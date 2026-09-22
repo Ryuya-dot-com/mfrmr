@@ -20,7 +20,7 @@ Start here for routine fit, first-screen results, reports, and exports.
   : Planned assignment roster for the operational example
 
 - [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
-  : Summarize MFRM input data (TAM-style descriptive snapshot)
+  : Check rating data before fitting an MFRM
 
 - [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   : Fit many-facet ordered-response models with a flexible number of
@@ -52,6 +52,60 @@ Start here for routine fit, first-screen results, reports, and exports.
 - [`mfrmr_workflow_methods`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
   : mfrmr Workflow and Method Map
 
+## External features and exploratory groups
+
+Review entity-level external attributes and describe exploratory groups.
+
+- [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
+  [`print(`*`<mfrm_features>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
+  [`summary(`*`<mfrm_features>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
+  : Prepare external features for exploratory grouping
+- [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+  [`print(`*`<mfrm_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+  [`summary(`*`<mfrm_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+  : Explore groups defined by external features
+- [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
+  [`plot(`*`<mfrm_hierarchical_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
+  : Hierarchical grouping of external features
+- [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+  [`print(`*`<mfrm_imputed_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+  [`summary(`*`<mfrm_imputed_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+  : Compare exploratory groups across external-feature imputations
+- [`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
+  [`print(`*`<mfrm_cluster_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
+  [`summary(`*`<mfrm_cluster_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
+  : Compare exploratory groups across settings and clustering methods
+- [`plot(`*`<mfrm_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_clusters.md)
+  [`plot(`*`<mfrm_imputed_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_clusters.md)
+  : Plot exploratory groups and imputation sensitivity
+
+## Portable fixed calibration
+
+Create, validate, freeze, persist, and apply the bounded RSM/PCM MML
+calibration artifact.
+
+- [`mfrm_calibration_capabilities()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md)
+  : Portable fixed-calibration capabilities
+- [`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`review_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`validate_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`freeze_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`supersede_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`retire_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`save_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`load_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  [`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  : Create and use a portable fixed calibration
+- [`summary(`*`<mfrm_calibration>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_methods.md)
+  [`print(`*`<mfrm_calibration>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_methods.md)
+  [`print(`*`<summary.mfrm_calibration>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_methods.md)
+  : Inspect a portable fixed calibration
+- [`summary(`*`<mfrm_calibration_score>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
+  [`print(`*`<mfrm_calibration_score>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
+  [`print(`*`<summary.mfrm_calibration_score>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
+  [`plot(`*`<mfrm_calibration_score>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
+  : Review and plot portable fixed-calibration scores
+
 ## Bounded GPCM boundary
 
 Supported, caveated, blocked, and deferred bounded-GPCM routes.
@@ -67,8 +121,9 @@ Supported, caveated, blocked, and deferred bounded-GPCM routes.
 - [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
   : Build a weighting-policy review between Rasch-family and bounded
   GPCM fits
-- [`gpcm_mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_mml_quadrature_sensitivity.md)
-  : Review GPCM-MML sensitivity to the quadrature grid
+- [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+  [`gpcm_mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+  : Review MML sensitivity to the quadrature grid
 - [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
   : Compute design-weighted precision curves for ordered many-facet fits
 - [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
@@ -215,7 +270,7 @@ Anchor review, linking synthesis, residual-bias screening, and
 differential-functioning review.
 
 - [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md)
-  : Build an anchor table from fitted estimates
+  : Build a candidate direct-anchor table from fitted estimates
 - [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
   : Review and normalize anchor/group-anchor tables
 - [`anchor_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_accessors.md)
@@ -250,6 +305,13 @@ differential-functioning review.
   : Compute interaction table between a facet and a grouping variable
 - [`dif_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_report.md)
   : Generate a differential-functioning interpretation report
+- [`summary(`*`<mfrm_dif>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_dff_methods.md)
+  [`summary(`*`<mfrm_dff>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_dff_methods.md)
+  [`print(`*`<summary.mfrm_dif>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_dff_methods.md)
+  [`print(`*`<summary.mfrm_dff>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_dff_methods.md)
+  [`print(`*`<mfrm_dif>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_dff_methods.md)
+  [`print(`*`<mfrm_dff>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_dff_methods.md)
+  : Review differential-functioning results
 - [`mfrmr_linking_and_dff`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
   : mfrmr Linking and DFF Guide
 
@@ -293,6 +355,8 @@ adapters.
   : Run a legacy-compatible estimation workflow wrapper
 
 - [`import_mirt_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_mirt_fit.md)
+  [`summary(`*`<mfrm_imported_fit>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/import_mirt_fit.md)
+  [`print(`*`<summary.mfrm_imported_fit>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/import_mirt_fit.md)
   :
 
   Import an `mirt` fit to an mfrmr-compatible bundle
@@ -451,7 +515,7 @@ and compatibility helpers.
   : List retained compatibility aliases and preferred names
 
 - [`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md)
-  : Compute Kish design effects for each facet
+  : Compute descriptive design-effect approximations for each facet
 
 - [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
   : Compute intra-class correlations for each facet
@@ -537,8 +601,32 @@ and compatibility helpers.
 - [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md)
   : Project G-theory coefficients under alternative D-study designs
 
+- [`plot(`*`<mfrm_d_study>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_d_study.md)
+  : Plot design comparisons from a main-effects D-study
+
 - [`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md)
   : Generalizability-theory variance decomposition for an MFRM design
+
+- [`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+  [`print(`*`<mfrm_multivariate_gstudy>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+  [`summary(`*`<mfrm_multivariate_gstudy>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+  : Multivariate G-study for crossed or nested rating data
+
+- [`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+  [`print(`*`<mfrm_multivariate_d_study>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+  [`summary(`*`<mfrm_multivariate_d_study>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+  : Plan measurement conditions with a multivariate D-study
+
+- [`plot(`*`<mfrm_multivariate_d_study>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_multivariate_d_study.md)
+  : Compare measurement-condition counts in a multivariate D-study
+
+- [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
+  [`summary(`*`<mfrm_multivariate_d_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
+  [`print(`*`<mfrm_multivariate_d_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
+  : Compare prespecified multivariate D-study plans
+
+- [`plot(`*`<mfrm_multivariate_d_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_multivariate_d_comparison.md)
+  : Plot differences between prespecified D-study plans
 
 - [`plot(`*`<apa_table>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.apa_table.md)
   : Plot an APA/FACETS table object using base R
@@ -578,6 +666,9 @@ and compatibility helpers.
 
 - [`plot(`*`<mfrm_summary_table_bundle>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_summary_table_bundle.md)
   : Plot a summary-table bundle for manuscript QC
+
+- [`plot_compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_compare_mfrm.md)
+  : Compare Wright maps or category curves from two fitted models
 
 - [`plot_displacement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_displacement.md)
   : Plot displacement diagnostics using base R

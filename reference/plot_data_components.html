@@ -13,7 +13,7 @@ dashboards, or report assembly."><meta property="og:image" content="https://ryuy
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,10 +24,12 @@ dashboards, or report assembly."><meta property="og:image" content="https://ryuy
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -44,7 +46,7 @@ dashboards, or report assembly."><meta property="og:image" content="https://ryuy
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>List reusable components in mfrmr plot data</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
       <div class="d-none name"><code>plot_data_components.Rd</code></div>
     </div>
 
@@ -87,273 +89,248 @@ dashboards, or report assembly.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># A balanced slice retains every Rater and Criterion while running quickly.</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">plot_data_components</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"pathway"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       PlotName             Component                Role ObjectType Rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  pathway_map              expected          table_data data.frame  241</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  pathway_map                 steps          table_data data.frame    3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  pathway_map       endpoint_labels          table_data data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  pathway_map     dominance_regions          table_data data.frame    4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  pathway_map          pathway_long        primary_data data.frame  245</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  pathway_map   pathway_annotations          annotation data.frame    4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  pathway_map          fit_measures          fit_review data.frame    8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  pathway_map            fit_status summary_or_guidance data.frame    2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  pathway_map      curve_fit_status summary_or_guidance data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 pathway_map    fit_measure_status summary_or_guidance data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 pathway_map           score_range            settings     double   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 pathway_map                 title    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 pathway_map              subtitle    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14 pathway_map                preset            settings  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15 pathway_map                legend               style data.frame    2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 pathway_map       reference_lines          annotation data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 pathway_map        scale_contract          table_data data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18 pathway_map             plot_name    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19 pathway_map         fit_readiness          fit_review data.frame    6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20 pathway_map interpretation_status summary_or_guidance  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21 pathway_map   interpretation_note summary_or_guidance  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Columns Length IsTabular                                          Accessor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        9      9      TRUE              plot_data(x, component = "expected")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        6      6      TRUE                 plot_data(x, component = "steps")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        9      9      TRUE       plot_data(x, component = "endpoint_labels")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        6      6      TRUE     plot_data(x, component = "dominance_regions")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       12     12      TRUE          plot_data(x, component = "pathway_long")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       13     13      TRUE   plot_data(x, component = "pathway_annotations")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       12     12      TRUE          plot_data(x, component = "fit_measures")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8        3      3      TRUE            plot_data(x, component = "fit_status")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       14     14      TRUE      plot_data(x, component = "curve_fit_status")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10       3      3      TRUE    plot_data(x, component = "fit_measure_status")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11      NA      2     FALSE           plot_data(x, component = "score_range")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12      NA      1     FALSE                 plot_data(x, component = "title")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13      NA      1     FALSE              plot_data(x, component = "subtitle")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14      NA      1     FALSE                plot_data(x, component = "preset")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15       4      4      TRUE                plot_data(x, component = "legend")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16       5      5      TRUE       plot_data(x, component = "reference_lines")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17      15     15      TRUE        plot_data(x, component = "scale_contract")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18      NA      1     FALSE             plot_data(x, component = "plot_name")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19       2      2      TRUE         plot_data(x, component = "fit_readiness")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20      NA      1     FALSE plot_data(x, component = "interpretation_status")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21      NA      1     FALSE   plot_data(x, component = "interpretation_note")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                     Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5        Best starting point for ggplot2, plotly, or Quarto re-rendering.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  Use with primary data to draw thresholds, labels, and reference lines.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                    Use to label or filter review-relevant plotted rows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                    Use to label or filter review-relevant plotted rows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                    Use to label or filter review-relevant plotted rows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                           Use for captions, QA checks, or report text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                 Use to reproduce color, line-type, or legend mappings.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 Use with primary data to draw thresholds, labels, and reference lines.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                           Use for captions, QA checks, or report text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                           Use for captions, QA checks, or report text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                 ColumnNames</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                   Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup, CurveBasis, PredictorOffset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                                                                             CurveGroup, Step, StepIndex, Threshold, PathY, ThresholdLabel</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                   Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup, CurveBasis, PredictorOffset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                                                                              CurveGroup, Category, Region, ThetaStart, ThetaEnd, ThetaMid</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                            Layer, CurveGroup, Theta, Value, ValueName, Category, Step, StepIndex, Label, DisplayedByDefault, Model, Slope</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                            AnnotationType, CurveGroup, Facet, Level, X, Y, Label, Measure, SE, FitStatus, Underfit, Overfit, ReviewReason</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                               Facet, Level, Measure, SE, Infit, Outfit, InfitZSTD, OutfitZSTD, FitStatus, Underfit, Overfit, ReviewReason</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                                                                                                                                    Facet, FitStatus, Rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                    CurveGroup, Facet, Level, Measure, SE, Infit, Outfit, InfitZSTD, OutfitZSTD, FitStatus, Underfit, Overfit, ReviewReason, MatchedFitRow</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                                                                                                               Available, Status, Message</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                                                                                                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                                                                                                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                                                                                                                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                                                                                                                                                                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                                                                                                                                                            label, role, aesthetic, value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                                                                                                                                                                       axis, value, label, linetype, role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                                                                                                                                                                                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                                                                                                                                                                                           Domain, Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                                                                                                                                                                                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                                                                                                                                                                                                                                         </span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">curves</span> <span class="op">&lt;-</span> <span class="fu"><a href="category_curves_report.html">category_curves_report</a></span><span class="op">(</span><span class="va">fit</span>, theta_points <span class="op">=</span> <span class="fl">51</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">plot_data_components</span><span class="op">(</span><span class="va">curves</span>, type <span class="op">=</span> <span class="st">"category_probability"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           PlotName                Component                Role ObjectType Rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  category_curves                     plot        primary_data  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  category_curves           expected_ogive          curve_data data.frame   51</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  category_curves            probabilities          curve_data data.frame  204</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  category_curves cumulative_probabilities          curve_data data.frame  408</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  category_curves    cumulative_boundaries          table_data data.frame    3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  category_curves     cumulative_direction            settings  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  category_curves     category_information          curve_data data.frame  204</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  category_curves          overview_panels summary_or_guidance data.frame    4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  category_curves                plot_long        primary_data data.frame  918</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 category_curves         plot_annotations          annotation data.frame    5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 category_curves            curve_summary summary_or_guidance data.frame    5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 category_curves              curve_style               style data.frame   13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 category_curves           boundary_lines          annotation data.frame    3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14 category_curves            plot_settings            settings data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15 category_curves                   preset            settings  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 category_curves                    title    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 category_curves                 subtitle    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18 category_curves                   legend               style data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19 category_curves          reference_lines          annotation data.frame    5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20 category_curves                plot_name    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Columns Length IsTabular</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       NA      1     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        9      9      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       13     13      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        9      9      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       12     12      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       NA      1     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       13     13      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8        3      3      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       15     15      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10       5      5      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11       7      7      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12       4      4      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13      12     12      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14       6      6      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15      NA      1     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16      NA      1     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17      NA      1     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18       4      4      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19       5      5      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20      NA      1     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                Accessor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                      plot_data(x, component = "plot")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            plot_data(x, component = "expected_ogive")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3             plot_data(x, component = "probabilities")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  plot_data(x, component = "cumulative_probabilities")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     plot_data(x, component = "cumulative_boundaries")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      plot_data(x, component = "cumulative_direction")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7      plot_data(x, component = "category_information")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8           plot_data(x, component = "overview_panels")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                 plot_data(x, component = "plot_long")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10         plot_data(x, component = "plot_annotations")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11            plot_data(x, component = "curve_summary")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12              plot_data(x, component = "curve_style")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13           plot_data(x, component = "boundary_lines")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14            plot_data(x, component = "plot_settings")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                   plot_data(x, component = "preset")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                    plot_data(x, component = "title")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                 plot_data(x, component = "subtitle")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                   plot_data(x, component = "legend")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19          plot_data(x, component = "reference_lines")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                plot_data(x, component = "plot_name")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                     Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                            Use for captions, QA checks, or report text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9        Best starting point for ggplot2, plotly, or Quarto re-rendering.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Use with primary data to draw thresholds, labels, and reference lines.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                           Use for captions, QA checks, or report text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                 Use to reproduce color, line-type, or legend mappings.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 Use with primary data to draw thresholds, labels, and reference lines.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14     Records resolved plotting options and aliases after normalization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                 Use to reproduce color, line-type, or legend mappings.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19 Use with primary data to draw thresholds, labels, and reference lines.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                    ColumnNames</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                      Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup, CurveBasis, PredictorOffset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                Theta, Probability, ExpectedScore, ScoreVariance, Information, CategoryInformation, CategoryInformationShare, Slope, Model, Category, CurveGroup, CurveBasis, PredictorOffset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                              CurveGroup, Theta, Direction, BoundaryCategory, BoundaryOrder, CategorySet, CumulativeProbability, Model, Slope</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  CurveGroup, BoundaryOrder, LowerOrEqualCategory, AboveCategory, ThresholdCategory, CumulativeDirection, TargetProbability, ThurstonianThreshold, InThetaRange, CrossingCount, BoundaryStatus, BoundaryLabel</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                CurveGroup, Theta, Category, Probability, ExpectedScore, ScoreVariance, Information, CategoryInformation, CategoryInformationShare, Slope, Model, CurveBasis, PredictorOffset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                                               Panel, PlotType, DataComponent</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                            PlotType, Panel, CurveGroup, Theta, Series, Category, BoundaryCategory, BoundaryOrder, CategorySet, Direction, ValueName, Value, DisplayedByDefault, Model, Slope</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                AnnotationType, Axis, Value, Label, LineType</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                        PlotType, Panel, ValueName, Rows, Series, CurveGroups, DisplayedRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                            Series, Colour, LineType, Preset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 CurveGroup, BoundaryOrder, LowerOrEqualCategory, AboveCategory, ThresholdCategory, CumulativeDirection, TargetProbability, ThurstonianThreshold, InThetaRange, CrossingCount, BoundaryStatus, BoundaryLabel</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                              RequestedType, PlotType, Preset, CumulativeDirection, ShowCumulativeBoundaries, BoundaryStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                                                                                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                                                                                                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                                                                                                                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                                                                                                               label, role, aesthetic, value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                                                                                          axis, value, label, linetype, role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                                                                                                                                            </span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">toy</span><span class="op">$</span><span class="va">ResponseTime</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">6</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Score</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">rt</span> <span class="op">&lt;-</span> <span class="fu"><a href="response_time_review.html">response_time_review</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">toy</span>,</span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
 <span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
 <span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  time <span class="op">=</span> <span class="st">"ResponseTime"</span></span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">plot_data_components</span><span class="op">(</span><span class="fu"><a href="plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                PlotName       Component                Role ObjectType Rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  response_time_review           table        primary_data data.frame  192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  response_time_review      thresholds            settings data.frame    2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  response_time_review        overview summary_or_guidance data.frame    1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  response_time_review           notes summary_or_guidance  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  response_time_review            type    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  response_time_review           facet    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  response_time_review           top_n            settings    integer   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  response_time_review           title    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  response_time_review        subtitle    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 response_time_review          preset            settings  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 response_time_review          legend               style data.frame    3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 response_time_review reference_lines          annotation data.frame    2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 response_time_review       plot_name    scalar_or_vector  character   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Columns Length IsTabular                                    Accessor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        7      7      TRUE           plot_data(x, component = "table")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        4      4      TRUE      plot_data(x, component = "thresholds")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       16     16      TRUE        plot_data(x, component = "overview")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       NA      2     FALSE           plot_data(x, component = "notes")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       NA      1     FALSE            plot_data(x, component = "type")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       NA      1     FALSE           plot_data(x, component = "facet")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       NA      1     FALSE           plot_data(x, component = "top_n")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8       NA      1     FALSE           plot_data(x, component = "title")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       NA      1     FALSE        plot_data(x, component = "subtitle")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10      NA      1     FALSE          plot_data(x, component = "preset")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11       4      4      TRUE          plot_data(x, component = "legend")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12       5      5      TRUE plot_data(x, component = "reference_lines")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13      NA      1     FALSE       plot_data(x, component = "plot_name")</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Discover which tables the default Wright map provides without drawing it</span></span></span>
+<span class="r-in"><span><span class="fu">plot_data_components</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      PlotName             Component                Role     ObjectType Rows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  wright_map          wright_style               style      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  wright_map              renderer    scalar_or_vector      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  wright_map       visual_contract    scalar_or_vector      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  wright_map                person          table_data     data.frame   48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  wright_map     person_exclusions          table_data     data.frame    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  wright_map           person_hist            metadata list:histogram   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  wright_map          person_stats          table_data     data.frame    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  wright_map             locations          table_data     data.frame   12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  wright_map          label_points          table_data     data.frame   12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 wright_map         group_summary summary_or_guidance     data.frame    3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 wright_map          group_levels            settings      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 wright_map               y_range            settings         double   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13 wright_map      display_settings            settings     data.frame    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14 wright_map           label_limit    scalar_or_vector        integer   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15 wright_map             retention          table_data     data.frame    3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16 wright_map        retention_note summary_or_guidance      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17 wright_map                 title    scalar_or_vector      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18 wright_map              subtitle    scalar_or_vector      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 wright_map               show_ci    scalar_or_vector        logical   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20 wright_map   uncertainty_display    scalar_or_vector      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21 wright_map                 group    scalar_or_vector           NULL   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22 wright_map                preset            settings      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23 wright_map                legend               style     data.frame    5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24 wright_map       reference_lines          annotation     data.frame    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25 wright_map        scale_contract          table_data     data.frame    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26 wright_map             plot_name    scalar_or_vector      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27 wright_map         fit_readiness          fit_review     data.frame    6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28 wright_map interpretation_status summary_or_guidance      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29 wright_map   interpretation_note summary_or_guidance      character   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30 wright_map               display            metadata      list:list   NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31 wright_map                 notes summary_or_guidance     data.frame    3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Columns Length IsTabular                                          Accessor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       NA      1     FALSE          plot_data(x, component = "wright_style")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       NA      1     FALSE              plot_data(x, component = "renderer")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       NA      1     FALSE       plot_data(x, component = "visual_contract")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4       22     22      TRUE                plot_data(x, component = "person")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5       22     22      TRUE     plot_data(x, component = "person_exclusions")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        6      6     FALSE           plot_data(x, component = "person_hist")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        7      7      TRUE          plot_data(x, component = "person_stats")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8       37     37      TRUE             plot_data(x, component = "locations")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9       43     43      TRUE          plot_data(x, component = "label_points")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10      16     16      TRUE         plot_data(x, component = "group_summary")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11      NA      3     FALSE          plot_data(x, component = "group_levels")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12      NA      2     FALSE               plot_data(x, component = "y_range")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13       8      8      TRUE      plot_data(x, component = "display_settings")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14      NA      1     FALSE           plot_data(x, component = "label_limit")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15       6      6      TRUE             plot_data(x, component = "retention")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16      NA      1     FALSE        plot_data(x, component = "retention_note")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17      NA      1     FALSE                 plot_data(x, component = "title")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18      NA      1     FALSE              plot_data(x, component = "subtitle")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19      NA      1     FALSE               plot_data(x, component = "show_ci")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20      NA      1     FALSE   plot_data(x, component = "uncertainty_display")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21      NA      0     FALSE                 plot_data(x, component = "group")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22      NA      1     FALSE                plot_data(x, component = "preset")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23       4      4      TRUE                plot_data(x, component = "legend")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24       5      5      TRUE       plot_data(x, component = "reference_lines")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25      15     15      TRUE        plot_data(x, component = "scale_contract")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26      NA      1     FALSE             plot_data(x, component = "plot_name")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27       2      2      TRUE         plot_data(x, component = "fit_readiness")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28      NA      1     FALSE plot_data(x, component = "interpretation_status")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29      NA      1     FALSE   plot_data(x, component = "interpretation_note")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30       2      2     FALSE               plot_data(x, component = "display")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31       2      2      TRUE                 plot_data(x, component = "notes")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                     Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                            Use for captions, QA checks, or report text.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                            Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                 Use to reproduce color, line-type, or legend mappings.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 Use with primary data to draw thresholds, labels, and reference lines.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                             ColumnNames</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                Row, Person, Time, LogTime, RapidFlag, SlowFlag, Score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                     Threshold, Value, Basis, TimeUnit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  Rows, ValidRows, DroppedRows, Persons, Facets, TimeColumn, ScoreColumn, TimeUnit, MedianTime, MeanLogTime, RapidThreshold, SlowThreshold, RapidRate, SlowRate, FlaggedGroups, InterpretationBoundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                                                     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                        label, role, aesthetic, value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                   axis, value, label, linetype, role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                                                                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                 Use to reproduce color, line-type, or legend mappings.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24 Use with primary data to draw thresholds, labels, and reference lines.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ColumnNames</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           breaks, counts, density, mids, xname, equidist</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                         N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                    Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                                                                                                                                                                                                                                           Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                                                                                                                                                                                                                                                                       Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Component, Shown, Total, Omitted, RequestedTopN, Complete</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           label, role, aesthetic, value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      axis, value, label, linetype, role</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                                                                                                                                                                                                Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Domain, Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  show_title, show_notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Type, Text</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Extract one of the listed components</span></span></span>
+<span class="r-in"><span><span class="va">locations</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">fit</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locations</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 37</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   StepIndex &lt;int&gt;, BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OriginalEstimate &lt;dbl&gt;, BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayEstimate &lt;dbl&gt;, DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OriginalCI_Upper &lt;dbl&gt;, DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, …</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A different plot type has different reusable tables</span></span></span>
+<span class="r-in"><span><span class="fu">plot_data_components</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"ccc"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                          PlotName             Component                Role</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  category_characteristic_curves         probabilities          curve_data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  category_characteristic_curves           curve_basis          curve_data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  category_characteristic_curves                 title    scalar_or_vector</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  category_characteristic_curves              subtitle    scalar_or_vector</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  category_characteristic_curves                preset            settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  category_characteristic_curves                legend               style</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  category_characteristic_curves       reference_lines          annotation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  category_characteristic_curves        scale_contract          table_data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  category_characteristic_curves             plot_name    scalar_or_vector</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 category_characteristic_curves         fit_readiness          fit_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 category_characteristic_curves interpretation_status summary_or_guidance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 category_characteristic_curves   interpretation_note summary_or_guidance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13 category_characteristic_curves               display            metadata</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14 category_characteristic_curves                 notes summary_or_guidance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    ObjectType Rows Columns Length IsTabular</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  data.frame  964      13     13      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  data.frame    1       3      3      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   character   NA      NA      1     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   character   NA      NA      1     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   character   NA      NA      1     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  data.frame    4       4      4      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  data.frame    1       5      5      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  data.frame    1      15     15      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9   character   NA      NA      1     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 data.frame    6       2      2      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11  character   NA      NA      1     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12  character   NA      NA      1     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13  list:list   NA       2      2     FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14 data.frame    3       2      2      TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                             Accessor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          plot_data(x, component = "probabilities")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            plot_data(x, component = "curve_basis")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                  plot_data(x, component = "title")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4               plot_data(x, component = "subtitle")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                 plot_data(x, component = "preset")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                 plot_data(x, component = "legend")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        plot_data(x, component = "reference_lines")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8         plot_data(x, component = "scale_contract")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9              plot_data(x, component = "plot_name")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10         plot_data(x, component = "fit_readiness")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 plot_data(x, component = "interpretation_status")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12   plot_data(x, component = "interpretation_note")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13               plot_data(x, component = "display")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                 plot_data(x, component = "notes")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                     Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                  Use to reproduce color, line-type, or legend mappings.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  Use with primary data to draw thresholds, labels, and reference lines.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                           Use for captions, QA checks, or report text.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                 ColumnNames</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                             Theta, Probability, ExpectedScore, ScoreVariance, Information, CategoryInformation, CategoryInformationShare, Slope, Model, Category, CurveGroup, CurveBasis, PredictorOffset</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                                                                                                  CurveBasis, PredictorOffset, Description</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                                                                                                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                                                                                                                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                                                                                                                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                                                                             label, role, aesthetic, value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                                                                                                        axis, value, label, linetype, role</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                                                                                                                                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                                                                                                                           Domain, Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                                                                                                                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                                                                                                                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                                                                                                                                   show_title, show_notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                                                                                                                                                                                               Type, Text</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

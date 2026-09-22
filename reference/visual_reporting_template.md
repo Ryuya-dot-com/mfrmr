@@ -284,10 +284,10 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 4  Unified Wright map uncertainty overlay
 #> 5                  Rater severity profile
 #> 6           Manuscript Figure 1 composite
-#> 7        Fair-average structural interval
+#> 7        Fair-average diagnostic interval
 #> 8       Bias-interaction interval overlay
 #> 9           Displacement interval overlay
-#> 10             DFF / DIF contrast summary
+#> 10                 Group contrast summary
 #> 11          Facet-equivalence ROPE review
 #> 12               Anchor drift forest plot
 #> 13                  Rater trajectory plot
@@ -299,10 +299,10 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 4                                                                    plot_wright_unified(fit, show_ci = TRUE, ci_level = 0.95)
 #> 5                                                                            plot_rater_severity_profile(fit, ci_level = 0.95)
 #> 6                                                                                    plot_apa_figure_one(fit, ci_level = 0.95)
-#> 7                                                                          fair_average_table(fair_se = TRUE, ci_level = 0.95)
+#> 7       plot_fair_average(fit, show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)
 #> 8                                                                  plot_bias_interaction(..., show_ci = TRUE, ci_level = 0.95)
 #> 9                                                                      plot_displacement(..., show_ci = TRUE, ci_level = 0.95)
-#> 10                                                                                      plot_dif_summary(..., ci_level = 0.95)
+#> 10                                                                                                       plot_dif_summary(...)
 #> 11                                                        analyze_facet_equivalence(ci_level = 0.95); plot_facet_equivalence()
 #> 12                                                                detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)
 #> 13                                                                                 plot_rater_trajectory(..., ci_level = 0.95)

@@ -295,8 +295,8 @@ summary(rec)$recovery_summary[, c("ParameterType", "Facet", "RMSE", "Bias")]
 #>   ParameterType Facet        RMSE      Bias
 #>   <chr>         <chr>       <dbl>     <dbl>
 #> 1 facet         Criterion  0.0130 -1.73e-18
-#> 2 facet         Rater      0.222  -2.78e-17
-#> 3 person        Person    11.2    -1.48e-16
+#> 2 facet         Rater      0.222   1.39e-17
+#> 3 person        Person    11.2    -2.96e-16
 #> 4 step          Common    13.7    -5.92e-16
 # }
 ```

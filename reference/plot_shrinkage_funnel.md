@@ -40,13 +40,15 @@ plot_shrinkage_funnel(
 
 - show_ci:
 
-  Logical. When `TRUE`, draw approximate confidence-interval whiskers
-  for raw and shrunken estimates when `SE` / `ShrunkSE` evidence is
-  available.
+  Logical. When `TRUE`, draw descriptive normal bands from raw and
+  plug-in shrunken SEs. These omit prior-variance uncertainty and
+  cross-level covariance; zero width after full pooling is not perfect
+  precision.
 
 - ci_level:
 
-  Confidence level used when `show_ci = TRUE`; default 0.95.
+  Nominal normal-band level when `show_ci = TRUE`; default 0.95. This
+  does not assert repeated-sampling coverage.
 
 - draw:
 
@@ -88,11 +90,16 @@ head(p$data$table)
 #> 3 Rater   R01  -0.1957561 0.09730123     -0.1705417 0.09081883       0.1288054
 #> 4 Rater   R03   0.1910876 0.09724282      0.1665002 0.09077133       0.1286707
 #> 1 Rater   R04   0.3334649 0.09763161      0.2902585 0.09108731       0.1295680
-#>      Movement RowOrder
-#> 2  0.04265200        1
-#> 3  0.02521444        2
-#> 4 -0.02458737        3
-#> 1 -0.04320639        4
+#>      Movement RowOrder SupportsFormalInference
+#> 2  0.04265200        1                   FALSE
+#> 3  0.02521444        2                   FALSE
+#> 4 -0.02458737        3                   FALSE
+#> 1 -0.04320639        4                   FALSE
+#>                                                                                                                                                             Interpretation
+#> 2 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
+#> 3 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
+#> 4 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
+#> 1 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
 # Look for: short segments (Raw and Shrunken close together) =
 #   little pooling. Long segments fanning toward the centre = the
 #   prior pulled the estimate strongly; this is most pronounced for

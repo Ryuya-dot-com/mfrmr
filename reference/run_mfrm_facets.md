@@ -27,7 +27,8 @@ run_mfrm_facets(
   reltol = 1e-09,
   optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
-  top_n_interactions = 20L
+  top_n_interactions = 20L,
+  mml_integration = c("fixed", "adaptive")
 )
 
 mfrmRFacets(
@@ -49,7 +50,8 @@ mfrmRFacets(
   maxit = 400,
   reltol = 1e-09,
   mml_engine = c("direct", "em", "hybrid"),
-  top_n_interactions = 20L
+  top_n_interactions = 20L,
+  mml_integration = c("fixed", "adaptive")
 )
 ```
 
@@ -147,6 +149,13 @@ mfrmRFacets(
 - top_n_interactions:
 
   Number of rows for interaction diagnostics.
+
+- mml_integration:
+
+  MML integration mode passed to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md):
+  `"fixed"` (default) or `"adaptive"`. Adaptive integration requires the
+  direct MML engine.
 
 ## Value
 

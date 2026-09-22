@@ -329,9 +329,10 @@ arbitrary-facet planning evidence.
 target contrast has \\p \<\\ `dif_p_cut` **and**, when an absolute
 contrast cutoff is in force, \\\|\mathrm{Contrast}\| \ge\\
 `dif_abs_cut`. For `dif_method = "refit"`, `dif_abs_cut` is interpreted
-on the logit scale. For `dif_method = "residual"`, the residual-contrast
-screening result is used and the default is to rely on the significance
-test alone.
+on the logit scale. For `dif_method = "residual"`, DIF detection,
+classification and false-positive rates are unavailable (`NA`). Residual
+contrasts remain available as descriptive summaries; a missing test is
+not counted as a non-detection.
 
 Bias results are different:
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
@@ -343,8 +344,9 @@ satisfy
 \\p \<\\ `bias_p_cut` **and** \\\|t\| \ge\\ `bias_abs_t`.
 
 **Power** is the proportion of replications in which the target signal
-was correctly detected. For DIF this is a conventional power summary.
-For bias, the primary summary is `BiasScreenRate`, a screening hit rate
+was flagged when a comparison statistic is available. Refit DIF rates
+are conditional screening rates, not calibrated inferential power. For
+bias, the primary summary is `BiasScreenRate`, a screening hit rate
 rather than formal inferential power.
 
 **False-positive rate** is the proportion of non-target cells that were
@@ -424,6 +426,6 @@ s_sig$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
-#> 1       1            1              1             0          0.924
+#> 1       1            1              1             0          0.849
 # }
 ```

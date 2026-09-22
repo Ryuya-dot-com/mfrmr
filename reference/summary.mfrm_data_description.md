@@ -1,6 +1,9 @@
 # Summarize a data-description object
 
-Summarize a data-description object
+Read a compact summary of the checks from
+[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+before fitting a model. Save it with `review <- summary(data_review)`
+and select the tables you need with `$`, as in the example.
 
 ## Usage
 
@@ -74,30 +77,48 @@ An object of class `summary.mfrm_data_description`.
   `print(summary(ds))` shows a compact `Caveats` block when rows are
   present
 
+- `notes`: plain-language explanations of missingness, preparation,
+  score support, and design-review findings
+
 ## Details
 
-This summary is intended as a compact pre-fit quality snapshot for
-manuscripts and analysis logs.
+`data_review` holds the complete data checks; `review` holds summary
+tables and notes. Neither object contains model estimates. The default
+`top_n = 10` limits the missing-column and score-distribution previews;
+use `data_review$missing_by_column` and `data_review$score_distribution`
+to see the complete tables.
 
 ## Interpreting output
 
 Recommended read order:
 
-- `overview`: sample size, persons/facets/categories.
+- `overview`: retained ratings (`Observations`), persons, facets, and
+  categories. Compare input and retained `Rows` in `row_retention` and
+  investigate unexpected `DroppedRows`.
 
-- `missing`: missingness hotspots by selected input columns.
+- `missing`: input `NA` counts by column. This table is named
+  `missing_by_column` in the original `data_review` object. Declared
+  missing-code replacements and invalid score text can cause additional
+  row loss; inspect `data_review$missing_recoding` and
+  `preparation_notes`.
 
 - `score_distribution`: category usage balance.
 
 - `notes` / printed `Caveats`: retained zero-count score categories and
-  related score-support caveats; intermediate unused categories should
-  be treated as threshold-functioning warnings before model fitting.
+  related score-support caveats. With `keep_original = TRUE`, a retained
+  unused internal category stops fitting; review the data and rubric
+  first.
 
 - `facet_overview`: coverage per facet (minimum/maximum weighted
   counts).
 
 - `agreement`: observed-score agreement for the selected scorer facet
   (when available).
+
+- `design_connectivity`: check for more than one observed component
+  before comparing facet levels. `structural_missingness` reports
+  planned omissions only when an assignment roster was supplied;
+  `not_declared` does not mean that no ratings are missing.
 
 Very low `MinWeightedN` in `facet_overview` is a practical warning for
 unstable downstream facet estimates.
@@ -108,10 +129,12 @@ unstable downstream facet estimates.
     [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
     on raw long-format data.
 
-2.  Inspect `summary(ds)` before model fitting.
+2.  Inspect `review <- summary(data_review)` before model fitting.
 
-3.  Resolve sparse/missing issues, then run
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+3.  Correct input issues and repeat the review, then pass the corrected
+    rating data to
+    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+    with the same preparation settings.
 
 ## See also
 
@@ -121,95 +144,52 @@ unstable downstream facet estimates.
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-ds <- describe_mfrm_data(toy, "Person", c("Rater", "Criterion"), "Score")
-summary(ds)
-#> mfrm Data Description Summary
-#> 
-#> Overview
-#>  Observations TotalWeight Persons Facets Categories RatingMin RatingMax
-#>           768         768      48      2          4         1         4
-#>  RatingRangeSource RatingMinSource RatingMaxSource
-#>           observed        observed        observed
-#> 
-#> Missing by column
-#>     Column Missing
-#>  Criterion       0
-#>     Person       0
-#>      Rater       0
-#>      Score       0
-#> 
-#> Planned assignment coverage
-#>        Status ExpectedCells ObservedCells MatchedCells MissingExpectedCells
-#>  not_declared            NA           768           NA                   NA
-#>  UnexpectedObservedCells CoverageRate ExpectedOnlyPersons UnexpectedPersons
-#>                       NA           NA                  NA                NA
-#> 
-#> Person-facet connectivity
-#>     Basis     Facet PersonNodes FacetLevelNodes Edges Components
-#>  observed     Rater          48               4   192          1
-#>  observed Criterion          48               4   192          1
-#>  LargestComponentPersons LargestComponentLevels LargestComponentPercent
-#>                       48                      4                     100
-#>                       48                      4                     100
-#>  Connected
-#>       TRUE
-#>       TRUE
-#> 
-#> Facet linkage support
-#>      Facet Levels Persons MinPersonsPerLevel MedianPersonsPerLevel
-#>      Rater      4      48                 48                    48
-#>  Criterion      4      48                 48                    48
-#>  MinLevelsPerPerson MedianLevelsPerPerson LinkingPersons LinkingPersonRate
-#>                   4                     4             48                 1
-#>                   4                     4             48                 1
-#>  SingleLevelPersons SparseLevels SparseLevelThreshold
-#>                   0            0                    2
-#>                   0            0                    2
-#> 
-#> Score distribution
-#>  Score RawN WeightedN Percent
-#>      1  139       139  18.099
-#>      2  241       241  31.380
-#>      3  252       252  32.812
-#>      4  136       136  17.708
-#> 
-#> Facet coverage
-#>      Facet Levels TotalWeightedN MeanWeightedN MinWeightedN MaxWeightedN
-#>  Criterion      4            768           192          192          192
-#>      Rater      4            768           192          192          192
-#> 
-#> Observed agreement by Rater
-#>  RaterFacet Raters Pairs Contexts TotalPairs OpportunityCount ExactAgreements
-#>       Rater      4     6      192       1152             1152             417
-#>  ExpectedAgreements ExactAgreement ExpectedExactAgreement
-#>                  NA          0.362                     NA
-#>  AgreementMinusExpected AdjacentAgreements AdjacentAgreement MeanAbsDiff
-#>                      NA                956              0.83       0.826
-#>  MeanCorr
-#>     0.378
-#> 
-#> Paper reporting map
-#>                                 Area  CoveredHere
-#>               Sample / design counts          yes
-#>                   Missingness review          yes
-#>          Planned assignment coverage not declared
-#>            Person-facet connectivity          yes
-#>  Score usage / category distribution          yes
-#>                       Facet coverage          yes
-#>                Rater-facet agreement          yes
-#>     Fit / reliability / residual PCA           no
-#>                                                 CompanionOutput
-#>                                summary(describe_mfrm_data(...))
-#>                                summary(describe_mfrm_data(...))
-#>       data_review$structural_missingness$missing_expected_cells
-#>                                   data_review$design_components
-#>                                summary(describe_mfrm_data(...))
-#>                                summary(describe_mfrm_data(...))
-#>  summary(describe_mfrm_data(...)) / plot_interrater_agreement()
-#>                                     summary(diagnose_mfrm(fit))
-#> 
-#> Notes
-#>  - No missing values were detected in selected input columns.
-#>  - Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned.
+library(mfrmr)
+ratings <- load_mfrmr_data("example_operational")
+
+# Demonstrate two missing scores in a copy of the example data
+ratings$Score[1:2] <- NA
+data_review <- describe_mfrm_data(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  keep_original = TRUE
+)
+review <- summary(data_review)
+review$row_retention # 282 input rows, 280 retained rows
+#>                             Stage Rows DroppedRows
+#> 1          input_selected_columns  282           0
+#> 2 after_missing_and_weight_filter  280           2
+#>                            DroppedReason
+#> 1                                       
+#> 2 missing values or non-positive weights
+review$missing       # Score has 2 missing input values
+#>      Column Missing
+#> 1     Score       2
+#> 2 Criterion       0
+#> 3    Person       0
+#> 4     Rater       0
+review$overview      # Counts describe the retained ratings
+#>   Observations TotalWeight Persons Facets Categories RatingMin RatingMax
+#> 1          280         280      48      2          4         1         4
+#>   RatingRangeSource RatingMinSource RatingMaxSource
+#> 1          declared        declared        declared
+review$notes         # Explanations to read before fitting
+#> [1] "Missing values were detected in one or more input columns."                                                                                                                                               
+#> [2] "Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned."                                             
+#> [3] "Dropped 2 row(s) with missing values or non-positive weights before estimation. Pass `missing_codes = ...` to recode user-specified missing markers, or pre-process upstream if you need to keep the row."
+
+# The original description retains the full missingness table
+data_review$missing_by_column
+#> # A tibble: 4 × 2
+#>   Column    Missing
+#>   <chr>       <int>
+#> 1 Person          0
+#> 2 Rater           0
+#> 3 Criterion       0
+#> 4 Score           2
+# Investigate missingness before using ratings in fit_mfrm()
 ```

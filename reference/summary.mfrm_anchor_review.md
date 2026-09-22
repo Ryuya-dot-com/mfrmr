@@ -101,7 +101,7 @@ summary(review)
 #>         4  136       136                10       TRUE
 #> 
 #> Recommendations
-#>  - Linacre guideline: about 30 observations per element are desirable. Low-observation facets: Person.
+#>  - Package observation-count screen: about 30 observations per element are used for review. Low-observation facets: Person.
 #>  - For linked analyses, keep Umean/Uscale from the source calibration so reporting origin and scaling stay consistent.
 #>  - Current noncenter facet is 'Person'. Other facets are centered unless constrained by anchors/group anchors.
 #> 

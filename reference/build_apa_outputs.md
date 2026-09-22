@@ -47,8 +47,8 @@ An object of class `mfrm_apa_outputs` with:
 
 - `decision`: plain-language source-fit interpretation plus the separate
   precision-contract decision; `FormalInference` is `"Yes"` only when
-  both the fit gate and `contract$precision$supports_formal_inference`
-  pass
+  both fit readiness and `contract$precision$supports_formal_inference`
+  support it
 
 - `fit_readiness`, `fit_readiness_components`, and
   `fit_readiness_parameters`: exact source-fit readiness provenance
@@ -131,6 +131,10 @@ By default, `report_text` includes:
 
 When bias results or PCA diagnostics are not supplied, those sections
 are omitted from the narrative rather than producing placeholder text.
+Reporting reuses stored residual PCA results and does not compute
+omitted overall or facet-specific analyses. Request the intended scope
+with `diagnose_mfrm(..., residual_pca = "overall")`, `"facet"`, or
+`"both"` first.
 
 ## Typical workflow
 
@@ -180,161 +184,134 @@ or another package-native bias helper that provides a table component.
 
 ``` r
 # \donttest{
-# Minimal APA-output example using a JML fit and lightweight diagnostics.
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
-fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", maxit = 30
-)
-diag_quick <- diagnose_mfrm(fit_quick,
-  residual_pca = "none",
-  diagnostic_mode = "legacy"
-)
-apa_quick <- build_apa_outputs(fit_quick, diag_quick)
-nchar(apa_quick$report_text) > 0
-#> [1] TRUE
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 7, maxit = 30
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Prepare draft wording from the fitted model and diagnostics
 apa <- build_apa_outputs(
   fit,
-  diag,
+  diagnostics = diagnostics,
   context = list(
-    assessment = "Toy writing task",
+    assessment = "Synthetic writing assessment",
     setting = "Demonstration dataset",
-    scale_desc = "0-2 rating scale",
+    scale_desc = "1-4 rating scale",
     rater_facet = "Rater"
   )
 )
-s_apa <- summary(apa)
-s_apa$overview
-#>   Components NonEmptyComponents TotalCharacters TotalNonEmptyLines Sections
-#> 1          3                  3            9943                125        9
-#>   AvailableSections ContentChecks ContentChecksPassed DraftContractPass
-#> 1                 7             9                   9              TRUE
-#>   ReadyForAPA
-#> 1        TRUE
-# Look for: `SentenceCount` non-zero in every section that the run
-#   should support (Method / Results / fit / reliability / bias).
-#   Zero counts mean that section's prose is empty and the
-#   manuscript will need to fill it manually.
-chk <- reporting_checklist(fit, diagnostics = diag)
-head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-#>          Section                                                      Item
-#> 1 Method Section                                       Model specification
-#> 2 Method Section                                          Data description
-#> 3 Method Section                                           Precision basis
-#> 4 Method Section                                               Convergence
-#> 5 Method Section                                     Connectivity assessed
-#> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present
-#>   DraftReady
-#> 1       TRUE
-#> 2       TRUE
-#> 3       TRUE
-#> 4       TRUE
-#> 5       TRUE
-#> 6       TRUE
-#>                                                                                                          NextAction
-#> 1                             Available; adapt this evidence into the manuscript draft after methodological review.
-#> 2                             Available; adapt this evidence into the manuscript draft after methodological review.
-#> 3                                                    Report the precision tier as model-based in the APA narrative.
-#> 4                             Available; adapt this evidence into the manuscript draft after methodological review.
-#> 5                                           Document the single connected subset before making common-scale claims.
-#> 6 Report both the fixed-effects and shrunk estimates; cite Efron & Morris (1973) for the empirical-Bayes rationale.
-# Look for: rows with `DraftReady = "yes"` are ready to paste into
-#   the manuscript. `"no"` rows tell you which helper / setting
-#   needs to run before that paragraph can be drafted, via
-#   `NextAction`. Aim for every Visual Displays / Reliability /
-#   Diagnostics row to be `"yes"` before submitting.
+
+# Check which sections are supported, then read the draft
+apa_review <- summary(apa)
+apa_review$content_checks
+#>                           Check Passed
+#> 1        Method section heading   TRUE
+#> 2       Results section heading   TRUE
+#> 3   Precision caution alignment   TRUE
+#> 4 Bias screening note alignment   TRUE
+#> 5         Residual PCA coverage   TRUE
+#> 6                 Note coverage   TRUE
+#> 7              Caption coverage   TRUE
+#> 8         Core section coverage   TRUE
+#> 9  Interrater summary alignment   TRUE
+#>                                                                            Detail
+#> 1                               APA narrative should begin with a Method heading.
+#> 2                                 APA narrative should include a Results heading.
+#> 3                               No extra precision caution required for this run.
+#> 4                                               No bias screening block required.
+#> 5    Residual PCA availability should be reflected in prose, notes, and captions.
+#> 6       All note-map entries should be represented in the consolidated note text.
+#> 7 All caption-map entries should be represented in the consolidated caption text.
+#> 8            Core package-native sections should be available in the section map.
+#> 9         Interrater agreement wording should appear in the report text or notes.
 cat(apa$report_text)
 #> Method.
 #> 
 #> Design and data.
-#> The analysis focused on Toy writing task in Demonstration dataset. A many-facet
-#> rating-scale Rasch model was fit to 192 observations from 12 persons scored on a 4-category
-#> scale (1-4). The design included facets for Rater (n = 4), Criterion (n = 4). Facet-level
-#> sample sizes met the package's `standard` band (smallest level N = 48), an mfrmr-specific
+#> The analysis focused on Synthetic writing assessment in Demonstration dataset. A many-facet
+#> rating-scale Rasch model was fit to 282 observations from 48 persons scored on a 4-category
+#> scale (1-4). The design included facets for Rater (n = 6), Criterion (n = 3). Facet-level
+#> sample sizes met the package's `standard` band (smallest level N = 38), an mfrmr-specific
 #> watermark adapted from Linacre's (1994) 30/100 guidance; facets were nonetheless estimated
 #> as fixed effects with sum-to-zero identification (see `facet_small_sample_review()`). The
-#> rating scale was described as 0-2 rating scale.
+#> rating scale was described as 1-4 rating scale.
 #> 
 #> Estimation settings.
 #> The RSM specification was estimated using MML with mfrmr. Model-based precision summaries
 #> were available for this run. Person measures are expected a posteriori (EAP) estimates
 #> under the marginal person distribution, and residual-based fit statistics are evaluated at
 #> these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended
-#> use for this precision profile: Use for primary reporting of SE, CI, and reliability in
-#> this package.. Optimization met the package convergence checks after 22 function
-#> evaluations and 22 gradient evaluations (LogLik = -223.729, canonical MML AIC = 463.458,
-#> Person-BIC = 467.338, Sclove SABIC = 443.146). These criteria are screening/review values
-#> only at q=7 (coarse_screening); automatic deltas, weights, preferences, and LRT are
-#> disabled below q=31. SABIC was retained for sensitivity only; automatic selection is
-#> disabled at 22 or fewer Persons. Terminal gradient sup-norm = 0.0000 (review threshold =
-#> 0.0001). Optimizer returned convergence code 0. Constraint settings: noncenter facet =
-#> Person; anchored levels = 0 (facets: none); group anchors = 0 (facets: none); dummy facets
-#> = none.
+#> use for this precision profile: Uncertainty is conditional on the fitted model. Person
+#> posterior SDs condition on the fitted calibration; facet standard errors use observed
+#> information. Review interval assumptions before reporting.. Optimization met the numerical
+#> convergence checks after 28 function evaluations and 28 gradient evaluations (LogLik =
+#> -347.240, canonical MML AIC = 712.480, Person-BIC = 729.320, Sclove SABIC = 701.085). MML
+#> integration used fixed Gauss-Hermite quadrature (q=31). Terminal gradient sup-norm = 0.0000
+#> (review threshold = 0.0001). Constraint settings: noncenter facet = Person; anchored levels
+#> = 0 (facets: none); group anchors = 0 (facets: none); dummy facets = none.
 #> 
 #> Results.
 #> 
 #> Scale functioning.
-#> Category usage was adequate (unused categories = 0, low-count categories = 0), and
-#> thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.22 to 1.44
-#> logits; no disordered steps.
+#> Category counts were available for all 4 categories: 0 unused and 0 below 10. Counts alone
+#> do not establish category adequacy. Adjacent threshold comparisons: 0 decreasing among 2
+#> available; 0 of 2 comparisons unavailable. Available estimates range from -1.22 to 1.06
+#> logits. Adjacent threshold comparisons: 0 decreasing among 2 available; 0 of 2 comparisons
+#> unavailable.
 #> 
 #> Facet measures.
-#> Person measures ranged from -1.22 to 1.24 logits (M = 0.28, SD = 0.97). Rater measures
-#> ranged from -0.21 to 0.25 logits (M = 0.00, SD = 0.21). Criterion measures ranged from
-#> -0.44 to 0.21 logits (M = 0.00, SD = 0.30).
+#> Person measures ranged from -1.72 to 1.51 logits (M = -0.16, SD = 0.82). Rater measures
+#> ranged from -0.61 to 0.41 logits (M = -0.00, SD = 0.40). Criterion measures ranged from
+#> -0.34 to 0.22 logits (M = 0.00, SD = 0.30).
 #> 
 #> Fit and precision.
-#> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.98, outfit
-#> MnSq = 0.98). This band is the package's review convention; published mean-square
+#> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.87, outfit
+#> MnSq = 0.86). This band is the package's review convention; published mean-square
 #> guidelines differ, and band position is screening evidence rather than a model-validity
-#> decision. 0 of 20 elements fell outside the 0.5-1.5 mean-square screening band. Largest
-#> misfit signals: Person:P008 (|ZSTD| = 1.40); Person:P004 (|ZSTD| = 1.33); Person:P006
-#> (|ZSTD| = 0.89). Criterion reliability = 0.68 (separation = 1.45). Person reliability =
-#> 0.89 (separation = 2.88). Rater reliability = 0.34 (separation = 0.72). These are
-#> Rasch/FACETS-style separation indices (measure spread relative to measurement error), not
-#> inter-rater agreement. The Person row uses EAP measures with posterior SDs, which yields a
-#> conservative summary that is not numerically comparable to JMLE-based person reliability
-#> from FACETS. Observed inter-rater agreement is reported separately from separation
-#> reliability: for Rater, exact agreement = 0.34, expected exact agreement = 0.37, adjacent
-#> agreement = 0.85. Element-level 95% confidence intervals (Normal approximation) accompany
-#> the measures (CI_Lower / CI_Upper); 20 of 20 rows are flagged CIEligible for primary
-#> reporting.
+#> decision. MnSq outside [0.5, 1.5]: 18 of 57 classified elements flagged; 0 of 57 elements
+#> unclassified. Largest misfit signals among 57 elements with complete paired statistics:
+#> Person:P026 (|ZSTD| = 2.46); Person:P022 (|ZSTD| = 2.42); Person:P016 (|ZSTD| = 2.08).
+#> Criterion reliability = 0.87 (separation = 2.56). Person reliability = 0.66 (separation =
+#> 1.41). Rater reliability = 0.68 (separation = 1.45). These are Rasch/FACETS-style
+#> separation indices (measure spread relative to measurement error), not inter-rater
+#> agreement. The Person row uses EAP measures with posterior SDs, which yields a conservative
+#> summary that is not numerically comparable to JMLE-based person reliability from FACETS.
+#> Observed inter-rater agreement is reported separately from separation reliability: for
+#> Rater, exact agreement = 0.39, expected exact agreement = 0.35, adjacent agreement = 0.86.
+#> Element-level 95% approximate intervals (Normal approximation) accompany 57 of 57
+#> estimates; 57 of 57 estimates have intervals eligible for primary reporting.
 #> 
 #> Residual structure.
-#> Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue =
-#> 4.02 (25.1% variance), with PC2 eigenvalue = 2.75. Facet-specific exploratory residual PCA
-#> showed the largest first-component signal in Criterion (eigenvalue = 2.18, 54.5% variance).
-#> Heuristic reference bands: EV >= 1.4 (critical minimum), >= 1.5 (caution), >= 2.0 (common),
-#> >= 3.0 (strong); variance >= 5% (minor), >= 10% (caution), >= 20% (strong). Strict marginal
-#> screening was available as a latent-integrated exploratory check (overall RMSD = 0.00,
-#> overall max |standardized residual| = 0.15). The largest strict marginal cell involved
-#> Criterion: Language | Cat 1 (standardized residual = 1.34, proportion difference = 0.06).
-#> Strict pairwise local-dependence follow-up flagged 0 level pair(s) under the
-#> latent-integrated agreement screen. The largest strict pairwise signal involved Criterion:
-#> Accuracy vs Content (ExactStdResidual = -1.28, AdjacentStdResidual = -0.12).
+#> Overall categories: 0 flagged among 4 classified; 0 of 4 unavailable. Step/scale groups: 0
+#> flagged among 1 classified; 0 of 1 unavailable. Facet levels: 1 flagged among 9 classified;
+#> 0 of 9 unavailable. Level pairs: 1 flagged among 9 classified; 0 of 9 unavailable. Expected
+#> counts condition on the same responses through Person posteriors, with fitted calibration
+#> held fixed. Residual scales omit cross-response covariance and calibration-parameter
+#> uncertainty; thresholds are descriptive, not calibrated tests. Strict marginal screening
+#> gives an overall RMSD of 0.01, overall max |standardized residual| = 0.43. The largest
+#> strict marginal cell involved Criterion: Content | Cat 4 (standardized residual = -1.53,
+#> proportion difference = -0.06). Strict pairwise local-dependence follow-up flagged 1 level
+#> pair(s) under the latent-integrated agreement screen. The largest strict pairwise signal
+#> involved Rater: R04 vs R05 (exact-agreement standardized residual = 2.09,
+#> adjacent-agreement standardized residual = 0.22).
 #> 
 #> Reporting cautions.
 #> Fit-basis note: MnSq/ZSTD fit statistics in this run were computed at EAP person measures,
 #> which are shrunken toward the population mean; they are therefore not numerically
 #> interchangeable with JMLE-based engines such as FACETS. Refit with method = "JML" when a
 #> JMLE-style residual basis is required for external comparison.
-apa$section_map[, c("SectionId", "Available")]
-#>                    SectionId Available
-#> 1              method_design      TRUE
-#> 2          method_estimation      TRUE
-#> 3              results_scale      TRUE
-#> 4           results_measures      TRUE
-#> 5   results_population_model     FALSE
-#> 6      results_fit_precision      TRUE
-#> 7 results_residual_structure      TRUE
-#> 8     results_bias_screening     FALSE
-#> 9           results_cautions      TRUE
-
+# Adapt the text to the study question, design, and evidence before using it
 # }
 ```

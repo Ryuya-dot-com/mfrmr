@@ -3,15 +3,13 @@
 functioning analysis or interaction table. For method = "refit", the
 report summarises linked screening contrasts and whether conditional plug-in
 uncertainty was available. For method = "residual", it summarises
-screening-positive results, lists the specific levels and their direction,
-and includes a caveat about the distinction between construct-relevant
-variation and measurement bias.'><meta property="og:description" content='Produces APA-style narrative text interpreting the results of a differential-
+the availability and meaning of residual comparisons, without testing
+differential functioning or classifying comparisons as positive or negative.'><meta property="og:description" content='Produces APA-style narrative text interpreting the results of a differential-
 functioning analysis or interaction table. For method = "refit", the
 report summarises linked screening contrasts and whether conditional plug-in
 uncertainty was available. For method = "residual", it summarises
-screening-positive results, lists the specific levels and their direction,
-and includes a caveat about the distinction between construct-relevant
-variation and measurement bias.'><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+the availability and meaning of residual comparisons, without testing
+differential functioning or classifying comparisons as positive or negative.'><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +17,7 @@ variation and measurement bias.'><meta property="og:image" content="https://ryuy
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,10 +28,12 @@ variation and measurement bias.'><meta property="og:image" content="https://ryuy
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -50,7 +50,7 @@ variation and measurement bias.'><meta property="og:image" content="https://ryuy
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Generate a differential-functioning interpretation report</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>dif_report.Rd</code></div>
     </div>
 
@@ -59,9 +59,8 @@ variation and measurement bias.'><meta property="og:image" content="https://ryuy
 functioning analysis or interaction table. For <code>method = "refit"</code>, the
 report summarises linked screening contrasts and whether conditional plug-in
 uncertainty was available. For <code>method = "residual"</code>, it summarises
-screening-positive results, lists the specific levels and their direction,
-and includes a caveat about the distinction between construct-relevant
-variation and measurement bias.</p>
+the availability and meaning of residual comparisons, without testing
+differential functioning or classifying comparisons as positive or negative.</p>
     </div>
 
     <div class="section level2">
@@ -99,7 +98,7 @@ calibrations retain the required anchors. Their separate-subgroup plug-in
 standard errors condition on those anchors and omit baseline-anchor
 uncertainty and cross-refit covariance, so the report does not assign ETS
 labels or present refit rows as formal inference. The residual method also
-uses screening-positive versus screening-negative language.</p>
+returns descriptive group differences without tests or binary classifications.</p>
     </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -108,7 +107,8 @@ uses screening-positive versus screening-negative language.</p>
 <ul><li><p><code>$narrative</code>: character scalar with the full narrative text.</p></li>
 <li><p><code>$counts</code>: named integer vector of method-appropriate counts.</p></li>
 <li><p><code>$large_dif</code>: an empty compatibility table for current refit output, or
-screening-positive contrasts/cells (<code>method = "residual"</code>).</p></li>
+an empty table for residual comparisons. Interaction reports include only
+cells above the requested absolute residual mean threshold, in score units.</p></li>
 <li><p><code>$gpcm_boundary</code>: for bounded <code>GPCM</code> inputs, a capability-boundary table
 marking the narrative as caveated DFF screening output.</p></li>
 <li><p><code>$config</code>: analysis configuration inherited from the input.</p></li>
@@ -162,9 +162,7 @@ Rasch measurement in language testing. <em>Language Testing</em>, 29(4),
 <span class="r-in"><span><span class="va">dif</span> <span class="op">&lt;-</span> <span class="fu"><a href="analyze_dff.html">analyze_dff</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, group <span class="op">=</span> <span class="st">"Group"</span>, data <span class="op">=</span> <span class="va">toy</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rpt</span> <span class="op">&lt;-</span> <span class="fu">dif_report</span><span class="op">(</span><span class="va">dif</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">rpt</span><span class="op">$</span><span class="va">narrative</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DRF screening was conducted for the Rater facet across levels of Group using the residual method. A total of 4 pairwise facet-level comparisons were evaluated. 0 comparison(s) were screening-positive and 4 were screening-negative based on the residual-contrast test. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No pairwise contrasts were screening-positive under the residual-screening method. This does not by itself establish invariance or consistent functioning across groups. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Note: The presence of differential functioning does not necessarily indicate measurement bias. Differential functioning may reflect construct-relevant variation (e.g., true group differences in the attribute being measured) rather than unwanted measurement bias. Substantive review is recommended to distinguish between these possibilities (cf. Eckes, 2011; McNamara &amp; Knoch, 2012).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mean observed-minus-expected scores were compared for the Rater facet across levels of Group. 4 of 4 group comparisons had sufficient observations to report a residual difference. Differences are in score units. They do not isolate differential functioning: group residual means can differ even when response parameters are the same. No p-values, confidence intervals or positive/negative classifications are provided.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

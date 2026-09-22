@@ -31,7 +31,7 @@ the current package scope.
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,10 +42,12 @@ the current package scope.
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -62,7 +64,7 @@ the current package scope.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>FACETS Feature Coverage Matrix</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_facets_coverage.R" class="external-link"><code>R/help_facets_coverage.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/help_facets_coverage.R" class="external-link"><code>R/help_facets_coverage.R</code></a></small>
       <div class="d-none name"><code>facets_feature_coverage.Rd</code></div>
     </div>
 
@@ -120,7 +122,8 @@ plot data over exact FACETS line-printer output.</p>
 <p>The current software reference target is FACETS 64-bit 4.5.1 (July 2026).
 Bibliographic references retain the title and edition of the consulted
 manual rather than silently relabelling a 4.5.0 manual as 4.5.1. External
-numerical validation is a separate evidence contract.</p>
+numerical agreement must be evaluated separately for a matched model and
+estimand.</p>
 <p>Status meanings:</p><ul><li><p><code>implemented</code>: a package-native route covers the substantive output
 surface; this status alone does not claim an externally matched
 statistical contract.</p></li>
@@ -137,8 +140,8 @@ familiar visual grammar belongs only to this axis.</p></li>
 <li><p><code>StatisticalContract</code> records the package-native statistical scope and
 never implies a FACETS-matched estimand.</p></li>
 <li><p><code>ValidationEvidence</code> records whether this table establishes matched
-external numerical evidence. It currently does not; validation belongs to
-a separate candidate-linked evidence contract.</p></li>
+external numerical evidence. It currently does not; that conclusion
+requires a separate comparison using a matched model and estimand.</p></li>
 <li><p><code>OperationalStatus</code> records route availability. A package route being
 available does not make <code>mfrmr</code> operationally interchangeable with
 FACETS.</p></li>
@@ -146,10 +149,8 @@ FACETS.</p></li>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Linacre, J. M. (2026). <em>A user's guide to FACETS, version 4.5.0</em>.
-Current FACETS software release:
-<a href="https://www.winsteps.com/facets.htm" class="external-link">https://www.winsteps.com/facets.htm</a>.
-Output tables - files - plots - graphs:
-<a href="https://www.winsteps.com/facetman64/outputtableindex.htm" class="external-link">https://www.winsteps.com/facetman64/outputtableindex.htm</a>.</p>
+Winsteps.com. See the guide's output-table index for the documented
+FACETS files, plots, and graphs.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -266,7 +267,7 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 45            Full FACETS command-file parser and UI option surface</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 46                       Exact FACETS line-printer report emulation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 47                                    Raw FACETS report-text import</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48      Versioned frozen-calibration import and operational scoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48                  FACETS or third-party frozen-calibration import</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 49      General threshold or step anchors and starting-value import</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 50                  Multiple observed scales and scale-specific PCM</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 51                              Nominal/multinomial response models</span>
@@ -323,14 +324,14 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 45                     index.htm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 46          outputtableindex.htm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 47          outputtableindex.htm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48   mfrmr 0.2.3 public contract</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49   mfrmr 0.2.3 public contract</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50   mfrmr 0.2.3 public contract</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51   mfrmr 0.2.3 public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51 current mfrmr public contract</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 52                    models.htm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53   mfrmr 0.2.3 weight contract</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54   mfrmr 0.2.3 public contract</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55   mfrmr 0.2.3 public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53 current mfrmr weight contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55 current mfrmr public contract</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 56                    t7menu.htm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                     mfrmrRoute</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                      specifications_report()</span>
@@ -380,15 +381,15 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                                                                               run_mfrm_facets(); fit_mfrm()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 46                                                                                                   build_fixed_reports() for selected tables</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 47                                                                            read_facets_fit_table() for delimited/fixed-field score extracts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                                                                               none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                                                               none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                                                               none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                                                               none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                                                                                                               none in 0.2.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48                        no external import; native route: mfrm_calibration_capabilities(); load_mfrm_calibration(); score_mfrm_calibration()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                                        not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                                        not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                                        not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                                                                                        not available in the current package</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 53                                                                                                                      fit_mfrm(weight = ...)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                                                               none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                         none for unrestricted GPCM in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                                                                                       none as a direct common-estimand lane</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                                        not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                         not available for unrestricted GPCM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                                                                                 none as a direct common-estimand comparison</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   Status                   SurfaceCoverage</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            implemented                         available</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2            implemented                         available</span>
@@ -589,9 +590,9 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                                      Selected 3D/surface-ready plot data are available.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                                               Several package outputs include histogram-like summaries.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 28                          Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                               Facet-level co-observation network plus rater agreement/disagreement/severity-direction and halo networks with reusable node/edge tables.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                         Separate facet-level co-observation, rater score-relation, and rater-by-criterion halo networks with reusable node/edge tables.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                                                                    R-native reproducibility manifest and replay script.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                                                           Reusable anchor tables from fitted estimates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                            Candidate direct-anchor tables mechanically extracted from fitted estimates.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 32                                                                                                                                  Graphfile-style category curve output.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 33                                                                                                                                   Structured appendix/report artifacts.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 34                                                       Standalone observation-level residual CSV/TSV output, residual tables, and residual visualizations are available.</span>
@@ -608,7 +609,7 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                                                                                         R function arguments are the package interface.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 46                                                                                                                              Selected fixed-width handoff is available.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 47                                                                                                                                    Fit/score table import is supported.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                        No current public route imports a reusable versioned calibration bundle for operational scoring.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                    Native mfrmr portable RSM/PCM MML calibration artifacts can be loaded and scored through the documented fixed-standard-normal route.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                               No current public route accepts general threshold or step anchors or a threshold starting-value contract.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                       Each fit uses one observed score scale and one homogeneous response-model family.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.</span>
@@ -646,9 +647,9 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                                                                                                                                                                                                                                        No arbitrary FACETS X-Y-Z plot wrapper.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                                                                                                                                                                                                                                                        No general FACETS histogram menu clone.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 28                                                                                                                                                                   Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not suitable for high-stakes use when boundary or singular fits are reported.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                                                                                                                                                                                                                                                           R-native igraph analysis and display rather than FACETS menu output.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                                                                                                                                    Only the co-observation network addresses assignment connectedness; response networks do not establish a common scale. R-native igraph analysis and display rather than FACETS menu output.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                                                                                                                                                                                                                                                            Does not write a FACETS command specification file.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                                                                                                                                                                                                                                             Uses R/CSV tables rather than FACETS fixed syntax.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                                                                                                                                                                Export does not certify source readiness, cross-run identity, or invariance; uses R/CSV tables rather than FACETS fixed syntax.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 32                                                                                                                                                                                                                                                                                                     Command-level FACETS graph options are not fully mirrored.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 33                                                                                                                                                                                                                                                                                                          Full FACETS report-file emulation is not implemented.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 34                                                                                                                                                                                                                                                                     Uses package-native residual columns rather than exact FACETS fixed-field residual syntax.</span>
@@ -665,7 +666,7 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                                                                                                                                                                                                                                                           Parsing arbitrary FACETS command files is outside the package scope.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 46                                                                                                                                                                                                                                                                                                      Exact full report emulation is outside the package scope.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 47                                                                                                                                                                                                                                                                                                          General raw FACETS report parsing is not implemented.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                                                                                                                                                                                    Posterior scoring from an existing fitted object is supported separately and is not a reusable frozen-calibration contract.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                                                                                                         No current route converts a FACETS or another program's calibration file into an mfrmr portable artifact; native artifact scoring does not establish transportability or external-program equivalence.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                                                                                                                                                                                   Element and group anchors do not make threshold ladders fixed or supply a general calibration-import schema.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                                                                                                                                                                       There is no per-observation ScaleId contract, scale-specific category map, or ragged scale-specific PCM threshold block.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                                                                                                                                A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.</span>
@@ -674,63 +675,63 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                                                                                                                                                                     Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                                                                                                                                                                                      Bounded GPCM support does not establish an unrestricted free-discrimination model family.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 56                                                                                                                                                                                 FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                    Alternative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                                          Use fitted-object posterior scoring for current analyses; retain frozen-calibration workflows for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                    Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                           Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                            Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53                                                  Retain one distinguishable event per row when possible; preserve distinct Person response patterns, and report the exact likelihood-weight interpretation.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                            Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                           Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56 Use FACETS for the matched PCM/JML lane or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                          Alternative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                        Use the native mfrmr calibration workflow for eligible fits; use a separately validated external workflow when third-party calibration import is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                          Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                                 Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                      Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                                  Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53                                                        Retain one distinguishable event per row when possible; preserve distinct Person response patterns, and report the exact likelihood-weight interpretation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                  Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                 Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56 Use FACETS for the matched PCM/JML comparison or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.</span>
 <span class="r-in"><span><span class="fu">facets_feature_coverage</span><span class="op">(</span><span class="st">"partial"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                FACETSArea                                      FACETSFeature</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3            Output table                     Table 3: main iteration report</span>
@@ -897,7 +898,7 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11 table7agreementstatistics.htm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13       table8_1ratingscale.htm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 28                   gtheory.htm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53   mfrmr 0.2.3 weight contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53 current mfrmr weight contract</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                            mfrmrRoute</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                 fit_measures_table(); diagnose_mfrm(); summary(fit)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                  facets_chisq_table(); diagnose_mfrm()$reliability</span>
@@ -953,7 +954,7 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 56 Current scope boundary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                       FACETSFeature</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 38                                   Winsteps control and data file</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48      Versioned frozen-calibration import and operational scoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48                  FACETS or third-party frozen-calibration import</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 49      General threshold or step anchors and starting-value import</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 50                  Multiple observed scales and scale-specific PCM</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 51                              Nominal/multinomial response models</span>
@@ -961,16 +962,26 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 54 Native multidimensional estimation and dimension-specific scores</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                Unrestricted GPCM</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 56                     FACETS free-slope polytomous GPCM comparison</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                FACETSReference                            mfrmrRoute</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38            winstepsfile.htm                                  none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48 mfrmr 0.2.3 public contract                         none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49 mfrmr 0.2.3 public contract                         none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50 mfrmr 0.2.3 public contract                         none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51 mfrmr 0.2.3 public contract                         none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52                  models.htm                         none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54 mfrmr 0.2.3 public contract                         none in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55 mfrmr 0.2.3 public contract   none for unrestricted GPCM in 0.2.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                  t7menu.htm none as a direct common-estimand lane</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  FACETSReference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38              winstepsfile.htm</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52                    models.htm</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55 current mfrmr public contract</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56                    t7menu.htm</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                              mfrmrRoute</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                                                                 none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48 no external import; native route: mfrm_calibration_capabilities(); load_mfrm_calibration(); score_mfrm_calibration()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                 not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                 not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                 not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                                                                 not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                 not available in the current package</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                  not available for unrestricted GPCM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                                                          none as a direct common-estimand comparison</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Status SurfaceCoverage StatisticalContract ValidationEvidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 38 not_implemented     unavailable       not_available     not_applicable</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 48 not_implemented     unavailable       not_available     not_applicable</span>
@@ -991,36 +1002,36 @@ Output tables - files - plots - graphs:
 <span class="r-out co"><span class="r-pr">#&gt;</span> 54           blocked</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 55           blocked</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 56           blocked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                Capability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                                 No Winsteps control/data export route.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                       No current public route imports a reusable versioned calibration bundle for operational scoring.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49              No current public route accepts general threshold or step anchors or a threshold starting-value contract.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                      Each fit uses one observed score scale and one homogeneous response-model family.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                               The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52           Binary ordered scores are available as the two-category special case of the current ordered-response kernel.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                      The current public estimator and score routes are unidimensional.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                 The current public GPCM route is bounded and requires slope_facet to equal step_facet.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56 FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                        Limitation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                                                                             Would require a separate Winsteps output contract.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                    Posterior scoring from an existing fitted object is supported separately and is not a reusable frozen-calibration contract.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                   Element and group anchors do not make threshold ladders fixed or supply a general calibration-import schema.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                       There is no per-observation ScaleId contract, scale-specific category map, or ragged scale-specific PCM threshold block.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52  Grouped binomial trials, Poisson counts, negative-binomial counts, and other count likelihoods are not implemented; integer scores are interpreted as ordered category codes.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                     Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                      Bounded GPCM support does not establish an unrestricted free-discrimination model family.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56 FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                    Alternative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                                          Use fitted-object posterior scoring for current analyses; retain frozen-calibration workflows for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                    Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                           Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                            Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                            Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                           Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56 Use FACETS for the matched PCM/JML lane or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                              Capability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                                               No Winsteps control/data export route.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48 Native mfrmr portable RSM/PCM MML calibration artifacts can be loaded and scored through the documented fixed-standard-normal route.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49                            No current public route accepts general threshold or step anchors or a threshold starting-value contract.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                    Each fit uses one observed score scale and one homogeneous response-model family.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                             The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52                         Binary ordered scores are available as the two-category special case of the current ordered-response kernel.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                    The current public estimator and score routes are unidimensional.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                               The current public GPCM route is bounded and requires slope_facet to equal step_facet.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56               FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                Limitation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                                                                                                     Would require a separate Winsteps output contract.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48 No current route converts a FACETS or another program's calibration file into an mfrmr portable artifact; native artifact scoring does not establish transportability or external-program equivalence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                           Element and group anchors do not make threshold ladders fixed or supply a general calibration-import schema.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                               There is no per-observation ScaleId contract, scale-specific category map, or ragged scale-specific PCM threshold block.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                        A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52                          Grouped binomial trials, Poisson counts, negative-binomial counts, and other count likelihoods are not implemented; integer scores are interpreted as ordered category codes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                             Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                              Bounded GPCM support does not establish an unrestricted free-discrimination model family.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56                         FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                          Alternative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                        Use the native mfrmr calibration workflow for eligible fits; use a separately validated external workflow when third-party calibration import is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                          Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                                 Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                                      Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                                  Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                  Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                 Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56 Use FACETS for the matched PCM/JML comparison or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

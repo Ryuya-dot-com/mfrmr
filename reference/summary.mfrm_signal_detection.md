@@ -84,7 +84,7 @@ summary(sig_eval)
 #> 
 #> Overview
 #>  Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>        1            1              0             0          0.316
+#>        1            1              0             0          0.289
 #> 
 #> Detection summary (preview)
 #>  design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
@@ -92,11 +92,11 @@ summary(sig_eval)
 #>  BiasTargetRater BiasTargetCriterion Reps ConvergenceRate McseConvergenceRate
 #>              R02                 C02    1               0                  NA
 #>  DIFPower McseDIFPower DIFClassificationPower McseDIFClassificationPower
-#>         0           NA                      0                         NA
+#>        NA           NA                     NA                         NA
 #>  MeanTargetContrast McseTargetContrast MeanTargetContrastAbs
 #>                 NaN                 NA                   NaN
 #>  McseTargetContrastAbs DIFFalsePositiveRate McseDIFFalsePositiveRate
-#>                     NA                  NaN                       NA
+#>                     NA                   NA                       NA
 #>  BiasScreenRate McseBiasScreenRate MeanTargetBias McseTargetBias
 #>               0                 NA            NaN             NA
 #>  MeanAbsTargetBias McseAbsTargetBias MeanTargetBiasT McseTargetBiasT
@@ -104,7 +104,7 @@ summary(sig_eval)
 #>  BiasScreenMetricAvailabilityRate McseBiasScreenMetricAvailabilityRate
 #>                                 0                                   NA
 #>  BiasScreenFalsePositiveRate McseBiasScreenFalsePositiveRate MeanElapsedSec
-#>                          NaN                              NA          0.316
+#>                          NaN                              NA          0.289
 #>  McseElapsedSec
 #>              NA
 #> 
@@ -125,9 +125,9 @@ summary(sig_eval)
 #> 
 #> Notes
 #>  - Some design conditions did not converge in every replication.
-#>  - Some design conditions showed DIF power below 0.80.
 #>  - Some design conditions showed bias-screen hit rates below 0.80.
 #>  - Some design conditions did not yield usable bias-screening t/p metrics in every replication.
+#>  - DIF detection rates are unavailable; residual differences do not provide a differential-functioning test.
 #>  - Bias-side rates are screening summaries derived from `estimate_bias()` output and should not be interpreted as formal power or alpha-calibrated false-positive rates.
 #>  - MCSE columns summarize finite-replication uncertainty around the reported means and rates.
 #>  - Planning helpers vary one person count and two named non-person facet roles (Rater and Criterion). Estimation may contain additional facets, but planning and forecasting are limited to this role-based design.

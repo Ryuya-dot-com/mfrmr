@@ -88,7 +88,7 @@ A bundle of class `mfrm_network_review` containing:
 
 `build_mfrm_network_review()` is a synthesis layer over
 [`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md).
-It keeps the measurement model and graph view in separate lanes: MFRM
+It keeps the measurement model and graph view in separate sections: MFRM
 estimates remain the measurement results, while the network review
 summarizes co-observation connectedness and linking vulnerability in the
 observed design. This is especially useful for sparse or incomplete
@@ -150,8 +150,8 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 #> 
 #> Table index
 #>              Table Rows Cols                        Role
-#>           overview    1   11     network_review_overview
-#>    network_summary    1   13      network_design_summary
+#>           overview    1   14     network_review_overview
+#>    network_summary    1   16      network_design_summary
 #>      facet_summary    3    8 network_facet_vulnerability
 #>  top_central_nodes   10   11       network_central_nodes
 #>      top_cut_nodes    0   11  network_articulation_nodes
@@ -174,8 +174,8 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 #> 
 #> Plot index
 #>              Table PlotReady NumericColumns               DefaultPlotTypes
-#>           overview      TRUE              7 numeric_profile, first_numeric
-#>    network_summary      TRUE             12 numeric_profile, first_numeric
+#>           overview      TRUE              9 numeric_profile, first_numeric
+#>    network_summary      TRUE             14 numeric_profile, first_numeric
 #>      facet_summary      TRUE              7 numeric_profile, first_numeric
 #>  top_central_nodes      TRUE              7 numeric_profile, first_numeric
 #>      top_cut_nodes     FALSE              7                               
@@ -188,7 +188,7 @@ if (requireNamespace("igraph", quietly = TRUE)) {
 #> Notes
 #>  - MFRM estimates remain the measurement-model results; network rows summarize observed design links.
 #>  - Articulation points and bridge edges identify levels or links whose removal would fragment the co-observation graph.
-#>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit gates.
+#>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit-readiness decisions.
 #>  - Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness.
 #>  - 2 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.
 # }

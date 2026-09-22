@@ -32,8 +32,9 @@ rating_scale_table(
 - drop_unused:
 
   If `TRUE`, remove categories with zero count from the displayed
-  category table; `summary` and `caveats` still retain the omitted
-  score-support warning.
+  category table. Usage totals still cover the full declared scale;
+  unavailable counts remain visible, and score-support caveats are
+  retained.
 
 ## Value
 
@@ -44,7 +45,17 @@ A named list with:
 
 - `threshold_table`: model step/threshold estimates
 
-- `summary`: one-row summary (usage and threshold monotonicity)
+- `summary`: one-row summary with available/unavailable category counts
+  and adjacent-threshold comparisons. Category-fit means identify their
+  available denominators and describe displayed rows. Missing fit
+  statistics/flags stay `NA`, including unused categories with no
+  estimable category fit.
+
+- `category_usage`: counts across the full scale, before `drop_unused`
+
+- `threshold_coverage`: available, unavailable and decreasing
+  adjacent-pair counts; `NotApplicable` distinguishes binary scales from
+  missing estimates
 
 - `caveats`: structured score-support warning/review rows
 
@@ -95,6 +106,15 @@ Then inspect:
 - `threshold_table` for adjacent-step gaps and ordering within each
   `StepFacet`.
 
+For MML step uncertainty, inspect
+`diagnostics$parameter_uncertainty$steps` from
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+A bare fit supplies point estimates to `threshold_table`; passing
+separate diagnostics here does not attach their SEs or intervals to that
+table. Check `SE_Status` and, when present, `CIEligible` / `CIUse`
+before reporting intervals. Retain `StepFacet` for PCM threshold
+families. A facet-location SE is not a step SE.
+
 ## Typical workflow
 
 1.  Fit model:
@@ -126,7 +146,9 @@ The `category_table` data.frame contains:
 
 - Count, Percent:
 
-  Observed count and percentage of total.
+  Observed count and percentage of total. With observation weights,
+  counts are sums of weights, not independent sample sizes. Missing or
+  invalid scores/weights make the usage counts unavailable.
 
 - AvgPersonMeasure:
 
@@ -160,7 +182,8 @@ The `threshold_table` data.frame contains:
 
 - Step:
 
-  Step label (e.g., "1-2", "2-3").
+  Step label (e.g., `Step_1`, `Step_2`). Use `LowerCategory` and
+  `UpperCategory` to identify the corresponding score transition.
 
 - Estimate:
 
@@ -173,15 +196,19 @@ The `threshold_table` data.frame contains:
 
 - GapFromPrev:
 
-  Difference from the previous threshold within the same `StepFacet`
-  when thresholds are facet-specific. Gaps below 1.4 logits may indicate
-  category underuse; gaps above 5.0 may indicate wide unused regions
-  (Linacre, 2002).
+  Difference between adjacent numbered thresholds within the same
+  `StepFacet`. Missing thresholds are not skipped to form a gap. No
+  automatic category-merging rule is applied.
 
 - ThresholdMonotonic:
 
-  Logical flag repeated within each threshold set. For PCM fits, read
-  this within `StepFacet`, not as a pooled item-bank verdict.
+  Logical flag repeated within each threshold set. `FALSE` records at
+  least one decreasing adjacent pair; `TRUE` requires every expected
+  pair to be available and nondecreasing, allowing numerical differences
+  up to `sqrt(.Machine$double.eps)`. Equal thresholds meet this
+  descriptive condition. Otherwise the flag is `NA`. A binary scale has
+  only one threshold and no applicable ordering comparison. This is a
+  statement about point estimates, not a test of category adequacy.
 
 - LowerCategory, UpperCategory, WeaklyIdentified, ThresholdCaveat:
 
@@ -201,8 +228,8 @@ The `threshold_table` data.frame contains:
 
 - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
   standardized mean? *Rasch Measurement Transactions, 16*(2), 878.
-  (Source for the 0.5-1.5 mean-square heuristic review interval and the
-  threshold-gap heuristics used in `summary(t8)$summary`.)
+  (Source for the 0.5-1.5 mean-square heuristic review interval; this is
+  not a source for threshold-gap rules.)
 
 - Wind, S. A. (2023). *Detecting rating scale malfunctioning with the
   partial credit model and generalized partial credit model*.
@@ -223,61 +250,48 @@ The `threshold_table` data.frame contains:
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
-t8 <- rating_scale_table(fit)
-summary(t8)
-#> mfrmr Rating Scale Summary 
-#>   Class: mfrm_rating_scale
-#>   Components: 6
-#> 
-#> Category/threshold summary
-#>  Categories UsedCategories UnusedScoreCategories WeaklyIdentifiedThresholds
-#>           4              4                                                0
-#>  MinCategoryCount MaxCategoryCount MeanCategoryInfit MeanCategoryOutfit
-#>               136              252             1.211              1.147
-#>  ThresholdMonotonic DiagnosticMode ExpectedCountBasis MarginalFitAvailable
-#>                TRUE           both      legacy_plugin                FALSE
-#>  MarginalOverallRMSD MarginalMaxAbsStdResidual MarginalFlaggedCategories
-#>                   NA                        NA                        NA
-#> 
-#> Category rows: category_table
-#>  Category Count AvgPersonMeasure ExpectedAverage Infit Outfit MeanResidual
-#>         1   139           -0.984           1.864 1.806  1.602       -0.864
-#>         2   241           -0.376           2.262 0.613  0.780       -0.262
-#>         3   252            0.328           2.734 0.556  0.617        0.266
-#>         4   136            1.068           3.145 1.871  1.590        0.855
-#>  DF_Infit DF_Outfit Percent InfitZSTD OutfitZSTD ExpectedCount ExpectedPercent
-#>    70.957       139  18.099     3.947      4.292       138.998          18.099
-#>   138.039       241  31.380    -3.710     -2.586       241.000          31.380
-#>   145.307       252  32.812    -4.511     -4.977       252.001          32.813
-#>    66.751       136  17.708     4.081      4.176       136.002          17.709
-#>  DiffCount DiffPercent LowCount InfitFlag OutfitFlag ZSTDFlag ZeroCount
-#>      0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE
-#>      0.000           0    FALSE     FALSE      FALSE     TRUE     FALSE
-#>     -0.001           0    FALSE     FALSE      FALSE     TRUE     FALSE
-#>     -0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE
-#>  UnusedCategoryType WeaklyIdentified CategoryCaveat
-#>                none            FALSE               
-#>                none            FALSE               
-#>                none            FALSE               
-#>                none            FALSE               
-#> 
-#> Notes
-#>  - Rating-scale diagnostics with category usage, fit, and threshold ordering.
-summary(t8)$summary
-#>   Categories UsedCategories UnusedScoreCategories WeaklyIdentifiedThresholds
-#> 1          4              4                                                0
-#>   MinCategoryCount MaxCategoryCount MeanCategoryInfit MeanCategoryOutfit
-#> 1              136              252          1.211281           1.147213
-#>   ThresholdMonotonic DiagnosticMode ExpectedCountBasis MarginalFitAvailable
-#> 1               TRUE           both      legacy_plugin                FALSE
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Review category use and the fitted transitions between scores
+categories <- rating_scale_table(fit)
+review <- summary(categories)
+review$summary
+#>   Categories DisplayedCategories AvailableCategoryCounts
+#> 1          4                   4                       4
+#>   UnavailableCategoryCounts UsedCategories UnusedScoreCategories
+#> 1                         0              4                      
+#>   WeaklyIdentifiedThresholds MinCategoryCount MaxCategoryCount
+#> 1                          0               46               96
+#>   MeanCategoryInfit AvailableCategoryInfit MeanCategoryOutfit
+#> 1          1.079498                      4          0.9991048
+#>   AvailableCategoryOutfit ThresholdMonotonic ThresholdComparisons
+#> 1                       4               TRUE                    2
+#>   AvailableThresholdComparisons UnavailableThresholdComparisons
+#> 1                             2                               0
+#>   ThresholdOrderNotApplicable DiagnosticMode
+#> 1                       FALSE           both
+#>                                     ExpectedCountBasis MarginalFitAvailable
+#> 1 legacy_plugin + latent_integrated_first_order_counts                 TRUE
 #>   MarginalOverallRMSD MarginalMaxAbsStdResidual MarginalFlaggedCategories
-#> 1                  NA                        NA                        NA
-p_t8 <- plot(t8, draw = FALSE)
-p_t8$data$plot
-#> [1] "counts"
+#> 1         0.006236843                 0.4330932                         0
+#>   MarginalClassifiedCategories MarginalUnclassifiedCategories
+#> 1                            4                              0
+
+# Bars show observed counts; the line shows model-expected counts
+# Recreate saved tables with the original fit and diagnostics after updating.
+plot(categories)
 
 # }
 ```

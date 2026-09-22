@@ -111,6 +111,28 @@ dispatched through
 
 - `unknown_elements`: facet levels in raw data but not in fitted design.
 
+## Local category avoidance is not automatically a GPCM problem
+
+Suppose a declared 1–10 scale is observed globally, but one rater uses
+only scores 3–8. If other raters use 1, 2, 9, and 10, the shared score
+support is not globally missing. The affected rater instead has local
+zero-category use: inspect `category_usage_by_facet`,
+`category_usage_summary`, and
+`plot(out, type = "facet_category_usage")`. This pattern can reflect
+range restriction, assignment/case mix, sparse information, or
+operational scoring practice; the table alone does not identify the
+cause.
+
+Do not select `GPCM` merely to absorb category avoidance. `GPCM` changes
+the designated step/slope owner's threshold and discrimination
+structure; it does not repair a rater's restricted use of the rubric.
+When the affected rater is itself the `step_facet`/`slope_facet` owner,
+local category gaps can also weaken owner-specific PCM/GPCM parameter
+support and the fit-readiness result must be checked. Under RSM, or when
+another facet owns the steps, the same local pattern remains important
+response-use evidence without automatically becoming a distinct response
+model.
+
 ## Typical workflow
 
 1.  Run `data_quality_report(...)` with raw data.
@@ -134,26 +156,31 @@ dispatched through
 ## Examples
 
 ``` r
+# \donttest{
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 7, maxit = 30
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-out <- data_quality_report(
-  fit,
-  data = toy, person = "Person",
-  facets = c("Rater", "Criterion"), score = "Score"
-)
-summary(out)
+
+# Review the input-data checks recorded with this fit
+quality <- data_quality_report(fit)
+summary(quality)
 #> mfrmr Data Quality Summary 
 #>   Class: mfrm_data_quality
 #>   Components: 14
 #> 
 #> Data quality overview
-#>  TotalLinesInData TotalDataLines TotalNonBlankResponsesFound MissingScoreRows
-#>               282            282                         282                0
-#>  MissingFacetRows MissingPersonRows InvalidWeightRows OutOfRangeScoreRows
-#>                 0                 0                 0                   0
+#>  TotalLinesInData TotalDataLines TotalNonBlankResponsesFound
+#>                NA             NA                          NA
 #>  ValidResponsesUsedForEstimation ZeroCountScoreCategories
 #>                              282                        0
 #>  IntermediateZeroCountScoreCategories FacetLevelsWithZeroCategories
@@ -185,7 +212,9 @@ summary(out)
 #>  - Priority QC flags: 1 flag(s), including 0 high-severity flag(s).
 #>  - Facet-level category use: 0 level(s) have zero-count categories; 0 have
 #>    zero-count intermediate categories; 6 have sparse non-zero categories.
-p_dq <- plot(out, draw = FALSE)
-p_dq$data$plot
-#> [1] "dashboard"
+
+# Draw the data-quality overview
+plot(quality)
+
+# }
 ```

@@ -114,20 +114,40 @@ data-handling policy before sharing it.
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-out <- export_mfrm(
-  fit,
-  diagnostics = diag,
-  output_dir = tempdir(),
-  prefix = "mfrmr_example",
-  overwrite = TRUE,
-  acknowledge_sensitive = TRUE
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-out$Table
-#> [1] "person"   "facets"   "summary"  "steps"    "measures"
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Use a new temporary folder for this example; choose a permanent one for your work
+output_dir <- tempfile("mfrmr-tables-")
+files <- export_mfrm(
+  fit,
+  diagnostics = diagnostics,
+  output_dir = output_dir,
+  acknowledge_sensitive = TRUE # Synthetic data; exported tables retain person IDs
+)
+
+# Preview filenames; full paths remain in files$Path
+data.frame(Table = files$Table, File = basename(files$Path))
+#>      Table                      File
+#> 1   person mfrm_person_estimates.csv
+#> 2   facets  mfrm_facet_estimates.csv
+#> 3  summary      mfrm_fit_summary.csv
+#> 4    steps  mfrm_step_parameters.csv
+#> 5 measures         mfrm_measures.csv
+# Open a path from files$Path in a spreadsheet app or with read.csv()
 # }
 ```

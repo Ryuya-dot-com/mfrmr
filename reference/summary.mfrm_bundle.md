@@ -144,10 +144,12 @@ summary(t4)
 #>   Components: 3
 #> 
 #> Threshold summary
-#>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN
-#>                192           5             2.604               5              5
-#>    Rule AbsZThreshold ProbThreshold
-#>  either           1.5           0.4
+#>  TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN
+#>                192                   192                       0          84
+#>  UnexpectedPercent LowProbabilityN LargeResidualN   Rule AbsZThreshold
+#>              43.75              84             24 either           1.5
+#>  ProbThreshold
+#>            0.4
 #> 
 #> Flagged responses: table
 #>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual

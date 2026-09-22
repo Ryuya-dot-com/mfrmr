@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Analyze the MFRM design network</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>mfrm_network_analysis.Rd</code></div>
     </div>
 
@@ -87,7 +89,8 @@ to serialize.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A bundle of class <code>mfrm_network_analysis</code> containing:</p><ul><li><p><code>summary</code>: graph-level connectedness and vulnerability metrics</p></li>
-<li><p><code>node_metrics</code>: node-level degree, strength, centrality, and cutpoint flags</p></li>
+<li><p><code>node_metrics</code>: node-level degree, strength, graph-theoretic centrality,
+and cutpoint flags</p></li>
 <li><p><code>edge_metrics</code>: edge-level weights, betweenness, and bridge flags</p></li>
 <li><p><code>facet_summary</code>: facet-level aggregation of node/bridge indicators</p></li>
 <li><p><code>cut_nodes</code>: articulation-point rows from <code>node_metrics</code></p></li>
@@ -99,7 +102,15 @@ to serialize.</p></dd>
 an undirected weighted graph. Nodes are person or facet levels; edges connect
 levels that co-occur in at least one observed rating; edge weights are
 co-observation counts. The resulting network metrics are design diagnostics,
-not psychometric measures of person ability or rater quality.
+not psychometric measures of person ability or rater quality. This is the
+package's assignment/co-observation network: unlike the score-relation
+networks returned by <code><a href="rater_network_analysis.html">rater_network_analysis()</a></code> and
+<code><a href="rater_halo_network_analysis.html">rater_halo_network_analysis()</a></code>, it can expose disconnected measurement
+subsets relevant to common-scale interpretation.
+<code>SourceSubsets</code>, <code>RetainedSubsets</code> and <code>ScopeComplete</code> record whether subset
+filters retained the full observed design. Connectedness of selected subsets
+cannot be generalized to omitted subsets. Recreate older design reviews
+from the existing fit and matching diagnostics to record this coverage.
 <code>plot(net, type = "centrality")</code>, <code>plot(net, type = "facet_summary")</code>, and
 <code>plot(net, type = "network")</code> provide immediate visual checks; use
 <code>draw = FALSE</code> to extract reusable plot data.</p>

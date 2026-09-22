@@ -78,15 +78,12 @@ pred <- predict_mfrm_population(
   maxit = 30,
   seed = 123
 )
-#> Warning: Unknown or uninitialised column: `ConvergenceRate`.
-#> Warning: Unknown or uninitialised column: `MeanMinCategoryCount`.
-#> Warning: Unknown or uninitialised column: `MeanSeparation`.
 s <- summary(pred)
 s$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
-#> 1       1            1              1             1           1.19
+#> 1       1            1              1             1          0.901
 s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 #> # A tibble: 3 × 3
 #>   Facet     MeanSeparation McseSeparation

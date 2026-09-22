@@ -11,7 +11,7 @@ mfrmr."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,10 +22,12 @@ mfrmr."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -42,7 +44,7 @@ mfrmr."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Linking and DFF Guide</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_linking_and_dff.R" class="external-link"><code>R/help_linking_and_dff.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/help_linking_and_dff.R" class="external-link"><code>R/help_linking_and_dff.R</code></a></small>
       <div class="d-none name"><code>mfrmr_linking_and_dff.Rd</code></div>
     </div>
 
@@ -90,6 +92,53 @@ object rather than separate anchor/drift/chain tables.</p></li>
 evidence.</p></li>
 </ol></div>
     <div class="section level2">
+    <h2 id="keep-anchor-roles-separate">Keep anchor roles separate<a class="anchor" aria-label="anchor" href="#keep-anchor-roles-separate"></a></h2>
+
+
+<ul><li><p>A common-element or common-rating link is observed overlap in the design.</p></li>
+<li><p><code>anchors</code> are direct equality constraints on selected parameter values.</p></li>
+<li><p><code>group_anchors</code> constrain declared group means and require an externally
+defensible target or equal-mean assumption.</p></li>
+<li><p><code><a href="make_anchor_table.html">make_anchor_table()</a></code> exports candidate direct constraints mechanically;
+by default it requires a current inference-ready source fit, but it does
+not select invariant elements. <code>readiness_policy = "review"</code> is for
+review-only extraction, not anchor reuse.</p></li>
+</ul><p>Constraint-based coordinate transfer does not create empirical overlap.
+Before reuse, also verify consistent model/score/orientation/population
+conventions, cross-run element identity, and the relevant assignment
+connectedness. <code><a href="review_mfrm_anchors.html">review_mfrm_anchors()</a></code> checks syntax and receiving-data
+support, not those substantive assumptions.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="design-the-link-not-only-the-anchor-count">Design the link, not only the anchor count<a class="anchor" aria-label="anchor" href="#design-the-link-not-only-the-anchor-count"></a></h2>
+
+
+<p>There is no universal adequate anchor count or percentage. Linking quality
+also depends on where overlap occurs, whether links are distributed or rely
+on one critical bridge, the rating workload and coverage, and model–data
+fit within the linking set. Inspect both Rater-centered and Person/task-
+centered assignment graphs when the design is sparse. The package's
+five-element <code>LinkSupportAdequate</code> screen is therefore a local warning, not
+a design recommendation or proof of a common scale.</p>
+<p>Fixed anchor values also carry uncertainty from their source calibration.
+Current anchor, drift, and chain summaries do not propagate all source-fit,
+offset, or cross-fit covariance. Compare substantively defensible anchor
+sets and report sensitivity when conclusions depend on the selected set.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="drift-and-chain-inference-boundary">Drift and chain inference boundary<a class="anchor" aria-label="anchor" href="#drift-and-chain-inference-boundary"></a></h2>
+
+
+<p><code><a href="detect_anchor_drift.html">detect_anchor_drift()</a></code> and <code><a href="build_equating_chain.html">build_equating_chain()</a></code> currently estimate one
+pooled offset across all selected common elements and facets. Their
+element-level SE ratios omit estimated-offset uncertainty and cross-fit
+covariance, and chain output does not propagate uncertainty across adjacent
+links. <code>Offset_SD</code> is residual spread, not an offset SE. Treat flags,
+support counts, and cumulative offsets as review screens; when a common
+shift across facet blocks is not defensible, analyze one coherent linking
+facet at a time.</p>
+    </div>
+    <div class="section level2">
     <h2 id="which-helper-answers-which-task">Which helper answers which task<a class="anchor" aria-label="anchor" href="#which-helper-answers-which-task"></a></h2>
 
 
@@ -98,7 +147,8 @@ evidence.</p></li>
 bottleneck facets, and design-matrix coverage.</p></dd>
 
 <dt><code><a href="make_anchor_table.html">make_anchor_table()</a></code></dt>
-<dd><p>Extracts reusable anchor candidates from a fit.</p></dd>
+<dd><p>Extracts candidate direct-anchor values from a
+fit without certifying them for reuse.</p></dd>
 
 <dt><code><a href="anchor_to_baseline.html">anchor_to_baseline()</a></code></dt>
 <dd><p>Anchors new raw data to a baseline fit and
@@ -118,8 +168,8 @@ a series of administrations or forms.</p></dd>
 screened-chain evidence into one operational review surface.</p></dd>
 
 <dt><code><a href="analyze_dff.html">analyze_dff()</a></code></dt>
-<dd><p>Screens differential facet functioning with residual
-or refit methods. Linked refit point contrasts remain screening-only
+<dd><p>Describes group residual differences or linked
+subgroup facet estimates. Linked refit point contrasts remain screening-only
 because their uncertainty is conditional on baseline anchors.</p></dd>
 
 
@@ -129,12 +179,18 @@ because their uncertainty is conditional on baseline anchors.</p></dd>
 
 
 <ul><li><p>Check connectedness before interpreting subgroup or wave differences.</p></li>
-<li><p>Use DFF outputs as screening results when common-scale linking is weak.</p></li>
+<li><p>Use <code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code> for assignment/co-observation connectedness.
+Agreement, severity-direction, and halo networks describe score relations;
+they do not establish an empirical link or a common measurement scale.</p></li>
+<li><p>Residual differences do not isolate differential functioning and have no
+tests or binary classifications. Even with an
+adequate link, refit SEs condition on baseline anchors and omit their
+uncertainty and cross-refit covariance; formal inference remains unavailable.</p></li>
 <li><p>Always name the facet, facet level, and group pair involved in a DFF
 contrast. A generic "DIF exists" statement is not interpretable in a
 many-facet design.</p></li>
-<li><p>Residual and refit DFF classifications are screening labels in 0.2.3;
-current refit output does not assign ETS A/B/C labels.</p></li>
+<li><p>Linked refit contrasts remain descriptive; neither method assigns ETS
+A/B/C labels or supports a formal differential-functioning decision.</p></li>
 <li><p>Treat drift flags as prompts for review, not automatic evidence that an
 anchor must be removed.</p></li>
 <li><p>Treat <code>LinkSupportAdequate = FALSE</code> as a weak-link warning: at least one
@@ -168,6 +224,23 @@ fit each wave separately -&gt; <code><a href="detect_anchor_drift.html">detect_a
 <li><p>For a longer walkthrough, see
 <code><a href="../articles/mfrmr-linking-and-dff.html">vignette("mfrmr-linking-and-dff", package = "mfrmr")</a></code>.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Myford, C. M., &amp; Wolfe, E. W. (2000). Strengthening the ties that bind:
+Improving the linking network in sparsely connected rating designs.
+<em>ETS Research Report Series</em>, 2000(1).
+<a href="https://doi.org/10.1002/j.2333-8504.2000.tb01832.x" class="external-link">doi:10.1002/j.2333-8504.2000.tb01832.x</a></p>
+<p>Uto, M. (2021). Accuracy of performance-test linking based on a many-facet
+Rasch model. <em>Behavior Research Methods</em>, 53(4), 1440–1454.
+<a href="https://doi.org/10.3758/s13428-020-01498-x" class="external-link">doi:10.3758/s13428-020-01498-x</a></p>
+<p>Wind, S. A., &amp; Jones, E. (2018). The stabilizing influences of linking set
+size and model–data fit in sparse rater-mediated assessment networks.
+<em>Educational and Psychological Measurement</em>, 78(4), 679–707.
+<a href="https://doi.org/10.1177/0013164417703733" class="external-link">doi:10.1177/0013164417703733</a></p>
+<p>Robitzsch, A. (2024). Bias and linking error in fixed item parameter
+calibration. <em>AppliedMath</em>, 4(3), 1181–1191.
+<a href="https://doi.org/10.3390/appliedmath4030063" class="external-link">doi:10.3390/appliedmath4030063</a></p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -193,12 +266,12 @@ fit each wave separately -&gt; <code><a href="detect_anchor_drift.html">detect_a
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dff</span><span class="op">$</span><span class="va">dif_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"Group1"</span>, <span class="st">"Group2"</span>,</span></span>
 <span class="r-in"><span>                       <span class="st">"Classification"</span>, <span class="st">"ClassificationSystem"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Level Group1 Group2 Classification  ClassificationSystem</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> R01   A      B      Screen negative screening           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> R02   A      B      Screen negative screening           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> R03   A      B      Screen negative screening           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> R04   A      B      Screen negative screening           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Level Group1 Group2 Classification    ClassificationSystem</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> R01   A      B      Residual contrast descriptive         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> R02   A      B      Residual contrast descriptive         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> R03   A      B      Residual contrast descriptive         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> R04   A      B      Residual contrast descriptive         </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

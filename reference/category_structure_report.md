@@ -111,51 +111,26 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML",
 #> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 out <- category_structure_report(fit)
 summary(out)
-#> mfrmr Category Structure Summary 
-#>   Class: mfrm_category_structure
-#>   Components: 9
+#> mfrmr Category Structure Summary
 #> 
-#> Category structure overview
-#>  Categories UsedCategories FlaggedStats ModeBoundaries MeanHalfscorePoints
-#>           4              4            8              3                   3
-#>  DiagnosticMode MarginalFitAvailable MarginalFlaggedCategories
-#>            both                FALSE                        NA
-#>  MarginalOverallRMSD MarginalMaxAbsStdResidual
-#>                   NA                        NA
+#> Category coverage
+#>  Categories Displayed Used Counts available Counts unavailable Flags
+#>           4         4    4                4                  0     8
+#>  Decisions available Decisions unavailable
+#>                   16                     0
 #> 
-#> Category structure rows: category_table
-#>  Category Count AvgPersonMeasure ExpectedAverage Infit Outfit MeanResidual
-#>         1   139           -0.984           1.864 1.806  1.602       -0.864
-#>         2   241           -0.376           2.262 0.613  0.780       -0.262
-#>         3   252            0.328           2.734 0.556  0.617        0.266
-#>         4   136            1.068           3.145 1.871  1.590        0.855
-#>  DF_Infit DF_Outfit Percent InfitZSTD OutfitZSTD ExpectedCount ExpectedPercent
-#>    70.957       139  18.099     3.947      4.292       138.998          18.099
-#>   138.039       241  31.380    -3.710     -2.586       241.000          31.380
-#>   145.307       252  32.812    -4.511     -4.977       252.001          32.813
-#>    66.751       136  17.708     4.081      4.176       136.002          17.709
-#>  DiffCount DiffPercent LowCount InfitFlag OutfitFlag ZSTDFlag ZeroCount
-#>      0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE
-#>      0.000           0    FALSE     FALSE      FALSE     TRUE     FALSE
-#>     -0.001           0    FALSE     FALSE      FALSE     TRUE     FALSE
-#>     -0.002           0    FALSE      TRUE       TRUE     TRUE     FALSE
-#>  UnusedCategoryType WeaklyIdentified CategoryCaveat
-#>                none            FALSE               
-#>                none            FALSE               
-#>                none            FALSE               
-#>                none            FALSE               
-#> 
-#> Settings
-#>         Setting Value
-#>     theta_range -6, 6
-#>    theta_points   241
-#>     drop_unused FALSE
-#>   include_fixed FALSE
-#>  fixed_max_rows   200
-#> 
-#> Notes
-#>  - Category-structure diagnostics with mode boundaries and half-score reference
-#>    points.
+#> Category rows
+#>  Category Count Percent Expected count Infit Outfit Infit ZSTD Outfit ZSTD
+#>         1   139  18.099        138.998 1.806  1.602      3.947       4.292
+#>         2   241  31.380        241.000 0.613  0.780     -3.710      -2.586
+#>         3   252  32.812        252.001 0.556  0.617     -4.511      -4.977
+#>         4   136  17.708        136.002 1.871  1.590      4.081       4.176
+#>   Category-structure diagnostics with mode boundaries and half-score reference
+#>   points.
+#>   Category counts were available for all 4 categories: 0 unused and 0 below 10.
+#>   Counts alone do not establish category adequacy.
+#>   Flag counts describe available decisions in the displayed rows; unavailable
+#>   decisions do not indicate an absence of warnings.
 head(out$category_table[, c("Category", "Count", "Infit", "Outfit")])
 #>   Category Count     Infit    Outfit
 #> 1        1   139 1.8058940 1.6016812

@@ -41,6 +41,8 @@ plot(
   wright_range = NULL,
   extreme_placement = c("ends", "estimate"),
   persons_per_star = NULL,
+  show_title = TRUE,
+  show_notes = TRUE,
   ...
 )
 ```
@@ -68,12 +70,13 @@ plot(
 
 - top_n:
 
-  Maximum number of facet/step locations retained by the native Wright
-  map for compact displays. Step transitions are always retained; any
-  omitted facet locations are counted in the returned `retention` table
-  and disclosed in the plot subtitle/note. Use `Inf` for a complete
-  all-level final map. The FACETS-style payload always retains every
-  fitted facet and step location.
+  Maximum number of non-person facet locations retained by the native
+  Wright map for compact displays. Step transitions are always retained
+  separately and do not consume this limit; any omitted facet locations
+  are counted in the returned `retention` table and disclosed in the
+  plot subtitle/note. Use `Inf` for a complete all-level final map. The
+  FACETS-style payload always retains every fitted facet and step
+  location.
 
 - theta_range:
 
@@ -123,13 +126,14 @@ plot(
 
 - diagnostics:
 
-  Optional output from
+  Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-  When supplied, Wright-map standard errors and precision metadata reuse
-  matching rows from `diagnostics$measures` without replacing fitted
-  coordinates, while pathway plot data reuse `fit_measures`,
-  `fit_status`, and `curve_fit_status` instead of recomputing
-  diagnostics.
+  Recompute it after refitting; mismatched or outdated readiness records
+  are rejected. When supplied, Wright-map standard errors and precision
+  metadata reuse matching rows from `diagnostics$measures` without
+  replacing fitted coordinates, while pathway plot data reuse
+  `fit_measures`, `fit_status`, and `curve_fit_status` instead of
+  recomputing diagnostics.
 
 - include_fit_measures:
 
@@ -246,6 +250,17 @@ plot(
   Number of persons represented by one `*` in the FACETS-style frequency
   column. `NULL` chooses a compact value automatically.
 
+- show_title:
+
+  Logical; display the main plot title. Structural panel headings, axis
+  labels, legends, and data labels remain visible.
+
+- show_notes:
+
+  Logical; display explanatory subtitles, footnotes, and review-only
+  title markers. Notes remain available in the returned object, and R
+  warnings are still issued when this is `FALSE`.
+
 - ...:
 
   Additional arguments ignored for S3 compatibility.
@@ -255,12 +270,17 @@ plot(
 Invisibly, an `mfrm_plot_data` object (default and for any single
 `type`), or an `mfrm_plot_bundle` when `type = "bundle"` / `"all"` /
 `"default"`. Each returned fit plot includes domain-specific readiness
-and an interpretation status in its data payload. It also includes a
-one-row `scale_contract` table recording the fitted coordinate basis,
-population SD when applicable, discrimination basis, and bounded-GPCM
-MML identification convention.
+and an interpretation status in its data payload, plus a `notes` table
+and `display` settings. It also includes a one-row `scale_contract`
+table recording the fitted coordinate basis, population SD when
+applicable, discrimination basis, and bounded-GPCM MML identification
+convention.
 
 ## Details
+
+Start with `plot(fit)`: it draws a Wright map of person abilities, rater
+severities, other facet locations, and category thresholds on one logit
+scale. No plot options are needed for this first view.
 
 This S3 plotting method provides the core fit-family visuals for
 `mfrmr`. When `type` is omitted, it returns the Wright map alone as an
@@ -271,28 +291,59 @@ pathway map, and category characteristic curves. The compact native
 default records any omitted facet locations in `data$retention` and
 annotates the subtitle and drawn figure; use `top_n = Inf` to retain
 every fitted location in the final Wright map. Every retained native
-location is labelled. Collision-aware `LabelX` / `LabelY` coordinates
-and leader lines displace text without moving the fitted point;
-`label_points` retains both point and text coordinates for custom
-renderers. Step transitions share one vertical ladder and their labels
-include the fitted threshold logit. When the fit records
-boundary-separated facet levels and no display range was supplied, the
-native and FACETS-style maps use the same robust automatic range and
-place those levels at ruler ends. Exact fitted values and intervals
-remain in `OriginalEstimate`, `CI_Lower`, and `CI_Upper`;
+location is labelled. `LabelX` / `LabelY` provide initial text
+positions; base graphics further adjusts these positions for the
+device's text dimensions, avoiding nearby labels and fitted points where
+space permits. Leader lines connect displaced text to the unchanged
+point. `label_points` retains fitted coordinates and initial text
+positions for custom renderers. Step transitions share one vertical
+ladder and their labels include the fitted threshold logit. When the fit
+records boundary-separated facet levels and no display range was
+supplied, the native and FACETS-style maps use the same robust automatic
+range and place those levels at ruler ends. Exact fitted values and
+intervals remain in `OriginalEstimate`, `CI_Lower`, and `CI_Upper`;
 `DisplayEstimate`, `DisplayCI_Lower`, `DisplayCI_Upper`, and the
 clipping-status columns describe only the rendered coordinates. Endpoint
 triangles and the plot footer disclose any omitted or clipped interval.
 The returned object always carries machine-readable metadata through the
-`mfrm_plot_data` contract, even when the plot is drawn immediately.
+`mfrm_plot_data` contract, even when the plot is drawn immediately. Set
+`show_title = FALSE` and `show_notes = FALSE` for a figure whose title
+and explanation will be supplied by the surrounding document. The
+returned `data$notes` table contains `Type` and `Text` columns for
+interpretation, reference-profile conditions, and display/retention
+notes where applicable; [`print()`](https://rdrr.io/r/base/print.html)
+also prints these notes. `data$display` records the two flags. Original
+titles, subtitles, coordinates, and readiness metadata are retained.
+Device-dependent crowding warnings are issued during drawing rather than
+stored in this draw-free notes table.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+respects these flags and retains the notes in
+`attr(plot, "mfrmr_notes")`.
+
+Fit-family Wright, pathway, and CCC displays use a shared, CUD-informed
+palette. The first eight series use an Okabe-Ito foundation with bright
+yellow omitted and darker pink/amber/cyan entries for light backgrounds.
+Beyond eight series, colours come from the dark half of the viridis HCL
+palette. Expected-score and category curves also vary line type; Wright
+locations retain their distinct point shapes, and small data labels use
+dark neutral text. Six line types cycle for larger series sets, so dense
+plots still require labels, panels, or more space. This is not a
+guarantee of perceptual separation for every viewer or device.
+`preset = "monochrome"` applies to these series in both base and ggplot
+renderers. Custom `palette` values are retained in `data$palette` and
+used during ggplot conversion; colour overrides keep the non-colour
+encodings. See <https://jfly.uni-koeln.de/color/> for Color Universal
+Design guidance.
 
 Every fit-derived payload also carries `data$fit_readiness`,
 `data$interpretation_status`, and `data$interpretation_note`.
 Availability and interpretability are separate: when a numerical, data,
-design, or stability gate requires review, the coordinates remain
+design, or stability status requires review, the coordinates remain
 available for diagnosis, but the call warns and marks the returned
-subtitle and drawn title `REVIEW ONLY`. A prior-regularized extreme MML
-EAP remains in `fit$facets$person`. If its source fit is blocked,
+subtitle and drawn title `REVIEW ONLY` by default. Hiding that
+annotation changes presentation only; it does not change the fit's
+interpretation status or suppress warnings. A prior-regularized extreme
+MML EAP remains in `fit$facets$person`. If its source fit is blocked,
 however, it is omitted from the Wright-map scale so that a finite but
 non-interpretable trace cannot collapse the display. The exact excluded
 rows and reason remain in `data$person_exclusions`, and the omission is
@@ -320,7 +371,10 @@ labels print that logit value. The styling emulates the semantics of
 FACETS Table 6; estimates and standard errors remain those produced by
 `mfrmr`. Use `show_ci = FALSE` for the closest FACETS-style rendering.
 If `show_ci = TRUE` is requested, interpret the result as a hybrid that
-adds mfrmr uncertainty intervals to FACETS-style ruler grammar.
+adds mfrmr uncertainty intervals to FACETS-style ruler grammar. Column
+headings are retained even on narrow devices. If headings or person
+frequency stars need more space, drawing warns; use a wider device or
+increase `persons_per_star` for a more compact frequency column.
 
 `type = "pathway"` shows expected score traces and dominant-category
 regions across theta. This expected-score display is distinct from the
@@ -336,21 +390,45 @@ labels used by
 [`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md).
 `type = "ccc"` shows category response probabilities. Multiple curve
 groups are faceted rather than overplotted by the native renderer, and
-category-specific legends use the same colours across panels. For
-`GPCM`, these curves retain the estimated step-facet slope; all curve
-families are reference-profile curves with additive facet main effects
-and fitted interactions fixed at zero; the native footer and ggplot
-subtitle disclose that conditioning. The draw-free `curve_basis`,
-`CurveBasis`, and `PredictorOffset` fields make that conditioning
-explicit. `type = "ccc_surface"` or `type = "category_surface"` returns
-3D-ready category-probability surface data for external rendering; it
-deliberately does not add a plotly/rgl dependency or replace the 2D
-CCC/pathway reporting figures. The returned object includes
-`category_support`, `interpretation_guide`, and `reporting_policy`
-tables so retained zero-frequency categories and manuscript-use
-boundaries remain visible to beginners. The remaining types (`"facet"`,
-`"person"`, `"step"`, `"shrinkage"`) provide compact location-specific
-displays.
+category-specific legends use the same colours across panels. Multiple
+groups or more than five categories use one legend beside the plotting
+area; colour presets use distinct default colours beyond eight
+categories. For `GPCM`, these curves retain the estimated step-facet
+slope; all curve families are reference-profile curves with additive
+facet main effects and fitted interactions fixed at zero; the native
+footer and ggplot subtitle disclose that conditioning. Expected-score
+pathways use the same reference profile and expose the same
+`curve_basis` table. These curves do not average over the observed rater
+assignments or show a particular fitted interaction cell. The draw-free
+`curve_basis`, `CurveBasis`, and `PredictorOffset` fields make that
+conditioning explicit. `type = "ccc_surface"` or
+`type = "category_surface"` returns 3D-ready category-probability
+surface data for external rendering; it deliberately does not add a
+plotly/rgl dependency or replace the 2D CCC/pathway reporting figures.
+The returned object includes `category_support`, `interpretation_guide`,
+and `reporting_policy` tables so retained zero-frequency categories and
+manuscript-use boundaries remain visible to beginners. The remaining
+types (`"facet"`, `"person"`, `"step"`, `"shrinkage"`) provide compact
+location-specific displays.
+
+## Graphics layout
+
+Single-panel plots advance through a caller's `par(mfrow = ...)` or
+[`layout()`](https://rdrr.io/r/graphics/layout.html) arrangement and
+restore the style and margins they change. Native Wright maps,
+multi-group CCC plots, and faceted fit pathways create their own page
+layouts; call these outside a custom
+[`layout()`](https://rdrr.io/r/graphics/layout.html) arrangement. Use
+`renderer = "facets"` for a single-panel Wright map in a custom grid. A
+7 by 5 inch device is a useful starting size for standalone plots; dense
+PCM labels benefit from a wider device. Native Wright/pathway plots warn
+when labels cannot be separated within the available space. Enlarge the
+device (for example, to 12 by 8 inches) and inspect the result; this
+warning concerns readability, not model fit. Abbreviated labels retain
+distinguishing text where possible, falling back to full names if
+needed. Original names remain available in the plot data. For non-Latin
+labels, select a graphics device and font that support the characters
+before plotting; the package retains the caller's font family.
 
 ## Typical workflow
 
@@ -381,30 +459,45 @@ and
 ## Examples
 
 ``` r
+# \donttest{
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
-# Seven quadrature points keep this executable example short. For a final
-# analysis, restore the default or a prespecified grid and review sensitivity.
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
-  "Person",
-  c("Rater", "Criterion"),
-  "Score",
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30
+  model = "RSM"
 )
+
+# Run each plot command separately to inspect its figure
+plot(fit) # Wright map: persons, facets, and category thresholds
+
+
+# Rater severity estimates (higher means stricter in this example)
+plot(fit, type = "facet", facet = "Rater")
+
+
+# Probability of each score category across the ability scale
+plot(fit, type = "ccc")
+
+
+# Optional: get plot data instead of drawing a figure
 wright <- plot(fit, draw = FALSE)
 head(wright$data$locations)
 #> # A tibble: 6 × 37
 #>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
 #>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
-#> 1 Rater R01   Facet level   -0.597 0.180     0.95 Observation-tab… exploratory  
-#> 2 Rater R02   Facet level   -0.334 0.165     0.95 Observation-tab… exploratory  
-#> 3 Rater R05   Facet level    0.135 0.198     0.95 Observation-tab… exploratory  
-#> 4 Rater R04   Facet level    0.169 0.184     0.95 Observation-tab… exploratory  
-#> 5 Rater R03   Facet level    0.259 0.178     0.95 Observation-tab… exploratory  
-#> 6 Rater R06   Facet level    0.368 0.217     0.95 Observation-tab… exploratory  
+#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
 #> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
 #> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
 #> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
@@ -412,100 +505,5 @@ head(wright$data$locations)
 #> #   OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
 #> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
 #> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
-# Look for: persons clustered against the facet / step rows on the
-#   shared logit axis. Large gaps between the person density and
-#   the step / facet rails indicate weak targeting; ceiling /
-#   floor stripes mean the test is too easy / hard.
-bundle <- plot(fit, type = "bundle", draw = FALSE)
-bundle$wright_map$data$group_summary
-#> # A tibble: 3 × 16
-#>   Group       PlotType        Min     Q1 Median    Q3   Max DisplayMin DisplayQ1
-#>   <fct>       <chr>         <dbl>  <dbl>  <dbl> <dbl> <dbl>      <dbl>     <dbl>
-#> 1 Rater       Facet level  -0.597 -0.217  0.152 0.236 0.368     -0.597    -0.217
-#> 2 Criterion   Facet level  -0.339 -0.110  0.118 0.169 0.221     -0.339    -0.110
-#> 3 Step:Common Step thresh… -1.21  -0.520  0.166 0.603 1.04      -1.21     -0.520
-#> # ℹ 7 more variables: DisplayMedian <dbl>, DisplayQ3 <dbl>, DisplayMax <dbl>,
-#> #   N <int>, XBase <dbl>, TargetGap <dbl>, DisplayTargetGap <dbl>
-# Look for: pathway curves rising in the expected order with
-#   visible dominant-category bands; CCC curves peaking sequentially
-#   without one category being completely overlapped by neighbours.
-surface <- plot(fit, type = "ccc_surface", draw = FALSE)
-head(surface$data$surface)
-#>   Theta Probability ExpectedScore ScoreVariance Information CategoryInformation
-#> 1 -6.00   0.9917645      1.008253   0.008219238 0.008219238        6.754698e-05
-#> 2 -5.95   0.9913450      1.008674   0.008637056 0.008637056        7.458832e-05
-#> 3 -5.90   0.9909043      1.009117   0.009075921 0.009075921        8.236015e-05
-#> 4 -5.85   0.9904413      1.009582   0.009536874 0.009536874        9.093770e-05
-#> 5 -5.80   0.9899549      1.010071   0.010021004 0.010021004        1.004038e-04
-#> 6 -5.75   0.9894439      1.010585   0.010529453 0.010529453        1.108498e-04
-#>   CategoryInformationShare Slope Model Category CurveGroup
-#> 1              0.008218156     1   RSM        1     Common
-#> 2              0.008635851     1   RSM        1     Common
-#> 3              0.009074579     1   RSM        1     Common
-#> 4              0.009535378     1   RSM        1     Common
-#> 5              0.010019337     1   RSM        1     Common
-#> 6              0.010527594     1   RSM        1     Common
-#>                    CurveBasis PredictorOffset CategoryIndex CategoryScore
-#> 1 zero_additive_facet_profile               0             1             1
-#> 2 zero_additive_facet_profile               0             1             1
-#> 3 zero_additive_facet_profile               0             1             1
-#> 4 zero_additive_facet_profile               0             1             1
-#> 5 zero_additive_facet_profile               0             1             1
-#> 6 zero_additive_facet_profile               0             1             1
-#>   SurfaceX SurfaceY  SurfaceZ
-#> 1    -6.00        1 0.9917645
-#> 2    -5.95        1 0.9913450
-#> 3    -5.90        1 0.9909043
-#> 4    -5.85        1 0.9904413
-#> 5    -5.80        1 0.9899549
-#> 6    -5.75        1 0.9894439
-surface$data$category_support
-#>   Category CategoryIndex CategoryScore ObservedCount ZeroObserved
-#> 1        1             1             1            62        FALSE
-#> 2        2             2             2            96        FALSE
-#> 3        3             3             3            78        FALSE
-#> 4        4             4             4            46        FALSE
-#>                  SupportRole
-#> 1 observed response category
-#> 2 observed response category
-#> 3 observed response category
-#> 4 observed response category
-# Look for: every retained category having `Observed > 0`; categories
-#   with zero observations are returned as a zero-observation slice and
-#   should not be interpreted as a real score region.
-surface$data$interpretation_guide
-#>                       Topic
-#> 1                      Axes
-#> 2        Category dominance
-#> 3 Zero-frequency categories
-#> 4             Reporting use
-#> 5         Renderer boundary
-#>                                                                                                                                                   Guidance
-#> 1                                       Read SurfaceX as theta/logit, SurfaceY as retained category index, and SurfaceZ as predicted category probability.
-#> 2 A high SurfaceZ ridge marks the theta region where that category is most probable; compare with the 2D CCC/pathway view before making a reporting claim.
-#> 3                                                                          All retained categories have at least one observed response in the fitted data.
-#> 4                          Use the 2D pathway or CCC figure as the default manuscript/report figure; use this surface as exploratory or teaching material.
-#> 5                                               mfrmr returns the data contract only and does not execute plotly/rgl or any other interactive 3D renderer.
-if (interactive()) {
-  plot(
-    fit,
-    type = "wright",
-    preset = "publication",
-    title = "Customized Wright Map",
-    show_ci = TRUE,
-    label_angle = 45
-  )
-  plot(
-    fit,
-    type = "pathway",
-    title = "Customized Pathway Map",
-    palette = c("#1f78b4")
-  )
-  plot(
-    fit,
-    type = "ccc",
-    title = "Customized Category Characteristic Curves",
-    palette = c("#1b9e77", "#d95f02", "#7570b3")
-  )
-}
+# }
 ```

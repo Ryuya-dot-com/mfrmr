@@ -16,12 +16,13 @@ compute_facet_icc(
   score,
   person = NULL,
   reml = TRUE,
-  ci_method = c("none", "profile", "boot"),
+  ci_method = c("none", "boot"),
   ci_level = 0.95,
   ci_boot_reps = 1000L,
   ci_boot_seed = NULL,
   ci_boot_parallel = c("no", "multicore", "snow"),
-  ci_boot_ncpus = 1L
+  ci_boot_ncpus = 1L,
+  missing = c("error", "omit")
 )
 ```
 
@@ -51,18 +52,12 @@ compute_facet_icc(
 - ci_method:
 
   Confidence-interval method for the ICC column. One of `"none"`
-  (default, point estimate only), `"profile"` (a **first-order
-  approximation**: marginal likelihood-profile bounds for each
-  variance-component SD via
-  [`lme4::confint.merMod()`](https://rdrr.io/pkg/lme4/man/confint.merMod.html)
-  with `method = "profile"`, squared to variances, then plugged into the
-  ICC ratio while holding the other components at their point estimate;
-  fast and deterministic, the default recommendation for reporting), or
-  `"boot"` (parametric bootstrap via
-  [`lme4::bootMer()`](https://rdrr.io/pkg/lme4/man/bootMer.html); slower
-  but robust to non-normal ICC sampling distributions because each
-  bootstrap replicate resamples the full variance decomposition
-  jointly).
+  (default, point estimate only) or `"boot"` (parametric percentile
+  bootstrap via
+  [`lme4::bootMer()`](https://rdrr.io/pkg/lme4/man/bootMer.html)). Each
+  simulated data set is refitted and its full variance decomposition
+  used to calculate the ICC ratios. The former `"profile"` method is no
+  longer supported; see Updating saved intervals below.
 
 - ci_level:
 
@@ -72,13 +67,16 @@ compute_facet_icc(
 
 - ci_boot_reps:
 
-  Number of bootstrap replicates used when `ci_method = "boot"`. Default
-  `1000`.
+  Number of bootstrap replicates used when `ci_method = "boot"`. An
+  integer of at least 2; default `1000`. Small counts give imprecise
+  tail quantiles; choose enough replicates for the precision required in
+  the application.
 
 - ci_boot_seed:
 
-  Optional integer seed for the bootstrap path (`NULL` leaves the RNG
-  state untouched).
+  Optional integer seed for the bootstrap path (between 0 and
+  `.Machine$integer.max`). `NULL` uses the current random-number state.
+  Bootstrap simulation advances that state.
 
 - ci_boot_parallel:
 
@@ -87,16 +85,20 @@ compute_facet_icc(
   [`lme4::bootMer()`](https://rdrr.io/pkg/lme4/man/bootMer.html): `"no"`
   (default), `"multicore"` (POSIX `mclapply`), or `"snow"` (PSOCK
   cluster). `"multicore"` does nothing on Windows and falls back to
-  serial; in that case use `"snow"` with
-  [`parallel::makeCluster()`](https://rdrr.io/r/parallel/makeCluster.html)
-  in scope.
+  serial; use `"snow"` there.
 
 - ci_boot_ncpus:
 
   Number of CPUs to use for the parallel bootstrap path (ignored when
-  `ci_boot_parallel = "no"`). The per-replicate progress bar is
-  suppressed under parallel execution because worker processes cannot
-  push updates to the parent's cli console.
+  `ci_boot_parallel = "no"`). A positive integer. Interactive progress
+  is available for serial execution.
+
+- missing:
+
+  How to handle missing scores or selected grouping values: `"error"`
+  (default) or explicit complete-case omission with `"omit"`. Numeric
+  character/factor score labels retain their numeric values. Nonnumeric
+  scores, infinite values, and blank grouping labels are refused.
 
 ## Value
 
@@ -105,7 +107,8 @@ component (including a `"Residual"` row) and columns:
 
 - `Facet`: the grouping factor name (or `"Residual"`).
 
-- `Variance`: REML variance estimate.
+- `Variance`: unrounded variance estimate (REML by default, ML if
+  `reml = FALSE`); `NA` when the variance shares are undefined.
 
 - `ICC`: variance share (`Variance / sum(Variance)`), in `[0, 1]`.
 
@@ -115,11 +118,44 @@ component (including a `"Residual"` row) and columns:
   `"Variance share"` for others.
 
 - `ICC_CI_Lower` / `ICC_CI_Upper` / `ICC_CI_Level` / `ICC_CI_Method`: CI
-  bounds, level, and method (populated when `ci_method != "none"`;
-  `NA_real_` otherwise).
+  bounds (unavailable bounds are `NA`), requested level, and method.
 
-- `ICC_CI_NReps`: bootstrap replicate count when `ci_method = "boot"`
-  (absent otherwise).
+- `ICC_CI_Status`: whether intervals are available and, otherwise, why.
+
+- `ICC_CI_NRequested` / `ICC_CI_NReps` / `ICC_CI_NUnavailable`:
+  requested bootstrap count, number of converged refits with all ICCs
+  finite, and number without such a result (absent for `"none"`). Counts
+  are `NA` when the bootstrap aborts without returning its draws.
+  Warnings can withhold intervals even when all draws are finite and all
+  refits converge.
+
+The `icc_ci` attribute retains the original fit's convergence and
+singularity diagnostics and warnings. When bootstrap results are
+returned, its `bootstrap` entry contains every draw, per-refit
+convergence and singularity indicators, the number of refit errors, and
+lme4's message/warning/error tables.
+
+## Rows used
+
+Missingness is checked only in the score, facets, and optional person
+column. `InputRows`, `UsedRows`, and `ExcludedRows` are included in the
+table. `attr(x, "data_usage")` retains these counts, excluded input row
+positions, missing columns per row, and observed grouping-level counts
+after omission.
+[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md)
+uses these retained counts for its sample sizes. Omission does not
+impute scores or correct missing-data bias.
+
+## Score units and zero variation
+
+A small positive variance is not treated as zero using a fixed cutoff.
+Multiplying scores by a nonzero constant leaves the variance shares
+unchanged, up to fitting precision, while variances change by its
+square. Variance estimates are retained without decimal rounding. If all
+retained scores are equal, or the fitted total variance is not positive
+and finite, variances and ICCs are unavailable (`NA`); numerical fitting
+residue is not interpreted as observed variation. A constant-response
+bootstrap refit is also unavailable and withholds the interval.
 
 ## Interpreting output
 
@@ -145,16 +181,35 @@ to each row, so downstream reporting does not confuse the two. FACETS
 instead of an ICC; mfrmr surfaces both, with the Rasch-metric version in
 `diagnostics$reliability` and this variance-share view here.
 
-Note: Koo & Li (2016) recommend applying the reliability bands to the
-**95% confidence interval** of the ICC rather than to the point estimate
-alone. Set `ci_method = "profile"` (default `"none"`) to obtain
-likelihood-profile CI bounds alongside the point estimate, or
-`ci_method = "boot"` for a parametric bootstrap with `ci_boot_reps`
-replicates. The returned data frame gains `ICC_CI_Lower` /
-`ICC_CI_Upper` columns so downstream reporting can apply the band to the
-CI rather than the point estimate. The `Interpretation` column still
-uses the point estimate so callers who want CI-aware banding can
-implement it externally from the supplied bounds.
+Set `ci_method = "boot"` to request intervals alongside the point
+estimates. The `Interpretation` column still uses point estimates. The
+bootstrap simulates Gaussian random effects and errors from the fitted
+model; it does not correct model misspecification or missing-data bias.
+Percentile coverage can be unreliable near zero variance components or
+with few grouping levels.
+
+Intervals are withheld if the original fit has convergence problems or
+warnings, or if any requested bootstrap refit fails, has convergence
+problems or warnings, or produces an undefined ICC. Finite draws are
+retained but never silently selected to calculate an interval. Singular
+fits (zero random-effect components) are recorded separately and
+retained when they converge; they are not automatically treated as
+failures. Inspect `ICC_CI_Status` and `attr(x, "icc_ci")` before
+reporting intervals.
+
+## Updating saved intervals
+
+The former `ci_method = "profile"` transformed separate
+standard-deviation intervals while holding other variance components
+fixed. These are not profile-likelihood intervals for the ICC ratio and
+should not be reported as ICC confidence intervals. Requests now stop
+with an explanation. Rerun `compute_facet_icc()` or
+[`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md)
+with the original data and settings, choosing `ci_method = "boot"`
+explicitly if intervals are needed. Saved bootstrap results from earlier
+versions must also be rerun to obtain complete failure accounting.
+Printing, summarizing, or plotting old interval results cannot correct
+their calculations.
 
 ## Typical workflow
 
@@ -167,8 +222,9 @@ implement it externally from the supplied bounds.
 
 3.  Feed into
     [`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md)
-    to convert ICCs and average cluster sizes into Kish (1965) design
-    effects.
+    to convert ICCs and average cluster sizes into descriptive,
+    per-facet design-effect approximations. These do not estimate the
+    precision of the full design.
 
 ## References
 
@@ -206,15 +262,21 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   #   has assigned to each row.
 }
 #> mfrm_facet_icc
-#>      Facet Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
-#>     Person 0.346261 0.3511           Poor  Koo-Li reliability           NA
-#>      Rater 0.026673 0.0270  Trivial share      Variance share           NA
-#>  Criterion 0.021884 0.0222  Trivial share      Variance share           NA
-#>   Residual 0.591449 0.5997    Large share      Variance share           NA
-#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method
-#>            NA         0.95          none
-#>            NA         0.95          none
-#>            NA         0.95          none
-#>            NA         0.95          none
+#>   ICC rows: 768 input, 768 used, 0 excluded.
+#>      Facet   Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
+#>     Person 0.34626071 0.3511           Poor  Koo-Li reliability           NA
+#>      Rater 0.02667343 0.0270  Trivial share      Variance share           NA
+#>  Criterion 0.02188365 0.0222  Trivial share      Variance share           NA
+#>   Residual 0.59144865 0.5997    Large share      Variance share           NA
+#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method ICC_CI_Status InputRows UsedRows
+#>            NA         0.95          none Not requested       768      768
+#>            NA         0.95          none Not requested       768      768
+#>            NA         0.95          none Not requested       768      768
+#>            NA         0.95          none Not requested       768      768
+#>  ExcludedRows
+#>             0
+#>             0
+#>             0
+#>             0
 # }
 ```

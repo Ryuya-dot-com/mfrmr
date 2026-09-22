@@ -218,8 +218,8 @@ Interpretation:
 When you need the package’s latent-integrated follow-up path, switch to
 `MML` and request `diagnostic_mode = "both"` so the legacy and strict
 branches stay visible side by side. The chunk below uses compact
-quadrature for optional local execution; final reporting should be refit
-with the package default or a higher quadrature setting.
+quadrature for a shorter runtime; final reporting should be based on a
+refit with the package default or a higher quadrature setting.
 
 ``` r
 
@@ -291,6 +291,18 @@ Interpretation:
 - Facets with low overlap are weaker anchors for cross-subset
   comparisons.
 
+Keep three uses of *network* separate.
+[`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md)
+analyzes the assignment/co-observation graph and can expose disconnected
+measurement subsets.
+[`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
+analyzes pairwise score relations, and
+[`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md)
+analyzes rater-by-criterion score-profile correlations. The latter two
+do not establish assignment connectedness or a common scale. Their
+centrality statistics are graph-theoretic quantities, not rating-scale
+central tendency, MFRM severity logits, or causal halo evidence.
+
 If you are working across administrations, follow up with anchor-drift
 plots:
 
@@ -308,10 +320,34 @@ Residual PCA is a follow-up layer after the main fit screen.
 
 diag_pca <- diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)
 pca <- analyze_residual_pca(diag_pca, mode = "both")
-plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+summary(pca)
+#> Residual PCA summary
+#> 
+#> Overview
+#>  Analysis Facets Overall components Facet component rows
+#>      both      2                  0                    3
+#> 
+#> Residual eigenvalues
+#>      Facet PC Eigenvalue Proportion
+#>  Criterion  1      1.518      0.506
+#>  Criterion  2      1.240      0.413
+#>  Criterion  3      0.243      0.081
+#> Residual PCA is exploratory residual-structure screening (overall and/or by facet), not a standalone dimensionality test or an automatic decision about dimensions or subscores. 
+#> Overall: Residual correlations are unavailable for one or more columns or pairs. Check shared-person counts and residual variation; missing correlations are not replaced with zero. 
+#> Rater: Residual correlations are unavailable for one or more columns or pairs. Check shared-person counts and residual variation; missing correlations are not replaced with zero.
+if (nrow(pca$overall_table) > 0L) {
+  plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+}
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/residual-pca-1.png)
+The incomplete rating design in this example leaves some pairs without
+enough shared Persons to compute their residual correlation, so the
+overall PCA is unavailable. The summary retains the reason and any
+available facet-specific results. Inspect shared-Person counts and
+residual variation; do not replace missing correlations with zero or
+interpret the absence of a scree plot as evidence for one dimension. A
+facet-specific PCA describes its own residual matrix and cannot replace
+the unavailable overall analysis.
 
 Interpretation:
 
@@ -404,6 +440,8 @@ plot_data_components(wright_payload)
 #> 27 wright_map         fit_readiness          fit_review     data.frame    6
 #> 28 wright_map interpretation_status summary_or_guidance      character   NA
 #> 29 wright_map   interpretation_note summary_or_guidance      character   NA
+#> 30 wright_map               display            metadata      list:list   NA
+#> 31 wright_map                 notes summary_or_guidance     data.frame    3
 #>    Columns Length IsTabular                                          Accessor
 #> 1       NA      1     FALSE          plot_data(x, component = "wright_style")
 #> 2       NA      1     FALSE              plot_data(x, component = "renderer")
@@ -434,6 +472,8 @@ plot_data_components(wright_payload)
 #> 27       2      2      TRUE         plot_data(x, component = "fit_readiness")
 #> 28      NA      1     FALSE plot_data(x, component = "interpretation_status")
 #> 29      NA      1     FALSE   plot_data(x, component = "interpretation_note")
+#> 30       2      2     FALSE               plot_data(x, component = "display")
+#> 31       2      2      TRUE                 plot_data(x, component = "notes")
 #>                                                                     Notes
 #> 1                                                                        
 #> 2                                                                        
@@ -464,6 +504,8 @@ plot_data_components(wright_payload)
 #> 27                                                                       
 #> 28                           Use for captions, QA checks, or report text.
 #> 29                           Use for captions, QA checks, or report text.
+#> 30                                                                       
+#> 31                           Use for captions, QA checks, or report text.
 #>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ColumnNames
 #> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 #> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
@@ -493,7 +535,9 @@ plot_data_components(wright_payload)
 #> 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
 #> 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Domain, Status
 #> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 29
+#> 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  show_title, show_notes
+#> 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Type, Text
 
 locations <- plot_data(wright_payload, component = "locations")
 head(locations)
@@ -545,7 +589,8 @@ names(wright_payload$data)
 #> [19] "show_ci"               "uncertainty_display"   "group"                
 #> [22] "preset"                "legend"                "reference_lines"      
 #> [25] "scale_contract"        "plot_name"             "fit_readiness"        
-#> [28] "interpretation_status" "interpretation_note"
+#> [28] "interpretation_status" "interpretation_note"   "display"              
+#> [31] "notes"
 wright_payload$data$reference_lines
 #>   axis value                    label linetype      role
 #> 1    h     0 Centered logit reference   dashed reference
@@ -555,6 +600,56 @@ Those metadata are the guardrails for captions and interpretation. They
 let you change colors, labels, panels, or rendering technology while
 preserving the same measurement scale, reference lines, caveats, and
 reporting role used by the package-native plot.
+
+### Fair Scores and annotations outside the figure
+
+Use `plot_type = "measure"` to relate measures to fair scores,
+`"scatter"` to compare observed and fair scores, or `"difference"` to
+rank their gaps. FairM uses mean reference measures; FairZ uses zero
+reference measures. FairZ is an expected score on the internal score
+scale, not a z-score. Observed-minus-fair gaps also reflect assignment
+and person mix, so they do not by themselves establish rater bias.
+
+``` r
+
+p_fair <- plot_fair_average(
+  fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
+  plot_type = "measure", show_ci = TRUE, preset = "monochrome",
+  show_title = FALSE, show_notes = FALSE, draw = FALSE
+)
+p_fair$data$notes
+p_fair$data$plot_data
+p_fair$data$excluded
+# Requires ggplot2:
+g_fair <- as_ggplot(p_fair)
+g_fair
+attr(g_fair, "mfrmr_notes")
+```
+
+Use `draw = TRUE` to draw the base-R version. Titles and notes remain in
+the returned object when hidden in the figure. The same annotation
+controls apply to Wright, expected-score pathway, and CCC plots; they do
+not change readiness or interval eligibility. Keep the applicable notes
+in the surrounding caption or report. Other plotting helpers have their
+own documented options.
+
+Fair-score intervals remain diagnostic-only (`CI_Eligible = FALSE`),
+with full-refit coverage unverified. RSM/PCM plots propagate only the
+focal measure SE, holding thresholds and reference measures fixed; they
+require a fitted model, not just a stored fair-average bundle. GPCM-MML
+plots use available structural delta-method SEs for non-Person rows,
+conditioning on Person EAP/reference means. The table option
+`fair_se = TRUE` supplies the GPCM route, not RSM/PCM fair-score SEs.
+Historical table `SE` columns describe measures. Difference-view
+whiskers hold observed means fixed and are not confidence intervals for
+the observed-minus-fair gap.
+
+Expected-score and CCC curves use six line types: solid, dashed, dotted,
+dotdash, longdash, and twodash. Fair-score plots use six point shapes.
+These encodings repeat for larger sets; select facets or use panels to
+keep a grayscale figure readable. Check labels and line separation at
+the intended output size rather than relying on color or gray levels
+alone.
 
 ## 6. Secondary visual layer
 
@@ -623,31 +718,34 @@ summary(rt)
 #>   282       282           0      48      2 ResponseTime       Score  seconds
 #>  MedianTime MeanLogTime RapidThreshold SlowThreshold RapidRate  SlowRate
 #>        17.5    2.841728             14            20 0.1205674 0.1950355
-#>  FlaggedGroups
-#>             27
+#>  FlaggedGroups Flags UnassessedPersons
+#>             27    27                 0
 #>                                                                               InterpretationBoundary
 #>  Descriptive response-time screening; not a joint speed-accuracy model and not a fit/pass-fail rule.
 #> 
 #> Thresholds:
-#>  Threshold Value        Basis TimeUnit
-#>      rapid    14 quantile_0.1  seconds
-#>       slow    20 quantile_0.9  seconds
+#>  Threshold Value                 Basis TimeUnit
+#>      rapid    14 Observed quantile 0.1  seconds
+#>       slow    20 Observed quantile 0.9  seconds
 #> 
 #> Flagged groups:
-#>  Source Group                     Flag      Rate N ThresholdRate
-#>  person  P014 high_rapid_response_rate 0.3333333 6          0.25
-#>  person  P016 high_rapid_response_rate 0.3333333 6          0.25
-#>  person  P023 high_rapid_response_rate 0.3333333 6          0.25
-#>  person  P033 high_rapid_response_rate 0.3333333 6          0.25
-#>  person  P040 high_rapid_response_rate 0.3333333 6          0.25
-#>  person  P041 high_rapid_response_rate 0.3333333 6          0.25
-#>  person  P002  high_slow_response_rate 0.3333333 6          0.25
-#>  person  P003  high_slow_response_rate 0.3333333 6          0.25
-#>  person  P005  high_slow_response_rate 0.3333333 6          0.25
-#>  person  P006  high_slow_response_rate 0.6000000 5          0.25
+#>  Source Group                                   Flag      Rate N ThresholdRate
+#>  person  P014 High fraction at or below rapid cutoff 0.3333333 6          0.25
+#>  person  P016 High fraction at or below rapid cutoff 0.3333333 6          0.25
+#>  person  P023 High fraction at or below rapid cutoff 0.3333333 6          0.25
+#>  person  P033 High fraction at or below rapid cutoff 0.3333333 6          0.25
+#>  person  P040 High fraction at or below rapid cutoff 0.3333333 6          0.25
+#>  person  P041 High fraction at or below rapid cutoff 0.3333333 6          0.25
+#>  person  P002  High fraction at or above slow cutoff 0.3333333 6          0.25
+#>  person  P003  High fraction at or above slow cutoff 0.3333333 6          0.25
+#>  person  P005  High fraction at or above slow cutoff 0.3333333 6          0.25
+#>  person  P006  High fraction at or above slow cutoff 0.6000000 5          0.25
 #> 
 #> Notes:
 #> - Response-time review is descriptive; it does not change fit_mfrm estimates.
+#> - Each row must represent one timed event. Do not duplicate one response-production time across its raters or criteria; rater scoring time is a different event.
+#> - Rates describe valid timed rows only; each group retains input and excluded counts. A group without valid times is unassessed.
+#> - Sample quantiles describe the observed distribution, not validated rapid-guessing, low-effort or speed cutoffs. Missing times and censoring are not modeled.
 #> - Score-level summaries are descriptive and should not be read as response-time model parameters.
 plot_response_time_review(rt, type = "distribution", preset = "publication")
 ```
@@ -729,6 +827,31 @@ Interpretation:
 - Report the shrinkage method and keep this display separate from bias,
   fit, or validity claims.
 
+## Portable score-batch review
+
+A batch returned by
+[`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+is not a fitted-model diagnostic object. Review it through its own
+methods:
+
+``` r
+
+summary(scores)
+plot(scores, type = "interval", preset = "publication")
+plot(scores, type = "precision", preset = "publication")
+plot(scores, type = "edge_mass", preset = "publication")
+```
+
+The interval view highlights `scored_review` Persons. The precision view
+shows valid response rows against posterior SD, and the edge-mass view
+compares outer-node posterior mass with the artifact’s recorded review
+threshold. Persons with no valid responses remain in the summary and
+draw-free plot payload rather than being assigned an artificial
+coordinate. These displays do not replace source-fit diagnostics, and
+their uncertainty is conditional on the frozen point calibration. See
+[`vignette("mfrmr-portable-calibration", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.md)
+for the complete fresh-session workflow.
+
 ## Recommended sequence
 
 For a compact visual workflow:
@@ -757,7 +880,9 @@ For a compact visual workflow:
     when response-time metadata are available.
 7.  `plot_shrinkage_funnel(show_ci = TRUE)` when empirical-Bayes
     shrinkage was applied.
-8.  [`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md),
+8.  `summary(scores)` and `plot(scores)` for a separately created
+    portable score batch; do not use these as source-fit diagnostics.
+9.  [`plot_guttman_scalogram()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_guttman_scalogram.md),
     [`plot_residual_qq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_qq.md),
     [`plot_rater_trajectory()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_rater_trajectory.md),
     and

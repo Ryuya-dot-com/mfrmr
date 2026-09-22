@@ -85,8 +85,14 @@ An object of class `summary.mfrm_diagnostics` with:
 - `interrater`: inter-rater agreement / pairwise correlation / rater
   separation overview when a Rater facet is present
 
-- `misfit_flagged`: rows flagged by the Infit / Outfit / ZSTD misfit
-  thresholds active for this fit
+- `misfit_flagged`: rows flagged by the Infit / Outfit mean-square band
+
+- `fit_screening`: counts of all, classified and unclassified elements
+  for the mean-square band and each ZSTD cutoff. Either available
+  statistic crossing a cutoff flags the element; otherwise a missing
+  statistic leaves it unclassified. Rates require every element to be
+  classified. Nonfinite statistics and negative mean squares are
+  unavailable, not passing values.
 
 - `misfit_thresholds`: named numeric vector with the misfit `lower` /
   `upper` thresholds used to populate `misfit_flagged`
@@ -94,7 +100,11 @@ An object of class `summary.mfrm_diagnostics` with:
 - `category_usage`: per-category response-frequency summary used to flag
   empty / collapsed categories
 
-- `top_fit`: top `|ZSTD|` rows
+- `top_fit`: top maximum `|ZSTD|` rows with both statistics available
+
+- `marginal_coverage`: classified, unclassified and flagged category
+  cells, groups and level pairs; counts of available flags do not
+  describe missing results
 
 - `marginal_fit`: optional strict marginal-fit overview when requested
 
@@ -155,6 +165,12 @@ review:
 
 - `flags`: compact counts for key warning domains.
 
+- `fit_screening`: available classifications and unclassified elements
+  for each mean-square/ZSTD rule. A known threshold crossing remains
+  flagged even if the other statistic is missing. Recreate older
+  summaries and reports from existing diagnostics; no MFRM refit is
+  required.
+
 ## Typical workflow
 
 1.  Run diagnostics with
@@ -176,39 +192,60 @@ review:
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-s <- summary(diag, top_n = 3)
-s$key_warnings
-#> [1] "The source fit is review and is not inference-ready; all diagnostic outputs remain review-only."                 
-#> [2] "Precision review flagged 2 review/warn checks."                                                                  
-#> [3] "Unexpected responses flagged: 15."                                                                               
-#> [4] "MnSq screening flagged 1 element(s) outside the configured 0.5-1.5 band."                                        
-#> [5] "MnSq follow-up: Criterion:Organization (Infit=0.48, Outfit=0.49; outside the configured 0.5-1.5 screening band)."
-# Look for: lines beginning with "MnSq misfit:" name the worst
-#   element + Infit / Outfit values; "Unexpected responses flagged"
-#   counts how many cell-level surprises the screen returned.
-s$top_fit
-#> # A tibble: 3 × 9
-#>   Facet     Level     Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ
-#>   <chr>     <fct>     <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl> <dbl>
-#> 1 Criterion Organiza… 0.481  0.493    -1.18      -1.67      8.48        16 1.67 
-#> 2 Criterion Accuracy  1.34   1.35      0.818      1.00      9.29        16 1.00 
-#> 3 Criterion Language  1.21   1.27      0.542      0.821     7.14        16 0.821
-# Large absolute standardized values identify rows for follow-up; they do
-# not create a universal accept/reject rule.
-s$facets_chisq
-#> # A tibble: 3 × 10
-#>   Facet     Levels MeanMeasure    SD FixedChiSq FixedDF FixedProb RandomChiSq
-#>   <chr>      <int>       <dbl> <dbl>      <dbl>   <dbl>     <dbl>       <dbl>
-#> 1 Criterion      4       0     0.270       1.80       3     0.616       NA   
-#> 2 Person         4       0.974 0.443       4.41       3     0.220        2.89
-#> 3 Rater          4       0     0.323       2.52       3     0.471       NA   
-#> # ℹ 2 more variables: RandomDF <dbl>, RandomProb <dbl>
-# Read the fixed-effect chi-square as a heterogeneity screen in the context
-# of the design and intended score use.
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Check model fit and the support for standard errors and intervals
+diagnostics <- diagnose_mfrm(fit)
+diagnostic_summary <- summary(diagnostics)
+diagnostic_summary$decision
+#>               Interpretation FormalInference FitReadiness
+#> 1 Ready for formal inference             Yes        ready
+#>                                           Why
+#> 1 All stored fit-readiness components passed.
+#>                                                                                            NextAction
+#> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
+
+diagnostic_summary$key_warnings # Issues to investigate, if present
+#> [1] "Unexpected responses flagged: 60."                                                                                                 
+#> [2] "Flagged displacement levels: 1."                                                                                                   
+#> [3] "MnSq screening flagged 18 element(s) outside the configured 0.5-1.5 band."                                                         
+#> [4] "Person-level fit warnings: 18 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."
+#> [5] "Strict marginal fit flagged 1 group-level summaries."                                                                              
+diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
+#> # A tibble: 10 × 9
+#>    Facet     Level   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ
+#>    <chr>     <fct>   <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl> <dbl>
+#>  1 Person    P026    0.126  0.117     -1.90      -2.46     4.06         6  2.46
+#>  2 Person    P022    0.126  0.123     -1.94      -2.42     4.23         6  2.42
+#>  3 Person    P016    2.66   2.53       1.68       2.08     2.94         6  2.08
+#>  4 Criterion Content 0.730  0.743     -1.56      -1.89    58.5         94  1.89
+#>  5 Rater     R05     0.648  0.640     -1.34      -1.87    25.1         44  1.87
+#>  6 Person    P035    0.239  0.237     -1.45      -1.79     4.36         6  1.79
+#>  7 Person    P008    0.251  0.250     -1.40      -1.73     4.34         6  1.73
+#>  8 Person    P025    2.22   2.18       1.55       1.73     4.18         6  1.73
+#>  9 Person    P012    2.01   2.17       1.35       1.72     4.05         6  1.72
+#> 10 Person    P017    0.265  0.285     -1.25      -1.59     3.85         6  1.59
+
+# Distinguish residual-based checks from marginal model checks
+diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+#> # A tibble: 4 × 3
+#>   DiagnosticPath                   Status        Basis                          
+#>   <chr>                            <chr>         <chr>                          
+#> 1 legacy_residual_fit              computed      plugin_residuals_and_eap_tables
+#> 2 strict_marginal_fit              computed      latent_integrated_first_order_…
+#> 3 strict_pairwise_local_dependence computed      latent_integrated_second_order…
+#> 4 posterior_predictive_follow_up   not_available posterior_predictive_replicati…
 # }
 ```

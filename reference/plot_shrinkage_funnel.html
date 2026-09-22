@@ -13,7 +13,7 @@ levels that move most under the prior appear at the top."><meta property="og:ima
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,10 +24,12 @@ levels that move most under the prior appear at the top."><meta property="og:ima
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -44,7 +46,7 @@ levels that move most under the prior appear at the top."><meta property="og:ima
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Empirical-Bayes shrinkage funnel / caterpillar</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-plotting-secondary.R" class="external-link"><code>R/api-plotting-secondary.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-plotting-secondary.R" class="external-link"><code>R/api-plotting-secondary.R</code></a></small>
       <div class="d-none name"><code>plot_shrinkage_funnel.Rd</code></div>
     </div>
 
@@ -90,13 +92,14 @@ shrinkage columns present).</p></dd>
 
 
 <dt id="arg-show-ci">show_ci<a class="anchor" aria-label="anchor" href="#arg-show-ci"></a></dt>
-<dd><p>Logical. When <code>TRUE</code>, draw approximate confidence-interval
-whiskers for raw and shrunken estimates when <code>SE</code> / <code>ShrunkSE</code> evidence is
-available.</p></dd>
+<dd><p>Logical. When <code>TRUE</code>, draw descriptive normal bands from
+raw and plug-in shrunken SEs. These omit prior-variance uncertainty and
+cross-level covariance; zero width after full pooling is not perfect precision.</p></dd>
 
 
 <dt id="arg-ci-level">ci_level<a class="anchor" aria-label="anchor" href="#arg-ci-level"></a></dt>
-<dd><p>Confidence level used when <code>show_ci = TRUE</code>; default 0.95.</p></dd>
+<dd><p>Nominal normal-band level when <code>show_ci = TRUE</code>; default
+0.95. This does not assert repeated-sampling coverage.</p></dd>
 
 
 <dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
@@ -138,11 +141,16 @@ a <code>fit_mfrm(..., facet_shrinkage = "empirical_bayes")</code> run, so that
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3 Rater   R01  -0.1957561 0.09730123     -0.1705417 0.09081883       0.1288054</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 Rater   R03   0.1910876 0.09724282      0.1665002 0.09077133       0.1286707</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 Rater   R04   0.3334649 0.09763161      0.2902585 0.09108731       0.1295680</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Movement RowOrder</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.04265200        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.02521444        2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.02458737        3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.04320639        4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Movement RowOrder SupportsFormalInference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.04265200        1                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.02521444        2                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.02458737        3                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.04320639        4                   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                             Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.</span>
 <span class="r-in"><span><span class="co"># Look for: short segments (Raw and Shrunken close together) =</span></span></span>
 <span class="r-in"><span><span class="co">#   little pooling. Long segments fanning toward the centre = the</span></span></span>
 <span class="r-in"><span><span class="co">#   prior pulled the estimate strongly; this is most pronounced for</span></span></span>

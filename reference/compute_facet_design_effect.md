@@ -1,8 +1,9 @@
-# Compute Kish design effects for each facet
+# Compute descriptive design-effect approximations for each facet
 
 Combines per-facet average cluster size with ICC estimates to return the
-Kish (1965) design effect `Deff = 1 + (m - 1) * rho`, where `m` is the
-average number of observations per facet element and `rho` is the ICC.
+Kish-style approximation `Deff = 1 + (m - 1) * rho`, where `m` is the
+average number of observations per facet element and `rho` is the ICC
+variance share. Each facet is evaluated separately.
 
 ## Usage
 
@@ -12,7 +13,8 @@ compute_facet_design_effect(
   facets,
   icc_table = NULL,
   score = NULL,
-  person = NULL
+  person = NULL,
+  missing = c("error", "omit")
 )
 ```
 
@@ -20,7 +22,9 @@ compute_facet_design_effect(
 
 - data:
 
-  Data frame in long format.
+  Data frame in long format, used to fit the ICC model when `icc_table`
+  is `NULL`. With a supplied ICC table, sample sizes come from its
+  retained row accounting, not from `data`.
 
 - facets:
 
@@ -30,7 +34,10 @@ compute_facet_design_effect(
 
   Output from
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
-  (optional; will be computed on the fly when `NULL`).
+  (optional; will be computed on the fly when `NULL`). Must retain its
+  `data_usage` attribute. Rerun older saved ICC results from their
+  original data and settings before calculating design effects; their
+  analysis sample cannot be reconstructed from the ICC table alone.
 
 - score:
 
@@ -40,22 +47,43 @@ compute_facet_design_effect(
 
   Person column; passed through to compute_facet_icc().
 
+- missing:
+
+  Missing-value policy passed to
+  [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
+  when `icc_table` is `NULL`. A supplied table retains its original
+  policy.
+
 ## Value
 
 A data.frame of class `mfrm_facet_design_effect` with columns `Facet`,
-`AvgClusterSize`, `ICC`, `DesignEffect`, and `EffectiveN`.
+`AvgClusterSize`, `ICC`, `DesignEffect`, `EffectiveN`, `InputRows`,
+`UsedRows`, and `ExcludedRows`. Its `data_usage` attribute is retained
+from the ICC result. Cluster sizes and effective sample sizes use only
+rows included in that model.
 
 ## Interpreting output
 
-- `Deff = 1`: facet behaves like simple random sampling; no
-  clustering-induced variance inflation.
+The formula describes the variance inflation of an unweighted mean under
+a single clustering factor with equal cluster sizes, independent
+clusters, and common within-cluster correlation. This helper substitutes
+the average cluster size and one fitted facet variance share. It does
+not calculate the variance of a specified estimator under the full
+sampling design.
 
-- `Deff > 1`: variance of the mean estimate is inflated by a factor of
-  `Deff` relative to SRS. `EffectiveN = N / Deff` is the sample size one
-  would need under SRS to achieve the same precision. For rater-mediated
-  designs, `Deff` well above 1 on the Rater facet means rater-level
-  clustering is noticeable; consider whether rater generalisation is
-  warranted.
+- `Deff = 1` means this approximation adds no inflation for that facet;
+  it does not establish independence of observations or adequate
+  precision.
+
+- `Deff > 1` signals potential clustering influence under this
+  approximation. `EffectiveN = UsedRows / Deff` is a descriptive
+  equivalent row count, not a count of independent Persons or an
+  assurance of matching precision.
+
+- Unequal cluster sizes, crossed or nested dependencies, sampling
+  weights, and finite-population corrections are not accounted for.
+  Per-facet values must not be added or multiplied to obtain an overall
+  design effect.
 
 - Reported `ICC` is pulled from `icc_table$ICC` (the variance share);
   interpretation is the same as in
@@ -70,17 +98,18 @@ A data.frame of class `mfrm_facet_design_effect` with columns `Facet`,
 2.  Feed the result and the data into
     `compute_facet_design_effect(data, facets, icc_table = icc)`.
 
-3.  Use `Deff` as part of the Methods discussion when generalising over
-    raters or sites. Large `Deff` values argue for reporting robust SEs
-    or moving to a hierarchical model.
+3.  Use these values to flag facets for design review. For standard
+    errors, sample-size planning, or comparisons of precision, use an
+    estimator and variance calculation that represent the actual design.
 
 ## References
 
 Kish, L. (1965). *Survey Sampling*. New York: Wiley.
 
-Park, I., & Lee, H. (2001). The design effect: Do we know all about it?
-In *Proceedings of the American Statistical Association, Survey Research
-Methods Section* (pp. 143-148).
+Park, I., & Lee, H. (2004). Design effects for the weighted mean and
+total estimators under complex survey sampling. *Survey Methodology,
+30*(2), 183-193.
+<https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf>
 
 ## See also
 
@@ -99,11 +128,16 @@ if (requireNamespace("lme4", quietly = TRUE)) {
                                       facets = c("Rater", "Criterion"),
                                       icc_table = icc)
   print(deff)
-  # Large DesignEffect -> modest EffectiveN relative to raw N.
+  # Review clustering influence; EffectiveN is a descriptive row count.
 }
-#> mfrm_facet_design_effect (Kish, 1965)
-#>      Facet AvgClusterSize    ICC DesignEffect EffectiveN
-#>      Rater            192 0.0270        6.157      124.7
-#>  Criterion            192 0.0222        5.240      146.6
+#> mfrm_facet_design_effect (per-facet approximation)
+#>   EffectiveN is a descriptive row count, not full-design precision.
+#>   ICC rows: 768 input, 768 used, 0 excluded.
+#>      Facet AvgClusterSize    ICC DesignEffect EffectiveN InputRows UsedRows
+#>      Rater            192 0.0270        6.157      124.7       768      768
+#>  Criterion            192 0.0222        5.240      146.6       768      768
+#>  ExcludedRows
+#>             0
+#>             0
 # }
 ```

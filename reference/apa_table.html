@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an APA-oriented table handoff using base R structures</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>apa_table.Rd</code></div>
     </div>
 
@@ -161,53 +163,39 @@ names listed in <code>build_summary_table_bundle(x)$table_index</code></p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">tbl</span> <span class="op">&lt;-</span> <span class="fu">apa_table</span><span class="op">(</span><span class="va">fit</span>, which <span class="op">=</span> <span class="st">"summary"</span>, caption <span class="op">=</span> <span class="st">"Model summary"</span>, note <span class="op">=</span> <span class="st">"Toy example"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">tbl_facets</span> <span class="op">&lt;-</span> <span class="fu">apa_table</span><span class="op">(</span><span class="va">fit</span>, which <span class="op">=</span> <span class="st">"summary"</span>, branch <span class="op">=</span> <span class="st">"facets"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit_bundle</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_summary_table_bundle.html">build_summary_table_bundle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">tbl_from_summary</span> <span class="op">&lt;-</span> <span class="fu">apa_table</span><span class="op">(</span><span class="va">fit_bundle</span>, which <span class="op">=</span> <span class="st">"facet_overview"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">tbl</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> APA Table Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Branch Style   Which Rows Columns NumericColumns MissingValues</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     apa   apa summary    1      87             40             3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Caption</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Model summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Note</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Toy example</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Numeric profile</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Column N   Mean SD    Min    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               AIC 1 712.40 NA 712.40 712.40</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               BIC 1 729.24 NA 729.24 729.24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Categories 1   4.00 NA   4.00   4.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ConvergenceCode 1   0.00 NA   0.00   0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Deviance 1 694.40 NA 694.40 694.40</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      EMIterations 0     NA NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  EMRelativeChange 0     NA NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   EffectiveReltol 1   0.00 NA   0.00   0.00</span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tbl</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p_facets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tbl_facets</span>, type <span class="op">=</span> <span class="st">"numeric_profile"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "numeric_profile"</span>
-<span class="r-in"><span><span class="va">p_facets</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "numeric_profile"</span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">tbl</span>,</span></span>
-<span class="r-in"><span>    type <span class="op">=</span> <span class="st">"numeric_profile"</span>,</span></span>
-<span class="r-in"><span>    main <span class="op">=</span> <span class="st">"APA Table Numeric Profile (Customized)"</span>,</span></span>
-<span class="r-in"><span>    palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>numeric_profile <span class="op">=</span> <span class="st">"#2b8cbe"</span>, grid <span class="op">=</span> <span class="st">"#d9d9d9"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    label_angle <span class="op">=</span> <span class="fl">45</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span><span class="va">tbl</span><span class="op">$</span><span class="va">note</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Toy example"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Turn one summary table into a table with a caption and note</span></span></span>
+<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">tbl</span> <span class="op">&lt;-</span> <span class="fu">apa_table</span><span class="op">(</span><span class="va">results</span>, which <span class="op">=</span> <span class="st">"facet_overview"</span>,</span></span>
+<span class="r-in"><span>                 caption <span class="op">=</span> <span class="st">"Distribution of estimates within each facet"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">tbl</span> <span class="co"># Prints the table, caption, and note</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Distribution of estimates within each facet</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate Span</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      3            0        0.3       -0.34        0.22 0.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater      6            0        0.4       -0.61        0.41 1.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Note. No population model was requested; MML used an unconditional normal person distribution.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Extract the ordinary data frame for further formatting or export</span></span></span>
+<span class="r-in"><span><span class="va">tbl</span><span class="op">$</span><span class="va">table</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate Span</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Criterion      3            0        0.3       -0.34        0.22 0.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Rater      6            0        0.4       -0.61        0.41 1.02</span>
+<span class="r-in"><span><span class="co"># This table summarizes facets; use as.data.frame(fit) for individual estimates</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

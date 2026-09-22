@@ -3,19 +3,17 @@
 fit and returns an mfrm_imported_fit object. The returned
 object has the public slots summary, facets$person,
 facets$others, steps, config, and source that the mfrmr
-plot and table helpers expect. With compute_fit = TRUE the
-importer also runs mirt::itemfit() and mirt::personfit() so
-Infit / Outfit columns are populated, and synthesises a
-mfrm_diagnostics-shape diagnostics slot consumable by
-downstream plot helpers (Wright map, QC dashboard, etc.)."><meta property="og:description" content="Extracts item, step, and person parameters from a mirt::mirt()
+plot and table helpers expect. Only unidimensional Rasch and partial-credit
+response models with positive slopes and ordinary category scores are
+supported. Graded-response, guessing and multidimensional models are refused.
+With compute_fit = TRUE, source Infit / Outfit statistics are attached."><meta property="og:description" content="Extracts item, step, and person parameters from a mirt::mirt()
 fit and returns an mfrm_imported_fit object. The returned
 object has the public slots summary, facets$person,
 facets$others, steps, config, and source that the mfrmr
-plot and table helpers expect. With compute_fit = TRUE the
-importer also runs mirt::itemfit() and mirt::personfit() so
-Infit / Outfit columns are populated, and synthesises a
-mfrm_diagnostics-shape diagnostics slot consumable by
-downstream plot helpers (Wright map, QC dashboard, etc.)."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+plot and table helpers expect. Only unidimensional Rasch and partial-credit
+response models with positive slopes and ordinary category scores are
+supported. Graded-response, guessing and multidimensional models are refused.
+With compute_fit = TRUE, source Infit / Outfit statistics are attached."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -23,7 +21,7 @@ downstream plot helpers (Wright map, QC dashboard, etc.)."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,10 +32,12 @@ downstream plot helpers (Wright map, QC dashboard, etc.)."><meta property="og:im
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -54,7 +54,7 @@ downstream plot helpers (Wright map, QC dashboard, etc.)."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Import an <code>mirt</code> fit to an mfrmr-compatible bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-import.R" class="external-link"><code>R/api-import.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-import.R" class="external-link"><code>R/api-import.R</code></a></small>
       <div class="d-none name"><code>import_mirt_fit.Rd</code></div>
     </div>
 
@@ -63,11 +63,10 @@ downstream plot helpers (Wright map, QC dashboard, etc.)."><meta property="og:im
 fit and returns an <code>mfrm_imported_fit</code> object. The returned
 object has the public slots <code>summary</code>, <code>facets$person</code>,
 <code>facets$others</code>, <code>steps</code>, <code>config</code>, and <code>source</code> that the mfrmr
-plot and table helpers expect. With <code>compute_fit = TRUE</code> the
-importer also runs <code><a href="https://philchalmers.github.io/mirt/reference/itemfit.html" class="external-link">mirt::itemfit()</a></code> and <code><a href="https://philchalmers.github.io/mirt/reference/personfit.html" class="external-link">mirt::personfit()</a></code> so
-Infit / Outfit columns are populated, and synthesises a
-<code>mfrm_diagnostics</code>-shape <code>diagnostics</code> slot consumable by
-downstream plot helpers (Wright map, QC dashboard, etc.).</p>
+plot and table helpers expect. Only unidimensional Rasch and partial-credit
+response models with positive slopes and ordinary category scores are
+supported. Graded-response, guessing and multidimensional models are refused.
+With <code>compute_fit = TRUE</code>, source Infit / Outfit statistics are attached.</p>
     </div>
 
     <div class="section level2">
@@ -77,7 +76,13 @@ downstream plot helpers (Wright map, QC dashboard, etc.).</p>
 <span>  model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"RSM"</span>, <span class="st">"PCM"</span>, <span class="st">"GPCM"</span><span class="op">)</span>,</span>
 <span>  item_facet <span class="op">=</span> <span class="st">"Item"</span>,</span>
 <span>  compute_fit <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_imported_fit'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, digits <span class="op">=</span> <span class="fl">3L</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'summary.mfrm_imported_fit'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -91,8 +96,9 @@ downstream plot helpers (Wright map, QC dashboard, etc.).</p>
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
 <dd><p>One of <code>"RSM"</code>, <code>"PCM"</code>, <code>"GPCM"</code>. The importer
-does not infer the model from the mirt object; pass the model
-that was estimated.</p></dd>
+does not reconstruct all source constraints; pass the model that was
+estimated. Non-unit slopes require <code>"GPCM"</code>. A polytomous <code>"RSM"</code>
+import requires source item type <code>"rsm"</code>.</p></dd>
 
 
 <dt id="arg-item-facet">item_facet<a class="anchor" aria-label="anchor" href="#arg-item-facet"></a></dt>
@@ -104,9 +110,20 @@ imported bundle (default <code>"Item"</code>).</p></dd>
 <dd><p>Logical. When <code>TRUE</code>, run <code><a href="https://philchalmers.github.io/mirt/reference/itemfit.html" class="external-link">mirt::itemfit()</a></code>
 and <code><a href="https://philchalmers.github.io/mirt/reference/personfit.html" class="external-link">mirt::personfit()</a></code> to populate Infit / Outfit / OutfitZSTD
 columns on the returned facet tables, plus build a
-measurement-side <code>mfrm_diagnostics</code> bundle consumable by
-<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="plot.mfrm_fit.html">plot.mfrm_fit()</a></code>, <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code>, etc.
-Default <code>FALSE</code> keeps the importer fast (skeleton only).</p></dd>
+measurement-side diagnostics bundle. Person fit uses source EAP scores.
+Default <code>FALSE</code> extracts parameters without calculating fit statistics.</p></dd>
+
+
+<dt id="arg-object-x">object, x<a class="anchor" aria-label="anchor" href="#arg-object-x"></a></dt>
+<dd><p>An imported measurement bundle.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of digits for displayed estimates.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional arguments (unused by imported summaries).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -120,15 +137,15 @@ Infit / Outfit / OutfitZSTD / Zh when <code>compute_fit = TRUE</code>.</p></dd>
 
 <dt><code>facets$others</code></dt>
 <dd><p>Item-level estimates and slopes; with
-<code>compute_fit = TRUE</code>, also Infit / Outfit / S_X2 / RMSEA / df
-from <code><a href="https://philchalmers.github.io/mirt/reference/itemfit.html" class="external-link">mirt::itemfit()</a></code>.</p></dd>
+<code>compute_fit = TRUE</code>, also available Infit / Outfit statistics.</p></dd>
 
 <dt><code>steps</code></dt>
-<dd><p>Per-item threshold parameters extracted from the
-IRT parameterisation (<code>b1</code>, ..., <code>b(K-1)</code>).</p></dd>
+<dd><p>Absolute adjacent-category thresholds on the source ability
+scale, labelled in <code>Parameterization</code>; these are not centered step
+deviations. Rating-scale offsets are included.</p></dd>
 
 <dt><code>config</code></dt>
-<dd><p>List with the resolved <code>model</code> and <code>item_facet</code>
+<dd><p>List with the declared <code>model</code> and facet names
 used for the import; downstream plot and table helpers consult
 this to dispatch correctly on the imported bundle.</p></dd>
 
@@ -142,12 +159,44 @@ this to dispatch correctly on the imported bundle.</p></dd>
 
 </dl></div>
     <div class="section level2">
+    <h2 id="source-scale">Source scale<a class="anchor" aria-label="anchor" href="#source-scale"></a></h2>
+
+
+<p>Item difficulty is the mean of its absolute adjacent-category thresholds.
+Source identification and slopes are retained without rescaling. For mirt
+<code>gpcmIRT</code> and <code>rsm</code>, the category offset is included as <code>b - c / a</code>.
+Person estimates are EAP; the <code>SE</code> column contains conditional posterior
+SDs, not sampling SEs. Person labels use retained source row names or
+P-prefixed row positions. Original identifiers discarded by mirt cannot be
+recovered. Imported summaries describe these conventions without assuming
+a native mfrmr population distribution or slope normalization.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="imported-uncertainty">Imported uncertainty<a class="anchor" aria-label="anchor" href="#imported-uncertainty"></a></h2>
+
+
+<p>Imported SEs retain the source package's interpretation. The measurement-side
+diagnostics do not reconstruct the joint parameter covariance, so joint facet
+chi-square statistics, degrees of freedom and p-values are unavailable.
+Posterior SDs do not supply sampling SEs for separation reliability.
+Other separation summaries require valid SEs for every finite estimate and
+remain descriptive. Imported Wright maps show points only: source uncertainty
+conventions do not establish one common confidence-interval calculation.
+Re-import older saved bundles from the existing source-package fit to update
+difficulties, thresholds and uncertainty labels. The mirt and TAM importers
+accept <code>compute_fit = TRUE</code> when source fit statistics are needed; no model
+re-estimation is required.</p>
+    </div>
+    <div class="section level2">
     <h2 id="scope">Scope<a class="anchor" aria-label="anchor" href="#scope"></a></h2>
 
 
-<p>Bundles bias / DIF / anchor / replay slots are explicitly not
-populated. This helper provides a one-way fitted-object import for the
-documented core fields, not a bidirectional interchange format.</p>
+<p>Use <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for source-scale tables and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for a point-only Wright
+map. Available source fit statistics remain in the facet and diagnostic
+tables. Native model curves, comprehensive <code><a href="mfrm_results.html">mfrm_results()</a></code> reports,
+response-level diagnostics, <code><a href="run_qc_pipeline.html">run_qc_pipeline()</a></code>, bias/DIF analysis, anchoring
+and portable calibration are unavailable for imported bundles. This is a
+one-way fitted-object import of the documented fields.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -158,18 +207,16 @@ documented core fields, not a bidirectional interchange format.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"mirt"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">response_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">60</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">response_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="fl">120</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">40</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">response_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Item"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">response_matrix</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">mirt</span><span class="fu">::</span><span class="fu"><a href="https://philchalmers.github.io/mirt/reference/mirt.html" class="external-link">mirt</a></span><span class="op">(</span><span class="va">response_matrix</span>, <span class="fl">1</span>, itemtype <span class="op">=</span> <span class="st">"gpcm"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">imported</span> <span class="op">&lt;-</span> <span class="fu">import_mirt_fit</span><span class="op">(</span><span class="va">fit</span>, model <span class="op">=</span> <span class="st">"GPCM"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">mirt</span><span class="fu">::</span><span class="fu"><a href="https://philchalmers.github.io/mirt/reference/mirt.html" class="external-link">mirt</a></span><span class="op">(</span><span class="va">response_matrix</span>, <span class="fl">1</span>, itemtype <span class="op">=</span> <span class="st">"Rasch"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">imported</span> <span class="op">&lt;-</span> <span class="fu">import_mirt_fit</span><span class="op">(</span><span class="va">fit</span>, model <span class="op">=</span> <span class="st">"RSM"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">imported</span><span class="op">$</span><span class="va">summary</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> "Item2" re-mapped to ensure all categories have a distance of 1</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>EM cycles terminated after 500 iterations.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method Source  N Persons Facets Categories    LogLik      AIC     BIC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  GPCM    MML   mirt 20      20      1         NA -71.49995 164.9999 175.953</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method Source  N Persons Facets Categories    LogLik      AIC      BIC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   RSM    MML   mirt 40      40      1         NA -81.62847 171.2569 178.0125</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Converged ConvergenceStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     FALSE            review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      TRUE                ok</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

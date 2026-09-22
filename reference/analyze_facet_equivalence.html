@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Analyze practical equivalence within a facet</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
       <div class="d-none name"><code>analyze_facet_equivalence.Rd</code></div>
     </div>
 
@@ -63,43 +65,37 @@
 
 
 <dl><dt id="arg-fit">fit<a class="anchor" aria-label="anchor" href="#arg-fit"></a></dt>
-<dd><p>Output from <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></dd>
+<dd><p>Output from <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. Requires an inference-ready MML fit
+with unregularized observed-information covariance and estimable contrasts.</p></dd>
 
 
 <dt id="arg-diagnostics">diagnostics<a class="anchor" aria-label="anchor" href="#arg-diagnostics"></a></dt>
-<dd><p>Optional output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. When <code>NULL</code>,
-diagnostics are computed with <code>residual_pca = "none"</code>.</p></dd>
+<dd><p>Optional matching output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. Supplied
+diagnostics must retain all target-facet levels, model-based SEs and
+ordinary-inference eligibility. Estimates and covariance are always taken
+from <code>fit</code>; supplying diagnostics cannot override its restrictions.</p></dd>
 
 
 <dt id="arg-facet">facet<a class="anchor" aria-label="anchor" href="#arg-facet"></a></dt>
-<dd><p>Character scalar naming the non-person facet to evaluate. If
-<code>NULL</code>, the function prefers a rater-like facet and otherwise uses the
-first model facet.</p></dd>
+<dd><p>Character scalar naming a non-person facet. When <code>NULL</code>, a
+rater-like facet is preferred, otherwise the first model facet is used.</p></dd>
 
 
 <dt id="arg-equivalence-bound">equivalence_bound<a class="anchor" aria-label="anchor" href="#arg-equivalence-bound"></a></dt>
-<dd><p>Practical-equivalence bound in logits. Default
-<code>0.5</code> is a moderate bound intended as a starting point, not a
-universal threshold. The TOST/ROPE result depends on both the bound
-<em>and</em> the per-level standard errors, so in small or high-variance
-designs the test may fail to reject non-equivalence simply because
-the SEs are wide. Choose <code>equivalence_bound</code> based on the smallest
-difference that would be practically meaningful in your assessment
-context (commonly 0.3 to 0.5 logits for rater-mediated designs) and
-check <code>$summary</code> for per-level SE magnitude before drawing
-conclusions.</p></dd>
+<dd><p>Positive practical-equivalence bound in logits.
+The default <code>0.5</code> is not a universal threshold. Choose the smallest
+practically meaningful difference for the intended use before inspecting
+the equivalence results.</p></dd>
 
 
 <dt id="arg-ci-level">ci_level<a class="anchor" aria-label="anchor" href="#arg-ci-level"></a></dt>
-<dd><p>Confidence level used for the forest-style interval
-view. Default <code>0.95</code>.</p></dd>
+<dd><p>Confidence level for level and grand-mean-deviation intervals
+(default <code>0.95</code>). Pairwise TOST always uses alpha 0.05 and 90% intervals.</p></dd>
 
 
 <dt id="arg-conf-level">conf_level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
-<dd><p>Deprecated alias for <code>ci_level</code>, retained for
-backward compatibility. Supplying a non-<code>NULL</code> value overrides
-<code>ci_level</code> and emits a one-time deprecation warning.
-Default <code>0.95</code>.</p></dd>
+<dd><p>Deprecated alias for <code>ci_level</code>; when supplied it takes
+precedence and emits a lifecycle deprecation warning.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -108,128 +104,108 @@ Default <code>0.95</code>.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function tests whether facet elements (e.g., raters) are similar
-enough to be treated as practically interchangeable, rather than merely
-testing whether they differ significantly.  This is the key distinction
-from a standard chi-square heterogeneity test: absence of evidence
-for difference is not evidence of equivalence.</p>
-<p>The function uses existing facet estimates and their standard errors
-from <code>diagnostics$measures</code>; no re-estimation is performed.</p>
-<p>The bundle combines four complementary views:</p><ol><li><p><strong>Fixed chi-square test</strong>: tests \(H_0\): all element measures
-are equal.  A non-significant result is <em>necessary but not
-sufficient</em> for interchangeability. It is reported as context, not
-as direct evidence of equivalence.</p></li>
-<li><p><strong>Pairwise TOST (Two One-Sided Tests)</strong>: for each pair of
-elements, tests whether the difference falls within
-\(\pm\)<code>equivalence_bound</code>.  The TOST procedure (Schuirmann,
-1987) rejects the null hypothesis of <em>non-equivalence</em> when both
-one-sided tests are significant at level \(\alpha\).  A pair is
-declared "Equivalent" when the TOST p-value &lt; 0.05.</p></li>
-<li><p><strong>BIC-based Bayes-factor heuristic</strong>: an approximate screening
-tool (not full Bayesian inference) that compares the evidence for
-a common-facet model (all elements equal) against a heterogeneity
-model (elements differ) via
-\(\mathrm{BF}_{01} \approx \exp((\mathrm{BIC}_{H_1} -
-   \mathrm{BIC}_{H_0}) / 2)\) (Kass &amp; Raftery, 1995).  Values &gt; 3
-favour the common-facet model; &lt; 1/3 favour heterogeneity.</p></li>
-<li><p><strong>ROPE-style grand-mean proximity</strong>: the proportion of each
-element's normal-approximation confidence distribution that falls
-within \(\pm\)<code>equivalence_bound</code> of the weighted grand mean.
-This is a descriptive proximity summary, not a Bayesian ROPE
-decision rule around a prespecified null value.</p></li>
-</ol><p><strong>Choosing <code>equivalence_bound</code></strong>: the default of 0.5 logits is a
-moderate criterion.  For high-stakes certification, 0.3 logits may
-be appropriate; for exploratory or low-stakes contexts, 1.0 logits
-may suffice.  The bound should reflect the smallest difference that
-would be practically meaningful in your application.</p>
+    <p>Pair differences use the full constrained covariance from the MML observed
+information: \(\mathrm{Var}(A-B) = \mathrm{Var}(A) + \mathrm{Var}(B) -
+2\mathrm{Cov}(A,B)\). No model is refitted. JML, inference-ineligible fits,
+missing or regularized covariance, and singular contrast covariance stop
+with an error. Levels with fixed or unavailable contrasts are not silently
+dropped. Known anchors are treated as fixed; their uncertainty is excluded.
+Non-unit observation weights are inference-ineligible, including weights
+normalized to mean one. Older bundles must retain the current readiness
+contract as well as the covariance basis before they can be displayed.</p>
+<p>The heterogeneity table uses a joint Wald chi-square test of equality of
+the facet levels. Non-significant heterogeneity is neither necessary nor
+sufficient for practical equivalence. <code>FixedChiSq</code>, <code>FixedDF</code>, and
+<code>FixedProb</code> retain their column names but use this joint contrast test.
+Separation and reliability remain descriptive summaries.</p>
+<p><code>GrandMean</code> is the equally weighted mean of the facet estimates. For each
+deviation from that mean, uncertainty includes the covariance with the
+estimated mean. <code>ROPEPct</code> is the mass of its normal confidence distribution
+inside the practical bound; it is descriptive, not a Bayesian posterior
+probability or a separate equivalence decision.</p>
+<p>The former BIC/Bayes-factor heuristic is unavailable: a Wald statistic is
+not a fitted likelihood comparison. For compatibility, <code>BF01</code> is <code>NA</code> and
+<code>BF01Label</code> states why no value is supplied.</p>
     </div>
     <div class="section level2">
     <h2 id="what-this-analysis-means">What this analysis means<a class="anchor" aria-label="anchor" href="#what-this-analysis-means"></a></h2>
 
 
-<p><code>analyze_facet_equivalence()</code> is a practical-interchangeability screen. It
-asks whether facet levels are close enough, under a user-defined logit
-bound, to be treated as practically similar for the current use case.</p>
+<p>The analysis asks whether differences between facet levels fall within a
+prespecified practical bound under the fitted model. These are asymptotic
+normal-approximation tests; numerical eligibility does not establish
+finite-sample coverage or adequacy of the rating design.</p>
     </div>
     <div class="section level2">
     <h2 id="what-this-analysis-does-not-justify">What this analysis does not justify<a class="anchor" aria-label="anchor" href="#what-this-analysis-does-not-justify"></a></h2>
 
 
-<ul><li><p>A non-significant chi-square result is not evidence of equivalence.</p></li>
-<li><p>Forest/ROPE displays are descriptive and do not replace the pairwise TOST
-decision rule.</p></li>
-<li><p>The BIC-based Bayes-factor summary is a heuristic screen, not a full
-Bayesian equivalence analysis.</p></li>
-</ul></div>
-    <div class="section level2">
-    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
-
-
-<p>Start with <code>summary$Decision</code>, which is a conservative summary of the
-pairwise TOST results. Then use the remaining tables as context:</p><ul><li><p><code>chi_square</code>: is there broad heterogeneity in the facet?</p></li>
-<li><p><code>pairwise</code>: which specific pairs meet the practical-equivalence bound?</p></li>
-<li><p><code>rope</code> / <code>forest</code>: how close is each level to the facet grand mean?</p></li>
-</ul><p>Smaller <code>equivalence_bound</code> values make the criterion stricter. If the
-decision is <code>"partial_pairwise_equivalence"</code>, that means some pairwise
-contrasts satisfy the practical-equivalence bound but not all of them do.</p>
+<p>A non-significant difference is not evidence of equivalence. Pairwise
+conclusions are unadjusted for multiplicity: selecting some positive pairs
+does not provide family-wise error control for that selected set. Estimated
+linking or anchor uncertainty, population transport, and model
+misspecification require separate evaluation.</p>
     </div>
     <div class="section level2">
     <h2 id="decision-rule">Decision rule<a class="anchor" aria-label="anchor" href="#decision-rule"></a></h2>
 
 
-<p>The final <code>Decision</code> is a pairwise TOST summary rather than a global
-equivalence proof. If all pairwise contrasts satisfy the practical-
-equivalence bound, the facet is labeled <code>"all_pairs_equivalent"</code>. If at
-least one, but not all, pairwise contrasts are equivalent, the facet is
-labeled <code>"partial_pairwise_equivalence"</code>. If no pairwise contrasts meet the
-practical-equivalence bound, the facet is labeled
-<code>"no_pairwise_equivalence_established"</code>. The chi-square, Bayes-factor, and
-grand-mean proximity summaries are reported as descriptive context.</p>
+<p>Each pair uses two one-sided normal tests at alpha 0.05. <code>Equivalent</code> is
+true when both tests reject non-equivalence, equivalently when its 90%
+interval lies strictly inside the bound. <code>Decision</code> summarizes all pairs
+as <code>"all_pairs_equivalent"</code>, <code>"partial_pairwise_equivalence"</code>, or
+<code>"no_pairwise_equivalence_established"</code>. No pair may be omitted from the
+all-pairs summary. Heterogeneity and ROPE summaries do not change this rule.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
+
+
+<p>Start with <code>summary$Decision</code> and examine the corresponding <code>pairwise</code>
+differences, SEs and intervals. A negative result can reflect imprecision
+or a material difference. <code>chi_square</code> addresses exact equality, while
+<code>rope</code> and <code>forest</code> describe proximity to the facet mean.</p>
     </div>
     <div class="section level2">
     <h2 id="how-to-read-the-main-outputs">How to read the main outputs<a class="anchor" aria-label="anchor" href="#how-to-read-the-main-outputs"></a></h2>
 
 
-<ul><li><p><code>summary</code>: one-row pairwise-TOST decision summary and aggregate context.</p></li>
-<li><p><code>pairwise</code>: pair-level TOST detail; use this for the primary inferential
-read.</p></li>
-<li><p><code>chi_square</code>: broad heterogeneity screen.</p></li>
-<li><p><code>rope</code> / <code>forest</code>: level-wise proximity to the weighted grand mean.</p></li>
+<ul><li><p><code>summary</code>: pairwise decision, covariance basis and multiplicity convention.</p></li>
+<li><p><code>pairwise</code>: differences, covariance-aware SEs, 90% intervals and TOST tests.</p></li>
+<li><p><code>chi_square</code>: joint Wald heterogeneity test and descriptive separation.</p></li>
+<li><p><code>rope</code> / <code>forest</code>: <code>Measure</code>, marginal <code>SE</code> and <code>CI_Lower</code>/<code>CI_Upper</code>, plus
+<code>Deviation</code>, <code>DeviationSE</code> and <code>DeviationCI_Lower</code>/<code>DeviationCI_Upper</code> for
+proximity to the equally weighted facet mean.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="recommended-next-step">Recommended next step<a class="anchor" aria-label="anchor" href="#recommended-next-step"></a></h2>
 
 
-<p>If the result is borderline or high-stakes, re-run the analysis with a
-tighter or looser <code>equivalence_bound</code>, then inspect <code>pairwise</code> and
-<code><a href="plot_facet_equivalence.html">plot_facet_equivalence()</a></code> before deciding how strongly to claim
-interchangeability.</p>
+<p>Review numerical integration and the model's uncertainty assumptions before
+interpreting a borderline result. Sensitivity to another practical bound
+should be reported transparently, without selecting a bound to obtain a
+desired decision.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
 
 
-<ol><li><p>Fit a model with <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></li>
-<li><p>Run <code>analyze_facet_equivalence()</code> for the facet you want to screen.</p></li>
-<li><p>Read <code>summary</code> and <code>chi_square</code> first.</p></li>
-<li><p>Use <code><a href="plot_facet_equivalence.html">plot_facet_equivalence()</a></code> to inspect which levels drive the result.</p></li>
+<ol><li><p>Fit and review an MML model with <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></li>
+<li><p>Prespecify the practical bound and run <code>analyze_facet_equivalence()</code>.</p></li>
+<li><p>Read <code>summary</code> and <code>pairwise</code>.</p></li>
+<li><p>Use <code><a href="plot_facet_equivalence.html">plot_facet_equivalence()</a></code> for descriptive grand-mean proximity.</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a></h2>
 
 
-<p>The returned bundle has class <code>mfrm_facet_equivalence</code> and includes:</p><ul><li><p><code>summary</code>: one-row overview with convergent decision</p></li>
-<li><p><code>chi_square</code>: fixed chi-square / separation summary</p></li>
-<li><p><code>pairwise</code>: pairwise TOST detail table</p></li>
-<li><p><code>rope</code>: element-wise ROPE probabilities around the weighted grand mean</p></li>
-<li><p><code>forest</code>: element-wise estimate, confidence interval, and ROPE status</p></li>
-<li><p><code>settings</code>: applied facet and threshold settings</p></li>
-</ul></div>
+<p>A bundle with <code>summary</code>, <code>chi_square</code>, <code>pairwise</code>, <code>rope</code>, <code>forest</code>, and
+<code>settings</code>. Older bundles without the current inference/covariance basis
+must be recomputed before using <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, or plotting.</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Kass, R. E., &amp; Raftery, A. E. (1995). Bayes factors. <em>Journal of the
-American Statistical Association, 90</em>(430), 773-795.</p>
-<p>Schuirmann, D. J. (1987). A comparison of the two one-sided tests
+    <p>Schuirmann, D. J. (1987). A comparison of the two one-sided tests
 procedure and the power approach for assessing the equivalence of
 average bioavailability. <em>Journal of Pharmacokinetics and
 Biopharmaceutics, 15</em>(6), 657-680.</p>
@@ -244,12 +220,11 @@ Biopharmaceutics, 15</em>(6), 657-680.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">31</span>, maxit <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">eq</span> <span class="op">&lt;-</span> <span class="fu">analyze_facet_equivalence</span><span class="op">(</span><span class="va">fit</span>, facet <span class="op">=</span> <span class="st">"Rater"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">eq</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"Elements"</span>, <span class="st">"Decision"</span>, <span class="st">"MeanROPE"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Facet Elements                     Decision MeanROPE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Rater        4 partial_pairwise_equivalence 97.86251</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Rater        4 partial_pairwise_equivalence 99.42802</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">eq</span><span class="op">$</span><span class="va">pairwise</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ElementA"</span>, <span class="st">"ElementB"</span>, <span class="st">"Equivalent"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ElementA ElementB Equivalent</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      R01      R02       TRUE</span>

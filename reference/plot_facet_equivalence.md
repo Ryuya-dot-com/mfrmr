@@ -21,12 +21,13 @@ plot_facet_equivalence(
 
   Output from
   [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md)
-  or
-  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  or an eligible MML
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  object. Legacy equivalence bundles must be recomputed.
 
 - diagnostics:
 
-  Optional output from
+  Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   when `x` is an `mfrm_fit` object.
 
@@ -49,51 +50,44 @@ plot_facet_equivalence(
 
 ## Value
 
-Invisibly returns the plotting data. If `draw = FALSE`, the plotting
-data are returned without drawing.
+Invisibly returns the plotting data and inference/covariance basis. With
+`draw = FALSE`, returns the data without drawing.
 
 ## Details
 
-`plot_facet_equivalence()` is a visual companion to
+Fit inputs use the same eligibility checks as
 [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md).
-It does not recompute the equivalence analysis; it only reshapes and
-displays the returned results.
+Bundle inputs display the already calculated results. Both routes
+require the current inference and covariance basis, including when
+`draw = FALSE`.
 
 ## Plot types
 
-- `"forest"` places each level on the logit scale with its confidence
-  interval and shades the practical-equivalence region around the
-  weighted grand mean.
+- `"forest"` shows each level's deviation from the equally weighted
+  facet mean, with covariance-aware deviation intervals and the
+  practical region around zero. The raw marginal measure intervals
+  remain in the data table.
 
-- `"rope"` shows the percentage of each level's uncertainty mass that
-  falls inside the ROPE.
+- `"rope"` shows the normal confidence-distribution mass within that
+  region.
 
 ## Interpreting output
 
-In the **forest plot**, the shaded band marks the ROPE
-(\\\pm\\`equivalence_bound` around the weighted grand mean). Levels
-whose entire confidence interval lies inside this band are close to the
-facet grand mean under this descriptive screen. Levels whose interval
-extends outside the band are more displaced from the facet average.
-Overlapping intervals between two elements suggest they are not reliably
-separable, but overlap alone does not establish formal equivalence—use
-the TOST results for that.
-
-In the **ROPE bar chart**, each bar shows the proportion of the
-element's normal-approximation distribution that falls inside the
-ROPE-style grand-mean proximity. Values \> 95\\ the element's
-normal-approximation uncertainty falls near the facet average; 50–95\\
-meaningfully displaced from that average.
+Both plots describe grand-mean proximity. Colors in the forest plot
+indicate whether the deviation interval is inside, outside, or overlaps
+the practical region. Neither plot establishes pairwise equivalence or a
+Bayesian probability. Read the pairwise TOST results for pair-specific
+conclusions.
 
 ## Typical workflow
 
 1.  Run
-    [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md).
+    [`analyze_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_facet_equivalence.md)
+    with a prespecified practical bound.
 
-2.  Start with `type = "forest"` to see the facet on the logit scale.
+2.  Use `type = "forest"` to inspect deviations and their uncertainty.
 
-3.  Switch to `type = "rope"` when you want a ranking of levels by
-    grand-mean proximity.
+3.  Use `type = "rope"` for a descriptive proximity view.
 
 ## See also
 
@@ -105,8 +99,7 @@ meaningfully displaced from that average.
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                method = "MML", quad_points = 31, maxit = 150)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
 pdat <- plot_facet_equivalence(eq, type = "forest", draw = FALSE)
 c(pdat$facet, pdat$type)

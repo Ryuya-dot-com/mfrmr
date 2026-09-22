@@ -98,6 +98,14 @@ backward-compatible alias.
 
 - Missing bias rows may simply mean `bias_results` were not supplied.
 
+- Study questions, recruitment, rater training, the assignment process,
+  missingness reasons, ethics, and substantive interpretation require
+  the author's study record. Available output does not verify those
+  facts. The "Manuscript coverage map" in
+  [`vignette("mfrmr-reporting-and-apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md)
+  pairs reporting topics with numerical evidence and information to
+  supply manually.
+
 ## Interpreting output
 
 - `checklist`: one row per reporting item with `Available = TRUE/FALSE`.
@@ -131,7 +139,10 @@ backward-compatible alias.
   2D figures from exploratory surface/3D-ready data handoffs, including
   a short `InterpretationCheck` for the main user-facing caveat.
 
-- `references`: core background references when requested.
+- `references`: abbreviated background citations and topics when
+  requested, not a complete bibliography. Verify full records for the
+  methods used; use `citation("mfrmr")` for the installed software's
+  citation.
 
 ## Recommended next step
 
@@ -199,146 +210,63 @@ operational review:
 
 ``` r
 # \donttest{
-# Minimal checklist example using a JML fit and lightweight diagnostics.
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
-fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                      method = "JML", maxit = 30)
-diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
-                             diagnostic_mode = "legacy")
-chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
-head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
-#>          Section                                                      Item
-#> 1 Method Section                                       Model specification
-#> 2 Method Section                                          Data description
-#> 3 Method Section                                           Precision basis
-#> 4 Method Section                                               Convergence
-#> 5 Method Section                                     Connectivity assessed
-#> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present
-#>   DraftReady
-#> 1       TRUE
-#> 2       TRUE
-#> 3       TRUE
-#> 4       TRUE
-#> 5       TRUE
-#> 6       TRUE
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", quad_points = 7, maxit = 30)
-diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
-chk <- reporting_checklist(fit, diagnostics = diag)
-summary(chk)
-#> mfrmr Reporting Checklist Summary
-#> 
-#> Overview
-#>  Sections Items Available DraftReady Missing NeedsDraftWork
-#>         7    33        29         28       4              5
-#> 
-#> Section summary
-#>                      Section Items Available DraftReady ReadyForAPA Missing
-#>  Bias / Interaction Analysis     2         0          0           0       2
-#>     Element-Level Statistics     4         4          4           4       0
-#>       Facet-Level Statistics     3         3          3           3       0
-#>                   Global Fit     3         3          3           3       0
-#>               Method Section     8         7          7           7       1
-#>     Rating Scale Diagnostics     4         4          4           4       0
-#>              Visual Displays     9         8          7           7       1
-#>  NeedsDraftWork NeedsAction
-#>               2           2
-#>               0           0
-#>               0           0
-#>               0           0
-#>               1           1
-#>               0           0
-#>               2           2
-#> 
-#> Priority summary
-#>  Priority    Severity Items
-#>    medium recommended     5
-#>     ready    required    12
-#>     ready recommended    15
-#>     ready    optional     1
-#> 
-#> Action items (preview)
-#>                      Section                          Item Available DraftReady
-#>  Bias / Interaction Analysis            Facet pairs tested     FALSE      FALSE
-#>  Bias / Interaction Analysis  Screen-positive interactions     FALSE      FALSE
-#>               Method Section Hierarchical structure review     FALSE      FALSE
-#>              Visual Displays            Bias / DIF visuals     FALSE      FALSE
-#>              Visual Displays       Strict marginal visuals      TRUE      FALSE
-#>     Severity Priority
-#>  recommended   medium
-#>  recommended   medium
-#>  recommended   medium
-#>  recommended   medium
-#>  recommended   medium
-#>                                                                                                                                 NextAction
-#>                                                                    Run bias screening if the manuscript needs interaction-level follow-up.
-#>                                                                          Run bias screening before discussing interaction-level anomalies.
-#>  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.
-#>                                                                     Run bias or DIF screening before discussing interaction-level visuals.
-#>              Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
-#> 
-#> FACETS positioning
-#>                                   Topic
-#>                    Estimation authority
-#>                   Compatibility purpose
-#>              External FACETS comparison
-#>  Current model and calibration boundary
-#>               Reporting source of truth
-#>                 Extension beyond FACETS
-#>                                                                                                                                  RecommendedWording
-#>                                                 The model was estimated with mfrmr; FACETS-style output names are used only to organize the report.
-#>                       FACETS-style outputs were generated for handoff or reader familiarity; they are not evidence of FACETS numerical equivalence.
-#>                                   When external FACETS output is supplied, compare MnSq first and report df/ZSTD convention sensitivity separately.
-#>  Describe mfrmr as a native R RSM/PCM analysis, diagnostic, and reporting environment, not as a general FACETS operational-calibration replacement.
-#>                                                          Report estimates, standard errors, fit summaries, and plots from documented mfrmr objects.
-#>                                                              Use package-native extensions as additional evidence and label them as mfrmr analyses.
-#> 
-#> Settings
-#>               Setting       Value
-#>    include_references        TRUE
-#>  diagnostics_supplied        TRUE
-#>     bias_result_count           0
-#>      bias_error_count           0
-#>        precision_tier model_based
-#> 
-#> Notes
-#>  - This summary is a manuscript-preparation guide.
-#>  - DraftReady indicates that the corresponding reporting element can be drafted with the package's documented caveats; it does not certify inferential adequacy.
-#>  - Detailed FACETS positioning, software scope, and visual scope tables are available in `$facets_positioning`, `$software_scope`, and `$visual_scope`.
-# Look for: a high `Ready` / `Total` ratio in the summary block.
-#   Sections with `Ready = 0` need follow-up before submitting
-#   (typically diagnostic_mode = "both" or a residual-PCA pass).
-apa <- build_apa_outputs(fit, diag)
-head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-#>          Section                                                      Item
-#> 1 Method Section                                       Model specification
-#> 2 Method Section                                          Data description
-#> 3 Method Section                                           Precision basis
-#> 4 Method Section                                               Convergence
-#> 5 Method Section                                     Connectivity assessed
-#> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present
-#>   DraftReady
-#> 1       TRUE
-#> 2       TRUE
-#> 3       TRUE
-#> 4       TRUE
-#> 5       TRUE
-#> 6       TRUE
-#>                                                                                                          NextAction
-#> 1                             Available; adapt this evidence into the manuscript draft after methodological review.
-#> 2                             Available; adapt this evidence into the manuscript draft after methodological review.
-#> 3                                                    Report the precision tier as model-based in the APA narrative.
-#> 4                             Available; adapt this evidence into the manuscript draft after methodological review.
-#> 5                                           Document the single connected subset before making common-scale claims.
-#> 6 Report both the fixed-effects and shrunk estimates; cite Efron & Morris (1973) for the empirical-Bayes rationale.
-# Look for: every row where `DraftReady = "yes"` is ready to paste
-#   into the manuscript. `"no"` rows include a concrete `NextAction`
-#   step (e.g. "run plot_qc_dashboard()") so the gap can be closed
-#   without re-reading the methodology guide.
-nchar(apa$report_text)
-#> [1] 4709
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Which reporting items still need evidence or explanation?
+checklist <- reporting_checklist(fit, diagnostics = diagnostics)
+checklist$section_summary
+#>                       Section Items Available DraftReady ReadyForAPA Missing
+#> 1 Bias / Interaction Analysis     2         0          0           0       2
+#> 2    Element-Level Statistics     4         4          4           4       0
+#> 3      Facet-Level Statistics     3         3          3           3       0
+#> 4                  Global Fit     3         2          2           2       1
+#> 5              Method Section     8         7          7           7       1
+#> 6    Rating Scale Diagnostics     4         4          4           4       0
+#> 7             Visual Displays     9         7          6           6       2
+#>   NeedsDraftWork NeedsAction
+#> 1              2           2
+#> 2              0           0
+#> 3              0           0
+#> 4              1           1
+#> 5              1           1
+#> 6              0           0
+#> 7              3           3
+
+# Review the missing items and their suggested next actions
+subset(checklist$checklist, !DraftReady,
+       c("Section", "Item", "DraftReady", "NextAction"))
+#>                        Section                          Item DraftReady
+#> 8               Method Section Hierarchical structure review      FALSE
+#> 10                  Global Fit              PCA of residuals      FALSE
+#> 23 Bias / Interaction Analysis            Facet pairs tested      FALSE
+#> 24 Bias / Interaction Analysis  Screen-positive interactions      FALSE
+#> 27             Visual Displays          Residual PCA visuals      FALSE
+#> 30             Visual Displays       Strict marginal visuals      FALSE
+#> 31             Visual Displays            Bias / DIF visuals      FALSE
+#>                                                                                                                                   NextAction
+#> 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.
+#> 10                                                                Run residual PCA if you want to comment on unexplained residual structure.
+#> 23                                                                   Run bias screening if the manuscript needs interaction-level follow-up.
+#> 24                                                                         Run bias screening before discussing interaction-level anomalies.
+#> 27                                                     Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
+#> 30             Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
+#> 31                                                                    Run bias or DIF screening before discussing interaction-level visuals.
+# DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats
+# Choose follow-up analyses for your question, not merely to make every row TRUE
 # }
 ```

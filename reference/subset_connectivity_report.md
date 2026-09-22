@@ -111,6 +111,8 @@ summary(out)
 #>           Setting Value
 #>     top_n_subsets    NA
 #>  min_observations     0
+#>    source_subsets     1
+#>  retained_subsets     1
 #>       is_disjoint FALSE
 #> 
 #> Notes

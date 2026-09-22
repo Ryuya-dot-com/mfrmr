@@ -12,48 +12,18 @@ together with a documented bounded `GPCM` extension. A facet can
 represent a rater, item, task, criterion, form, occasion, or another
 observed role that affects an ordered score.
 
-For GPCM, *bounded* refers to the documented model and workflow scope;
-it does not mean finite parameter box constraints. Unsupported
-combinations and inference states are reported explicitly rather than
-silently treated as ordinary estimates.
+Educational performance assessment is a recurring example, but the
+column names and facet roles are configurable. The same analysis
+questions can arise when judges rate musical performances, clinicians
+rate observed performance, or observers apply a psychological rating
+rubric. Define the unit being rated, the ordered categories and the
+modeled construct for each application. A competition total or a
+continuous clinical measurement is not automatically an ordered-category
+response.
 
-The package extends Rasch-family RSM/PCM work with MML, modern
-diagnostics, reproducibility, network review, and reporting support. It
-is not a general FACETS replacement: each
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-call uses one response-model family and one observed score scale, and
-the current public API does not provide mixed response families,
-multiple independent rating scales, general threshold anchoring, or an
-imported versioned frozen-calibration bundle for operational scoring.
-Posterior scoring from an existing fitted object is a separate analysis
-route.
-
-The recommended workflow is:
-
-``` text
-long-format data + describe_mfrm_data()
-  -> fit_mfrm(method = "MML")
-  -> print(fit) / summary(fit)$decision
-  -> if ready: summary(profile = "facets")
-     if review/blocked: follow summary(fit)$decision$NextAction
-  -> native Wright map with uncertainty
-  -> focused diagnostics
-  -> report and export
-```
-
-The native Wright map is the required first fitted-scale figure in this
-workflow. A separate FACETS-style renderer is available when a familiar
-asterisk ruler and labelled category transitions are useful.
-
-The three basic fitted-object methods have deliberately different jobs:
-`print(fit)` is a compact triage view, `summary(fit)` is the canonical
-structured review surface, and `plot(fit, draw = FALSE)` returns
-reusable plot data. The printed `Decision` and structured
-`summary(fit)$decision` are the common first-read for RSM, PCM, and
-bounded GPCM. All three methods carry the same model/readiness basis;
-fitted-model plots also retain a `scale_contract` table so the
-latent-coordinate and discrimination scales are not inferred from axis
-labels alone.
+Start with the quick start below: load data, fit a model, draw a plot,
+and inspect the summary. The complete workflow then covers data checks,
+diagnostics, and reporting.
 
 Package website: <https://ryuya-dot-com.github.io/mfrmr/>
 
@@ -64,14 +34,27 @@ Questions and bug reports:
 
 ## Installation
 
-Install the CRAN package with:
+This README describes the unreleased `0.2.4` release candidate,
+including portable calibration, exploratory external-feature groups and
+multivariate G/D-studies. See [the
+roadmap](https://ryuya-dot-com.github.io/mfrmr/ROADMAP.md) for supported
+scope and future work. Functions and options shown here may differ from
+an installed release; check `packageVersion("mfrmr")` and the help
+shipped with that installation. For an existing analysis, read [Updating
+saved analyses](#updating-saved-analyses) before reusing saved
+diagnostics, scores or reports.
+
+Install the published CRAN release with:
 
 ``` r
 
 install.packages("mfrmr")
 ```
 
-Install the GitHub version with:
+The CRAN release and the default GitHub branch do not select the
+development candidate described here. To install a local copy of this
+source, use the directory containing this README and a `DESCRIPTION`
+file with `Version: 0.2.4`:
 
 ``` r
 
@@ -79,25 +62,114 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
   install.packages("remotes")
 }
 
-remotes::install_github(
-  "Ryuya-dot-com/mfrmr",
+remotes::install_local(
+  "path/to/mfrmr",
   build_vignettes = TRUE
 )
 ```
 
-Load the package, inspect the six-step beginner route, and list the
-installed guides:
+## Quick start
+
+This example estimates person abilities while accounting for rater
+severity and criterion difficulty. A *facet* is a source of variation in
+scores; here, `Rater` and `Criterion` are facets, and individual raters
+and criteria are their *levels*. The data are synthetic, with one row
+per rating and scores from 1 to 4.
+
+`head(toy)` shows the first six rows. The quoted column names in
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+are case-sensitive; `Study` and `Group` are extra labels unused by this
+model. `MML` selects marginal maximum likelihood; `RSM` selects a
+rating-scale model with shared category thresholds (the transitions
+between adjacent scores).
 
 ``` r
 
+# Load the package
 library(mfrmr)
-mfrmr_output_guide("beginner")[, c(
-  "Question", "MainFunction", "NextStep"
-)]
-browseVignettes("mfrmr")
+
+# Load example ratings and look at the first six rows
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Plot the results (Wright map)
+plot(fit)
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
+results$decision
 ```
 
-For the shortest end-to-end explanation, open
+`<-` saves an object without printing it. Here `toy` holds the data,
+`fit` holds the model, and `results` holds its summary. `$` selects a
+named part: `results$person_overview` displays just that table. Enter
+`results` to print the full summary.
+
+The Wright map displays the estimates in logits, the model’s measurement
+units, rather than the original 1-to-4 scores. With this example’s
+default orientation, higher person estimates mean higher ability; higher
+rater estimates mean stricter ratings, and higher criterion estimates
+mean greater difficulty.
+
+The overview tables describe distributions: `person_overview` has one
+row for all 48 persons, and `facet_overview` has one row for each facet.
+`Mean`/`MeanEstimate` is the average, `SD`/`SDEstimate` is the spread,
+and `Min`/`Max` or `MinEstimate`/`MaxEstimate` give the endpoints. Rater
+and criterion means are constrained to zero here; their SDs and ranges
+show differences among levels.
+
+### Inspect individual estimates
+
+``` r
+
+estimates <- as.data.frame(fit)
+head(subset(estimates, Facet == "Person")) # First six persons
+subset(estimates, Facet == "Rater")       # All raters
+subset(estimates, Facet == "Criterion")   # All criteria
+```
+
+`Facet` identifies the type of estimate, `Level` identifies the person,
+rater, or criterion, and `Estimate` is its value in logits.
+
+### Check what needs review
+
+Read `results$decision`, especially `Why` and `NextAction`, before
+interpreting or reporting estimates. `FormalInference = "No"` in this
+first summary can mean that precision has not yet been reviewed; it does
+not necessarily mean that fitting failed. The default summary does not
+compute diagnostics.
+
+``` r
+
+diagnostics <- diagnose_mfrm(fit)
+diagnostic_summary <- summary(diagnostics)
+diagnostic_summary$decision
+```
+
+For your own data, follow [Use your own CSV](#use-your-own-csv) below.
+For reporting, `res <- mfrm_results(fit, diagnostics = diagnostics)`
+builds a comprehensive object that reuses the checks above. Pass `res`
+to
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+or
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md);
+`results` remains the basic summary.
+
+For a guide to the next steps, open
 [`help("mfrmr_workflow_methods", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
 or
 [`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md).
@@ -107,32 +179,211 @@ when choosing a figure and
 [`help("mfrmr_reporting_and_apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
 when moving from a reviewed fit to tables and manuscript-draft output.
 
-## Data format
+### Give feedback to raters
 
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-expects one row per observed rating event. At minimum, the data need:
-
-- one person identifier;
-- one or more non-person facet columns;
-- one ordered numeric score column.
-
-For example:
+Use the fitted model and diagnostics above to ask which rating patterns
+need discussion with a rater. First read `diagnostic_summary$decision`;
+a plot does not override its restrictions. Then inspect signed severity
+estimates and their uncertainty, followed by the detailed screening
+results:
 
 ``` r
 
-head(data.frame(
-  Person = c("P01", "P01", "P02", "P02"),
-  Rater = c("R1", "R2", "R1", "R2"),
-  Criterion = c("Content", "Content", "Content", "Content"),
-  Score = c(3, 2, 2, 3)
-))
+# Review severity on the fitted scale without heuristic guide bands
+severity <- plot_rater_severity_profile(
+  fit, diagnostics = diagnostics, facet = "Rater",
+  show_bands = FALSE, draw = FALSE
+)
+severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
+
+# Keep the screening settings and interpretation notes with the results
+rater_review <- facet_quality_dashboard(
+  fit, diagnostics = diagnostics, facet = "Rater"
+)
+rater_review$detail[, c("Level", "N", "Estimate", "SE", "Infit", "Outfit")]
+rater_review$detail[, c("Level", "MissingMetrics", "SeverityFlag", "MisfitFlag")]
+rater_review$settings
+writeLines(strwrap(rater_review$notes, width = 72))
+
+# Inspect rating coverage and category use before selecting feedback cases
+coverage <- subset_connectivity_report(fit, diagnostics = diagnostics)
+summary(coverage)
+usage <- data_quality_report(fit)
+usage$category_usage_summary
+usage$facet_response_patterns
+cases <- build_misfit_casebook(fit, diagnostics = diagnostics)
+summary(cases)
 ```
 
-Facet identifiers may be character or factor columns. Scores must
-represent ordered categories. Use `NA` for missing responses, or
-document and recode special missing-value codes before fitting. The
-design need not be fully crossed, but it must contain enough links among
-persons and facet levels to support the intended comparisons.
+For a column named `Judge` or `Examiner`, pass that modeled facet name
+instead of `"Rater"`. Severity describes scoring relative to the fitted
+reference; being stricter does not by itself mean being inconsistent or
+incorrect. Individual interval overlap is not a test of the difference
+between two raters. Dashboard flags use the displayed screening settings
+and require follow-up; they do not establish bias or justify automatic
+exclusion. `MissingMetrics` identifies unavailable diagnostics: zero
+observed flags is not a complete pass. A `REVIEW ONLY` plot retains the
+fit’s interpretation restrictions. Keep the complete dashboard when
+saving with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html);
+`export_mfrm_bundle(..., include = c("dashboard", "html"))` also retains
+screening settings and interpretation notes with the exported tables.
+
+Check each rater’s workload, category use and overlap with other raters
+before discussing flagged cases. Compare selected ratings with the
+rubric and shared calibration performances. Insufficient overlap may
+call for additional common ratings before comparing raters. For a
+training follow-up, compare explicitly linked occasions; a change in
+severity alone does not establish a training effect. See
+[`help("facet_quality_dashboard")`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md),
+[`help("data_quality_report")`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+and
+[`help("subset_connectivity_report")`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
+for the supporting checks.
+
+## Data format
+
+Each row records **one score given by one rater to one person on one
+criterion**. The same person therefore appears on several rows:
+
+| Person | Rater | Criterion | Score |
+|--------|-------|-----------|-------|
+| 001    | R1    | Content   | 3     |
+| 001    | R1    | Style     | 2     |
+| 001    | R2    | Content   | 4     |
+| 001    | R2    | Style     | 3     |
+
+These four rows illustrate the layout, not a dataset for estimating a
+model. Keep the complete set of ratings for your analysis. Use
+consistent IDs across rows; `001` identifies the same person each time.
+`Score` contains the ordered integer categories from the rubric, not
+person totals or averages across raters. Use a blank cell or `NA` for a
+missing rating; zero is a score if your rubric includes zero. Do not add
+zeros for ratings that were never assigned.
+
+At least one non-person facet is required. This example uses two; choose
+columns that represent your design. If criteria occupy separate
+spreadsheet columns, see the reshaping example in the workflow vignette.
+
+## Use your own CSV
+
+Export the rating sheet as **CSV UTF-8**, with column names in the first
+row. For the four-column layout above, run:
+
+``` r
+
+library(mfrmr)
+
+# Select your CSV file in the file dialog
+csv_path <- file.choose()
+ratings <- read.csv(
+  csv_path,
+  colClasses = "character",
+  na.strings = "",
+  check.names = FALSE,
+  fileEncoding = "UTF-8-BOM"
+)
+# Treat the documented missing-score marker only in the score column
+ratings <- recode_missing_codes(ratings, columns = "Score", codes = "NA")
+head(ratings)
+names(ratings)
+table(ratings$Score, useNA = "ifany")
+```
+
+For a reusable script, replace
+[`file.choose()`](https://rdrr.io/r/base/file.choose.html) with a quoted
+path such as `"data/ratings.csv"`, relative to the folder shown by
+[`getwd()`](https://rdrr.io/r/base/getwd.html). Reading columns as text
+preserves distinct IDs such as `001`, `1`, and `NA`; `mfrmr` converts
+numeric score strings such as `"3"` for estimation. Empty cells are
+missing in every column; the literal marker `NA` is recoded only in
+`Score`. Use the missing-score markers declared for your data.
+
+The names in `person`, `facets`, and `score` must match `names(ratings)`
+exactly. For a file headed `Student`, `Judge`, `Task`, and `Rating`, use
+`person = "Student"`, `facets = c("Judge", "Task")`, and
+`score = "Rating"` in **both** calls below. Also use
+`columns = "Rating"` in the recoding call and inspect `ratings$Rating`
+above.
+
+### Check the data before fitting
+
+``` r
+
+data_review <- describe_mfrm_data(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  keep_original = TRUE
+)
+data_review$row_retention
+data_review$missing_by_column
+data_review$score_distribution
+data_review$design_connectivity
+```
+
+Set `rating_min` and `rating_max` from the **rubric**, even if nobody
+received the lowest or highest score. The values above describe a 1-to-4
+rubric. `keep_original = TRUE` preserves its category structure. Check
+`DroppedRows` for excluded rows and `RawN` for category counts. Missing
+scores or required IDs remove that rating row, not automatically the
+person’s other ratings. The package does not fill missing ratings. If an
+internal category has no observations, fitting with this setting stops:
+review the data and rubric before changing the categories.
+
+`Components = 1` indicates that a facet’s levels are connected through
+shared persons. More than one component needs design review before
+comparing levels across components. This check alone does not establish
+model identification. The vignette’s **If a check stops you** section
+covers missing-value codes, unexpected row loss, and common input
+errors.
+
+### Fit and read the results
+
+After resolving the data-review findings, use the same columns and score
+scale:
+
+``` r
+
+csv_fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  keep_original = TRUE,
+  method = "MML",
+  model = "RSM"
+)
+csv_diagnostics <- diagnose_mfrm(csv_fit)
+csv_results <- summary(csv_fit, diagnostics = csv_diagnostics)
+csv_results$decision
+
+plot(csv_fit)
+csv_estimates <- as.data.frame(csv_fit)
+head(subset(csv_estimates, Facet == "Person"))
+subset(csv_estimates, Facet == "Rater")
+subset(csv_estimates, Facet == "Criterion")
+```
+
+Read `Why` and `NextAction` before using the estimates. With these
+default settings, higher person estimates mean higher ability, higher
+rater estimates mean stricter ratings, and higher criterion estimates
+mean greater difficulty. The values are in logits; a difference in
+estimates alone does not establish statistical significance. For custom
+facet names, also change the `Facet` filters above, for example from
+`"Rater"` to `"Judge"`; person rows retain `Facet == "Person"`.
+
+Open
+[`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md)
+for a runnable practice CSV, a wide-to-long example, and
+troubleshooting. The complete workflow below returns to the packaged
+data to illustrate further review and reporting.
+
+## Further data considerations
 
 ### Response type and frequencies
 
@@ -154,10 +405,11 @@ pattern is not equivalent to replicating a complete Person response
 pattern after marginalization. It also does not change the response
 family or model dependence among repeated ratings. Non-unit
 observation-weight fits are excluded from the common MML
-information-criterion panel. [FACETS has separate `Bn` binomial-trial
-and `P` Poisson response
-models](https://www.winsteps.com/facetman64/models.htm); those are not
-reproduced by mfrmr’s binary ordered-score route.
+information-criterion panel and remain review-only for ordinary
+inference: their SEs and intervals have not been qualified for the
+weighted objective. FACETS has separate `Bn` binomial-trial and `P`
+Poisson response models; those are not reproduced by mfrmr’s binary
+ordered-score route.
 
 Each row should represent a distinguishable rating event. Exact
 duplicate Person-by-facet combinations are retained but trigger a
@@ -264,8 +516,9 @@ fit <- fit_mfrm(
 
 `MML` integrates over the person distribution and returns posterior
 person summaries. The default uses 31 quadrature points. Record that
-setting and examine quadrature sensitivity when the application requires
-it. Eligible fits below 15 points retain raw AIC/BIC/SABIC for
+setting and examine same-data quadrature sensitivity before portable
+calibration and whenever numerical movement could affect a consequential
+result. Eligible fits below 15 points retain raw AIC/BIC/SABIC for
 screening, and fits at 15–30 points retain them for review, but
 automatic deltas, criterion weights, preferred-model labels, evidence
 ratios, and LRT are disabled below 31 points. Use 31–60 points as a
@@ -274,27 +527,40 @@ close or consequential comparison still requires a prespecified
 common-grid sensitivity check; q\>=31 alone is not evidence that
 integration error is negligible.
 
-After fitting a bounded GPCM-MML object as `fit_gpcm`, run the
-comparison explicitly rather than making
-[`summary()`](https://rdrr.io/r/base/summary.html) refit the model in
-the background:
+For the fitted MML model and the same data, request the comparison
+explicitly.
+[`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+reuses the supplied fit at its stored grid and refits the other
+requested grids; `summary(q_review)` only summarizes the returned
+review:
 
 ``` r
 
-q_review <- gpcm_mml_quadrature_sensitivity(
-  fit_gpcm,
+q_review <- mml_quadrature_sensitivity(
+  fit,
   data = dat,
-  quad_points = c(31, 41)
+  quad_points = c(31, 61)
 )
 summary(q_review)
 apa_table(q_review)
 ```
 
-The review reports changes in marginal likelihood per Person, relative
-slopes, raw local-curvature SEs, population SD, and fitted
-probabilities. It does not assign a universal stable/unstable cutoff,
-make raw slope SEs inferentially eligible, or change the fit-readiness
-decision.
+The review works for RSM, PCM, and bounded GPCM. It reports changes in
+marginal likelihood per Person, measurement coordinates, probabilities,
+EAP, posterior SD, and, when present, relative slopes, raw
+local-curvature SEs, and population SD. The GPCM-specific
+[`gpcm_mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+name remains available. Neither route assigns a universal
+stable/unstable cutoff, makes raw slope SEs inferentially eligible, or
+changes the fit-readiness decision.
+
+A fit marked `ready` has passed its recorded checks at the chosen grid;
+that status does not establish that a denser grid would give the same
+answer. Review changes in rater estimates and SEs separately from
+changes in person scores, using tolerances appropriate to the intended
+interpretation. If the first comparison shows meaningful movement,
+compare against a further denser grid. Numerical agreement does not
+establish repeated-sampling interval coverage.
 
 Use `model = "PCM", step_facet = "Criterion"` when category steps differ
 across that facet. Choose the model from the scoring design and
@@ -323,14 +589,12 @@ fit_summary$person_overview
 fit_summary$step_overview
 ```
 
-Read `fit_summary$decision` first. It translates the stored readiness
-contract into four practical questions: did the fit gates pass, has
-formal precision support been evaluated, what evidence prevents formal
-use, and what should be done next. A fit-only summary deliberately
-returns `FormalInference = "No"` even when `InferenceReady = TRUE`,
-because convergence and estimability do not by themselves validate
-standard errors, confidence intervals, or reliability. Evaluate that
-separate contract with diagnostics:
+Read `fit_summary$decision` first: have estimation checks passed, has
+precision been assessed, what limits interpretation, and what should be
+done next? A fit-only summary returns `FormalInference = "No"` even when
+estimation checks pass. Convergence and estimability do not by
+themselves validate standard errors, confidence intervals or
+reliability. Review precision with matching diagnostics:
 
 ``` r
 
@@ -348,61 +612,31 @@ It does not mean that changing optimizer settings until the answer
 becomes `"Yes"` is appropriate. Follow `NextAction` and retain the
 original reason in reports.
 
-Then review convergence and estimation settings. When optimizer code
-zero is reached before the common terminal-gradient check passes,
-[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-makes a bounded sequence of warm-started polishing attempts when the
-requested setting is at least as strict as the public default
-(`reltol <= 1e-9`). It retains the best non-worsening stage under the
-recorded selection rule. The requested and selected-stage settings,
-every attempted stage, terminal gradients, parameter changes, and
-evaluation counts remain in `fit$opt$optimizer_polish`. For L-BFGS-B,
-the native `factr` and `pgtol` controls are also recorded; do not
-interpret `EffectiveReltol` as a native L-BFGS-B argument.
+Then review convergence and estimation settings. Optimizer success and
+the terminal-gradient check are separate numerical checks. A small
+gradient still does not resolve a disconnected design, effects that
+cannot be separately estimated, or unbounded estimates. The fitting help
+describes the numerical controls and the recorded optimization history.
 
 Treat `maxit` as a computational ceiling, not a convergence criterion or
-a control to tune until preferred estimates appear. The package default
-is `maxit = 400`; smaller values in executable examples exist only to
-shorten checks. Prespecify the estimator and controls before inspecting
-results. If a fit ends with `ConvergenceStatus = "iteration_limit"`, do
-not interpret or compare its estimates. Refit the same data, model,
-method, anchors, optimizer, tolerance, and quadrature rule using the
-next ceiling in a prespecified sequence. Use a result only after
-`FitReadiness = ready`, `InferenceReady = TRUE`, and `Numerical = pass`;
-do not select among runs by coefficient size, fit statistics,
-significance, or agreement with an expected answer. Material differences
-between separately ready runs indicate numerical instability that
-requires review.
+a control to tune until preferred estimates appear. The default is
+`maxit = 400`. Prespecify the estimator and controls before inspecting
+results. If a fit stops at the iteration limit, refit the same data,
+model, method, anchors, optimizer, tolerance and quadrature rule using
+the next ceiling in that sequence. Do not select among runs by
+coefficient size, fit statistics, significance or agreement with an
+expected answer. Material differences between numerically acceptable
+runs require review.
 
-`InferenceReady` is deliberately a conservative fit-level first screen,
-not a publication decision. It is `TRUE` only when Input, Estimability,
-Category, Boundary, and Numerical components all pass. Then inspect the
-separate Design, Stability, Diagnostics, and Reporting workflow rows in
-`fit_summary$readiness`. A fit object saved before this versioned record
-existed is labelled `legacy_unknown`; an older `InferenceReady = TRUE`
-value does not make its summaries, results, or plots
-interpretation-ready. Refit it under the current version to establish
-current readiness. Before optimization, mfrmr now checks the
-estimator-specific constrained RSM/PCM free-coordinate design. Exact
-rank deficiency stops with a structured `mfrmr_estimability_error`;
-optimization cannot turn it into a usable fit. A disconnected design
-that is full rank only under its declared constraints, an MML panel
-linked through a common latent-population assumption rather than shared
-Persons, or a boundary- constant facet level remains a reporting hold or
-review even when the optimizer gradient is small. Inspect
-`fit$data_review$estimability` for the rank, nullity, parameter blocks,
-and check scope. In an otherwise supported fit, a Reporting status such
-as `ready_for_diagnostics_and_reporting_follow_up` means that fitting
-succeeded and the next diagnostic stage is pending; it does not mean
-that optimization failed or that the result is already manuscript-ready.
-Plots can still be generated for diagnosis, but their returned data
-carry `interpretation_status = "review_only"`, their subtitle is marked
-`REVIEW ONLY`, the drawn title carries the same banner, and the plotting
-call warns before substantive or cross-subset interpretation. The
-remaining tables describe the fitted scale; they do not create universal
-acceptance thresholds.
+Print `fit_summary` for readable explanations; its component tables
+retain detailed settings and status fields for further inspection.
+Estimation checks and precision assessment are distinct from reviewing
+the rating design and the assumptions needed for the intended
+comparison. Plots marked `REVIEW ONLY` remain diagnostic displays. A
+saved fit without current estimation checks needs the update procedure
+below before inferential reuse.
 
-### 4. Request the comprehensive FACETS-organized summary
+### 4. Request the comprehensive measurement summary
 
 Use the `facets` profile for the main review:
 
@@ -427,12 +661,13 @@ res$plot_map[, c(
 ```
 
 This profile organizes model information, measures, uncertainty, fit
-evidence, precision, category/step information, and plot routes in a
-reading order that will be familiar to FACETS users. It computes the
-documented diagnostics when they are needed and returns the resulting
-`mfrm_results` object in `facets_summary$results`.
+evidence, precision, category/step information, and plot routes in one
+reading order. No experience with FACETS, TAM, or sirt is required. It
+computes the documented diagnostics when they are needed and returns the
+resulting `mfrm_results` object in `facets_summary$results`.
 
-The profile name describes organization, not software execution:
+The historical profile name describes organization, not software
+execution:
 
 - FACETS is not called;
 - all estimates remain `mfrmr` estimates;
@@ -660,6 +895,50 @@ The separate `type = "pathway"` route displays expected scores and
 dominant-category regions across theta; `type = "fit_pathway"` displays
 Infit or Outfit against the fitted measure.
 
+### Fair Scores and figures without embedded notes
+
+[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+offers observed-versus-fair (`"scatter"`), observed-minus-fair
+(`"difference"`), and measure-to-score (`"measure"`) views. FairM uses
+mean reference measures; FairZ uses zero reference measures. **FairZ is
+an expected score, not a z-score.** These transformations do not average
+predictions over the observed assignment distribution, and gaps also
+reflect person mix and assignment; they do not by themselves establish
+bias.
+
+``` r
+
+p_fair <- plot_fair_average(
+  fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
+  plot_type = "measure", show_ci = TRUE, preset = "monochrome",
+  show_title = FALSE, show_notes = FALSE, draw = FALSE
+)
+p_fair$data$notes
+p_fair$data$plot_data
+# With ggplot2 installed:
+# as_ggplot(p_fair)
+```
+
+Use `draw = TRUE` for a base-R figure. The returned object retains notes
+even when annotations are hidden. Wright, expected-score pathway, and
+CCC plots also accept `show_title`, `show_notes`, and
+`preset = "monochrome"`; see
+[`help("mfrmr_visual_diagnostics")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+for the reusable-data route and display limits.
+
+| Fair-score interval route | What is propagated | Current interpretation |
+|----|----|----|
+| `plot_fair_average(fit, show_ci = TRUE)` for RSM/PCM | Focal measure SE, with thresholds and reference measures fixed | Conditional diagnostic interval |
+| `fair_average_table(fit_gpcm, fair_se = TRUE)` for GPCM-MML | Joint structural covariance, with Person EAP/reference means fixed; non-Person rows only | Structural diagnostic interval |
+
+The table’s `fair_se` option does not supply RSM/PCM fair-score SEs.
+Historical `SE`/`ModelBasedSE` columns describe measures, not fair
+scores. Plot intervals carry `CI_Eligible = FALSE`; requested table
+intervals carry `FairCIEligible = FALSE`. Neither finite limits nor a
+ready fit establishes full-refit coverage. Difference-view whiskers also
+hold the observed mean fixed and are not confidence intervals for the
+observed-minus-fair gap.
+
 ### 8. Build a report and export the results
 
 Start with the brief result summary:
@@ -765,10 +1044,8 @@ workflow is easier to review and is recommended.
 
 Use these guides for the full migration details:
 
-- [Migrating from FACETS to
-  mfrmr](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-facets-migration.Rmd)
-- [Visual
-  diagnostics](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-visual-diagnostics.Rmd)
+- [Migrating from FACETS to mfrmr](#documentation)
+- [Visual diagnostics](#documentation)
 
 The installed `references/FACETS_manual_mapping.md` maps concepts and
 output routes. It is not evidence that FACETS was executed.
@@ -852,6 +1129,715 @@ estimates. The helper warns when writing these files and creates
 `*_privacy_notice.csv`. Store the bundle in an approved restricted
 location and pseudonymize or redact it as required before sharing.
 
+## External features and exploratory groups
+
+The [external-feature tutorial](#documentation) follows 120 fictional
+raters from experience, workload, specialty, training, and certification
+attributes through missingness review, multiple imputation, group
+profiles, and sensitivity to feature selection, group count, weights,
+and clustering method. It also groups persons and tasks separately and
+joins their classifications to planned and observed ratings by ID. It
+distinguishes unrecorded values from inapplicable mentoring histories
+and keeps auxiliary imputation predictors separate from clustering
+features.
+
+In version 0.2.4,
+[`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
+reviews a table with one row per person, rater, or task and explicitly
+selected external attributes, such as experience or specialization.
+[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+groups those profiles using Gower distances and PAM; install the
+optional `cluster` package to use it.
+
+``` r
+
+features <- mfrm_features(rater_attributes, id = "Rater",
+                         features = c("ExperienceYears", "Specialty"))
+summary(features)
+features$missing
+groups <- mfrm_cluster(features, k = 3)
+groups$membership
+groups$profiles
+plot(groups)
+plot(groups, type = "profile", feature = "ExperienceYears")
+```
+
+Here `rater_attributes` is your entity-level table, with
+`ExperienceYears` measured in completed years. Group count and feature
+selection are substantive choices. Missing features stop clustering by
+default; `missing = "omit"` explicitly selects complete cases and
+retains excluded IDs with missing group membership. Optional missingness
+reasons are documented in
+[`?mfrm_features`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md).
+No value is imputed. Silhouette widths describe separation in this
+sample; stability, inferential comparisons, and measurement uncertainty
+are not assessed. The groups do not establish ability levels or rater
+quality.
+
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) also displays
+categorical feature proportions and, for an imputed clustering result, a
+co-membership heatmap. All views reuse stored results; `draw = FALSE`
+returns the values for custom graphics. See
+[`?plot.mfrm_clusters`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_clusters.md)
+and the tutorial for examples. PAM is nonhierarchical and has no
+dendrogram.
+
+For a hierarchy, fit a separate Gower-based analysis using average
+linkage (default) or complete linkage:
+
+``` r
+
+hierarchy <- mfrm_cluster_hierarchical(features, k = 3, linkage = "average")
+plot(hierarchy)
+summary(mfrm_cluster_compare(list(PAM = groups, Average = hierarchy)))
+```
+
+The dendrogram uses the stored tree; boxes mark the chosen groups.
+Heights are linkage dissimilarities, not branch support. With missing
+features, use an explicit omission policy or the imputation workflow
+below. Set `method = "hierarchical", linkage = "average"` in
+[`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+to retain a tree for each completion. No pooled tree is estimated.
+
+For incomplete external attributes,
+[`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+accepts a model fitted with the optional `mice` package. Select eligible
+missing cells explicitly after reviewing their reasons; structurally
+undefined attributes should remain missing. The imputation model may
+include auxiliary variables that are not clustering features. Choose and
+review its methods, predictors, and diagnostics in `mice`; see
+[`?mfrm_cluster_imputed`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+for a runnable example.
+
+The result retains every imputation’s groups, original missingness
+reasons, and the fitted imputation model. Its `co_membership` matrix
+reports how often each pair belongs to the same group across all
+supplied imputations, independent of group numbering. A failed analysis
+stops the comparison. These proportions describe sensitivity to the
+imputations, conditional on the chosen model and clustering settings;
+they are not membership probabilities or sampling stability. No
+automatic missing-score correction is performed.
+
+To review sensitivity to selected features, group count, weights, or
+clustering method, fit the settings you want to compare and pass the
+named results to
+[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md).
+The comparison reuses these results without refitting:
+
+``` r
+
+alternatives <- list(
+  TwoGroups = mfrm_cluster(features, k = 2),
+  ThreeGroups = groups,
+  ExperienceWeighted = mfrm_cluster(features, k = 3,
+    weights = c(ExperienceYears = 3, Specialty = 1))
+)
+comparison <- mfrm_cluster_compare(alternatives)
+comparison$analysis_summary
+comparison$comparisons
+summary(comparison)
+```
+
+`ChangedFraction` is the fraction of entity pairs whose together/apart
+status changes; `SplitPairs` and `JoinedPairs` show the direction.
+`AdjustedRand` also compares the partitions while correcting for
+agreement expected under random partitions with fixed group sizes. Both
+measures ignore arbitrary group numbering. Inspect group sizes and
+profiles alongside them. Mean silhouettes under different feature
+selections or weights use different distances and do not establish the
+best selection or weights.
+
+For multiple imputations, supply a named list of
+[`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+results. Selected features may differ, but entity IDs and included
+entities must match; shared features must retain their values and types.
+When feature selections differ, all results must retain the same fitted
+`mids` object, and selected values are checked against its corresponding
+completion. Changing a clustering feature selection does not change the
+imputation model. See the “Compare feature selections” section of the
+external-feature tutorial listed under [Documentation](#documentation)
+for an example. Unmatched completions or different included entities are
+refused. The summary reports descriptive means and ranges across
+imputations; these are not pooled inference or sampling stability. No
+setting is automatically selected.
+
+Pairwise distances use quadratic memory. The 5,000-entity limits are
+input guards, not performance or memory guarantees; multiply imputed
+analyses also retain every completed result. Reuse saved results when
+comparing settings.
+
+## Multivariate G-theory
+
+For a first runnable example, start with the bundled two-score data
+under [Common tasks and crossed
+facets](#common-tasks-and-crossed-facets). It follows the question of
+adding tasks through data import, G-study estimation, D-study tables,
+plots and interpretation. Use the design table below to check whether
+that model matches your assessment before adapting the example.
+
+Choose the G-study model before comparing designs. The existing
+[`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md)
+/
+[`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md)
+route fits main effects and uses an explicit assumption to scale its
+combined residual. The
+[`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+/
+[`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+route estimates the supported interaction covariance components
+separately; it also accepts a **single score**, so its use is not
+restricted to composites. Neither route automatically infers the
+intended measurement design from column names.
+
+When an assessment reports several score components, such as content and
+organization, their covariances matter for the dependability of a
+composite. In version 0.2.4,
+[`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+estimates those covariances for one or two common random measurement
+facets. The default ANOVA method requires a complete balanced design;
+`method = "minque0"` also handles incomplete configurations and unequal
+nested child counts. Each retained cell has one row with all selected
+numeric scores observed. Included facet identifiers must denote the same
+conditions across scores and persons, and represent the random
+conditions over which scores will be generalized. Score components are
+fixed parts of the assessment.
+
+Choose the facets explicitly:
+
+| Measurement design | G-study arguments | D-study count columns |
+|----|----|----|
+| Persons and common tasks | `rater = NULL` | `Tasks` |
+| Persons and common raters | `task = NULL` | `Raters` |
+| Persons, common raters, and common tasks | Defaults | `Raters`, `Tasks` |
+| Persons and tasks with a different rater team for each task | `nesting = c(Rater = "Task")` | `Raters` **per task**, `Tasks` |
+| One or two other common random facets | `facets = c(Rater = "Assessor", Occasion = "Session")` | Exact labels: `Rater`, `Occasion` |
+
+In `facets`, values select data columns and names label the analysis. Do
+not combine it with `rater`/`task`. Labels carry through component
+matrices, count tables, and plots. For example, with `repeat_ratings`
+containing `Person`, `Assessor`, `Session`, `Content`, and
+`Organization`:
+
+``` r
+
+g_repeat <- mfrm_multivariate_gstudy(repeat_ratings,
+  scores = c("Content", "Organization"),
+  facets = c(Rater = "Assessor", Occasion = "Session"))
+d_repeat <- mfrm_multivariate_d_study(g_repeat,
+  expand.grid(Rater = c(1, 2), Occasion = c(2, 4)),
+  weights = c(Content = 0.6, Organization = 0.4))
+summary(d_repeat)
+plot(d_repeat, x_var = "Occasion", type = "sem")
+```
+
+Here the question is whether additional occasions reduce error while
+rater counts are held constant within each line. Occasions must be
+defensibly treated as exchangeable random conditions; this specification
+does not estimate learning, growth, a time trend, or serial correlation.
+All included facets are random; the default model is crossed. Fixed
+facets and three or more measurement facets remain unsupported.
+
+### Different rater teams for different tasks
+
+Suppose each task has its own raters, and each team rates the same
+examinees on Content and Organization. Specify
+`nesting = c(Rater = "Task")` to estimate five components: Person, Task,
+Rater(Task), Person:Task, and the combined
+Person-by-Rater-within-Task/residual component. A local label R1 on Task
+1 identifies a different rater from R1 on Task 2. If the same physical
+rater works on both tasks, this independent nested-rater model does not
+describe that arrangement; relabeling the rater cannot make it so.
+
+With `nested_ratings` containing one row per observed Person/Task/Rater
+and both score columns:
+
+``` r
+
+g_nested <- mfrm_multivariate_gstudy(nested_ratings,
+  scores = c("Content", "Organization"), nesting = c(Rater = "Task"))
+g_nested$design$child_counts # Raters within each observed task.
+g_nested$component_diagnostics
+d_nested <- mfrm_multivariate_d_study(g_nested,
+  expand.grid(Raters = c(2, 3), Tasks = c(4, 6)),
+  weights = c(Content = 0.6, Organization = 0.4))
+summary(d_nested)
+plot(d_nested, x_var = "Raters") # Horizontal axis: raters per task.
+plot(d_nested, x_var = "Tasks", type = "sem")
+```
+
+Here two raters for each of six tasks requires **twelve distinct
+raters** and twelve ratings per examinee. Increasing `Raters` adds
+raters within each task; increasing `Tasks` samples more tasks with
+their own teams. Read the G/Phi and SEM projections together with their
+status and component diagnostics. They are point estimates; the
+plan-comparison interval method currently requires crossed facets and
+cannot be used for this nested model.
+
+ANOVA requires complete observations and equal numbers of raters per
+task. Use `method = "minque0"` for incomplete observations or unequal
+team sizes when the observed design separates the five components. An
+explicit future grid is then required; it describes a complete design
+with equal team sizes, not reliability of the observed sparse roster.
+Nesting within examinees, partly shared raters and score-specific rater
+identities are unsupported. See
+[`?mfrm_multivariate_gstudy`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+for a runnable synthetic nested-score example.
+
+### Common tasks and crossed facets
+
+For a design without a rater facet, set `rater = NULL` explicitly. This
+example uses the published synthetic data from Brennan’s *Manual for
+mGENOVA*, Table 12: ten persons, six common items (named `Task` here),
+and scores V and W.
+
+``` r
+
+tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
+g_task <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
+d_task <- mfrm_multivariate_d_study(g_task,
+  design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
+summary(d_task)
+plot(d_task) # G and Phi for W minus V, identified by the title and weights.
+plot(d_task, type = "sem") # Error in difference-score units.
+plot(d_task, score = "V") # An original score, shown separately.
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  p <- as_ggplot(d_task, type = "sem")
+  print(p)
+  # ggplot2::ggsave("d-study-sem.png", p, width = 7, height = 7, dpi = 300)
+}
+```
+
+At six tasks the difference W minus V has G = 0.30000 and Phi = 0.24116,
+matching the manual’s Appendix E. Person, Task, and the combined
+Person-by-Task/residual covariance matrices are estimated from the
+scores. The D-study varies task counts; it cannot project new raters
+from this model. No scores are averaged automatically when omitting the
+rater facet.
+
+The planning question is whether adding common tasks would improve the
+dependability of the difference score. Under the estimated components,
+doubling tasks from six to twelve raises G from 0.300 to 0.462. This is
+a projection, not evidence from twelve observed tasks. G concerns
+relative ordering; Phi also includes shifts in absolute score levels.
+Larger values mean greater dependability under the model. SEM expresses
+error in score units, where smaller is better; it is not a confidence
+interval for G or Phi. Neither coefficient gives pass/fail
+classification accuracy, and no universal acceptable threshold or
+optimal design is selected.
+
+With `ratings` containing `Person`, `Rater`, `Task`, `Content`, and
+`Organization` columns:
+
+``` r
+
+g <- mfrm_multivariate_gstudy(ratings, scores = c("Content", "Organization"))
+g$component_diagnostics
+g$components$Person
+d <- mfrm_multivariate_d_study(g,
+  design_grid = data.frame(Raters = c(2, 4), Tasks = c(3, 3)),
+  weights = c(Content = 0.6, Organization = 0.4))
+summary(d)
+plot(d) # Rater counts on the horizontal axis because tasks are held at three.
+
+# To vary both counts, request all combinations explicitly.
+d_grid <- mfrm_multivariate_d_study(g,
+  expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 9)),
+  weights = c(Content = 0.6, Organization = 0.4))
+plot(d_grid, x_var = "Tasks") # Each line holds the rater count constant.
+```
+
+Plots select a sole composite by default, or the first score when no
+weights are supplied; `score = "Content"` selects an original score.
+Points show requested scenarios and lines only guide comparisons.
+Inspect exact values with `summary(d_grid)` or
+`plot_data(plot(d_grid, draw = FALSE))`. Unavailable estimates are
+explained and retained in the plot payload rather than shown as zero.
+See
+[`?mfrm_multivariate_d_study`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+and
+[`?plot.mfrm_multivariate_d_study`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_multivariate_d_study.md)
+for the complete workflow and how to read it.
+
+To compare feasible plans with twelve ratings per person, reuse the same
+G-study and score weights:
+
+``` r
+
+plans <- data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))
+d_plans <- mfrm_multivariate_d_study(g, plans,
+  weights = c(Content = 0.6, Organization = 0.4))
+plan_results <- subset(summary(d_plans), Kind == "Composite")
+plan_results$RatingsPerPerson <- with(plan_results, Raters * Tasks)
+plan_results[c("Raters", "Tasks", "RatingsPerPerson", "G", "Phi", "GStatus", "PhiStatus")]
+```
+
+Twelve ratings do not mean equal examinee burden: six tasks scored by
+two raters require twice as many performances as three tasks scored by
+four raters. Consider task duration, rater workload and other costs
+separately. Choose the metric from the intended decision, then compare
+the size of the projected differences. The largest point estimate does
+not establish a reliably better plan, and a rank change can have a small
+practical effect. Component-estimation uncertainty is not included in
+these comparisons; SEM is measurement error, not uncertainty in the
+comparison itself. If a candidate’s metric is unavailable, selecting
+among the remaining values does not settle the comparison of all plans.
+
+For plans specified before inspecting their estimates, the
+two-crossed-facet workflow also provides approximate intervals for their
+differences. Use this method only when independent normal random effects
+are a defensible model for the persons and both facets; the function
+does not test that assumption:
+
+``` r
+
+comparison <- mfrm_multivariate_d_compare(d_plans, reference = 1,
+  assumption = "normal")
+summary(comparison) # Every plan minus row 1: two raters and six tasks.
+plot(comparison) # Positive G/Phi differences favor the comparison plan.
+plot(comparison, type = "sem") # Negative SEM differences favor it.
+plot_data(plot(comparison, draw = FALSE))$table # Exact points and intervals.
+```
+
+The calculation preserves dependence between plans estimated from the
+same data. `SE` describes sampling uncertainty in the difference; it is
+not SEM. An interval containing zero does not establish equivalence.
+Intervals are pointwise, not simultaneous guarantees for all plans or a
+plan selected after examining the results. This approximation is
+sensitive to nonnormal effects, small facet pools and uneven
+assignments; it is not a robust missing-data correction. One-facet and
+nested-design intervals are not yet provided. A point can remain
+available when its interval is unavailable; inspect `Status`. See
+[`?mfrm_multivariate_d_compare`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
+for assumptions and a complete example.
+
+To compare several ways of combining the scores, give `weights` a
+matrix: rows name the original scores and columns name the choices. For
+example, compare an equally weighted total, a content-focused total, and
+the difference between Content and Organization under the same planned
+assessment designs:
+
+``` r
+
+weight_choices <- cbind(
+  Equal = c(Content = 0.5, Organization = 0.5),
+  ContentFocus = c(Content = 0.8, Organization = 0.2),
+  Difference = c(Content = 1, Organization = -1))
+d_choices <- mfrm_multivariate_d_study(g,
+  expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 9)),
+  weights = weight_choices)
+summary(d_choices) # Original scores and all three composites for every design.
+plot(d_choices, composite = "ContentFocus", x_var = "Tasks")
+plot(d_choices, composite = "Difference", type = "sem")
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  print(as_ggplot(d_choices, composite = "Equal"))
+}
+```
+
+[`summary()`](https://rdrr.io/r/base/summary.html) identifies original
+scores and composites with `Kind` and their names with `Score`. Each
+composite uses the same estimated covariance components, without
+refitting the G-study. With several composites, plots require
+`composite` or `score` to identify what to show. Rows of the weight
+matrix are matched by score name; weights are never normalized
+automatically. Changing weights may change what the assessment measures:
+a higher G or Phi alone does not justify adopting a different total.
+Differences describe a different target from totals, and SEM comparisons
+require comparable score scales. Select weights for the intended use
+before interpreting dependability.
+
+With both rater and task facets, the G-study includes Person-by-Rater,
+Person-by-Task, and Rater-by-Task components. The three-way interaction
+and within-cell error remain combined because each cell has one
+observation. The D-study projects mean scores over the specified raters
+and tasks. It uses the full covariance matrices to report relative G,
+absolute Phi, and their corresponding error SEMs; it does not average
+separate reliability coefficients. Weights are used as supplied.
+Omitting `weights` reports the score components without creating a
+composite. See
+[`?mfrm_multivariate_gstudy`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+for a runnable fictional continuous-score example.
+
+Signed weights also allow difference scores. For example,
+`mfrm_multivariate_d_study(g, weights = c(Content = 1, Organization = -1))`
+projects the dependability of Content minus Organization. Subtraction
+must be meaningful on the supplied score scales. The same weights define
+the universe-score target and its observed mean-score estimate; distinct
+target and estimation weights are not supported.
+
+For incomplete crossed data, explicitly select `method = "minque0"`. It
+estimates covariance components from observed overlaps, without
+constructing the full assignment grid. The identity-working-covariance
+MINQUE method uses a common mean per score and common covariance
+components across the sample ([Rao,
+1971](https://doi.org/10.1016/0047-259X(71)90001-7)). It does not fit a
+selection model or covariate-dependent means.
+
+``` r
+
+# Thin the example to illustrate an incomplete assignment roster.
+sparse <- tasks[(tasks$Person + tasks$Task) %% 3 != 0, ]
+sparse$V[1] <- NA_real_ # Additionally, one assigned score was not recorded.
+g_sparse <- mfrm_multivariate_gstudy(sparse, c("V", "W"), rater = NULL,
+  method = "minque0", missing = "omit")
+g_sparse$data_usage
+g_sparse$estimation$component_support
+g_sparse$component_diagnostics
+d_sparse <- mfrm_multivariate_d_study(g_sparse,
+  data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
+summary(d_sparse)
+```
+
+Unassigned cells need no invented score. Missing assigned scores are a
+different issue: omission removes the whole row for all selected scores
+and records its input position. It can lose information and introduce
+bias. Neither sparse estimation nor labeling missingness MAR corrects
+selective assignment, nonresponse, or omitted predictors. Preserve the
+original roster and review coverage with
+`describe_mfrm_data(..., expected_design = ...)`. The G-study’s
+`observed_fraction` concerns retained level combinations, not completion
+of planned assignments or entirely unobserved entities.
+
+Connectedness alone does not guarantee separable variance components.
+For example, with just one rater per Person/Task cell, Person-by-Task
+interaction and residual error cannot both be estimated by this model.
+MINQUE stops when its scaled moment equations cannot separate the
+requested components. Passing this check does not guarantee useful
+precision. The thinned example also illustrates that a difference score
+can have negative estimated universe variance while the original scores
+still have calculable G/Phi. Its explicit D-study grid describes a
+**future complete crossed design**; it does not describe the
+dependability of the observed sparse roster or person-specific
+assignment patterns.
+
+Review an incomplete design in this order:
+
+| Question | What to inspect | What the result can tell you |
+|----|----|----|
+| Were planned ratings actually recorded? | The planned roster, `describe_mfrm_data(..., expected_design = ...)`, and `g_sparse$data_usage` | Unassigned cells and missing assigned scores are different. Omission counts do not identify the cause of missingness. |
+| Can this arrangement separate the components? | The estimation error or `g_sparse$estimation`, including component replication | A full-rank moment system permits calculation. A small condition number is not an estimate of statistical precision. |
+| Are the estimated covariance matrices admissible? | `g_sparse$component_diagnostics` and D-study `ComponentPSD` | Non-PSD components flag a need for review. This diagnostic is separate from whether each requested coefficient can be calculated. |
+| Which requested metrics can be calculated? | `GStatus`, `PhiStatus`, `RelativeSEMStatus`, `AbsoluteSEMStatus` | Each metric uses its own projected variances. An unavailable Phi does not automatically withhold G. Calculability does not establish model fit or precision. |
+| How uncertain is a prespecified improvement between plans? | [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md) for two common crossed facets under normal random effects, plus evidence for the source design and population | Approximate paired intervals preserve dependence between plans. They do not establish robustness to nonnormality, selective missingness or post-selection inference. |
+
+The arrangement matters even at the same workload. With 120 persons,
+rating four tasks with two distinct raters per performance and rating
+eight tasks with one rater per performance both require 960 ratings.
+Only the former supplies repeated ratings within a Person/Task cell; the
+latter cannot separate Person-by-Task variation from residual variation
+in the seven-component model. Other overlaps are still needed to
+separate the remaining components. Do not interpret a rating count,
+percentage of observed cells, or connected graph as a universal adequacy
+threshold.
+
+Allocation and missingness affect precision, even when coefficients can
+be calculated. A limited Gaussian simulation used two scores, 120
+persons, 12 raters and eight task levels, with 1,000 replications per
+condition. At the same 960-rating workload, rotating rater pairs gave
+equal-composite G RMSE 0.050, compared with 0.066 for a repeated pair
+per person. Omitting Content scores on 25% of rating rows, then using
+common complete rows for both scores, gave mean G of 0.766 under random
+omission and 0.684 when the highest Content scores were omitted, against
+a true value of 0.767. G was calculable in every replication of these
+conditions. These results concern one specified model; they illustrate
+why successful calculation cannot establish precision or correct
+selective missingness, rather than identify an optimal allocation.
+
+Small or zero true components can produce non-PSD estimates through
+sampling variation under a correct model. Rater-by-Task variation
+contributes to absolute error, but not relative error, so a problem in
+that component need not prevent calculation of G. Review each requested
+metric and the component diagnostics separately; non-PSD frequency is
+not a model-fit test or a coefficient-calculation failure rate.
+
+The number of distinct raters or tasks observed in the G-study affects
+component estimation. It differs from the number each person would
+receive in a future D-study scenario. At a fixed rating budget,
+expanding the pool also reduces ratings per level; there is no universal
+minimum pool size or automatically preferred design established by these
+checks.
+
+Negative or indefinite component estimates remain visible. **D-study
+output is judged separately for every score/composite and metric.** G
+requires nonnegative universe and relative-error variances with a
+positive sum; Phi uses absolute-error variance instead. Each SEM
+requires only its corresponding nonnegative error variance. Zero
+universe variance gives zero G/Phi when the corresponding error variance
+is positive; zero total variance leaves the coefficient undefined. No
+negative estimates are automatically replaced.
+
+`Status` summarizes a row as `Available`, `Partially available`, or
+`Unavailable`; the four metric-specific status columns give the reasons.
+`ComponentPSD` separately reports whether all component matrices pass
+their numerical check. Print and plot methods note non-PSD estimates
+even when the requested metrics are calculable. Recalculate a previously
+saved D-study from its G-study to apply these rules; plotting does not
+change stored values. Raw estimates can also yield Phi greater than G
+when estimated absolute error is below relative error. This calls for
+review of component estimates; the model’s additional absolute-error
+contributions are nonnegative, so a reversal is not evidence that
+absolute decisions are more dependable. Passing a matrix check does not
+establish precise estimation or model fit, and failing it does not prove
+that the data or model are wrong. Distinguish the number of separable
+components (`estimation$rank`) from the rank of each between-score
+covariance matrix (`component_diagnostics$Rank`): a true zero component
+can have matrix rank zero without being confounded with another
+component. These are observed-score point projections conditional on
+estimated components. The separate two-facet comparison method provides
+approximate normal-theory intervals for prespecified differences with
+crossed facets. Numeric category scores do not yield latent ordinal or
+MFRM reliability. Agreement with a published numerical example does not
+establish recovery under missingness or ordinal latent models. Nesting
+other than the stated Person-by-(Child-within-Parent) model, partial
+sharing across score components, score-specific missing-data estimation,
+and score imputation are not supported. The existing main-effects
+[`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md)
+workflow remains separate.
+
+When comparing results with GENOVA programs, check the estimator and the
+negative-component convention. mfrmr retains raw component estimates.
+mGENOVA 2.1 instead replaces negative variance components with zero for
+its D-study unless `DOPTIONS NEGATIVE` is specified. This concerns
+variances, not all negative covariances, and is not a general PSD
+repair. jGENOVA’s `NEGATIVE` option controls printing: its D-study
+zeroes negative variances under both `ALGORITHM` and the default `EMS`
+convention; `EMS` also recalculates other components using those zero
+replacements. See the [jGENOVA
+manual](https://brennancrickgenova.org/genova-suite/) for these options.
+Zeroing components before forming a multivariate composite can also
+differ from zeroing components estimated from a single summed score.
+
+Matched examples confirm the calculations under these respective
+conventions. They check specific formulas and explain output
+differences; agreement does not establish suitability for an assessment,
+sampling precision, or correction for selective missingness. Choose the
+score meaning, model and assumptions from the assessment question rather
+than from agreement with another program.
+
+## ICC inputs and intervals
+
+[`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
+preserves numeric character/factor score labels. Missing scores or
+selected grouping values stop the analysis by default; choose
+`missing = "omit"` explicitly to use complete rows. Invalid score labels
+and infinite values must be corrected. Inspect the input, used, and
+excluded row counts and `attr(icc, "data_usage")` for excluded positions
+and missing columns.
+[`compute_facet_design_effect()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md)
+uses the observation and grouping-level counts retained in that ICC
+result. Rerun older ICC results before calculating design effects.
+Omission does not impute scores or correct missing-data bias.
+
+ICC variance shares are not screened against a fixed variance cutoff
+tied to score units. Returned variances retain their numerical
+precision. Constant scores yield unavailable variances and ICCs,
+including in bootstrap refits. Rerun earlier results to obtain these
+corrections.
+
+Design effects use a per-facet average-cluster-size approximation.
+`EffectiveN` is a descriptive equivalent row count, not a count of
+independent Persons or a precision estimate for the full design. Unequal
+cluster sizes, crossed or nested dependencies, sampling weights, and
+finite-population corrections are not represented. Use a
+design-appropriate estimator and variance calculation for standard
+errors or sample-size planning; see
+[`?compute_facet_design_effect`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_design_effect.md).
+
+[`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
+reports observed-score variance shares from a Gaussian random-intercept
+model. Request parametric percentile intervals with `ci_method = "boot"`
+and a recorded `ci_boot_seed`. Read `ICC_CI_Status`, the
+requested/available replicate counts, and `attr(icc, "icc_ci")` before
+reporting them. Failed or nonconverged refits and fit warnings withhold
+intervals. Converged zero-variance components remain in the bootstrap
+distribution; coverage can be unreliable at such boundaries or with few
+grouping levels. The bootstrap does not correct missing-data bias.
+
+The former `"profile"` method transformed separate variance-component
+bounds and did not calculate a profile-likelihood interval for the ICC
+ratio. It is now refused. Rerun saved ICC interval analyses from their
+original data and settings; reprinting old results cannot fix their
+intervals or recover omitted bootstrap diagnostics. See
+[`help("compute_facet_icc")`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
+for details.
+
+## Model scope
+
+For GPCM, *bounded* refers to the documented model and workflow scope;
+it does not mean finite parameter box constraints. Unsupported
+combinations and inference states are reported explicitly rather than
+silently treated as ordinary estimates.
+
+The package extends Rasch-family RSM/PCM work with MML, modern
+diagnostics, reproducibility, network review, and reporting support. It
+is not a general FACETS replacement: each
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+call uses one response-model family and one observed score scale, and
+the current public API does not provide mixed response families,
+multiple independent rating scales, general threshold anchoring, or
+online calibration updates. Portable fixed-calibration artifacts are
+available only for one-scale `RSM`/`PCM` `MML` fits under the fixed
+standard-normal scoring basis. Posterior scoring from an existing fitted
+object is a separate, wider analysis route.
+
+## Portable fixed calibration
+
+An eligible `RSM` or `PCM` `MML` fit can be converted into a versioned
+calibration artifact, validated, frozen, saved, and applied to new
+Persons without retaining the source fit or training responses:
+
+The following template assumes an eligible `fit`, its original
+`training_data`, and `new_responses` with matching facet labels and
+score coding. The portable calibration vignette below supplies a
+complete example defining these objects.
+
+``` r
+
+q_review <- mml_quadrature_sensitivity(
+  fit, training_data, quad_points = c(31, 61)
+)
+summary(q_review) # You decide whether the observed movement is acceptable.
+fit_for_calibration <- q_review$fits$q61
+
+draft <- extract_mfrm_calibration(
+  fit_for_calibration, quadrature_review = q_review
+)
+review_mfrm_calibration(draft)
+
+validated <- validate_mfrm_calibration(draft)
+calibration <- freeze_mfrm_calibration(validated)
+save_mfrm_calibration(calibration, "reviewed-calibration.rds")
+
+# This can run in a new R session.
+calibration <- load_mfrm_calibration("reviewed-calibration.rds")
+scores <- score_mfrm_calibration(calibration, new_responses)
+summary(scores)
+plot(scores, type = "interval", preset = "publication")
+```
+
+Use
+[`mfrm_calibration_capabilities()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md)
+for the exact portable support envelope, and see
+[`vignette("mfrmr-portable-calibration")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.md)
+for a complete synthetic example. See
+[`help("mfrm_calibration_methods", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_methods.md)
+for the artifact summaries and
+[`help("mfrm_calibration_score_methods", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
+for score summaries and plots. Estimated-population and
+latent-regression MML, JML, and bounded GPCM remain fitted-object-only
+routes; they do not create portable calibration artifacts in 0.2.4.
+Artifact scores are posterior EAP values conditional on the frozen point
+calibration and recorded prior. Their intervals exclude
+calibration-parameter uncertainty, and loading validates consistency
+rather than authenticating files from untrusted sources. Review every
+`scored_review` or `not_scored` disposition before using estimates. The
+score plot is a batch-review display, not evidence that the source
+calibration fits or transports to a new population.
+
+Score tables and summaries retain the scoring algorithm and requested
+interval level for CSV export. Printed scores and interval plots
+identify saved grid-based intervals, whose posterior mass may differ
+from the requested level.
+
 ## Model and interpretation boundaries
 
 | Area | Supported route | Important boundary |
@@ -862,9 +1848,25 @@ location and pseudonymize or redact it as required before sharing.
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
 | Bounded `GPCM` | Documented slope-aware core with `slope_facet == step_facet`; MML estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
-| Latent regression | Conditional-normal, unidimensional MML population model | Not arbitrary ConQuest design-matrix or multidimensional population modeling |
-| Diagnostics | Residual/EAP and strict marginal screening routes | A flag is not a deletion, fairness, or validity decision |
+| Latent regression | Conditional-normal, unidimensional MML population model | Person scoring requires explicit exploratory review and omits uncertainty in the fitted population parameters |
+| Diagnostics | Residual and posterior-averaged marginal screens | A flag is not a deletion, fairness, or validity decision; missing results remain unavailable |
+| Residual group comparisons | Differences in observed-minus-expected scores | No residual SEs, p-values, confidence intervals or differential-functioning classifications |
+| G/D studies | Observed-score main-effects variance decomposition and design projections | No MFRM latent-scale reliability, full interaction decomposition or cut-score accuracy estimate; variance-estimation uncertainty is omitted |
+| Shrinkage | Post-fit adjustment toward zero | Original estimates and predictions are unchanged; descriptive bands omit prior-variance uncertainty and cross-level covariance |
+| External imports | Source-scale displays for supported mirt, TAM and eRm fits | No native response-level diagnostics or portable calibration; missing joint covariance is not reconstructed |
 | FACETS and ConQuest | Exported-table review within documented overlap | Neither external program is executed by `mfrmr` |
+
+Fitted-object Person scoring is separate from calibration estimation. It
+returns posterior EAP under a stated normal prior, including a
+standard-normal reference prior when the calibration was fitted by JML.
+Scores, posterior SDs and intervals hold calibration and prior
+parameters fixed. Estimated-population scoring requires
+`readiness_policy = "review"`; posterior draws alone do not justify
+downstream regression or group inference without a compatible
+conditioning model and sampling design. See
+[`?predict_mfrm_units`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+and
+[`?sample_mfrm_plausible_values`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md).
 
 For bounded `GPCM`, inspect the capability table before choosing a
 downstream helper:
@@ -880,9 +1882,11 @@ inference remains review-only. Read `print(fit)`,
 `summary(fit)$decision`, and the slope table’s `ParameterStatus` and
 `PrimaryEstimate` before interpreting the finite optimizer trace in
 `OptimizerEstimate`. `Optimizer*SE` and `Optimizer*CI` are diagnostic
-quantities; ordinary slope SEs and confidence intervals remain
-unavailable until the parameter-specific readiness checks pass. The GPCM
-scope vignette explains each status and the appropriate next action.
+quantities; ordinary slope SEs and confidence intervals are currently
+unavailable for free slopes (`SEEligible = FALSE`,
+`CIEligible = FALSE`). Convergence or quadrature stability does not
+change that eligibility. The GPCM scope vignette explains each status
+and the appropriate next action.
 
 For MML, the default `gpcm_mml_identification = "free_population"`
 estimates an intercept-only population distribution while relative
@@ -931,23 +1935,43 @@ and ggplot displays state the reference profile condition. Inspect
 interpreting a curve as if it represented a particular observed
 Person-by-facet cell.
 
-For unpenalized JML, all-minimum or all-maximum Person patterns can have
-an unbounded primary ability estimate. A finite adjusted display, when
-supplied, is kept separate from the likelihood-based primary status. The
-same principle applies to any GPCM slope whose boundary status has not
-been resolved: a finite optimizer iterate is not automatically a finite
-maximum suitable for ordinary inference.
+`fit_mfrm(method = "JML")` uses the observed scores without
+extreme-score adjustment or finite-item bias correction. Freely
+estimated Persons with all-minimum or all-maximum responses have primary
+estimates of `-Inf` or `Inf`; their finite optimizer values are
+computational traces. Fixed anchors retain their supplied values, while
+coupled constraints require separate review. JML SEs and normal bands
+remain exploratory.
+
+`fair_average_table(..., xtreme = 0.25)` can produce a finite displayed
+`Measure` without refitting. Its `PrimaryMeasure` retains the original
+fitted value, and `MeasureBasis` and `ExtremeAdjustment` identify the
+replacement. The original SE does not describe that replacement, so
+measure SEs are unavailable on adjusted rows. Fair-score calculations do
+not use this replacement. When a JML Person measure is infinite,
+non-Person FairM is unavailable because its mean Person reference is
+unbounded. FairZ uses a zero reference; `FairMReference` records the
+distinction. This display option and endpoint placement on a Wright map
+do not correct JML bias. In comparisons across software, specify score
+adjustments and post-fit corrections separately; a shared “JML” label is
+insufficient.
+
+The same principle applies to any GPCM slope whose boundary status has
+not been resolved: a finite optimizer iterate is not automatically a
+finite maximum suitable for ordinary inference.
 
 PCM and bounded GPCM can be reviewed on the same data with
 `compare_mfrm(fit_pcm, fit_gpcm)`,
 `build_weighting_review(fit_pcm, fit_gpcm)`, or
 `build_model_choice_review(..., run_weighting_review = TRUE)`.
-Selectable information-criterion ranking requires comparable,
-inference-ready MML fits on a common quadrature grid with at least 31
-points. Although PCM is the all-unit-slope reduction of the aligned GPCM
-kernel, the current automatic nesting contract withholds the
-PCM-versus-GPCM chi-square LRT and records `PCM_in_GPCM_ic_only`
-instead.
+Selectable information-criterion ranking requires comparable MML fits
+with adequate support for inference on a common quadrature grid with at
+least 31 points. Free-slope GPCM fits currently do not satisfy these
+inference requirements, so their criteria, when available, are
+descriptive only. PCM is the all-unit-slope reduction of the aligned
+GPCM kernel, but a PCM-versus-GPCM chi-square LRT is unavailable. The
+recorded `PCM_in_GPCM_ic_only` relation does not authorize automatic
+ranking.
 
 The practical comparison is available without reconstructing the model
 matrices manually. After fitting the same data as `fit_pcm` and
@@ -966,27 +1990,25 @@ choice$model_roles[, c(
 The coordinate columns count reported values; the free-parameter columns
 also apply the fitted constraints.
 [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
-keeps JML and MML evidence separate. Comparable, inference-ready MML
-fits can contribute information criteria, whereas an unpenalized JML
-likelihood difference is not turned into an automatic PCM-versus-GPCM
-choice.
+describes changes in measures and information under discrimination-based
+weighting. Free-slope GPCM ranking remains unavailable under MML, and an
+unpenalized JML likelihood difference does not justify an automatic
+PCM-versus-GPCM choice.
 
 Cross-software slope values are not automatically matched estimands.
-FACETS does not jointly fit Muraki’s free-slope polytomous GPCM.
-[FACETS’ reported element
-discrimination](https://www.winsteps.com/facetman64/t7menu.htm) is a
-post-fit diagnostic computed after the Rasch measures and does not feed
-back into the other estimates; it must not be treated as a free-GPCM
-slope estimate from `mfrmr`. TAM can estimate GPCM slopes through its
-2PL/GPCM MML route, but its many-facet fitting route does not estimate
-those slopes. The current `immer` estimation routes provide PCM- design
-and hierarchical-rater references rather than a matched free-GPCM fit.
-Consequently, FACETS and `immer` are appropriate only for documented
-equal-discrimination overlaps or deliberately different-model
-sensitivity checks. A TAM GPCM comparison is numerical only after the
-response kernel, slope grouping, threshold parameterization,
-latent-scale identification, retained rows, category map, and covariance
-information have been matched.
+FACETS does not jointly fit Muraki’s free-slope polytomous GPCM. FACETS’
+reported element discrimination is a post-fit diagnostic computed after
+the Rasch measures and does not feed back into the other estimates; it
+must not be treated as a free-GPCM slope estimate from `mfrmr`. TAM can
+estimate GPCM slopes through its 2PL/GPCM MML route, but its many-facet
+fitting route does not estimate those slopes. The current `immer`
+estimation routes provide PCM- design and hierarchical-rater references
+rather than a matched free-GPCM fit. Consequently, FACETS and `immer`
+are appropriate only for documented equal-discrimination overlaps or
+deliberately different-model sensitivity checks. A TAM GPCM comparison
+is numerical only after the response kernel, slope grouping, threshold
+parameterization, latent-scale identification, retained rows, category
+map, and covariance information have been matched.
 
 For strict MML diagnostics, keep the two evidence bases distinct:
 
@@ -1001,35 +2023,83 @@ diag_both <- diagnose_mfrm(
 summary(diag_both)$diagnostic_basis
 ```
 
-The legacy route evaluates residual-oriented summaries using person
-estimates. The strict marginal route uses latent-integrated expected
-values. They are complementary screens and should not be collapsed into
-one decision rule.
+The residual route uses person point estimates. The marginal route
+averages expectations over Person posteriors conditional on the same
+responses, with the calibration held fixed. Its residual scales omit
+cross-response covariance and calibration uncertainty. These are
+complementary descriptive screens; neither supplies guaranteed
+individual or multiple-element false-positive rates.
+
+## Updating saved analyses
+
+In version 0.2.4,
+[`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md)
+stops if scores or selected facet values are missing. Review the data
+and use `missing = "omit"` only when complete-row selection is intended;
+invalid score labels must be cleaned explicitly. `gt$data_usage` records
+the input source, row counts, and missing cells. The counts also
+accompany G/D coefficient tables and exports. Counts based on stored
+fitted rows exclude any earlier MFRM filtering. Older saved G/D results
+cannot recover that accounting by reprinting; rerun the G-study with the
+original data if it is needed.
+
+Installing 0.2.4 does not recalculate saved diagnostics, scores or
+reports. Keep the originals and the settings used to create them. For
+analyses based on a native MFRM fit, first print `summary(fit)` with the
+updated package. A native fit lacking the current estimation checks must
+be refitted from its original data and settings before inferential
+reuse; computing diagnostics alone cannot supply those fit checks.
+Observed-score G/D studies and external-feature groups use their own
+source objects and do not require an MFRM fit.
+
+Start at the affected step below and rebuild everything that depends on
+it. For an MFRM-based analysis, this assumes a fit with current
+estimation checks:
+
+| Saved result | Required action |
+|----|----|
+| Fit-summary wording | Reprint the summary. Stored calculations and missing precision evidence do not change. |
+| Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |
+| Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
+| ICC and design effects | Rerun [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md) or [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md) from the original data/settings, explicitly choosing how to handle missing values. Recreate design effects from the new ICC result’s row accounting. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
+| Main-effects G/D studies | Rerun the observed-score G-study and D-study using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
+| Multivariate G/D studies | Recompute the D-study from its saved G-study to update metric-specific availability or change future counts/weights; then recreate dependent comparisons and plots. Replotting alone preserves stored values. Changed source data, a changed G-study model (including nesting), incompatible design metadata or an earlier G-study affected by the single-score MINQUE(0) or interaction-ID corrections requires a new G-study. Keep the G-study and its data for plan-comparison intervals. |
+| External-feature groups | Replot saved results for updated labels; memberships and trees are preserved. Changed features, weights, group counts or methods require new clustering, followed by a new comparison of those results. Reuse the same fitted imputation object when comparing settings across completions. Use [`plot()`](https://rdrr.io/r/graphics/plot.default.html) or [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md); automatic ggplot conversion is unsupported. |
+| Shrinkage | Reapply using the original prior and explicit Person settings, then regenerate reports and replay scripts. Switching Person shrinkage off removes old adjustment columns. No MFRM refit is needed to refresh these results. |
+| Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
+| Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |
+| External imports | Re-import the saved source-package fit, then recreate derived output; source-model re-estimation is unnecessary. |
+| Simulation/design evaluations | Re-summarize retained runs for corrected denominators. Missing connectivity or workload records require repeating the original evaluation if needed for a recommendation. |
+
+The complete instructions, including function names and exceptions, are
+in “Updating saved analyses for 0.2.4” under
+[`help("mfrmr_workflow_methods", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md).
+[NEWS](https://ryuya-dot-com.github.io/mfrmr/NEWS.md) explains the
+individual changes. Re-exporting an old derived object does not update
+its calculations, and updating an object does not broaden its
+statistical use.
 
 ## Documentation
 
-The package includes the following vignettes:
+The package includes the following tutorials. On the documentation
+website, open them from the **Articles** menu. In R, run the command
+below to read the guide shipped with your installed version.
 
-- [End-to-end
-  workflow](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-workflow.Rmd)
-- [MML estimation and marginal-fit
-  diagnostics](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-mml-and-marginal-fit.Rmd)
-- [Migrating from
-  FACETS](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-facets-migration.Rmd)
-- [Visual
-  diagnostics](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-visual-diagnostics.Rmd)
-- [Reporting and APA-oriented
-  output](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-reporting-and-apa.Rmd)
-- [Linking and
-  DFF](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-linking-and-dff.Rmd)
-- [Bounded GPCM
-  scope](https://ryuya-dot-com.github.io/mfrmr/vignettes/mfrmr-gpcm-scope.Rmd)
+| Guide | Open in R |
+|----|----|
+| End-to-end workflow | [`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md) |
+| MML estimation and marginal-fit diagnostics | [`vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-mml-and-marginal-fit.md) |
+| Portable calibration and fresh-session scoring | [`vignette("mfrmr-portable-calibration", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.md) |
+| Exploring person, rater, and task attributes | [`vignette("mfrmr-external-features", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md) |
+| Migrating from FACETS | [`vignette("mfrmr-facets-migration", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facets-migration.md) |
+| Visual diagnostics | [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md) |
+| Reporting and APA-oriented output | [`vignette("mfrmr-reporting-and-apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md) |
+| Linking and DFF | [`vignette("mfrmr-linking-and-dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md) |
+| Bounded GPCM scope | [`vignette("mfrmr-gpcm-scope", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md) |
 
-Open a guide with
-[`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md)
-or list them with `browseVignettes("mfrmr")`. A printable API overview
-is installed at `cheatsheet/mfrmr-cheatsheet.pdf`. Function-level help
-starts with
+List installed guides with `browseVignettes("mfrmr")`. A printable API
+overview is installed at `cheatsheet/mfrmr-cheatsheet.pdf`.
+Function-level help starts with
 [`?fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
 [`?summary.mfrm_fit`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_fit.md),
 and

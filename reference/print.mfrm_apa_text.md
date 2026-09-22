@@ -66,51 +66,47 @@ apa$report_text
 #> 
 #> Estimation settings.
 #> The RSM specification was estimated using JML with mfrmr. Precision summaries were
-#> exploratory in this run. Recommended use for this precision profile: Use for screening and
-#> calibration triage; confirm formal SE, CI, and reliability with an MML fit.. Optimization
-#> did not meet the package convergence checks after 76 function evaluations and 30 gradient
-#> evaluations (LogLik = -820.949). The canonical MML information-criterion panel was not
-#> eligible (status: descriptive_jml). Legacy descriptive AIC = 1753.898; legacy descriptive
-#> BIC = 2013.950; neither enters the common MML ranking panel. Terminal gradient sup-norm =
-#> 0.0035 (review threshold = 0.0001). Optimizer reached the iteration limit before the
-#> terminal gradient became small enough for review-only acceptance. Constraint settings:
-#> noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0 (facets:
-#> none); dummy facets = none.
+#> exploratory in this run. Recommended use for this precision profile: JML standard errors
+#> and normal bands are exploratory approximations. Changing to MML does not by itself
+#> establish valid uncertainty; review the fitted model and its uncertainty assumptions..
+#> Optimization did not meet the package convergence checks after 76 function evaluations and
+#> 30 gradient evaluations (LogLik = -820.949). MML model-comparison criteria are unavailable
+#> for this fit; numerical completion alone does not establish comparability. Legacy
+#> descriptive AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common
+#> MML ranking panel. Terminal gradient sup-norm = 0.0035 (review threshold = 0.0001).
+#> Optimizer reached the iteration limit before the terminal gradient became small enough for
+#> review-only acceptance. Constraint settings: noncenter facet = Person; anchored levels = 0
+#> (facets: none); group anchors = 0 (facets: none); dummy facets = none.
 #> 
 #> Results.
 #> 
 #> Scale functioning.
-#> Category usage was adequate (unused categories = 0, low-count categories = 0), and
-#> thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.32 to 1.38
-#> logits; no disordered steps.
+#> Category counts were available for all 4 categories: 0 unused and 0 below 10. Counts alone
+#> do not establish category adequacy. Adjacent threshold comparisons: 0 decreasing among 2
+#> available; 0 of 2 comparisons unavailable. Available estimates range from -1.32 to 1.38
+#> logits. Adjacent threshold comparisons: 0 decreasing among 2 available; 0 of 2 comparisons
+#> unavailable.
 #> 
 #> Facet measures.
 #> Person measures ranged from -2.18 to 2.68 logits (M = 0.00, SD = 1.10). Rater measures
-#> ranged from -0.33 to 0.33 logits (M = 0.00, SD = 0.31). Criterion measures ranged from
+#> ranged from -0.33 to 0.33 logits (M = -0.00, SD = 0.31). Criterion measures ranged from
 #> -0.42 to 0.25 logits (M = 0.00, SD = 0.29).
 #> 
 #> Fit and precision.
 #> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.99, outfit
 #> MnSq = 1.02). This band is the package's review convention; published mean-square
 #> guidelines differ, and band position is screening evidence rather than a model-validity
-#> decision. 1 of 56 elements fell outside the 0.5-1.5 mean-square screening band. Largest
-#> misfit signals: Person:P023 (|ZSTD| = 3.06); Person:P018 (|ZSTD| = 1.51);
-#> Criterion:Organization (|ZSTD| = 1.43). Criterion exploratory reliability summary = 0.89
-#> (separation = 2.78). Person exploratory reliability summary = 0.90 (separation = 3.01).
-#> Rater exploratory reliability summary = 0.90 (separation = 3.05). These are
-#> Rasch/FACETS-style separation indices (measure spread relative to measurement error), not
-#> inter-rater agreement. Observed inter-rater agreement is reported separately from
-#> separation reliability: for Rater, exact agreement = 0.36, expected exact agreement = 0.37,
-#> adjacent agreement = 0.83. Element-level 95% confidence intervals (Normal approximation)
-#> accompany the measures (CI_Lower / CI_Upper); 0 of 56 rows are flagged CIEligible for
-#> primary reporting.
-#> 
-#> Residual structure.
-#> Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue =
-#> 2.11 (13.2% variance), with PC2 eigenvalue = 1.83. Facet-specific exploratory residual PCA
-#> showed the largest first-component signal in Rater (eigenvalue = 1.72, 43.0% variance).
-#> Heuristic reference bands: EV >= 1.4 (critical minimum), >= 1.5 (caution), >= 2.0 (common),
-#> >= 3.0 (strong); variance >= 5% (minor), >= 10% (caution), >= 20% (strong).
+#> decision. MnSq outside [0.5, 1.5]: 1 of 56 classified elements flagged; 0 of 56 elements
+#> unclassified. Largest misfit signals among 56 elements with complete paired statistics:
+#> Person:P023 (|ZSTD| = 3.06); Person:P018 (|ZSTD| = 1.51); Criterion:Organization (|ZSTD| =
+#> 1.43). Criterion exploratory reliability summary = 0.89 (separation = 2.78). Person
+#> exploratory reliability summary = 0.90 (separation = 3.01). Rater exploratory reliability
+#> summary = 0.90 (separation = 3.05). These are Rasch/FACETS-style separation indices
+#> (measure spread relative to measurement error), not inter-rater agreement. Observed
+#> inter-rater agreement is reported separately from separation reliability: for Rater, exact
+#> agreement = 0.36, expected exact agreement = 0.37, adjacent agreement = 0.83. Element-level
+#> 95% approximate intervals (Normal approximation) accompany 56 of 56 estimates; 0 of 56
+#> estimates have intervals eligible for primary reporting.
 #> 
 #> Reporting cautions.
 #> Precision note: this run relies on exploratory precision summaries, so confidence intervals

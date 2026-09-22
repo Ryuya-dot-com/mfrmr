@@ -79,7 +79,11 @@ derived from posterior-integrated expected exact and adjacent agreement.
 The `"exact"` view ranks level pairs by the absolute exact-agreement
 standardized residual. The `"adjacent"` view uses the adjacent-agreement
 standardized residual instead. Both are exploratory corroboration
-screens for strict marginal-fit flags.
+screens for strict marginal-fit flags. Selection uses all pairs within
+the requested facet, not a preselected list for the other metric.
+`retention` counts available/unavailable metric values, while
+`full_table` retains all candidates. Grey bars/labels indicate
+unavailable values or classifications.
 
 ## Interpreting output
 
@@ -89,8 +93,10 @@ screens for strict marginal-fit flags.
 - Negative bars mean the observed agreement fell below the
   posterior-expected agreement.
 
-- Red bars indicate the pair exceeded the current strict-warning
-  threshold.
+- Red bars indicate an available standardized-residual or agreement-gap
+  rule was crossed. A missing companion rule does not cancel a known
+  crossing. These are descriptive cutoffs without calibrated error
+  rates.
 
 ## Typical workflow
 
@@ -125,27 +131,30 @@ and
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
-  "Person",
-  c("Rater", "Criterion"),
-  "Score",
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
   method = "MML",
-  quad_points = 7,
-  maxit = 30
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-p <- plot_marginal_pairwise(diag, draw = FALSE, preset = "publication")
-p$data$preset
-#> [1] "publication"
-if (interactive()) {
-  plot_marginal_pairwise(
-    diag,
-    metric = "adjacent",
-    draw = TRUE,
-    preset = "publication"
-  )
-}
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Which pairs show more or less exact agreement than the model expects?
+plot_marginal_pairwise(diagnostics)
+
+# These are screening results; inspect the rating design before drawing conclusions
+
+# Optional: agreement within one score category
+plot_marginal_pairwise(diagnostics, metric = "adjacent")
+
 # }
 ```

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a weighting-policy review between Rasch-family and bounded GPCM fits</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_weighting_review.Rd</code></div>
     </div>
 
@@ -105,10 +107,10 @@ not one common slope and not simultaneous criterion-by-rater slope blocks.
 The overview records the slope owner, step owner, level count, free relative
 slope contrasts, and whether the supplied reference is the exact unit-slope
 PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
-intentionally withheld in the current comparison contract.
-The returned <code>comparison_contract</code> separates three evidence channels:
-selectable same-basis MML information criteria, descriptive JML
-reweighting, and non-ready optimizer traces. In particular, a JML
+unavailable. Free-slope GPCM also lacks the inference checks required for
+information-criterion ranking, even under MML. The returned
+<code>comparison_contract</code> records the applicable comparison restrictions;
+observed changes in fit, scores and information remain descriptive. A JML
 log-likelihood increase is not promoted to automatic PCM-versus-GPCM model
 selection because it is unpenalized and the GPCM contains additional slope
 parameters. FACETS may serve as a direct comparator for the PCM/JML side
@@ -130,9 +132,9 @@ reweighting is substantively acceptable.</p></li>
 
 
 <ul><li><p><code>model_comparison</code>: same-data model-comparison bundle from <code><a href="compare_mfrm.html">compare_mfrm()</a></code>.
-AIC/Person-BIC/SABIC ranking is available only when
-<code>model_comparison$table$ICComparable</code> is true. PCM-versus-GPCM LRT remains
-unavailable even though PCM is the aligned GPCM's unit-slope reduction.</p></li>
+AIC/Person-BIC/SABIC ranking is unavailable for the current free-slope
+GPCM fits. PCM-versus-GPCM LRT also remains unavailable even though PCM
+is the aligned GPCM's unit-slope reduction.</p></li>
 <li><p><code>comparison_contract</code>: one-row evidence-tier table stating whether formal
 model selection is available, how any observed log-likelihood difference
 may be read, and the bounded role of FACETS in a JML review.</p></li>
@@ -188,58 +190,17 @@ validity adjudication.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ReferenceModel ComparisonModel ReferenceMethod ComparisonMethod SlopeFacet</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             RSM            GPCM             MML              MML  Criterion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  StepFacet ReferenceStepFacet AlignedStepSlopeOwner SlopeLevelCount</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion               &lt;NA&gt;                 FALSE               4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FreeRelativeSlopeContrasts                                    SlopeComposition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                           3 single_aligned_facet_level_specific_relative_slopes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SimultaneousCriterionRaterSlopeBlocks UnitSlopePCMReduction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                  FALSE                 FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         PCMvsGPCMLRT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  not_applicable_reference_is_not_pcm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                  EvidenceTier FormalModelSelectionAvailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mml_optimizer_trace_only_not_inference_ready                         FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ObservedLogLikDifference                   LogLikDifferenceStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     8.593 optimizer_trace_only_not_inference_ready</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 ReviewStatus                  ComparisonMode MaxAbsLogSlope</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  reweighting_review_required descriptive_model_contrast_only          0.138</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxAbsInfoShareDelta</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 0.026</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  StepFacet SlopeLevelCount FreeRelativeSlopeContrasts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion               4                          3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    Item</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Overall status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Weighting principle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Slope ownership</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Comparison basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Evidence tier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Formal model selection</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         PCM vs GPCM LRT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                          Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    reweighting_review_required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Rasch-family equal weighting vs bounded GPCM discrimination-based reweighting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                            Criterion levels; one aligned slope/step owner only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                descriptive_model_contrast_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                   mml_optimizer_trace_only_not_inference_ready</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                       withheld</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            not_applicable_reference_is_not_pcm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Comparison Contract</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReferenceModel ComparisonModel ReferenceMethod ComparisonMethod SameMethod</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             RSM            GPCM             MML              MML       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SamePreparedData BothInferenceReady</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              TRUE              FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                  EvidenceTier FormalModelSelectionAvailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mml_optimizer_trace_only_not_inference_ready                         FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                            SelectionRoute ObservedLogLikDifference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  withheld_comparison_basis_not_selectable                    8.593</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    LogLikDifferenceStatus AICPreferred PersonBICPreferred</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  optimizer_trace_only_not_inference_ready         &lt;NA&gt;               &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SABICPreferred                        PCMvsGPCMLRT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;NA&gt; not_applicable_reference_is_not_pcm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   FACETSComparisonRole</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  not_an_internal_free_slope_comparator</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                             RecommendedUse</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Repair inference readiness, integration selectability, or comparison identity before using this pair for model selection.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Comparison interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Numerical convergence checks passed for both fits; inference eligibility is</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   assessed separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Log-likelihood difference: 8.593 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Inspect changes in facet measures, relative slopes and information shares.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Free-slope GPCM information-criterion ranking and the PCM-versus-GPCM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   chi-square LRT are unavailable; a larger likelihood does not select a scoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   model.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key Warnings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Model-comparison weights are descriptive only because the two fits do not</span>
@@ -253,8 +214,8 @@ validity adjudication.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Next Actions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Read summary(model_comparison) before interpreting any fit advantage as a</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    scoring recommendation.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - For MML selection, require ICComparable and repeat consequential comparisons</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    on a denser common quadrature grid.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use likelihood and weighting differences descriptively; GPCM ranking remains</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    unavailable even after numerical convergence.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Use slope_profile and top_reweighted_levels to inspect whether Criterion</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    levels are being upweighted or downweighted in substantively acceptable</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    ways.</span>
@@ -309,21 +270,14 @@ validity adjudication.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          0.926           -0.077   Downweighted           192               0.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          1.039            0.038      Near unit           192               0.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Support Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    Scope                Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      RSM / PCM reference             supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  bounded GPCM comparison supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                      Note</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                            Supported as the equal-weighting reference side of the review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Supported with caveat as a slope-aware comparison model. Use it to inspect discrimination-based reweighting, not as an automatic replacement for the Rasch-family route.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Observation weights and discrimination-based reweighting are separate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    concepts in this package.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - The fitted slopes vary across levels of `Criterion`; other facets have no</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    separate slope block.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Criterion-owned and rater-owned GPCM fits are separate restricted models;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    both blocks cannot be estimated together in 0.2.3.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    both blocks cannot be estimated together by the current bounded-GPCM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    interface.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - FACETS is a direct JML comparator only for the aligned equal-discrimination</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    PCM side; its reported discrimination is a post-fit diagnostic, not the</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    fitted free-slope GPCM parameter.</span>

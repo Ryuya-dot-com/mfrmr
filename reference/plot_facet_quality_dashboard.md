@@ -11,8 +11,8 @@ plot_facet_quality_dashboard(
   facet = NULL,
   bias_results = NULL,
   severity_warn = 1,
-  misfit_warn = 1.5,
-  central_tendency_max = 0.25,
+  misfit_warn = NULL,
+  central_tendency_max = NULL,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
   bias_abs_size_warn = 0.5,
@@ -60,7 +60,10 @@ plot_facet_quality_dashboard(
 
 - central_tendency_max:
 
-  Absolute estimate cutoff used to flag central tendency.
+  Legacy opt-in absolute estimate cutoff for marking facet estimates
+  near the fitted origin. Default `NULL`; use
+  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+  for observed category-use screening.
 
 - bias_count_warn:
 
@@ -112,6 +115,14 @@ plot_facet_quality_dashboard(
 ## Value
 
 A plotting-data object of class `mfrm_plot_data`.
+
+## Details
+
+When `x` is a dashboard, its stored screening settings define both flags
+and plot guides; threshold arguments apply only when `x` is a fit.
+Returned plot data retain those settings, interpretation notes and fit
+readiness. Restricted or older dashboards without readiness are labeled
+`REVIEW ONLY`. Zero observed flags is not a complete diagnostic pass.
 
 ## See also
 

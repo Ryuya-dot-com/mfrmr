@@ -42,7 +42,8 @@ q3_statistic(
 
   Minimum number of persons with finite aggregated residuals at both
   levels required to retain a pair; a single integer of at least three.
-  Pairs below the threshold drop out of the table (mirrors
+  Unavailable pairs remain in the table with `NA` correlations and flags
+  (mirrors
   [`plot_local_dependence_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_local_dependence_heatmap.md)).
 
 - yen_threshold:
@@ -76,17 +77,20 @@ An object of class `mfrm_q3` containing:
 
 - `pairs`:
 
-  A data frame with one row per facet-level pair and columns `Level1`,
-  `Level2`, `Q3`, `N`, `AbsQ3`, `YenFlag`, `MaraisFlag`, `RelativeFlag`,
-  and a textual `Interpretation` summarising which thresholds were
-  exceeded. `N` is the number of persons with finite aggregated
-  residuals at both levels. `YenFlag` is a compatibility name and does
-  not imply that Yen (1984) proposed the fixed default.
+  A data frame with one row per unordered facet-level pair and columns
+  `Level1`, `Level2`, `Q3`, `N`, `AbsQ3`, `YenFlag`, `MaraisFlag`,
+  `RelativeFlag`, and a textual `Interpretation` summarising which
+  thresholds were exceeded. `N` is the number of persons with finite
+  aggregated residuals at both levels. Unavailable pairs have `NA`
+  correlations and flags, with an explanation in `Interpretation`.
+  `YenFlag` is a compatibility name and does not imply that Yen (1984)
+  proposed the fixed default.
 
 - `summary`:
 
-  One-row tibble with `MeanQ3`, `MaxAbsQ3`, and the three flagged-pair
-  counts.
+  One-row tibble with `MeanQ3`, `MaxAbsQ3`, the three flagged-pair
+  counts, `CandidatePairs`, `AvailablePairs`, and `UnavailablePairs`.
+  Flagged counts are unavailable if no pair can be evaluated.
 
 - `thresholds`:
 
@@ -128,7 +132,7 @@ For both reasons, treat the values returned here as a **screening
 summary** rather than a direct substitute for the published Q3
 thresholds. A formal raw-residual Q3 procedure would require a
 separately implemented and validated design-specific bootstrap; mfrmr
-0.2.3 does not provide that procedure.
+does not currently provide that procedure.
 
 ## References
 
@@ -171,25 +175,27 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 q3 <- q3_statistic(fit)
 q3$summary
-#>       MeanQ3  MaxAbsQ3 YenFlagged MaraisFlagged RelativeFlagged
-#> 1 -0.3277129 0.4631436         10             8               2
+#>   CandidatePairs AvailablePairs UnavailablePairs     MeanQ3  MaxAbsQ3
+#> 1              6              6                0 -0.3277129 0.4631436
+#>   YenFlagged MaraisFlagged RelativeFlagged
+#> 1          5             4               1
 # Look for: use MaxAbsQ3 and the pair table to rank follow-up. The default
 #   0.20/0.30 absolute rules are uncalibrated heuristics for this Q3-style
 #   index, not standalone local-independence tests.
 head(q3$pairs)
-#>    Level1 Level2         Q3  N     AbsQ3 YenFlag MaraisFlag RelativeFlag
-#> 3     R01    R04 -0.4631436 48 0.4631436    TRUE       TRUE        FALSE
-#> 10    R04    R01 -0.4631436 48 0.4631436    TRUE       TRUE        FALSE
-#> 2     R01    R03 -0.4382773 48 0.4382773    TRUE       TRUE        FALSE
-#> 7     R03    R01 -0.4382773 48 0.4382773    TRUE       TRUE        FALSE
-#> 6     R02    R04 -0.4243919 48 0.4243919    TRUE       TRUE        FALSE
-#> 11    R04    R02 -0.4243919 48 0.4243919    TRUE       TRUE        FALSE
+#>   Level1 Level2          Q3  N      AbsQ3 YenFlag MaraisFlag RelativeFlag
+#> 3    R01    R04 -0.46314357 48 0.46314357    TRUE       TRUE        FALSE
+#> 2    R01    R03 -0.43827728 48 0.43827728    TRUE       TRUE        FALSE
+#> 5    R02    R04 -0.42439186 48 0.42439186    TRUE       TRUE        FALSE
+#> 4    R02    R03 -0.36329400 48 0.36329400    TRUE       TRUE        FALSE
+#> 6    R03    R04 -0.26388437 48 0.26388437    TRUE      FALSE        FALSE
+#> 1    R01    R02 -0.01328644 48 0.01328644   FALSE      FALSE         TRUE
 #>                            Interpretation
 #> 3  stricter heuristic (|Q3-style| > 0.30)
-#> 10 stricter heuristic (|Q3-style| > 0.30)
 #> 2  stricter heuristic (|Q3-style| > 0.30)
-#> 7  stricter heuristic (|Q3-style| > 0.30)
-#> 6  stricter heuristic (|Q3-style| > 0.30)
-#> 11 stricter heuristic (|Q3-style| > 0.30)
+#> 5  stricter heuristic (|Q3-style| > 0.30)
+#> 4  stricter heuristic (|Q3-style| > 0.30)
+#> 6 fixed absolute rule (|Q3-style| > 0.20)
+#> 1        relative-to-mean (offset > 0.20)
 # }
 ```

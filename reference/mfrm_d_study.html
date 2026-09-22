@@ -13,7 +13,7 @@ re-fitting the Rasch/MFRM model.'><meta property="og:image" content="https://ryu
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,10 +24,12 @@ re-fitting the Rasch/MFRM model.'><meta property="og:image" content="https://ryu
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -44,7 +46,7 @@ re-fitting the Rasch/MFRM model.'><meta property="og:image" content="https://ryu
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Project G-theory coefficients under alternative D-study designs</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-generalizability.R" class="external-link"><code>R/api-generalizability.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-generalizability.R" class="external-link"><code>R/api-generalizability.R</code></a></small>
       <div class="d-none name"><code>mfrm_d_study.Rd</code></div>
     </div>
 
@@ -80,7 +82,8 @@ re-fitting the Rasch/MFRM model.</p>
 <dd><p>Data frame or named list giving planned counts for each
 random measurement facet. Column names may be the facet names themselves
 (for example <code>Rater</code>) or <code>n_</code> plus the facet name (for example
-<code>n_Rater</code>). When <code>NULL</code>, one row using the observed number of levels is
+<code>n_Rater</code>). Counts must be positive integers. When <code>NULL</code>, one row using
+the observed number of levels is
 returned.</p></dd>
 
 
@@ -94,8 +97,8 @@ returned.</p></dd>
 when planned facet counts increase. <code>"highest_order"</code> treats the residual
 as highest-order person-by-all-conditions/error variance and divides by
 the product of planned counts. <code>"single_condition"</code> divides by the smallest
-planned facet count, a conservative sensitivity check when unmodeled
-person-by-one-facet interactions may dominate. <code>"none"</code> leaves the residual
+planned facet count, a sensitivity assumption for variation associated
+with the least-replicated condition. It is not a confidence bound. <code>"none"</code> leaves the residual
 unscaled. <code>"sensitivity"</code> returns all three assumptions for each design
 row.</p></dd>
 
@@ -110,7 +113,12 @@ is an <code>mfrm_fit</code>.</p></dd>
     <p>An object of class <code>mfrm_d_study</code>, a data.frame with one row per
 design scenario and columns for planned facet counts, variance terms,
 projected <code>G</code>, projected <code>Phi</code>, interpretation bands, and identification
-status inherited from <code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>.</p>
+status inherited from <code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>.
+<code>InputRows</code>, <code>UsedRows</code>, and <code>ExcludedRows</code> describe the source G-study,
+not the planned D-study sample; <code>GStudyDataSource</code> identifies their scope.
+The <code>data_usage</code> attribute retains its
+row accounting, including after subsetting. Older source results without
+accounting have <code>NA</code> counts; they are not assumed to have used all rows.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -120,16 +128,24 @@ variance contributes <code>sigma2_j / n_j</code> to the absolute-error denominat
 The residual term contains unmodeled person-by-facet and higher-order
 interaction variance in the current simplified G-study, so the selected
 <code>residual_scaling</code> assumption is reported explicitly. The relative-decision
-denominator uses only this scaled residual term.</p>
+denominator uses only this scaled residual term. Missing or invalid required
+components leave the affected coefficient unavailable; they are not zero
+variance. These are point projections conditional on estimated components,
+not uncertainty bounds or automatic recommendations for sample size.</p>
 <p>This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
 decomposition. If person-by-rater or person-by-item interactions are a
-primary estimand, use <code>residual_scaling = "sensitivity"</code> and treat the output
-as planning evidence; fit a fully crossed G-theory model externally when
-those interaction components must be estimated separately.</p>
+primary estimand, consider <code><a href="mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy()</a></code> and
+<code><a href="mfrm_multivariate_d_study.html">mfrm_multivariate_d_study()</a></code> for one or two common random facets,
+including Person-by-Task, Person-by-Rater, and Person-by-Rater-by-Task. Those
+functions also accept a single score and estimate the corresponding
+interaction components explicitly. Changing <code>residual_scaling</code> here only
+explores assumptions; it does not estimate the omitted interactions.</p>
 <p>The <code>G</code> and <code>Phi</code> values returned here belong to the generalizability-theory
 metric family. They should not be interpreted as coefficient alpha, omega,
 KR-20, or IRT marginal/separation reliability, even though all of those
-summaries may be displayed on a 0–1 scale in broader reporting dashboards.</p>
+summaries may be displayed on a 0–1 scale in broader reporting dashboards.
+They remain on the observed numeric score scale inherited from
+<code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>, not the fitted MFRM latent scale.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -140,7 +156,8 @@ generalizability for scores and profiles</em>. Wiley.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>, <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>,
+    <div class="dont-index"><p><code><a href="plot.mfrm_d_study.html">plot.mfrm_d_study()</a></code>, <code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>,
+<code><a href="mfrm_multivariate_d_study.html">mfrm_multivariate_d_study()</a></code>, <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>,
 <code><a href="recommend_mfrm_design.html">recommend_mfrm_design()</a></code>, <code><a href="plot_data.html">plot_data()</a></code></p></div>
     </div>
 
@@ -160,19 +177,20 @@ generalizability for scores and profiles</em>. Wiley.</p>
 <span class="r-in"><span>  <span class="co"># values remain identification warnings, not decision-ready evidence.</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr D-study projection</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Object of measurement: NA </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Random facets:  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Object of measurement: Person </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Random facets: Rater, Criterion </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Residual scaling:  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimand scale: observed numeric score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G-study rows: 768 input; 768 used; 0 excluded.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Counts start from stored fitted rows; earlier MFRM filtering is not included.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Residual assumption: Divide residual by all facet counts </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  n_Rater n_Criterion      G    Phi                    GStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2           4 0.8241 0.7888 at_or_above_0.80_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3           4 0.8754 0.8447 at_or_above_0.80_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        4           4 0.9035 0.8758 at_or_above_0.80_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   PhiStatus IdentificationStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  at_or_above_0.70_reference           identified</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  at_or_above_0.80_reference           identified</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  at_or_above_0.80_reference           identified</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  n_Rater n_Criterion      G    Phi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        2           4 0.8241 0.7887</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        3           4 0.8754 0.8447</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        4           4 0.9035 0.8758</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Observed-score planning projections hold estimated variance components fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   They do not establish cut-score accuracy or an adequate rating design.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Note: 0.70 and 0.80 are reference guides, not universal decision rules.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

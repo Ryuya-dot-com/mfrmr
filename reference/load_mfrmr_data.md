@@ -69,8 +69,11 @@ interpretable.
 ## Examples
 
 ``` r
-data("mfrmr_example_operational", package = "mfrmr")
-head(mfrmr_example_operational)
+library(mfrmr)
+
+# Load synthetic ratings and inspect their columns and score frequencies
+toy <- load_mfrmr_data("example_operational")
+head(toy)
 #>                Study Person Rater    Criterion Score Group
 #> 1 OperationalExample   P001   R01     Language     4     A
 #> 2 OperationalExample   P001   R01 Organization     2     A
@@ -78,16 +81,15 @@ head(mfrmr_example_operational)
 #> 4 OperationalExample   P001   R02     Language     3     A
 #> 5 OperationalExample   P001   R02 Organization     2     A
 #> 6 OperationalExample   P002   R01      Content     3     A
-
-d <- load_mfrmr_data("example_operational")
-table(d$Rater)
+names(toy)
+#> [1] "Study"     "Person"    "Rater"     "Criterion" "Score"     "Group"    
+table(toy$Score)
 #> 
-#> R01 R02 R03 R04 R05 R06 
-#>  47  56  50  47  44  38 
-table(d$Criterion, d$Score)
-#>               
-#>                 1  2  3  4
-#>   Content      11 33 34 16
-#>   Language     25 29 25 15
-#>   Organization 26 34 19 15
+#>  1  2  3  4 
+#> 62 96 78 46 
+
+# Optional: base R's data() loads the same dataset under its full name
+data("mfrmr_example_operational", package = "mfrmr")
+identical(toy, mfrmr_example_operational) # TRUE: both contain the same data
+#> [1] TRUE
 ```

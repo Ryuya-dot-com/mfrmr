@@ -16,8 +16,11 @@ predict_mfrm_units(
   person_id = NULL,
   population_policy = c("error", "omit"),
   interval_level = 0.95,
+  scoring_quad_points = 31L,
+  readiness_policy = c("error", "review"),
   n_draws = 0,
-  seed = NULL
+  seed = NULL,
+  adaptive_quad_points = NULL
 )
 ```
 
@@ -63,8 +66,8 @@ predict_mfrm_units(
 
   Optional one-row-per-person data.frame with the background variables
   required by a latent-regression fit. Ignored for ordinary
-  fixed-calibration scoring. For intercept-only latent-regression fits
-  (`population_formula = ~ 1`), `mfrmr` reconstructs the minimal
+  fitted-object posterior scoring. For intercept-only latent-regression
+  fits (`population_formula = ~ 1`), `mfrmr` reconstructs the minimal
   one-row-per-person table internally from the scored person IDs. This
   is the scoring-time table for `new_data`, not the fit object's
   replay/export provenance table. For categorical background variables,
@@ -90,6 +93,25 @@ predict_mfrm_units(
 
   Posterior interval level returned in `Lower`/`Upper`.
 
+- scoring_quad_points:
+
+  Number of Gauss-Hermite nodes used only for this scoring call. It is
+  independent of the quadrature order used while fitting `fit`; the
+  default is 31 and values below 2 are refused. The fixed or adaptive
+  integration mode is inherited from `fit`.
+
+- readiness_policy:
+
+  How a source fit that is not scoring-ready is handled. `"error"`
+  (default) refuses scoring. `"review"` permits an explicitly
+  review-only fitted-object calculation and labels the returned
+  estimates and settings accordingly; it does not make the source fit
+  ready. Estimated-population fits currently require `"review"` because
+  their identification, boundary and numerical-accuracy acceptance rule
+  is incomplete. Earlier population-model predictions labelled
+  scoring-ready must be regenerated with explicit review before summary
+  or export.
+
 - n_draws:
 
   Optional number of quadrature-grid posterior draws to return per
@@ -98,6 +120,15 @@ predict_mfrm_units(
 - seed:
 
   Optional seed for reproducible posterior draws.
+
+- adaptive_quad_points:
+
+  Optional vector of at least two distinct integer orders \>= 3, for
+  example `c(31, 61)`. Adds `quadrature_review`, comparing a fixed-prior
+  grid with grids centered and scaled to each Person's posterior.
+  Calibration parameters and the prior are held fixed. Inspect both
+  fixed/adaptive differences and movement between adaptive orders; this
+  diagnostic does not replace estimates, intervals, draws, or readiness.
 
 ## Value
 
@@ -111,6 +142,9 @@ An object of class `mfrm_unit_prediction` with components:
 
 - `population_review`: optional person-level omission review for
   latent-regression scoring
+
+- `quadrature_review`, `quadrature_overview`: optional unrounded
+  numerical integration comparison and its compact overview
 
 - `input_data`: cleaned canonical scoring rows retained from `new_data`
 
@@ -130,15 +164,16 @@ one-dimensional population model to score new or partially observed
 persons via Expected A Posteriori (EAP) summaries on a quadrature grid.
 
 When the original fit uses ordinary `method = "MML"`, the posterior
-summaries are taken under that fitted MML calibration. When the original
-fit uses the latent-regression MML branch, the scoring prior is the
-fitted conditional normal population model \\\theta \mid x \sim
+summaries use that fitted MML calibration and a standard normal scoring
+prior, unless a population model was fitted. When the original fit uses
+the latent-regression MML branch, the scoring prior is the fitted
+conditional normal population model \\\theta \mid x \sim
 N(x^\top\hat\beta, \hat\sigma^2)\\, so the returned summaries are
 population-model-aware posterior EAP estimates. When the original fit
 uses `method = "JML"`, `mfrmr` applies the fitted facet/step parameters
 with a standard normal reference prior on the quadrature grid, so the
-returned person scores remain fixed-calibration EAP summaries rather
-than direct JML estimates from the fitting step.
+returned person scores remain fitted-object EAP summaries rather than
+direct JML estimates from the fitting step.
 
 When the fitted population model is intercept-only
 (`population_formula = ~ 1`), `predict_mfrm_units()` still uses the
@@ -147,9 +182,9 @@ scored-person table internally because no background covariates are
 needed beyond the person IDs in `new_data`.
 
 The current bounded `GPCM` branch is included in this scoring layer, so
-fitted `GPCM` objects can be used for the same fixed-calibration
-posterior summaries. This does not imply that every downstream
-diagnostic or reporting helper has already been generalized to `GPCM`.
+fitted `GPCM` objects can be used for the same fitted-object posterior
+summaries. This does not imply that every downstream diagnostic or
+reporting helper has already been generalized to `GPCM`.
 
 This is appropriate for questions such as:
 
@@ -174,20 +209,38 @@ For `JML` fits, this scoring stage is intentionally post hoc: `mfrmr`
 uses the fitted facet and step parameters from the joint-likelihood fit,
 then adds a standard normal reference prior only for the scoring layer
 so that new or partially observed units can be summarized on a
-quadrature grid. This is a practical fixed-calibration EAP procedure,
-not a claim that the original `JML` fit itself estimated a population
-model.
+quadrature grid. This is a practical fitted-object EAP procedure, not a
+claim that the original `JML` fit itself estimated a population model.
 
 ## Interpreting output
 
 - `estimates` contains posterior EAP summaries for each person in
   `new_data`.
 
-- `Lower` and `Upper` are quadrature-grid posterior interval bounds at
-  the requested `interval_level`.
+- `Lower` and `Upper` are continuous equal-tail posterior interval
+  bounds at the requested `interval_level`, computed by numerical CDF
+  inversion. EAP, SD, and optional draws still use the selected
+  quadrature rule. These intervals condition on the fitted calibration
+  and scoring prior, including any estimated population coefficients and
+  variance. They exclude uncertainty from estimating calibration or
+  population parameters; they are not confidence intervals at each fixed
+  true Person ability. Their interpretation also depends on the scoring
+  prior: a new population with a different ability mean, spread or shape
+  can have different coverage. More quadrature points check numerical
+  approximation under the same prior; they do not establish that this
+  prior matches the new population.
 
 - `SD` is posterior uncertainty under the fitted scoring basis used for
   scoring.
+
+- Estimate tables retain `IntervalLevel` without rounding, the prior
+  form, per-Person `PriorMean` and `PriorSD`, calibration method,
+  interval method and uncertainty interpretation. `WeightedLikelihood`
+  indicates whether any response contribution for that Person was raised
+  to a non-unit weight. Such weights do not by themselves establish
+  equivalent independent ratings or frequentist coverage. Draw tables
+  retain their discrete-grid basis and the same prior and calibration
+  interpretation.
 
 - `draws`, when requested, contains approximate plausible values on the
   fitted quadrature grid.
@@ -195,6 +248,21 @@ model.
 - `population_review`, when present, records whether scored persons were
   omitted because their background data were incomplete for a
   latent-regression fit.
+
+- `quadrature_review`, when requested, retains unrounded per-Person
+  fixed/adaptive log-marginal, EAP and posterior-SD differences, changes
+  between adaptive orders, and computation status/reasons.
+  [`summary()`](https://rdrr.io/r/base/summary.html) also supplies a
+  compact `quadrature_overview`. A `computed` status does not certify
+  accuracy; inspect the differences and any unavailable rows.
+
+Re-summarize older results to recover recorded interval settings and
+readable notes without changing numerical scores. Prior means/SDs for
+older estimated-population results may be unavailable because those
+parameters were not retained in the result. Re-score with the existing
+fitted model to retain them; no calibration refit is needed. An
+unrecorded interval algorithm is labelled unavailable, not assumed to
+use continuous quantiles.
 
 ## What this does not justify
 
@@ -259,6 +327,6 @@ summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
 #> # A tibble: 2 × 4
 #>   Person Estimate Lower Upper
 #>   <chr>     <dbl> <dbl> <dbl>
-#> 1 NEW01    -0.149 -1.36  1.36
-#> 2 NEW02     0.279 -1.36  1.36
+#> 1 NEW01    -0.17  -1.50  1.18
+#> 2 NEW02     0.301 -1.04  1.68
 ```

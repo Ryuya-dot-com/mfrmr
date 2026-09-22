@@ -29,7 +29,11 @@ stay outside the documented GPCM boundary.
 
 
 Use gpcm_capability_matrix() for the formal per-helper boundary
-before choosing a GPCM follow-up plot route.'><meta property="og:description" content='Quick guide to choosing the right base-R diagnostic plot in mfrmr.
+before choosing a GPCM follow-up plot route.
+Portable fixed-calibration score batches have a separate review route.
+Use summary(scores) and plot(scores) as described in
+mfrm_calibration_score_methods. Those displays review returned scores;
+they do not replace source-fit diagnostics or establish calibration fit.'><meta property="og:description" content='Quick guide to choosing the right base-R diagnostic plot in mfrmr.
 Use this page when you know the analysis question but do not yet know
 which plotting helper or plot() method to call.
 If you are preparing figures for a report, start with
@@ -59,7 +63,11 @@ stay outside the documented GPCM boundary.
 
 
 Use gpcm_capability_matrix() for the formal per-helper boundary
-before choosing a GPCM follow-up plot route.'><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+before choosing a GPCM follow-up plot route.
+Portable fixed-calibration score batches have a separate review route.
+Use summary(scores) and plot(scores) as described in
+mfrm_calibration_score_methods. Those displays review returned scores;
+they do not replace source-fit diagnostics or establish calibration fit.'><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -67,7 +75,7 @@ before choosing a GPCM follow-up plot route.'><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,10 +86,12 @@ before choosing a GPCM follow-up plot route.'><meta property="og:image" content=
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -98,7 +108,7 @@ before choosing a GPCM follow-up plot route.'><meta property="og:image" content=
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Visual Diagnostics Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
       <div class="d-none name"><code>mfrmr_visual_diagnostics.Rd</code></div>
     </div>
 
@@ -131,6 +141,10 @@ transformation. Under <code>GPCM</code> the fair-average panel of
 stay outside the documented <code>GPCM</code> boundary.</p></li>
 </ul><p>Use <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> for the formal per-helper boundary
 before choosing a <code>GPCM</code> follow-up plot route.</p>
+<p>Portable fixed-calibration score batches have a separate review route.
+Use <code>summary(scores)</code> and <code>plot(scores)</code> as described in
+<a href="mfrm_calibration_score_methods.html">mfrm_calibration_score_methods</a>. Those displays review returned scores;
+they do not replace source-fit diagnostics or establish calibration fit.</p>
     </div>
 
 
@@ -142,6 +156,9 @@ before choosing a <code>GPCM</code> follow-up plot route.</p>
 Use <code>plot(fit, type = "wright")</code> or <code><a href="plot_wright_unified.html">plot_wright_unified()</a></code>.</p></li>
 <li><p>"Where do score categories transition across theta?"
 Use <code>plot(fit, type = "pathway")</code> and <code>plot(fit, type = "ccc")</code>.</p></li>
+<li><p>"How do measures and observed scores relate to Fair Scores?"
+Use <code><a href="plot_fair_average.html">plot_fair_average()</a></code> with <code>plot_type = "measure"</code>, <code>"scatter"</code>, or
+<code>"difference"</code>. FairZ is a zero-reference expected score, not a z-score.</p></li>
 <li><p>"Is the design linked well enough across subsets or administrations?"
 Use <code>plot(subset_connectivity_report(...), type = "design_matrix")</code>,
 <code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code>, <code><a href="build_mfrm_network_review.html">build_mfrm_network_review()</a></code>,
@@ -152,9 +169,10 @@ Use <code><a href="plot_unexpected.html">plot_unexpected()</a></code> and <code>
 Use <code><a href="plot_marginal_fit.html">plot_marginal_fit()</a></code>.</p></li>
 <li><p>"Which level pairs drive strict local-dependence follow-up?"
 Use <code><a href="plot_marginal_pairwise.html">plot_marginal_pairwise()</a></code>.</p></li>
-<li><p>"Do raters agree and do facets separate meaningfully?"
-Use <code><a href="plot_interrater_agreement.html">plot_interrater_agreement()</a></code>, <code><a href="rater_network_analysis.html">rater_network_analysis()</a></code>, and
-<code><a href="plot_facets_chisq.html">plot_facets_chisq()</a></code>.</p></li>
+<li><p>"Do raters agree within observed shared scoring contexts?"
+Use <code><a href="plot_interrater_agreement.html">plot_interrater_agreement()</a></code> and <code><a href="rater_network_analysis.html">rater_network_analysis()</a></code>.</p></li>
+<li><p>"Do facet levels separate meaningfully?"
+Use <code><a href="plot_facets_chisq.html">plot_facets_chisq()</a></code>.</p></li>
 <li><p>"Do criteria within the same rater move together in a halo-like way?"
 Use <code><a href="rater_halo_network_analysis.html">rater_halo_network_analysis()</a></code> and
 <code>plot(..., type = "edge_distribution")</code>.</p></li>
@@ -199,6 +217,12 @@ Use <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code> for <c
 branch can also call <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code>, but its fair-average
 panel reports an explicit unavailability indicator because that
 panel's score-metric semantics are limited to the Rasch-family branch.</p></li>
+<li><p>"I scored new Persons from a frozen portable calibration; which scores
+require review and how wide are their conditional intervals?"
+Use <code>summary(scores)</code> followed by
+<code>plot(scores, type = "interval")</code>. Continue with <code>type = "precision"</code>
+or <code>type = "edge_mass"</code> when response-count precision or quadrature-edge
+behavior needs follow-up.</p></li>
 <li><p>"Which figures are already supported by my current run?"
 Use <code><a href="reporting_checklist.html">reporting_checklist()</a></code> and review the <code>"Visual Displays"</code> rows before
 choosing the next plot.</p></li>
@@ -211,6 +235,20 @@ theta-by-category-by-probability plot data for exploratory teaching or
 downstream interactive rendering. Keep 2D pathway/CCC plots as the
 default reporting figures.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="keep-the-network-questions-separate">Keep the network questions separate<a class="anchor" aria-label="anchor" href="#keep-the-network-questions-separate"></a></h2>
+
+
+<p><code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code> describes the assignment/co-observation graph and
+is the relevant network route for disconnected measurement subsets.
+<code><a href="rater_network_analysis.html">rater_network_analysis()</a></code> describes pairwise score agreement,
+disagreement, or severity direction, while <code><a href="rater_halo_network_analysis.html">rater_halo_network_analysis()</a></code>
+describes rater-by-criterion score-profile correlations. The latter two do
+not establish assignment connectedness or a common scale. In all three,
+degree, strength, betweenness, and closeness are graph-theoretic quantities;
+they are not rating-scale central tendency, MFRM severity logits, or causal
+halo evidence.</p>
+    </div>
     <div class="section level2">
     <h2 id="recommended-visual-route">Recommended visual route<a class="anchor" aria-label="anchor" href="#recommended-visual-route"></a></h2>
 
@@ -230,6 +268,9 @@ interaction, differential-functioning, linking, or precision
 follow-up.</p></li>
 <li><p>Use <code>plot(..., draw = FALSE)</code> when you want reusable plot data instead
 of immediate graphics.</p></li>
+<li><p>For an artifact-scored batch, use <code>summary(scores)</code> and <code>plot(scores)</code>;
+keep its conditional-uncertainty note with the figure and inspect every
+<code>scored_review</code> or <code>not_scored</code> disposition.</p></li>
 <li><p>Use <code>plot(fit, type = "ccc_surface", draw = FALSE)</code> only when you need
 3D-ready category-probability data; <code>mfrmr</code> intentionally does not add a
 package-native plotly/rgl renderer for this route.</p></li>
@@ -279,6 +320,10 @@ fitted object contains the required data:</p><ul><li><p>First-pass triage:
 <code>mfrm_plot_data</code> objects for downstream review and export. When step
 estimates are available, <code><a href="build_visual_summaries.html">build_visual_summaries()</a></code> also exposes
 <code>$plot_payloads$category_probability_surface</code>.</p></li>
+<li><p>Portable score-batch review:
+<code>plot(scores, type = "interval")</code>, <code>"precision"</code>, or <code>"edge_mass"</code>
+after <code><a href="mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code>. These views retain selection accounting,
+review dispositions, and Persons that could not be scored.</p></li>
 <li><p>3D-ready exploratory handoff:
 <code>plot(fit, type = "ccc_surface", draw = FALSE)</code> returns a
 theta-by-category-by-probability <code>mfrm_plot_data</code> object. This is not a
@@ -395,7 +440,7 @@ reviewing rapid/slow response patterns alongside MFRM diagnostics; it is
 not a joint speed-accuracy model and does not change fitted measures.</p></dd>
 
 <dt><code><a href="plot_local_dependence_heatmap.html">plot_local_dependence_heatmap()</a></code></dt>
-<dd><p>Yen Q3-style heatmap of
+<dd><p>Standardized, aggregated-residual Q3-style heatmap of
 pairwise residual correlations between facet levels. Best for
 exploratory local-dependence screening; pairs with very strong
 off-diagonal residual correlation merit content-level review.</p></dd>
@@ -416,6 +461,12 @@ the residual sign and magnitude matter, not just the response code.</p></dd>
 funnel showing raw versus shrunken facet estimates. Best on fits
 produced via <code><a href="apply_empirical_bayes_shrinkage.html">apply_empirical_bayes_shrinkage()</a></code> for reviewing how
 much each level moved under the prior.</p></dd>
+
+<dt><code>plot(scores, type = "interval")</code></dt>
+<dd><p>Posterior EAP intervals for a
+portable fixed-calibration score batch, with review dispositions
+highlighted. The intervals are conditional on the frozen point
+calibration and exclude calibration-parameter uncertainty.</p></dd>
 
 
 </dl></div>
@@ -495,6 +546,10 @@ agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.</p></li>
 <li><p>Residual PCA and bias plots should be interpreted as follow-up layers
 after the main fit screen, not as first-pass diagnostics.</p></li>
+<li><p>Portable score plots review returned score batches only. Inspect the
+source calibration separately, retain <code>not_scored</code> Persons in the audit
+trail, and do not interpret conditional intervals as including
+calibration-parameter uncertainty.</p></li>
 <li><p>DFF residual- and refit-method plots are screening visuals. Current refit
 rows do not receive ETS A/B/C labels because their plug-in uncertainty
 omits baseline-anchor uncertainty and cross-refit covariance.</p></li>
@@ -528,6 +583,46 @@ inspect the explicit facet, level, and group-pair columns before
 writing interpretation.</p></li>
 </ul></div>
     <div class="section level2">
+    <h2 id="figures-with-separate-titles-and-interpretation">Figures with separate titles and interpretation<a class="anchor" aria-label="anchor" href="#figures-with-separate-titles-and-interpretation"></a></h2>
+
+
+<p>Wright, expected-score pathway, CCC, and <code><a href="plot_fair_average.html">plot_fair_average()</a></code> displays
+accept <code>show_title = FALSE</code> and <code>show_notes = FALSE</code>. These options hide
+figure annotations while retaining axes, legends, structural panel labels,
+and the original title and notes in the returned <code>mfrm_plot_data</code> object.
+With <code>p &lt;- plot(fit, type = "ccc", draw = FALSE, show_title = FALSE, show_notes = FALSE)</code>, inspect <code>p$data$notes</code> before writing a caption.
+<code><a href="as_ggplot.html">as_ggplot()</a></code> respects the display options and retains notes in
+<code>attr(as_ggplot(p), "mfrmr_notes")</code>. Hiding annotations does not change
+readiness or interval eligibility.</p>
+<p>Use <code>preset = "monochrome"</code> for grayscale. Expected-score and CCC curves
+have six line types: solid, dashed, dotted, dotdash, longdash, and twodash.
+Fair-score plots have six point shapes. Encodings repeat beyond six series;
+use panels or select a facet instead of relying on gray levels alone.
+These controls are documented for the named routes, not every plotting
+helper in the package. Check the individual help page for other plots.</p>
+<p>Fair-score intervals remain diagnostic-only with full-refit coverage
+unverified. RSM/PCM plots propagate the focal measure SE while holding
+thresholds and reference measures fixed. GPCM-MML plots can use structural
+table SEs for non-Person rows, conditioning on Person EAP/reference means.
+<code>fair_average_table(fair_se = TRUE)</code> does not provide RSM/PCM fair-score
+SEs. See <code><a href="mfrmr_interval_guide.html">mfrmr_interval_guide()</a></code> and <code><a href="plot_fair_average.html">plot_fair_average()</a></code> for the status
+columns and the observed-minus-fair gap caveat.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="non-latin-and-long-labels">Non-Latin and long labels<a class="anchor" aria-label="anchor" href="#non-latin-and-long-labels"></a></h2>
+
+
+<p>Select an installed font that contains the characters in your labels before
+drawing. For example, on macOS, open a PNG device and set
+<code>par(family = "Hiragino Sans")</code> before <code>plot(fit)</code>. Use an appropriate
+installed font on other systems. A successful plot call alone does not
+confirm that the device rendered every character; inspect the saved figure.
+Long labels also require enough space. Use a wider device for rater-severity
+profiles. For crowded FACETS-style maps, use a taller or wider device,
+increase <code>rows_per_logit</code>, or switch to <code>renderer = "native"</code>.
+Full labels remain in the tables returned with <code>draw = FALSE</code>.</p>
+    </div>
+    <div class="section level2">
     <h2 id="companion-vignette">Companion vignette<a class="anchor" aria-label="anchor" href="#companion-vignette"></a></h2>
 
 
@@ -554,96 +649,43 @@ writing interpretation.</p></li>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># A balanced slice retains every Rater and Criterion while running quickly.</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
 <span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
 <span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
-<span class="r-in"><span>  quad_points <span class="op">=</span> <span class="fl">7</span>,</span></span>
-<span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">checklist</span> <span class="op">&lt;-</span> <span class="fu"><a href="reporting_checklist.html">reporting_checklist</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="visual_reporting_template.html">visual_reporting_template</a></span><span class="op">(</span><span class="st">"manuscript"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     FigureFamily      Scope</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                     Wright map manuscript</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Pathway map manuscript</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Category characteristic curves manuscript</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5             Information curves manuscript</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                               PrimaryHelper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                        plot(fit, type = "wright", preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                       plot(fit, type = "pathway", preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                           plot(fit, type = "ccc", preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 compute_information(fit) -&gt; plot_information(..., preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    DefaultPlacement</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      Main text when targeting, spread, or shared-logit interpretation is central.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Main text or category-functioning subsection for ordered-category interpretation.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       Main text or appendix; pair with pathway when category behavior is central.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5        Main text when precision or targeting across theta is a substantive claim.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                   WhatToReport</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      Describe whether persons, facet levels, and thresholds overlap on the same logit scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         Describe expected-score progression and the theta regions where categories dominate.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Describe whether categories peak in the intended order and whether adjacent curves separate.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                   Describe where measurement information is highest or weakest across theta.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                 CaptionSkeleton</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           Figure X. Wright map showing person measures, facet-level locations, and step thresholds on the shared logit scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Figure X. Expected score pathway across theta, with dominant-category regions for the fitted rating scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                  Figure X. Category characteristic curves showing fitted category probabilities across theta.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Figure X. Test information curve showing where the fitted model provides relatively stronger or weaker measurement precision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                       ResultsWording</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           The Wright map was inspected to evaluate targeting and shared-scale overlap among persons, facet levels, and thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 The pathway plot was inspected to evaluate whether expected scores and dominant-category regions progressed in the intended order.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           The category characteristic curves were inspected to evaluate the ordering and separation of fitted response categories.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5            The information curve was inspected to identify theta regions with relatively stronger or weaker measurement precision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                            WhatNotToClaim</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                  Do not present targeting as proof of global model fit.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                       Do not treat smooth category progression as proof that the rating scale is valid.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Do not overstate overlapping curves as definitive category failure without category counts and context.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                    Do not ignore the precision tier or approximation caveats used to compute the curve.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                               BeginnerCheck</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            Check gaps between person density and thresholds/facet levels.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Check whether the dominant-category bands progress in the expected order.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Check whether every retained category has a visible peak or clear role.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   Check whether the information peak covers the theta region of interest.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 ThreeDPolicy</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            2D recommended; 3D Wright maps are discouraged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                         2D report default.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                         2D report default.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 2D curve route active; 3D information surface is deferred.</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">checklist</span><span class="op">$</span><span class="va">checklist</span>,</span></span>
-<span class="r-in"><span>  <span class="va">Section</span> <span class="op">==</span> <span class="st">"Visual Displays"</span> <span class="op">&amp;</span> <span class="va">Item</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"QC / facet dashboard"</span>, <span class="st">"Strict marginal visuals"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Item"</span>, <span class="st">"Available"</span>, <span class="st">"NextAction"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       Item Available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26    QC / facet dashboard      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30 Strict marginal visuals      TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                       NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_qc_dashboard.html">plot_qc_dashboard</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">qc</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "qc_dashboard"</span>
+<span class="r-in"><span><span class="co"># Start with the shared-scale view; run plot commands one at a time</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="mfrmr_visual_diagnostics-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">p_marg</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_marginal_fit.html">plot_marginal_fit</a></span><span class="op">(</span><span class="va">diag</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p_marg</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "publication"</span>
+<span class="r-in"><span><span class="co"># Compute diagnostics once and check their interpretation status</span></span></span>
+<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diagnostics</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">decision</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Interpretation FormalInference FitReadiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Ready for formal inference             Yes        ready</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           Why</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 All stored fit-readiness components passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                            NextAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">wright</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">wright</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "publication"</span>
+<span class="r-in"><span><span class="co"># Inspect an overview of model-fit issues</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plot_qc_dashboard.html">plot_qc_dashboard</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="mfrmr_visual_diagnostics-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">scree</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_residual_pca.html">plot_residual_pca</a></span><span class="op">(</span><span class="va">pca</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">scree</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "publication"</span>
+<span class="r-in"><span><span class="co"># Follow up on observed versus model-expected category frequencies</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plot_marginal_fit.html">plot_marginal_fit</a></span><span class="op">(</span><span class="va">diagnostics</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="mfrmr_visual_diagnostics-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
-<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

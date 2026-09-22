@@ -66,35 +66,37 @@ new_units <- data.frame(
 pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 summary(pv)
 #> mfrmr Plausible Values Summary
+#>   Calibration estimated by MML; scoring uses posterior EAP. Prior: Standard
+#>   normal N(0,1).
+#>   95% intervals: continuous posterior quantiles.
+#>   Posterior SDs and intervals condition on point estimates of the calibration
+#>   and prior; their estimation uncertainty is excluded.
 #> 
-#> Draw summary
+#> Empirical draw summaries (first 10)
 #>  Person Draws MeanValue SDValue LowerValue UpperValue
-#>   NEW01     3         0       0          0          0
+#>   NEW01     3    -0.373   0.323      -0.56          0
+#>   Draw limits are empirical quantiles at the requested level. With few draws
+#>   they are coarse; use the companion posterior interval and its stated
+#>   calculation method for interval reporting.
 #> 
-#> Companion estimates
-#>  Person Estimate    SD  Lower Upper Observations WeightedN
-#>   NEW01   -0.097 0.648 -1.356 1.356            2         2
+#> Posterior estimates (first 10)
+#>  Person Estimate    SD  Lower Upper Observations                         Review
+#>   NEW01   -0.112 0.683 -1.448 1.235            2 No source restriction recorded
 #> 
-#> Row preparation review
+#> Response rows
 #>  InputRows KeptRows DroppedRows DroppedMissing DroppedBadScore DroppedBadWeight
 #>          2        2           0              0               0                0
 #>  DroppedNonpositiveWeight
 #>                         0
-#> 
-#> Settings
-#>             Setting      Value
-#>      interval_level       0.95
-#>             n_draws          3
-#>         quad_points          5
-#>                seed          1
-#>              method        MML
-#>      source_columns   <list 4>
-#>     posterior_basis legacy_mml
-#>           person_id       NULL
-#>   population_policy       NULL
-#>  population_formula       NULL
-#> 
-#> Notes
-#>  - These draws are sampled from the fixed quadrature-grid posterior under the existing MML calibration.
-#>  - Use them as approximate plausible-value summaries for posterior uncertainty, not as deterministic future truth values.
+#>   These draws are sampled from the quadrature-grid posterior under the existing
+#>   MML calibration and its fixed or adaptive integration setting.
+#>   Use them as approximate plausible-value summaries for posterior uncertainty,
+#>   not as deterministic future truth values.
+#>   Draws alone do not validate downstream group comparisons or regressions;
+#>   check the conditioning model and sampling design for the intended analysis.
+#>   Non-person facets in `new_data` must already exist in the fitted calibration.
+#>   Overlapping person IDs are treated as labels in `new_data`; the original
+#>   fitted person estimates are not updated.
+#>   The `draws` component contains quadrature-grid posterior draws that can be
+#>   used as approximate plausible-value summaries.
 ```

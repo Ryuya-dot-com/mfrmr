@@ -2,10 +2,11 @@
 
 Builds a 2x2 draft composite for an `mfrm_fit`, suitable for reviewing a
 possible "Figure 1" in the Rasch-family `RSM`/`PCM` manuscript route.
-Panels: (1) Wright map, (2) rater severity profile with CI whiskers, (3)
-threshold ladder, (4) a one-line reliability / separation summary block.
-Each panel reuses the standalone plot helper so the visual language is
-consistent with the rest of the package.
+Panels: (1) single-panel FACETS-style Wright map (without CI whiskers),
+(2) rater severity profile with CI whiskers, (3) threshold ladder, (4) a
+one-line reliability / separation summary block. Each panel reuses the
+standalone plot helper so the visual language is consistent with the
+rest of the package.
 
 ## Usage
 
@@ -63,7 +64,7 @@ Designed as a single-figure Methods or Results draft. The summary panel
 prints the model class, sample size, log-likelihood, the canonical MML
 IC panel or an explicit ineligibility/legacy label, and the largest
 non-Person facet's separation / reliability if available. A fit that has
-not passed its numerical, data, design, and stability gates produces one
+not passed its numerical, data, design, and stability checks produce one
 warning and a visible `"REVIEW ONLY"` label. Resolve that review before
 treating the composite as report-ready evidence.
 

@@ -4,9 +4,9 @@ Produces APA-style narrative text interpreting the results of a
 differential- functioning analysis or interaction table. For
 `method = "refit"`, the report summarises linked screening contrasts and
 whether conditional plug-in uncertainty was available. For
-`method = "residual"`, it summarises screening-positive results, lists
-the specific levels and their direction, and includes a caveat about the
-distinction between construct-relevant variation and measurement bias.
+`method = "residual"`, it summarises the availability and meaning of
+residual comparisons, without testing differential functioning or
+classifying comparisons as positive or negative.
 
 ## Usage
 
@@ -47,8 +47,8 @@ calibrations retain the required anchors. Their separate-subgroup
 plug-in standard errors condition on those anchors and omit
 baseline-anchor uncertainty and cross-refit covariance, so the report
 does not assign ETS labels or present refit rows as formal inference.
-The residual method also uses screening-positive versus
-screening-negative language.
+The residual method also returns descriptive group differences without
+tests or binary classifications.
 
 ## Interpreting output
 
@@ -57,7 +57,9 @@ screening-negative language.
 - `$counts`: named integer vector of method-appropriate counts.
 
 - `$large_dif`: an empty compatibility table for current refit output,
-  or screening-positive contrasts/cells (`method = "residual"`).
+  or an empty table for residual comparisons. Interaction reports
+  include only cells above the requested absolute residual mean
+  threshold, in score units.
 
 - `$gpcm_boundary`: for bounded `GPCM` inputs, a capability-boundary
   table marking the narrative as caveated DFF screening output.
@@ -121,8 +123,6 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)
 cat(rpt$narrative)
-#> DRF screening was conducted for the Rater facet across levels of Group using the residual method. A total of 4 pairwise facet-level comparisons were evaluated. 0 comparison(s) were screening-positive and 4 were screening-negative based on the residual-contrast test. 
-#> No pairwise contrasts were screening-positive under the residual-screening method. This does not by itself establish invariance or consistent functioning across groups. 
-#> Note: The presence of differential functioning does not necessarily indicate measurement bias. Differential functioning may reflect construct-relevant variation (e.g., true group differences in the attribute being measured) rather than unwanted measurement bias. Substantive review is recommended to distinguish between these possibilities (cf. Eckes, 2011; McNamara & Knoch, 2012).
+#> Mean observed-minus-expected scores were compared for the Rater facet across levels of Group. 4 of 4 group comparisons had sufficient observations to report a residual difference. Differences are in score units. They do not isolate differential functioning: group residual means can differ even when response parameters are the same. No p-values, confidence intervals or positive/negative classifications are provided.
 # }
 ```

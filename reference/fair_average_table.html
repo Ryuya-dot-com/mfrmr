@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an adjusted-score reference table bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>fair_average_table.Rd</code></div>
     </div>
 
@@ -74,7 +76,8 @@
 
 
 <dt id="arg-diagnostics">diagnostics<a class="anchor" aria-label="anchor" href="#arg-diagnostics"></a></dt>
-<dd><p>Optional output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>.</p></dd>
+<dd><p>Optional output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> for this <code>fit</code>.
+Matching saved diagnostics are reusable; recompute them after refitting.</p></dd>
 
 
 <dt id="arg-facets">facets<a class="anchor" aria-label="anchor" href="#arg-facets"></a></dt>
@@ -87,11 +90,11 @@ legacy extreme-row exclusion (<code>FALSE</code>).</p></dd>
 
 
 <dt id="arg-umean">umean<a class="anchor" aria-label="anchor" href="#arg-umean"></a></dt>
-<dd><p>Additive score-to-report origin shift.</p></dd>
+<dd><p>Additive origin shift for Measure (not fair-score values).</p></dd>
 
 
 <dt id="arg-uscale">uscale<a class="anchor" aria-label="anchor" href="#arg-uscale"></a></dt>
-<dd><p>Multiplicative score-to-report scale.</p></dd>
+<dd><p>Multiplicative scale for Measure and measure SEs (not fair scores).</p></dd>
 
 
 <dt id="arg-udecimals">udecimals<a class="anchor" aria-label="anchor" href="#arg-udecimals"></a></dt>
@@ -113,7 +116,11 @@ legacy extreme-row exclusion (<code>FALSE</code>).</p></dd>
 
 
 <dt id="arg-xtreme">xtreme<a class="anchor" aria-label="anchor" href="#arg-xtreme"></a></dt>
-<dd><p>Extreme-score adjustment amount.</p></dd>
+<dd><p>Display adjustment in score units for all-minimum/all-maximum
+rows; default <code>0</code> leaves fitted measures unchanged. A positive value
+replaces the displayed <code>Measure</code> by inversion of an expected score that
+far from the endpoint. It does not adjust responses, refit the model or
+correct JML bias.</p></dd>
 
 
 <dt id="arg-fair-se">fair_se<a class="anchor" aria-label="anchor" href="#arg-fair-se"></a></dt>
@@ -149,7 +156,24 @@ appended to the formatted outputs.</p>
 <p>For the Rasch-family <code>RSM</code> / <code>PCM</code> branch, these tables follow the
 standard FACETS Linacre construction: fair averages are
 Rasch-measure-to-score transformations evaluated in a standardized
-mean/zero-facet environment.</p>
+mean/zero-facet environment.
+FairM uses mean other-facet measures (and mean person measure for non-person
+rows); FairZ uses zero references. Neither integrates over the observed
+assignment/person distribution. FairZ and its historical alias
+<code>StandardizedAdjustedAverage</code> are expected scores, not z-scores.
+If a free JML Person measure is infinite, the mean Person reference is
+unavailable: non-Person FairM values are <code>NA</code>, with the reason recorded in
+<code>FairMReference</code>. Finite optimizer traces are not substituted into that
+mean. FairZ uses a zero Person reference and does not require this mean.</p>
+<p>With <code>xtreme &gt; 0</code>, <code>PrimaryMeasure</code> retains the fitted measure, including
+infinite JML estimates and fixed anchors, on the requested reporting scale.
+<code>MeasureBasis</code> identifies display-only replacements and <code>ExtremeAdjustment</code>
+records their amount in score units. The displayed <code>Measure</code> may differ
+from a fixed anchor; the anchor itself is unchanged. Measure SEs are
+unavailable on replaced rows because the original SE does not describe the
+display adjustment. Fair-score calculations do not use the replacement.
+Recompute older diagnostics and recreate saved tables from the existing
+fit before summarizing or plotting them; no model refit is needed.</p>
 <p>Bounded <code>GPCM</code> fits are supported under a slope-aware
 element-conditional construction. For each slope-facet element
 \(j^\star\) the per-row fair-average is the GPCM expected score
@@ -166,7 +190,7 @@ to FACETS fair averages. Do not report it as FACETS score-side equivalence
 or as an operational scoring rule unless that convention is substantively
 justified.</p>
 <p>Standard errors on the fair-average value itself are opt-in for MML
-bounded <code>GPCM</code> fits via <code>fair_se = TRUE</code>. The original <code>SE</code>,
+bounded <code>GPCM</code> fits via <code>fair_se = TRUE</code>. The
 <code>Model S.E.</code>, <code>ModelBasedSE</code>, <code>Real S.E.</code>, and <code>FitAdjustedSE</code> columns
 retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
 uncertainty is reported under distinct columns such as <code>Fair(M) S.E.</code>,
@@ -178,10 +202,11 @@ uncertainty is reported under distinct columns such as <code>Fair(M) S.E.</code>
 
 <ul><li><p><code>stacked</code>: cross-facet table for global comparison.</p></li>
 <li><p><code>by_facet</code>: per-facet formatted tables for reporting.</p></li>
-<li><p><code>raw_by_facet</code>: unformatted values for custom analyses/plots.</p></li>
+<li><p><code>raw_by_facet</code>: unformatted values for custom analyses/plots; identifiers
+use the column <code>Level</code>.</p></li>
 <li><p><code>settings</code>: scoring-transformation and filtering options used.</p></li>
-</ul><p>Larger observed-vs-fair gaps can indicate systematic scoring tendencies by
-specific facet levels.</p>
+</ul><p>Observed-vs-fair gaps also reflect person mix and assignment. They are
+descriptive follow-up prompts, not standalone evidence of rater bias.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -195,10 +220,11 @@ specific facet levels.</p>
     <h2 id="output-columns">Output columns<a class="anchor" aria-label="anchor" href="#output-columns"></a></h2>
 
 
-<p>The <code>stacked</code> data.frame contains:</p><dl><dt>Facet</dt>
+<p>The <code>stacked</code> data.frame contains the following columns, selected by
+<code>reference</code>, <code>label_style</code>, and <code>fair_se</code>:</p><dl><dt>Facet</dt>
 <dd><p>Facet name for this row.</p></dd>
 
-<dt>Level</dt>
+<dt>Element</dt>
 <dd><p>Element label within the facet.</p></dd>
 
 <dt>Obsvd Average</dt>
@@ -208,7 +234,7 @@ specific facet levels.</p>
 <dd><p>Model-adjusted reference average on the reported score scale.</p></dd>
 
 <dt>Fair(Z) Average</dt>
-<dd><p>Standardized adjusted reference average.</p></dd>
+<dd><p>Expected score at a zero reference environment, not a z-score.</p></dd>
 
 <dt>ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage</dt>
 <dd><p>Package-native aliases for the three average columns above.</p></dd>
@@ -220,10 +246,16 @@ specific facet levels.</p>
 <dd><p>Optional structural delta-method uncertainty for <code>StandardizedAdjustedAverage</code> when <code>fair_se = TRUE</code> and available.</p></dd>
 
 <dt>Measure</dt>
-<dd><p>Estimated logit measure for this level.</p></dd>
+<dd><p>Displayed facet measure, transformed by <code>umean</code> and <code>uscale</code>; may be replaced when <code>xtreme &gt; 0</code>.</p></dd>
 
-<dt>SE</dt>
-<dd><p>Compatibility alias for the model-based standard error.</p></dd>
+<dt>PrimaryMeasure</dt>
+<dd><p>Original fitted measure on the same reporting scale, including infinite JML estimates.</p></dd>
+
+<dt>MeasureBasis, ExtremeAdjustment</dt>
+<dd><p>Whether the displayed measure was replaced and the replacement amount in score units.</p></dd>
+
+<dt>FairMReference</dt>
+<dd><p>The mean reference used for FairM, or why that reference is unavailable.</p></dd>
 
 <dt>ModelBasedSE, FitAdjustedSE</dt>
 <dd><p>Package-native aliases for <code>Model S.E.</code> and <code>Real S.E.</code>.</p></dd>
@@ -237,12 +269,10 @@ specific facet levels.</p>
     <h2 id="standard-error-caveat-read-before-quoting-cis-">Standard-error caveat (read before quoting CIs)<a class="anchor" aria-label="anchor" href="#standard-error-caveat-read-before-quoting-cis-"></a></h2>
 
 
-<p>The <code>SE</code>, <code>Model S.E.</code>, <code>ModelBasedSE</code>, <code>Real S.E.</code>, and <code>FitAdjustedSE</code>
+<p>The <code>Model S.E.</code>, <code>ModelBasedSE</code>, <code>Real S.E.</code>, and <code>FitAdjustedSE</code>
 columns in this table are the <strong>measure-level</strong> standard errors of the
-underlying facet element (the same SE that would appear in
-<code>summary(fit)$facets</code>), rescaled by the fair-average score scale factor
-so the units line up with the reported <code>Fair(M) Average</code> / <code>Fair(Z) Average</code>
-columns. They are <strong>not</strong> delta-method standard errors of the fair-average
+underlying facet element, rescaled by <code>abs(uscale)</code> to the reported Measure units.
+Fair scores remain on the fitted internal score scale. They are <strong>not</strong> delta-method standard errors of the fair-average
 values themselves. When <code>fair_se = TRUE</code>, the distinct <code>Fair(M) S.E.</code> /
 <code>Fair(Z) S.E.</code> columns are computed by
 propagating the joint covariance of the relevant facet element, the
@@ -250,9 +280,19 @@ threshold parameters, and the slope parameters through the gradient of
 \(\mathrm{E}[X \mid \theta_p, j^\star]\). This is a structural
 covariance calculation: MML person EAP estimates are conditioned on rather
 than included in the Hessian, so person rows receive unavailable fair-average
-SEs. <strong>Do not use the measure-level <code>SE</code> / <code>Model S.E.</code> columns as
+SEs. <strong>Do not use the measure-level <code>ModelBasedSE</code> / <code>Model S.E.</code> columns as
 \(\pm 1.96 \cdot \mathrm{SE}\) confidence-interval bounds on the
-fair-average value.</strong></p>
+fair-average value.</strong>
+<code>FairCIEligible</code> is <code>FALSE</code> for these diagnostic intervals; numerical
+availability (<code>ok</code> or <code>regularized</code>) does not establish inferential validity.
+<code>FairCIReportingUse</code> distinguishes diagnostic-only and unavailable rows.
+Full-refit coverage remains unverified. For RSM/PCM, this table does not
+supply fair-score SEs; <code><a href="plot_fair_average.html">plot_fair_average()</a></code> can compute a conditional
+interval from a fitted model by propagating only the focal measure SE.
+Summaries identify <code>FairMetric</code>: FairM for mean/both reference tables, FairZ
+for zero-reference tables, with matching score/SE column names.
+Export <code>stacked</code> or the summary's <code>summary</code> / <code>preview</code> data.frames with
+<code><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">utils::write.csv()</a></code>. <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> does not accept this bundle.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -262,7 +302,7 @@ fair-average value.</strong></p>
 <li><p>Linacre, J. M. (1994). <em>Many-facet Rasch Measurement</em> (2nd ed.).
 MESA Press.</p></li>
 <li><p>Linacre, J. M. (2026). <em>A user's guide to FACETS, version 4.5.0</em>.
-Winsteps.com. <a href="https://www.winsteps.com/facets.htm" class="external-link">https://www.winsteps.com/facets.htm</a>
+Winsteps.com.
 (FACETS Table 12 corresponds to the fair-average
 construction implemented here for <code>RSM</code> / <code>PCM</code> fits; the
 slope-aware element-conditional construction for bounded <code>GPCM</code>
@@ -285,64 +325,39 @@ slope-aware extension.)</p></li>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
-<span class="r-in"><span><span class="va">t12</span> <span class="op">&lt;-</span> <span class="fu">fair_average_table</span><span class="op">(</span><span class="va">fit</span>, udecimals <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">t12_native</span> <span class="op">&lt;-</span> <span class="fu">fair_average_table</span><span class="op">(</span><span class="va">fit</span>, reference <span class="op">=</span> <span class="st">"mean"</span>, label_style <span class="op">=</span> <span class="st">"native"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">t12</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Adjusted Score Summary </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_fair_average</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Facets Levels MeanAbsObservedFairM FairSERequested FairSEAvailableRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       3     56                0.012           FALSE                   0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FairSEUnavailableRows  FairSEMethod  FairSEStatus MeanAdjustedAverageSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      0 not_requested not_requested                    NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxAdjustedAverageSE AdjustedAverageCILevel</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    NA                     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Facet-level adjusted-score rows: stacked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet        Level ObservedAverage AdjustedAverage</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R02            2.68            2.73</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion      Content            2.73            2.78</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R01            2.61            2.64</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater          R04            2.32            2.29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person &lt;suppressed&gt;            3.62            3.64</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person &lt;suppressed&gt;            3.12            3.14</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person &lt;suppressed&gt;            1.50            1.48</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person &lt;suppressed&gt;            1.88            1.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person &lt;suppressed&gt;            1.88            1.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person &lt;suppressed&gt;            1.88            1.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Setting   Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           facets    NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       totalscore    TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            umean       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           uscale       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        udecimals       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        reference    both</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      label_style    both</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  omit_unobserved   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           xtreme       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          fair_se   FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         ci_level    0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            model     RSM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           method PCM/RSM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Adjusted-score reference summary by facet level.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Fair-average structural SE columns are omitted unless requested by `fair_se</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    = TRUE`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person identifiers are suppressed in this summary. Use `include_person =</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    TRUE` only under appropriate privacy controls.</span>
-<span class="r-in"><span><span class="va">p_t12</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t12</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p_t12</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "difference"</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compute diagnostics once for the following checks</span></span></span>
+<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compare observed person means with model-based scores on a common reference</span></span></span>
+<span class="r-in"><span><span class="va">fair</span> <span class="op">&lt;-</span> <span class="fu">fair_average_table</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span>, facets <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>                           reference <span class="op">=</span> <span class="st">"mean"</span>, label_style <span class="op">=</span> <span class="st">"native"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">fair</span><span class="op">$</span><span class="va">raw_by_facet</span><span class="op">$</span><span class="va">Person</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"ObservedAverage"</span>, <span class="st">"FairM"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Level ObservedAverage FairM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> P045             3.67  3.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> P015             3.67  3.44</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> P036             3.33  3.33</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> P030             3.33  3.28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> P027             3.17  3.16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> P025             3     3.02</span>
+<span class="r-in"><span><span class="co"># FairM uses the mean reference for the other facets; it is in score units</span></span></span>
+<span class="r-in"><span><span class="co"># It is a conditional model prediction, not a guarantee of fairness</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

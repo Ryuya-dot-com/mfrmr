@@ -17,7 +17,7 @@ context."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfr
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,10 +28,12 @@ context."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfr
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -48,7 +50,7 @@ context."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfr
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review response-time patterns outside the MFRM likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-response-time.R" class="external-link"><code>R/api-response-time.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-response-time.R" class="external-link"><code>R/api-response-time.R</code></a></small>
       <div class="d-none name"><code>response_time_review.Rd</code></div>
     </div>
 
@@ -156,6 +158,23 @@ default 3.</p></dd>
 <code>facet_summary</code>, <code>score_summary</code>, <code>flags</code>, and <code>notes</code>.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Supply one row per timed event. A respondent's production time must not be
+repeated for every rater or criterion that scores that response; rater
+scoring time is a different observation. This helper does not model repeated
+events, censoring or a speed-accuracy relationship.</p>
+<p>Numeric factor labels are interpreted as times, not factor codes. Group
+summaries retain <code>InputRows</code>, valid timed rows (<code>N</code>) and <code>ExcludedRows</code>.
+Rates describe valid rows only; groups with no valid times remain present
+with unavailable statistics. Missing facet or score labels are omitted from
+that grouping. Sample quantiles and user-specified cutoffs are descriptive;
+they do not diagnose rapid guessing, effort or rater quality. Equal cutoffs
+can flag the same event in both tails when times are tied. <code>FlaggedGroups</code>
+counts distinct groups, while <code>Flags</code> counts rapid/slow rule crossings.
+Recreate older reviews from the original timing data before summary or
+plotting; no MFRM refit is needed.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="plot_response_time_review.html">plot_response_time_review()</a></code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code>,
 <a href="mfrmr_visual_diagnostics.html">mfrmr_visual_diagnostics</a>, <code><a href="mfrmr_output_guide.html">mfrmr_output_guide()</a></code></p></div>
@@ -180,31 +199,34 @@ default 3.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   768       768           0      48      2 ResponseTime       Score  seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  MedianTime MeanLogTime RapidThreshold SlowThreshold  RapidRate  SlowRate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        24.7     3.16429           16.2          32.6 0.06901042 0.0546875</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FlaggedGroups</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FlaggedGroups Flags UnassessedPersons</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             10    10                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                               InterpretationBoundary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Descriptive response-time screening; not a joint speed-accuracy model and not a fit/pass-fail rule.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Thresholds:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Threshold Value         Basis TimeUnit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      rapid  16.2 quantile_0.05  seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       slow  32.6 quantile_0.95  seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Threshold Value                  Basis TimeUnit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      rapid  16.2 Observed quantile 0.05  seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       slow  32.6 Observed quantile 0.95  seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Flagged groups:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Source Group                     Flag   Rate  N ThresholdRate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P001 high_rapid_response_rate 0.7500 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P002 high_rapid_response_rate 0.5000 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P003 high_rapid_response_rate 0.6250 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P005 high_rapid_response_rate 0.2500 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P006 high_rapid_response_rate 0.4375 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P008 high_rapid_response_rate 0.5000 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P042  high_slow_response_rate 0.2500 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P044  high_slow_response_rate 0.7500 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P047  high_slow_response_rate 0.5625 16          0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P048  high_slow_response_rate 0.8125 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Source Group                                   Flag   Rate  N ThresholdRate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P001 High fraction at or below rapid cutoff 0.7500 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P002 High fraction at or below rapid cutoff 0.5000 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P003 High fraction at or below rapid cutoff 0.6250 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P005 High fraction at or below rapid cutoff 0.2500 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P006 High fraction at or below rapid cutoff 0.4375 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P008 High fraction at or below rapid cutoff 0.5000 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P042  High fraction at or above slow cutoff 0.2500 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P044  High fraction at or above slow cutoff 0.7500 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P047  High fraction at or above slow cutoff 0.5625 16          0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  person  P048  High fraction at or above slow cutoff 0.8125 16          0.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - Response-time review is descriptive; it does not change fit_mfrm estimates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - Each row must represent one timed event. Do not duplicate one response-production time across its raters or criteria; rater scoring time is a different event.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - Rates describe valid timed rows only; each group retains input and excluded counts. A group without valid times is unassessed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - Sample quantiles describe the observed distribution, not validated rapid-guessing, low-effort or speed cutoffs. Missing times and censoring are not modeled.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - Score-level summaries are descriptive and should not be read as response-time model parameters.</span>
 <span class="r-in"><span><span class="fu"><a href="plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 </code></pre></div>

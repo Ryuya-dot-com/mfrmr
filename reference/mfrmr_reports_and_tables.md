@@ -318,97 +318,157 @@ routes.
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy_small,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "MML",
-  quad_points = 7,
-  maxit = 30
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 
-spec <- specifications_report(fit)
-summary(spec)$overview
-#>                 Class Components
-#> 1 mfrm_specifications          6
-#>                                                                      ComponentNames
-#> 1 header, data_spec, facet_labels, output_spec, convergence_control, anchor_summary
-#>   PreviewComponent PreviewRows
-#> 1        data_spec          10
+# Build the comprehensive results and report
+res <- mfrm_results(fit)
+report <- mfrm_report(res)
+summary(report, view = "reader")
+#> mfrmr Report Summary
+#> 
+#> Overview
+#>  Style OverallStatus     FirstAction ReviewAreas NotComputedAreas CaveatAreas
+#>     qc        review Start with Fit.           1                0           0
+#>  OptionalAreas UnavailableAreas OkAreas
+#>              3                0       1
+#>                                                      SourceInclude
+#>  fit, diagnostics, tables, precision, reporting, categories, plots
+#> 
+#> Decision
+#>  - Interpretation: Fit-readiness requirements satisfied; formal precision
+#>    review required
+#>  - Formal inference: No
+#>  - Why: Formal precision support has not been evaluated.
+#>  - Next: Read the compact results summary.
+#> 
+#> First screen
+#>               Area            Status         Readiness
+#>            Overall            review            review
+#>                Fit            review            review
+#>         Bias / DFF request_if_needed request_if_needed
+#>  Linking / anchors request_if_needed request_if_needed
+#>   Misfit / pathway request_if_needed request_if_needed
+#>          Precision                ok             ready
+#>                                                                      MainIssue
+#>  ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.
+#>                   ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
+#>                                                    Evidence was not requested.
+#>                                                    Evidence was not requested.
+#>                                                    Evidence was not requested.
+#>                                                No report-index review signals.
+#>                                                                NextAction
+#>                                                           Start with Fit.
+#>  Inspect the primary evidence table and template boundary before writing.
+#>                        Request this evidence only if the claim is needed.
+#>                        Request this evidence only if the claim is needed.
+#>                        Request this evidence only if the claim is needed.
+#>                   Use the listed template route if this area is reported.
+#>                                  PrimaryRoute
+#>    report$report_index; report$template_index
+#>                   report$fit_evidence_summary
+#>           mfrm_results(fit, include = "bias")
+#>        mfrm_results(fit, include = "linking")
+#>  mfrm_results(fit, include = "misfit_review")
+#>             report$precision_evidence_summary
+#> 
+#> Claim readiness
+#>                Readiness Claims                    ExampleClaim
+#>  needs_requested_section      5       APA-style manuscript text
+#>        write_with_caveat      1      Fit and precision evidence
+#>                    ready      4 Appendix or reviewer supplement
+#> 
+#> Immediate actions
+#>  Area Status                                                    MainIssue
+#>   Fit review ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
+#>                                                                NextAction
+#>  Inspect the primary evidence table and template boundary before writing.
+#>                 PrimaryRoute                  TemplateRoute
+#>  report$fit_evidence_summary report$fit_reporting_templates
+#> 
+#> Report gaps
+#>  Priority           GapType                        Section
+#>         3     not_requested     APA and manuscript wording
+#>         3     not_requested            Anchors and linking
+#>         3     not_requested                 Bias screening
+#>         3     not_requested      Misfit and pathway review
+#>         3     not_requested       Network and connectivity
+#>         3     not_requested               Response-time QC
+#>         4 caveated_evidence Fit, separation, and precision
+#>                                                                                                   RecommendedAction
+#>                   Rebuild the result with mfrm_results(fit, include = "publication") before using APA-style output.
+#>                Rebuild the result with mfrm_results(fit, include = "linking") before writing anchor-readiness text.
+#>            Rebuild the result with mfrm_results(fit, include = "bias") before writing bias or fairness-screen text.
+#>  Rebuild the result with mfrm_results(fit, include = "misfit_review") before writing observation-level misfit text.
+#>                    Rebuild the result with mfrm_results(fit, include = "network") before writing connectivity text.
+#>          Request the relevant mfrm_results() section or call the route-specific helper before reporting this claim.
+#>                             Write only a caveated claim and inspect the route-specific table before manuscript use.
+#>                                                                                                                           Route
+#>                                                                 mfrm_results(fit, include = "publication"); build_apa_outputs()
+#>                                                             mfrm_results(fit, include = "linking"); plot(res, type = "anchors")
+#>                                                 mfrm_results(fit, include = "bias"); estimate_bias(); bias_interaction_report()
+#>                                                       mfrm_results(fit, include = "misfit_review"); plot(res, type = "pathway")
+#>                                                             mfrm_results(fit, include = "network"); build_mfrm_network_review()
+#>  mfrm_results(fit, include = "response_time", response_time = ..., response_time_data = ...); plot(res, type = "response_time")
+#>                                             summary(res$components$precision_review); precision_review_report(fit, diagnostics)
 
-prec <- precision_review_report(fit, diagnostics = diag)
-summary(prec)$checks
-#>                      Check Status
-#> 1           Precision tier   pass
-#> 2    Optimizer convergence   pass
-#> 3     ModelSE availability   pass
-#> 4 Fit-adjusted SE ordering   pass
-#> 5     Reliability ordering   pass
-#> 6 Facet precision coverage   pass
-#> 7         SE source labels   pass
-#>                                                                                 Detail
-#> 1                              This run uses the package's model-based precision path.
-#> 2                                Optimizer diagnostics support inference-ready status.
-#> 3                             Finite ModelSE values were available for 100.0% of rows.
-#> 4            Fit-adjusted SE values were not smaller than their paired ModelSE values.
-#> 5         Conservative reliability values were not larger than the model-based values.
-#> 6 Each facet had sample/population summaries for both model and fit-adjusted SE modes.
-#> 7                        Person and non-person SE labels match the MML precision path.
+# Find report sections that need attention
+report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
+#>                Area            Status
+#> 1           Overall            review
+#> 2               Fit            review
+#> 3        Bias / DFF request_if_needed
+#> 4 Linking / anchors request_if_needed
+#> 5  Misfit / pathway request_if_needed
+#> 6         Precision                ok
+#>                                                                       MainIssue
+#> 1 ok=1; review=1; caveat=0; request_if_needed=3; not_computed=0; unavailable=0.
+#> 2                  ReviewSignalCount = 9; underfit=0; overfit=0; df_sensitive=9
+#> 3                                                   Evidence was not requested.
+#> 4                                                   Evidence was not requested.
+#> 5                                                   Evidence was not requested.
+#> 6                                               No report-index review signals.
+#>                                                                 NextAction
+#> 1                                                          Start with Fit.
+#> 2 Inspect the primary evidence table and template boundary before writing.
+#> 3                       Request this evidence only if the claim is needed.
+#> 4                       Request this evidence only if the claim is needed.
+#> 5                       Request this evidence only if the claim is needed.
+#> 6                  Use the listed template route if this area is reported.
 
-checklist <- reporting_checklist(fit, diagnostics = diag)
-subset(checklist$checklist, Section == "Visual Displays", c("Item", "NextAction"))
-#>                                   Item
-#> 25                          Wright map
-#> 26                QC / facet dashboard
-#> 27                Residual PCA visuals
-#> 28 Connectivity / design-matrix visual
-#> 29  Inter-rater / displacement visuals
-#> 30             Strict marginal visuals
-#> 31                  Bias / DIF visuals
-#> 32      Precision / information curves
-#> 33                Fit/category visuals
-#>                                                                                                                       NextAction
-#> 25                                      Include a Wright map when the manuscript benefits from a shared-scale targeting display.
-#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
-#> 27                                         Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.
-#> 28                                                       Use the design-matrix view to support linkage and comparability claims.
-#> 29                                       Use displacement and inter-rater views to localize QC issues after dashboard screening.
-#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
-#> 31                                                        Run bias or DIF screening before discussing interaction-level visuals.
-#> 32                                Use information curves to describe precision across theta when that is the reporting question.
-#> 33                                        Use category curves and fit visuals as local descriptive follow-up after QC screening.
-
-apa <- build_apa_outputs(fit, diagnostics = diag)
-apa$section_map[, c("Heading", "Available")]
-#>                              Heading Available
-#> 1                    Design and data      TRUE
-#> 2                Estimation settings      TRUE
-#> 3                  Scale functioning      TRUE
-#> 4                     Facet measures      TRUE
-#> 5 Latent-regression population model     FALSE
-#> 6                  Fit and precision      TRUE
-#> 7                 Residual structure      TRUE
-#> 8                     Bias screening     FALSE
-#> 9                 Reporting cautions      TRUE
-bundle <- build_summary_table_bundle(checklist)
-bundle$table_index
-#>                Table Rows Cols                        Role
-#> 1           overview    1    6          checklist_overview
-#> 2    section_summary    7    8            section_coverage
-#> 3 facets_positioning    6    4 facets_relationship_wording
-#> 4   priority_summary    4    3       priority_distribution
-#> 5       action_items    7    7               draft_actions
-#> 6           settings    5    2          checklist_settings
-#>                                                                                                Description
-#> 1                                    Overall checklist coverage across sections and draft-readiness flags.
-#> 2                                                                   Coverage summary by reporting section.
-#> 3 Report-ready wording that separates mfrmr estimation from FACETS-style handoff or external-table review.
-#> 4                                                                High/medium/low/ready counts by severity.
-#> 5                                                              Top unresolved manuscript-drafting actions.
-#> 6                                                 Checklist settings used to build the reporting contract.
+# Extract individual person, rater, and criterion estimates
+estimates <- as.data.frame(fit)
+head(subset(estimates, Facet == "Person")) # First six persons
+#>    Facet Level    Estimate Extreme
+#> 1 Person  P001  0.28429588    none
+#> 2 Person  P002  0.66118004    none
+#> 3 Person  P003  0.02177773    none
+#> 4 Person  P004  0.22410785    none
+#> 5 Person  P005 -0.17496065    none
+#> 6 Person  P006  0.67681003    none
+subset(estimates, Facet == "Rater")       # All raters
+#>    Facet Level   Estimate Extreme
+#> 49 Rater   R01 -0.6059776    <NA>
+#> 50 Rater   R02 -0.3820356    <NA>
+#> 51 Rater   R03  0.2120388    <NA>
+#> 52 Rater   R04  0.1799462    <NA>
+#> 53 Rater   R05  0.1842365    <NA>
+#> 54 Rater   R06  0.4117917    <NA>
+subset(estimates, Facet == "Criterion")   # All criteria
+#>        Facet        Level   Estimate Extreme
+#> 55 Criterion      Content -0.3441471    <NA>
+#> 56 Criterion     Language  0.1204520    <NA>
+#> 57 Criterion Organization  0.2236950    <NA>
 # }
 ```

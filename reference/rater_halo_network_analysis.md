@@ -62,7 +62,9 @@ rater_halo_network_analysis(
 - alpha:
 
   Adjusted p-value threshold for retaining edges. Set to `1` to retain
-  all finite correlations after `min_abs_weight` filtering.
+  all finite correlations after `min_abs_weight` filtering. This changes
+  retained-edge counts, graph topology, and graph centrality, but not
+  the full-pair halo/non-halo distribution summaries.
 
 - p_adjust:
 
@@ -73,17 +75,21 @@ rater_halo_network_analysis(
 
 - min_abs_weight:
 
-  Minimum absolute correlation retained as a graph edge.
+  Minimum absolute correlation retained as a graph edge. Like `alpha`,
+  this is an analysis filter for the retained graph, not merely a
+  display filter.
 
 - halo_weight_review:
 
   Same-rater cross-criterion mean absolute correlation at or above which
-  a rater is marked for review.
+  a rater is marked for review. This is a package screening default, not
+  a validated halo cut point.
 
 - halo_contrast_review:
 
   Minimum difference between a rater's mean halo edge weight and
-  incident non-halo edge weight for a stronger review flag.
+  incident non-halo edge weight for a stronger review flag. This is a
+  package screening default, not a validated halo cut point.
 
 - min_retained_halo_edges:
 
@@ -93,7 +99,10 @@ rater_halo_network_analysis(
 - positive_only:
 
   If `TRUE`, negative correlations are kept in `pair_metrics` but
-  excluded from the graph edge table.
+  excluded from the graph edge table and retained-edge counts.
+  Unfiltered distribution and per-rater summaries use absolute
+  correlations regardless of this setting; inspect
+  `MeanSignedHaloWeight` before interpreting a review flag.
 
 - include_graph:
 
@@ -109,7 +118,7 @@ A bundle of class `mfrm_halo_network` containing:
 
 - `node_metrics`:
 
-  Rater-by-criterion node strength and centrality.
+  Rater-by-criterion node strength and graph-theoretic centrality.
 
 - `edge_metrics`:
 
@@ -117,7 +126,8 @@ A bundle of class `mfrm_halo_network` containing:
 
 - `pair_metrics`:
 
-  All estimated node-pair correlations before edge filtering.
+  All estimated node-pair correlations with explicit retention flags for
+  each graph filter.
 
 - `halo_summary_by_rater`:
 
@@ -136,17 +146,39 @@ those node score vectors across shared contexts. Edges connecting two
 nodes from the same rater but different criteria are labelled `"halo"`;
 all other retained edges are labelled `"non_halo"`.
 
+This response-profile network does not evaluate assignment connectedness
+or establish a common scale. Its degree, strength, betweenness, and
+closeness columns are graph-theoretic centrality summaries after
+adjusted-p, `min_abs_weight`, and sign filters are applied.
+
 Per-rater `ReviewStatus` combines same-rater cross-criterion mean
 weight, incident non-halo comparison weight, and the number of retained
 halo edges. A `"warning"` means these criteria converge strongly enough
 to prioritize follow-up; `"review"` means at least one screening
-criterion is elevated. Neither label is a causal halo diagnosis.
+criterion is elevated. Neither label is a causal halo diagnosis, and the
+default review thresholds are package conventions rather than validated
+decision rules. Strong negative same-rater correlations are anomalous
+but are not evidence of a positive halo pattern; consult signed
+correlations in `pair_metrics` and `MeanSignedHaloWeight`.
 
 The key descriptive comparison is the distribution of halo-edge weights
 versus non-halo-edge weights. A larger halo-edge distribution is
 consistent with a halo pattern, but this function deliberately reports
-it as a screening diagnostic. The included Welch test is descriptive
-only because edge weights are clustered by rater and node.
+it as a screening diagnostic. `MeanHaloWeight` and `MeanNonHaloWeight`
+use all finite absolute correlations meeting `min_pair_n`, before
+adjusted-p, `min_abs_weight`, and sign filtering; the corresponding
+`MeanRetained*` columns describe the filtered graph. Candidate and
+unavailable pair counts accompany these available-pair means. An
+incomplete comparison cannot receive an unqualified no-flag assessment.
+
+`WelchT`, `WelchDF` and `WelchP` remain as unavailable compatibility
+columns. The correlations share observations, raters and nodes; an
+independent-sample test of their difference is not supplied. Pairwise
+correlation tail areas screen association under their sampling
+assumptions, not halo itself. No retained graph edges is not evidence
+that halo is absent; retain the originally specified thresholds.
+Recreate older network results from the existing fit and matching
+diagnostics before summary, plotting or export.
 
 ## References
 

@@ -53,17 +53,55 @@ as_ggplot(x, type = NULL, component = NULL, ...)
 
 ## Value
 
-A `ggplot2` plot object.
+A `ggplot2` plot object, with a `mfrmr_notes` attribute when the source
+plot payload contains a `notes` table. Paired Wright/CCC payloads from
+[`plot_compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_compare_mfrm.md)
+retain their selected comparison or difference view, group selection and
+monochrome panel policy.
 
 ## Details
 
 Dedicated conversions are provided for Wright maps,
 theta-to-expected-score pathways, fit-statistic-to-measure pathways,
-category characteristic curves, bubble charts, and DIF/DFF summaries and
-heatmaps. Other draw-free payloads use a conservative tabular fallback;
-inspect
+category characteristic curves, bubble charts, DIF/DFF summaries and
+heatmaps, portable-calibration score review plots, and multivariate
+D-study comparisons. D-study conversions preserve G/Phi or SEM panels,
+fixed-count groups, score units, and unavailable estimates. They do not
+refit the model or add confidence intervals. Difference-interval plots
+from
+[`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
+use their base [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+method or
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md);
+automatic conversion is not supported. Automatic conversion of
+exploratory clustering plots is not supported. Use their
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods for
+silhouettes, feature profiles, dendrograms and imputation co-membership
+heatmaps, or
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for custom graphics. For main-effects `mfrm_d_study` results, use the
+base [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method or
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for custom graphics; automatic conversion is refused because generic
+column selection does not preserve those design comparisons. Other
+draw-free payloads use a conservative tabular fallback; inspect
 [`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md)
-when automatic inference is not appropriate.
+when automatic inference is not appropriate. Titles, subtitles, and
+captions are wrapped at 72 text columns for ordinary figure widths;
+missing text is omitted. For narrower exports or custom line breaks,
+override these labels with
+[`ggplot2::labs()`](https://ggplot2.tidyverse.org/reference/labs.html)
+on the returned plot. Fit plots created with `show_title = FALSE` or
+`show_notes = FALSE` retain those settings on conversion. To set them
+when converting a fit directly, pass the flags through `...`.
+Interpretation and display notes remain available in
+`attr(plot, "mfrmr_notes")`, when present in the source payload. Wright,
+pathway, and CCC conversions share the fit-family series palette, honour
+monochrome presets and supplied palette overrides, and preserve
+line-type or point-shape distinctions. CCC categories retain their
+source order. When `slope_aes = "colour"`, slopes instead use a
+continuous viridis scale (a grey gradient in monochrome); categories
+still have line types.
 
 ## Examples
 

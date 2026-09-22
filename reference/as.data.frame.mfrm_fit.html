@@ -13,7 +13,7 @@ environment."><meta property="og:image" content="https://ryuya-dot-com.github.io
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,10 +24,12 @@ environment."><meta property="og:image" content="https://ryuya-dot-com.github.io
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -44,7 +46,7 @@ environment."><meta property="og:image" content="https://ryuya-dot-com.github.io
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Convert mfrm_fit to a tidy data.frame</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
       <div class="d-none name"><code>as.data.frame.mfrm_fit.Rd</code></div>
     </div>
 
@@ -117,18 +119,45 @@ All non-person facets are stacked underneath in the same schema.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>,</span></span>
-<span class="r-in"><span>                quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Extract estimates and select the rows to display</span></span></span>
+<span class="r-in"><span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Person"</span><span class="op">)</span><span class="op">)</span> <span class="co"># First six persons</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Facet Level    Estimate Extreme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Person  P001  0.22371868    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Person  P002  0.71054603    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Person  P003  0.02517584    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Person  P004  0.14530707    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Person  P005 -0.06792434    none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Person  P006  0.70720576    none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Person  P001  0.28429588    none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Person  P002  0.66118004    none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Person  P003  0.02177773    none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Person  P004  0.22410785    none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Person  P005 -0.17496065    none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Person  P006  0.67681003    none</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Rater"</span><span class="op">)</span>       <span class="co"># All raters</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Facet Level   Estimate Extreme</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49 Rater   R01 -0.6059776    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50 Rater   R02 -0.3820356    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51 Rater   R03  0.2120388    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52 Rater   R04  0.1799462    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53 Rater   R05  0.1842365    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54 Rater   R06  0.4117917    &lt;NA&gt;</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Criterion"</span><span class="op">)</span>   <span class="co"># All criteria</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Facet        Level   Estimate Extreme</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55 Criterion      Content -0.3441471    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56 Criterion     Language  0.1204520    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 57 Criterion Organization  0.2236950    &lt;NA&gt;</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

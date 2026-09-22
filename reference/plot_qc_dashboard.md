@@ -173,34 +173,46 @@ for detailed diagnosis.
 
 ``` r
 # \donttest{
-# Build the plotting data without opening a graphics device.
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person %in% unique(toy$Person)[1:3], ]
-fit_quick <- suppressWarnings(
-  fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-           method = "JML", maxit = 3)
-)
-qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
-names(qc_quick$data)
-#>  [1] "title"             "subtitle"          "legend"           
-#>  [4] "reference_lines"   "preset"            "threshold_profile"
-#>  [7] "thresholds"        "category_stats"    "fit"              
-#> [10] "zstd"              "unexpected"        "fair_average"     
-#> [13] "displacement"      "interrater"        "facets_chisq"     
-#> [16] "reliability"       "plot_name"        
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
-qc <- plot_qc_dashboard(fit, draw = FALSE)
-qc$data$panels$Status
-#> NULL
-# Look for: a row whose `Status` is "OK" for each panel that
-#   the run should support. "WARN" / "REVIEW" rows tell you which
-#   downstream helper to run next (e.g. `plot_unexpected()`,
-#   `plot_residual_pca()`); the dashboard is a triage screen, not
-#   a publication figure on its own.
-if (interactive()) {
-  plot_qc_dashboard(fit, rater_facet = "Rater")
-}
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Read the interpretation status before reviewing the quality-control (QC) panels
+review <- summary(diagnostics)
+review$decision
+#>               Interpretation FormalInference FitReadiness
+#> 1 Ready for formal inference             Yes        ready
+#>                                           Why
+#> 1 All stored fit-readiness components passed.
+#>                                                                                            NextAction
+#> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
+
+# Draw the dashboard and save its data
+qc <- plot_qc_dashboard(fit, diagnostics = diagnostics)
+
+
+# Inspect the counts behind the category panel
+qc$data$category_stats[, c("Category", "Count", "ExpectedCount")]
+#> # A tibble: 4 × 3
+#>   Category Count ExpectedCount
+#>      <int> <dbl>         <dbl>
+#> 1        1    62          57.2
+#> 2        2    96          99.0
+#> 3        3    78          80.1
+#> 4        4    46          45.6
+# Use focused plots such as plot_marginal_fit(diagnostics) to investigate a panel
 # }
 ```

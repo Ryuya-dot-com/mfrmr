@@ -9,7 +9,7 @@ severity, misfit, central-tendency screening, and optional bias counts."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,10 +20,12 @@ severity, misfit, central-tendency screening, and optional bias counts."><meta p
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -40,7 +42,7 @@ severity, misfit, central-tendency screening, and optional bias counts."><meta p
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Facet-quality dashboard for facet-level screening</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
       <div class="d-none name"><code>facet_quality_dashboard.Rd</code></div>
     </div>
 
@@ -58,7 +60,7 @@ severity, misfit, central-tendency screening, and optional bias counts.</p>
 <span>  bias_results <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  severity_warn <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  misfit_warn <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  central_tendency_max <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  central_tendency_max <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bias_count_warn <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  bias_abs_t_warn <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  bias_abs_size_warn <span class="op">=</span> <span class="fl">0.5</span>,</span>
@@ -99,8 +101,11 @@ this cutoff or below its reciprocal are flagged.</p></dd>
 
 
 <dt id="arg-central-tendency-max">central_tendency_max<a class="anchor" aria-label="anchor" href="#arg-central-tendency-max"></a></dt>
-<dd><p>Absolute estimate cutoff used to flag central
-tendency. Levels near zero are marked.</p></dd>
+<dd><p>Legacy opt-in absolute estimate cutoff for
+marking facet estimates near the fitted origin. The default <code>NULL</code>
+disables this flag because origin proximity is not evidence that a rater
+avoids extreme score categories. Use <code><a href="data_quality_report.html">data_quality_report()</a></code> for observed
+category-use and restriction-of-range screening.</p></dd>
 
 
 <dt id="arg-bias-count-warn">bias_count_warn<a class="anchor" aria-label="anchor" href="#arg-bias-count-warn"></a></dt>
@@ -146,19 +151,31 @@ pair returned by <code><a href="mfrm_misfit_thresholds.html">mfrm_misfit_thresho
 pass <code>misfit_warn = 1.5</code> to keep the older symmetric
 \([1/\)<code>misfit_warn</code>\(,\;\)<code>misfit_warn</code>\(]\)
 form (0.67-1.5).</p></li>
-<li><p><strong>Central tendency</strong>: elements with
-\(|\mathrm{Estimate}| &lt;\) <code>central_tendency_max</code> logits
-are flagged.  Near-zero estimates may indicate a rater who avoids
-extreme categories, producing artificially narrow score ranges.</p></li>
+<li><p><strong>Reference proximity (legacy <code>CentralTendencyFlag</code> label)</strong>: when
+<code>central_tendency_max</code> is supplied, elements with
+\(|\mathrm{Estimate}| &lt;\) <code>central_tendency_max</code> logits are marked.
+This only describes proximity to the fitted origin and must not be
+interpreted as central-category use or restriction of range. Those are
+response-pattern questions handled by <code><a href="data_quality_report.html">data_quality_report()</a></code>.</p></li>
 <li><p><strong>Bias</strong>: elements involved in \(\ge\) <code>bias_count_warn</code>
 screen-positive interaction cells (from <code><a href="estimate_bias.html">estimate_bias()</a></code>) are flagged.</p></li>
-</ul><p>A <strong>flag density</strong> score counts how many of the four criteria each
-element triggers. Elements flagged on multiple criteria warrant priority
+</ul><p>A <strong>flag density</strong> score counts how many enabled criteria each element
+triggers. Elements flagged on multiple criteria warrant priority
 review and may motivate training or a documented data-quality review; the
 dashboard does not justify automatic row, person, or rater exclusion.</p>
 <p>Default thresholds are screening heuristics. Prespecify and justify any
 application-specific alternatives rather than treating them as universal
-validity or acceptance criteria.</p>
+validity or acceptance criteria.
+<code>MissingMetrics</code> lists unavailable estimate, SE, Infit or Outfit values.
+A severity or misfit flag is <code>NA</code> when it cannot be evaluated (an observed
+misfit exceedance still flags even if the other fit index is unavailable).
+<code>FlagCount</code> counts observed flags only; zero is not a complete pass.
+<code>IncompleteLevels</code> counts levels with any missing diagnostic. Bias counts
+describe supplied results only, not tests of absence of bias.
+Fit-readiness restrictions are retained in <code>fit_readiness</code>,
+<code>interpretation_status</code> and <code>notes</code>. Review overlap with
+<code><a href="subset_connectivity_report.html">subset_connectivity_report()</a></code> and category use with <code><a href="data_quality_report.html">data_quality_report()</a></code>
+before interpreting between-rater differences.</p>
     </div>
     <div class="section level2">
     <h2 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a></h2>
@@ -200,60 +217,16 @@ when <code>bias_results</code> was supplied; <code>NULL</code> otherwise</p></li
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Facet Quality Dashboard Summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet FacetSource Levels FlaggedLevels BiasSourceBundles</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater    inferred      4             2                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet FacetSource Levels FlaggedLevels IncompleteLevels BiasSourceBundles</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater    inferred      4             0                0                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Facet Levels MeanEstimate   SD MinEstimate MaxEstimate MeanInfit MeanOutfit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Rater      4            0 0.26      -0.322       0.315     0.997      0.978</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  SeverityFlagged MisfitFlagged CentralTendencyFlagged BiasFlagged AnyFlagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0             0                      2           0          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0             0                      0           0          0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  BiasRows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged levels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet Level Estimate ParameterStatus BoundaryDirection ResponseExtreme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R01    0.003            &lt;NA&gt;              &lt;NA&gt;            &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R02    0.003            &lt;NA&gt;              &lt;NA&gt;            &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  OptimizerEstimate DisplayEstimate DisplayAdjustment PrimaryEstimateBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA              NA              &lt;NA&gt;                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA              NA              &lt;NA&gt;                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  OptimizerEstimateUse ReasonCodes ReadinessContractVersion SourceFitReadiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;        &lt;NA&gt;                     &lt;NA&gt;               &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;        &lt;NA&gt;                     &lt;NA&gt;               &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SourceInferenceReady EstimateUse N.x    SE ModelSE RealSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    NA        &lt;NA&gt;  32 0.252   0.252  0.289</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    NA        &lt;NA&gt;  32 0.252   0.252  0.252</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      SE_Method Converged InferenceReady ConvergenceSeverity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Observation-table information      TRUE           TRUE                pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Observation-table information      TRUE           TRUE                pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PrecisionTier SupportsFormalInference          SEUse</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    exploratory                   FALSE screening_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    exploratory                   FALSE screening_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                CIBasis          CIUse N.y Infit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal interval from exploratory observation-table SE screening_only  32 1.321</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal interval from exploratory observation-table SE screening_only  32 0.943</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit N.x.x ObservedAverage</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1.277     0.937      1.101   15.765        32    32            2.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   0.912    -0.046     -0.278   15.765        32    32            2.75</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ExpectedAverage Bias MeanResidual MeanStdResidual MeanAbsStdResidual  ChiSq</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             2.75    0            0          -0.026              0.922 40.856</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             2.75    0            0           0.011              0.779 29.192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ChiDf  ChiP SE_Residual t_Residual p_Residual SE_StdResidual t_StdResidual</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     31 0.111       0.124          0          1          0.177        -0.149</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     31 0.559       0.124          0          1          0.177         0.063</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  p_StdResidual DF PTMEA N.y.y BoundaryExcluded CI_Lower CI_Upper CI_Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.882 31 0.609    32            FALSE    -0.49    0.497     0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.950 31 0.667    32            FALSE    -0.49    0.497     0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             CI_Method CIEligible                              CILabel  N</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal approximation      FALSE Approximate interval; screening only 32</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal approximation      FALSE Approximate interval; screening only 32</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  AbsEstimate SeverityFlag MisfitFlag CentralTendencyFlag BiasCount BiasSources</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        0.003        FALSE      FALSE                TRUE         0           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        0.003        FALSE      FALSE                TRUE         0           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  BiasFlag FlagCount AnyFlag FlagLabel .AbsEstimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     FALSE         1    TRUE   central        0.003</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     FALSE         1    TRUE   central        0.003</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Setting    Value</span>
@@ -261,7 +234,8 @@ when <code>bias_results</code> was supplied; <code>NULL</code> otherwise</p></li
 <span class="r-out co"><span class="r-pr">#&gt;</span>          facet_source inferred</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         severity_warn        1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           misfit_warn      1.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  central_tendency_max     0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          misfit_lower      0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  central_tendency_max       NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       bias_count_warn        1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       bias_abs_t_warn        2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    bias_abs_size_warn      0.5</span>
@@ -269,7 +243,13 @@ when <code>bias_results</code> was supplied; <code>NULL</code> otherwise</p></li
 <span class="r-out co"><span class="r-pr">#&gt;</span>   bias_source_bundles        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Dashboard constructed successfully.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Flags are screening prompts, not evidence of invalid ratings or grounds for automatic exclusion.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Severity is relative to the fitted reference; inspect workload, category use and common ratings before comparing levels.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - FlagCount counts observed flags only. MissingMetrics identifies unavailable diagnostics; zero flags does not mean all checks passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - BiasCount counts flagged cells in supplied bias results only; zero does not establish absence of bias.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Legacy CentralTendencyFlag is disabled by default because origin proximity does not diagnose observed category avoidance or range restriction.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - No level-level flags were triggered under the current thresholds.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

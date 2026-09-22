@@ -112,7 +112,7 @@ jml_status$readiness
 head(run$fair_average)
 #> $raw_by_facet
 #> $raw_by_facet$Person
-#> # A tibble: 48 × 18
+#> # A tibble: 48 × 22
 #>    TotalScore TotalCount WeightdScore WeightdCount ObservedAverage FairM FairZ
 #>         <int>      <int>        <dbl>        <dbl>           <dbl> <dbl> <dbl>
 #>  1         22          6           22            6            3.67  3.69  3.69
@@ -126,12 +126,14 @@ head(run$fair_average)
 #>  9         20          6           20            6            3.33  3.07  3.07
 #> 10         18          6           18            6            3     3.02  3.02
 #> # ℹ 38 more rows
-#> # ℹ 11 more variables: Measure <dbl>, ModelSE <dbl>, RealSE <dbl>,
-#> #   InfitMnSq <dbl>, InfitZStd <dbl>, OutfitMnSq <dbl>, OutfitZStd <dbl>,
-#> #   PtMeaCorr <dbl>, Anchor <chr>, Status <chr>, Level <chr>
+#> # ℹ 15 more variables: FairMReference <chr>, Measure <dbl>,
+#> #   PrimaryMeasure <dbl>, MeasureBasis <chr>, ExtremeAdjustment <dbl>,
+#> #   ModelSE <dbl>, RealSE <dbl>, InfitMnSq <dbl>, InfitZStd <dbl>,
+#> #   OutfitMnSq <dbl>, OutfitZStd <dbl>, PtMeaCorr <dbl>, Anchor <chr>,
+#> #   Status <chr>, Level <chr>
 #> 
 #> $raw_by_facet$Rater
-#> # A tibble: 6 × 18
+#> # A tibble: 6 × 22
 #>   TotalScore TotalCount WeightdScore WeightdCount ObservedAverage FairM FairZ
 #>        <int>      <int>        <dbl>        <dbl>           <dbl> <dbl> <dbl>
 #> 1        115         50          115           50            2.3   2.09  2.23
@@ -140,20 +142,24 @@ head(run$fair_average)
 #> 4         95         44           95           44            2.16  2.29  2.44
 #> 5        147         56          147           56            2.62  2.54  2.70
 #> 6        130         47          130           47            2.77  2.73  2.88
-#> # ℹ 11 more variables: Measure <dbl>, ModelSE <dbl>, RealSE <dbl>,
-#> #   InfitMnSq <dbl>, InfitZStd <dbl>, OutfitMnSq <dbl>, OutfitZStd <dbl>,
-#> #   PtMeaCorr <dbl>, Anchor <chr>, Status <chr>, Level <chr>
+#> # ℹ 15 more variables: FairMReference <chr>, Measure <dbl>,
+#> #   PrimaryMeasure <dbl>, MeasureBasis <chr>, ExtremeAdjustment <dbl>,
+#> #   ModelSE <dbl>, RealSE <dbl>, InfitMnSq <dbl>, InfitZStd <dbl>,
+#> #   OutfitMnSq <dbl>, OutfitZStd <dbl>, PtMeaCorr <dbl>, Anchor <chr>,
+#> #   Status <chr>, Level <chr>
 #> 
 #> $raw_by_facet$Criterion
-#> # A tibble: 3 × 18
+#> # A tibble: 3 × 22
 #>   TotalScore TotalCount WeightdScore WeightdCount ObservedAverage FairM FairZ
 #>        <int>      <int>        <dbl>        <dbl>           <dbl> <dbl> <dbl>
 #> 1        211         94          211           94            2.24  2.16  2.30
 #> 2        218         94          218           94            2.32  2.23  2.37
 #> 3        243         94          243           94            2.59  2.57  2.73
-#> # ℹ 11 more variables: Measure <dbl>, ModelSE <dbl>, RealSE <dbl>,
-#> #   InfitMnSq <dbl>, InfitZStd <dbl>, OutfitMnSq <dbl>, OutfitZStd <dbl>,
-#> #   PtMeaCorr <dbl>, Anchor <chr>, Status <chr>, Level <chr>
+#> # ℹ 15 more variables: FairMReference <chr>, Measure <dbl>,
+#> #   PrimaryMeasure <dbl>, MeasureBasis <chr>, ExtremeAdjustment <dbl>,
+#> #   ModelSE <dbl>, RealSE <dbl>, InfitMnSq <dbl>, InfitZStd <dbl>,
+#> #   OutfitMnSq <dbl>, OutfitZStd <dbl>, PtMeaCorr <dbl>, Anchor <chr>,
+#> #   Status <chr>, Level <chr>
 #> 
 #> 
 #> $by_facet
@@ -207,104 +213,153 @@ head(run$fair_average)
 #> 46           8           6             8             6          1.33
 #> 47           8           6             8             6          1.33
 #> 48           7           6             7             6          1.17
-#>    Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq
-#> 1             3.69            3.69    2.37       0.76      0.76       0.44
-#> 2             3.66            3.66    2.26       0.77      0.94       1.51
-#> 3             3.44            3.44    1.65       0.59      0.65       1.23
-#> 4             3.41            3.41    1.59       0.58      0.58       1.00
-#> 5             3.34            3.34    1.44       0.55      0.60       1.22
-#> 6             3.19            3.19    1.16       0.55      0.71       1.66
-#> 7             3.19            3.19    1.15       0.53      0.85       2.62
-#> 8             3.11            3.11    1.01       0.66      0.66       0.56
-#> 9             3.07            3.07    0.95       0.58      0.70       1.44
-#> 10            3.02            3.02    0.87       0.53      0.53       0.89
-#> 11            2.92            2.92    0.71       0.51      0.51       0.72
-#> 12            2.86            2.86    0.62       0.51      0.67       1.72
-#> 13            2.76            2.76    0.45       0.57      0.59       1.04
-#> 14            2.75            2.75    0.45       0.51      0.51       0.69
-#> 15            2.75            2.75    0.45       0.51      0.51       0.34
-#> 16            2.69            2.69    0.35       0.53      0.56       1.13
-#> 17            2.66            2.66    0.30       0.56      0.78       1.95
-#> 18            2.62            2.62    0.25       0.51      0.52       1.01
-#> 19            2.58            2.58    0.17       0.52      0.72       1.93
-#> 20            2.52            2.52    0.09       0.52      0.52       0.14
-#> 21            2.51            2.51    0.08       0.51      0.62       1.44
-#> 22            2.35            2.35   -0.18       0.53      0.53       0.13
-#> 23            2.35            2.35   -0.18       0.53      0.53       0.65
-#> 24            2.35            2.35   -0.19       0.51      0.51       0.61
-#> 25            2.35            2.35   -0.19       0.51      0.51       0.61
-#> 26            2.33            2.33   -0.21       0.57      0.57       0.59
-#> 27            2.26            2.26   -0.33       0.58      0.60       1.08
-#> 28            2.18            2.18   -0.45       0.51      0.51       0.29
-#> 29            2.16            2.16   -0.49       0.54      0.66       1.54
-#> 30            2.16            2.16   -0.49       0.54      0.82       2.35
-#> 31            2.10            2.10   -0.59       0.55      0.55       0.43
-#> 32            2.07            2.07   -0.65       0.60      0.63       1.07
-#> 33            2.06            2.06   -0.65       0.54      0.54       0.50
-#> 34            2.06            2.06   -0.65       0.54      0.57       1.11
-#> 35            2.03            2.03   -0.71       0.52      0.53       1.04
-#> 36            1.99            1.99   -0.79       0.55      0.55       0.29
-#> 37            1.90            1.90   -0.95       0.56      0.56       0.79
-#> 38            1.74            1.74   -1.28       0.55      0.55       0.43
-#> 39            1.61            1.61   -1.56       0.68      0.68       0.70
-#> 40            1.58            1.58   -1.64       0.62      0.62       0.54
-#> 41            1.56            1.56   -1.68       0.68      0.68       0.59
-#> 42            1.48            1.48   -1.89       0.68      0.71       1.08
-#> 43            1.48            1.48   -1.89       0.68      1.28       3.53
-#> 44            1.38            1.38   -2.21       0.79      0.79       0.70
-#> 45            1.38            1.38   -2.21       0.79      0.79       0.79
-#> 46            1.36            1.36   -2.26       0.79      0.79       0.73
-#> 47            1.36            1.36   -2.26       0.79      0.79       0.57
-#> 48            1.18            1.18   -3.08       1.06      1.08       1.03
-#>    Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element
-#> 1       -0.30        0.39       -1.22         NA                P015
-#> 2        0.77        1.04        0.27         NA                P045
-#> 3        0.53        1.31        0.68         NA                P036
-#> 4        0.27        0.99        0.18         NA                P030
-#> 5        0.52        1.31        0.68         NA                P027
-#> 6        0.97        1.91        1.44         NA                P013
-#> 7        1.77        2.59        2.13         NA                P025
-#> 8       -0.25        0.60       -0.54         NA                P006
-#> 9        0.74        1.53        0.99         NA                P002
-#> 10       0.11        0.85       -0.08         NA                P019
-#> 11      -0.19        0.69       -0.40         NA                P034
-#> 12       1.07        1.75        1.26         NA                P021
-#> 13       0.32        1.05        0.29         NA                P001
-#> 14      -0.25        0.68       -0.42         NA                P031
-#> 15      -1.01        0.34       -1.39         NA                P035
-#> 16       0.41        1.09        0.35         NA                P004
-#> 17       1.20        1.93        1.37         NA                P024
-#> 18       0.26        1.01        0.20         NA                P038
-#> 19       1.24        1.95        1.49         NA                P048
-#> 20      -1.72        0.14       -2.32         NA                P022
-#> 21       0.77        1.44        0.86         NA                P003
-#> 22      -1.74        0.12       -2.46         NA                P026
-#> 23      -0.29        0.67       -0.46         NA                P020
-#> 24      -0.39        0.62       -0.57         NA                P005
-#> 25      -0.39        0.62       -0.57         NA                P010
-#> 26      -0.34        0.62       -0.49         NA                P011
-#> 27       0.37        1.13        0.40         NA                P028
-#> 28      -1.17        0.29       -1.58         NA                P008
-#> 29       0.86        1.49        0.93         NA                P018
-#> 30       1.56        2.57        2.11         NA                P012
-#> 31      -0.67        0.43       -1.09         NA                P042
-#> 32       0.37        1.10        0.36         NA                P039
-#> 33      -0.56        0.53       -0.81         NA                P046
-#> 34       0.39        1.03        0.25         NA                P043
-#> 35       0.30        1.06        0.30         NA                P009
-#> 36      -1.03        0.31       -1.48         NA                P017
-#> 37      -0.03        0.79       -0.19         NA                P044
-#> 38      -0.68        0.42       -1.10         NA                P007
-#> 39      -0.03        0.72       -0.35         NA                P023
-#> 40      -0.34        0.58       -0.67         NA                P047
-#> 41      -0.19        0.64       -0.53         NA                P041
-#> 42       0.40        0.91        0.04         NA                P014
-#> 43       1.94        3.31        2.74         NA                P016
-#> 44       0.07        0.68       -0.42         NA                P037
-#> 45       0.17        0.88       -0.03         NA                P040
-#> 46       0.11        0.73       -0.32         NA                P029
-#> 47      -0.08        0.52       -0.81         NA                P033
-#> 48         NA        1.23        0.56         NA                P032
+#>    Fair(M) Average Fair(Z) Average               FairMReference Measure
+#> 1             3.69            3.69 Mean of other facet measures    2.37
+#> 2             3.66            3.66 Mean of other facet measures    2.26
+#> 3             3.44            3.44 Mean of other facet measures    1.65
+#> 4             3.41            3.41 Mean of other facet measures    1.59
+#> 5             3.34            3.34 Mean of other facet measures    1.44
+#> 6             3.19            3.19 Mean of other facet measures    1.16
+#> 7             3.19            3.19 Mean of other facet measures    1.15
+#> 8             3.11            3.11 Mean of other facet measures    1.01
+#> 9             3.07            3.07 Mean of other facet measures    0.95
+#> 10            3.02            3.02 Mean of other facet measures    0.87
+#> 11            2.92            2.92 Mean of other facet measures    0.71
+#> 12            2.86            2.86 Mean of other facet measures    0.62
+#> 13            2.76            2.76 Mean of other facet measures    0.45
+#> 14            2.75            2.75 Mean of other facet measures    0.45
+#> 15            2.75            2.75 Mean of other facet measures    0.45
+#> 16            2.69            2.69 Mean of other facet measures    0.35
+#> 17            2.66            2.66 Mean of other facet measures    0.30
+#> 18            2.62            2.62 Mean of other facet measures    0.25
+#> 19            2.58            2.58 Mean of other facet measures    0.17
+#> 20            2.52            2.52 Mean of other facet measures    0.09
+#> 21            2.51            2.51 Mean of other facet measures    0.08
+#> 22            2.35            2.35 Mean of other facet measures   -0.18
+#> 23            2.35            2.35 Mean of other facet measures   -0.18
+#> 24            2.35            2.35 Mean of other facet measures   -0.19
+#> 25            2.35            2.35 Mean of other facet measures   -0.19
+#> 26            2.33            2.33 Mean of other facet measures   -0.21
+#> 27            2.26            2.26 Mean of other facet measures   -0.33
+#> 28            2.18            2.18 Mean of other facet measures   -0.45
+#> 29            2.16            2.16 Mean of other facet measures   -0.49
+#> 30            2.16            2.16 Mean of other facet measures   -0.49
+#> 31            2.10            2.10 Mean of other facet measures   -0.59
+#> 32            2.07            2.07 Mean of other facet measures   -0.65
+#> 33            2.06            2.06 Mean of other facet measures   -0.65
+#> 34            2.06            2.06 Mean of other facet measures   -0.65
+#> 35            2.03            2.03 Mean of other facet measures   -0.71
+#> 36            1.99            1.99 Mean of other facet measures   -0.79
+#> 37            1.90            1.90 Mean of other facet measures   -0.95
+#> 38            1.74            1.74 Mean of other facet measures   -1.28
+#> 39            1.61            1.61 Mean of other facet measures   -1.56
+#> 40            1.58            1.58 Mean of other facet measures   -1.64
+#> 41            1.56            1.56 Mean of other facet measures   -1.68
+#> 42            1.48            1.48 Mean of other facet measures   -1.89
+#> 43            1.48            1.48 Mean of other facet measures   -1.89
+#> 44            1.38            1.38 Mean of other facet measures   -2.21
+#> 45            1.38            1.38 Mean of other facet measures   -2.21
+#> 46            1.36            1.36 Mean of other facet measures   -2.26
+#> 47            1.36            1.36 Mean of other facet measures   -2.26
+#> 48            1.18            1.18 Mean of other facet measures   -3.08
+#>    PrimaryMeasure    MeasureBasis ExtremeAdjustment Model S.E. Real S.E.
+#> 1            2.37 Fitted estimate                 0       0.76      0.76
+#> 2            2.26 Fitted estimate                 0       0.77      0.94
+#> 3            1.65 Fitted estimate                 0       0.59      0.65
+#> 4            1.59 Fitted estimate                 0       0.58      0.58
+#> 5            1.44 Fitted estimate                 0       0.55      0.60
+#> 6            1.16 Fitted estimate                 0       0.55      0.71
+#> 7            1.15 Fitted estimate                 0       0.53      0.85
+#> 8            1.01 Fitted estimate                 0       0.66      0.66
+#> 9            0.95 Fitted estimate                 0       0.58      0.70
+#> 10           0.87 Fitted estimate                 0       0.53      0.53
+#> 11           0.71 Fitted estimate                 0       0.51      0.51
+#> 12           0.62 Fitted estimate                 0       0.51      0.67
+#> 13           0.45 Fitted estimate                 0       0.57      0.59
+#> 14           0.45 Fitted estimate                 0       0.51      0.51
+#> 15           0.45 Fitted estimate                 0       0.51      0.51
+#> 16           0.35 Fitted estimate                 0       0.53      0.56
+#> 17           0.30 Fitted estimate                 0       0.56      0.78
+#> 18           0.25 Fitted estimate                 0       0.51      0.52
+#> 19           0.17 Fitted estimate                 0       0.52      0.72
+#> 20           0.09 Fitted estimate                 0       0.52      0.52
+#> 21           0.08 Fitted estimate                 0       0.51      0.62
+#> 22          -0.18 Fitted estimate                 0       0.53      0.53
+#> 23          -0.18 Fitted estimate                 0       0.53      0.53
+#> 24          -0.19 Fitted estimate                 0       0.51      0.51
+#> 25          -0.19 Fitted estimate                 0       0.51      0.51
+#> 26          -0.21 Fitted estimate                 0       0.57      0.57
+#> 27          -0.33 Fitted estimate                 0       0.58      0.60
+#> 28          -0.45 Fitted estimate                 0       0.51      0.51
+#> 29          -0.49 Fitted estimate                 0       0.54      0.66
+#> 30          -0.49 Fitted estimate                 0       0.54      0.82
+#> 31          -0.59 Fitted estimate                 0       0.55      0.55
+#> 32          -0.65 Fitted estimate                 0       0.60      0.63
+#> 33          -0.65 Fitted estimate                 0       0.54      0.54
+#> 34          -0.65 Fitted estimate                 0       0.54      0.57
+#> 35          -0.71 Fitted estimate                 0       0.52      0.53
+#> 36          -0.79 Fitted estimate                 0       0.55      0.55
+#> 37          -0.95 Fitted estimate                 0       0.56      0.56
+#> 38          -1.28 Fitted estimate                 0       0.55      0.55
+#> 39          -1.56 Fitted estimate                 0       0.68      0.68
+#> 40          -1.64 Fitted estimate                 0       0.62      0.62
+#> 41          -1.68 Fitted estimate                 0       0.68      0.68
+#> 42          -1.89 Fitted estimate                 0       0.68      0.71
+#> 43          -1.89 Fitted estimate                 0       0.68      1.28
+#> 44          -2.21 Fitted estimate                 0       0.79      0.79
+#> 45          -2.21 Fitted estimate                 0       0.79      0.79
+#> 46          -2.26 Fitted estimate                 0       0.79      0.79
+#> 47          -2.26 Fitted estimate                 0       0.79      0.79
+#> 48          -3.08 Fitted estimate                 0       1.06      1.08
+#>    Infit MnSq Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element
+#> 1        0.44      -0.30        0.39       -1.22         NA                P015
+#> 2        1.51       0.77        1.04        0.27         NA                P045
+#> 3        1.23       0.53        1.31        0.68         NA                P036
+#> 4        1.00       0.27        0.99        0.18         NA                P030
+#> 5        1.22       0.52        1.31        0.68         NA                P027
+#> 6        1.66       0.97        1.91        1.44         NA                P013
+#> 7        2.62       1.77        2.59        2.13         NA                P025
+#> 8        0.56      -0.25        0.60       -0.54         NA                P006
+#> 9        1.44       0.74        1.53        0.99         NA                P002
+#> 10       0.89       0.11        0.85       -0.08         NA                P019
+#> 11       0.72      -0.19        0.69       -0.40         NA                P034
+#> 12       1.72       1.07        1.75        1.26         NA                P021
+#> 13       1.04       0.32        1.05        0.29         NA                P001
+#> 14       0.34      -1.01        0.34       -1.39         NA                P035
+#> 15       0.69      -0.25        0.68       -0.42         NA                P031
+#> 16       1.13       0.41        1.09        0.35         NA                P004
+#> 17       1.95       1.20        1.93        1.37         NA                P024
+#> 18       1.01       0.26        1.01        0.20         NA                P038
+#> 19       1.93       1.24        1.95        1.49         NA                P048
+#> 20       0.14      -1.72        0.14       -2.32         NA                P022
+#> 21       1.44       0.77        1.44        0.86         NA                P003
+#> 22       0.13      -1.74        0.12       -2.46         NA                P026
+#> 23       0.65      -0.29        0.67       -0.46         NA                P020
+#> 24       0.61      -0.39        0.62       -0.57         NA                P005
+#> 25       0.61      -0.39        0.62       -0.57         NA                P010
+#> 26       0.59      -0.34        0.62       -0.49         NA                P011
+#> 27       1.08       0.37        1.13        0.40         NA                P028
+#> 28       0.29      -1.17        0.29       -1.58         NA                P008
+#> 29       1.54       0.86        1.49        0.93         NA                P018
+#> 30       2.35       1.56        2.57        2.11         NA                P012
+#> 31       0.43      -0.67        0.43       -1.09         NA                P042
+#> 32       1.07       0.37        1.10        0.36         NA                P039
+#> 33       0.50      -0.56        0.53       -0.81         NA                P046
+#> 34       1.11       0.39        1.03        0.25         NA                P043
+#> 35       1.04       0.30        1.06        0.30         NA                P009
+#> 36       0.29      -1.03        0.31       -1.48         NA                P017
+#> 37       0.79      -0.03        0.79       -0.19         NA                P044
+#> 38       0.43      -0.68        0.42       -1.10         NA                P007
+#> 39       0.70      -0.03        0.72       -0.35         NA                P023
+#> 40       0.54      -0.34        0.58       -0.67         NA                P047
+#> 41       0.59      -0.19        0.64       -0.53         NA                P041
+#> 42       1.08       0.40        0.91        0.04         NA                P014
+#> 43       3.53       1.94        3.31        2.74         NA                P016
+#> 44       0.79       0.17        0.88       -0.03         NA                P040
+#> 45       0.70       0.07        0.68       -0.42         NA                P037
+#> 46       0.73       0.11        0.73       -0.32         NA                P029
+#> 47       0.57      -0.08        0.52       -0.81         NA                P033
+#> 48       1.03         NA        1.23        0.56         NA                P032
 #>    ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE
 #> 1             3.67            3.69                        3.69         0.76
 #> 2             3.67            3.66                        3.66         0.77
@@ -412,56 +467,67 @@ head(run$fair_average)
 #> 4          95          44            95            44          2.16
 #> 5         147          56           147            56          2.62
 #> 6         130          47           130            47          2.77
-#>   Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq
-#> 1            2.09            2.23    0.37       0.20      0.21       1.13
-#> 2            2.10            2.24    0.36       0.24      0.24       0.99
-#> 3            2.17            2.31    0.24       0.20      0.21       1.10
-#> 4            2.29            2.44    0.03       0.22      0.22       0.79
-#> 5            2.54            2.70   -0.36       0.18      0.19       1.12
-#> 6            2.73            2.88   -0.64       0.19      0.19       0.86
-#>   Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element
-#> 1       0.56        1.07        0.40       0.59                 R03
-#> 2       0.08        0.98        0.00       0.59                 R06
-#> 3       0.42        1.12        0.63       0.59                 R04
-#> 4      -0.60        0.76       -1.14       0.59                 R05
-#> 5       0.53        1.24        1.22       0.59                 R02
-#> 6      -0.46        0.83       -0.82       0.59                 R01
-#>   ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE
-#> 1            2.30            2.09                        2.23         0.20
-#> 2            2.03            2.10                        2.24         0.24
-#> 3            2.30            2.17                        2.31         0.20
-#> 4            2.16            2.29                        2.44         0.22
-#> 5            2.62            2.54                        2.70         0.18
-#> 6            2.77            2.73                        2.88         0.19
-#>   FitAdjustedSE
-#> 1          0.21
-#> 2          0.24
-#> 3          0.21
-#> 4          0.22
-#> 5          0.19
-#> 6          0.19
+#>   Fair(M) Average Fair(Z) Average
+#> 1            2.09            2.23
+#> 2            2.10            2.24
+#> 3            2.17            2.31
+#> 4            2.29            2.44
+#> 5            2.54            2.70
+#> 6            2.73            2.88
+#>                                   FairMReference Measure PrimaryMeasure
+#> 1 Mean of fitted Person and other facet measures    0.37           0.37
+#> 2 Mean of fitted Person and other facet measures    0.36           0.36
+#> 3 Mean of fitted Person and other facet measures    0.24           0.24
+#> 4 Mean of fitted Person and other facet measures    0.03           0.03
+#> 5 Mean of fitted Person and other facet measures   -0.36          -0.36
+#> 6 Mean of fitted Person and other facet measures   -0.64          -0.64
+#>      MeasureBasis ExtremeAdjustment Model S.E. Real S.E. Infit MnSq Infit ZStd
+#> 1 Fitted estimate                 0       0.20      0.21       1.13       0.56
+#> 2 Fitted estimate                 0       0.24      0.24       0.99       0.08
+#> 3 Fitted estimate                 0       0.20      0.21       1.10       0.42
+#> 4 Fitted estimate                 0       0.22      0.22       0.79      -0.60
+#> 5 Fitted estimate                 0       0.18      0.19       1.12       0.53
+#> 6 Fitted estimate                 0       0.19      0.19       0.86      -0.46
+#>   Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element ObservedAverage
+#> 1        1.07        0.40       0.59                 R03            2.30
+#> 2        0.98        0.00       0.59                 R06            2.03
+#> 3        1.12        0.63       0.59                 R04            2.30
+#> 4        0.76       -1.14       0.59                 R05            2.16
+#> 5        1.24        1.22       0.59                 R02            2.62
+#> 6        0.83       -0.82       0.59                 R01            2.77
+#>   AdjustedAverage StandardizedAdjustedAverage ModelBasedSE FitAdjustedSE
+#> 1            2.09                        2.23         0.20          0.21
+#> 2            2.10                        2.24         0.24          0.24
+#> 3            2.17                        2.31         0.20          0.21
+#> 4            2.29                        2.44         0.22          0.22
+#> 5            2.54                        2.70         0.18          0.19
+#> 6            2.73                        2.88         0.19          0.19
 #> 
 #> $by_facet$Criterion
 #>   Total Score Total Count Weightd Score Weightd Count Obsvd Average
 #> 1         211          94           211            94          2.24
 #> 2         218          94           218            94          2.32
 #> 3         243          94           243            94          2.59
-#>   Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq
-#> 1            2.16            2.30    0.26       0.14      0.16       1.20
-#> 2            2.23            2.37    0.14       0.14      0.14       0.95
-#> 3            2.57            2.73   -0.40       0.14      0.14       0.88
-#>   Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element
-#> 1       1.00        1.21        1.41       0.63             Organization
-#> 2      -0.17        0.93       -0.45       0.63                 Language
-#> 3      -0.57        0.89       -0.71       0.63                  Content
-#>   ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE
-#> 1            2.24            2.16                        2.30         0.14
-#> 2            2.32            2.23                        2.37         0.14
-#> 3            2.59            2.57                        2.73         0.14
-#>   FitAdjustedSE
-#> 1          0.16
-#> 2          0.14
-#> 3          0.14
+#>   Fair(M) Average Fair(Z) Average
+#> 1            2.16            2.30
+#> 2            2.23            2.37
+#> 3            2.57            2.73
+#>                                   FairMReference Measure PrimaryMeasure
+#> 1 Mean of fitted Person and other facet measures    0.26           0.26
+#> 2 Mean of fitted Person and other facet measures    0.14           0.14
+#> 3 Mean of fitted Person and other facet measures   -0.40          -0.40
+#>      MeasureBasis ExtremeAdjustment Model S.E. Real S.E. Infit MnSq Infit ZStd
+#> 1 Fitted estimate                 0       0.14      0.16       1.20       1.00
+#> 2 Fitted estimate                 0       0.14      0.14       0.95      -0.17
+#> 3 Fitted estimate                 0       0.14      0.14       0.88      -0.57
+#>   Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element ObservedAverage
+#> 1        1.21        1.41       0.63             Organization            2.24
+#> 2        0.93       -0.45       0.63                 Language            2.32
+#> 3        0.89       -0.71       0.63                  Content            2.59
+#>   AdjustedAverage StandardizedAdjustedAverage ModelBasedSE FitAdjustedSE
+#> 1            2.16                        2.30         0.14          0.16
+#> 2            2.23                        2.37         0.14          0.14
+#> 3            2.57                        2.73         0.14          0.14
 #> 
 #> 
 #> $stacked
@@ -523,238 +589,296 @@ head(run$fair_average)
 #> 55 Criterion         211          94           211            94          2.24
 #> 56 Criterion         218          94           218            94          2.32
 #> 57 Criterion         243          94           243            94          2.59
-#>    Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq
-#> 1             3.69            3.69    2.37       0.76      0.76       0.44
-#> 2             3.66            3.66    2.26       0.77      0.94       1.51
-#> 3             3.44            3.44    1.65       0.59      0.65       1.23
-#> 4             3.41            3.41    1.59       0.58      0.58       1.00
-#> 5             3.34            3.34    1.44       0.55      0.60       1.22
-#> 6             3.19            3.19    1.16       0.55      0.71       1.66
-#> 7             3.19            3.19    1.15       0.53      0.85       2.62
-#> 8             3.11            3.11    1.01       0.66      0.66       0.56
-#> 9             3.07            3.07    0.95       0.58      0.70       1.44
-#> 10            3.02            3.02    0.87       0.53      0.53       0.89
-#> 11            2.92            2.92    0.71       0.51      0.51       0.72
-#> 12            2.86            2.86    0.62       0.51      0.67       1.72
-#> 13            2.76            2.76    0.45       0.57      0.59       1.04
-#> 14            2.75            2.75    0.45       0.51      0.51       0.69
-#> 15            2.75            2.75    0.45       0.51      0.51       0.34
-#> 16            2.69            2.69    0.35       0.53      0.56       1.13
-#> 17            2.66            2.66    0.30       0.56      0.78       1.95
-#> 18            2.62            2.62    0.25       0.51      0.52       1.01
-#> 19            2.58            2.58    0.17       0.52      0.72       1.93
-#> 20            2.52            2.52    0.09       0.52      0.52       0.14
-#> 21            2.51            2.51    0.08       0.51      0.62       1.44
-#> 22            2.35            2.35   -0.18       0.53      0.53       0.13
-#> 23            2.35            2.35   -0.18       0.53      0.53       0.65
-#> 24            2.35            2.35   -0.19       0.51      0.51       0.61
-#> 25            2.35            2.35   -0.19       0.51      0.51       0.61
-#> 26            2.33            2.33   -0.21       0.57      0.57       0.59
-#> 27            2.26            2.26   -0.33       0.58      0.60       1.08
-#> 28            2.18            2.18   -0.45       0.51      0.51       0.29
-#> 29            2.16            2.16   -0.49       0.54      0.66       1.54
-#> 30            2.16            2.16   -0.49       0.54      0.82       2.35
-#> 31            2.10            2.10   -0.59       0.55      0.55       0.43
-#> 32            2.07            2.07   -0.65       0.60      0.63       1.07
-#> 33            2.06            2.06   -0.65       0.54      0.54       0.50
-#> 34            2.06            2.06   -0.65       0.54      0.57       1.11
-#> 35            2.03            2.03   -0.71       0.52      0.53       1.04
-#> 36            1.99            1.99   -0.79       0.55      0.55       0.29
-#> 37            1.90            1.90   -0.95       0.56      0.56       0.79
-#> 38            1.74            1.74   -1.28       0.55      0.55       0.43
-#> 39            1.61            1.61   -1.56       0.68      0.68       0.70
-#> 40            1.58            1.58   -1.64       0.62      0.62       0.54
-#> 41            1.56            1.56   -1.68       0.68      0.68       0.59
-#> 42            1.48            1.48   -1.89       0.68      0.71       1.08
-#> 43            1.48            1.48   -1.89       0.68      1.28       3.53
-#> 44            1.38            1.38   -2.21       0.79      0.79       0.70
-#> 45            1.38            1.38   -2.21       0.79      0.79       0.79
-#> 46            1.36            1.36   -2.26       0.79      0.79       0.73
-#> 47            1.36            1.36   -2.26       0.79      0.79       0.57
-#> 48            1.18            1.18   -3.08       1.06      1.08       1.03
-#> 49            2.09            2.23    0.37       0.20      0.21       1.13
-#> 50            2.10            2.24    0.36       0.24      0.24       0.99
-#> 51            2.17            2.31    0.24       0.20      0.21       1.10
-#> 52            2.29            2.44    0.03       0.22      0.22       0.79
-#> 53            2.54            2.70   -0.36       0.18      0.19       1.12
-#> 54            2.73            2.88   -0.64       0.19      0.19       0.86
-#> 55            2.16            2.30    0.26       0.14      0.16       1.20
-#> 56            2.23            2.37    0.14       0.14      0.14       0.95
-#> 57            2.57            2.73   -0.40       0.14      0.14       0.88
-#>    Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element
-#> 1       -0.30        0.39       -1.22         NA                     P015
-#> 2        0.77        1.04        0.27         NA                     P045
-#> 3        0.53        1.31        0.68         NA                     P036
-#> 4        0.27        0.99        0.18         NA                     P030
-#> 5        0.52        1.31        0.68         NA                     P027
-#> 6        0.97        1.91        1.44         NA                     P013
-#> 7        1.77        2.59        2.13         NA                     P025
-#> 8       -0.25        0.60       -0.54         NA                     P006
-#> 9        0.74        1.53        0.99         NA                     P002
-#> 10       0.11        0.85       -0.08         NA                     P019
-#> 11      -0.19        0.69       -0.40         NA                     P034
-#> 12       1.07        1.75        1.26         NA                     P021
-#> 13       0.32        1.05        0.29         NA                     P001
-#> 14      -0.25        0.68       -0.42         NA                     P031
-#> 15      -1.01        0.34       -1.39         NA                     P035
-#> 16       0.41        1.09        0.35         NA                     P004
-#> 17       1.20        1.93        1.37         NA                     P024
-#> 18       0.26        1.01        0.20         NA                     P038
-#> 19       1.24        1.95        1.49         NA                     P048
-#> 20      -1.72        0.14       -2.32         NA                     P022
-#> 21       0.77        1.44        0.86         NA                     P003
-#> 22      -1.74        0.12       -2.46         NA                     P026
-#> 23      -0.29        0.67       -0.46         NA                     P020
-#> 24      -0.39        0.62       -0.57         NA                     P005
-#> 25      -0.39        0.62       -0.57         NA                     P010
-#> 26      -0.34        0.62       -0.49         NA                     P011
-#> 27       0.37        1.13        0.40         NA                     P028
-#> 28      -1.17        0.29       -1.58         NA                     P008
-#> 29       0.86        1.49        0.93         NA                     P018
-#> 30       1.56        2.57        2.11         NA                     P012
-#> 31      -0.67        0.43       -1.09         NA                     P042
-#> 32       0.37        1.10        0.36         NA                     P039
-#> 33      -0.56        0.53       -0.81         NA                     P046
-#> 34       0.39        1.03        0.25         NA                     P043
-#> 35       0.30        1.06        0.30         NA                     P009
-#> 36      -1.03        0.31       -1.48         NA                     P017
-#> 37      -0.03        0.79       -0.19         NA                     P044
-#> 38      -0.68        0.42       -1.10         NA                     P007
-#> 39      -0.03        0.72       -0.35         NA                     P023
-#> 40      -0.34        0.58       -0.67         NA                     P047
-#> 41      -0.19        0.64       -0.53         NA                     P041
-#> 42       0.40        0.91        0.04         NA                     P014
-#> 43       1.94        3.31        2.74         NA                     P016
-#> 44       0.07        0.68       -0.42         NA                     P037
-#> 45       0.17        0.88       -0.03         NA                     P040
-#> 46       0.11        0.73       -0.32         NA                     P029
-#> 47      -0.08        0.52       -0.81         NA                     P033
-#> 48         NA        1.23        0.56         NA                     P032
-#> 49       0.56        1.07        0.40       0.59                      R03
-#> 50       0.08        0.98        0.00       0.59                      R06
-#> 51       0.42        1.12        0.63       0.59                      R04
-#> 52      -0.60        0.76       -1.14       0.59                      R05
-#> 53       0.53        1.24        1.22       0.59                      R02
-#> 54      -0.46        0.83       -0.82       0.59                      R01
-#> 55       1.00        1.21        1.41       0.63             Organization
-#> 56      -0.17        0.93       -0.45       0.63                 Language
-#> 57      -0.57        0.89       -0.71       0.63                  Content
-#>    ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE
-#> 1             3.67            3.69                        3.69         0.76
-#> 2             3.67            3.66                        3.66         0.77
-#> 3             3.33            3.44                        3.44         0.59
-#> 4             3.33            3.41                        3.41         0.58
-#> 5             3.17            3.34                        3.34         0.55
-#> 6             3.17            3.19                        3.19         0.55
-#> 7             3.00            3.19                        3.19         0.53
-#> 8             3.40            3.11                        3.11         0.66
-#> 9             3.33            3.07                        3.07         0.58
-#> 10            3.00            3.02                        3.02         0.53
-#> 11            2.83            2.92                        2.92         0.51
-#> 12            2.67            2.86                        2.86         0.51
-#> 13            3.00            2.76                        2.76         0.57
-#> 14            2.67            2.75                        2.75         0.51
-#> 15            2.67            2.75                        2.75         0.51
-#> 16            3.00            2.69                        2.69         0.53
-#> 17            2.40            2.66                        2.66         0.56
-#> 18            2.50            2.62                        2.62         0.51
-#> 19            2.67            2.58                        2.58         0.52
-#> 20            2.33            2.52                        2.52         0.52
-#> 21            2.83            2.51                        2.51         0.51
-#> 22            2.17            2.35                        2.35         0.53
-#> 23            2.17            2.35                        2.35         0.53
-#> 24            2.67            2.35                        2.35         0.51
-#> 25            2.67            2.35                        2.35         0.51
-#> 26            2.40            2.33                        2.33         0.57
-#> 27            2.20            2.26                        2.26         0.58
-#> 28            2.50            2.18                        2.18         0.51
-#> 29            2.17            2.16                        2.16         0.54
-#> 30            2.17            2.16                        2.16         0.54
-#> 31            2.00            2.10                        2.10         0.55
-#> 32            2.00            2.07                        2.07         0.60
-#> 33            2.17            2.06                        2.06         0.54
-#> 34            2.17            2.06                        2.06         0.54
-#> 35            2.33            2.03                        2.03         0.52
-#> 36            2.00            1.99                        1.99         0.55
-#> 37            2.00            1.90                        1.90         0.56
-#> 38            2.00            1.74                        1.74         0.55
-#> 39            1.50            1.61                        1.61         0.68
-#> 40            1.67            1.58                        1.58         0.62
-#> 41            1.50            1.56                        1.56         0.68
-#> 42            1.50            1.48                        1.48         0.68
-#> 43            1.50            1.48                        1.48         0.68
-#> 44            1.33            1.38                        1.38         0.79
-#> 45            1.33            1.38                        1.38         0.79
-#> 46            1.33            1.36                        1.36         0.79
-#> 47            1.33            1.36                        1.36         0.79
-#> 48            1.17            1.18                        1.18         1.06
-#> 49            2.30            2.09                        2.23         0.20
-#> 50            2.03            2.10                        2.24         0.24
-#> 51            2.30            2.17                        2.31         0.20
-#> 52            2.16            2.29                        2.44         0.22
-#> 53            2.62            2.54                        2.70         0.18
-#> 54            2.77            2.73                        2.88         0.19
-#> 55            2.24            2.16                        2.30         0.14
-#> 56            2.32            2.23                        2.37         0.14
-#> 57            2.59            2.57                        2.73         0.14
-#>    FitAdjustedSE
-#> 1           0.76
-#> 2           0.94
-#> 3           0.65
-#> 4           0.58
-#> 5           0.60
-#> 6           0.71
-#> 7           0.85
-#> 8           0.66
-#> 9           0.70
-#> 10          0.53
-#> 11          0.51
-#> 12          0.67
-#> 13          0.59
-#> 14          0.51
-#> 15          0.51
-#> 16          0.56
-#> 17          0.78
-#> 18          0.52
-#> 19          0.72
-#> 20          0.52
-#> 21          0.62
-#> 22          0.53
-#> 23          0.53
-#> 24          0.51
-#> 25          0.51
-#> 26          0.57
-#> 27          0.60
-#> 28          0.51
-#> 29          0.66
-#> 30          0.82
-#> 31          0.55
-#> 32          0.63
-#> 33          0.54
-#> 34          0.57
-#> 35          0.53
-#> 36          0.55
-#> 37          0.56
-#> 38          0.55
-#> 39          0.68
-#> 40          0.62
-#> 41          0.68
-#> 42          0.71
-#> 43          1.28
-#> 44          0.79
-#> 45          0.79
-#> 46          0.79
-#> 47          0.79
-#> 48          1.08
-#> 49          0.21
-#> 50          0.24
-#> 51          0.21
-#> 52          0.22
-#> 53          0.19
-#> 54          0.19
-#> 55          0.16
-#> 56          0.14
-#> 57          0.14
+#>    Fair(M) Average Fair(Z) Average
+#> 1             3.69            3.69
+#> 2             3.66            3.66
+#> 3             3.44            3.44
+#> 4             3.41            3.41
+#> 5             3.34            3.34
+#> 6             3.19            3.19
+#> 7             3.19            3.19
+#> 8             3.11            3.11
+#> 9             3.07            3.07
+#> 10            3.02            3.02
+#> 11            2.92            2.92
+#> 12            2.86            2.86
+#> 13            2.76            2.76
+#> 14            2.75            2.75
+#> 15            2.75            2.75
+#> 16            2.69            2.69
+#> 17            2.66            2.66
+#> 18            2.62            2.62
+#> 19            2.58            2.58
+#> 20            2.52            2.52
+#> 21            2.51            2.51
+#> 22            2.35            2.35
+#> 23            2.35            2.35
+#> 24            2.35            2.35
+#> 25            2.35            2.35
+#> 26            2.33            2.33
+#> 27            2.26            2.26
+#> 28            2.18            2.18
+#> 29            2.16            2.16
+#> 30            2.16            2.16
+#> 31            2.10            2.10
+#> 32            2.07            2.07
+#> 33            2.06            2.06
+#> 34            2.06            2.06
+#> 35            2.03            2.03
+#> 36            1.99            1.99
+#> 37            1.90            1.90
+#> 38            1.74            1.74
+#> 39            1.61            1.61
+#> 40            1.58            1.58
+#> 41            1.56            1.56
+#> 42            1.48            1.48
+#> 43            1.48            1.48
+#> 44            1.38            1.38
+#> 45            1.38            1.38
+#> 46            1.36            1.36
+#> 47            1.36            1.36
+#> 48            1.18            1.18
+#> 49            2.09            2.23
+#> 50            2.10            2.24
+#> 51            2.17            2.31
+#> 52            2.29            2.44
+#> 53            2.54            2.70
+#> 54            2.73            2.88
+#> 55            2.16            2.30
+#> 56            2.23            2.37
+#> 57            2.57            2.73
+#>                                    FairMReference Measure PrimaryMeasure
+#> 1                    Mean of other facet measures    2.37           2.37
+#> 2                    Mean of other facet measures    2.26           2.26
+#> 3                    Mean of other facet measures    1.65           1.65
+#> 4                    Mean of other facet measures    1.59           1.59
+#> 5                    Mean of other facet measures    1.44           1.44
+#> 6                    Mean of other facet measures    1.16           1.16
+#> 7                    Mean of other facet measures    1.15           1.15
+#> 8                    Mean of other facet measures    1.01           1.01
+#> 9                    Mean of other facet measures    0.95           0.95
+#> 10                   Mean of other facet measures    0.87           0.87
+#> 11                   Mean of other facet measures    0.71           0.71
+#> 12                   Mean of other facet measures    0.62           0.62
+#> 13                   Mean of other facet measures    0.45           0.45
+#> 14                   Mean of other facet measures    0.45           0.45
+#> 15                   Mean of other facet measures    0.45           0.45
+#> 16                   Mean of other facet measures    0.35           0.35
+#> 17                   Mean of other facet measures    0.30           0.30
+#> 18                   Mean of other facet measures    0.25           0.25
+#> 19                   Mean of other facet measures    0.17           0.17
+#> 20                   Mean of other facet measures    0.09           0.09
+#> 21                   Mean of other facet measures    0.08           0.08
+#> 22                   Mean of other facet measures   -0.18          -0.18
+#> 23                   Mean of other facet measures   -0.18          -0.18
+#> 24                   Mean of other facet measures   -0.19          -0.19
+#> 25                   Mean of other facet measures   -0.19          -0.19
+#> 26                   Mean of other facet measures   -0.21          -0.21
+#> 27                   Mean of other facet measures   -0.33          -0.33
+#> 28                   Mean of other facet measures   -0.45          -0.45
+#> 29                   Mean of other facet measures   -0.49          -0.49
+#> 30                   Mean of other facet measures   -0.49          -0.49
+#> 31                   Mean of other facet measures   -0.59          -0.59
+#> 32                   Mean of other facet measures   -0.65          -0.65
+#> 33                   Mean of other facet measures   -0.65          -0.65
+#> 34                   Mean of other facet measures   -0.65          -0.65
+#> 35                   Mean of other facet measures   -0.71          -0.71
+#> 36                   Mean of other facet measures   -0.79          -0.79
+#> 37                   Mean of other facet measures   -0.95          -0.95
+#> 38                   Mean of other facet measures   -1.28          -1.28
+#> 39                   Mean of other facet measures   -1.56          -1.56
+#> 40                   Mean of other facet measures   -1.64          -1.64
+#> 41                   Mean of other facet measures   -1.68          -1.68
+#> 42                   Mean of other facet measures   -1.89          -1.89
+#> 43                   Mean of other facet measures   -1.89          -1.89
+#> 44                   Mean of other facet measures   -2.21          -2.21
+#> 45                   Mean of other facet measures   -2.21          -2.21
+#> 46                   Mean of other facet measures   -2.26          -2.26
+#> 47                   Mean of other facet measures   -2.26          -2.26
+#> 48                   Mean of other facet measures   -3.08          -3.08
+#> 49 Mean of fitted Person and other facet measures    0.37           0.37
+#> 50 Mean of fitted Person and other facet measures    0.36           0.36
+#> 51 Mean of fitted Person and other facet measures    0.24           0.24
+#> 52 Mean of fitted Person and other facet measures    0.03           0.03
+#> 53 Mean of fitted Person and other facet measures   -0.36          -0.36
+#> 54 Mean of fitted Person and other facet measures   -0.64          -0.64
+#> 55 Mean of fitted Person and other facet measures    0.26           0.26
+#> 56 Mean of fitted Person and other facet measures    0.14           0.14
+#> 57 Mean of fitted Person and other facet measures   -0.40          -0.40
+#>       MeasureBasis ExtremeAdjustment Model S.E. Real S.E. Infit MnSq Infit ZStd
+#> 1  Fitted estimate                 0       0.76      0.76       0.44      -0.30
+#> 2  Fitted estimate                 0       0.77      0.94       1.51       0.77
+#> 3  Fitted estimate                 0       0.59      0.65       1.23       0.53
+#> 4  Fitted estimate                 0       0.58      0.58       1.00       0.27
+#> 5  Fitted estimate                 0       0.55      0.60       1.22       0.52
+#> 6  Fitted estimate                 0       0.55      0.71       1.66       0.97
+#> 7  Fitted estimate                 0       0.53      0.85       2.62       1.77
+#> 8  Fitted estimate                 0       0.66      0.66       0.56      -0.25
+#> 9  Fitted estimate                 0       0.58      0.70       1.44       0.74
+#> 10 Fitted estimate                 0       0.53      0.53       0.89       0.11
+#> 11 Fitted estimate                 0       0.51      0.51       0.72      -0.19
+#> 12 Fitted estimate                 0       0.51      0.67       1.72       1.07
+#> 13 Fitted estimate                 0       0.57      0.59       1.04       0.32
+#> 14 Fitted estimate                 0       0.51      0.51       0.34      -1.01
+#> 15 Fitted estimate                 0       0.51      0.51       0.69      -0.25
+#> 16 Fitted estimate                 0       0.53      0.56       1.13       0.41
+#> 17 Fitted estimate                 0       0.56      0.78       1.95       1.20
+#> 18 Fitted estimate                 0       0.51      0.52       1.01       0.26
+#> 19 Fitted estimate                 0       0.52      0.72       1.93       1.24
+#> 20 Fitted estimate                 0       0.52      0.52       0.14      -1.72
+#> 21 Fitted estimate                 0       0.51      0.62       1.44       0.77
+#> 22 Fitted estimate                 0       0.53      0.53       0.13      -1.74
+#> 23 Fitted estimate                 0       0.53      0.53       0.65      -0.29
+#> 24 Fitted estimate                 0       0.51      0.51       0.61      -0.39
+#> 25 Fitted estimate                 0       0.51      0.51       0.61      -0.39
+#> 26 Fitted estimate                 0       0.57      0.57       0.59      -0.34
+#> 27 Fitted estimate                 0       0.58      0.60       1.08       0.37
+#> 28 Fitted estimate                 0       0.51      0.51       0.29      -1.17
+#> 29 Fitted estimate                 0       0.54      0.66       1.54       0.86
+#> 30 Fitted estimate                 0       0.54      0.82       2.35       1.56
+#> 31 Fitted estimate                 0       0.55      0.55       0.43      -0.67
+#> 32 Fitted estimate                 0       0.60      0.63       1.07       0.37
+#> 33 Fitted estimate                 0       0.54      0.54       0.50      -0.56
+#> 34 Fitted estimate                 0       0.54      0.57       1.11       0.39
+#> 35 Fitted estimate                 0       0.52      0.53       1.04       0.30
+#> 36 Fitted estimate                 0       0.55      0.55       0.29      -1.03
+#> 37 Fitted estimate                 0       0.56      0.56       0.79      -0.03
+#> 38 Fitted estimate                 0       0.55      0.55       0.43      -0.68
+#> 39 Fitted estimate                 0       0.68      0.68       0.70      -0.03
+#> 40 Fitted estimate                 0       0.62      0.62       0.54      -0.34
+#> 41 Fitted estimate                 0       0.68      0.68       0.59      -0.19
+#> 42 Fitted estimate                 0       0.68      0.71       1.08       0.40
+#> 43 Fitted estimate                 0       0.68      1.28       3.53       1.94
+#> 44 Fitted estimate                 0       0.79      0.79       0.79       0.17
+#> 45 Fitted estimate                 0       0.79      0.79       0.70       0.07
+#> 46 Fitted estimate                 0       0.79      0.79       0.73       0.11
+#> 47 Fitted estimate                 0       0.79      0.79       0.57      -0.08
+#> 48 Fitted estimate                 0       1.06      1.08       1.03         NA
+#> 49 Fitted estimate                 0       0.20      0.21       1.13       0.56
+#> 50 Fitted estimate                 0       0.24      0.24       0.99       0.08
+#> 51 Fitted estimate                 0       0.20      0.21       1.10       0.42
+#> 52 Fitted estimate                 0       0.22      0.22       0.79      -0.60
+#> 53 Fitted estimate                 0       0.18      0.19       1.12       0.53
+#> 54 Fitted estimate                 0       0.19      0.19       0.86      -0.46
+#> 55 Fitted estimate                 0       0.14      0.16       1.20       1.00
+#> 56 Fitted estimate                 0       0.14      0.14       0.95      -0.17
+#> 57 Fitted estimate                 0       0.14      0.14       0.88      -0.57
+#>    Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element ObservedAverage
+#> 1         0.39       -1.22         NA                     P015            3.67
+#> 2         1.04        0.27         NA                     P045            3.67
+#> 3         1.31        0.68         NA                     P036            3.33
+#> 4         0.99        0.18         NA                     P030            3.33
+#> 5         1.31        0.68         NA                     P027            3.17
+#> 6         1.91        1.44         NA                     P013            3.17
+#> 7         2.59        2.13         NA                     P025            3.00
+#> 8         0.60       -0.54         NA                     P006            3.40
+#> 9         1.53        0.99         NA                     P002            3.33
+#> 10        0.85       -0.08         NA                     P019            3.00
+#> 11        0.69       -0.40         NA                     P034            2.83
+#> 12        1.75        1.26         NA                     P021            2.67
+#> 13        1.05        0.29         NA                     P001            3.00
+#> 14        0.34       -1.39         NA                     P035            2.67
+#> 15        0.68       -0.42         NA                     P031            2.67
+#> 16        1.09        0.35         NA                     P004            3.00
+#> 17        1.93        1.37         NA                     P024            2.40
+#> 18        1.01        0.20         NA                     P038            2.50
+#> 19        1.95        1.49         NA                     P048            2.67
+#> 20        0.14       -2.32         NA                     P022            2.33
+#> 21        1.44        0.86         NA                     P003            2.83
+#> 22        0.12       -2.46         NA                     P026            2.17
+#> 23        0.67       -0.46         NA                     P020            2.17
+#> 24        0.62       -0.57         NA                     P005            2.67
+#> 25        0.62       -0.57         NA                     P010            2.67
+#> 26        0.62       -0.49         NA                     P011            2.40
+#> 27        1.13        0.40         NA                     P028            2.20
+#> 28        0.29       -1.58         NA                     P008            2.50
+#> 29        1.49        0.93         NA                     P018            2.17
+#> 30        2.57        2.11         NA                     P012            2.17
+#> 31        0.43       -1.09         NA                     P042            2.00
+#> 32        1.10        0.36         NA                     P039            2.00
+#> 33        0.53       -0.81         NA                     P046            2.17
+#> 34        1.03        0.25         NA                     P043            2.17
+#> 35        1.06        0.30         NA                     P009            2.33
+#> 36        0.31       -1.48         NA                     P017            2.00
+#> 37        0.79       -0.19         NA                     P044            2.00
+#> 38        0.42       -1.10         NA                     P007            2.00
+#> 39        0.72       -0.35         NA                     P023            1.50
+#> 40        0.58       -0.67         NA                     P047            1.67
+#> 41        0.64       -0.53         NA                     P041            1.50
+#> 42        0.91        0.04         NA                     P014            1.50
+#> 43        3.31        2.74         NA                     P016            1.50
+#> 44        0.88       -0.03         NA                     P040            1.33
+#> 45        0.68       -0.42         NA                     P037            1.33
+#> 46        0.73       -0.32         NA                     P029            1.33
+#> 47        0.52       -0.81         NA                     P033            1.33
+#> 48        1.23        0.56         NA                     P032            1.17
+#> 49        1.07        0.40       0.59                      R03            2.30
+#> 50        0.98        0.00       0.59                      R06            2.03
+#> 51        1.12        0.63       0.59                      R04            2.30
+#> 52        0.76       -1.14       0.59                      R05            2.16
+#> 53        1.24        1.22       0.59                      R02            2.62
+#> 54        0.83       -0.82       0.59                      R01            2.77
+#> 55        1.21        1.41       0.63             Organization            2.24
+#> 56        0.93       -0.45       0.63                 Language            2.32
+#> 57        0.89       -0.71       0.63                  Content            2.59
+#>    AdjustedAverage StandardizedAdjustedAverage ModelBasedSE FitAdjustedSE
+#> 1             3.69                        3.69         0.76          0.76
+#> 2             3.66                        3.66         0.77          0.94
+#> 3             3.44                        3.44         0.59          0.65
+#> 4             3.41                        3.41         0.58          0.58
+#> 5             3.34                        3.34         0.55          0.60
+#> 6             3.19                        3.19         0.55          0.71
+#> 7             3.19                        3.19         0.53          0.85
+#> 8             3.11                        3.11         0.66          0.66
+#> 9             3.07                        3.07         0.58          0.70
+#> 10            3.02                        3.02         0.53          0.53
+#> 11            2.92                        2.92         0.51          0.51
+#> 12            2.86                        2.86         0.51          0.67
+#> 13            2.76                        2.76         0.57          0.59
+#> 14            2.75                        2.75         0.51          0.51
+#> 15            2.75                        2.75         0.51          0.51
+#> 16            2.69                        2.69         0.53          0.56
+#> 17            2.66                        2.66         0.56          0.78
+#> 18            2.62                        2.62         0.51          0.52
+#> 19            2.58                        2.58         0.52          0.72
+#> 20            2.52                        2.52         0.52          0.52
+#> 21            2.51                        2.51         0.51          0.62
+#> 22            2.35                        2.35         0.53          0.53
+#> 23            2.35                        2.35         0.53          0.53
+#> 24            2.35                        2.35         0.51          0.51
+#> 25            2.35                        2.35         0.51          0.51
+#> 26            2.33                        2.33         0.57          0.57
+#> 27            2.26                        2.26         0.58          0.60
+#> 28            2.18                        2.18         0.51          0.51
+#> 29            2.16                        2.16         0.54          0.66
+#> 30            2.16                        2.16         0.54          0.82
+#> 31            2.10                        2.10         0.55          0.55
+#> 32            2.07                        2.07         0.60          0.63
+#> 33            2.06                        2.06         0.54          0.54
+#> 34            2.06                        2.06         0.54          0.57
+#> 35            2.03                        2.03         0.52          0.53
+#> 36            1.99                        1.99         0.55          0.55
+#> 37            1.90                        1.90         0.56          0.56
+#> 38            1.74                        1.74         0.55          0.55
+#> 39            1.61                        1.61         0.68          0.68
+#> 40            1.58                        1.58         0.62          0.62
+#> 41            1.56                        1.56         0.68          0.68
+#> 42            1.48                        1.48         0.68          0.71
+#> 43            1.48                        1.48         0.68          1.28
+#> 44            1.38                        1.38         0.79          0.79
+#> 45            1.38                        1.38         0.79          0.79
+#> 46            1.36                        1.36         0.79          0.79
+#> 47            1.36                        1.36         0.79          0.79
+#> 48            1.18                        1.18         1.06          1.08
+#> 49            2.09                        2.23         0.20          0.21
+#> 50            2.10                        2.24         0.24          0.24
+#> 51            2.17                        2.31         0.20          0.21
+#> 52            2.29                        2.44         0.22          0.22
+#> 53            2.54                        2.70         0.18          0.19
+#> 54            2.73                        2.88         0.19          0.19
+#> 55            2.16                        2.30         0.14          0.16
+#> 56            2.23                        2.37         0.14          0.14
+#> 57            2.57                        2.73         0.14          0.14
 #> 
 #> $settings
 #> $settings$facets
@@ -790,6 +914,21 @@ head(run$fair_average)
 #> $settings$ci_level
 #> [1] 0.95
 #> 
+#> $settings$rating_min
+#> [1] 1
+#> 
+#> $settings$rating_max
+#> [1] 4
+#> 
+#> $settings$score_map
+#> # A tibble: 4 × 2
+#>   OriginalScore InternalScore
+#>           <int>         <int>
+#> 1             1             1
+#> 2             2             2
+#> 3             3             3
+#> 4             4             4
+#> 
 #> $settings$model
 #> [1] "RSM"
 #> 
@@ -799,8 +938,8 @@ head(run$fair_average)
 
 `method = "JML"` is shown here for a JMLE-oriented migration comparison.
 Do not infer readiness from `Converged` alone: require
-`InferenceReady = TRUE` for the numerical gate and review the
-terminal-gradient guidance when severity is `"review"` or `"fail"`.
+`InferenceReady = TRUE` for the numerical-readiness criteria and review
+the terminal-gradient guidance when severity is `"review"` or `"fail"`.
 Numerical readiness does not override a Data, Design, or Stability hold;
 use the readiness table before interpreting or reporting the fit. For
 new analysis scripts, prefer `fit_mfrm(method = "MML")` directly. MML
@@ -875,8 +1014,11 @@ fit <- fit_mfrm(..., anchors = anchors)
 ```
 
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
-validates and reports on the anchor block before the fit runs, surfacing
-connectivity, overlap, and minimum-sample issues.
+normalizes and reports on the constraint block before the fit runs,
+surfacing duplicate/direct-group overlap and local support-count issues.
+It does not evaluate assignment connectedness, source-fit readiness, or
+cross-run element invariance; use the design-network route and
+substantive identity evidence separately.
 
 ### Bias and interaction
 
@@ -1001,6 +1143,11 @@ fit_g <- fit_mfrm(..., group_anchors = group_anchors)
 dff <- analyze_dff(fit_g, diag, facet = "Criterion",
                    group = "FirstLanguage", method = "refit")
 ```
+
+A group-anchor target is an external mean constraint, not an empirical
+link. Its use requires a defensible equal-mean or known-target
+assumption for the declared elements and does not connect otherwise
+unobserved rating subsets.
 
 ## Reviewing output contracts and fit tables
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize a design-simulation study</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_design_evaluation.Rd</code></div>
     </div>
 
@@ -94,7 +96,26 @@ design planning, especially:</p><ul><li><p>convergence rate</p></li>
 <li><p>separation and reliability by facet</p></li>
 <li><p>severity recovery RMSE</p></li>
 <li><p>mean misfit rate</p></li>
-</ul></div>
+</ul><p><code>Reps</code>, <code>ConvergenceRate</code>, and <code>McseConvergenceRate</code> use all recorded
+replications for each design, including fit and diagnostic failures.
+Only a recorded <code>Converged = TRUE</code> counts as converged. <code>AvailableReps</code>
+counts the replications with returned results for that facet; performance
+means still use the available metric values. Designs with no returned
+facet results have no performance-summary rows and cannot be recommended.
+To update an older saved summary, call <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> again on the original
+evaluation object; no simulation or refitting is needed.</p>
+<p><code>MaxRatings</code> and <code>MaxRatingsPerRater</code> are the largest total rating count
+and individual rater workload across all recorded replications, including
+failed runs. A rating is one generated person-rater-criterion row; weights
+do not multiply workload. A maximum is <code>NA</code> when any replication lacks
+that count, including older evaluations without per-rater workload records.</p>
+<p><code>MaxRaterComponents</code> and <code>MaxCriterionComponents</code> give the largest
+Person-facet component count across all recorded assignments; a missing
+count makes its maximum <code>NA</code>. <code>DisconnectedReps</code> counts replications with
+a recorded disconnection in either graph. Zero known disconnections does
+not establish connectedness when records are missing. Sparse-design
+summaries also use all run records, including failures.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>, <a href="plot.mfrm_design_evaluation.html">plot.mfrm_design_evaluation</a></p></div>
@@ -117,24 +138,24 @@ design planning, especially:</p><ul><li><p>convergence rate</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       2            2              2             1          0.892</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       2            2              2             1          0.817</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">design_summary</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 44</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   design_id Facet     n_person n_rater n_criterion raters_per_person  Reps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> D01       Criterion        8       2           2                 2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> D02       Criterion       12       2           2                 2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> D01       Person           8       2           2                 2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> D02       Person          12       2           2                 2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> D01       Rater            8       2           2                 2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> D02       Rater           12       2           2                 2     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 37 more variables: ConvergenceRate &lt;dbl&gt;, McseConvergenceRate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanSeparation &lt;dbl&gt;, SdSeparation &lt;dbl&gt;, McseSeparation &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanReliability &lt;dbl&gt;, McseReliability &lt;dbl&gt;, MeanInfit &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   McseInfit &lt;dbl&gt;, MeanOutfit &lt;dbl&gt;, McseOutfit &lt;dbl&gt;, MeanMisfitRate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   McseMisfitRate &lt;dbl&gt;, MeanSeverityRMSE &lt;dbl&gt;, McseSeverityRMSE &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanSeverityBias &lt;dbl&gt;, McseSeverityBias &lt;dbl&gt;, MeanSeverityRMSERaw &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   McseSeverityRMSERaw &lt;dbl&gt;, MeanSeverityBiasRaw &lt;dbl&gt;, …</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 50</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   design_id Facet   n_person n_rater n_criterion raters_per_person AvailableReps</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> D01       Criter…        8       2           2                 2             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> D02       Criter…       12       2           2                 2             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> D01       Person         8       2           2                 2             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> D02       Person        12       2           2                 2             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> D01       Rater          8       2           2                 2             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> D02       Rater         12       2           2                 2             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 43 more variables: MeanSeparation &lt;dbl&gt;, SdSeparation &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   McseSeparation &lt;dbl&gt;, MeanReliability &lt;dbl&gt;, McseReliability &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanInfit &lt;dbl&gt;, McseInfit &lt;dbl&gt;, MeanOutfit &lt;dbl&gt;, McseOutfit &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanMisfitRate &lt;dbl&gt;, McseMisfitRate &lt;dbl&gt;, MeanSeverityRMSE &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   McseSeverityRMSE &lt;dbl&gt;, MeanSeverityBias &lt;dbl&gt;, McseSeverityBias &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanSeverityRMSERaw &lt;dbl&gt;, McseSeverityRMSERaw &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MeanSeverityBiasRaw &lt;dbl&gt;, McseSeverityBiasRaw &lt;dbl&gt;, …</span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

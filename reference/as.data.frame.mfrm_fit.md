@@ -66,16 +66,43 @@ facets are stacked underneath in the same schema.
 ## Examples
 
 ``` r
+# \donttest{
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", model = "RSM",
-                quad_points = 7, maxit = 30)
-head(as.data.frame(fit))
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Extract estimates and select the rows to display
+estimates <- as.data.frame(fit)
+head(subset(estimates, Facet == "Person")) # First six persons
 #>    Facet Level    Estimate Extreme
-#> 1 Person  P001  0.22371868    none
-#> 2 Person  P002  0.71054603    none
-#> 3 Person  P003  0.02517584    none
-#> 4 Person  P004  0.14530707    none
-#> 5 Person  P005 -0.06792434    none
-#> 6 Person  P006  0.70720576    none
+#> 1 Person  P001  0.28429588    none
+#> 2 Person  P002  0.66118004    none
+#> 3 Person  P003  0.02177773    none
+#> 4 Person  P004  0.22410785    none
+#> 5 Person  P005 -0.17496065    none
+#> 6 Person  P006  0.67681003    none
+subset(estimates, Facet == "Rater")       # All raters
+#>    Facet Level   Estimate Extreme
+#> 49 Rater   R01 -0.6059776    <NA>
+#> 50 Rater   R02 -0.3820356    <NA>
+#> 51 Rater   R03  0.2120388    <NA>
+#> 52 Rater   R04  0.1799462    <NA>
+#> 53 Rater   R05  0.1842365    <NA>
+#> 54 Rater   R06  0.4117917    <NA>
+subset(estimates, Facet == "Criterion")   # All criteria
+#>        Facet        Level   Estimate Extreme
+#> 55 Criterion      Content -0.3441471    <NA>
+#> 56 Criterion     Language  0.1204520    <NA>
+#> 57 Criterion Organization  0.2236950    <NA>
+# }
 ```

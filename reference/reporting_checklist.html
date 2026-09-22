@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an auto-filled MFRM reporting checklist</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reporting-checklist.R" class="external-link"><code>R/api-reporting-checklist.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reporting-checklist.R" class="external-link"><code>R/api-reporting-checklist.R</code></a></small>
       <div class="d-none name"><code>reporting_checklist.Rd</code></div>
     </div>
 
@@ -132,6 +134,12 @@ backward-compatible alias.</p>
 <li><p><code>DraftReady = TRUE</code> / <code>ReadyForAPA = TRUE</code> does not certify formal
 inferential adequacy.</p></li>
 <li><p>Missing bias rows may simply mean <code>bias_results</code> were not supplied.</p></li>
+<li><p>Study questions, recruitment, rater training, the assignment process,
+missingness reasons, ethics, and substantive interpretation require the
+author's study record. Available output does not verify those facts.
+The "Manuscript coverage map" in
+<code><a href="../articles/mfrmr-reporting-and-apa.html">vignette("mfrmr-reporting-and-apa", package = "mfrmr")</a></code> pairs reporting
+topics with numerical evidence and information to supply manually.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -157,7 +165,9 @@ handoff or external-table review.</p></li>
 <li><p><code>visual_scope</code>: plotting-route summary that separates report-default
 2D figures from exploratory surface/3D-ready data handoffs, including a
 short <code>InterpretationCheck</code> for the main user-facing caveat.</p></li>
-<li><p><code>references</code>: core background references when requested.</p></li>
+<li><p><code>references</code>: abbreviated background citations and topics when requested,
+not a complete bibliography. Verify full records for the methods used;
+use <code>citation("mfrmr")</code> for the installed software's citation.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="recommended-next-step">Recommended next step<a class="anchor" aria-label="anchor" href="#recommended-next-step"></a></h2>
@@ -209,147 +219,64 @@ available from the current analysis objects.</p></li>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Minimal checklist example using a JML fit and lightweight diagnostics.</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># A balanced slice retains every Rater and Criterion while running quickly.</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                      method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">diag_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit_quick</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span>,</span></span>
-<span class="r-in"><span>                             diagnostic_mode <span class="op">=</span> <span class="st">"legacy"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">chk_quick</span> <span class="op">&lt;-</span> <span class="fu">reporting_checklist</span><span class="op">(</span><span class="va">fit_quick</span>, diagnostics <span class="op">=</span> <span class="va">diag_quick</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chk_quick</span><span class="op">$</span><span class="va">checklist</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Section"</span>, <span class="st">"Item"</span>, <span class="st">"DraftReady"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Section                                                      Item</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Method Section                                       Model specification</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Method Section                                          Data description</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Method Section                                           Precision basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Method Section                                               Convergence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Method Section                                     Connectivity assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DraftReady</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       TRUE</span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"both"</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">chk</span> <span class="op">&lt;-</span> <span class="fu">reporting_checklist</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">chk</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Reporting Checklist Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Sections Items Available DraftReady Missing NeedsDraftWork</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         7    33        29         28       4              5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Section summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      Section Items Available DraftReady ReadyForAPA Missing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Bias / Interaction Analysis     2         0          0           0       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Element-Level Statistics     4         4          4           4       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Facet-Level Statistics     3         3          3           3       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Global Fit     3         3          3           3       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Method Section     8         7          7           7       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Rating Scale Diagnostics     4         4          4           4       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Visual Displays     9         8          7           7       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  NeedsDraftWork NeedsAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               2           2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1           1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               0           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               2           2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Priority summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Priority    Severity Items</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    medium recommended     5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ready    required    12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ready recommended    15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ready    optional     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Action items (preview)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      Section                          Item Available DraftReady</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Bias / Interaction Analysis            Facet pairs tested     FALSE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Bias / Interaction Analysis  Screen-positive interactions     FALSE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Method Section Hierarchical structure review     FALSE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Visual Displays            Bias / DIF visuals     FALSE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Visual Displays       Strict marginal visuals      TRUE      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Severity Priority</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  recommended   medium</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  recommended   medium</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  recommended   medium</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  recommended   medium</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  recommended   medium</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                 NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                    Run bias screening if the manuscript needs interaction-level follow-up.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                          Run bias screening before discussing interaction-level anomalies.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                     Run bias or DIF screening before discussing interaction-level visuals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> FACETS positioning</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                   Topic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    Estimation authority</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Compatibility purpose</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              External FACETS comparison</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Current model and calibration boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Reporting source of truth</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Extension beyond FACETS</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                  RecommendedWording</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 The model was estimated with mfrmr; FACETS-style output names are used only to organize the report.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       FACETS-style outputs were generated for handoff or reader familiarity; they are not evidence of FACETS numerical equivalence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                   When external FACETS output is supplied, compare MnSq first and report df/ZSTD convention sensitivity separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Describe mfrmr as a native R RSM/PCM analysis, diagnostic, and reporting environment, not as a general FACETS operational-calibration replacement.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                          Report estimates, standard errors, fit summaries, and plots from documented mfrmr objects.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                              Use package-native extensions as additional evidence and label them as mfrmr analyses.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Setting       Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    include_references        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  diagnostics_supplied        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     bias_result_count           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      bias_error_count           0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        precision_tier model_based</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - This summary is a manuscript-preparation guide.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - DraftReady indicates that the corresponding reporting element can be drafted with the package's documented caveats; it does not certify inferential adequacy.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Detailed FACETS positioning, software scope, and visual scope tables are available in `$facets_positioning`, `$software_scope`, and `$visual_scope`.</span>
-<span class="r-in"><span><span class="co"># Look for: a high `Ready` / `Total` ratio in the summary block.</span></span></span>
-<span class="r-in"><span><span class="co">#   Sections with `Ready = 0` need follow-up before submitting</span></span></span>
-<span class="r-in"><span><span class="co">#   (typically diagnostic_mode = "both" or a residual-PCA pass).</span></span></span>
-<span class="r-in"><span><span class="va">apa</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_apa_outputs.html">build_apa_outputs</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chk</span><span class="op">$</span><span class="va">checklist</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Section"</span>, <span class="st">"Item"</span>, <span class="st">"DraftReady"</span>, <span class="st">"NextAction"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Section                                                      Item</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Method Section                                       Model specification</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Method Section                                          Data description</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Method Section                                           Precision basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Method Section                                               Convergence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Method Section                                     Connectivity assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Method Section Empirical-Bayes shrinkage when small-N facets are present</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DraftReady</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                          NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                             Available; adapt this evidence into the manuscript draft after methodological review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                             Available; adapt this evidence into the manuscript draft after methodological review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                    Report the precision tier as model-based in the APA narrative.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                             Available; adapt this evidence into the manuscript draft after methodological review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                           Document the single connected subset before making common-scale claims.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Report both the fixed-effects and shrunk estimates; cite Efron &amp; Morris (1973) for the empirical-Bayes rationale.</span>
-<span class="r-in"><span><span class="co"># Look for: every row where `DraftReady = "yes"` is ready to paste</span></span></span>
-<span class="r-in"><span><span class="co">#   into the manuscript. `"no"` rows include a concrete `NextAction`</span></span></span>
-<span class="r-in"><span><span class="co">#   step (e.g. "run plot_qc_dashboard()") so the gap can be closed</span></span></span>
-<span class="r-in"><span><span class="co">#   without re-reading the methodology guide.</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">apa</span><span class="op">$</span><span class="va">report_text</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4709</span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compute diagnostics once for the following checks</span></span></span>
+<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Which reporting items still need evidence or explanation?</span></span></span>
+<span class="r-in"><span><span class="va">checklist</span> <span class="op">&lt;-</span> <span class="fu">reporting_checklist</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">checklist</span><span class="op">$</span><span class="va">section_summary</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Section Items Available DraftReady ReadyForAPA Missing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Bias / Interaction Analysis     2         0          0           0       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    Element-Level Statistics     4         4          4           4       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      Facet-Level Statistics     3         3          3           3       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                  Global Fit     3         2          2           2       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              Method Section     8         7          7           7       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    Rating Scale Diagnostics     4         4          4           4       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7             Visual Displays     9         7          6           6       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   NeedsDraftWork NeedsAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              2           2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0           0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0           0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              1           1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              1           1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0           0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7              3           3</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Review the missing items and their suggested next actions</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">checklist</span><span class="op">$</span><span class="va">checklist</span>, <span class="op">!</span><span class="va">DraftReady</span>,</span></span>
+<span class="r-in"><span>       <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Section"</span>, <span class="st">"Item"</span>, <span class="st">"DraftReady"</span>, <span class="st">"NextAction"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        Section                          Item DraftReady</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8               Method Section Hierarchical structure review      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                  Global Fit              PCA of residuals      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23 Bias / Interaction Analysis            Facet pairs tested      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24 Bias / Interaction Analysis  Screen-positive interactions      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27             Visual Displays          Residual PCA visuals      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30             Visual Displays       Strict marginal visuals      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31             Visual Displays            Bias / DIF visuals      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                   NextAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  Run `analyze_hierarchical_structure(fit)` once per design and pass the result to `reporting_checklist(..., hierarchical_structure = hs)`.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                Run residual PCA if you want to comment on unexplained residual structure.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                   Run bias screening if the manuscript needs interaction-level follow-up.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                         Run bias screening before discussing interaction-level anomalies.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                     Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30             Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                    Run bias or DIF screening before discussing interaction-level visuals.</span>
+<span class="r-in"><span><span class="co"># DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats</span></span></span>
+<span class="r-in"><span><span class="co"># Choose follow-up analyses for your question, not merely to make every row TRUE</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

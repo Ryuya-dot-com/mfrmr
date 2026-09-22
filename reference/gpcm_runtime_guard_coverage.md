@@ -51,5 +51,5 @@ gpcm_runtime_guard_coverage()
 #> 2                                                                                                                                                                    mfrmr does not currently provide posterior-predictive checks or MCMC estimation for bounded GPCM.
 #>                                                                                                                                                                                             RecommendedRoute
 #> 1 Use direct fair-average tables and graph-only compatibility outputs; use package-native scorefile export with its stated caveats, and keep full FACETS output-contract reviews on the `RSM` / `PCM` route.
-#> 2                                                                   Use the current MML fitting and fixed-calibration scoring routes, or use external Bayesian software when posterior sampling is required.
+#> 2                                                             Use the current MML fitting and fitted-object posterior scoring routes, or use external Bayesian software when posterior sampling is required.
 ```

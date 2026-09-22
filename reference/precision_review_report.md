@@ -17,8 +17,10 @@ precision_review_report(fit, diagnostics = NULL)
 
 - diagnostics:
 
-  Optional output from
+  Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  Recompute it after refitting; mismatched or outdated readiness records
+  are rejected.
 
 ## Value
 
@@ -94,6 +96,12 @@ qualified as hybrid, or should remain exploratory in the final report.
     whether the run supports model-based reporting language or should
     remain in exploratory/screening mode.
 
+Regularized or fallback SEs remain diagnostic only. Numerical
+convergence does not establish inferential support. Older reports
+without the recorded regularization distinction must be recreated with
+`precision_review_report(fit)`; the existing fit can be reused without
+refitting.
+
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
@@ -104,50 +112,40 @@ qualified as hybrid, or should remain exploratory in the final report.
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-out <- precision_review_report(fit, diagnostics = diag)
-summary(out)
-#> mfrmr Precision Review Summary 
-#>   Class: mfrm_precision_review
-#>   Components: 5
-#> 
-#> Precision overview
-#>  Method PrecisionTier SupportsFormalInference Checks ReviewOrWarn
-#>     JML   exploratory                   FALSE      7            2
-#>  FitSeparationRows NoteRows
-#>                  4        4
-#> 
-#> Review checks: checks
-#>                     Check Status
-#>            Precision tier review
-#>     Optimizer convergence review
-#>      ModelSE availability   pass
-#>  Fit-adjusted SE ordering   pass
-#>      Reliability ordering   pass
-#>  Facet precision coverage   pass
-#>          SE source labels   pass
-#>                                                                                                                                                                                                 Detail
-#>                                                                                       This run uses the package's exploratory precision path; prefer MML for formal SE, CI, and reliability reporting.
-#>  Optimizer diagnostics require review; keep SE, CI, and reliability in review mode. Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.
-#>                                                                                                                                               Finite ModelSE values were available for 100.0% of rows.
-#>                                                                                                                              Fit-adjusted SE values were not smaller than their paired ModelSE values.
-#>                                                                                                                           Conservative reliability values were not larger than the model-based values.
-#>                                                                                                                   Each facet had sample/population summaries for both model and fit-adjusted SE modes.
-#>                                                                                                                                     JML SE labels consistently identify observation-table information.
-#> 
-#> Settings
-#>         Setting       Value
-#>           model         RSM
-#>          method         JML
-#>  precision_tier exploratory
-#> 
-#> Notes
-#>  - Exploratory precision path detected; use this run for screening and
-#>    calibration triage, not as the package's primary inferential summary.
-#>  - Fit/separation basis rows state source grounding and validation-use
-#>    boundaries.
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Review support for standard errors, intervals, and reliability summaries
+diagnostics <- diagnose_mfrm(fit)
+precision <- precision_review_report(fit, diagnostics = diagnostics)
+review <- summary(precision)
+review$checks # Check statuses and reasons before making precision claims
+#>                      Check Status
+#> 1           Precision tier   pass
+#> 2    Optimizer convergence   pass
+#> 3     ModelSE availability   pass
+#> 4 Fit-adjusted SE ordering   pass
+#> 5     Reliability ordering   pass
+#> 6 Facet precision coverage   pass
+#> 7         SE source labels   pass
+#>                                                                                                                                                                                                    Detail
+#> 1 Uncertainty is conditional on the fitted model. Person posterior SDs condition on the fitted calibration; facet standard errors use observed information. Review interval assumptions before reporting.
+#> 2                                                                                                              Numerical convergence checks passed; this alone does not establish valid SEs or intervals.
+#> 3                                                                                                                                               Finite standard errors were available for 100.0% of rows.
+#> 4                                                                                                              Among available pairs, fit-adjusted SEs were at least as large as their unadjusted values.
+#> 5                                                                                                     Among available pairs, fit-adjusted reliability values were not larger than the model-based values.
+#> 6                                                                                                                    Each facet had sample/population summaries for both model and fit-adjusted SE modes.
+#> 7                                                                                                                     Person uncertainty uses posterior SDs; facet uncertainty uses observed information.
 # }
 ```

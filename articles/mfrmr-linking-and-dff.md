@@ -5,8 +5,8 @@ This vignette covers the package-native route for:
 - checking whether a design is connected enough for a common scale
 - exporting anchor candidates from an existing fit
 - screening differential facet functioning (DFF)
-- deciding when subgroup contrasts are descriptive versus formally
-  comparable
+- deciding whether subgroup contrasts are linked and available for
+  screening
 
 For a broader workflow guide, see
 [`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md).
@@ -21,7 +21,7 @@ library(mfrmr)
 
 bias_df <- load_mfrmr_data("example_bias")
 
-# The vignette uses compact quadrature so optional local execution stays fast.
+# This example uses compact quadrature for a shorter runtime.
 # For final DFF or linking evidence, refit with the package default or a higher
 # quadrature setting and record that setting in the analysis log.
 fit <- fit_mfrm(
@@ -59,12 +59,16 @@ Interpretation:
 
 - Sparse rows or columns indicate weaker design coverage.
 - Weak coverage should lower confidence in subgroup comparisons.
+- Use the co-observation design graph, not rater agreement,
+  severity-direction, or halo response networks, to assess empirical
+  connectedness. Response-network correlations do not create a common
+  scale.
 
 ## 2. Export anchor candidates
 
 [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md)
-is the shortest route when you need reusable anchor elements from an
-existing calibration.
+mechanically exports fitted values in the direct-anchor schema. Its
+output is a candidate table, not a validated anchor set.
 
 ``` r
 
@@ -79,14 +83,72 @@ head(anchors)
 #> 4 Criterion Organization -0.0499
 ```
 
-Use
+By default,
+[`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md)
+refuses a source whose current readiness record does not have
+`InferenceReady = TRUE`. Use `readiness_policy = "review"` only to
+inspect review-only candidate values, not to reuse them as anchors. For
+a ready reference fit, also document cross-run element identity and
+invariance and confirm compatible model, score, orientation, and
+population conventions. Then use
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
-when you want a stricter review of anchor quality.
+to check table syntax and receiving-data support. That review does not
+certify the substantive link.
 
-## 3. Residual DFF as a screening layer
+Keep the roles distinct: common ratings or common elements supply
+observed design overlap; `anchors` fix individual parameters;
+`group_anchors` constrain a group mean under an externally justified
+target or equal-mean assumption. Neither constraint type manufactures
+empirical overlap.
 
-Residual DFF is the fast screening route. It is useful for triage, but
-it is not automatically a logit-scale inferential contrast.
+### Design the link, not only the percentage
+
+No anchor percentage or count is universally adequate. In sparse
+designs, link quality also depends on coverage, the distribution and
+redundancy of the links, whether one articulation point or critical edge
+holds the network together, the location and model fit of the linking
+set, and the intended use of ranks or classifications. Inspect both
+Rater-centered and Person/task- centered assignment graphs rather than
+treating a minimum count as proof of a common scale. This distinction is
+consistent with work on sparse linking networks by [Myford and Wolfe
+(2000)](https://doi.org/10.1002/j.2333-8504.2000.tb01832.x), [Wind and
+Jones (2018)](https://doi.org/10.1177/0013164417703733), and [Uto
+(2021)](https://doi.org/10.3758/s13428-020-01498-x).
+
+Fixed anchor values also carry uncertainty from their source
+calibration. Current mfrmr drift and chain summaries do not propagate
+every source-fit, offset, and cross-fit covariance component. When
+results depend on the anchor set, compare defensible alternatives and
+report that sensitivity; fixed- parameter calibration error should not
+be mistaken for zero uncertainty ([Robitzsch,
+2024](https://doi.org/10.3390/appliedmath4030063)).
+
+## 3. Compare group residuals
+
+Residual comparisons describe how observed-minus-expected scores differ
+between groups. They use score units and do not test differential
+functioning.
+
+A group with higher average ability can score higher without
+differential functioning. DFF concerns a facet difference at the same
+ability. Residual screens inherit the fitted population assumptions, and
+fixed-standard-normal RSM/PCM subgroup refits do not estimate group
+ability distributions. Linking anchors alone do not address an omitted
+group difference. Review these assumptions before interpreting a
+residual difference involving a rater or criterion.
+
+Representing group ability differences is necessary for a suitable
+population model, but does not turn the current residual screen into a
+calibrated DFF test. MML residuals evaluate expected scores at EAP
+ability estimates. Because the response function is nonlinear, a no-DFF
+model can still have different mean residuals across groups. This
+concerns the null being tested as well as its standard error.
+
+The residual method therefore returns no p-values, confidence intervals
+or positive/negative classifications. For compatibility, its former SE
+and test columns contain `NA`. Recompute older residual results with
+[`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
+using the existing fit and original data; no model refit is needed.
 
 ``` r
 
@@ -100,23 +162,22 @@ dff_resid <- analyze_dff(
 )
 
 dff_resid$summary
-#> # A tibble: 3 × 2
-#>   Classification  Count
-#>   <chr>           <int>
-#> 1 Screen positive     2
-#> 2 Screen negative     2
-#> 3 Unclassified        0
+#> # A tibble: 2 × 2
+#>   Classification    Count
+#>   <chr>             <int>
+#> 1 Residual contrast     4
+#> 2 Unavailable           0
 head(
-  dff_resid$dif_table[, c("Level", "Group1", "Group2", "Classification", "ClassificationSystem")],
+  dff_resid$dif_table[, c("Level", "Group1", "Group2", "Contrast", "N_Group1", "N_Group2")],
   8
 )
-#> # A tibble: 4 × 5
-#>   Level        Group1 Group2 Classification  ClassificationSystem
-#>   <chr>        <chr>  <chr>  <chr>           <chr>               
-#> 1 Accuracy     A      B      Screen positive screening           
-#> 2 Content      A      B      Screen negative screening           
-#> 3 Language     A      B      Screen positive screening           
-#> 4 Organization A      B      Screen negative screening
+#> # A tibble: 4 × 6
+#>   Level        Group1 Group2 Contrast N_Group1 N_Group2
+#>   <chr>        <chr>  <chr>     <dbl>    <int>    <int>
+#> 1 Accuracy     A      B        0.403        48       48
+#> 2 Content      A      B       -0.0643       48       48
+#> 3 Language     A      B       -0.401        48       48
+#> 4 Organization A      B       -0.101        48       48
 plot_dif_heatmap(dff_resid)
 ```
 
@@ -124,16 +185,32 @@ plot_dif_heatmap(dff_resid)
 
 Interpretation:
 
-- Treat `residual` output as screening evidence.
-- Check `ClassificationSystem` to see how the current residual screen
-  was labeled.
+- Read `Contrast` as the residual mean in Group1 minus that in Group2.
+- A positive value means higher residual scores in Group1, not greater
+  rater leniency.
 - Reserve `ScaleLinkStatus` and `ContrastComparable` for refit-based
   contrasts.
 
 ## 4. Refit DFF when subgroup comparisons are defensible
 
-The refit route can support logit-scale contrasts only when subgroup
-linking is adequate and the precision layer supports it.
+The refit route reports logit-scale point contrasts when subgroup
+linking supports a common scale. Any available SE or test statistic
+conditions on the baseline anchors and omits their uncertainty and
+cross-refit covariance; `FormalInferenceEligible` remains `FALSE`, even
+with adequate linking. The default refit linking screen requires at
+least five anchored levels in total across the non-target linking facets
+in each subgroup. A weak link withholds contrast SEs and p-values.
+Inspect `LinkingAnchoredLevels`, `LinkingThreshold`, and
+`ScaleLinkStatus`; five is a local screening threshold, not a universal
+adequate anchor count or proof of invariance.
+
+Refits currently refuse baselines with user-specified active population
+models, fitted facet interactions, or group-anchor constraints because
+those structures cannot yet be replayed and linked completely within
+subgroups. The default GPCM-MML identification intercept is handled
+separately. Residual DFF remains a screening alternative; see
+[`?analyze_dff`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
+for the exact scope.
 
 ``` r
 
@@ -181,7 +258,7 @@ dit <- dif_interaction_table(
 )
 
 head(dit$table)
-#> # A tibble: 6 × 15
+#> # A tibble: 6 × 18
 #>   Level  GroupValue     N ObsScore ExpScore ObsExpAvg Var_sum sparse StdResidual
 #>   <chr>  <chr>      <int>    <int>    <dbl>     <dbl>   <dbl> <lgl>        <dbl>
 #> 1 Accur… A             48      125     113.    0.255     28.6 FALSE        2.29 
@@ -190,14 +267,13 @@ head(dit$table)
 #> 4 Conte… B             48      148     144.    0.0774    26.1 FALSE        0.727
 #> 5 Langu… A             48      128     135.   -0.156     27.5 FALSE       -1.43 
 #> 6 Langu… B             48      158     146.    0.245     25.6 FALSE        2.32 
-#> # ℹ 6 more variables: t <dbl>, df <dbl>, p_value <dbl>, p_adjusted <dbl>,
-#> #   flag_t <lgl>, flag_bias <lgl>
+#> # ℹ 9 more variables: t <dbl>, df <dbl>, p_value <dbl>,
+#> #   FormalInferenceEligible <lgl>, ReportingUse <chr>, Interpretation <chr>,
+#> #   p_adjusted <dbl>, flag_t <lgl>, flag_bias <lgl>
 
 dr <- dif_report(dff_resid)
 cat(dr$narrative)
-#> DIF screening was conducted for the Criterion facet across levels of Group using the residual method. A total of 4 pairwise facet-level comparisons were evaluated. 2 comparison(s) were screening-positive and 2 were screening-negative based on the residual-contrast test. 
-#> The following Criterion level(s) showed screening-positive residual contrasts: Accuracy, Language.   - Accuracy: A vs B (contrast = 0.403 on the residual scale; A was higher).   - Language: A vs B (contrast = -0.401 on the residual scale; A was lower). 
-#> Note: The presence of differential functioning does not necessarily indicate measurement bias. Differential functioning may reflect construct-relevant variation (e.g., true group differences in the attribute being measured) rather than unwanted measurement bias. Substantive review is recommended to distinguish between these possibilities (cf. Eckes, 2011; McNamara & Knoch, 2012).
+#> Mean observed-minus-expected scores were compared for the Criterion facet across levels of Group. 4 of 4 group comparisons had sufficient observations to report a residual difference. Differences are in score units. They do not isolate differential functioning: group residual means can differ even when response parameters are the same. No p-values, confidence intervals or positive/negative classifications are provided.
 ```
 
 ## 6. Model-estimated facet interactions
@@ -281,6 +357,15 @@ drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 plot_anchor_drift(drift, type = "drift", preset = "publication")
 ```
 
+The current drift and chain helpers estimate one pooled offset across
+every selected common element and facet. Their SE ratios do not include
+uncertainty from estimating that offset or cross-fit covariance, and
+cumulative chain offsets have no propagated SE. `Offset_SD` is residual
+spread rather than an offset standard error. Use one coherent linking
+facet unless a common shift across facet blocks is defensible, and treat
+flags and support counts as review screens rather than formal tests or
+proof of scale equivalence.
+
 ## Recommended sequence
 
 For a compact linking route:
@@ -309,3 +394,16 @@ For a compact linking route:
 - [`help("analyze_dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
 - [`help("interaction_effect_table", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/interaction_effect_table.md)
 - [`help("detect_anchor_drift", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
+
+## References
+
+- Myford, C. M., & Wolfe, E. W. (2000). Strengthening the ties that
+  bind: Improving the linking network in sparsely connected rating
+  designs. *ETS Research Report Series*, 2000(1).
+- Robitzsch, A. (2024). Bias and linking error in fixed item parameter
+  calibration. *AppliedMath*, 4(3), 1181–1191.
+- Uto, M. (2021). Accuracy of performance-test linking based on a
+  many-facet Rasch model. *Behavior Research Methods*, 53(4), 1440–1454.
+- Wind, S. A., & Jones, E. (2018). The stabilizing influences of linking
+  set size and model–data fit in sparse rater-mediated assessment
+  networks. *Educational and Psychological Measurement*, 78(4), 679–707.

@@ -44,14 +44,15 @@ fits the documented `RSM`/`MML` starting route before calling
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
 Use explicit
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-calls in scripts, Quarto documents, tests, and reproducible analyses.
+calls in scripts, Quarto documents, batch workflows, and reproducible
+analyses.
 
 ## Why this helper is opt-in
 
 Interactive prompts are useful at the console but are unsafe defaults
-for reproducible analysis, package checks, batch scripts, and
-manuscripts. The helper therefore prints replay code and leaves the
-scripted route explicit.
+for reproducible analysis, unattended workflows, and manuscripts. The
+helper therefore prints replay code and leaves the scripted route
+explicit.
 
 ## See also
 

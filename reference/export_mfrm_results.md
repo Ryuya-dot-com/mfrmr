@@ -96,7 +96,8 @@ The helper writes:
 - summary CSVs from `summary(x)` such as overview, status, triage, plot
   routes, next actions, mapping, and replay-code lines;
 
-- collected `x$tables` as CSV files;
+- collected `x$tables` as CSV files (tables with no columns are omitted;
+  zero-row tables with defined columns retain their headers);
 
 - optional report artifacts from `mfrm_report(x)`, including
   report-index, evidence-summary, and reporting-template CSVs plus
@@ -139,22 +140,55 @@ reviewed without replacing the required Wright-map first screen.
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
-fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+res <- mfrm_results(fit)
+
+# Create a new temporary folder for this example's files
+# For your own analysis, use a permanent folder you can write to
+output_dir <- tempfile("mfrmr-example-")
 exported <- export_mfrm_results(
   res,
-  output_dir = tempdir(),
-  prefix = "mfrmr_results_example",
+  output_dir = output_dir,
   preset = "starter",
-  overwrite = TRUE
+  acknowledge_sensitive = TRUE # These data are synthetic; exports retain IDs
 )
-#> Warning: This export is an analysis archive, not a deidentified or automatically shareable package. It can contain direct person identifiers, person-level estimates, original facet labels, local file paths, and a complete RDS result object. Review and transform every file under the applicable data-handling policy before sharing it. Set `acknowledge_sensitive = TRUE` only to acknowledge this risk; that setting does not deidentify the export.
-exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
-#>   FilesWritten CsvWritten HtmlWritten
-#> 1          158        145           3
+
+# Preview filenames and check whether any plots could not be exported
+head(data.frame(
+  Component = exported$written_files$Component,
+  File = basename(exported$written_files$Path)
+))
+#>                          Component
+#> 1                 summary_overview
+#> 2                 summary_decision
+#> 3                   summary_status
+#> 4            summary_fit_readiness
+#> 5 summary_fit_readiness_components
+#> 6 summary_fit_readiness_parameters
+#>                                                 File
+#> 1                 mfrmr_results_summary_overview.csv
+#> 2                 mfrmr_results_summary_decision.csv
+#> 3                   mfrmr_results_summary_status.csv
+#> 4            mfrmr_results_summary_fit_readiness.csv
+#> 5 mfrmr_results_summary_fit_readiness_components.csv
+#> 6 mfrmr_results_summary_fit_readiness_parameters.csv
+exported$plot_errors
+#> [1] Plot  Error
+#> <0 rows> (or 0-length row.names)
+# Full paths remain in exported$written_files$Path.
+# Open index.html in output_dir to read the report.
 # }
 ```

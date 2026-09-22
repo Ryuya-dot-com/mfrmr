@@ -17,7 +17,7 @@ expects. This is not the raw-residual Yen (1984) Q3 statistic."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,10 +28,12 @@ expects. This is not the raw-residual Yen (1984) Q3 statistic."><meta property="
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -48,7 +50,7 @@ expects. This is not the raw-residual Yen (1984) Q3 statistic."><meta property="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr standardized/aggregated-residual Q3-style screen</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-q3.R" class="external-link"><code>R/api-q3.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-q3.R" class="external-link"><code>R/api-q3.R</code></a></small>
       <div class="d-none name"><code>q3_statistic.Rd</code></div>
     </div>
 
@@ -94,8 +96,8 @@ on demand when omitted.</p></dd>
 <dt id="arg-min-pairs">min_pairs<a class="anchor" aria-label="anchor" href="#arg-min-pairs"></a></dt>
 <dd><p>Minimum number of persons with finite aggregated residuals
 at both levels required to retain a pair; a single integer of at least
-three. Pairs below the threshold drop out
-of the table (mirrors <code><a href="plot_local_dependence_heatmap.html">plot_local_dependence_heatmap()</a></code>).</p></dd>
+three. Unavailable pairs remain in the table with <code>NA</code> correlations and
+flags (mirrors <code><a href="plot_local_dependence_heatmap.html">plot_local_dependence_heatmap()</a></code>).</p></dd>
 
 
 <dt id="arg-yen-threshold">yen_threshold<a class="anchor" aria-label="anchor" href="#arg-yen-threshold"></a></dt>
@@ -128,17 +130,21 @@ for that bootstrap.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>mfrm_q3</code> containing:</p><dl><dt><code>pairs</code></dt>
-<dd><p>A data frame with one row per facet-level pair
+<dd><p>A data frame with one row per unordered facet-level pair
 and columns <code>Level1</code>, <code>Level2</code>, <code>Q3</code>, <code>N</code>, <code>AbsQ3</code>,
 <code>YenFlag</code>, <code>MaraisFlag</code>, <code>RelativeFlag</code>, and a textual
 <code>Interpretation</code> summarising which thresholds were exceeded. <code>N</code> is the
 number of persons with finite aggregated residuals at both levels.
+Unavailable pairs have <code>NA</code> correlations and flags, with an explanation
+in <code>Interpretation</code>.
 <code>YenFlag</code> is a compatibility name and does not imply that Yen (1984)
 proposed the fixed default.</p></dd>
 
 <dt><code>summary</code></dt>
 <dd><p>One-row tibble with <code>MeanQ3</code>, <code>MaxAbsQ3</code>,
-and the three flagged-pair counts.</p></dd>
+the three flagged-pair counts, <code>CandidatePairs</code>, <code>AvailablePairs</code>, and
+<code>UnavailablePairs</code>. Flagged counts are unavailable if no pair can be
+evaluated.</p></dd>
 
 <dt><code>thresholds</code></dt>
 <dd><p>The thresholds used, for reproducibility. The <code>yen</code>
@@ -177,8 +183,8 @@ comparable with raw-row Q3.</p>
 <p>For both reasons, treat the values returned here as a <strong>screening
 summary</strong> rather than a direct substitute for the published Q3
 thresholds. A formal raw-residual Q3 procedure would require a separately
-implemented and validated design-specific bootstrap; mfrmr 0.2.3 does not
-provide that procedure.</p>
+implemented and validated design-specific bootstrap; mfrmr does not
+currently provide that procedure.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -218,26 +224,28 @@ appropriate cut-off? <em>Journal of Educational Measurement, 62</em>(2),
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">q3</span> <span class="op">&lt;-</span> <span class="fu">q3_statistic</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">q3</span><span class="op">$</span><span class="va">summary</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       MeanQ3  MaxAbsQ3 YenFlagged MaraisFlagged RelativeFlagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.3277129 0.4631436         10             8               2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CandidatePairs AvailablePairs UnavailablePairs     MeanQ3  MaxAbsQ3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              6              6                0 -0.3277129 0.4631436</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   YenFlagged MaraisFlagged RelativeFlagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          5             4               1</span>
 <span class="r-in"><span><span class="co"># Look for: use MaxAbsQ3 and the pair table to rank follow-up. The default</span></span></span>
 <span class="r-in"><span><span class="co">#   0.20/0.30 absolute rules are uncalibrated heuristics for this Q3-style</span></span></span>
 <span class="r-in"><span><span class="co">#   index, not standalone local-independence tests.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">q3</span><span class="op">$</span><span class="va">pairs</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Level1 Level2         Q3  N     AbsQ3 YenFlag MaraisFlag RelativeFlag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     R01    R04 -0.4631436 48 0.4631436    TRUE       TRUE        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10    R04    R01 -0.4631436 48 0.4631436    TRUE       TRUE        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     R01    R03 -0.4382773 48 0.4382773    TRUE       TRUE        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7     R03    R01 -0.4382773 48 0.4382773    TRUE       TRUE        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     R02    R04 -0.4243919 48 0.4243919    TRUE       TRUE        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11    R04    R02 -0.4243919 48 0.4243919    TRUE       TRUE        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Level1 Level2          Q3  N      AbsQ3 YenFlag MaraisFlag RelativeFlag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    R01    R04 -0.46314357 48 0.46314357    TRUE       TRUE        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    R01    R03 -0.43827728 48 0.43827728    TRUE       TRUE        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    R02    R04 -0.42439186 48 0.42439186    TRUE       TRUE        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    R02    R03 -0.36329400 48 0.36329400    TRUE       TRUE        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    R03    R04 -0.26388437 48 0.26388437    TRUE      FALSE        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    R01    R02 -0.01328644 48 0.01328644   FALSE      FALSE         TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                            Interpretation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3  stricter heuristic (|Q3-style| &gt; 0.30)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 stricter heuristic (|Q3-style| &gt; 0.30)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  stricter heuristic (|Q3-style| &gt; 0.30)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  stricter heuristic (|Q3-style| &gt; 0.30)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  stricter heuristic (|Q3-style| &gt; 0.30)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 stricter heuristic (|Q3-style| &gt; 0.30)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  stricter heuristic (|Q3-style| &gt; 0.30)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  stricter heuristic (|Q3-style| &gt; 0.30)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 fixed absolute rule (|Q3-style| &gt; 0.20)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        relative-to-mean (offset &gt; 0.20)</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

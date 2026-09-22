@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a linking-review synthesis object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_linking_review.Rd</code></div>
     </div>
 
@@ -92,7 +94,10 @@ into one operational review surface with:</p><ul><li><p>a front-door status bloc
 <li><p>a reporting/export handoff map.</p></li>
 </ul><p>The helper keeps the current conservative interpretation policy:
 anchor drift and screened links are operational review tools, not automatic
-proofs of scale equivalence or score comparability.</p>
+proofs of scale equivalence or score comparability.
+It also does not verify source-fit readiness, cross-wave element identity,
+invariance, or the external assumptions behind group anchors; these must be
+established before promoting the synthesized review.</p>
     </div>
     <div class="section level2">
     <h2 id="recommended-input-route">Recommended input route<a class="anchor" aria-label="anchor" href="#recommended-input-route"></a></h2>
@@ -150,20 +155,14 @@ support.</p>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">build_linking_review</span><span class="op">(</span>anchor_review <span class="op">=</span> <span class="va">anchor_review_obj</span>, drift <span class="op">=</span> <span class="va">drift</span>, chain <span class="op">=</span> <span class="va">chain</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrm Linking Review Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Linking flags are review screens, not tests of anchor invariance.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Source-parameter, estimated-offset and cross-fit covariance are not fully</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   propagated. A sufficient element count alone does not establish a common</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   scale.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  AnchorReviewAvailable DriftAvailable ChainAvailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   TRUE           TRUE           TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  ReviewStatus TopRiskRows GroupViews SourceModels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  insufficient_anchor_evidence           3          4          RSM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            GPCMSupport</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Item                        Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Overall status insufficient_anchor_evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Evidence sources  anchor_review, drift, chain</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Bounded GPCM        supported_with_caveat</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  AnchorReviewAvailable DriftAvailable ChainAvailable SourceModels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   TRUE           TRUE           TRUE          RSM</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key Warnings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Drift review flagged 2 wave/facet support or drift rows.</span>
@@ -176,14 +175,6 @@ support.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    before using cumulative offsets operationally.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Top Linking Risks</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                        RiskID                   Area           SourceFamily</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    thin_link:Criterion::Wave2 post_fit_element_drift      thin_link_support</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        thin_link:Rater::Wave2 post_fit_element_drift      thin_link_support</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  chain_support:Wave1 -&gt; Wave2  chain_level_stability equating_chain_support</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            SourceTable     SourceRowKey AdministrationID WaveID        LinkKey</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  drift$common_by_facet Criterion::Wave2             &lt;NA&gt;  Wave2           &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  drift$common_by_facet     Rater::Wave2             &lt;NA&gt;  Wave2           &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            chain$links   Wave1 -&gt; Wave2             &lt;NA&gt;   &lt;NA&gt; Wave1 -&gt; Wave2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Level  Wave           Link</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion  &lt;NA&gt; Wave2           &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Rater  &lt;NA&gt; Wave2           &lt;NA&gt;</span>
@@ -192,25 +183,10 @@ support.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Retained common-element support is below the package guideline      1.00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Retained common-element support is below the package guideline      1.00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Thin retained support in an adjacent screened link      0.48</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SeverityGroup ReviewPriority</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           high              1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           high              1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           high              1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                         Guidance</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Treat drift flags as low-support until more retained common elements are available.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Treat drift flags as low-support until more retained common elements are available.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Inspect the adjacent link and cumulative offsets before using the chain for operational review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          PrimaryPlotRoute SupportStatus RiskRank</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plot_anchor_drift(drift, type = "drift")     supported        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plot_anchor_drift(drift, type = "drift")     supported        2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plot_anchor_drift(chain, type = "chain")     supported        3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Grouping Views</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              View Rows                                           Description</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           by_wave    1            Concentrated linking risks by fitted wave.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           by_link    1 Concentrated linking risks by adjacent screened link.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          by_facet    2                  Concentrated linking risks by facet.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  by_source_family    2        Volume and priority by evidence source family.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Plot Follow-up</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        ReviewArea Available                                 PlotHelper</span>
@@ -221,22 +197,14 @@ support.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                            Use when anchor issues or overlap warnings are present.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use when fitted waves show flagged drift or thin retained common-element support.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Use when adjacent links show thin support or large residual spread.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Support Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Scope                Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     RSM / PCM             supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  bounded GPCM supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                      Note</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Supported as a synthesis layer over documented anchor-review, drift, and equating-chain objects.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Supported with caveat when bounded GPCM source objects are supplied; not active for this RSM/PCM review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Detailed risk values, grouped views and support information remain in the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   returned review tables.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Linking review is an operational synthesis layer over existing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    package-native anchor, drift, and chain evidence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Drift or thin-support warnings do not prove scale breakdown by themselves;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    they indicate where review is needed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Repeated signals across anchor, drift, and chain evidence deserve priority,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    but this helper does not collapse them into one opaque composite score.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Review anchor overlap, fitted-wave drift and adjacent-link residuals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    together before comparing results across administrations.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Drift or limited-overlap flags identify comparisons to investigate; they do</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    not establish that the measurement scale has changed.</span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">top_linking_risks</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 20</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RiskID     Area  SourceFamily SourceTable SourceRowKey AdministrationID WaveID</span>

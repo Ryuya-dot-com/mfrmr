@@ -82,8 +82,12 @@ from `diagnose_mfrm(..., diagnostic_mode = "both")` or
 
 The `"std_residual"` view ranks cells by the absolute standardized
 residual from posterior-integrated expected category counts. The
-`"prop_diff"` view ranks the same cells by the signed
-observed-minus-expected proportion gap.
+`"prop_diff"` view ranks cells by the absolute observed-minus-expected
+proportion gap and plots their signed gaps. Both views apply the facet
+filter before ranking all cells. The returned `full_table` retains all
+candidate rows; `retention` records available/unavailable values for the
+selected metric. Undefined values are not zero residuals, and grey
+bars/labels indicate unavailable values or flags.
 
 Use this plot after `summary(diagnostics)` indicates strict marginal
 flags. The display is exploratory: it highlights which facet/category
@@ -135,27 +139,31 @@ and
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
-  "Person",
-  c("Rater", "Criterion"),
-  "Score",
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
   method = "MML",
-  quad_points = 7,
-  maxit = 30
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-p <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
-p$data$preset
-#> [1] "publication"
-if (interactive()) {
-  plot_marginal_fit(
-    diag,
-    plot_type = "prop_diff",
-    draw = TRUE,
-    preset = "publication"
-  )
-}
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Which score categories occur more or less often than the model expects?
+plot_marginal_fit(diagnostics)
+
+# Positive bars: more frequent than expected; negative bars: less frequent
+
+# Optional: show observed-minus-expected proportions instead
+# Run this command separately to inspect the second figure
+plot_marginal_fit(diagnostics, plot_type = "prop_diff")
+
 # }
 ```

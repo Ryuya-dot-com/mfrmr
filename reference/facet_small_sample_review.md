@@ -104,7 +104,7 @@ prior integrates out the uncertainty.
 ## References
 
 Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
-Winsteps.com. <https://www.winsteps.com/facets.htm>
+Winsteps.com.
 
 Linacre, J. M. (1994). Sample size and item calibration stability.
 *Rasch Measurement Transactions, 7*(4), 328.

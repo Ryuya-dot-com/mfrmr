@@ -171,9 +171,9 @@ summary(vis)
 #> 
 #> Warning counts
 #>                            Visual Messages
+#>               strict_marginal_fit        7
 #>              residual_pca_overall        5
 #>             residual_pca_by_facet        4
-#>               strict_marginal_fit        3
 #>  strict_pairwise_local_dependence        2
 #>                        wright_map        2
 #>                 observed_expected        1
@@ -187,19 +187,19 @@ summary(vis)
 #> 
 #> Summary counts
 #>                            Visual Messages
+#>               strict_marginal_fit       10
 #>              residual_pca_overall        5
-#>               strict_marginal_fit        5
 #>             residual_pca_by_facet        4
 #>  strict_pairwise_local_dependence        4
 #>                        wright_map        4
-#>                   category_curves        2
 #>             fit_zstd_distribution        2
 #>                 observed_expected        2
-#>                       pathway_map        2
-#>                   step_thresholds        2
+#>                   category_curves        1
 #>                facet_distribution        1
 #>                   fit_diagnostics        1
 #>                     misfit_levels        1
+#>                       pathway_map        1
+#>                   step_thresholds        1
 #> 
 #> FACETS crosswalk
 #>                            Visual

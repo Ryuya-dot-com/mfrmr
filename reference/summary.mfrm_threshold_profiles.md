@@ -102,15 +102,15 @@ summary(profiles)
 #>        zstd2_ratio_warn  0.08  1e-01   0.15   0.07
 #>        zstd3_ratio_warn  0.03  5e-02   0.08   0.05
 #> 
-#> PCA reference bands
-#>        Band              Key Value
-#>  eigenvalue critical_minimum  1.40
-#>  eigenvalue          caution  1.50
-#>  eigenvalue           common  2.00
-#>  eigenvalue           strong  3.00
-#>  proportion            minor  0.05
-#>  proportion          caution  0.10
-#>  proportion           strong  0.20
+#> PCA descriptive reference values (uncalibrated)
+#>        Band Value
+#>  eigenvalue  1.40
+#>  eigenvalue  1.50
+#>  eigenvalue  2.00
+#>  eigenvalue  3.00
+#>  proportion  0.05
+#>  proportion  0.10
+#>  proportion  0.20
 #> 
 #> Notes
 #>  - Profiles tune warning strictness for build_visual_summaries().Use `thresholds` in build_visual_summaries() to override selected values.

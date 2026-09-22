@@ -17,7 +17,7 @@ analyze_hierarchical_structure(
   person = "Person",
   score = "Score",
   compute_icc = TRUE,
-  ci_method = c("none", "profile", "boot"),
+  ci_method = c("none", "boot"),
   ci_level = 0.95,
   ci_boot_reps = 1000L,
   ci_boot_seed = NULL,
@@ -25,7 +25,8 @@ analyze_hierarchical_structure(
   icc_ci_method = NULL,
   icc_ci_level = NULL,
   icc_ci_boot_reps = NULL,
-  icc_ci_boot_seed = NULL
+  icc_ci_boot_seed = NULL,
+  missing = c("error", "omit")
 )
 ```
 
@@ -57,9 +58,10 @@ analyze_hierarchical_structure(
 
   ICC confidence-interval method passed through to
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md).
-  One of `"none"` (default, point estimate only), `"profile"`, or
-  `"boot"`. Deprecated alias: `icc_ci_method` (kept for backward
-  compatibility, emits a lifecycle warning).
+  One of `"none"` (default, point estimate only) or `"boot"`. The former
+  `"profile"` method is refused because it did not calculate an ICC
+  profile-likelihood interval. Deprecated alias: `icc_ci_method` (kept
+  for backward compatibility, emits a lifecycle warning).
 
 - ci_level:
 
@@ -87,6 +89,16 @@ analyze_hierarchical_structure(
   Supplying a non-`NULL` value routes through
   [`lifecycle::deprecate_warn()`](https://lifecycle.r-lib.org/reference/deprecate_soft.html)
   and overrides the canonical `ci_*` argument.
+
+- missing:
+
+  Missing-value policy for the ICC and design-effect tables, passed to
+  [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md).
+  Invalid input or model errors stop the requested ICC analysis.
+  Nesting, cross-tabulation, and connectivity tables describe the
+  supplied design, including rows excluded from the ICC model. When
+  `data` is a fit, ICC row counts start from its stored fitted rows;
+  they cannot recover exclusions made before fitting the MFRM.
 
 ## Value
 
@@ -130,7 +142,9 @@ A list of class `mfrm_hierarchical_structure` with:
   [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md)
   for the two-scale interpretation.
 
-- `design_effect`: Kish (1965) `Deff` and `EffectiveN`.
+- `design_effect`: per-facet design-effect approximations and
+  descriptive equivalent row counts; not precision estimates for the
+  full design.
 
 - `connectivity`: number of bipartite components linking Person x facet
   levels. A single component is required for a common measurement scale;
@@ -161,7 +175,7 @@ results from many-facets-Rasch model analyses* (Doctoral thesis, Brigham
 Young University). <https://scholarsarchive.byu.edu/etd/6689/>
 
 Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
-Winsteps.com. <https://www.winsteps.com/facets.htm>
+Winsteps.com.
 
 Kish, L. (1965). *Survey Sampling*. New York: Wiley.
 
@@ -223,22 +237,33 @@ if (requireNamespace("lme4", quietly = TRUE) &&
 #> 
 #> ICC (lme4 variance-components):
 #> mfrm_facet_icc
-#>      Facet Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
-#>     Person 0.346261 0.3511           Poor  Koo-Li reliability           NA
-#>      Rater 0.026673 0.0270  Trivial share      Variance share           NA
-#>  Criterion 0.021884 0.0222  Trivial share      Variance share           NA
-#>   Residual 0.591449 0.5997    Large share      Variance share           NA
-#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method
-#>            NA         0.95          none
-#>            NA         0.95          none
-#>            NA         0.95          none
-#>            NA         0.95          none
+#>   ICC rows: 768 input, 768 used, 0 excluded.
+#>      Facet   Variance    ICC Interpretation InterpretationScale ICC_CI_Lower
+#>     Person 0.34626071 0.3511           Poor  Koo-Li reliability           NA
+#>      Rater 0.02667343 0.0270  Trivial share      Variance share           NA
+#>  Criterion 0.02188365 0.0222  Trivial share      Variance share           NA
+#>   Residual 0.59144865 0.5997    Large share      Variance share           NA
+#>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method ICC_CI_Status InputRows UsedRows
+#>            NA         0.95          none Not requested       768      768
+#>            NA         0.95          none Not requested       768      768
+#>            NA         0.95          none Not requested       768      768
+#>            NA         0.95          none Not requested       768      768
+#>  ExcludedRows
+#>             0
+#>             0
+#>             0
+#>             0
 #> 
-#> Design effects (Kish):
-#> mfrm_facet_design_effect (Kish, 1965)
-#>      Facet AvgClusterSize    ICC DesignEffect EffectiveN
-#>      Rater            192 0.0270        6.157      124.7
-#>  Criterion            192 0.0222        5.240      146.6
+#> Design-effect approximations:
+#> mfrm_facet_design_effect (per-facet approximation)
+#>   EffectiveN is a descriptive row count, not full-design precision.
+#>   ICC rows: 768 input, 768 used, 0 excluded.
+#>      Facet AvgClusterSize    ICC DesignEffect EffectiveN InputRows UsedRows
+#>      Rater            192 0.0270        6.157      124.7       768      768
+#>  Criterion            192 0.0222        5.240      146.6       768      768
+#>  ExcludedRows
+#>             0
+#>             0
 #> 
 #> Bipartite connectivity (via igraph):
 #>   Components: 1 

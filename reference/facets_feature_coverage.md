@@ -70,7 +70,8 @@ and reusable plot data over exact FACETS line-printer output.
 The current software reference target is FACETS 64-bit 4.5.1 (July
 2026). Bibliographic references retain the title and edition of the
 consulted manual rather than silently relabelling a 4.5.0 manual as
-4.5.1. External numerical validation is a separate evidence contract.
+4.5.1. External numerical agreement must be evaluated separately for a
+matched model and estimand.
 
 Status meanings:
 
@@ -100,8 +101,8 @@ The four contract axes are deliberately independent:
   never implies a FACETS-matched estimand.
 
 - `ValidationEvidence` records whether this table establishes matched
-  external numerical evidence. It currently does not; validation belongs
-  to a separate candidate-linked evidence contract.
+  external numerical evidence. It currently does not; that conclusion
+  requires a separate comparison using a matched model and estimand.
 
 - `OperationalStatus` records route availability. A package route being
   available does not make `mfrmr` operationally interchangeable with
@@ -110,9 +111,8 @@ The four contract axes are deliberately independent:
 ## References
 
 Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
-Current FACETS software release: <https://www.winsteps.com/facets.htm>.
-Output tables - files - plots - graphs:
-<https://www.winsteps.com/facetman64/outputtableindex.htm>.
+Winsteps.com. See the guide's output-table index for the documented
+FACETS files, plots, and graphs.
 
 ## See also
 
@@ -232,7 +232,7 @@ facets_feature_coverage()
 #> 45            Full FACETS command-file parser and UI option surface
 #> 46                       Exact FACETS line-printer report emulation
 #> 47                                    Raw FACETS report-text import
-#> 48      Versioned frozen-calibration import and operational scoring
+#> 48                  FACETS or third-party frozen-calibration import
 #> 49      General threshold or step anchors and starting-value import
 #> 50                  Multiple observed scales and scale-specific PCM
 #> 51                              Nominal/multinomial response models
@@ -289,14 +289,14 @@ facets_feature_coverage()
 #> 45                     index.htm
 #> 46          outputtableindex.htm
 #> 47          outputtableindex.htm
-#> 48   mfrmr 0.2.3 public contract
-#> 49   mfrmr 0.2.3 public contract
-#> 50   mfrmr 0.2.3 public contract
-#> 51   mfrmr 0.2.3 public contract
+#> 48 current mfrmr public contract
+#> 49 current mfrmr public contract
+#> 50 current mfrmr public contract
+#> 51 current mfrmr public contract
 #> 52                    models.htm
-#> 53   mfrmr 0.2.3 weight contract
-#> 54   mfrmr 0.2.3 public contract
-#> 55   mfrmr 0.2.3 public contract
+#> 53 current mfrmr weight contract
+#> 54 current mfrmr public contract
+#> 55 current mfrmr public contract
 #> 56                    t7menu.htm
 #>                                                                                                                                     mfrmrRoute
 #> 1                                                                                                                      specifications_report()
@@ -346,15 +346,15 @@ facets_feature_coverage()
 #> 45                                                                                                               run_mfrm_facets(); fit_mfrm()
 #> 46                                                                                                   build_fixed_reports() for selected tables
 #> 47                                                                            read_facets_fit_table() for delimited/fixed-field score extracts
-#> 48                                                                                                                               none in 0.2.3
-#> 49                                                                                                                               none in 0.2.3
-#> 50                                                                                                                               none in 0.2.3
-#> 51                                                                                                                               none in 0.2.3
-#> 52                                                                                                                               none in 0.2.3
+#> 48                        no external import; native route: mfrm_calibration_capabilities(); load_mfrm_calibration(); score_mfrm_calibration()
+#> 49                                                                                                        not available in the current package
+#> 50                                                                                                        not available in the current package
+#> 51                                                                                                        not available in the current package
+#> 52                                                                                                        not available in the current package
 #> 53                                                                                                                      fit_mfrm(weight = ...)
-#> 54                                                                                                                               none in 0.2.3
-#> 55                                                                                                         none for unrestricted GPCM in 0.2.3
-#> 56                                                                                                       none as a direct common-estimand lane
+#> 54                                                                                                        not available in the current package
+#> 55                                                                                                         not available for unrestricted GPCM
+#> 56                                                                                                 none as a direct common-estimand comparison
 #>                   Status                   SurfaceCoverage
 #> 1            implemented                         available
 #> 2            implemented                         available
@@ -555,9 +555,9 @@ facets_feature_coverage()
 #> 26                                                                                                                      Selected 3D/surface-ready plot data are available.
 #> 27                                                                                                               Several package outputs include histogram-like summaries.
 #> 28                          Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.
-#> 29                               Facet-level co-observation network plus rater agreement/disagreement/severity-direction and halo networks with reusable node/edge tables.
+#> 29                                         Separate facet-level co-observation, rater score-relation, and rater-by-criterion halo networks with reusable node/edge tables.
 #> 30                                                                                                                    R-native reproducibility manifest and replay script.
-#> 31                                                                                                                           Reusable anchor tables from fitted estimates.
+#> 31                                                                                            Candidate direct-anchor tables mechanically extracted from fitted estimates.
 #> 32                                                                                                                                  Graphfile-style category curve output.
 #> 33                                                                                                                                   Structured appendix/report artifacts.
 #> 34                                                       Standalone observation-level residual CSV/TSV output, residual tables, and residual visualizations are available.
@@ -574,7 +574,7 @@ facets_feature_coverage()
 #> 45                                                                                                                         R function arguments are the package interface.
 #> 46                                                                                                                              Selected fixed-width handoff is available.
 #> 47                                                                                                                                    Fit/score table import is supported.
-#> 48                                                                        No current public route imports a reusable versioned calibration bundle for operational scoring.
+#> 48                                    Native mfrmr portable RSM/PCM MML calibration artifacts can be loaded and scored through the documented fixed-standard-normal route.
 #> 49                                                               No current public route accepts general threshold or step anchors or a threshold starting-value contract.
 #> 50                                                                                       Each fit uses one observed score scale and one homogeneous response-model family.
 #> 51                                                                                The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.
@@ -612,9 +612,9 @@ facets_feature_coverage()
 #> 26                                                                                                                                                                                                                                                                                                                        No arbitrary FACETS X-Y-Z plot wrapper.
 #> 27                                                                                                                                                                                                                                                                                                                        No general FACETS histogram menu clone.
 #> 28                                                                                                                                                                   Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not suitable for high-stakes use when boundary or singular fits are reported.
-#> 29                                                                                                                                                                                                                                                                                           R-native igraph analysis and display rather than FACETS menu output.
+#> 29                                                                                                                                                                    Only the co-observation network addresses assignment connectedness; response networks do not establish a common scale. R-native igraph analysis and display rather than FACETS menu output.
 #> 30                                                                                                                                                                                                                                                                                                            Does not write a FACETS command specification file.
-#> 31                                                                                                                                                                                                                                                                                                             Uses R/CSV tables rather than FACETS fixed syntax.
+#> 31                                                                                                                                                                                                                                Export does not certify source readiness, cross-run identity, or invariance; uses R/CSV tables rather than FACETS fixed syntax.
 #> 32                                                                                                                                                                                                                                                                                                     Command-level FACETS graph options are not fully mirrored.
 #> 33                                                                                                                                                                                                                                                                                                          Full FACETS report-file emulation is not implemented.
 #> 34                                                                                                                                                                                                                                                                     Uses package-native residual columns rather than exact FACETS fixed-field residual syntax.
@@ -631,7 +631,7 @@ facets_feature_coverage()
 #> 45                                                                                                                                                                                                                                                                                           Parsing arbitrary FACETS command files is outside the package scope.
 #> 46                                                                                                                                                                                                                                                                                                      Exact full report emulation is outside the package scope.
 #> 47                                                                                                                                                                                                                                                                                                          General raw FACETS report parsing is not implemented.
-#> 48                                                                                                                                                                                                                                    Posterior scoring from an existing fitted object is supported separately and is not a reusable frozen-calibration contract.
+#> 48                                                                                                                                                         No current route converts a FACETS or another program's calibration file into an mfrmr portable artifact; native artifact scoring does not establish transportability or external-program equivalence.
 #> 49                                                                                                                                                                                                                                                   Element and group anchors do not make threshold ladders fixed or supply a general calibration-import schema.
 #> 50                                                                                                                                                                                                                                       There is no per-observation ScaleId contract, scale-specific category map, or ragged scale-specific PCM threshold block.
 #> 51                                                                                                                                                                                                A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.
@@ -640,63 +640,63 @@ facets_feature_coverage()
 #> 54                                                                                                                                                                                                                                     Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.
 #> 55                                                                                                                                                                                                                                                                      Bounded GPCM support does not establish an unrestricted free-discrimination model family.
 #> 56                                                                                                                                                                                 FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.
-#>                                                                                                                                                                                                    Alternative
-#> 1                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 2                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 3                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 4                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 5                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 6                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 7                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 8                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 9                                                                                              Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 10                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 11                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 12                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
-#> 13                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 14                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 15                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 16                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 17                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 18                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 19                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 20                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 21                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 22                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
-#> 23                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
-#> 24                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
-#> 25                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
-#> 26                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
-#> 27                                                                                    Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
-#> 28                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 29                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 30                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 31                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 32                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 33                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
-#> 34                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 35                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 36                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 37                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 38                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
-#> 39                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 40                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 41                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 42                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 43                                                                                             Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
-#> 44                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
-#> 45                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
-#> 46                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
-#> 47                                                                        Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
-#> 48                                                                                          Use fitted-object posterior scoring for current analyses; retain frozen-calibration workflows for a later release.
-#> 49                                                                                    Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.
-#> 50                                                                                           Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.
-#> 51                                                                                Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.
-#> 52                                            Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.
-#> 53                                                  Retain one distinguishable event per row when possible; preserve distinct Person response patterns, and report the exact likelihood-weight interpretation.
-#> 54                                                                            Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.
-#> 55                                                                                           Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.
-#> 56 Use FACETS for the matched PCM/JML lane or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.
+#>                                                                                                                                                                                                          Alternative
+#> 1                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 2                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 3                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 4                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 5                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 6                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 7                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 8                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 9                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 10                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 11                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 12                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 13                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 14                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 15                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 16                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 17                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 18                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 19                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 20                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 21                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 22                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 23                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 24                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 25                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 26                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 27                                                                                          Build the display from package plot data or another R graphics system; use FACETS externally for its menu-specific view.
+#> 28                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 29                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 30                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 31                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 32                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 33                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 34                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 35                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 36                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 37                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 38                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 39                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 40                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 41                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 42                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 43                                                                                                   Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
+#> 44                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 45                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 46                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 47                                                                              Use the closest documented mfrmr table or plot for analysis; use FACETS externally when the omitted statistic or format is required.
+#> 48                                                        Use the native mfrmr calibration workflow for eligible fits; use a separately validated external workflow when third-party calibration import is required.
+#> 49                                                                                          Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.
+#> 50                                                                                                 Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.
+#> 51                                                                                      Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.
+#> 52                                                  Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.
+#> 53                                                        Retain one distinguishable event per row when possible; preserve distinct Person response patterns, and report the exact likelihood-weight interpretation.
+#> 54                                                                                  Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.
+#> 55                                                                                                 Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.
+#> 56 Use FACETS for the matched PCM/JML comparison or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.
 facets_feature_coverage("partial")
 #>                FACETSArea                                      FACETSFeature
 #> 3            Output table                     Table 3: main iteration report
@@ -863,7 +863,7 @@ facets_feature_coverage("supported_with_caveat")
 #> 11 table7agreementstatistics.htm
 #> 13       table8_1ratingscale.htm
 #> 28                   gtheory.htm
-#> 53   mfrmr 0.2.3 weight contract
+#> 53 current mfrmr weight contract
 #>                                                                                                            mfrmrRoute
 #> 9                                                                 fit_measures_table(); diagnose_mfrm(); summary(fit)
 #> 10                                                                  facets_chisq_table(); diagnose_mfrm()$reliability
@@ -919,7 +919,7 @@ facets_feature_coverage("not_implemented")
 #> 56 Current scope boundary
 #>                                                       FACETSFeature
 #> 38                                   Winsteps control and data file
-#> 48      Versioned frozen-calibration import and operational scoring
+#> 48                  FACETS or third-party frozen-calibration import
 #> 49      General threshold or step anchors and starting-value import
 #> 50                  Multiple observed scales and scale-specific PCM
 #> 51                              Nominal/multinomial response models
@@ -927,16 +927,26 @@ facets_feature_coverage("not_implemented")
 #> 54 Native multidimensional estimation and dimension-specific scores
 #> 55                                                Unrestricted GPCM
 #> 56                     FACETS free-slope polytomous GPCM comparison
-#>                FACETSReference                            mfrmrRoute
-#> 38            winstepsfile.htm                                  none
-#> 48 mfrmr 0.2.3 public contract                         none in 0.2.3
-#> 49 mfrmr 0.2.3 public contract                         none in 0.2.3
-#> 50 mfrmr 0.2.3 public contract                         none in 0.2.3
-#> 51 mfrmr 0.2.3 public contract                         none in 0.2.3
-#> 52                  models.htm                         none in 0.2.3
-#> 54 mfrmr 0.2.3 public contract                         none in 0.2.3
-#> 55 mfrmr 0.2.3 public contract   none for unrestricted GPCM in 0.2.3
-#> 56                  t7menu.htm none as a direct common-estimand lane
+#>                  FACETSReference
+#> 38              winstepsfile.htm
+#> 48 current mfrmr public contract
+#> 49 current mfrmr public contract
+#> 50 current mfrmr public contract
+#> 51 current mfrmr public contract
+#> 52                    models.htm
+#> 54 current mfrmr public contract
+#> 55 current mfrmr public contract
+#> 56                    t7menu.htm
+#>                                                                                                              mfrmrRoute
+#> 38                                                                                                                 none
+#> 48 no external import; native route: mfrm_calibration_capabilities(); load_mfrm_calibration(); score_mfrm_calibration()
+#> 49                                                                                 not available in the current package
+#> 50                                                                                 not available in the current package
+#> 51                                                                                 not available in the current package
+#> 52                                                                                 not available in the current package
+#> 54                                                                                 not available in the current package
+#> 55                                                                                  not available for unrestricted GPCM
+#> 56                                                                          none as a direct common-estimand comparison
 #>             Status SurfaceCoverage StatisticalContract ValidationEvidence
 #> 38 not_implemented     unavailable       not_available     not_applicable
 #> 48 not_implemented     unavailable       not_available     not_applicable
@@ -957,34 +967,34 @@ facets_feature_coverage("not_implemented")
 #> 54           blocked
 #> 55           blocked
 #> 56           blocked
-#>                                                                                                                Capability
-#> 38                                                                                 No Winsteps control/data export route.
-#> 48                       No current public route imports a reusable versioned calibration bundle for operational scoring.
-#> 49              No current public route accepts general threshold or step anchors or a threshold starting-value contract.
-#> 50                                      Each fit uses one observed score scale and one homogeneous response-model family.
-#> 51                               The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.
-#> 52           Binary ordered scores are available as the two-category special case of the current ordered-response kernel.
-#> 54                                                      The current public estimator and score routes are unidimensional.
-#> 55                                 The current public GPCM route is bounded and requires slope_facet to equal step_facet.
-#> 56 FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.
-#>                                                                                                                                                                        Limitation
-#> 38                                                                                                                             Would require a separate Winsteps output contract.
-#> 48                                                    Posterior scoring from an existing fitted object is supported separately and is not a reusable frozen-calibration contract.
-#> 49                                                                   Element and group anchors do not make threshold ladders fixed or supply a general calibration-import schema.
-#> 50                                                       There is no per-observation ScaleId contract, scale-specific category map, or ragged scale-specific PCM threshold block.
-#> 51                A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.
-#> 52  Grouped binomial trials, Poisson counts, negative-binomial counts, and other count likelihoods are not implemented; integer scores are interpreted as ordered category codes.
-#> 54                                                     Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.
-#> 55                                                                                      Bounded GPCM support does not establish an unrestricted free-discrimination model family.
-#> 56 FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.
-#>                                                                                                                                                                                                    Alternative
-#> 38                                                                       Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
-#> 48                                                                                          Use fitted-object posterior scoring for current analyses; retain frozen-calibration workflows for a later release.
-#> 49                                                                                    Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.
-#> 50                                                                                           Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.
-#> 51                                                                                Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.
-#> 52                                            Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.
-#> 54                                                                            Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.
-#> 55                                                                                           Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.
-#> 56 Use FACETS for the matched PCM/JML lane or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.
+#>                                                                                                                              Capability
+#> 38                                                                                               No Winsteps control/data export route.
+#> 48 Native mfrmr portable RSM/PCM MML calibration artifacts can be loaded and scored through the documented fixed-standard-normal route.
+#> 49                            No current public route accepts general threshold or step anchors or a threshold starting-value contract.
+#> 50                                                    Each fit uses one observed score scale and one homogeneous response-model family.
+#> 51                                             The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.
+#> 52                         Binary ordered scores are available as the two-category special case of the current ordered-response kernel.
+#> 54                                                                    The current public estimator and score routes are unidimensional.
+#> 55                                               The current public GPCM route is bounded and requires slope_facet to equal step_facet.
+#> 56               FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.
+#>                                                                                                                                                                                                Limitation
+#> 38                                                                                                                                                     Would require a separate Winsteps output contract.
+#> 48 No current route converts a FACETS or another program's calibration file into an mfrmr portable artifact; native artifact scoring does not establish transportability or external-program equivalence.
+#> 49                                                                                           Element and group anchors do not make threshold ladders fixed or supply a general calibration-import schema.
+#> 50                                                                               There is no per-observation ScaleId contract, scale-specific category map, or ragged scale-specific PCM threshold block.
+#> 51                                        A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.
+#> 52                          Grouped binomial trials, Poisson counts, negative-binomial counts, and other count likelihoods are not implemented; integer scores are interpreted as ordered category codes.
+#> 54                                                                             Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.
+#> 55                                                                                                              Bounded GPCM support does not establish an unrestricted free-discrimination model family.
+#> 56                         FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.
+#>                                                                                                                                                                                                          Alternative
+#> 38                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
+#> 48                                                        Use the native mfrmr calibration workflow for eligible fits; use a separately validated external workflow when third-party calibration import is required.
+#> 49                                                                                          Use current element/group anchor routes only for their documented scope; retain threshold anchoring for a later release.
+#> 50                                                                                                 Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release.
+#> 51                                                                                      Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.
+#> 52                                                  Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.
+#> 54                                                                                  Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.
+#> 55                                                                                                 Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.
+#> 56 Use FACETS for the matched PCM/JML comparison or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.
 ```

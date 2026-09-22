@@ -3,9 +3,10 @@
 Links a series of calibration waves by computing mean offsets between
 adjacent pairs of fits. Common linking elements (e.g., raters or items
 that appear in consecutive administrations) are used to estimate the
-scale shift. Cumulative offsets place all waves on a common metric
-anchored to the first wave. The procedure is intended as a practical
-screened linking aid, not as a full general-purpose equating framework.
+scale shift. Cumulative offsets express all waves relative to the first
+wave, conditional on the common-element assumptions. The procedure is a
+practical screened linking aid, not a full general-purpose equating
+framework or proof of common-scale comparability.
 
 ## Usage
 
@@ -24,9 +25,12 @@ print(x, ...)
 plot(
   x,
   y = NULL,
-  type = c("common_anchors", "graph", "chain"),
+  type = c("common_anchors", "graph", "chain", "links", "anchor_removal",
+    "offset_sensitivity"),
   preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
+  show_title = TRUE,
+  show_notes = TRUE,
   ...
 )
 
@@ -69,9 +73,12 @@ print(x, ...)
 
 - type:
 
-  One of `"graph"` (bipartite Wave x anchor-element graph; requires the
-  `igraph` package), `"common_anchors"` (default; bar chart of
-  common-anchor counts per wave pair), or `"chain"`.
+  One of `"graph"` (bipartite wave x link-specific common-element
+  graph), `"common_anchors"` (default; bar chart of common-anchor counts
+  per wave pair), `"chain"` (cumulative offsets), `"links"` (recorded
+  wave comparisons), or `"anchor_removal"` (newly disconnected wave
+  pairs after deleting each common element), or `"offset_sensitivity"`
+  (conditional rescreened linking-offset changes).
 
 - preset:
 
@@ -80,6 +87,16 @@ print(x, ...)
 - draw:
 
   If `TRUE`, draw the plot with base graphics.
+
+- show_title:
+
+  Logical; display the main title.
+
+- show_notes:
+
+  Logical; display graph/topology interpretation footers. Returned notes
+  and ordinary R warnings are unaffected. Axes, legends and data labels
+  remain visible; other chain views have no interpretation footer.
 
 - object:
 
@@ -135,8 +152,28 @@ pair of adjacent waves \\(A, B)\\, the function:
 6.  Flags links with fewer than 5 retained common elements in any
     linking facet as having thin support.
 
+The five-element rule is a package screening convention, not a universal
+adequacy threshold. Matching labels are assumed to identify the same
+invariant elements, and input fits are assumed to use compatible model,
+score, orientation, and population conventions. The helper does not
+verify those assumptions or source-fit readiness. In particular,
+adjacent label overlap and a finite offset do not by themselves
+establish a common scale.
+
+Each adjacent `Offset` is one value pooled across all selected facets.
+When any common rows have finite positive SEs, only those rows
+contribute to the inverse-variance weighted offset; retained/support
+counts can still include rows without usable SEs. If preliminary
+screening would remove every row, the implementation falls back to all
+finite differences. Prefer one substantively coherent `anchor_facets`
+block unless a common shift across facets is justified.
+
 Cumulative offsets are computed by chaining link offsets from Wave 1
 forward, placing all waves onto the metric of the first wave.
+`Offset_SD` is retained-element residual spread, not the standard error
+of `Offset`. No offset SE, confidence interval, cross-fit covariance, or
+cumulative uncertainty propagation is currently returned, so uncertainty
+can compound along the chain without appearing in `cumulative`.
 
 Elements whose per-link residual exceeds `drift_threshold` are flagged
 in `$element_detail$Flag`. A high `Offset_SD`, many flagged elements, or
@@ -180,6 +217,127 @@ the resulting scale placement.
 - Read `links` before `cumulative`: weak adjacent links can make later
   cumulative offsets less trustworthy.
 
+## Common-element graph
+
+`plot(chain, type = "graph")` displays waves as squares and common
+elements as circles, including waves without retained connections. Each
+element node belongs to one reviewed link: `[L1]` refers to link 1 in
+the returned links table. The same element can have different screening
+results in different comparisons, so it is repeated per link. Solid
+lines denote retained, unflagged elements; dot-dash denotes retained
+elements with a drift flag or an unavailable flag; dashed denotes
+excluded elements; dotted denotes unknown retention. These distinctions
+also apply in monochrome.
+
+This is a graph of screened common-element comparisons, not an inventory
+of fixed anchors or an all-pairs assessment. Retention does not
+guarantee positive weight in the offset, invariance, adequate support or
+precision. New chains store positional `FromID`/`ToID` in `links` and
+`LinkID` in `element_detail`; display names may repeat or contain
+punctuation. Older chains are matched by their complete link labels;
+ambiguous references require rebuilding the chain.
+
+With `draw = FALSE`, the plot returns an `mfrm_plot_data` object. Its
+`$data$data` contains `nodes`, `edges`, `links`, `elements`, `n_waves`,
+`n_anchors` (unique facet/level identities), and `n_element_nodes`
+(link-specific nodes). Edge `from`/`to` refer to node `NodeId`;
+`AnchorId` identifies the same facet/level across links. `Retained`,
+`Flag`, `Status` and `Reason` preserve screening information.
+`RetainedDegree` counts retained incidences, not statistical
+information. Interpretation notes remain in `$data$notes` and in
+[`print()`](https://rdrr.io/r/base/print.html) even when
+`show_notes = FALSE`. Full labels remain in the node table if the device
+is too narrow. Base graphics are sufficient; no optional graph package
+is needed.
+
+## Wave links and common-element removal
+
+`plot(chain, type = "links")` summarizes the recorded wave-to-wave
+comparisons. Numbers count common elements with `Retained = TRUE`,
+including flagged retained elements. A dotted comparison has no recorded
+retained element; this is not proof that the original rating design is
+disconnected. Missing retention is counted separately. Dot-dash
+connections have flagged retained elements or inadequate/unknown
+recorded link support.
+
+`plot(chain, type = "anchor_removal")` removes each facet/level
+identity, one at a time, from all recorded comparisons. Other retention
+decisions stay fixed. The horizontal axis counts newly disconnected
+unordered wave pairs, including indirect paths. Pairs already
+disconnected at baseline are not counted. Losing a direct link need not
+disconnect its endpoints if another path remains. Zero means no new
+graph disconnection, not negligible impact on estimates or adequate
+linking support. No screening, offsets, estimates, SEs or confidence
+intervals are recomputed by either view.
+
+Both views return `$data$data$nodes`, `links`, `elements` and `summary`.
+The removal view additionally returns `removal` (one row per
+common-element identity), `lost_links` (recorded comparisons losing
+their last retained element), `lost_pairs` (newly disconnected wave
+pairs), and `components_after` (baseline and post-removal membership for
+every wave). Use `AnchorId` to join the removal table to these details;
+`FromID`/`ToID` and `WaveID` identify waves independently of display
+labels. Component numbers are local to each partition: compare
+membership relations, not numeric labels across Before, After or
+different removal scenarios. Removal counts include
+`RetainedOccurrences`, `UnknownOccurrences`, `LostLinks`,
+`ComponentsAfter` and `NewlyDisconnectedPairs`.
+
+These calculations reuse the recorded common-element graph; they do not
+search for new links or assess statistical influence. The full lost-pair
+table can be large for chains with many waves and common elements.
+Compact plots abbreviate long labels and warn when IDs or a larger
+device are needed; full identities and interpretation notes remain in
+the returned tables.
+
+## Conditional offset sensitivity
+
+`plot(chain, type = "offset_sensitivity")` removes each common
+`(Facet, Level)` identity from every adjacent link, then reruns the
+existing offset calculation with its recorded drift threshold.
+Preliminary offsets, screening, final weighted/unweighted offsets and
+cumulative offsets are recomputed. The source wave estimates and SEs
+remain fixed: this is a conditional linking sensitivity calculation, not
+a refit of item, rater or person parameters or a new uncertainty
+estimate.
+
+The view requires an ordered adjacent chain with the recorded method,
+threshold, support guideline, source estimate/SE columns and offsets.
+Recomputed baseline offsets must agree with recorded offsets within
+`1e-8 * max(1, abs(recorded_offset))`; inconsistent or incomplete source
+records require rebuilding the chain. Numerical overflow/underflow that
+prevents a finite preliminary offset is reported as a numerical failure.
+
+The figure shows each deletion's maximum absolute cumulative offset
+change over finite comparisons, excluding the fixed-zero first wave.
+Shapes distinguish complete comparisons, partial comparisons and no
+finite comparison. An unavailable comparison remains `NA`, not zero. If
+one link becomes unavailable, later cumulative offsets also become
+unavailable. Read the detailed tables when a figure marks an incomplete
+comparison.
+
+The `$data$data` payload contains `settings`, `baseline_links`,
+`baseline_cumulative`, `baseline_elements`, `removal`, `links`,
+`cumulative`, `retention_changes` and `common_by_facet`. Join
+`RemovedAnchorId` in scenario tables to `removal$AnchorId`. Signed
+`Change` is recalculated minus baseline offset. `Status` distinguishes
+`computed`, `no_common`, `no_finite_differences` and
+`numerical_failure`. `N_Contributing` and element `Contributing`
+identify positive finite weight contributors (or retained rows in an
+unweighted offset). `retention_changes` records other elements whose
+retention, contribution or residual flag changes; the deliberately
+removed element is omitted. Facets whose last element is removed remain
+in support tables with zero counts. No support failure is converted into
+a statement of readiness.
+
+`ScreeningFallback` identifies the existing rule that restores all
+finite differences if preliminary screening would remove every one. SEs
+may be missing, in which case the existing unweighted fallback is used.
+No offset SE, confidence interval, cross-fit covariance, or uncertainty
+propagation is supplied. A small conditional change is not evidence of
+anchor invariance or negligible change under a full model refit. Notes
+remain available when figure titles and footers are omitted.
+
 ## Typical workflow
 
 1.  Fit each administration wave separately: `fit_a <- fit_mfrm(...)`.
@@ -220,12 +378,17 @@ chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 #> Warning: Thin linking support between 'Form1' and 'Form2': fewer than 5 retained common elements in Criterion, Rater.
 summary(chain)
 #> --- Screened Linking Chain ---
-#> Method: screened_common_element_alignment | Intended use: screened_linking_aid 
+#>   Linking flags are review screens, not tests of anchor invariance.
+#>   Source-parameter, estimated-offset and cross-fit covariance are not fully
+#>   propagated. A sufficient element count alone does not establish a common
+#>   scale.
+#>   Offset_SD is residual spread, not the SE of the estimated offset; cumulative
+#>   offsets omit uncertainty across links.
 #> Links: 1 | Waves: Form1 -> Form2 
 #> 
 #> Link details:
-#>  Link  From    To N_Common N_Retained Min_Common_Per_Facet
-#>     1 Form1 Form2        8          8                    4
+#>  Link FromID ToID  From    To N_Common N_Retained Min_Common_Per_Facet
+#>     1      1    2 Form1 Form2        8          8                    4
 #>  Min_Retained_Per_Facet Offset_Prelim  Offset Offset_SD Max_Residual
 #>                       4       0.00211 0.00211     0.275        0.498
 #>  LinkSupportAdequate    Offset_Method

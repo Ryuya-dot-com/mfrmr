@@ -71,14 +71,14 @@ tbl <- apa_table(fit, which = "summary")
 summary(tbl)
 #> APA Table Summary
 #>  Branch Style   Which Rows Columns NumericColumns MissingValues
-#>     apa   apa summary    1      87             40            14
+#>     apa   apa summary    1      88             40            14
 #> 
 #> Caption
 #>  - Table 1
 #> Facet Summary (Measures, Precision, Fit, Reliability)
 #> 
 #> Note
-#>  - Measures are reported in logits; higher person values indicate higher ability, and higher non-person facet values indicate greater severity/difficulty (all non-person facets used the default negative orientation in this fit). Model S.E. = exploratory standard error; Real S.E. = fit-adjusted exploratory standard error; MnSq = mean-square fit. Report CI_Lower / CI_Upper (95%, Normal approximation) alongside measures for rows flagged CIEligible. Model = RSM; estimation = JML; N = 768 observations from 48 persons on a 4-category scale (1-4).
+#>  - Measures are reported in logits; higher person values indicate higher ability, and higher non-person facet values indicate greater severity/difficulty (all non-person facets used the default negative orientation in this fit). Model S.E. = exploratory standard error; Real S.E. = fit-adjusted exploratory standard error; MnSq = mean-square fit. Report eligible interval limits (95%, Normal approximation) alongside measures; intervals that do not meet the reporting requirements remain descriptive. Model = RSM; estimation = JML; N = 768 observations from 48 persons on a 4-category scale (1-4).
 #> 
 #> Numeric profile
 #>            Column N   Mean SD    Min    Max

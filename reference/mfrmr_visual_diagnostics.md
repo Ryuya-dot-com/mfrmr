@@ -48,6 +48,12 @@ Use
 for the formal per-helper boundary before choosing a `GPCM` follow-up
 plot route.
 
+Portable fixed-calibration score batches have a separate review route.
+Use `summary(scores)` and `plot(scores)` as described in
+[mfrm_calibration_score_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md).
+Those displays review returned scores; they do not replace source-fit
+diagnostics or establish calibration fit.
+
 ## Start with the question
 
 - "Do persons and facet levels overlap on the same logit scale?" Use
@@ -56,6 +62,11 @@ plot route.
 
 - "Where do score categories transition across theta?" Use
   `plot(fit, type = "pathway")` and `plot(fit, type = "ccc")`.
+
+- "How do measures and observed scores relate to Fair Scores?" Use
+  [`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+  with `plot_type = "measure"`, `"scatter"`, or `"difference"`. FairZ is
+  a zero-reference expected score, not a z-score.
 
 - "Is the design linked well enough across subsets or administrations?"
   Use `plot(subset_connectivity_report(...), type = "design_matrix")`,
@@ -75,10 +86,12 @@ plot route.
 - "Which level pairs drive strict local-dependence follow-up?" Use
   [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md).
 
-- "Do raters agree and do facets separate meaningfully?" Use
-  [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
-  [`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md),
+- "Do raters agree within observed shared scoring contexts?" Use
+  [`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md)
   and
+  [`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md).
+
+- "Do facet levels separate meaningfully?" Use
   [`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md).
 
 - "Do criteria within the same rater move together in a halo-like way?"
@@ -154,6 +167,12 @@ plot route.
   indicator because that panel's score-metric semantics are limited to
   the Rasch-family branch.
 
+- "I scored new Persons from a frozen portable calibration; which scores
+  require review and how wide are their conditional intervals?" Use
+  `summary(scores)` followed by `plot(scores, type = "interval")`.
+  Continue with `type = "precision"` or `type = "edge_mass"` when
+  response-count precision or quadrature-edge behavior needs follow-up.
+
 - "Which figures are already supported by my current run?" Use
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
   and review the `"Visual Displays"` rows before choosing the next plot.
@@ -168,6 +187,21 @@ plot route.
   theta-by-category-by-probability plot data for exploratory teaching or
   downstream interactive rendering. Keep 2D pathway/CCC plots as the
   default reporting figures.
+
+## Keep the network questions separate
+
+[`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md)
+describes the assignment/co-observation graph and is the relevant
+network route for disconnected measurement subsets.
+[`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
+describes pairwise score agreement, disagreement, or severity direction,
+while
+[`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md)
+describes rater-by-criterion score-profile correlations. The latter two
+do not establish assignment connectedness or a common scale. In all
+three, degree, strength, betweenness, and closeness are graph-theoretic
+quantities; they are not rating-scale central tendency, MFRM severity
+logits, or causal halo evidence.
 
 ## Recommended visual route
 
@@ -206,11 +240,16 @@ plot route.
 6.  Use `plot(..., draw = FALSE)` when you want reusable plot data
     instead of immediate graphics.
 
-7.  Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you
+7.  For an artifact-scored batch, use `summary(scores)` and
+    `plot(scores)`; keep its conditional-uncertainty note with the
+    figure and inspect every `scored_review` or `not_scored`
+    disposition.
+
+8.  Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you
     need 3D-ready category-probability data; `mfrmr` intentionally does
     not add a package-native plotly/rgl renderer for this route.
 
-8.  Use `preset = "publication"` when you want the package's cleaner
+9.  Use `preset = "publication"` when you want the package's cleaner
     manuscript-oriented styling, or `preset = "monochrome"` when
     journals, accessibility requirements, or print workflows require
     grayscale output.
@@ -271,6 +310,12 @@ the fitted object contains the required data:
   available,
   [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md)
   also exposes `$plot_payloads$category_probability_surface`.
+
+- Portable score-batch review: `plot(scores, type = "interval")`,
+  `"precision"`, or `"edge_mass"` after
+  [`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md).
+  These views retain selection accounting, review dispositions, and
+  Persons that could not be scored.
 
 - 3D-ready exploratory handoff:
   `plot(fit, type = "ccc_surface", draw = FALSE)` returns a
@@ -405,10 +450,10 @@ Wright map is meant to support.
 
 - [`plot_local_dependence_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_local_dependence_heatmap.md):
 
-  Yen Q3-style heatmap of pairwise residual correlations between facet
-  levels. Best for exploratory local-dependence screening; pairs with
-  very strong off-diagonal residual correlation merit content-level
-  review.
+  Standardized, aggregated-residual Q3-style heatmap of pairwise
+  residual correlations between facet levels. Best for exploratory
+  local-dependence screening; pairs with very strong off-diagonal
+  residual correlation merit content-level review.
 
 - [`plot_reliability_snapshot()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_reliability_snapshot.md):
 
@@ -430,6 +475,13 @@ Wright map is meant to support.
   shrunken facet estimates. Best on fits produced via
   [`apply_empirical_bayes_shrinkage()`](https://ryuya-dot-com.github.io/mfrmr/reference/apply_empirical_bayes_shrinkage.md)
   for reviewing how much each level moved under the prior.
+
+- `plot(scores, type = "interval")`:
+
+  Posterior EAP intervals for a portable fixed-calibration score batch,
+  with review dispositions highlighted. The intervals are conditional on
+  the frozen point calibration and exclude calibration-parameter
+  uncertainty.
 
 ## Cross-reference to FACETS / Winsteps tables
 
@@ -528,6 +580,11 @@ workflows, so column subsets and column names differ.
 - Residual PCA and bias plots should be interpreted as follow-up layers
   after the main fit screen, not as first-pass diagnostics.
 
+- Portable score plots review returned score batches only. Inspect the
+  source calibration separately, retain `not_scored` Persons in the
+  audit trail, and do not interpret conditional intervals as including
+  calibration-parameter uncertainty.
+
 - DFF residual- and refit-method plots are screening visuals. Current
   refit rows do not receive ETS A/B/C labels because their plug-in
   uncertainty omits baseline-anchor uncertainty and cross-refit
@@ -585,6 +642,53 @@ workflows, so column subsets and column names differ.
   -\> inspect the explicit facet, level, and group-pair columns before
   writing interpretation.
 
+## Figures with separate titles and interpretation
+
+Wright, expected-score pathway, CCC, and
+[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+displays accept `show_title = FALSE` and `show_notes = FALSE`. These
+options hide figure annotations while retaining axes, legends,
+structural panel labels, and the original title and notes in the
+returned `mfrm_plot_data` object. With
+`p <- plot(fit, type = "ccc", draw = FALSE, show_title = FALSE, show_notes = FALSE)`,
+inspect `p$data$notes` before writing a caption.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+respects the display options and retains notes in
+`attr(as_ggplot(p), "mfrmr_notes")`. Hiding annotations does not change
+readiness or interval eligibility.
+
+Use `preset = "monochrome"` for grayscale. Expected-score and CCC curves
+have six line types: solid, dashed, dotted, dotdash, longdash, and
+twodash. Fair-score plots have six point shapes. Encodings repeat beyond
+six series; use panels or select a facet instead of relying on gray
+levels alone. These controls are documented for the named routes, not
+every plotting helper in the package. Check the individual help page for
+other plots.
+
+Fair-score intervals remain diagnostic-only with full-refit coverage
+unverified. RSM/PCM plots propagate the focal measure SE while holding
+thresholds and reference measures fixed. GPCM-MML plots can use
+structural table SEs for non-Person rows, conditioning on Person
+EAP/reference means. `fair_average_table(fair_se = TRUE)` does not
+provide RSM/PCM fair-score SEs. See
+[`mfrmr_interval_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.md)
+and
+[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+for the status columns and the observed-minus-fair gap caveat.
+
+## Non-Latin and long labels
+
+Select an installed font that contains the characters in your labels
+before drawing. For example, on macOS, open a PNG device and set
+`par(family = "Hiragino Sans")` before `plot(fit)`. Use an appropriate
+installed font on other systems. A successful plot call alone does not
+confirm that the device rendered every character; inspect the saved
+figure. Long labels also require enough space. Use a wider device for
+rater-severity profiles. For crowded FACETS-style maps, use a taller or
+wider device, increase `rows_per_logit`, or switch to
+`renderer = "native"`. Full labels remain in the tables returned with
+`draw = FALSE`.
+
 ## Companion vignette
 
 For a longer, plot-first walkthrough, run
@@ -623,93 +727,41 @@ For a longer, plot-first walkthrough, run
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "MML",
-  quad_points = 7,
-  maxit = 30
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-checklist <- reporting_checklist(fit, diagnostics = diag)
-visual_reporting_template("manuscript")
-#>                     FigureFamily      Scope
-#> 1                     Wright map manuscript
-#> 2                    Pathway map manuscript
-#> 3 Category characteristic curves manuscript
-#> 5             Information curves manuscript
-#>                                                               PrimaryHelper
-#> 1                        plot(fit, type = "wright", preset = "publication")
-#> 2                       plot(fit, type = "pathway", preset = "publication")
-#> 3                           plot(fit, type = "ccc", preset = "publication")
-#> 5 compute_information(fit) -> plot_information(..., preset = "publication")
-#>                                                                    DefaultPlacement
-#> 1      Main text when targeting, spread, or shared-logit interpretation is central.
-#> 2 Main text or category-functioning subsection for ordered-category interpretation.
-#> 3       Main text or appendix; pair with pathway when category behavior is central.
-#> 5        Main text when precision or targeting across theta is a substantive claim.
-#>                                                                                   WhatToReport
-#> 1      Describe whether persons, facet levels, and thresholds overlap on the same logit scale.
-#> 2         Describe expected-score progression and the theta regions where categories dominate.
-#> 3 Describe whether categories peak in the intended order and whether adjacent curves separate.
-#> 5                   Describe where measurement information is highest or weakest across theta.
-#>                                                                                                                 CaptionSkeleton
-#> 1           Figure X. Wright map showing person measures, facet-level locations, and step thresholds on the shared logit scale.
-#> 2                    Figure X. Expected score pathway across theta, with dominant-category regions for the fitted rating scale.
-#> 3                                  Figure X. Category characteristic curves showing fitted category probabilities across theta.
-#> 5 Figure X. Test information curve showing where the fitted model provides relatively stronger or weaker measurement precision.
-#>                                                                                                                       ResultsWording
-#> 1           The Wright map was inspected to evaluate targeting and shared-scale overlap among persons, facet levels, and thresholds.
-#> 2 The pathway plot was inspected to evaluate whether expected scores and dominant-category regions progressed in the intended order.
-#> 3           The category characteristic curves were inspected to evaluate the ordering and separation of fitted response categories.
-#> 5            The information curve was inspected to identify theta regions with relatively stronger or weaker measurement precision.
-#>                                                                                            WhatNotToClaim
-#> 1                                                  Do not present targeting as proof of global model fit.
-#> 2                       Do not treat smooth category progression as proof that the rating scale is valid.
-#> 3 Do not overstate overlapping curves as definitive category failure without category counts and context.
-#> 5                    Do not ignore the precision tier or approximation caveats used to compute the curve.
-#>                                                               BeginnerCheck
-#> 1            Check gaps between person density and thresholds/facet levels.
-#> 2 Check whether the dominant-category bands progress in the expected order.
-#> 3   Check whether every retained category has a visible peak or clear role.
-#> 5   Check whether the information peak covers the theta region of interest.
-#>                                                 ThreeDPolicy
-#> 1            2D recommended; 3D Wright maps are discouraged.
-#> 2                                         2D report default.
-#> 3                                         2D report default.
-#> 5 2D curve route active; 3D information surface is deferred.
-subset(
-  checklist$checklist,
-  Section == "Visual Displays" & Item %in% c("QC / facet dashboard", "Strict marginal visuals"),
-  c("Item", "Available", "NextAction")
-)
-#>                       Item Available
-#> 26    QC / facet dashboard      TRUE
-#> 30 Strict marginal visuals      TRUE
-#>                                                                                                                       NextAction
-#> 26                     Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag.
-#> 30 Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics.
 
-qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
-qc$data$plot
-#> [1] "qc_dashboard"
+# Start with the shared-scale view; run plot commands one at a time
+plot(fit)
 
-p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
-p_marg$data$preset
-#> [1] "publication"
 
-wright <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
-wright$data$preset
-#> [1] "publication"
+# Compute diagnostics once and check their interpretation status
+diagnostics <- diagnose_mfrm(fit)
+review <- summary(diagnostics)
+review$decision
+#>               Interpretation FormalInference FitReadiness
+#> 1 Ready for formal inference             Yes        ready
+#>                                           Why
+#> 1 All stored fit-readiness components passed.
+#>                                                                                            NextAction
+#> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
 
-pca <- analyze_residual_pca(diag, mode = "overall")
-scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE, preset = "publication")
-scree$data$preset
-#> [1] "publication"
+# Inspect an overview of model-fit issues
+plot_qc_dashboard(fit, diagnostics = diagnostics)
+
+
+# Follow up on observed versus model-expected category frequencies
+plot_marginal_fit(diagnostics)
+
 # }
 ```

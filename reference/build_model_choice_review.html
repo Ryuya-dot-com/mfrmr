@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a model-choice review across RSM, PCM, and bounded GPCM fits</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_model_choice_review.Rd</code></div>
     </div>
 
@@ -139,10 +141,8 @@ q&lt;31 fits retain raw criteria but produce a screening/review-only bundle.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrm Model Choice Review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FitCount   Models HasBoundedGPCM OperationalReference SensitivityModel</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         2 RSM, PCM          FALSE                  RSM             &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ICComparable                     ReviewStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          TRUE rasch_family_model_choice_review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FitCount   Models OperationalReference SensitivityModel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2 RSM, PCM                  RSM             &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Next Actions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Read comparison_table for fit evidence, but decide operational use from the</span>
@@ -156,12 +156,9 @@ q&lt;31 fits retain raw criteria but produce a screening/review-only bundle.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model Method Persons Npar   LogLik      AIC      BIC    SABIC Delta_AIC</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM    MML      48    8 -900.013 1816.025 1830.995 1805.897     1.527</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM    MML      48   14 -893.249 1814.498 1840.695 1796.774     0.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Delta_BIC Delta_SABIC ICStatus ICIntegrationTier ICSelectable ICComparable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        0.0       9.123       ok    standard_start         TRUE         TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        9.7       0.000       ok    standard_start         TRUE         TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SABICComparable InferenceReady</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             TRUE           TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             TRUE           TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Delta_BIC Delta_SABIC InferenceReady</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        0.0       9.123           TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        9.7       0.000           TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Full IC audit fields remain available in `$comparison_table`.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model Contracts and Readiness</span>
@@ -177,21 +174,23 @@ q&lt;31 fits retain raw criteria but produce a screening/review-only bundle.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM     fixed at 1        0    0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fit readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model FitReadiness FormalInference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM        ready              No</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM        ready              No</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit gates passed; formal precision review required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit gates passed; formal precision review required</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RSM: numerical convergence: Passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PCM: numerical convergence: Passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model FormalInference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM              No</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM              No</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                          Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit-readiness requirements satisfied; formal precision review required</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit-readiness requirements satisfied; formal precision review required</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Full score contracts and readiness reasons remain in `$model_roles`.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Downstream Routes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model FullAPARoute ScoreSideExport LinkingSynthesis RecoveryChecks</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM    supported       supported        supported      supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM    supported       supported        supported      supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM    Available       Available        Available      Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM    Available       Available        Available      Available</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  FairAverage BiasScreening SummaryAppendix</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    supported     supported       supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    supported     supported       supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Available     Available       Available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Available     Available       Available</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighting Review Status</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Requested Available</span>

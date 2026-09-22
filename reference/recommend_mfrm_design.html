@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Recommend a design condition from simulation results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>recommend_mfrm_design.Rd</code></div>
     </div>
 
@@ -56,7 +58,10 @@
 <span>  max_severity_rmse <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  max_misfit_rate <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  min_convergence_rate <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  prefer <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"n_person"</span>, <span class="st">"raters_per_person"</span>, <span class="st">"n_rater"</span>, <span class="st">"n_criterion"</span><span class="op">)</span></span>
+<span>  prefer <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"n_person"</span>, <span class="st">"raters_per_person"</span>, <span class="st">"n_rater"</span>, <span class="st">"n_criterion"</span><span class="op">)</span>,</span>
+<span>  max_ratings <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_ratings_per_rater <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  require_connected <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -69,7 +74,9 @@
 
 
 <dt id="arg-facets">facets<a class="anchor" aria-label="anchor" href="#arg-facets"></a></dt>
-<dd><p>Facets that must satisfy the planning thresholds.</p></dd>
+<dd><p>Non-empty vector of facets that must satisfy the planning
+thresholds. By default, use the stored non-person facet names; for older
+objects without these names, use the non-person facets in the summary.</p></dd>
 
 
 <dt id="arg-min-separation">min_separation<a class="anchor" aria-label="anchor" href="#arg-min-separation"></a></dt>
@@ -98,13 +105,37 @@ optimized first when multiple designs pass. Custom public aliases from
 <code>sim_spec</code> are also accepted, as are the role keywords <code>person</code>, <code>rater</code>,
 <code>criterion</code>, and <code>assignment</code>.</p></dd>
 
+
+<dt id="arg-max-ratings">max_ratings<a class="anchor" aria-label="anchor" href="#arg-max-ratings"></a></dt>
+<dd><p>Optional upper bound on total rating rows in each
+evaluated replication. Supply a non-negative whole number, or <code>NULL</code>
+(default) to impose no limit.</p></dd>
+
+
+<dt id="arg-max-ratings-per-rater">max_ratings_per_rater<a class="anchor" aria-label="anchor" href="#arg-max-ratings-per-rater"></a></dt>
+<dd><p>Optional upper bound on rating rows assigned
+to any one rater-like facet level in each evaluated replication. Supply
+a non-negative whole number, or <code>NULL</code> (default) to impose no limit.</p></dd>
+
+
+<dt id="arg-require-connected">require_connected<a class="anchor" aria-label="anchor" href="#arg-require-connected"></a></dt>
+<dd><p>Logical; require both generated Person-facet
+assignment graphs to be connected in every recorded replication
+(default <code>TRUE</code>). This covers both non-person facets regardless of which
+performance metrics are selected through <code>facets</code>. Set <code>FALSE</code> only to
+explicitly omit this structural screen; the recorded status is retained.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list of class <code>mfrm_design_recommendation</code> with:</p><ul><li><p><code>facet_table</code>: facet-level threshold checks, including design-variable
 alias columns when applicable</p></li>
 <li><p><code>design_table</code>: design-level aggregated checks, including design-variable
-alias columns when applicable</p></li>
+alias columns when applicable, <code>MaxRatings</code>, <code>MaxRatingsPerRater</code>, and
+workload checks <code>RatingsPass</code> and <code>RaterWorkloadPass</code>. Its <code>Pass</code> requires
+the facet-level checks, active workload limits, and <code>ConnectivityPass</code>.
+Component maxima, <code>DisconnectedReps</code>, <code>ConnectivityStatus</code>, and the
+separate <code>LinkReviewStatus</code> / <code>LinkReviewReason</code> explain structural checks.</p></li>
 <li><p><code>recommended</code>: the first passing design after ranking</p></li>
 <li><p><code>thresholds</code>: thresholds used in the recommendation</p></li>
 <li><p><code>design_variable_aliases</code>: accepted public aliases for design variables</p></li>
@@ -112,20 +143,58 @@ alias columns when applicable</p></li>
 <li><p><code>planning_scope</code>: explicit record of the current planning contract</p></li>
 <li><p><code>planning_constraints</code>: explicit record of mutable/locked design variables</p></li>
 <li><p><code>planning_schema</code>: structured planning metadata</p></li>
-<li><p><code>caveats</code>: structured warning rows for situations where the
-recommendation rests on weak evidence (e.g., no design met every
-threshold; the recommended design is at the boundary of the
-evaluated grid; only one rep was simulated). Empty <code>tibble()</code>
-when no caveats apply.</p></li>
+<li><p><code>caveats</code>: fixed-effects and connectivity interpretations and suggested
+post-fit reviews</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This helper converts a design-study summary into a simple planning table.</p>
 <p>A design is marked as recommended when all requested facets satisfy all
 selected thresholds simultaneously.
+Each design must have results for every requested facet. Missing facets
+are reported in <code>FacetsMissing</code> and prevent that design from passing;
+<code>FacetsRequired</code> always counts the requested facets, not the available rows.
+Designs with none of the requested facets have no facet-check rows and
+cannot be recommended. A requested facet absent from the entire summary
+produces an error.
 If multiple designs pass, the helper returns the smallest one according to
 <code>prefer</code> (by default: fewer persons first, then fewer ratings per person,
-then fewer raters, then fewer criteria).</p>
+then fewer raters, then fewer criteria).
+The convergence threshold uses all recorded replications, including
+failures that returned no facet metrics, as summarized by
+<code><a href="summary.mfrm_design_evaluation.html">summary.mfrm_design_evaluation()</a></code>.</p>
+<p>The connectivity screen uses generated assignments, including failed fits
+and diagnostic runs. <code>ConnectivityStatus</code> is <code>"disconnected"</code> if any
+recorded graph is disconnected, <code>"connected"</code> if both graphs are connected
+in every replication, and <code>"not_assessed"</code> otherwise. With the default
+<code>require_connected = TRUE</code>, only <code>"connected"</code> passes. Older saved objects
+without component counts cannot pass this screen; re-summarizing alone
+cannot recover the missing assignment evidence.</p>
+<p>This is a conservative screen for comparisons supported by shared-person
+assignments, not a test of full model identification or adequate precision.
+MML population assumptions can supply information beyond these connections;
+disabling the screen does not validate that assumption-based comparison.
+Connections may be indirect, so a rater pair without common persons is
+not by itself evidence of a disconnected design. <code>LinkReviewStatus</code> and
+<code>LinkReviewReason</code> carry the separate sparse-design overlap review:
+<code>"review"</code> flags a missing overlap count, a pair without common persons,
+or a pair below its recorded target; <code>"ok"</code> means those recorded checks
+pass, and <code>"not_assessed"</code>
+means no sparse overlap target was assessed. They do not change <code>Pass</code>;
+overlap counts alone do not establish precision or a universal minimum.</p>
+<p>Workload limits apply to the maxima across all recorded replications,
+including failed fits and diagnostic runs. One rating is one generated
+person-rater-criterion row, not a bundle of criteria or a weighted count.
+For example, two raters each scoring three criteria for ten persons use
+60 ratings, with 30 per rater. Counts use the actual assignment, including
+linking persons and uneven or incomplete skeletons. A design cannot pass
+an active limit when its corresponding count is missing. Older evaluation
+objects can be re-summarized for total counts, but per-rater counts require
+an evaluation that recorded <code>MaxRatingsPerRater</code>.</p>
+<p>These checks describe the evaluated assignments. With randomized
+assignments, an observed maximum does not guarantee that future assignments
+will respect the same limit. The limits constrain workload, not monetary
+cost or scoring time. Ranking among passing designs still follows <code>prefer</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -152,14 +221,18 @@ then fewer raters, then fewer criteria).</p>
 <span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span>,</span></span>
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">recommend_mfrm_design</span><span class="op">(</span><span class="va">sim_eval</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">recommend_mfrm_design</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">sim_eval</span>, max_ratings <span class="op">=</span> <span class="fl">48</span>, max_ratings_per_rater <span class="op">=</span> <span class="fl">24</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rec</span><span class="op">$</span><span class="va">recommended</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 0 × 14</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 14 variables: design_id &lt;chr&gt;, n_person &lt;dbl&gt;, n_rater &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 0 × 26</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 26 variables: design_id &lt;chr&gt;, n_person &lt;dbl&gt;, n_rater &lt;dbl&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   n_criterion &lt;dbl&gt;, raters_per_person &lt;dbl&gt;, FacetsChecked &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MinSeparation &lt;dbl&gt;, MinReliability &lt;dbl&gt;, MaxSeverityRMSE &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxMisfitRate &lt;dbl&gt;, MinConvergenceRate &lt;dbl&gt;, FacetsPassing &lt;int&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   FacetsRequired &lt;int&gt;, Pass &lt;lgl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   FacetsMissing &lt;chr&gt;, MinSeparation &lt;dbl&gt;, MinReliability &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxSeverityRMSE &lt;dbl&gt;, MaxMisfitRate &lt;dbl&gt;, MinConvergenceRate &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxRatings &lt;dbl&gt;, MaxRatingsPerRater &lt;dbl&gt;, MaxRaterComponents &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxCriterionComponents &lt;dbl&gt;, DisconnectedReps &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   LinkReviewStatus &lt;chr&gt;, LinkReviewReason &lt;chr&gt;, FacetsPassing &lt;int&gt;, …</span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

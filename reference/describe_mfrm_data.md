@@ -1,6 +1,10 @@
-# Summarize MFRM input data (TAM-style descriptive snapshot)
+# Check rating data before fitting an MFRM
 
-Summarize MFRM input data (TAM-style descriptive snapshot)
+Inspect how many rating rows can be used, how often each score category
+occurs, and whether facet levels connect through shared persons. This
+function prepares descriptive checks; it does not fit a model or change
+the data object supplied by the caller. Each row should represent one
+rating, and `person`, `facets`, and `score` name its columns.
 
 ## Usage
 
@@ -178,11 +182,10 @@ A list of class `mfrm_data_description` with:
 
 ## Details
 
-This function provides a compact descriptive bundle similar to the
-pre-fit summaries commonly checked in TAM workflows: sample size, score
-distribution, per-facet coverage, and linkage counts.
-[`psych::describe()`](https://rdrr.io/pkg/psych/man/describe.html) is
-used for numeric descriptives of score and weight.
+Set `rating_min` and `rating_max` from the rubric, including categories
+nobody received. Use `keep_original = TRUE` to preserve its category
+structure in the review. Numeric descriptives of score and weight use
+[`psych::describe()`](https://rdrr.io/pkg/psych/man/describe.html).
 
 **Key data-quality checks to perform before fitting:**
 
@@ -197,19 +200,27 @@ used for numeric descriptives of score and weight.
   facet-specific check is conservative and does not by itself prove full
   model identification.
 
-- *Extreme scores*: persons or facet levels with all-minimum or
-  all-maximum scores yield infinite logit estimates under JML; they are
-  handled via Bayesian shrinkage under MML.
+- *Extreme scores*: MML uses a person distribution to obtain posterior
+  person scores, including for persons with all-minimum or all-maximum
+  scores. Non-person facets remain fixed effects: an extreme rater or
+  criterion is not given a prior or automatically shrunk by
+  choosing MML. Review the fitted boundary and precision evidence before
+  interpretation.
 
 ## Interpreting output
 
 Recommended order:
 
-- `overview`: confirms sample size, facet count, and category span.
+- `overview`: confirms retained ratings (`Observations`), persons,
+  facets, and category span. Use `row_retention` to compare input and
+  retained `Rows`; `DroppedRows` counts exclusions during preparation.
 
-- `missing_by_column`: identifies immediate data-quality risks.
-  Understand why values are missing and whether the fitted missing-data
-  handling matches the study design.
+- `missing_by_column`: counts `NA` values in the input columns. A
+  missing score or required identifier excludes that rating row, not
+  automatically the person's other ratings. The package does not fill
+  missing ratings. When `missing_codes` is supplied, these counts still
+  describe the original input; inspect `missing_recoding` and
+  `preparation_notes` as well.
 
 - `structural_missingness`: compares observed rating cells with
   `expected_design`, when supplied. Without a declared roster,
@@ -228,37 +239,131 @@ Recommended order:
   scorer facet (exact agreement, correlation, and mean differences per
   pair).
 
+`data_review <- describe_mfrm_data(...)` saves all these checks.
+`review <- summary(data_review)` provides a compact view; its
+missingness table is named `review$missing`, while the original full
+table is `data_review$missing_by_column`. Summary previews use
+`top_n = 10` by default. Use the original tables to inspect all rows or
+categories.
+
+## If the input needs attention
+
+- **Column name not found:** run `names(ratings)` and match spelling,
+  spaces, and case in `person`, `facets`, and `score`.
+
+- **Unexpected row loss:** inspect `row_retention`, `missing_by_column`,
+  and `preparation_notes`. Resolve unintended missing IDs and invalid
+  score text in the input data. For documented score markers such as
+  `99` or `.`, use
+  [`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md)
+  with explicit `columns` and `codes`.
+
+- **Repeated person-by-facet cells:** inspect `duplicate_cell_detail`.
+  Correct accidental duplicates; include a task or occasion facet when
+  ratings represent distinct events in the design.
+
+- **Unused category or disconnected design:** inspect
+  `score_distribution` and `design_connectivity`. Review the rubric and
+  assignments before changing the model. A retained internal zero-count
+  category stops fitting; extra optimizer iterations cannot supply the
+  missing category information.
+
+After editing or recoding ratings, rerun this review on the corrected
+data and pass that same data to
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+using the same columns, score bounds, and `keep_original` setting. If
+you use `missing_codes` within the review instead of recoding first,
+supply the same option to the fit: reviewing does not modify the
+original data. For CSV import, column mapping, and a complete worked
+example, see
+[`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md).
+
 ## Typical workflow
 
-1.  Run `describe_mfrm_data()` on long-format input.
+1.  Run `data_review <- describe_mfrm_data(...)` on the rating data.
 
-2.  Review `summary(ds)` and `plot(ds, ...)`.
+2.  Inspect row retention, category counts, and design connectivity.
 
-3.  Resolve missingness/sparsity issues before
+3.  Correct input issues, repeat the review, and fit the reviewed data
+    with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+[`summary.mfrm_data_description()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_data_description.md),
+[`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md),
+[mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md),
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
 
 ## Examples
 
 ``` r
-toy <- load_mfrmr_data("example_core")
-ds <- describe_mfrm_data(
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+#>                Study Person Rater    Criterion Score Group
+#> 1 OperationalExample   P001   R01     Language     4     A
+#> 2 OperationalExample   P001   R01 Organization     2     A
+#> 3 OperationalExample   P001   R02      Content     4     A
+#> 4 OperationalExample   P001   R02     Language     3     A
+#> 5 OperationalExample   P001   R02 Organization     2     A
+#> 6 OperationalExample   P002   R01      Content     3     A
+
+# Check the data before fitting; the intended score categories are 1 to 4
+data_review <- describe_mfrm_data(
   data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
-  score = "Score"
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  keep_original = TRUE
 )
-s_ds <- summary(ds)
-s_ds$overview
+data_review$row_retention       # Input and retained rows; check DroppedRows
+#>                             Stage Rows DroppedRows
+#> 1          input_selected_columns  282           0
+#> 2 after_missing_and_weight_filter  282           0
+#>                            DroppedReason
+#> 1                                       
+#> 2 missing values or non-positive weights
+data_review$missing_by_column   # Missing input values in each model column
+#> # A tibble: 4 × 2
+#>   Column    Missing
+#>   <chr>       <int>
+#> 1 Person          0
+#> 2 Rater           0
+#> 3 Criterion       0
+#> 4 Score           0
+data_review$score_distribution  # RawN is the number of ratings per category
+#> # A tibble: 4 × 4
+#>   Score  RawN WeightedN Percent
+#>   <int> <int>     <dbl>   <dbl>
+#> 1     1    62        62    22.0
+#> 2     2    96        96    34.0
+#> 3     3    78        78    27.7
+#> 4     4    46        46    16.3
+data_review$design_connectivity # Components = 1 means connected for that facet
+#>      Basis     Facet PersonNodes FacetLevelNodes Edges Components
+#> 1 observed     Rater          48               6    96          1
+#> 2 observed Criterion          48               3   144          1
+#>   LargestComponentPersons LargestComponentLevels LargestComponentPercent
+#> 1                      48                      6                     100
+#> 2                      48                      3                     100
+#>   Connected
+#> 1      TRUE
+#> 2      TRUE
+# Here all 282 rows are retained, and all four categories have observations
+
+# Save a compact summary when you want the overview and review notes
+review <- summary(data_review)
+review$overview
 #>   Observations TotalWeight Persons Facets Categories RatingMin RatingMax
-#> 1          768         768      48      2          4         1         4
+#> 1          282         282      48      2          4         1         4
 #>   RatingRangeSource RatingMinSource RatingMaxSource
-#> 1          observed        observed        observed
-p_ds <- plot(ds, draw = FALSE)
-p_ds$data$plot
-#> [1] "score_distribution"
+#> 1          declared        declared        declared
+review$notes
+#> [1] "No missing values were detected in selected input columns."                                                                                                  
+#> [2] "Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned."
+# For the next fit, use data = toy; data_review is a set of checks, not ratings
 ```

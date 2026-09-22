@@ -137,7 +137,7 @@ precision-review role so fit, ZSTD, separation/reliability/strata, and
 package review thresholds can be reported without turning them into
 universal recovery criteria. Fit-measure and FACETS fit-review summaries
 keep df/ZSTD sensitivity and optional external FACETS matching tables in
-the same precision-review lane.
+the same precision-review section.
 
 Parameter-recovery studies can be exported by passing
 [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
@@ -191,6 +191,6 @@ appendix <- export_summary_appendix(
 )
 appendix$summary
 #>   BundlesWritten FilesWritten CsvWritten TextWritten HtmlWritten ZipWritten
-#> 1              2           48         45           2           1          0
+#> 1              2           46         43           2           1          0
 # }
 ```

@@ -40,8 +40,11 @@ shrinkage_report(fit)
 #>       Facet NLevels NLevelsUsed       Tau2     MeanSE2 MeanShrinkage
 #> 1     Rater       4           4 0.06403506 0.009500135     0.1291914
 #> 2 Criterion       4           4 0.05259214 0.009500604     0.1530053
-#>   EffectiveDF          Method PriorSource Note
-#> 1    3.483234 empirical_bayes   empirical <NA>
-#> 2    3.387979 empirical_bayes   empirical <NA>
+#>   EffectiveDF          Method PriorSource Note SupportsFormalInference
+#> 1    3.483234 empirical_bayes   empirical <NA>                   FALSE
+#> 2    3.387979 empirical_bayes   empirical <NA>                   FALSE
+#>                                                                                                                                                             Interpretation
+#> 1 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
+#> 2 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
 # }
 ```

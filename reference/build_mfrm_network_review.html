@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an MFRM network review</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>build_mfrm_network_review.Rd</code></div>
     </div>
 
@@ -120,7 +122,7 @@ peer-review design, and rater-effect network routes</p></li>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code>build_mfrm_network_review()</code> is a synthesis layer over
 <code><a href="mfrm_network_analysis.html">mfrm_network_analysis()</a></code>. It keeps the measurement model and graph view in
-separate lanes: MFRM estimates remain the measurement results, while the
+separate sections: MFRM estimates remain the measurement results, while the
 network review summarizes co-observation connectedness and linking
 vulnerability in the observed design. This is especially useful for sparse
 or incomplete rater-mediated designs, where common-person links, connected
@@ -176,8 +178,8 @@ NCME presentation.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Table index</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Table Rows Cols                        Role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           overview    1   11     network_review_overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary    1   13      network_design_summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           overview    1   14     network_review_overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary    1   16      network_design_summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      facet_summary    3    8 network_facet_vulnerability</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  top_central_nodes   10   11       network_central_nodes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      top_cut_nodes    0   11  network_articulation_nodes</span>
@@ -200,8 +202,8 @@ NCME presentation.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Plot index</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Table PlotReady NumericColumns               DefaultPlotTypes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           overview      TRUE              7 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary      TRUE             12 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           overview      TRUE              9 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    network_summary      TRUE             14 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      facet_summary      TRUE              7 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  top_central_nodes      TRUE              7 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      top_cut_nodes     FALSE              7                               </span>
@@ -214,7 +216,7 @@ NCME presentation.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - MFRM estimates remain the measurement-model results; network rows summarize observed design links.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Articulation points and bridge edges identify levels or links whose removal would fragment the co-observation graph.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit gates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit-readiness decisions.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - 2 empty table(s) were omitted from `tables`; use `include_empty = TRUE` to retain them.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

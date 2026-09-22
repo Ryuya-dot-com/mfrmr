@@ -32,7 +32,9 @@ fair_average_table(
 - diagnostics:
 
   Optional output from
-  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+  [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+  for this `fit`. Matching saved diagnostics are reusable; recompute
+  them after refitting.
 
 - facets:
 
@@ -45,11 +47,11 @@ fair_average_table(
 
 - umean:
 
-  Additive score-to-report origin shift.
+  Additive origin shift for Measure (not fair-score values).
 
 - uscale:
 
-  Multiplicative score-to-report scale.
+  Multiplicative scale for Measure and measure SEs (not fair scores).
 
 - udecimals:
 
@@ -71,7 +73,11 @@ fair_average_table(
 
 - xtreme:
 
-  Extreme-score adjustment amount.
+  Display adjustment in score units for all-minimum/all-maximum rows;
+  default `0` leaves fitted measures unchanged. A positive value
+  replaces the displayed `Measure` by inversion of an expected score
+  that far from the endpoint. It does not adjust responses, refit the
+  model or correct JML bias.
 
 - fair_se:
 
@@ -111,7 +117,26 @@ appended to the formatted outputs.
 For the Rasch-family `RSM` / `PCM` branch, these tables follow the
 standard FACETS Linacre construction: fair averages are
 Rasch-measure-to-score transformations evaluated in a standardized
-mean/zero-facet environment.
+mean/zero-facet environment. FairM uses mean other-facet measures (and
+mean person measure for non-person rows); FairZ uses zero references.
+Neither integrates over the observed assignment/person distribution.
+FairZ and its historical alias `StandardizedAdjustedAverage` are
+expected scores, not z-scores. If a free JML Person measure is infinite,
+the mean Person reference is unavailable: non-Person FairM values are
+`NA`, with the reason recorded in `FairMReference`. Finite optimizer
+traces are not substituted into that mean. FairZ uses a zero Person
+reference and does not require this mean.
+
+With `xtreme > 0`, `PrimaryMeasure` retains the fitted measure,
+including infinite JML estimates and fixed anchors, on the requested
+reporting scale. `MeasureBasis` identifies display-only replacements and
+`ExtremeAdjustment` records their amount in score units. The displayed
+`Measure` may differ from a fixed anchor; the anchor itself is
+unchanged. Measure SEs are unavailable on replaced rows because the
+original SE does not describe the display adjustment. Fair-score
+calculations do not use the replacement. Recompute older diagnostics and
+recreate saved tables from the existing fit before summarizing or
+plotting them; no model refit is needed.
 
 Bounded `GPCM` fits are supported under a slope-aware
 element-conditional construction. For each slope-facet element
@@ -130,11 +155,11 @@ or as an operational scoring rule unless that convention is
 substantively justified.
 
 Standard errors on the fair-average value itself are opt-in for MML
-bounded `GPCM` fits via `fair_se = TRUE`. The original `SE`,
-`Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE` columns
-retain the same meaning as for PCM (scaled facet-measure SEs);
-fair-average uncertainty is reported under distinct columns such as
-`Fair(M) S.E.`, `Fair(M) CI Lower`, and `AdjustedAverageSE`.
+bounded `GPCM` fits via `fair_se = TRUE`. The `Model S.E.`,
+`ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE` columns retain the same
+meaning as for PCM (scaled facet-measure SEs); fair-average uncertainty
+is reported under distinct columns such as `Fair(M) S.E.`,
+`Fair(M) CI Lower`, and `AdjustedAverageSE`.
 
 ## Interpreting output
 
@@ -142,12 +167,13 @@ fair-average uncertainty is reported under distinct columns such as
 
 - `by_facet`: per-facet formatted tables for reporting.
 
-- `raw_by_facet`: unformatted values for custom analyses/plots.
+- `raw_by_facet`: unformatted values for custom analyses/plots;
+  identifiers use the column `Level`.
 
 - `settings`: scoring-transformation and filtering options used.
 
-Larger observed-vs-fair gaps can indicate systematic scoring tendencies
-by specific facet levels.
+Observed-vs-fair gaps also reflect person mix and assignment. They are
+descriptive follow-up prompts, not standalone evidence of rater bias.
 
 ## Typical workflow
 
@@ -160,13 +186,14 @@ by specific facet levels.
 
 ## Output columns
 
-The `stacked` data.frame contains:
+The `stacked` data.frame contains the following columns, selected by
+`reference`, `label_style`, and `fair_se`:
 
 - Facet:
 
   Facet name for this row.
 
-- Level:
+- Element:
 
   Element label within the facet.
 
@@ -180,7 +207,7 @@ The `stacked` data.frame contains:
 
 - Fair(Z) Average:
 
-  Standardized adjusted reference average.
+  Expected score at a zero reference environment, not a z-score.
 
 - ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage:
 
@@ -199,11 +226,23 @@ The `stacked` data.frame contains:
 
 - Measure:
 
-  Estimated logit measure for this level.
+  Displayed facet measure, transformed by `umean` and `uscale`; may be
+  replaced when `xtreme > 0`.
 
-- SE:
+- PrimaryMeasure:
 
-  Compatibility alias for the model-based standard error.
+  Original fitted measure on the same reporting scale, including
+  infinite JML estimates.
+
+- MeasureBasis, ExtremeAdjustment:
+
+  Whether the displayed measure was replaced and the replacement amount
+  in score units.
+
+- FairMReference:
+
+  The mean reference used for FairM, or why that reference is
+  unavailable.
 
 - ModelBasedSE, FitAdjustedSE:
 
@@ -215,22 +254,34 @@ The `stacked` data.frame contains:
 
 ## Standard-error caveat (read before quoting CIs)
 
-The `SE`, `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE`
+The `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE`
 columns in this table are the **measure-level** standard errors of the
-underlying facet element (the same SE that would appear in
-`summary(fit)$facets`), rescaled by the fair-average score scale factor
-so the units line up with the reported `Fair(M) Average` /
-`Fair(Z) Average` columns. They are **not** delta-method standard errors
-of the fair-average values themselves. When `fair_se = TRUE`, the
-distinct `Fair(M) S.E.` / `Fair(Z) S.E.` columns are computed by
-propagating the joint covariance of the relevant facet element, the
-threshold parameters, and the slope parameters through the gradient of
-\\\mathrm{E}\[X \mid \theta_p, j^\star\]\\. This is a structural
-covariance calculation: MML person EAP estimates are conditioned on
-rather than included in the Hessian, so person rows receive unavailable
-fair-average SEs. **Do not use the measure-level `SE` / `Model S.E.`
-columns as \\\pm 1.96 \cdot \mathrm{SE}\\ confidence-interval bounds on
-the fair-average value.**
+underlying facet element, rescaled by `abs(uscale)` to the reported
+Measure units. Fair scores remain on the fitted internal score scale.
+They are **not** delta-method standard errors of the fair-average values
+themselves. When `fair_se = TRUE`, the distinct `Fair(M) S.E.` /
+`Fair(Z) S.E.` columns are computed by propagating the joint covariance
+of the relevant facet element, the threshold parameters, and the slope
+parameters through the gradient of \\\mathrm{E}\[X \mid \theta_p,
+j^\star\]\\. This is a structural covariance calculation: MML person EAP
+estimates are conditioned on rather than included in the Hessian, so
+person rows receive unavailable fair-average SEs. **Do not use the
+measure-level `ModelBasedSE` / `Model S.E.` columns as \\\pm 1.96 \cdot
+\mathrm{SE}\\ confidence-interval bounds on the fair-average value.**
+`FairCIEligible` is `FALSE` for these diagnostic intervals; numerical
+availability (`ok` or `regularized`) does not establish inferential
+validity. `FairCIReportingUse` distinguishes diagnostic-only and
+unavailable rows. Full-refit coverage remains unverified. For RSM/PCM,
+this table does not supply fair-score SEs;
+[`plot_fair_average()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_fair_average.md)
+can compute a conditional interval from a fitted model by propagating
+only the focal measure SE. Summaries identify `FairMetric`: FairM for
+mean/both reference tables, FairZ for zero-reference tables, with
+matching score/SE column names. Export `stacked` or the summary's
+`summary` / `preview` data.frames with
+[`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html).
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
+does not accept this bundle.
 
 ## References
 
@@ -240,10 +291,10 @@ the fair-average value.**
   Press.
 
 - Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
-  Winsteps.com. <https://www.winsteps.com/facets.htm> (FACETS Table 12
-  corresponds to the fair-average construction implemented here for
-  `RSM` / `PCM` fits; the slope-aware element-conditional construction
-  for bounded `GPCM` is documented in this help page.)
+  Winsteps.com. (FACETS Table 12 corresponds to the fair-average
+  construction implemented here for `RSM` / `PCM` fits; the slope-aware
+  element-conditional construction for bounded `GPCM` is documented in
+  this help page.)
 
 - Andrich, D. (1978). A rating formulation for ordered response
   categories. *Psychometrika, 43*(4), 561-573.
@@ -267,61 +318,37 @@ the fair-average value.**
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
-t12 <- fair_average_table(fit, udecimals = 2)
-t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
-summary(t12)
-#> mfrmr Adjusted Score Summary 
-#>   Class: mfrm_fair_average
-#>   Components: 4
-#> 
-#> Overview
-#>  Facets Levels MeanAbsObservedFairM FairSERequested FairSEAvailableRows
-#>       3     56                0.012           FALSE                   0
-#>  FairSEUnavailableRows  FairSEMethod  FairSEStatus MeanAdjustedAverageSE
-#>                      0 not_requested not_requested                    NA
-#>  MaxAdjustedAverageSE AdjustedAverageCILevel
-#>                    NA                     NA
-#> 
-#> Facet-level adjusted-score rows: stacked
-#>      Facet        Level ObservedAverage AdjustedAverage
-#>      Rater          R02            2.68            2.73
-#>  Criterion      Content            2.73            2.78
-#>      Rater          R01            2.61            2.64
-#>      Rater          R04            2.32            2.29
-#>     Person <suppressed>            3.62            3.64
-#>     Person <suppressed>            3.12            3.14
-#>     Person <suppressed>            1.50            1.48
-#>     Person <suppressed>            1.88            1.86
-#>     Person <suppressed>            1.88            1.86
-#>     Person <suppressed>            1.88            1.86
-#> 
-#> Settings
-#>          Setting   Value
-#>           facets    NULL
-#>       totalscore    TRUE
-#>            umean       0
-#>           uscale       1
-#>        udecimals       2
-#>        reference    both
-#>      label_style    both
-#>  omit_unobserved   FALSE
-#>           xtreme       0
-#>          fair_se   FALSE
-#>         ci_level    0.95
-#>            model     RSM
-#>           method PCM/RSM
-#> 
-#> Notes
-#>  - Adjusted-score reference summary by facet level.
-#>  - Fair-average structural SE columns are omitted unless requested by `fair_se
-#>    = TRUE`.
-#>  - Person identifiers are suppressed in this summary. Use `include_person =
-#>    TRUE` only under appropriate privacy controls.
-p_t12 <- plot(t12, draw = FALSE)
-p_t12$data$plot
-#> [1] "difference"
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Compare observed person means with model-based scores on a common reference
+fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
+                           reference = "mean", label_style = "native")
+head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
+#> # A tibble: 6 × 3
+#>   Level ObservedAverage FairM
+#>   <chr>           <dbl> <dbl>
+#> 1 P045             3.67  3.45
+#> 2 P015             3.67  3.44
+#> 3 P036             3.33  3.33
+#> 4 P030             3.33  3.28
+#> 5 P027             3.17  3.16
+#> 6 P025             3     3.02
+# FairM uses the mean reference for the other facets; it is in score units
+# It is a conditional model prediction, not a guarantee of fairness
 # }
 ```

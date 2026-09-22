@@ -13,7 +13,7 @@ facet_quality_dashboard(
   bias_results = NULL,
   severity_warn = 1,
   misfit_warn = NULL,
-  central_tendency_max = 0.25,
+  central_tendency_max = NULL,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
   bias_abs_size_warn = 0.5,
@@ -56,8 +56,12 @@ facet_quality_dashboard(
 
 - central_tendency_max:
 
-  Absolute estimate cutoff used to flag central tendency. Levels near
-  zero are marked.
+  Legacy opt-in absolute estimate cutoff for marking facet estimates
+  near the fitted origin. The default `NULL` disables this flag because
+  origin proximity is not evidence that a rater avoids extreme score
+  categories. Use
+  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+  for observed category-use and restriction-of-range screening.
 
 - bias_count_warn:
 
@@ -106,25 +110,39 @@ complementary criteria:
   symmetric \\\[1/\\`misfit_warn`\\,\\\\`misfit_warn`\\\]\\ form
   (0.67-1.5).
 
-- **Central tendency**: elements with \\\|\mathrm{Estimate}\| \<\\
-  `central_tendency_max` logits are flagged. Near-zero estimates may
-  indicate a rater who avoids extreme categories, producing artificially
-  narrow score ranges.
+- **Reference proximity (legacy `CentralTendencyFlag` label)**: when
+  `central_tendency_max` is supplied, elements with
+  \\\|\mathrm{Estimate}\| \<\\ `central_tendency_max` logits are marked.
+  This only describes proximity to the fitted origin and must not be
+  interpreted as central-category use or restriction of range. Those are
+  response-pattern questions handled by
+  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md).
 
 - **Bias**: elements involved in \\\ge\\ `bias_count_warn`
   screen-positive interaction cells (from
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md))
   are flagged.
 
-A **flag density** score counts how many of the four criteria each
-element triggers. Elements flagged on multiple criteria warrant priority
-review and may motivate training or a documented data-quality review;
-the dashboard does not justify automatic row, person, or rater
-exclusion.
+A **flag density** score counts how many enabled criteria each element
+triggers. Elements flagged on multiple criteria warrant priority review
+and may motivate training or a documented data-quality review; the
+dashboard does not justify automatic row, person, or rater exclusion.
 
 Default thresholds are screening heuristics. Prespecify and justify any
 application-specific alternatives rather than treating them as universal
-validity or acceptance criteria.
+validity or acceptance criteria. `MissingMetrics` lists unavailable
+estimate, SE, Infit or Outfit values. A severity or misfit flag is `NA`
+when it cannot be evaluated (an observed misfit exceedance still flags
+even if the other fit index is unavailable). `FlagCount` counts observed
+flags only; zero is not a complete pass. `IncompleteLevels` counts
+levels with any missing diagnostic. Bias counts describe supplied
+results only, not tests of absence of bias. Fit-readiness restrictions
+are retained in `fit_readiness`, `interpretation_status` and `notes`.
+Review overlap with
+[`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
+and category use with
+[`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+before interpreting between-rater differences.
 
 ## Output
 
@@ -178,60 +196,16 @@ summary(dash)
 #> mfrmr Facet Quality Dashboard Summary
 #> 
 #> Overview
-#>  Facet FacetSource Levels FlaggedLevels BiasSourceBundles
-#>  Rater    inferred      4             2                 0
+#>  Facet FacetSource Levels FlaggedLevels IncompleteLevels BiasSourceBundles
+#>  Rater    inferred      4             0                0                 0
 #> 
 #> Summary
 #>  Facet Levels MeanEstimate   SD MinEstimate MaxEstimate MeanInfit MeanOutfit
 #>  Rater      4            0 0.26      -0.322       0.315     0.997      0.978
 #>  SeverityFlagged MisfitFlagged CentralTendencyFlagged BiasFlagged AnyFlagged
-#>                0             0                      2           0          2
+#>                0             0                      0           0          0
 #>  BiasRows
 #>         0
-#> 
-#> Flagged levels
-#>  Facet Level Estimate ParameterStatus BoundaryDirection ResponseExtreme
-#>  Rater   R01    0.003            <NA>              <NA>            <NA>
-#>  Rater   R02    0.003            <NA>              <NA>            <NA>
-#>  OptimizerEstimate DisplayEstimate DisplayAdjustment PrimaryEstimateBasis
-#>                 NA              NA              <NA>                 <NA>
-#>                 NA              NA              <NA>                 <NA>
-#>  OptimizerEstimateUse ReasonCodes ReadinessContractVersion SourceFitReadiness
-#>                  <NA>        <NA>                     <NA>               <NA>
-#>                  <NA>        <NA>                     <NA>               <NA>
-#>  SourceInferenceReady EstimateUse N.x    SE ModelSE RealSE
-#>                    NA        <NA>  32 0.252   0.252  0.289
-#>                    NA        <NA>  32 0.252   0.252  0.252
-#>                      SE_Method Converged InferenceReady ConvergenceSeverity
-#>  Observation-table information      TRUE           TRUE                pass
-#>  Observation-table information      TRUE           TRUE                pass
-#>  PrecisionTier SupportsFormalInference          SEUse
-#>    exploratory                   FALSE screening_only
-#>    exploratory                   FALSE screening_only
-#>                                                CIBasis          CIUse N.y Infit
-#>  Normal interval from exploratory observation-table SE screening_only  32 1.321
-#>  Normal interval from exploratory observation-table SE screening_only  32 0.943
-#>  Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit N.x.x ObservedAverage
-#>   1.277     0.937      1.101   15.765        32    32            2.75
-#>   0.912    -0.046     -0.278   15.765        32    32            2.75
-#>  ExpectedAverage Bias MeanResidual MeanStdResidual MeanAbsStdResidual  ChiSq
-#>             2.75    0            0          -0.026              0.922 40.856
-#>             2.75    0            0           0.011              0.779 29.192
-#>  ChiDf  ChiP SE_Residual t_Residual p_Residual SE_StdResidual t_StdResidual
-#>     31 0.111       0.124          0          1          0.177        -0.149
-#>     31 0.559       0.124          0          1          0.177         0.063
-#>  p_StdResidual DF PTMEA N.y.y BoundaryExcluded CI_Lower CI_Upper CI_Level
-#>          0.882 31 0.609    32            FALSE    -0.49    0.497     0.95
-#>          0.950 31 0.667    32            FALSE    -0.49    0.497     0.95
-#>             CI_Method CIEligible                              CILabel  N
-#>  Normal approximation      FALSE Approximate interval; screening only 32
-#>  Normal approximation      FALSE Approximate interval; screening only 32
-#>  AbsEstimate SeverityFlag MisfitFlag CentralTendencyFlag BiasCount BiasSources
-#>        0.003        FALSE      FALSE                TRUE         0           0
-#>        0.003        FALSE      FALSE                TRUE         0           0
-#>  BiasFlag FlagCount AnyFlag FlagLabel .AbsEstimate
-#>     FALSE         1    TRUE   central        0.003
-#>     FALSE         1    TRUE   central        0.003
 #> 
 #> Settings
 #>               Setting    Value
@@ -239,7 +213,8 @@ summary(dash)
 #>          facet_source inferred
 #>         severity_warn        1
 #>           misfit_warn      1.5
-#>  central_tendency_max     0.25
+#>          misfit_lower      0.5
+#>  central_tendency_max       NA
 #>       bias_count_warn        1
 #>       bias_abs_t_warn        2
 #>    bias_abs_size_warn      0.5
@@ -247,6 +222,12 @@ summary(dash)
 #>   bias_source_bundles        0
 #> 
 #> Notes
-#>  - Dashboard constructed successfully.
+#>  - Flags are screening prompts, not evidence of invalid ratings or grounds for automatic exclusion.
+#>  - Severity is relative to the fitted reference; inspect workload, category use and common ratings before comparing levels.
+#>  - FlagCount counts observed flags only. MissingMetrics identifies unavailable diagnostics; zero flags does not mean all checks passed.
+#>  - BiasCount counts flagged cells in supplied bias results only; zero does not establish absence of bias.
+#>  - Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.
+#>  - Legacy CentralTendencyFlag is disabled by default because origin proximity does not diagnose observed category avoidance or range restriction.
+#>  - No level-level flags were triggered under the current thresholds.
 # }
 ```

@@ -2,9 +2,8 @@
 
 Ranks the levels of a chosen rater facet by estimated severity and draws
 each level as a horizontal CI whisker around the point estimate.
-Optional gentle / strict guidance bands at `+/-0.5` and `+/-1.0` logit
-relative to the centred mean make rater calibration easy to read for
-training feedback.
+Optional descriptive bands mark absolute distances of `0.5` and `1.0`
+logit from zero; they are display aids, not calibration rules.
 
 ## Usage
 
@@ -46,8 +45,9 @@ plot_rater_severity_profile(
 
 - show_bands:
 
-  Logical. When `TRUE` (default) draw shaded `+/-0.5` (gentle) and
-  `+/-1.0` (strict) logit guidance bands.
+  Logical. When `TRUE` (default) draw shaded `+/-0.5` and `+/-1.0` logit
+  guide bands and describe them in the subtitle and legend. Set to
+  `FALSE` to omit both bands and their labels.
 
 - preset:
 
@@ -59,15 +59,23 @@ plot_rater_severity_profile(
 
 ## Value
 
-An `mfrm_plot_data` object whose `data` slot contains columns `Level`,
-`Estimate`, `SE`, `CI_Lower`, `CI_Upper`, `Band`.
+An `mfrm_plot_data` object. Its `data$data` table contains columns
+`Level`, `Estimate`, `SE`, `CI_Lower`, `CI_Upper`, and `Band`. The
+enclosing `data` list retains the facet, confidence level and plot
+annotations; keep these with the table when reporting the results. Fit
+readiness and interpretation notes are retained; restricted fits are
+labeled `REVIEW ONLY` in the title.
 
 ## Interpreting output
 
-The vertical reference line at zero is the sum-to-zero centring point.
-Levels well within `+/- 0.5 logit` (gentle band) are typically
-interchangeable in operational scoring; levels outside `+/- 1.0 logit`
-(strict band) deserve targeted training or anchoring.
+Zero is the sum-to-zero reference for the default centered facet;
+describe any different constraints or anchors used in the fit. With the
+default negative facet orientation, higher estimates mean stricter
+scoring. The optional bands and the legacy `Band` labels (`gentle`,
+`moderate`, `strict`) describe absolute magnitude, not the sign of
+severity, operational interchangeability, or a need for training.
+Pairwise claims require the uncertainty of the contrast; check the SE
+basis in the supplied diagnostics.
 
 ## See also
 
@@ -79,16 +87,37 @@ interchangeable in operational scoring; levels outside `+/- 1.0 logit`
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
-p <- plot_rater_severity_profile(fit, draw = FALSE)
-head(p$data$data)
-#>   Level   Estimate         SE      CI_Lower     CI_Upper   Band
-#> 1   R02 -0.3287963 0.09769808 -0.5202810670 -0.137311629 gentle
-#> 2   R01 -0.1957561 0.09730123 -0.3864630271 -0.005049222 gentle
-#> 3   R03  0.1910876 0.09724282  0.0004951599  0.381680000 gentle
-#> 4   R04  0.3334649 0.09763161  0.1421104554  0.524819330 gentle
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Compare signed severity estimates and their intervals
+severity <- plot_rater_severity_profile(
+  fit, diagnostics = diagnostics, show_bands = FALSE
+)
+
+severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
+#>   Level   Estimate        SE    CI_Lower    CI_Upper
+#> 1   R01 -0.6059776 0.2243521 -1.04569977 -0.16625550
+#> 2   R02 -0.3820356 0.2085513 -0.79078871  0.02671748
+#> 3   R04  0.1799462 0.2226570 -0.25645356  0.61634590
+#> 4   R05  0.1842365 0.2341852 -0.27475809  0.64323116
+#> 5   R03  0.2120388 0.2165999 -0.21248930  0.63656689
+#> 6   R06  0.4117917 0.2494894 -0.07719839  0.90078189
+# Higher estimates mean stricter ratings with this example's default orientation
+# The optional magnitude bands are omitted from this first comparison
 # }
 ```

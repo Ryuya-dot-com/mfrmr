@@ -1,8 +1,8 @@
 # Compute interaction table between a facet and a grouping variable
 
 Produces a cell-level interaction table showing Obs-Exp differences,
-standardized residuals, and screening statistics for each facet-level x
-group-value cell.
+scaled residuals, and absolute residual mean comparisons for each
+facet-level x group-value cell.
 
 ## Usage
 
@@ -49,23 +49,23 @@ dif_interaction_table(
 - min_obs:
 
   Minimum observations per cell. Cells with fewer than this many
-  observations are flagged as sparse and their test statistics set to
-  `NA`. Default `10`.
+  observations are marked sparse; scaled residuals and magnitude flags
+  are `NA`. Observed and expected score summaries remain available.
 
 - p_adjust:
 
-  P-value adjustment method, passed to
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html). Default
-  `"holm"`.
+  Retained for compatibility; unused because no p-values are reported.
+  Default `"holm"`.
 
 - abs_t_warn:
 
-  Threshold for flagging cells by absolute t-value. Default `2`.
+  Retained for compatibility; unused because scaled residuals are not t
+  statistics. `flag_t` is `NA`.
 
 - abs_bias_warn:
 
-  Threshold for flagging cells by absolute Obs-Exp average (in logits).
-  Default `0.5`.
+  Threshold for marking the absolute observed-minus-expected average, in
+  score units. Default `0.5`. This is a descriptive magnitude rule.
 
 ## Value
 
@@ -97,20 +97,15 @@ cell, it computes:
 
 - StdResidual: (ObsScore - ExpScore) / sqrt(Var_sum)
 
-- t: approximate t-statistic (equal to StdResidual)
-
-- df: N - 1
-
-- p_value: two-tailed p-value from the t-distribution
+- t, df, p_value, p_adjusted, flag_t: `NA`, retained for compatibility
 
 ## When to use this instead of analyze_dff()
 
 Use `dif_interaction_table()` when you want cell-level screening for a
 single facet-by-group table. Use
 [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
-when you want group-pair contrasts summarized into
-differential-functioning effect sizes and method-appropriate
-classifications.
+when you want group-pair comparisons. Neither residual output tests
+differential functioning.
 
 ## Further guidance
 
@@ -128,10 +123,12 @@ For plot selection and follow-up diagnostics, see
 - `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
   marking the table as caveated DFF screening evidence.
 
-- Cells with `|t| > abs_t_warn` or `|ObsExpAvg| > abs_bias_warn` are
-  flagged in the `flag_t` and `flag_bias` columns.
+- `flag_bias` records `|ObsExpAvg| > abs_bias_warn` in score units. It
+  does not establish differential functioning. `flag_t` is unavailable.
 
-- Sparse cells (N \< min_obs) have `sparse = TRUE` and NA statistics.
+- Sparse cells (N \< min_obs) have `sparse = TRUE` and unavailable
+  scaled residuals and magnitude flags. The score means and counts are
+  retained.
 
 ## GPCM boundary
 
@@ -139,6 +136,11 @@ For bounded `GPCM`, the interaction table uses the fitted slope-aware
 expected-score/residual scale and should be reported as screening
 evidence, not as a standalone fairness, invariance, or operational
 subgroup decision.
+
+Residual means can differ even when response parameters are the same
+between groups. These summaries provide no p-values or t-based
+decisions. Recompute older saved tables with this function using the
+fitted model; no refit is needed.
 
 ## Typical workflow
 
@@ -174,13 +176,12 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)
 int$summary
-#> # A tibble: 4 × 2
-#>   Metric                     Count
-#>   <chr>                      <int>
-#> 1 Total cells                    8
-#> 2 Sparse cells (N < min_obs)     0
-#> 3 Flagged by |t|                 0
-#> 4 Flagged by |Obs-Exp Avg|       0
+#> # A tibble: 3 × 2
+#>   Metric                                 Count
+#>   <chr>                                  <int>
+#> 1 Total cells                                8
+#> 2 Sparse cells (N < min_obs)                 0
+#> 3 Above absolute residual mean threshold     0
 head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
 #> # A tibble: 6 × 4
 #>   Level GroupValue ObsExpAvg flag_bias

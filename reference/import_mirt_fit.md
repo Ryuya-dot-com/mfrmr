@@ -5,13 +5,10 @@ Extracts item, step, and person parameters from a
 fit and returns an `mfrm_imported_fit` object. The returned object has
 the public slots `summary`, `facets$person`, `facets$others`, `steps`,
 `config`, and `source` that the mfrmr plot and table helpers expect.
-With `compute_fit = TRUE` the importer also runs
-[`mirt::itemfit()`](https://philchalmers.github.io/mirt/reference/itemfit.html)
-and
-[`mirt::personfit()`](https://philchalmers.github.io/mirt/reference/personfit.html)
-so Infit / Outfit columns are populated, and synthesises a
-`mfrm_diagnostics`-shape `diagnostics` slot consumable by downstream
-plot helpers (Wright map, QC dashboard, etc.).
+Only unidimensional Rasch and partial-credit response models with
+positive slopes and ordinary category scores are supported.
+Graded-response, guessing and multidimensional models are refused. With
+`compute_fit = TRUE`, source Infit / Outfit statistics are attached.
 
 ## Usage
 
@@ -22,6 +19,12 @@ import_mirt_fit(
   item_facet = "Item",
   compute_fit = FALSE
 )
+
+# S3 method for class 'mfrm_imported_fit'
+summary(object, digits = 3L, ...)
+
+# S3 method for class 'summary.mfrm_imported_fit'
+print(x, ...)
 ```
 
 ## Arguments
@@ -34,8 +37,10 @@ import_mirt_fit(
 
 - model:
 
-  One of `"RSM"`, `"PCM"`, `"GPCM"`. The importer does not infer the
-  model from the mirt object; pass the model that was estimated.
+  One of `"RSM"`, `"PCM"`, `"GPCM"`. The importer does not reconstruct
+  all source constraints; pass the model that was estimated. Non-unit
+  slopes require `"GPCM"`. A polytomous `"RSM"` import requires source
+  item type `"rsm"`.
 
 - item_facet:
 
@@ -49,11 +54,21 @@ import_mirt_fit(
   and
   [`mirt::personfit()`](https://philchalmers.github.io/mirt/reference/personfit.html)
   to populate Infit / Outfit / OutfitZSTD columns on the returned facet
-  tables, plus build a measurement-side `mfrm_diagnostics` bundle
-  consumable by [`summary()`](https://rdrr.io/r/base/summary.html),
-  [`plot.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_fit.md),
-  [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
-  etc. Default `FALSE` keeps the importer fast (skeleton only).
+  tables, plus build a measurement-side diagnostics bundle. Person fit
+  uses source EAP scores. Default `FALSE` extracts parameters without
+  calculating fit statistics.
+
+- object, x:
+
+  An imported measurement bundle.
+
+- digits:
+
+  Number of digits for displayed estimates.
+
+- ...:
+
+  Additional arguments (unused by imported summaries).
 
 ## Value
 
@@ -70,18 +85,18 @@ An `mfrm_imported_fit` object. Slots:
 
 - `facets$others`:
 
-  Item-level estimates and slopes; with `compute_fit = TRUE`, also Infit
-  / Outfit / S_X2 / RMSEA / df from
-  [`mirt::itemfit()`](https://philchalmers.github.io/mirt/reference/itemfit.html).
+  Item-level estimates and slopes; with `compute_fit = TRUE`, also
+  available Infit / Outfit statistics.
 
 - `steps`:
 
-  Per-item threshold parameters extracted from the IRT parameterisation
-  (`b1`, ..., `b(K-1)`).
+  Absolute adjacent-category thresholds on the source ability scale,
+  labelled in `Parameterization`; these are not centered step
+  deviations. Rating-scale offsets are included.
 
 - `config`:
 
-  List with the resolved `model` and `item_facet` used for the import;
+  List with the declared `model` and facet names used for the import;
   downstream plot and table helpers consult this to dispatch correctly
   on the imported bundle.
 
@@ -94,11 +109,45 @@ An `mfrm_imported_fit` object. Slots:
 
   Imported-from metadata.
 
+## Source scale
+
+Item difficulty is the mean of its absolute adjacent-category
+thresholds. Source identification and slopes are retained without
+rescaling. For mirt `gpcmIRT` and `rsm`, the category offset is included
+as `b - c / a`. Person estimates are EAP; the `SE` column contains
+conditional posterior SDs, not sampling SEs. Person labels use retained
+source row names or P-prefixed row positions. Original identifiers
+discarded by mirt cannot be recovered. Imported summaries describe these
+conventions without assuming a native mfrmr population distribution or
+slope normalization.
+
+## Imported uncertainty
+
+Imported SEs retain the source package's interpretation. The
+measurement-side diagnostics do not reconstruct the joint parameter
+covariance, so joint facet chi-square statistics, degrees of freedom and
+p-values are unavailable. Posterior SDs do not supply sampling SEs for
+separation reliability. Other separation summaries require valid SEs for
+every finite estimate and remain descriptive. Imported Wright maps show
+points only: source uncertainty conventions do not establish one common
+confidence-interval calculation. Re-import older saved bundles from the
+existing source-package fit to update difficulties, thresholds and
+uncertainty labels. The mirt and TAM importers accept
+`compute_fit = TRUE` when source fit statistics are needed; no model
+re-estimation is required.
+
 ## Scope
 
-Bundles bias / DIF / anchor / replay slots are explicitly not populated.
-This helper provides a one-way fitted-object import for the documented
-core fields, not a bidirectional interchange format.
+Use [`summary()`](https://rdrr.io/r/base/summary.html) for source-scale
+tables and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+a point-only Wright map. Available source fit statistics remain in the
+facet and diagnostic tables. Native model curves, comprehensive
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+reports, response-level diagnostics,
+[`run_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_qc_pipeline.md),
+bias/DIF analysis, anchoring and portable calibration are unavailable
+for imported bundles. This is a one-way fitted-object import of the
+documented fields.
 
 ## See also
 
@@ -110,17 +159,15 @@ core fields, not a bidirectional interchange format.
 ``` r
 # \donttest{
 if (requireNamespace("mirt", quietly = TRUE)) {
-  response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
+  response_matrix <- matrix(sample(0:1, 120, replace = TRUE), nrow = 40)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
-  fit <- mirt::mirt(response_matrix, 1, itemtype = "gpcm", verbose = FALSE)
-  imported <- import_mirt_fit(fit, model = "GPCM")
+  fit <- mirt::mirt(response_matrix, 1, itemtype = "Rasch", verbose = FALSE)
+  imported <- import_mirt_fit(fit, model = "RSM")
   imported$summary
 }
-#> "Item2" re-mapped to ensure all categories have a distance of 1
-#> Warning: EM cycles terminated after 500 iterations.
-#>   Model Method Source  N Persons Facets Categories    LogLik      AIC     BIC
-#> 1  GPCM    MML   mirt 20      20      1         NA -71.49995 164.9999 175.953
+#>   Model Method Source  N Persons Facets Categories    LogLik      AIC      BIC
+#> 1   RSM    MML   mirt 40      40      1         NA -81.62847 171.2569 178.0125
 #>   Converged ConvergenceStatus
-#> 1     FALSE            review
+#> 1      TRUE                ok
 # }
 ```

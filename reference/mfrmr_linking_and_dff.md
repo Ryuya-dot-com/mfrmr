@@ -69,6 +69,61 @@ links, monitoring drift, and screening differential facet functioning
     [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
     only after checking connectivity and common-scale evidence.
 
+## Keep anchor roles separate
+
+- A common-element or common-rating link is observed overlap in the
+  design.
+
+- `anchors` are direct equality constraints on selected parameter
+  values.
+
+- `group_anchors` constrain declared group means and require an
+  externally defensible target or equal-mean assumption.
+
+- [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md)
+  exports candidate direct constraints mechanically; by default it
+  requires a current inference-ready source fit, but it does not select
+  invariant elements. `readiness_policy = "review"` is for review-only
+  extraction, not anchor reuse.
+
+Constraint-based coordinate transfer does not create empirical overlap.
+Before reuse, also verify consistent model/score/orientation/population
+conventions, cross-run element identity, and the relevant assignment
+connectedness.
+[`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
+checks syntax and receiving-data support, not those substantive
+assumptions.
+
+## Design the link, not only the anchor count
+
+There is no universal adequate anchor count or percentage. Linking
+quality also depends on where overlap occurs, whether links are
+distributed or rely on one critical bridge, the rating workload and
+coverage, and model–data fit within the linking set. Inspect both
+Rater-centered and Person/task- centered assignment graphs when the
+design is sparse. The package's five-element `LinkSupportAdequate`
+screen is therefore a local warning, not a design recommendation or
+proof of a common scale.
+
+Fixed anchor values also carry uncertainty from their source
+calibration. Current anchor, drift, and chain summaries do not propagate
+all source-fit, offset, or cross-fit covariance. Compare substantively
+defensible anchor sets and report sensitivity when conclusions depend on
+the selected set.
+
+## Drift and chain inference boundary
+
+[`detect_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/detect_anchor_drift.md)
+and
+[`build_equating_chain()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.md)
+currently estimate one pooled offset across all selected common elements
+and facets. Their element-level SE ratios omit estimated-offset
+uncertainty and cross-fit covariance, and chain output does not
+propagate uncertainty across adjacent links. `Offset_SD` is residual
+spread, not an offset SE. Treat flags, support counts, and cumulative
+offsets as review screens; when a common shift across facet blocks is
+not defensible, analyze one coherent linking facet at a time.
+
 ## Which helper answers which task
 
 - [`subset_connectivity_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md):
@@ -78,7 +133,8 @@ links, monitoring drift, and screening differential facet functioning
 
 - [`make_anchor_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/make_anchor_table.md):
 
-  Extracts reusable anchor candidates from a fit.
+  Extracts candidate direct-anchor values from a fit without certifying
+  them for reuse.
 
 - [`anchor_to_baseline()`](https://ryuya-dot-com.github.io/mfrmr/reference/anchor_to_baseline.md):
 
@@ -101,23 +157,31 @@ links, monitoring drift, and screening differential facet functioning
 
 - [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md):
 
-  Screens differential facet functioning with residual or refit methods.
-  Linked refit point contrasts remain screening-only because their
-  uncertainty is conditional on baseline anchors.
+  Describes group residual differences or linked subgroup facet
+  estimates. Linked refit point contrasts remain screening-only because
+  their uncertainty is conditional on baseline anchors.
 
 ## Practical linking rules
 
 - Check connectedness before interpreting subgroup or wave differences.
 
-- Use DFF outputs as screening results when common-scale linking is
-  weak.
+- Use
+  [`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md)
+  for assignment/co-observation connectedness. Agreement,
+  severity-direction, and halo networks describe score relations; they
+  do not establish an empirical link or a common measurement scale.
+
+- Residual differences do not isolate differential functioning and have
+  no tests or binary classifications. Even with an adequate link, refit
+  SEs condition on baseline anchors and omit their uncertainty and
+  cross-refit covariance; formal inference remains unavailable.
 
 - Always name the facet, facet level, and group pair involved in a DFF
   contrast. A generic "DIF exists" statement is not interpretable in a
   many-facet design.
 
-- Residual and refit DFF classifications are screening labels in 0.2.3;
-  current refit output does not assign ETS A/B/C labels.
+- Linked refit contrasts remain descriptive; neither method assigns ETS
+  A/B/C labels or supports a formal differential-functioning decision.
 
 - Treat drift flags as prompts for review, not automatic evidence that
   an anchor must be removed.
@@ -178,6 +242,26 @@ links, monitoring drift, and screening differential facet functioning
 - For a longer walkthrough, see
   [`vignette("mfrmr-linking-and-dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md).
 
+## References
+
+Myford, C. M., & Wolfe, E. W. (2000). Strengthening the ties that bind:
+Improving the linking network in sparsely connected rating designs. *ETS
+Research Report Series*, 2000(1).
+[doi:10.1002/j.2333-8504.2000.tb01832.x](https://doi.org/10.1002/j.2333-8504.2000.tb01832.x)
+
+Uto, M. (2021). Accuracy of performance-test linking based on a
+many-facet Rasch model. *Behavior Research Methods*, 53(4), 1440–1454.
+[doi:10.3758/s13428-020-01498-x](https://doi.org/10.3758/s13428-020-01498-x)
+
+Wind, S. A., & Jones, E. (2018). The stabilizing influences of linking
+set size and model–data fit in sparse rater-mediated assessment
+networks. *Educational and Psychological Measurement*, 78(4), 679–707.
+[doi:10.1177/0013164417703733](https://doi.org/10.1177/0013164417703733)
+
+Robitzsch, A. (2024). Bias and linking error in fixed item parameter
+calibration. *AppliedMath*, 4(3), 1181–1191.
+[doi:10.3390/appliedmath4030063](https://doi.org/10.3390/appliedmath4030063)
+
 ## Examples
 
 ``` r
@@ -203,11 +287,11 @@ dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 head(dff$dif_table[, c("Level", "Group1", "Group2",
                        "Classification", "ClassificationSystem")])
 #> # A tibble: 4 × 5
-#>   Level Group1 Group2 Classification  ClassificationSystem
-#>   <chr> <chr>  <chr>  <chr>           <chr>               
-#> 1 R01   A      B      Screen negative screening           
-#> 2 R02   A      B      Screen negative screening           
-#> 3 R03   A      B      Screen negative screening           
-#> 4 R04   A      B      Screen negative screening           
+#>   Level Group1 Group2 Classification    ClassificationSystem
+#>   <chr> <chr>  <chr>  <chr>             <chr>               
+#> 1 R01   A      B      Residual contrast descriptive         
+#> 2 R02   A      B      Residual contrast descriptive         
+#> 3 R03   A      B      Residual contrast descriptive         
+#> 4 R04   A      B      Residual contrast descriptive         
 # }
 ```

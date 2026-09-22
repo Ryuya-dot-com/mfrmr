@@ -14,7 +14,8 @@ run_qc_pipeline(
   thresholds = NULL,
   rater_facet = NULL,
   include_bias = TRUE,
-  bias_results = NULL
+  bias_results = NULL,
+  separation_facets = NULL
 )
 ```
 
@@ -22,8 +23,10 @@ run_qc_pipeline(
 
 - fit:
 
-  Output from
+  Native output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  Imported measurement tables do not contain the response-level
+  information required by this pipeline.
 
 - diagnostics:
 
@@ -41,8 +44,8 @@ run_qc_pipeline(
 
 - rater_facet:
 
-  Character name of the rater facet for inter-rater check (auto-detected
-  if NULL).
+  Character name of the rater facet for inter-rater check (detected from
+  rater-like facet names if NULL; otherwise supply it explicitly).
 
 - include_bias:
 
@@ -53,6 +56,14 @@ run_qc_pipeline(
   Optional pre-computed bias results from
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
 
+- separation_facets:
+
+  Character names of non-Person facets whose levels you intend to
+  distinguish. Reliability/separation thresholds apply only to these
+  facets. With the default `NULL`, these two checks are not requested;
+  they do not affect the overall verdict. For example, use `"Criterion"`
+  only when distinguishing criterion difficulties is a substantive goal.
+
 ## Value
 
 Object of class `mfrm_qc_pipeline` with verdicts, overall status,
@@ -61,16 +72,37 @@ details, and recommendations.
 ## Details
 
 The pipeline evaluates 10 quality checks and assigns a verdict (Pass /
-Warn / Fail) to each. The overall status is the most severe verdict
-across all checks. Diagnostics are computed automatically via
+Warn / Fail / Skip) to each. The overall status is the most severe
+verdict among checks marked `AffectsOverall`. Unrequested
+differentiation and bias checks, and inapplicable rater-agreement
+checks, are excluded. Missing information for an applicable check cannot
+produce Pass. Diagnostics are computed automatically via
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 if not supplied.
 
+All thresholds are screening rules, not universal statistical acceptance
+criteria. High rater separation indicates distinguishable rater
+measures, not high agreement; low separation may reflect similar rater
+severity. Select `separation_facets` only when differentiation is the
+intended target. A Pass does not establish model validity, adequate SEs,
+or anchor invariance.
+
 Reliability and separation are used here as QC signals. In `mfrmr`,
 `Reliability` / `Separation` are model-based facet indices and
-`RealReliability` / `RealSeparation` provide more conservative lower
+`RealReliability` / `RealSeparation` use fit-inflated SEs. They are
+smaller or equal on the same levels; they are not statistical confidence
 bounds. For `MML`, these rely on model-based `ModelSE` values for
 non-person facets; for `JML`, they remain exploratory approximations.
+Reliability and separation come from the same variance decomposition;
+they are not independent evidence.
+
+Category counts are sums of observation weights when weights are used.
+Threshold ordering compares adjacent numbered steps within each
+threshold family; missing steps or families require review. Equal
+estimates are nondecreasing within numerical tolerance. A binary scale
+has no adjacent threshold comparison, so its category screen evaluates
+counts only. These checks do not establish category adequacy or justify
+automatic merging.
 
 Three threshold presets are available via `threshold_profile`:
 
@@ -88,7 +120,8 @@ Three threshold presets are available via `threshold_profile`:
 | Bias fail (pct)   | 5      | 10       | 15      |
 
 Individual thresholds can be overridden via the `thresholds` argument (a
-named list keyed by the internal threshold names shown above).
+named list using entries such as `global_fit_warn` or
+`reliability_pass`).
 
 For bounded `GPCM`, this pipeline is available as caveated operational
 triage over supported diagnostics. Its pass/warn/fail labels remain
@@ -104,9 +137,10 @@ The 10 checks are:
 
 2.  **Global fit**: Infit/Outfit MnSq within the current review band.
 
-3.  **Reliability**: Minimum non-person facet model reliability index.
+3.  **Reliability**: Minimum index across explicitly selected
+    differentiation facets.
 
-4.  **Separation**: Minimum non-person facet model separation index.
+4.  **Separation**: Minimum index across those same selected facets.
 
 5.  **Element misfit**: Percentage of elements with Infit/Outfit outside
     the current review band.
@@ -133,13 +167,17 @@ The 10 checks are:
 - `$verdicts`: tibble with columns `Check`, `Verdict`, `Value`, and
   `Threshold` for each of the 10 checks.
 
-- `$details`: character vector of human-readable detail strings.
+- `$verdicts$Detail`: human-readable explanation of each assessment.
 
-- `$raw_details`: named list of per-check numeric details for
-  programmatic access.
+- `$verdicts$AffectsOverall`: whether a check contributes to the overall
+  result.
+
+- `$details`: named list of per-check numeric details for programmatic
+  access.
 
 - `$recommendations`: character vector of actionable suggestions for
-  checks that did not pass.
+  checks that need review; suggestions do not prescribe deleting raters
+  or collapsing categories automatically.
 
 - `$config`: records the threshold profile and effective thresholds.
 
@@ -187,79 +225,95 @@ qc
 #> --- QC Pipeline ---
 #> Overall: Fail 
 #> 
-#>   [FAIL] Convergence               Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.
+#>   QC flags describe the selected screening rules. Pass does not establish
+#>   validity or adequate uncertainty. Unrequested checks do not affect the
+#>   overall result.
+#>   [FAIL] Convergence               Numerical convergence requires review. One or more categories provide weak information; One or more boundary parameters are excluded; Numerical convergence failed.
 #>   [PASS] Global Fit                Global Infit=0.999, Outfit=0.990
-#>   [PASS] Reliability               Min non-person model reliability = 0.955
-#>   [PASS] Separation                Min non-person model separation = 4.592
+#>   [SKIP] Reliability               No facet differentiation target specified; low rater separation is not evidence of poor agreement.
+#>   [SKIP] Separation                No facet differentiation target specified; low rater separation is not evidence of poor agreement.
 #>   [FAIL] Element Misfit            143 of 328 elements misfitting (43.6%)
-#>   [FAIL] Unexpected Responses      5.4% unexpected responses
+#>   [FAIL] Unexpected Responses      22.5% unexpected responses
 #>   [PASS] Category Structure        Thresholds ordered, min category count = 215
 #>   [PASS] Connectivity              1 disjoint subset(s)
 #>   [WARN] Inter-rater Agreement     Exact agreement = 36.2%
 #>   [FAIL] Functioning/Bias Screen   80.0% of screened interactions crossed |screening t| > 2
 #> 
 #> Recommendations:
-#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes. 
-#>   - Excessive element misfit detected. Review individual element fit statistics. 
-#>   - High unexpected response rate. Inspect unexpected_response_table() for patterns. 
+#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical-readiness criteria are satisfied. 
+#>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. 
+#>   - Inspect unexpected_response_table() for unusual responses and missing residual information. 
 #>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
 summary(qc)
 #> --- QC Pipeline Summary ---
 #> Overall: Fail 
-#> Pass: 5 | Warn: 1 | Fail: 4 | Skip: 0
+#>   Pass describes the selected screening rules, not a statistical validation.
+#>   Unrequested checks do not affect the overall result.
+#> Pass: 3 | Warn: 1 | Fail: 4 | Skip: 2
 #> 
-#>                    Check Verdict                         Value
-#>              Convergence    Fail Nonzero code; review required
-#>               Global Fit    Pass       Infit=1.00, Outfit=0.99
-#>              Reliability    Pass                          0.95
-#>               Separation    Pass                          4.59
-#>           Element Misfit    Fail               143/328 (43.6%)
-#>     Unexpected Responses    Fail                          5.4%
-#>       Category Structure    Pass     Ordered=Yes, MinCount=215
-#>             Connectivity    Pass                             1
-#>    Inter-rater Agreement    Warn                         36.2%
-#>  Functioning/Bias Screen    Fail                         80.0%
-#>                    Threshold
-#>  Convergence severity = pass
-#>                 [0.50, 1.50]
-#>       Pass>=0.80, Warn>=0.50
-#>       Pass>=2.00, Warn>=1.00
-#>           Pass<=5%, Fail>15%
-#>            Pass<=2%, Fail>5%
-#>          Ordered + count>=10
-#>      Pass=1, Warn=2, Fail>=3
-#>         Pass>=50%, Warn>=30%
-#>           Pass<=0%, Fail>10%
-#>                                                                                                              Detail
-#>  Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance.
-#>                                                                                    Global Infit=0.999, Outfit=0.990
-#>                                                                            Min non-person model reliability = 0.955
-#>                                                                             Min non-person model separation = 4.592
-#>                                                                              143 of 328 elements misfitting (43.6%)
-#>                                                                                           5.4% unexpected responses
-#>                                                                        Thresholds ordered, min category count = 215
-#>                                                                                                1 disjoint subset(s)
-#>                                                                                             Exact agreement = 36.2%
-#>                                                            80.0% of screened interactions crossed |screening t| > 2
+#>                    Check Verdict                                  Value
+#>              Convergence    Fail  Numerical convergence requires review
+#>               Global Fit    Pass                Infit=1.00, Outfit=0.99
+#>              Reliability    Skip                          Not requested
+#>               Separation    Skip                          Not requested
+#>           Element Misfit    Fail                        143/328 (43.6%)
+#>     Unexpected Responses    Fail                                  22.5%
+#>       Category Structure    Pass Order=Nondecreasing, minimum count=215
+#>             Connectivity    Pass                                      1
+#>    Inter-rater Agreement    Warn                                  36.2%
+#>  Functioning/Bias Screen    Fail                                  80.0%
+#>                                   Threshold
+#>    Numerical and inference checks satisfied
+#>                                [0.50, 1.50]
+#>         No differentiation target specified
+#>         No differentiation target specified
+#>                          Pass<=5%, Fail>15%
+#>                           Pass<=2%, Fail>5%
+#>  Nondecreasing where applicable + count>=10
+#>                     Pass=1, Warn=2, Fail>=3
+#>                        Pass>=50%, Warn>=30%
+#>                          Pass<=0%, Fail>10%
+#>                                                                                                                                                               Detail
+#>  Numerical convergence requires review. One or more categories provide weak information; One or more boundary parameters are excluded; Numerical convergence failed.
+#>                                                                                                                                     Global Infit=0.999, Outfit=0.990
+#>                                                                   No facet differentiation target specified; low rater separation is not evidence of poor agreement.
+#>                                                                   No facet differentiation target specified; low rater separation is not evidence of poor agreement.
+#>                                                                                                                               143 of 328 elements misfitting (43.6%)
+#>                                                                                                                                           22.5% unexpected responses
+#>                                                                                                                         Thresholds ordered, min category count = 215
+#>                                                                                                                                                 1 disjoint subset(s)
+#>                                                                                                                                              Exact agreement = 36.2%
+#>                                                                                                             80.0% of screened interactions crossed |screening t| > 2
+#>  AffectsOverall
+#>            TRUE
+#>            TRUE
+#>           FALSE
+#>           FALSE
+#>            TRUE
+#>            TRUE
+#>            TRUE
+#>            TRUE
+#>            TRUE
+#>            TRUE
 #> 
 #> Recommendations:
-#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes. 
-#>   - Excessive element misfit detected. Review individual element fit statistics. 
-#>   - High unexpected response rate. Inspect unexpected_response_table() for patterns. 
+#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical-readiness criteria are satisfied. 
+#>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. 
+#>   - Inspect unexpected_response_table() for unusual responses and missing residual information. 
 #>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
 qc$verdicts
-#> # A tibble: 10 × 5
-#>    Check                   Verdict Value                        Threshold Detail
-#>    <chr>                   <chr>   <chr>                        <chr>     <chr> 
-#>  1 Convergence             Fail    Nonzero code; review requir… Converge… Optim…
-#>  2 Global Fit              Pass    Infit=1.00, Outfit=0.99      [0.50, 1… Globa…
-#>  3 Reliability             Pass    0.95                         Pass>=0.… Min n…
-#>  4 Separation              Pass    4.59                         Pass>=2.… Min n…
-#>  5 Element Misfit          Fail    143/328 (43.6%)              Pass<=5%… 143 o…
-#>  6 Unexpected Responses    Fail    5.4%                         Pass<=2%… 5.4% …
-#>  7 Category Structure      Pass    Ordered=Yes, MinCount=215    Ordered … Thres…
-#>  8 Connectivity            Pass    1                            Pass=1, … 1 dis…
-#>  9 Inter-rater Agreement   Warn    36.2%                        Pass>=50… Exact…
-#> 10 Functioning/Bias Screen Fail    80.0%                        Pass<=0%… 80.0%…
+#> # A tibble: 10 × 6
+#>    Check                   Verdict Value         Threshold Detail AffectsOverall
+#>    <chr>                   <chr>   <chr>         <chr>     <chr>  <lgl>         
+#>  1 Convergence             Fail    Numerical co… Numerica… Numer… TRUE          
+#>  2 Global Fit              Pass    Infit=1.00, … [0.50, 1… Globa… TRUE          
+#>  3 Reliability             Skip    Not requested No diffe… No fa… FALSE         
+#>  4 Separation              Skip    Not requested No diffe… No fa… FALSE         
+#>  5 Element Misfit          Fail    143/328 (43.… Pass<=5%… 143 o… TRUE          
+#>  6 Unexpected Responses    Fail    22.5%         Pass<=2%… 22.5%… TRUE          
+#>  7 Category Structure      Pass    Order=Nondec… Nondecre… Thres… TRUE          
+#>  8 Connectivity            Pass    1             Pass=1, … 1 dis… TRUE          
+#>  9 Inter-rater Agreement   Warn    36.2%         Pass>=50… Exact… TRUE          
+#> 10 Functioning/Bias Screen Fail    80.0%         Pass<=0%… 80.0%… TRUE          
 # }
 ```

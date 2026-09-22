@@ -77,16 +77,16 @@ designated facet, not one common slope and not simultaneous
 criterion-by-rater slope blocks. The overview records the slope owner,
 step owner, level count, free relative slope contrasts, and whether the
 supplied reference is the exact unit-slope PCM response-kernel
-reduction. A formal PCM-versus-GPCM chi-square LRT is intentionally
-withheld in the current comparison contract. The returned
-`comparison_contract` separates three evidence channels: selectable
-same-basis MML information criteria, descriptive JML reweighting, and
-non-ready optimizer traces. In particular, a JML log-likelihood increase
-is not promoted to automatic PCM-versus-GPCM model selection because it
-is unpenalized and the GPCM contains additional slope parameters. FACETS
-may serve as a direct comparator for the PCM/JML side only; its post-fit
-discrimination statistic is not a jointly estimated free-slope GPCM
-counterpart.
+reduction. A formal PCM-versus-GPCM chi-square LRT is unavailable.
+Free-slope GPCM also lacks the inference checks required for
+information-criterion ranking, even under MML. The returned
+`comparison_contract` records the applicable comparison restrictions;
+observed changes in fit, scores and information remain descriptive. A
+JML log-likelihood increase is not promoted to automatic PCM-versus-GPCM
+model selection because it is unpenalized and the GPCM contains
+additional slope parameters. FACETS may serve as a direct comparator for
+the PCM/JML side only; its post-fit discrimination statistic is not a
+jointly estimated free-slope GPCM counterpart.
 
 ## Recommended input route
 
@@ -104,10 +104,9 @@ counterpart.
 
 - `model_comparison`: same-data model-comparison bundle from
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
-  AIC/Person-BIC/SABIC ranking is available only when
-  `model_comparison$table$ICComparable` is true. PCM-versus-GPCM LRT
-  remains unavailable even though PCM is the aligned GPCM's unit-slope
-  reduction.
+  AIC/Person-BIC/SABIC ranking is unavailable for the current free-slope
+  GPCM fits. PCM-versus-GPCM LRT also remains unavailable even though
+  PCM is the aligned GPCM's unit-slope reduction.
 
 - `comparison_contract`: one-row evidence-tier table stating whether
   formal model selection is available, how any observed log-likelihood
@@ -171,58 +170,17 @@ summary(review)
 #> Overview
 #>  ReferenceModel ComparisonModel ReferenceMethod ComparisonMethod SlopeFacet
 #>             RSM            GPCM             MML              MML  Criterion
-#>  StepFacet ReferenceStepFacet AlignedStepSlopeOwner SlopeLevelCount
-#>  Criterion               <NA>                 FALSE               4
-#>  FreeRelativeSlopeContrasts                                    SlopeComposition
-#>                           3 single_aligned_facet_level_specific_relative_slopes
-#>  SimultaneousCriterionRaterSlopeBlocks UnitSlopePCMReduction
-#>                                  FALSE                 FALSE
-#>                         PCMvsGPCMLRT
-#>  not_applicable_reference_is_not_pcm
-#>                                  EvidenceTier FormalModelSelectionAvailable
-#>  mml_optimizer_trace_only_not_inference_ready                         FALSE
-#>  ObservedLogLikDifference                   LogLikDifferenceStatus
-#>                     8.593 optimizer_trace_only_not_inference_ready
-#>                 ReviewStatus                  ComparisonMode MaxAbsLogSlope
-#>  reweighting_review_required descriptive_model_contrast_only          0.138
-#>  MaxAbsInfoShareDelta
-#>                 0.026
+#>  StepFacet SlopeLevelCount FreeRelativeSlopeContrasts
+#>  Criterion               4                          3
 #> 
-#> Status
-#>                    Item
-#>          Overall status
-#>     Weighting principle
-#>         Slope ownership
-#>        Comparison basis
-#>           Evidence tier
-#>  Formal model selection
-#>         PCM vs GPCM LRT
-#>                                                                          Value
-#>                                                    reweighting_review_required
-#>  Rasch-family equal weighting vs bounded GPCM discrimination-based reweighting
-#>                            Criterion levels; one aligned slope/step owner only
-#>                                                descriptive_model_contrast_only
-#>                                   mml_optimizer_trace_only_not_inference_ready
-#>                                                                       withheld
-#>                                            not_applicable_reference_is_not_pcm
-#> 
-#> Comparison Contract
-#>  ReferenceModel ComparisonModel ReferenceMethod ComparisonMethod SameMethod
-#>             RSM            GPCM             MML              MML       TRUE
-#>  SamePreparedData BothInferenceReady
-#>              TRUE              FALSE
-#>                                  EvidenceTier FormalModelSelectionAvailable
-#>  mml_optimizer_trace_only_not_inference_ready                         FALSE
-#>                            SelectionRoute ObservedLogLikDifference
-#>  withheld_comparison_basis_not_selectable                    8.593
-#>                    LogLikDifferenceStatus AICPreferred PersonBICPreferred
-#>  optimizer_trace_only_not_inference_ready         <NA>               <NA>
-#>  SABICPreferred                        PCMvsGPCMLRT
-#>            <NA> not_applicable_reference_is_not_pcm
-#>                   FACETSComparisonRole
-#>  not_an_internal_free_slope_comparator
-#>                                                                                                             RecommendedUse
-#>  Repair inference readiness, integration selectability, or comparison identity before using this pair for model selection.
+#> Comparison interpretation
+#>   Numerical convergence checks passed for both fits; inference eligibility is
+#>   assessed separately.
+#>   Log-likelihood difference: 8.593 
+#>   Inspect changes in facet measures, relative slopes and information shares.
+#>   Free-slope GPCM information-criterion ranking and the PCM-versus-GPCM
+#>   chi-square LRT are unavailable; a larger likelihood does not select a scoring
+#>   model.
 #> 
 #> Key Warnings
 #>  - Model-comparison weights are descriptive only because the two fits do not
@@ -236,8 +194,8 @@ summary(review)
 #> Next Actions
 #>  - Read summary(model_comparison) before interpreting any fit advantage as a
 #>    scoring recommendation.
-#>  - For MML selection, require ICComparable and repeat consequential comparisons
-#>    on a denser common quadrature grid.
+#>  - Use likelihood and weighting differences descriptively; GPCM ranking remains
+#>    unavailable even after numerical convergence.
 #>  - Use slope_profile and top_reweighted_levels to inspect whether Criterion
 #>    levels are being upweighted or downweighted in substantively acceptable
 #>    ways.
@@ -292,21 +250,14 @@ summary(review)
 #>          0.926           -0.077   Downweighted           192               0.25
 #>          1.039            0.038      Near unit           192               0.25
 #> 
-#> Support Status
-#>                    Scope                Status
-#>      RSM / PCM reference             supported
-#>  bounded GPCM comparison supported_with_caveat
-#>                                                                                                                                                                      Note
-#>                                                                                                            Supported as the equal-weighting reference side of the review.
-#>  Supported with caveat as a slope-aware comparison model. Use it to inspect discrimination-based reweighting, not as an automatic replacement for the Rasch-family route.
-#> 
 #> Notes
 #>  - Observation weights and discrimination-based reweighting are separate
 #>    concepts in this package.
 #>  - The fitted slopes vary across levels of `Criterion`; other facets have no
 #>    separate slope block.
 #>  - Criterion-owned and rater-owned GPCM fits are separate restricted models;
-#>    both blocks cannot be estimated together in 0.2.3.
+#>    both blocks cannot be estimated together by the current bounded-GPCM
+#>    interface.
 #>  - FACETS is a direct JML comparator only for the aligned equal-discrimination
 #>    PCM side; its reported discrimination is a post-fit diagnostic, not the
 #>    fitted free-slope GPCM parameter.

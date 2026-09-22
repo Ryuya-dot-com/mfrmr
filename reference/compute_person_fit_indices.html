@@ -13,7 +13,7 @@ justified by the person-estimation method, Snijders' lz*."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,10 +24,12 @@ justified by the person-estimation method, Snijders' lz*."><meta property="og:im
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -44,7 +46,7 @@ justified by the person-estimation method, Snijders' lz*."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Person fit indices: lz and Snijders-corrected lz*</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-person-fit.R" class="external-link"><code>R/api-person-fit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-person-fit.R" class="external-link"><code>R/api-person-fit.R</code></a></small>
       <div class="d-none name"><code>compute_person_fit_indices.Rd</code></div>
     </div>
 
@@ -72,7 +74,8 @@ justified by the person-estimation method, Snijders' <code>lz*</code>.</p>
 <dd><p>Optional <code>mfrm_fit</code> from <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. Required to decide
 whether the person estimates are JML/fixed-effect estimates for which
 the Snijders (2001) correction is computed. MML/EAP person scores
-return <code>NA</code> for <code>lz_star</code> with an explanatory status.</p></dd>
+return <code>NA</code> for <code>lz_star</code> with an explanatory status. Supplied fit and
+diagnostics must identify the same analysis.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -81,8 +84,10 @@ return <code>NA</code> for <code>lz_star</code> with an explanatory status.</p><
 Person and columns:</p><dl><dt><code>Person</code></dt>
 <dd><p>Person ID.</p></dd>
 
-<dt><code>N</code></dt>
-<dd><p>Number of contributing response opportunities.</p></dd>
+<dt><code>TotalN</code>, <code>N</code>, <code>UnavailableN</code></dt>
+<dd><p>Total responses, responses with
+valid probability and log-likelihood moments, and unavailable responses.
+An incomplete response set does not produce a person-fit statistic.</p></dd>
 
 <dt><code>LogLik</code></dt>
 <dd><p>Sum of log P(X = x | theta) under the fitted
@@ -92,13 +97,15 @@ not from a Gaussian residual approximation.</p></dd>
 
 <dt><code>lz</code></dt>
 <dd><p>Drasgow et al. (1985) standardized log-likelihood,
-in its proper polytomous form.</p></dd>
+in its polytomous form, treating each retained response once regardless
+of calibration weights. <code>lz_status</code> records computational availability.</p></dd>
 
 <dt><code>lz_star</code></dt>
 <dd><p>Snijders-corrected <code>lz*</code> when the source fit used
 JML/fixed-effect person estimates, conditioning on the fitted
 non-person calibration, and the diagnostics include the required
-derivative terms; otherwise <code>NA</code>.</p></dd>
+derivative terms. Numerical convergence, a finite person estimate and
+unit observation weights are required; otherwise <code>NA</code>.</p></dd>
 
 <dt><code>lz_star_status</code></dt>
 <dd><p>Status string for <code>lz_star</code>, such as
@@ -119,7 +126,8 @@ two-sided <code>lz</code> thresholds of <code>|z| &gt; 1.96</code> and <code>|z|
 
 <dt><code>lz_star_flag_5pct</code>, <code>lz_star_flag_1pct</code></dt>
 <dd><p>The same flags for
-<code>lz_star</code>, returned as <code>FALSE</code> when <code>lz_star</code> is unavailable.</p></dd>
+<code>lz_star</code>. All index flags, including <code>ReportFlag</code>, remain <code>NA</code> when
+the corresponding statistic is unavailable.</p></dd>
 
 <dt><code>ReportIndex</code>, <code>ReportValue</code>, <code>ReportFlagLevel</code>,
 <code>ReportFlag</code>, <code>ReviewStatus</code>, <code>ReviewReason</code>, <code>ReportCaveat</code></dt>
@@ -129,16 +137,26 @@ correction was computed; otherwise it falls back to <code>lz</code> with an
 explicit caveat.</p></dd>
 
 
-</dl><p>Under the conditional-independence assumption of the MFRM, <code>lz</code> is
-asymptotically standard normal. Practical reporting thresholds:
-|lz| &gt; 1.96 flags a person at the 5% level; |lz| &gt; 2.58 at the
-1% level. When
+</dl><p>The <code>5pct</code> and <code>1pct</code> flag names refer to standard-normal reference cutoffs:
+|lz| &gt; 1.96 and |lz| &gt; 2.58. Treat them as screening thresholds, not a
+guarantee of those false-positive rates for fitted person scores.
+Read <code>ReportCaveat</code> and <code>lz_star_status</code> with every flagged result. When
 <code>lz_star_status == "computed_jml_conditional_calibration"</code>, <code>lz_star</code>
 applies Snijders' estimated-ability correction for JML person estimates,
 conditional on the fitted non-person parameters. This does not propagate
 non-person calibration uncertainty. For MML/EAP person scores, use <code>lz</code>
 with its documented caveat rather than treating EAP scores as if they
-satisfied the Snijders estimating equation.</p>
+satisfied the Snijders estimating equation. Positive and negative flags
+indicate more and less predictable patterns, respectively; neither alone
+establishes invalid responses or justifies exclusion. The implemented
+correction does not cover non-unit observation weights, even if normalized
+to mean one. No multiple-person error-rate control is provided.</p>
+<p>Small positive probabilities are used without a lower floor. Zero, invalid
+or missing observed probabilities make the person statistic unavailable.
+Missing derivative information withholds the correction for the whole person.
+With the matching fit supplied, older probability-moment diagnostics are
+refreshed from that fit without re-estimation. Otherwise recompute
+diagnostics first. Older saved person-fit tables/summaries must be rebuilt.</p>
 <p>Note: this implementation reads the model category probabilities
 directly from the diagnostics bundle. Earlier mfrmr releases used
 a Gaussian-residual approximation
@@ -178,88 +196,45 @@ person-fit statistics beyond dichotomous items.
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
-<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span>,</span></span>
-<span class="r-in"><span>                      diagnostic_mode <span class="op">=</span> <span class="st">"legacy"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">pf</span> <span class="op">&lt;-</span> <span class="fu">compute_person_fit_indices</span><span class="op">(</span><span class="va">diag</span>, fit <span class="op">=</span> <span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pf</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Person  N    LogLik         lz    lz_star</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P001 16 -19.19835 -0.5160336 -0.5514588</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002 16 -14.97442 -0.2169141 -0.3432021</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   P003 16 -14.93284  0.5887400  0.7498362</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   P004 16 -19.81129 -1.0604725 -1.1921249</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   P005 16 -19.22409 -0.7935414 -0.8920720</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   P006 16 -14.31173  0.4206670  0.6441770</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         lz_star_status  lz_star_c lz_star_variance lz_flag_5pct</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 computed_jml_conditional_calibration  0.2526791         4.222314        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 computed_jml_conditional_calibration  0.7090399         2.191676        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 computed_jml_conditional_calibration  0.4918946         3.073199        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 computed_jml_conditional_calibration  0.3362485         3.829696        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 computed_jml_conditional_calibration  0.3362485         3.829696        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 computed_jml_conditional_calibration -0.6419596         2.228687        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   lz_flag_1pct lz_star_flag_5pct lz_star_flag_1pct ReportIndex ReportValue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        FALSE             FALSE             FALSE     lz_star  -0.5514588</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        FALSE             FALSE             FALSE     lz_star  -0.3432021</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        FALSE             FALSE             FALSE     lz_star   0.7498362</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        FALSE             FALSE             FALSE     lz_star  -1.1921249</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5        FALSE             FALSE             FALSE     lz_star  -0.8920720</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6        FALSE             FALSE             FALSE     lz_star   0.6441770</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ReportFlagLevel ReportFlag ReviewStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            none      FALSE  not_flagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            none      FALSE  not_flagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3            none      FALSE  not_flagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4            none      FALSE  not_flagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5            none      FALSE  not_flagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6            none      FALSE  not_flagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                     ReviewReason</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 No report-level flag under the practical two-sided thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 No report-level flag under the practical two-sided thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 No report-level flag under the practical two-sided thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 No report-level flag under the practical two-sided thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 No report-level flag under the practical two-sided thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 No report-level flag under the practical two-sided thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                ReportCaveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pf</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Person-Fit Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Persons ReportableRows ReportFlaggedRows Review1PctRows Review5PctRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       48             48                 1              1              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  NotFlaggedRows NotAvailableRows SnijdersRows LzFallbackRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              47                0           48              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MissingReportIndexRows FlagRate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       0    0.021</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Review status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Variable       Value Rows Proportion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReviewStatus not_flagged   47      0.979</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReviewStatus review_1pct    1      0.021</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Report index</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Variable   Value Rows Proportion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReportIndex lz_star   48          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Person-level review rows: 1; identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - ReportIndex uses lz_star only when the Snijders correction was computed;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    otherwise it falls back to lz with the status caveat visible.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person-fit flags are screening evidence. Review response-level evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    before making substantive claims about a person.</span>
-<span class="r-in"><span><span class="co"># Look for: |lz| &gt; 1.96 (5% level) flags a person whose response</span></span></span>
-<span class="r-in"><span><span class="co">#   pattern is statistically inconsistent with the model; &gt; 2.58 is</span></span></span>
-<span class="r-in"><span><span class="co">#   a 1% flag. lz_star is populated for JML/fixed-effect person</span></span></span>
-<span class="r-in"><span><span class="co">#   estimates and left NA for MML/EAP estimates. Use ReportIndex /</span></span></span>
-<span class="r-in"><span><span class="co">#   ReviewStatus for a compact report-ready reading.</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compute diagnostics once for the following checks</span></span></span>
+<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Screen for unusual person response patterns</span></span></span>
+<span class="r-in"><span><span class="va">person_fit</span> <span class="op">&lt;-</span> <span class="fu">compute_person_fit_indices</span><span class="op">(</span><span class="va">diagnostics</span>, fit <span class="op">=</span> <span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">person_fit</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"N"</span>, <span class="st">"ReportIndex"</span>, <span class="st">"ReportValue"</span>, <span class="st">"ReviewStatus"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Person N ReportIndex ReportValue ReviewStatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   P001 5          lz  0.40405734  not_flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   P002 6          lz -0.49464167  not_flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   P003 6          lz -0.48719030  not_flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   P004 6          lz  0.06122145  not_flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   P005 6          lz  1.06480928  not_flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   P006 5          lz  0.59431547  not_flagged</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Inspect flagged persons and the limitations of their reported index</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">person_fit</span>, <span class="va">ReportFlag</span>,</span></span>
+<span class="r-in"><span>       <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"ReportValue"</span>, <span class="st">"ReviewReason"</span>, <span class="st">"ReportCaveat"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Person ReportValue                                          ReviewReason</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12   P012   -2.043880 lz exceeds the absolute normal-reference cutoff 1.96.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25   P025   -2.537499 lz exceeds the absolute normal-reference cutoff 1.96.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                     ReportCaveat</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 lz is an uncorrected, unweighted response-pattern screen. The implemented correction does not apply to MML/EAP person scores.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25 lz is an uncorrected, unweighted response-pattern screen. The implemented correction does not apply to MML/EAP person scores.</span>
+<span class="r-in"><span><span class="co"># With MML/EAP scores, lz_star is unavailable; lz is an uncorrected screening index</span></span></span>
+<span class="r-in"><span><span class="co"># A flag alone does not establish invalid responses or justify excluding a person</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

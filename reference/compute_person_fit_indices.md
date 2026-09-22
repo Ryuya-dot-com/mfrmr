@@ -25,7 +25,7 @@ compute_person_fit_indices(diagnostics, fit = NULL)
   Required to decide whether the person estimates are JML/fixed-effect
   estimates for which the Snijders (2001) correction is computed.
   MML/EAP person scores return `NA` for `lz_star` with an explanatory
-  status.
+  status. Supplied fit and diagnostics must identify the same analysis.
 
 ## Value
 
@@ -36,9 +36,11 @@ and columns:
 
   Person ID.
 
-- `N`:
+- `TotalN`, `N`, `UnavailableN`:
 
-  Number of contributing response opportunities.
+  Total responses, responses with valid probability and log-likelihood
+  moments, and unavailable responses. An incomplete response set does
+  not produce a person-fit statistic.
 
 - `LogLik`:
 
@@ -49,15 +51,17 @@ and columns:
 
 - `lz`:
 
-  Drasgow et al. (1985) standardized log-likelihood, in its proper
-  polytomous form.
+  Drasgow et al. (1985) standardized log-likelihood, in its polytomous
+  form, treating each retained response once regardless of calibration
+  weights. `lz_status` records computational availability.
 
 - `lz_star`:
 
   Snijders-corrected `lz*` when the source fit used JML/fixed-effect
   person estimates, conditioning on the fitted non-person calibration,
-  and the diagnostics include the required derivative terms; otherwise
-  `NA`.
+  and the diagnostics include the required derivative terms. Numerical
+  convergence, a finite person estimate and unit observation weights are
+  required; otherwise `NA`.
 
 - `lz_star_status`:
 
@@ -81,8 +85,8 @@ and columns:
 
 - `lz_star_flag_5pct`, `lz_star_flag_1pct`:
 
-  The same flags for `lz_star`, returned as `FALSE` when `lz_star` is
-  unavailable.
+  The same flags for `lz_star`. All index flags, including `ReportFlag`,
+  remain `NA` when the corresponding statistic is unavailable.
 
 - `ReportIndex`, `ReportValue`, `ReportFlagLevel`, `ReportFlag`,
   `ReviewStatus`, `ReviewReason`, `ReportCaveat`:
@@ -91,15 +95,30 @@ and columns:
   Snijders correction was computed; otherwise it falls back to `lz` with
   an explicit caveat.
 
-Under the conditional-independence assumption of the MFRM, `lz` is
-asymptotically standard normal. Practical reporting thresholds: \|lz\|
-\> 1.96 flags a person at the 5% level; \|lz\| \> 2.58 at the 1% level.
-When `lz_star_status == "computed_jml_conditional_calibration"`,
-`lz_star` applies Snijders' estimated-ability correction for JML person
-estimates, conditional on the fitted non-person parameters. This does
-not propagate non-person calibration uncertainty. For MML/EAP person
-scores, use `lz` with its documented caveat rather than treating EAP
-scores as if they satisfied the Snijders estimating equation.
+The `5pct` and `1pct` flag names refer to standard-normal reference
+cutoffs: \|lz\| \> 1.96 and \|lz\| \> 2.58. Treat them as screening
+thresholds, not a guarantee of those false-positive rates for fitted
+person scores. Read `ReportCaveat` and `lz_star_status` with every
+flagged result. When
+`lz_star_status == "computed_jml_conditional_calibration"`, `lz_star`
+applies Snijders' estimated-ability correction for JML person estimates,
+conditional on the fitted non-person parameters. This does not propagate
+non-person calibration uncertainty. For MML/EAP person scores, use `lz`
+with its documented caveat rather than treating EAP scores as if they
+satisfied the Snijders estimating equation. Positive and negative flags
+indicate more and less predictable patterns, respectively; neither alone
+establishes invalid responses or justifies exclusion. The implemented
+correction does not cover non-unit observation weights, even if
+normalized to mean one. No multiple-person error-rate control is
+provided.
+
+Small positive probabilities are used without a lower floor. Zero,
+invalid or missing observed probabilities make the person statistic
+unavailable. Missing derivative information withholds the correction for
+the whole person. With the matching fit supplied, older
+probability-moment diagnostics are refreshed from that fit without
+re-estimation. Otherwise recompute diagnostics first. Older saved
+person-fit tables/summaries must be rebuilt.
 
 Note: this implementation reads the model category probabilities
 directly from the diagnostics bundle. Earlier mfrmr releases used a
@@ -140,87 +159,44 @@ earlier approximation.
 
 ``` r
 # \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
-diag <- diagnose_mfrm(fit, residual_pca = "none",
-                      diagnostic_mode = "legacy")
-pf <- compute_person_fit_indices(diag, fit = fit)
-head(pf)
-#>   Person  N    LogLik         lz    lz_star
-#> 1   P001 16 -19.19835 -0.5160336 -0.5514588
-#> 2   P002 16 -14.97442 -0.2169141 -0.3432021
-#> 3   P003 16 -14.93284  0.5887400  0.7498362
-#> 4   P004 16 -19.81129 -1.0604725 -1.1921249
-#> 5   P005 16 -19.22409 -0.7935414 -0.8920720
-#> 6   P006 16 -14.31173  0.4206670  0.6441770
-#>                         lz_star_status  lz_star_c lz_star_variance lz_flag_5pct
-#> 1 computed_jml_conditional_calibration  0.2526791         4.222314        FALSE
-#> 2 computed_jml_conditional_calibration  0.7090399         2.191676        FALSE
-#> 3 computed_jml_conditional_calibration  0.4918946         3.073199        FALSE
-#> 4 computed_jml_conditional_calibration  0.3362485         3.829696        FALSE
-#> 5 computed_jml_conditional_calibration  0.3362485         3.829696        FALSE
-#> 6 computed_jml_conditional_calibration -0.6419596         2.228687        FALSE
-#>   lz_flag_1pct lz_star_flag_5pct lz_star_flag_1pct ReportIndex ReportValue
-#> 1        FALSE             FALSE             FALSE     lz_star  -0.5514588
-#> 2        FALSE             FALSE             FALSE     lz_star  -0.3432021
-#> 3        FALSE             FALSE             FALSE     lz_star   0.7498362
-#> 4        FALSE             FALSE             FALSE     lz_star  -1.1921249
-#> 5        FALSE             FALSE             FALSE     lz_star  -0.8920720
-#> 6        FALSE             FALSE             FALSE     lz_star   0.6441770
-#>   ReportFlagLevel ReportFlag ReviewStatus
-#> 1            none      FALSE  not_flagged
-#> 2            none      FALSE  not_flagged
-#> 3            none      FALSE  not_flagged
-#> 4            none      FALSE  not_flagged
-#> 5            none      FALSE  not_flagged
-#> 6            none      FALSE  not_flagged
-#>                                                     ReviewReason
-#> 1 No report-level flag under the practical two-sided thresholds.
-#> 2 No report-level flag under the practical two-sided thresholds.
-#> 3 No report-level flag under the practical two-sided thresholds.
-#> 4 No report-level flag under the practical two-sided thresholds.
-#> 5 No report-level flag under the practical two-sided thresholds.
-#> 6 No report-level flag under the practical two-sided thresholds.
-#>                                                                                                                                ReportCaveat
-#> 1 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.
-#> 2 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.
-#> 3 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.
-#> 4 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.
-#> 5 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.
-#> 6 lz_star applies the Snijders correction conditional on fitted non-person calibration; non-person parameter uncertainty is not propagated.
-summary(pf)
-#> Person-Fit Summary
-#> 
-#> Overview
-#>  Persons ReportableRows ReportFlaggedRows Review1PctRows Review5PctRows
-#>       48             48                 1              1              0
-#>  NotFlaggedRows NotAvailableRows SnijdersRows LzFallbackRows
-#>              47                0           48              0
-#>  MissingReportIndexRows FlagRate
-#>                       0    0.021
-#> 
-#> Review status
-#>      Variable       Value Rows Proportion
-#>  ReviewStatus not_flagged   47      0.979
-#>  ReviewStatus review_1pct    1      0.021
-#> 
-#> Report index
-#>     Variable   Value Rows Proportion
-#>  ReportIndex lz_star   48          1
-#> 
-#> Person-level review rows: 1; identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls.
-#> 
-#> Notes
-#>  - ReportIndex uses lz_star only when the Snijders correction was computed;
-#>    otherwise it falls back to lz with the status caveat visible.
-#>  - Person-fit flags are screening evidence. Review response-level evidence
-#>    before making substantive claims about a person.
-# Look for: |lz| > 1.96 (5% level) flags a person whose response
-#   pattern is statistically inconsistent with the model; > 2.58 is
-#   a 1% flag. lz_star is populated for JML/fixed-effect person
-#   estimates and left NA for MML/EAP estimates. Use ReportIndex /
-#   ReviewStatus for a compact report-ready reading.
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Screen for unusual person response patterns
+person_fit <- compute_person_fit_indices(diagnostics, fit = fit)
+head(person_fit[, c("Person", "N", "ReportIndex", "ReportValue", "ReviewStatus")])
+#>   Person N ReportIndex ReportValue ReviewStatus
+#> 1   P001 5          lz  0.40405734  not_flagged
+#> 2   P002 6          lz -0.49464167  not_flagged
+#> 3   P003 6          lz -0.48719030  not_flagged
+#> 4   P004 6          lz  0.06122145  not_flagged
+#> 5   P005 6          lz  1.06480928  not_flagged
+#> 6   P006 5          lz  0.59431547  not_flagged
+
+# Inspect flagged persons and the limitations of their reported index
+subset(person_fit, ReportFlag,
+       c("Person", "ReportValue", "ReviewReason", "ReportCaveat"))
+#>    Person ReportValue                                          ReviewReason
+#> 12   P012   -2.043880 lz exceeds the absolute normal-reference cutoff 1.96.
+#> 25   P025   -2.537499 lz exceeds the absolute normal-reference cutoff 1.96.
+#>                                                                                                                     ReportCaveat
+#> 12 lz is an uncorrected, unweighted response-pattern screen. The implemented correction does not apply to MML/EAP person scores.
+#> 25 lz is an uncorrected, unweighted response-pattern screen. The implemented correction does not apply to MML/EAP person scores.
+# With MML/EAP scores, lz_star is unavailable; lz is an uncorrected screening index
+# A flag alone does not establish invalid responses or justify excluding a person
 # }
 ```

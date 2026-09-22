@@ -42,9 +42,10 @@ summary(
 - profile:
 
   Summary profile. `"fit"` preserves the lightweight fit-only contract
-  and does not compute diagnostics. `"facets"` adds a FACETS-organized
-  measurement review, while `"reporting"` adds the reporting-oriented
-  results profile.
+  and does not compute diagnostics. `"facets"` adds a comprehensive
+  measurement review using familiar FACETS-style section organization;
+  it does not require FACETS knowledge or software. `"reporting"` adds
+  the reporting-oriented results profile.
 
 - detail:
 
@@ -92,7 +93,7 @@ An object of class `summary.mfrm_fit` with:
   stability, diagnostic, and reporting workflow states
 
 - `data_review`: structured connectivity and facet-support evidence used
-  by the non-numerical readiness gates
+  by the non-numerical readiness requirements
 
 - `key_warnings`: highest-priority warnings to review first
 
@@ -185,6 +186,19 @@ An object of class `summary.mfrm_fit` with:
 
 ## Details
 
+Start with `results <- summary(fit)`. Use `results$person_overview` for
+the distribution of person ability estimates and
+`results$facet_overview` for the distribution of estimates within each
+non-person facet. These are aggregate summaries; use
+`as.data.frame(fit)` for individual person and facet-level estimates.
+Read `results$decision` before interpreting results. Assignment with
+`<-` saves the summary without printing it; enter `results` to print the
+full summary or use `$` to display a selected table. In the example,
+`person_overview` has one row for all persons and `facet_overview` has
+one row for raters and one for criteria. Each non-person facet's mean is
+constrained to zero in this fit; use its SD and range or individual
+estimates to inspect differences among its levels.
+
 This method provides a compact, human-readable summary oriented to
 reporting. The expanded profiles use FACETS-style organization for
 navigation, but do not claim that FACETS was executed or that estimates
@@ -226,11 +240,17 @@ object and prints:
   only when the stored `FitReadiness` is `ready`; numerical convergence
   cannot override input, estimability, category, or boundary review.
 
-- `decision`: separates that fit gate from formal precision support. A
+- `decision`: separates fit readiness from formal precision support. A
   fit-only summary returns `FormalInference = "No"` until a matching
   `mfrm_diagnostics` object is supplied through `diagnostics =`; use
   `summary(diagnostics)$decision` for the equivalent precision-aware
-  view.
+  view. The console uses this single decision throughout; a converged
+  optimizer or a passed fit check does not independently authorize
+  formal inference. Printed workflow, population and GPCM descriptions
+  use readable labels. The returned tables retain their numerical values
+  and structured status fields for programmatic use. Reprinting an
+  existing summary updates its display without refitting or changing its
+  stored results.
 
 - `data_review`: overall multi-facet connectivity, facet-level score
   support, boundary-constant levels, single-level facets, and retained
@@ -249,6 +269,9 @@ object and prints:
   fits.
 
 - `settings_overview`: estimation settings that affect interpretation.
+  For MML fits, the printed fit and summary also state the engine, fixed
+  or adaptive Gauss–Hermite rule and order, one-dimensional latent
+  structure, population identification, and discrimination constraint.
 
 - `population_coding`: fitted categorical levels and contrasts that must
   be reused when scoring new persons under the population-model
@@ -291,7 +314,8 @@ object and prints:
     and read `summary(fit, profile = "fit")`.
 
 3.  Request `summary(fit, profile = "facets")` for the comprehensive
-    FACETS-organized review.
+    measurement review. The historical profile name does not mean that
+    FACETS is run.
 
 4.  Draw the required native Wright map with
     `plot(fit, type = "wright", show_ci = TRUE)`; add the FACETS
@@ -304,7 +328,7 @@ object and prints:
     [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
     /
     [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
-    or the fixed-calibration posterior scoring helpers.
+    or the fitted-object posterior scoring helpers.
 
 ## See also
 
@@ -314,83 +338,78 @@ object and prints:
 ## Examples
 
 ``` r
+# \donttest{
+# Load the package
+library(mfrmr)
+
+# Load example ratings and look at the first six rows
 toy <- load_mfrmr_data("example_operational")
-# Seven quadrature points keep this executable example short. For a final
-# analysis, restore the default or a prespecified grid and review sensitivity.
+head(toy)
+#>                Study Person Rater    Criterion Score Group
+#> 1 OperationalExample   P001   R01     Language     4     A
+#> 2 OperationalExample   P001   R01 Organization     2     A
+#> 3 OperationalExample   P001   R02      Content     4     A
+#> 4 OperationalExample   P001   R02     Language     3     A
+#> 5 OperationalExample   P001   R02 Organization     2     A
+#> 6 OperationalExample   P002   R01      Content     3     A
+
+# Fit the model
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-s <- summary(fit)
-s$overview[, c(
-  "Model", "Method", "Converged", "FitReadiness", "InferenceReady",
-  "ConvergenceSeverity"
-)]
-#> # A tibble: 1 × 6
-#>   Model Method Converged FitReadiness InferenceReady ConvergenceSeverity
-#>   <chr> <chr>  <lgl>     <chr>        <lgl>          <chr>              
-#> 1 RSM   MML    TRUE      ready        TRUE           pass               
-s$readiness
-#>        Domain                                        Status
-#> 1         Fit                                         ready
-#> 2   Numerical                                          pass
-#> 3        Data                                          pass
-#> 4      Design                                   pass_linked
-#> 5   Stability                                          pass
-#> 6 Diagnostics                                  not_assessed
-#> 7   Reporting ready_for_diagnostics_and_reporting_follow_up
-#>                                                                                                                              Detail
-#> 1                                                                                       All stored fit-readiness components passed.
-#> 2                                                                                            Optimizer returned convergence code 0.
-#> 3                                                                                No preparation warning or review row was retained.
-#> 4 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 5                                                                         No boundary-constant non-person facet level was detected.
-#> 6                                                             Diagnostics have not yet been incorporated into this fit-only status.
-#> 7                                                             Reporting status is the strictest applicable upstream workflow state.
-# `InferenceReady = TRUE` means all five stored fit components passed.
-# It does not, by itself, support formal SE/CI or reliability.
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-summary(fit, diagnostics = diag)$decision
-#>               Interpretation FormalInference FitReadiness
-#> 1 Ready for formal inference             Yes        ready
-#>                                           Why
-#> 1 All stored fit-readiness components passed.
-#>                                                                                                                                               NextAction
-#> 1 After reviewing convergence, run `review <- summary(fit, profile = "facets", detail = "brief")` for the comprehensive FACETS-organized result surface.
-# Design, Stability, Diagnostics, and Reporting remain purpose-specific
-# workflow reviews rather than alternative fit-readiness derivations.
-# If Numerical is not a pass, inspect the retained polish stages; increasing
-# `maxit` alone may not resolve the review.
-s$person_overview
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
 #> # A tibble: 1 × 11
 #>   Persons DistributionN ReviewExcludedExtremeE…¹ EstimateUse   Mean    SD Median
 #>     <int>         <int>                    <int> <chr>        <dbl> <dbl>  <dbl>
-#> 1      48            48                        0 source_fit… -0.141 0.811 -0.107
+#> 1      48            48                        0 source_fit… -0.155 0.824 -0.208
 #> # ℹ abbreviated name: ¹​ReviewExcludedExtremeEAPs
 #> # ℹ 4 more variables: Min <dbl>, Max <dbl>, Span <dbl>, MeanPosteriorSD <dbl>
-# Interpret location and spread on the fitted logit scale together with the
-# score distribution and extreme-score counts.
-s$targeting
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
-#>   Facet     PersonMean FacetMean Targeting PersonSD FacetSD SpreadRatio
-#>   <chr>          <dbl>     <dbl>     <dbl>    <dbl>   <dbl>       <dbl>
-#> 1 Criterion     -0.141  4.62e-18    -0.141    0.811   0.298        2.72
-#> 2 Rater         -0.141  0           -0.141    0.811   0.379        2.14
-# Targeting and spread are descriptive. Their practical importance depends
-# on the assessment purpose, sample, and facet orientation.
-facets_summary <- summary(fit, profile = "facets", compute = "never")
-res <- facets_summary$results
-native_map <- plot(
-  fit, type = "wright", renderer = "native", show_ci = TRUE, draw = FALSE
-)
-facets_map <- plot(
-  fit, type = "wright", renderer = "facets", show_ci = FALSE,
-  category_labels = c(
-    `1` = "Beginning", `2` = "Developing",
-    `3` = "Secure", `4` = "Advanced"
-  ),
-  draw = FALSE
-)
-# For fit statistics and the optional person-inclusive pathway, rerun the
-# FACETS profile with diagnostics available, then use its `results` object.
+#>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
+#>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
+#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
+#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
+
+# Check the interpretation status and recommended next step
+results$decision
+#>                                                           Interpretation
+#> 1 Fit-readiness requirements satisfied; formal precision review required
+#>   FormalInference FitReadiness                                              Why
+#> 1              No        ready Formal precision support has not been evaluated.
+#>                                                                                                                                                   NextAction
+#> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
+
+# Extract estimates and select the rows to display
+estimates <- as.data.frame(fit)
+head(subset(estimates, Facet == "Person")) # First six persons
+#>    Facet Level    Estimate Extreme
+#> 1 Person  P001  0.28429588    none
+#> 2 Person  P002  0.66118004    none
+#> 3 Person  P003  0.02177773    none
+#> 4 Person  P004  0.22410785    none
+#> 5 Person  P005 -0.17496065    none
+#> 6 Person  P006  0.67681003    none
+subset(estimates, Facet == "Rater")       # All raters
+#>    Facet Level   Estimate Extreme
+#> 49 Rater   R01 -0.6059776    <NA>
+#> 50 Rater   R02 -0.3820356    <NA>
+#> 51 Rater   R03  0.2120388    <NA>
+#> 52 Rater   R04  0.1799462    <NA>
+#> 53 Rater   R05  0.1842365    <NA>
+#> 54 Rater   R06  0.4117917    <NA>
+subset(estimates, Facet == "Criterion")   # All criteria
+#>        Facet        Level   Estimate Extreme
+#> 55 Criterion      Content -0.3441471    <NA>
+#> 56 Criterion     Language  0.1204520    <NA>
+#> 57 Criterion Organization  0.2236950    <NA>
+# }
 ```

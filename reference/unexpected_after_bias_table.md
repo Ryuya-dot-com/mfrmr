@@ -44,7 +44,9 @@ unexpected_after_bias_table(
 
 - top_n:
 
-  Maximum number of rows to return.
+  Maximum number of ranked rows to return in `table`. Summary counts,
+  percentages, and before/after comparisons use all flagged
+  observations, regardless of this display limit.
 
 - rule:
 
@@ -70,7 +72,11 @@ A named list with:
 This helper recomputes expected values and residuals after interaction
 adjustments from
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-have been introduced.
+have been introduced. Screening coverage is retained separately before
+and after adjustment. Reduction counts, percentages and the comparison
+plot are unavailable if either screen leaves responses unclassified.
+Recreate older saved results with the original settings; the MFRM fit
+does not need re-estimation.
 
 `summary(t10)` is supported through
 [`summary()`](https://rdrr.io/r/base/summary.html). `plot(t10)` is
@@ -160,12 +166,16 @@ summary(t10)
 #>   Components: 5
 #> 
 #> After-bias threshold summary
-#>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN
-#>                384          20             5.208              20              9
-#>    Rule AbsZThreshold ProbThreshold BaselineUnexpectedN AfterBiasUnexpectedN
-#>  either             2           0.3                  88                   20
-#>  ReducedBy ReducedPercent
-#>         68         77.273
+#>  TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN
+#>                384                   384                       0          80
+#>  UnexpectedPercent LowProbabilityN LargeResidualN   Rule AbsZThreshold
+#>             20.833              80              9 either             2
+#>  ProbThreshold BaselineUnexpectedN AfterBiasUnexpectedN
+#>            0.3                  88                   80
+#>  BaselineEvaluatedObservations BaselineUnavailableObservations ReducedBy
+#>                            384                               0         8
+#>  ReducedPercent
+#>           9.091
 #> 
 #> After-bias flagged rows: table
 #>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual

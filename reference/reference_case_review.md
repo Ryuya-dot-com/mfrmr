@@ -107,12 +107,12 @@ summary(review)
 #> 
 #> Attention items: metric_checks
 #>  Table                         Check Pass            Actual         Expected
-#>     T4 UnexpectedPercent consistency TRUE  6.51041666666667 6.51041666666667
-#>    T10         ReducedBy consistency TRUE               148              148
-#>    T10    ReducedPercent consistency TRUE  74.7474747474748 74.7474747474748
+#>     T4 UnexpectedPercent consistency TRUE          25.78125         25.78125
+#>    T10         ReducedBy consistency TRUE                 2                2
+#>    T10    ReducedPercent consistency TRUE  1.01010101010101 1.01010101010101
 #>    T11   LowCountPercent consistency TRUE                 0                0
 #>     T7          ExactAgreement range TRUE 0.361979166666667            [0,1]
-#>     T7  ExpectedExactAgreement range TRUE 0.374634703073567            [0,1]
+#>     T7  ExpectedExactAgreement range TRUE 0.374634703073566            [0,1]
 #>     T7       AdjacentAgreement range TRUE 0.829861111111111            [0,1]
 #>     T7               FixedProb range TRUE               all            [0,1]
 #>     T7              RandomProb range TRUE               all            [0,1]

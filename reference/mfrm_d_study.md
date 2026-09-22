@@ -34,7 +34,8 @@ mfrm_d_study(
   Data frame or named list giving planned counts for each random
   measurement facet. Column names may be the facet names themselves (for
   example `Rater`) or `n_` plus the facet name (for example `n_Rater`).
-  When `NULL`, one row using the observed number of levels is returned.
+  Counts must be positive integers. When `NULL`, one row using the
+  observed number of levels is returned.
 
 - object_facet, random_facets:
 
@@ -48,10 +49,10 @@ mfrm_d_study(
   facet counts increase. `"highest_order"` treats the residual as
   highest-order person-by-all-conditions/error variance and divides by
   the product of planned counts. `"single_condition"` divides by the
-  smallest planned facet count, a conservative sensitivity check when
-  unmodeled person-by-one-facet interactions may dominate. `"none"`
-  leaves the residual unscaled. `"sensitivity"` returns all three
-  assumptions for each design row.
+  smallest planned facet count, a sensitivity assumption for variation
+  associated with the least-replicated condition. It is not a confidence
+  bound. `"none"` leaves the residual unscaled. `"sensitivity"` returns
+  all three assumptions for each design row.
 
 - ...:
 
@@ -66,6 +67,11 @@ scenario and columns for planned facet counts, variance terms, projected
 `G`, projected `Phi`, interpretation bands, and identification status
 inherited from
 [`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md).
+`InputRows`, `UsedRows`, and `ExcludedRows` describe the source G-study,
+not the planned D-study sample; `GStudyDataSource` identifies their
+scope. The `data_usage` attribute retains its row accounting, including
+after subsetting. Older source results without accounting have `NA`
+counts; they are not assumed to have used all rows.
 
 ## Details
 
@@ -76,20 +82,32 @@ For a random measurement facet `j`, main-effect variance contributes
 contains unmodeled person-by-facet and higher-order interaction variance
 in the current simplified G-study, so the selected `residual_scaling`
 assumption is reported explicitly. The relative-decision denominator
-uses only this scaled residual term.
+uses only this scaled residual term. Missing or invalid required
+components leave the affected coefficient unavailable; they are not zero
+variance. These are point projections conditional on estimated
+components, not uncertainty bounds or automatic recommendations for
+sample size.
 
 This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
 decomposition. If person-by-rater or person-by-item interactions are a
-primary estimand, use `residual_scaling = "sensitivity"` and treat the
-output as planning evidence; fit a fully crossed G-theory model
-externally when those interaction components must be estimated
-separately.
+primary estimand, consider
+[`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+and
+[`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+for one or two common random facets, including Person-by-Task,
+Person-by-Rater, and Person-by-Rater-by-Task. Those functions also
+accept a single score and estimate the corresponding interaction
+components explicitly. Changing `residual_scaling` here only explores
+assumptions; it does not estimate the omitted interactions.
 
 The `G` and `Phi` values returned here belong to the
 generalizability-theory metric family. They should not be interpreted as
 coefficient alpha, omega, KR-20, or IRT marginal/separation reliability,
 even though all of those summaries may be displayed on a 0–1 scale in
-broader reporting dashboards.
+broader reporting dashboards. They remain on the observed numeric score
+scale inherited from
+[`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md),
+not the fitted MFRM latent scale.
 
 ## References
 
@@ -101,7 +119,9 @@ Brennan, R. L. (2001). *Generalizability theory*. Springer.
 
 ## See also
 
+[`plot.mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_d_study.md),
 [`mfrm_generalizability()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_generalizability.md),
+[`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md),
 [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md),
 [`recommend_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/recommend_mfrm_design.md),
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
@@ -123,19 +143,20 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # values remain identification warnings, not decision-ready evidence.
 }
 #> mfrmr D-study projection
-#>   Object of measurement: NA 
-#>   Random facets:  
+#>   Object of measurement: Person 
+#>   Random facets: Rater, Criterion 
 #> 
-#>   Residual scaling:  
+#>   Estimand scale: observed numeric score
+#>   G-study rows: 768 input; 768 used; 0 excluded.
+#>   Counts start from stored fitted rows; earlier MFRM filtering is not included.
+#>   Residual assumption: Divide residual by all facet counts 
 #> 
-#>  n_Rater n_Criterion      G    Phi                    GStatus
-#>        2           4 0.8241 0.7888 at_or_above_0.80_reference
-#>        3           4 0.8754 0.8447 at_or_above_0.80_reference
-#>        4           4 0.9035 0.8758 at_or_above_0.80_reference
-#>                   PhiStatus IdentificationStatus
-#>  at_or_above_0.70_reference           identified
-#>  at_or_above_0.80_reference           identified
-#>  at_or_above_0.80_reference           identified
+#>  n_Rater n_Criterion      G    Phi
+#>        2           4 0.8241 0.7887
+#>        3           4 0.8754 0.8447
+#>        4           4 0.9035 0.8758
+#>   Observed-score planning projections hold estimated variance components fixed.
+#>   They do not establish cut-score accuracy or an adequate rating design.
 #> 
 #>   Note: 0.70 and 0.80 are reference guides, not universal decision rules.
 # }

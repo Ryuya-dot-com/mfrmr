@@ -101,7 +101,8 @@ An object of class `mfrm_diagnostics` including:
 - `parameter_uncertainty`: MML observed-information uncertainty for
   structural parameters when available (`steps`, and bounded-`GPCM`
   `slopes` on both log and positive scales), plus covariance status
-  metadata
+  metadata. Step `CIEligible` and `CIUse` retain the source fit's
+  restrictions; non-unit observation-weight bands are diagnostic only.
 
 - `facet_precision`: facet-level precision summary by distribution basis
   and SE mode
@@ -134,11 +135,15 @@ An object of class `mfrm_diagnostics` including:
   review-only fit
 
 - `marginal_fit`: optional strict marginal-fit companion based on
-  posterior-expected first-order category counts
+  posterior-expected first-order category counts, with classification
+  coverage
 
 - `residual_pca_overall`: optional overall PCA object
 
 - `residual_pca_by_facet`: optional facet PCA objects
+
+- `replay_inputs`: diagnostic settings retained for reproducible export,
+  including fit standardization, interaction selection, and PCA limits
 
 ## Details
 
@@ -153,6 +158,29 @@ residual/EAP stack, whereas the strict marginal path targets
 latent-integrated first-order category counts. When
 `diagnostic_mode = "both"`, the output includes a `diagnostic_basis`
 guide so downstream tables and summaries can distinguish these targets.
+
+Marginal expected counts integrate over each Person's posterior
+conditioned on the same observed responses, holding fitted calibration
+fixed. They are not expectations from an independent replication or a
+prior-only population margin. First-order residual scales use
+`sum(w^2 * p * (1-p))`; pairwise scales use the analogous formula with
+products of row weights. These scales omit cross-response/opportunity
+covariance and calibration-parameter uncertainty. They are descriptive
+screens, not calibrated residual tests.
+
+Missing/invalid contributing probabilities, scores or weights withhold
+the affected complete-scope aggregate rather than selecting usable rows.
+Missing standardized residuals and flags remain `NA`. A known cutoff
+crossing stays flagged when a companion rule is unavailable.
+`marginal_fit$coverage` records classified/unclassified cells, groups
+and level pairs. Row/opportunity counts remain visible; zero-weight
+opportunities contribute no information. Available maxima are
+accompanied by classification/residual counts; they are not maxima over
+unavailable values. RMSDs require the complete scope. In PCM and GPCM,
+step-group summaries retain the declared `step_facet`. Regenerate older
+marginal diagnostics and downstream summaries/plots/exports from the
+existing fit and original diagnostic settings; no model refit is
+required.
 
 Choosing `diagnostic_mode`:
 
@@ -293,12 +321,30 @@ a single criterion.
 
 `SE` is kept as a compatibility alias for `ModelSE`. `RealSE` is a
 fit-adjusted companion defined as `ModelSE * sqrt(max(Infit, 1))`.
-Reliability tables report model and fit-adjusted bounds from observed
-variance, error variance, and true variance; `JML` entries should still
-be treated as exploratory. Separation, strata, and reliability follow
-the Wright & Masters (1982) conventions: \\G =
-\mathrm{TrueSD}/\mathrm{RMSE}\\, \\R = G^2 / (1 + G^2)\\, and \\H =
-(4G + 1) / 3\\.
+Reliability tables report model and fit-adjusted indices from observed
+variance minus mean squared SE, truncated at zero. Fit-adjusted values
+are not confidence bounds; `JML` entries remain exploratory. Separation,
+strata, and reliability follow the Wright & Masters (1982) conventions:
+\\G = \mathrm{TrueSD}/\mathrm{RMSE}\\, \\R = G^2 / (1 + G^2)\\, and \\H
+= (4G + 1) / 3\\.
+
+Tables record finite-estimate counts and the available SEs on those same
+levels. Non-finite estimates are excluded from the spread and SE
+summaries. If any finite estimate lacks a valid SE, reliability,
+separation, strata and error-adjusted spread are unavailable, rather
+than combining different sets of levels. Excluded levels or incomplete
+uncertainty prevent a facet summary from supporting formal reporting.
+For EAP Persons, this separation-based index is distinct from
+posterior-variance EAP reliability. High rater separation means
+distinguishable rater measures, not high rater agreement.
+
+Facet SEs from a regularized information matrix or an observation-table
+fallback remain diagnostic approximations. They are labelled explicitly
+and cannot authorize ordinary confidence-interval reporting. Numerical
+convergence is reviewed separately from support for inference; switching
+from JML to MML does not by itself establish valid SEs or intervals.
+Recompute older diagnostic objects with `diagnose_mfrm(fit)` before
+reporting; the existing fit can be used without refitting the model.
 
 ## Typical workflow
 
@@ -349,22 +395,54 @@ the Wright & Masters (1982) conventions: \\G =
 
 ``` r
 # \donttest{
-# Diagnostic example without residual PCA.
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
-# Seven quadrature points keep this example short; use the prespecified
-# final grid and a denser sensitivity grid for substantive analysis.
+
+# Fit the model
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-s_diag <- summary(diag)
-s_diag$overview[, c("Observations", "Facets", "Categories")]
-#> # A tibble: 1 × 3
-#>   Observations Facets Categories
-#>          <int>  <int>      <int>
-#> 1          282      2          4
-s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+
+# Check model fit and the support for standard errors and intervals
+diagnostics <- diagnose_mfrm(fit)
+diagnostic_summary <- summary(diagnostics)
+diagnostic_summary$decision
+#>               Interpretation FormalInference FitReadiness
+#> 1 Ready for formal inference             Yes        ready
+#>                                           Why
+#> 1 All stored fit-readiness components passed.
+#>                                                                                            NextAction
+#> 1 Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence.
+
+diagnostic_summary$key_warnings # Issues to investigate, if present
+#> [1] "Unexpected responses flagged: 60."                                                                                                 
+#> [2] "Flagged displacement levels: 1."                                                                                                   
+#> [3] "MnSq screening flagged 18 element(s) outside the configured 0.5-1.5 band."                                                         
+#> [4] "Person-level fit warnings: 18 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."
+#> [5] "Strict marginal fit flagged 1 group-level summaries."                                                                              
+diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
+#> # A tibble: 10 × 9
+#>    Facet     Level   Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ
+#>    <chr>     <fct>   <dbl>  <dbl>     <dbl>      <dbl>    <dbl>     <dbl> <dbl>
+#>  1 Person    P026    0.126  0.117     -1.90      -2.46     4.06         6  2.46
+#>  2 Person    P022    0.126  0.123     -1.94      -2.42     4.23         6  2.42
+#>  3 Person    P016    2.66   2.53       1.68       2.08     2.94         6  2.08
+#>  4 Criterion Content 0.730  0.743     -1.56      -1.89    58.5         94  1.89
+#>  5 Rater     R05     0.648  0.640     -1.34      -1.87    25.1         44  1.87
+#>  6 Person    P035    0.239  0.237     -1.45      -1.79     4.36         6  1.79
+#>  7 Person    P008    0.251  0.250     -1.40      -1.73     4.34         6  1.73
+#>  8 Person    P025    2.22   2.18       1.55       1.73     4.18         6  1.73
+#>  9 Person    P012    2.01   2.17       1.35       1.72     4.05         6  1.72
+#> 10 Person    P017    0.265  0.285     -1.25      -1.59     3.85         6  1.59
+
+# Distinguish residual-based checks from marginal model checks
+diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 #> # A tibble: 4 × 3
 #>   DiagnosticPath                   Status        Basis                          
 #>   <chr>                            <chr>         <chr>                          
@@ -372,97 +450,5 @@ s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 #> 2 strict_marginal_fit              computed      latent_integrated_first_order_…
 #> 3 strict_pairwise_local_dependence computed      latent_integrated_second_order…
 #> 4 posterior_predictive_follow_up   not_available posterior_predictive_replicati…
-s_diag$key_warnings
-#> [1] "Unexpected responses flagged: 63."                                                                                                 
-#> [2] "Flagged displacement levels: 5."                                                                                                   
-#> [3] "MnSq screening flagged 19 element(s) outside the configured 0.5-1.5 band."                                                         
-#> [4] "Person-level fit warnings: 19 row(s); identifiers suppressed. Use `include_person = TRUE` only under appropriate privacy controls."
-#> [5] "Strict marginal fit flagged 2 group-level summaries."                                                                              
-# Look for: lines starting with "MnSq misfit:" name the element +
-#   Infit / Outfit values outside the configured heuristic review band.
-#   Review those signals in context; an empty warning list is not an
-#   automatic all-clear decision.
-s_diag$facets_chisq
-#> # A tibble: 3 × 10
-#>   Facet     Levels MeanMeasure    SD FixedChiSq FixedDF FixedProb RandomChiSq
-#>   <chr>      <int>       <dbl> <dbl>      <dbl>   <dbl>     <dbl>       <dbl>
-#> 1 Criterion      3    4.62e-18 0.298       14.6       2  6.60e- 4        2.00
-#> 2 Person        48   -1.41e- 1 0.811      149.       47  1.83e-12       46.5 
-#> 3 Rater          6    0        0.379       14.5       5  1.26e- 2        4.99
-#> # ℹ 2 more variables: RandomDF <dbl>, RandomProb <dbl>
-# Look for: `FixedProb` < 0.05 is evidence against the fixed-effect
-#   "all elements equal" null under the reported chi-square approximation.
-#   Interpret the magnitude and precision as well; a non-significant result
-#   does not demonstrate homogeneous elements or negligible facet spread.
-s_diag$interrater
-#> # A tibble: 1 × 12
-#>   RaterFacet Raters Pairs OpportunityCount ExactAgreement ExpectedExactAgreement
-#>   <chr>       <int> <int>            <dbl>          <dbl>                  <dbl>
-#> 1 Rater           6    15              138          0.391                  0.349
-#> # ℹ 6 more variables: AgreementMinusExpected <dbl>, AdjacentAgreement <dbl>,
-#> #   MeanAbsDiff <dbl>, MeanCorr <dbl>, RaterSeparation <dbl>,
-#> #   RaterReliability <dbl>
-# Look for: ExactAgreement >= ExpectedExactAgreement and
-#   AgreementMinusExpected >= 0 indicate raters agree at least as
-#   often as the model expects. Negative values warrant a closer
-#   look at `diag$interrater$pairs`.
-p_qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE)
-p_qc$data$plot
-#> [1] "qc_dashboard"
-
-# Optional: include residual PCA in the diagnostic bundle
-diag_pca <- diagnose_mfrm(fit, residual_pca = "overall")
-pca <- analyze_residual_pca(diag_pca, mode = "overall")
-head(pca$overall_table)
-#>   Component Eigenvalue Proportion Cumulative
-#> 1         1   2.853684 0.15853802  0.1585380
-#> 2         2   2.458881 0.13660448  0.2951425
-#> 3         3   2.200935 0.12227419  0.4174167
-#> 4         4   1.996765 0.11093138  0.5283481
-#> 5         5   1.598169 0.08878715  0.6171352
-#> 6         6   1.452093 0.08067183  0.6978070
-
-# Reporting route:
-prec <- precision_review_report(fit, diagnostics = diag)
-summary(prec)
-#> mfrmr Precision Review Summary 
-#>   Class: mfrm_precision_review
-#>   Components: 5
-#> 
-#> Precision overview
-#>  Method PrecisionTier SupportsFormalInference Checks ReviewOrWarn
-#>     MML   model_based                    TRUE      7            0
-#>  FitSeparationRows NoteRows
-#>                  4        4
-#> 
-#> Review checks: checks
-#>                     Check Status
-#>            Precision tier   pass
-#>     Optimizer convergence   pass
-#>      ModelSE availability   pass
-#>  Fit-adjusted SE ordering   pass
-#>      Reliability ordering   pass
-#>  Facet precision coverage   pass
-#>          SE source labels   pass
-#>                                                                                Detail
-#>                               This run uses the package's model-based precision path.
-#>                                 Optimizer diagnostics support inference-ready status.
-#>                              Finite ModelSE values were available for 100.0% of rows.
-#>             Fit-adjusted SE values were not smaller than their paired ModelSE values.
-#>          Conservative reliability values were not larger than the model-based values.
-#>  Each facet had sample/population summaries for both model and fit-adjusted SE modes.
-#>                         Person and non-person SE labels match the MML precision path.
-#> 
-#> Settings
-#>         Setting       Value
-#>           model         RSM
-#>          method         MML
-#>  precision_tier model_based
-#> 
-#> Notes
-#>  - Model-based precision path detected for the current run.
-#>  - Fit/separation basis rows state source grounding and validation-use
-#>    boundaries.
-
 # }
 ```

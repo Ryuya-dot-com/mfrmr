@@ -99,6 +99,24 @@ An object of class `mfrm_response_time_review`, a list with `overview`,
 `thresholds`, `observations`, `person_summary`, `facet_summary`,
 `score_summary`, `flags`, and `notes`.
 
+## Details
+
+Supply one row per timed event. A respondent's production time must not
+be repeated for every rater or criterion that scores that response;
+rater scoring time is a different observation. This helper does not
+model repeated events, censoring or a speed-accuracy relationship.
+
+Numeric factor labels are interpreted as times, not factor codes. Group
+summaries retain `InputRows`, valid timed rows (`N`) and `ExcludedRows`.
+Rates describe valid rows only; groups with no valid times remain
+present with unavailable statistics. Missing facet or score labels are
+omitted from that grouping. Sample quantiles and user-specified cutoffs
+are descriptive; they do not diagnose rapid guessing, effort or rater
+quality. Equal cutoffs can flag the same event in both tails when times
+are tied. `FlaggedGroups` counts distinct groups, while `Flags` counts
+rapid/slow rule crossings. Recreate older reviews from the original
+timing data before summary or plotting; no MFRM refit is needed.
+
 ## See also
 
 [`plot_response_time_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_response_time_review.md),
@@ -126,31 +144,34 @@ summary(rt)
 #>   768       768           0      48      2 ResponseTime       Score  seconds
 #>  MedianTime MeanLogTime RapidThreshold SlowThreshold  RapidRate  SlowRate
 #>        24.7     3.16429           16.2          32.6 0.06901042 0.0546875
-#>  FlaggedGroups
-#>             10
+#>  FlaggedGroups Flags UnassessedPersons
+#>             10    10                 0
 #>                                                                               InterpretationBoundary
 #>  Descriptive response-time screening; not a joint speed-accuracy model and not a fit/pass-fail rule.
 #> 
 #> Thresholds:
-#>  Threshold Value         Basis TimeUnit
-#>      rapid  16.2 quantile_0.05  seconds
-#>       slow  32.6 quantile_0.95  seconds
+#>  Threshold Value                  Basis TimeUnit
+#>      rapid  16.2 Observed quantile 0.05  seconds
+#>       slow  32.6 Observed quantile 0.95  seconds
 #> 
 #> Flagged groups:
-#>  Source Group                     Flag   Rate  N ThresholdRate
-#>  person  P001 high_rapid_response_rate 0.7500 16          0.25
-#>  person  P002 high_rapid_response_rate 0.5000 16          0.25
-#>  person  P003 high_rapid_response_rate 0.6250 16          0.25
-#>  person  P005 high_rapid_response_rate 0.2500 16          0.25
-#>  person  P006 high_rapid_response_rate 0.4375 16          0.25
-#>  person  P008 high_rapid_response_rate 0.5000 16          0.25
-#>  person  P042  high_slow_response_rate 0.2500 16          0.25
-#>  person  P044  high_slow_response_rate 0.7500 16          0.25
-#>  person  P047  high_slow_response_rate 0.5625 16          0.25
-#>  person  P048  high_slow_response_rate 0.8125 16          0.25
+#>  Source Group                                   Flag   Rate  N ThresholdRate
+#>  person  P001 High fraction at or below rapid cutoff 0.7500 16          0.25
+#>  person  P002 High fraction at or below rapid cutoff 0.5000 16          0.25
+#>  person  P003 High fraction at or below rapid cutoff 0.6250 16          0.25
+#>  person  P005 High fraction at or below rapid cutoff 0.2500 16          0.25
+#>  person  P006 High fraction at or below rapid cutoff 0.4375 16          0.25
+#>  person  P008 High fraction at or below rapid cutoff 0.5000 16          0.25
+#>  person  P042  High fraction at or above slow cutoff 0.2500 16          0.25
+#>  person  P044  High fraction at or above slow cutoff 0.7500 16          0.25
+#>  person  P047  High fraction at or above slow cutoff 0.5625 16          0.25
+#>  person  P048  High fraction at or above slow cutoff 0.8125 16          0.25
 #> 
 #> Notes:
 #> - Response-time review is descriptive; it does not change fit_mfrm estimates.
+#> - Each row must represent one timed event. Do not duplicate one response-production time across its raters or criteria; rater scoring time is a different event.
+#> - Rates describe valid timed rows only; each group retains input and excluded counts. A group without valid times is unassessed.
+#> - Sample quantiles describe the observed distribution, not validated rapid-guessing, low-effort or speed cutoffs. Missing times and censoring are not modeled.
 #> - Score-level summaries are descriptive and should not be read as response-time model parameters.
 plot_response_time_review(rt, draw = FALSE)
 ```

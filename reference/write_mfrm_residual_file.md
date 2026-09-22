@@ -84,8 +84,12 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 path <- tempfile(fileext = ".csv")
 out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)
-out$written_files
-#>       Component Format                                 Path
-#> 1 residual_file    csv /tmp/RtmpJHlGr0/file2f3350773bb9.csv
+data.frame(
+  Component = out$written_files$Component,
+  File = basename(out$written_files$Path)
+)
+#>       Component                 File
+#> 1 residual_file file30ba797e3309.csv
+# Full paths remain in out$written_files$Path.
 # }
 ```

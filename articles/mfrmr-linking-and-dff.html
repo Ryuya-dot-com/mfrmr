@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,10 +38,12 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -69,7 +71,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Linking and DFF</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/vignettes/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/mfrmr-linking-and-dff.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/vignettes/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/mfrmr-linking-and-dff.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-linking-and-dff.Rmd</code></div>
     </div>
 
@@ -81,8 +83,8 @@
 scale</li>
 <li>exporting anchor candidates from an existing fit</li>
 <li>screening differential facet functioning (DFF)</li>
-<li>deciding when subgroup contrasts are descriptive versus formally
-comparable</li>
+<li>deciding whether subgroup contrasts are linked and available for
+screening</li>
 </ul>
 <p>For a broader workflow guide, see
 <code><a href="../articles/mfrmr-workflow.html">vignette("mfrmr-workflow", package = "mfrmr")</a></code>. For the
@@ -96,7 +98,7 @@ shorter help-page map, see
 <span></span>
 <span><span class="va">bias_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># The vignette uses compact quadrature so optional local execution stays fast.</span></span>
+<span><span class="co"># This example uses compact quadrature for a shorter runtime.</span></span>
 <span><span class="co"># For final DFF or linking evidence, refit with the package default or a higher</span></span>
 <span><span class="co"># quadrature setting and record that setting in the analysis log.</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
@@ -128,13 +130,18 @@ subgroup or cross-form contrasts.</p>
 <ul>
 <li>Sparse rows or columns indicate weaker design coverage.</li>
 <li>Weak coverage should lower confidence in subgroup comparisons.</li>
+<li>Use the co-observation design graph, not rater agreement,
+severity-direction, or halo response networks, to assess empirical
+connectedness. Response-network correlations do not create a common
+scale.</li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="export-anchor-candidates">2. Export anchor candidates<a class="anchor" aria-label="anchor" href="#export-anchor-candidates"></a>
 </h2>
-<p><code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> is the shortest route when you need
-reusable anchor elements from an existing calibration.</p>
+<p><code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> mechanically exports fitted values
+in the direct-anchor schema. Its output is a candidate table, not a
+validated anchor set.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">anchors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_anchor_table.html">make_anchor_table</a></span><span class="op">(</span><span class="va">fit</span>, facets <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">anchors</span><span class="op">)</span></span>
@@ -145,14 +152,68 @@ reusable anchor elements from an existing calibration.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Criterion Content      -<span style="color: #BB0000;">0.199</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Criterion Language     -<span style="color: #BB0000;">0.275</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Criterion Organization -<span style="color: #BB0000;">0.049</span><span style="color: #BB0000; text-decoration: underline;">9</span></span></span></code></pre></div>
-<p>Use <code><a href="../reference/review_mfrm_anchors.html">review_mfrm_anchors()</a></code> when you want a stricter
-review of anchor quality.</p>
+<p>By default, <code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> refuses a source whose
+current readiness record does not have
+<code>InferenceReady = TRUE</code>. Use
+<code>readiness_policy = "review"</code> only to inspect review-only
+candidate values, not to reuse them as anchors. For a ready reference
+fit, also document cross-run element identity and invariance and confirm
+compatible model, score, orientation, and population conventions. Then
+use <code><a href="../reference/review_mfrm_anchors.html">review_mfrm_anchors()</a></code> to check table syntax and
+receiving-data support. That review does not certify the substantive
+link.</p>
+<p>Keep the roles distinct: common ratings or common elements supply
+observed design overlap; <code>anchors</code> fix individual parameters;
+<code>group_anchors</code> constrain a group mean under an externally
+justified target or equal-mean assumption. Neither constraint type
+manufactures empirical overlap.</p>
+<div class="section level3">
+<h3 id="design-the-link-not-only-the-percentage">Design the link, not only the percentage<a class="anchor" aria-label="anchor" href="#design-the-link-not-only-the-percentage"></a>
+</h3>
+<p>No anchor percentage or count is universally adequate. In sparse
+designs, link quality also depends on coverage, the distribution and
+redundancy of the links, whether one articulation point or critical edge
+holds the network together, the location and model fit of the linking
+set, and the intended use of ranks or classifications. Inspect both
+Rater-centered and Person/task- centered assignment graphs rather than
+treating a minimum count as proof of a common scale. This distinction is
+consistent with work on sparse linking networks by <a href="https://doi.org/10.1002/j.2333-8504.2000.tb01832.x" class="external-link">Myford and
+Wolfe (2000)</a>, <a href="https://doi.org/10.1177/0013164417703733" class="external-link">Wind and Jones
+(2018)</a>, and <a href="https://doi.org/10.3758/s13428-020-01498-x" class="external-link">Uto
+(2021)</a>.</p>
+<p>Fixed anchor values also carry uncertainty from their source
+calibration. Current mfrmr drift and chain summaries do not propagate
+every source-fit, offset, and cross-fit covariance component. When
+results depend on the anchor set, compare defensible alternatives and
+report that sensitivity; fixed- parameter calibration error should not
+be mistaken for zero uncertainty (<a href="https://doi.org/10.3390/appliedmath4030063" class="external-link">Robitzsch,
+2024</a>).</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="residual-dff-as-a-screening-layer">3. Residual DFF as a screening layer<a class="anchor" aria-label="anchor" href="#residual-dff-as-a-screening-layer"></a>
+<h2 id="compare-group-residuals">3. Compare group residuals<a class="anchor" aria-label="anchor" href="#compare-group-residuals"></a>
 </h2>
-<p>Residual DFF is the fast screening route. It is useful for triage,
-but it is not automatically a logit-scale inferential contrast.</p>
+<p>Residual comparisons describe how observed-minus-expected scores
+differ between groups. They use score units and do not test differential
+functioning.</p>
+<p>A group with higher average ability can score higher without
+differential functioning. DFF concerns a facet difference at the same
+ability. Residual screens inherit the fitted population assumptions, and
+fixed-standard-normal RSM/PCM subgroup refits do not estimate group
+ability distributions. Linking anchors alone do not address an omitted
+group difference. Review these assumptions before interpreting a
+residual difference involving a rater or criterion.</p>
+<p>Representing group ability differences is necessary for a suitable
+population model, but does not turn the current residual screen into a
+calibrated DFF test. MML residuals evaluate expected scores at EAP
+ability estimates. Because the response function is nonlinear, a no-DFF
+model can still have different mean residuals across groups. This
+concerns the null being tested as well as its standard error.</p>
+<p>The residual method therefore returns no p-values, confidence
+intervals or positive/negative classifications. For compatibility, its
+former SE and test columns contain <code>NA</code>. Recompute older
+residual results with <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code> using the existing fit
+and original data; no model refit is needed.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dff_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_dff.html">analyze_dff</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
@@ -164,30 +225,30 @@ but it is not automatically a logit-scale inferential contrast.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dff_resid</span><span class="op">$</span><span class="va">summary</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 2</span></span></span>
-<span><span class="co">#&gt;   Classification  Count</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Screen positive     2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Screen negative     2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Unclassified        0</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 2</span></span></span>
+<span><span class="co">#&gt;   Classification    Count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Residual contrast     4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Unavailable           0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span></span>
-<span>  <span class="va">dff_resid</span><span class="op">$</span><span class="va">dif_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"Group1"</span>, <span class="st">"Group2"</span>, <span class="st">"Classification"</span>, <span class="st">"ClassificationSystem"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  <span class="va">dff_resid</span><span class="op">$</span><span class="va">dif_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"Group1"</span>, <span class="st">"Group2"</span>, <span class="st">"Contrast"</span>, <span class="st">"N_Group1"</span>, <span class="st">"N_Group2"</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>  <span class="fl">8</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 5</span></span></span>
-<span><span class="co">#&gt;   Level        Group1 Group2 Classification  ClassificationSystem</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Accuracy     A      B      Screen positive screening           </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Content      A      B      Screen negative screening           </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Language     A      B      Screen positive screening           </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Organization A      B      Screen negative screening</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
+<span><span class="co">#&gt;   Level        Group1 Group2 Contrast N_Group1 N_Group2</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Accuracy     A      B        0.403        48       48</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Content      A      B       -<span style="color: #BB0000;">0.064</span><span style="color: #BB0000; text-decoration: underline;">3</span>       48       48</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Language     A      B       -<span style="color: #BB0000;">0.401</span>        48       48</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Organization A      B       -<span style="color: #BB0000;">0.101</span>        48       48</span></span>
 <span><span class="fu"><a href="../reference/plot_dif_heatmap.html">plot_dif_heatmap</a></span><span class="op">(</span><span class="va">dff_resid</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-linking-and-dff_files/figure-html/dff-residual-1.png" class="r-plt" alt="" width="672"></p>
 <p>Interpretation:</p>
 <ul>
-<li>Treat <code>residual</code> output as screening evidence.</li>
-<li>Check <code>ClassificationSystem</code> to see how the current
-residual screen was labeled.</li>
+<li>Read <code>Contrast</code> as the residual mean in Group1 minus that
+in Group2.</li>
+<li>A positive value means higher residual scores in Group1, not greater
+rater leniency.</li>
 <li>Reserve <code>ScaleLinkStatus</code> and
 <code>ContrastComparable</code> for refit-based contrasts.</li>
 </ul>
@@ -195,8 +256,23 @@ residual screen was labeled.</li>
 <div class="section level2">
 <h2 id="refit-dff-when-subgroup-comparisons-are-defensible">4. Refit DFF when subgroup comparisons are defensible<a class="anchor" aria-label="anchor" href="#refit-dff-when-subgroup-comparisons-are-defensible"></a>
 </h2>
-<p>The refit route can support logit-scale contrasts only when subgroup
-linking is adequate and the precision layer supports it.</p>
+<p>The refit route reports logit-scale point contrasts when subgroup
+linking supports a common scale. Any available SE or test statistic
+conditions on the baseline anchors and omits their uncertainty and
+cross-refit covariance; <code>FormalInferenceEligible</code> remains
+<code>FALSE</code>, even with adequate linking. The default refit
+linking screen requires at least five anchored levels in total across
+the non-target linking facets in each subgroup. A weak link withholds
+contrast SEs and p-values. Inspect <code>LinkingAnchoredLevels</code>,
+<code>LinkingThreshold</code>, and <code>ScaleLinkStatus</code>; five is
+a local screening threshold, not a universal adequate anchor count or
+proof of invariance.</p>
+<p>Refits currently refuse baselines with user-specified active
+population models, fitted facet interactions, or group-anchor
+constraints because those structures cannot yet be replayed and linked
+completely within subgroups. The default GPCM-MML identification
+intercept is handled separately. Residual DFF remains a screening
+alternative; see <code><a href="../reference/analyze_dff.html">?analyze_dff</a></code> for the exact scope.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dff_refit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_dff.html">analyze_dff</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
@@ -240,7 +316,7 @@ the interaction table and narrative report.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dit</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 15</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 18</span></span></span>
 <span><span class="co">#&gt;   Level  GroupValue     N ObsScore ExpScore ObsExpAvg Var_sum sparse StdResidual</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Accur… A             48      125     113.    0.255     28.6 FALSE        2.29 </span></span>
@@ -249,14 +325,13 @@ the interaction table and narrative report.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Conte… B             48      148     144.    0.077<span style="text-decoration: underline;">4</span>    26.1 FALSE        0.727</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Langu… A             48      128     135.   -<span style="color: #BB0000;">0.156</span>     27.5 FALSE       -<span style="color: #BB0000;">1.43</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Langu… B             48      158     146.    0.245     25.6 FALSE        2.32 </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 6 more variables: t &lt;dbl&gt;, df &lt;dbl&gt;, p_value &lt;dbl&gt;, p_adjusted &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   flag_t &lt;lgl&gt;, flag_bias &lt;lgl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 9 more variables: t &lt;dbl&gt;, df &lt;dbl&gt;, p_value &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   FormalInferenceEligible &lt;lgl&gt;, ReportingUse &lt;chr&gt;, Interpretation &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   p_adjusted &lt;dbl&gt;, flag_t &lt;lgl&gt;, flag_bias &lt;lgl&gt;</span></span></span>
 <span></span>
 <span><span class="va">dr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dif_report.html">dif_report</a></span><span class="op">(</span><span class="va">dff_resid</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">dr</span><span class="op">$</span><span class="va">narrative</span><span class="op">)</span></span>
-<span><span class="co">#&gt; DIF screening was conducted for the Criterion facet across levels of Group using the residual method. A total of 4 pairwise facet-level comparisons were evaluated. 2 comparison(s) were screening-positive and 2 were screening-negative based on the residual-contrast test. </span></span>
-<span><span class="co">#&gt; The following Criterion level(s) showed screening-positive residual contrasts: Accuracy, Language.   - Accuracy: A vs B (contrast = 0.403 on the residual scale; A was higher).   - Language: A vs B (contrast = -0.401 on the residual scale; A was lower). </span></span>
-<span><span class="co">#&gt; Note: The presence of differential functioning does not necessarily indicate measurement bias. Differential functioning may reflect construct-relevant variation (e.g., true group differences in the attribute being measured) rather than unwanted measurement bias. Substantive review is recommended to distinguish between these possibilities (cf. Eckes, 2011; McNamara &amp; Knoch, 2012).</span></span></code></pre></div>
+<span><span class="co">#&gt; Mean observed-minus-expected scores were compared for the Criterion facet across levels of Group. 4 of 4 group comparisons had sufficient observations to report a residual difference. Differences are in score units. They do not isolate differential functioning: group residual means can differ even when response parameters are the same. No p-values, confidence intervals or positive/negative classifications are provided.</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="model-estimated-facet-interactions">6. Model-estimated facet interactions<a class="anchor" aria-label="anchor" href="#model-estimated-facet-interactions"></a>
@@ -335,6 +410,14 @@ anchors and do not link their scales.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_anchor_drift.html">detect_anchor_drift</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Wave1 <span class="op">=</span> <span class="va">fit1</span>, Wave2 <span class="op">=</span> <span class="va">fit2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_anchor_drift.html">plot_anchor_drift</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"drift"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
+<p>The current drift and chain helpers estimate one pooled offset across
+every selected common element and facet. Their SE ratios do not include
+uncertainty from estimating that offset or cross-fit covariance, and
+cumulative chain offsets have no propagated SE. <code>Offset_SD</code>
+is residual spread rather than an offset standard error. Use one
+coherent linking facet unless a common shift across facet blocks is
+defensible, and treat flags and support counts as review screens rather
+than formal tests or proof of scale equivalence.</p>
 </div>
 <div class="section level2">
 <h2 id="recommended-sequence">Recommended sequence<a class="anchor" aria-label="anchor" href="#recommended-sequence"></a>
@@ -369,6 +452,24 @@ anchors and do not link their scales.</p>
 <li><code><a href="../reference/analyze_dff.html">help("analyze_dff", package = "mfrmr")</a></code></li>
 <li><code><a href="../reference/interaction_effect_table.html">help("interaction_effect_table", package = "mfrmr")</a></code></li>
 <li><code><a href="../reference/detect_anchor_drift.html">help("detect_anchor_drift", package = "mfrmr")</a></code></li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<ul>
+<li>Myford, C. M., &amp; Wolfe, E. W. (2000). Strengthening the ties
+that bind: Improving the linking network in sparsely connected rating
+designs. <em>ETS Research Report Series</em>, 2000(1).</li>
+<li>Robitzsch, A. (2024). Bias and linking error in fixed item parameter
+calibration. <em>AppliedMath</em>, 4(3), 1181–1191.</li>
+<li>Uto, M. (2021). Accuracy of performance-test linking based on a
+many-facet Rasch model. <em>Behavior Research Methods</em>, 53(4),
+1440–1454.</li>
+<li>Wind, S. A., &amp; Jones, E. (2018). The stabilizing influences of
+linking set size and model–data fit in sparse rater-mediated assessment
+networks. <em>Educational and Psychological Measurement</em>, 78(4),
+679–707.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

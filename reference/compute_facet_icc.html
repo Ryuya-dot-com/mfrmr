@@ -17,7 +17,7 @@ separation/reliability reported elsewhere."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,10 +28,12 @@ separation/reliability reported elsewhere."><meta property="og:image" content="h
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -48,7 +50,7 @@ separation/reliability reported elsewhere."><meta property="og:image" content="h
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute intra-class correlations for each facet</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-hierarchical-audit.R" class="external-link"><code>R/api-hierarchical-audit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-hierarchical-audit.R" class="external-link"><code>R/api-hierarchical-audit.R</code></a></small>
       <div class="d-none name"><code>compute_facet_icc.Rd</code></div>
     </div>
 
@@ -69,12 +71,13 @@ separation/reliability reported elsewhere.</p>
 <span>  <span class="va">score</span>,</span>
 <span>  person <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  reml <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  ci_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"profile"</span>, <span class="st">"boot"</span><span class="op">)</span>,</span>
+<span>  ci_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"boot"</span><span class="op">)</span>,</span>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  ci_boot_reps <span class="op">=</span> <span class="fl">1000L</span>,</span>
 <span>  ci_boot_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ci_boot_parallel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"multicore"</span>, <span class="st">"snow"</span><span class="op">)</span>,</span>
-<span>  ci_boot_ncpus <span class="op">=</span> <span class="fl">1L</span></span>
+<span>  ci_boot_ncpus <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"omit"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -106,16 +109,11 @@ out.</p></dd>
 
 <dt id="arg-ci-method">ci_method<a class="anchor" aria-label="anchor" href="#arg-ci-method"></a></dt>
 <dd><p>Confidence-interval method for the ICC column.
-One of <code>"none"</code> (default, point estimate only), <code>"profile"</code>
-(a <strong>first-order approximation</strong>: marginal likelihood-profile
-bounds for each variance-component SD via
-<code><a href="https://rdrr.io/pkg/lme4/man/confint.merMod.html" class="external-link">lme4::confint.merMod()</a></code> with <code>method = "profile"</code>, squared to
-variances, then plugged into the ICC ratio while holding the
-other components at their point estimate; fast and deterministic,
-the default recommendation for reporting), or <code>"boot"</code>
-(parametric bootstrap via <code><a href="https://rdrr.io/pkg/lme4/man/bootMer.html" class="external-link">lme4::bootMer()</a></code>; slower but robust
-to non-normal ICC sampling distributions because each bootstrap
-replicate resamples the full variance decomposition jointly).</p></dd>
+One of <code>"none"</code> (default, point estimate only) or <code>"boot"</code>
+(parametric percentile bootstrap via <code><a href="https://rdrr.io/pkg/lme4/man/bootMer.html" class="external-link">lme4::bootMer()</a></code>). Each
+simulated data set is refitted and its full variance decomposition
+used to calculate the ICC ratios. The former <code>"profile"</code> method
+is no longer supported; see Updating saved intervals below.</p></dd>
 
 
 <dt id="arg-ci-level">ci_level<a class="anchor" aria-label="anchor" href="#arg-ci-level"></a></dt>
@@ -127,12 +125,15 @@ Good / Excellent.</p></dd>
 
 <dt id="arg-ci-boot-reps">ci_boot_reps<a class="anchor" aria-label="anchor" href="#arg-ci-boot-reps"></a></dt>
 <dd><p>Number of bootstrap replicates used when
-<code>ci_method = "boot"</code>. Default <code>1000</code>.</p></dd>
+<code>ci_method = "boot"</code>. An integer of at least 2; default <code>1000</code>.
+Small counts give imprecise tail quantiles; choose enough replicates
+for the precision required in the application.</p></dd>
 
 
 <dt id="arg-ci-boot-seed">ci_boot_seed<a class="anchor" aria-label="anchor" href="#arg-ci-boot-seed"></a></dt>
 <dd><p>Optional integer seed for the bootstrap path
-(<code>NULL</code> leaves the RNG state untouched).</p></dd>
+(between 0 and <code>.Machine$integer.max</code>). <code>NULL</code> uses the current
+random-number state. Bootstrap simulation advances that state.</p></dd>
 
 
 <dt id="arg-ci-boot-parallel">ci_boot_parallel<a class="anchor" aria-label="anchor" href="#arg-ci-boot-parallel"></a></dt>
@@ -140,33 +141,69 @@ Good / Excellent.</p></dd>
 parametric-bootstrap CI path, passed through to
 <code><a href="https://rdrr.io/pkg/lme4/man/bootMer.html" class="external-link">lme4::bootMer()</a></code>: <code>"no"</code> (default), <code>"multicore"</code> (POSIX
 <code>mclapply</code>), or <code>"snow"</code> (PSOCK cluster). <code>"multicore"</code> does
-nothing on Windows and falls back to serial; in that case use
-<code>"snow"</code> with <code><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">parallel::makeCluster()</a></code> in scope.</p></dd>
+nothing on Windows and falls back to serial; use <code>"snow"</code> there.</p></dd>
 
 
 <dt id="arg-ci-boot-ncpus">ci_boot_ncpus<a class="anchor" aria-label="anchor" href="#arg-ci-boot-ncpus"></a></dt>
 <dd><p>Number of CPUs to use for the parallel
-bootstrap path (ignored when <code>ci_boot_parallel = "no"</code>). The
-per-replicate progress bar is suppressed under parallel
-execution because worker processes cannot push updates to the
-parent's cli console.</p></dd>
+bootstrap path (ignored when <code>ci_boot_parallel = "no"</code>). A positive
+integer. Interactive progress is available for serial execution.</p></dd>
+
+
+<dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
+<dd><p>How to handle missing scores or selected grouping values:
+<code>"error"</code> (default) or explicit complete-case omission with <code>"omit"</code>.
+Numeric character/factor score labels retain their numeric values.
+Nonnumeric scores, infinite values, and blank grouping labels are refused.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data.frame of class <code>mfrm_facet_icc</code> with one row per
 variance component (including a <code>"Residual"</code> row) and columns:</p><ul><li><p><code>Facet</code>: the grouping factor name (or <code>"Residual"</code>).</p></li>
-<li><p><code>Variance</code>: REML variance estimate.</p></li>
+<li><p><code>Variance</code>: unrounded variance estimate (REML by default, ML if
+<code>reml = FALSE</code>); <code>NA</code> when the variance shares are undefined.</p></li>
 <li><p><code>ICC</code>: variance share (<code>Variance / sum(Variance)</code>), in <code>[0, 1]</code>.</p></li>
 <li><p><code>Interpretation</code>: band label according to the facet's scale.</p></li>
 <li><p><code>InterpretationScale</code>: <code>"Koo-Li reliability"</code> for the person
 facet, <code>"Variance share"</code> for others.</p></li>
 <li><p><code>ICC_CI_Lower</code> / <code>ICC_CI_Upper</code> / <code>ICC_CI_Level</code> / <code>ICC_CI_Method</code>:
-CI bounds, level, and method (populated when <code>ci_method != "none"</code>;
-<code>NA_real_</code> otherwise).</p></li>
-<li><p><code>ICC_CI_NReps</code>: bootstrap replicate count when
-<code>ci_method = "boot"</code> (absent otherwise).</p></li>
-</ul></div>
+CI bounds (unavailable bounds are <code>NA</code>), requested level, and method.</p></li>
+<li><p><code>ICC_CI_Status</code>: whether intervals are available and, otherwise, why.</p></li>
+<li><p><code>ICC_CI_NRequested</code> / <code>ICC_CI_NReps</code> / <code>ICC_CI_NUnavailable</code>: requested
+bootstrap count, number of converged refits with all ICCs finite, and
+number without such a result (absent for <code>"none"</code>). Counts are <code>NA</code> when
+the bootstrap aborts without returning its draws. Warnings can withhold
+intervals even when all draws are finite and all refits converge.</p></li>
+</ul><p>The <code>icc_ci</code> attribute retains the original fit's convergence and singularity
+diagnostics and warnings. When bootstrap results are returned, its <code>bootstrap</code>
+entry contains every draw, per-refit convergence and singularity indicators,
+the number of refit errors, and lme4's message/warning/error tables.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="rows-used">Rows used<a class="anchor" aria-label="anchor" href="#rows-used"></a></h2>
+
+
+<p>Missingness is checked only in the score, facets, and optional person column.
+<code>InputRows</code>, <code>UsedRows</code>, and <code>ExcludedRows</code> are included in the table.
+<code>attr(x, "data_usage")</code> retains these counts, excluded input row positions,
+missing columns per row, and observed grouping-level counts after omission.
+<code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code> uses these retained counts for its sample
+sizes. Omission does not impute scores or correct missing-data bias.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="score-units-and-zero-variation">Score units and zero variation<a class="anchor" aria-label="anchor" href="#score-units-and-zero-variation"></a></h2>
+
+
+<p>A small positive variance is not treated as zero using a fixed cutoff.
+Multiplying scores by a nonzero constant leaves the variance shares
+unchanged, up to fitting precision, while variances change by its square.
+Variance estimates are retained without decimal rounding. If all retained
+scores are equal, or the fitted total variance is not positive and finite,
+variances and ICCs are unavailable (<code>NA</code>); numerical fitting residue is not
+interpreted as observed variation. A constant-response bootstrap refit is
+also unavailable and withholds the interval.</p>
+    </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
@@ -190,17 +227,33 @@ two. FACETS (Linacre, 2026) reports rater separation/reliability on
 the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 Rasch-metric version in <code>diagnostics$reliability</code> and this
 variance-share view here.</p>
-<p>Note: Koo &amp; Li (2016) recommend applying the reliability bands to
-the <strong>95% confidence interval</strong> of the ICC rather than to the point
-estimate alone. Set <code>ci_method = "profile"</code> (default <code>"none"</code>) to
-obtain likelihood-profile CI bounds alongside the point estimate,
-or <code>ci_method = "boot"</code> for a parametric bootstrap with
-<code>ci_boot_reps</code> replicates. The returned data frame gains
-<code>ICC_CI_Lower</code> / <code>ICC_CI_Upper</code> columns so downstream reporting can
-apply the band to the CI rather than the point estimate. The
-<code>Interpretation</code> column still uses the point estimate so
-callers who want CI-aware banding can implement it externally from
-the supplied bounds.</p>
+<p>Set <code>ci_method = "boot"</code> to request intervals alongside the point
+estimates. The <code>Interpretation</code> column still uses point estimates.
+The bootstrap simulates Gaussian random effects and errors from the
+fitted model; it does not correct model misspecification or missing-data
+bias. Percentile coverage can be unreliable near zero variance components
+or with few grouping levels.</p>
+<p>Intervals are withheld if the original fit has convergence problems or
+warnings, or if any requested bootstrap refit fails, has convergence
+problems or warnings, or produces an undefined ICC. Finite draws are
+retained but never silently selected to calculate an interval. Singular
+fits (zero random-effect components) are recorded separately and retained
+when they converge; they are not automatically treated as failures.
+Inspect <code>ICC_CI_Status</code> and <code>attr(x, "icc_ci")</code> before reporting intervals.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="updating-saved-intervals">Updating saved intervals<a class="anchor" aria-label="anchor" href="#updating-saved-intervals"></a></h2>
+
+
+<p>The former <code>ci_method = "profile"</code> transformed separate standard-deviation
+intervals while holding other variance components fixed. These are not
+profile-likelihood intervals for the ICC ratio and should not be reported
+as ICC confidence intervals. Requests now stop with an explanation.
+Rerun <code>compute_facet_icc()</code> or <code><a href="analyze_hierarchical_structure.html">analyze_hierarchical_structure()</a></code> with the
+original data and settings, choosing <code>ci_method = "boot"</code> explicitly if
+intervals are needed. Saved bootstrap results from earlier versions must
+also be rerun to obtain complete failure accounting. Printing, summarizing,
+or plotting old interval results cannot correct their calculations.</p>
     </div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -211,7 +264,8 @@ separation/reliability.</p></li>
 <li><p>Call <code>compute_facet_icc(data, facets, score, person)</code> to get the
 complementary variance-share summary.</p></li>
 <li><p>Feed into <code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code> to convert ICCs and
-average cluster sizes into Kish (1965) design effects.</p></li>
+average cluster sizes into descriptive, per-facet design-effect
+approximations. These do not estimate the precision of the full design.</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -247,16 +301,22 @@ Software, 67</em>(1), 1-48.</p>
 <span class="r-in"><span>  <span class="co">#   has assigned to each row.</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrm_facet_icc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet Variance    ICC Interpretation InterpretationScale ICC_CI_Lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Person 0.346261 0.3511           Poor  Koo-Li reliability           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater 0.026673 0.0270  Trivial share      Variance share           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion 0.021884 0.0222  Trivial share      Variance share           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Residual 0.591449 0.5997    Large share      Variance share           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ICC rows: 768 input, 768 used, 0 excluded.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Facet   Variance    ICC Interpretation InterpretationScale ICC_CI_Lower</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Person 0.34626071 0.3511           Poor  Koo-Li reliability           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Rater 0.02667343 0.0270  Trivial share      Variance share           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Criterion 0.02188365 0.0222  Trivial share      Variance share           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Residual 0.59144865 0.5997    Large share      Variance share           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ICC_CI_Upper ICC_CI_Level ICC_CI_Method ICC_CI_Status InputRows UsedRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            NA         0.95          none Not requested       768      768</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ExcludedRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

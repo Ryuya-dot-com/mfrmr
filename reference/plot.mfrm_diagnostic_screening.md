@@ -221,12 +221,12 @@ plot_data(diag_eval, type = "overview", component = "figure_recipes")
 #> 3                     Describe reporting-layer review routing, not model validity or diagnostic success.
 #> 4                       Describe misspecification-minus-baseline deltas and name the evaluated baseline.
 #> 5                      Describe computational cost under the evaluated design grid and fitting settings.
-#>                                                                                       InterpretationBoundary
-#> 1              Rates are simulation summaries and should not be read as calibrated inferential test results.
-#> 2 Counts are presentation summaries over the same simulation evidence and should not define pass/fail gates.
-#> 3           Report-review signals are prompts for text and evidence review, not additional diagnostic tests.
-#> 4      Contrasts are descriptive and conditional on scenarios, baseline, design grid, and replication count.
-#> 5        Runtime evidence describes this implementation and settings, not a general computational guarantee.
+#>                                                                                          InterpretationBoundary
+#> 1                 Rates are simulation summaries and should not be read as calibrated inferential test results.
+#> 2 Counts are presentation summaries over the same simulation evidence and should not define pass/fail criteria.
+#> 3              Report-review signals are prompts for text and evidence review, not additional diagnostic tests.
+#> 4         Contrasts are descriptive and conditional on scenarios, baseline, design grid, and replication count.
+#> 5           Runtime evidence describes this implementation and settings, not a general computational guarantee.
 #>                                                             Availability
 #> 1                                         available_when_plot_rows_exist
 #> 2                                         available_when_plot_rows_exist

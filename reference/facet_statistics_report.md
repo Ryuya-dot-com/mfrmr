@@ -128,28 +128,50 @@ summary(out)
 #>       1.099 0.347  1.043            1.209         0.120        1.089      3.010
 #>       0.271 0.099  0.253            0.074         0.010        0.064      2.564
 #>       0.271 0.097  0.253            0.074         0.010        0.064      2.596
-#>  Strata Reliability SEAvailable MeanSE MedianSE MeanInfit MeanOutfit FixedChiSq
-#>   3.421       0.843           4  0.099    0.098     0.994      1.019     25.914
-#>   3.470       0.847           4  0.097    0.097     0.994      1.019     25.914
-#>   3.981       0.882           4  0.099    0.098     0.994      1.019     25.914
-#>   4.037       0.885           4  0.097    0.097     0.994      1.019     25.914
-#>   4.079       0.888          48  0.360    0.349     1.000      1.019    384.088
-#>   4.300       0.898          48  0.344    0.330     1.000      1.019    384.088
-#>   4.123       0.890          48  0.360    0.349     1.000      1.019    384.088
-#>   4.346       0.901          48  0.344    0.330     1.000      1.019    384.088
-#>   3.752       0.868           4  0.099    0.099     0.994      1.019     30.901
-#>   3.795       0.871           4  0.097    0.097     0.994      1.019     30.901
-#>  FixedDF FixedProb RandomVar RandomChiSq RandomDF RandomProb
-#>        3         0     0.073       2.997        2      0.223
-#>        3         0     0.073       2.997        2      0.223
-#>        3         0     0.073       2.997        2      0.223
-#>        3         0     0.073       2.997        2      0.223
-#>       47         0     1.089      45.462       46      0.495
-#>       47         0     1.089      45.462       46      0.495
-#>       47         0     1.089      45.462       46      0.495
-#>       47         0     1.089      45.462       46      0.495
-#>        3         0     0.089       2.999        2      0.223
-#>        3         0     0.089       2.999        2      0.223
+#>  Strata Reliability EstimateAvailable SEAvailable ExcludedEstimates
+#>   3.421       0.843                 4           4                 0
+#>   3.470       0.847                 4           4                 0
+#>   3.981       0.882                 4           4                 0
+#>   4.037       0.885                 4           4                 0
+#>   4.079       0.888                48          48                 0
+#>   4.300       0.898                48          48                 0
+#>   4.123       0.890                48          48                 0
+#>   4.346       0.901                48          48                 0
+#>   3.752       0.868                 4           4                 0
+#>   3.795       0.871                 4           4                 0
+#>                                                   SummaryNote MeanSE MedianSE
+#>    Computed over 4 of 4 levels with finite estimates and SEs.  0.099    0.098
+#>    Computed over 4 of 4 levels with finite estimates and SEs.  0.097    0.097
+#>    Computed over 4 of 4 levels with finite estimates and SEs.  0.099    0.098
+#>    Computed over 4 of 4 levels with finite estimates and SEs.  0.097    0.097
+#>  Computed over 48 of 48 levels with finite estimates and SEs.  0.360    0.349
+#>  Computed over 48 of 48 levels with finite estimates and SEs.  0.344    0.330
+#>  Computed over 48 of 48 levels with finite estimates and SEs.  0.360    0.349
+#>  Computed over 48 of 48 levels with finite estimates and SEs.  0.344    0.330
+#>    Computed over 4 of 4 levels with finite estimates and SEs.  0.099    0.099
+#>    Computed over 4 of 4 levels with finite estimates and SEs.  0.097    0.097
+#>  MeanInfit MeanOutfit FixedChiSq FixedDF FixedProb RandomVar RandomChiSq
+#>      0.994      1.019     25.914       3         0     0.073       2.997
+#>      0.994      1.019     25.914       3         0     0.073       2.997
+#>      0.994      1.019     25.914       3         0     0.073       2.997
+#>      0.994      1.019     25.914       3         0     0.073       2.997
+#>      1.000      1.019    384.088      47         0     1.089      45.462
+#>      1.000      1.019    384.088      47         0     1.089      45.462
+#>      1.000      1.019    384.088      47         0     1.089      45.462
+#>      1.000      1.019    384.088      47         0     1.089      45.462
+#>      0.994      1.019     30.901       3         0     0.089       2.999
+#>      0.994      1.019     30.901       3         0     0.089       2.999
+#>  RandomDF RandomProb
+#>         2      0.223
+#>         2      0.223
+#>         2      0.223
+#>         2      0.223
+#>        46      0.495
+#>        46      0.495
+#>        46      0.495
+#>        46      0.495
+#>         2      0.223
+#>         2      0.223
 #> 
 #> Settings
 #>             Setting                           Value

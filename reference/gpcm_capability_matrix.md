@@ -89,15 +89,15 @@ gpcm_capability_matrix()
 #>               deferred      1
 #> 
 #> Route preview
-#>                                            Area                Status
-#>                      Core fitting and summaries supported_with_caveat
-#>  Exploratory diagnostics and residual follow-up supported_with_caveat
-#>       Fixed-calibration scoring and information             supported
-#>                   Core curve and category views             supported
-#>      Checklist and summary-table appendix route supported_with_caveat
-#>                     Operational misfit casebook supported_with_caveat
-#>        Weighting review and model-choice review supported_with_caveat
-#>                   Operational linking synthesis supported_with_caveat
+#>                                             Area                Status
+#>                       Core fitting and summaries supported_with_caveat
+#>   Exploratory diagnostics and residual follow-up supported_with_caveat
+#>  Fitted-object posterior scoring and information             supported
+#>                    Core curve and category views             supported
+#>       Checklist and summary-table appendix route supported_with_caveat
+#>                      Operational misfit casebook supported_with_caveat
+#>         Weighting review and model-choice review supported_with_caveat
+#>                    Operational linking synthesis supported_with_caveat
 #> 
 #> ... 11 more route(s).
 #> 
@@ -110,9 +110,9 @@ gpcm_capability_matrix("supported")
 #>  supported      2
 #> 
 #> Route preview
-#>                                       Area    Status
-#>  Fixed-calibration scoring and information supported
-#>              Core curve and category views supported
+#>                                             Area    Status
+#>  Fitted-object posterior scoring and information supported
+#>                    Core curve and category views supported
 #> 
 #> Filter by status, for example gpcm_capability_matrix("supported_with_caveat").
 #> Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.

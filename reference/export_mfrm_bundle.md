@@ -209,8 +209,11 @@ Depending on `include`, the exporter can write:
 - checklist CSVs via
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
 
-- facet-dashboard CSVs via
-  [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md)
+- facet-dashboard CSVs and interpretation notes via
+  [`facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_quality_dashboard.md),
+  including screening settings in CSV and HTML; HTML tables show every
+  level's estimates and unavailable diagnostics, while CSVs retain full
+  detail
 
 - APA text files via
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
@@ -322,27 +325,17 @@ bundle <- export_mfrm_bundle(
 bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
 #>   FilesWritten HtmlWritten ScriptWritten
 #> 1           23           1             1
-head(bundle$written_files)
-#>          Component Format
-#> 1      core_person    csv
-#> 2      core_facets    csv
-#> 3     core_summary    csv
-#> 4    core_measures    csv
-#> 5       core_steps    csv
-#> 6 manifest_summary    csv
-#>                                                        Path
-#> 1 /tmp/RtmpJHlGr0/mfrmr_bundle_example_person_estimates.csv
-#> 2  /tmp/RtmpJHlGr0/mfrmr_bundle_example_facet_estimates.csv
-#> 3      /tmp/RtmpJHlGr0/mfrmr_bundle_example_fit_summary.csv
-#> 4         /tmp/RtmpJHlGr0/mfrmr_bundle_example_measures.csv
-#> 5  /tmp/RtmpJHlGr0/mfrmr_bundle_example_step_parameters.csv
-#> 6 /tmp/RtmpJHlGr0/mfrmr_bundle_example_manifest_summary.csv
-#>                    DataHandling
-#> 1 may_contain_person_level_data
-#> 2         review_before_sharing
-#> 3         review_before_sharing
-#> 4         review_before_sharing
-#> 5         review_before_sharing
-#> 6         review_before_sharing
+head(data.frame(
+  Component = bundle$written_files$Component,
+  File = basename(bundle$written_files$Path)
+))
+#>          Component                                      File
+#> 1      core_person mfrmr_bundle_example_person_estimates.csv
+#> 2      core_facets  mfrmr_bundle_example_facet_estimates.csv
+#> 3     core_summary      mfrmr_bundle_example_fit_summary.csv
+#> 4    core_measures         mfrmr_bundle_example_measures.csv
+#> 5       core_steps  mfrmr_bundle_example_step_parameters.csv
+#> 6 manifest_summary mfrmr_bundle_example_manifest_summary.csv
+# Full paths and data-handling notes remain in bundle$written_files.
 # }
 ```

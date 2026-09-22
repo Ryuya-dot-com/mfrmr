@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Evaluate MFRM design conditions by repeated simulation</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>evaluate_mfrm_design.Rd</code></div>
     </div>
 
@@ -221,7 +223,11 @@ uses <code><a href="https://future.apply.futureverse.org/reference/future_lapply
 <code><a href="https://future.futureverse.org/reference/plan.html" class="external-link">future::plan()</a></code> is currently active. The Suggests package
 <code>future.apply</code> must be installed for the parallel path to
 activate; otherwise the call falls back to serial execution with a single
-message. Parallel execution applies to replications within each design row.</p></dd>
+message. A fixed explicit <code>seed</code> preallocates the same per-cell simulation
+seeds before either route, so serial and future execution receive identical
+stochastic inputs for the same ordered design grid. Parallel dispatch
+applies to replications within each design row; actual worker concurrency
+depends on the active future plan.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -232,7 +238,15 @@ alongside the standard result columns.</p></li>
 <li><p><code>results</code>: facet-level replicate results, with the same design-variable
 alias columns when applicable.</p></li>
 <li><p><code>rep_overview</code>: run-level status and timing, with the same design-variable
-alias columns when applicable. Failed fits retain the condition class,
+alias columns when applicable. <code>Observations</code> counts generated rating rows;
+<code>MaxRatingsPerRater</code> is the largest row count for a single rater-like facet
+level. One row is one person-rater-criterion rating, regardless of <code>Weight</code>.
+These workload counts are retained even when fitting or diagnostics fail.
+<code>RaterComponents</code> and <code>CriterionComponents</code> count connected components
+in each generated Person-facet assignment graph, using the same audit as
+<code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>. They refer to the rater-like and criterion-like
+roles even when custom facet names are used, and also survive failures.
+Failed fits retain the condition class,
 failure component, and category-support state/reason codes when available;
 a completely failed design still returns the documented zero-row
 <code>results</code> schema rather than a zero-column table.</p></li>

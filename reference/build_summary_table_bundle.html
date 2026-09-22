@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a manuscript-oriented table bundle from <code>summary()</code> outputs</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>build_summary_table_bundle.Rd</code></div>
     </div>
 
@@ -242,13 +244,13 @@ plan.</p></li>
 <span class="r-in"><span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu">build_summary_table_bundle</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bundle</span><span class="op">$</span><span class="va">table_index</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  Table Rows Cols                 Role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1             overview    1   87         run_overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             overview    1   88         run_overview</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  population_overview    1   16     population_basis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5    population_coding    0    6    population_coding</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6       facet_overview    2    7   facet_distribution</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7      person_overview    1   10  person_distribution</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8        step_overview    1    5   category_structure</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10   settings_overview    1   28  estimation_settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10   settings_overview    1   29  estimation_settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11       reporting_map    6    3        reporting_map</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12             caveats    0    8     analysis_caveats</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13      facet_extremes    8    3 extreme_facet_levels</span>
@@ -269,7 +271,7 @@ plan.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                   Lowest person measures from the current fit.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">role_summary</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    Role Tables TotalRows TotalCols</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12         run_overview      1         1        87</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12         run_overview      1         1        88</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11        reporting_map      1         6         3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10    population_coding      1         0         6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9      population_basis      1         1        16</span>
@@ -278,7 +280,7 @@ plan.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6    extreme_person_low      1        10        20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5   extreme_person_high      1        10        20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  extreme_facet_levels      1         8         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   estimation_settings      1         1        28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   estimation_settings      1         1        29</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2    category_structure      1         1         5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      analysis_caveats      1         0         8</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

@@ -11,7 +11,7 @@ user-facing map, not an analysis result."><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,10 +22,12 @@ user-facing map, not an analysis result."><meta property="og:image" content="htt
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -42,7 +44,7 @@ user-facing map, not an analysis result."><meta property="og:image" content="htt
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Choose an mfrmr output helper by user goal</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
       <div class="d-none name"><code>mfrmr_output_guide.Rd</code></div>
     </div>
 
@@ -57,7 +59,8 @@ user-facing map, not an analysis result.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span></span>
 <span>  scope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"public"</span>, <span class="st">"beginner"</span>, <span class="st">"psychometric"</span>, <span class="st">"entry"</span>, <span class="st">"viewer"</span>, <span class="st">"binary"</span>,</span>
 <span>    <span class="st">"tables"</span>, <span class="st">"reports"</span>, <span class="st">"reviews"</span>, <span class="st">"bundles"</span>, <span class="st">"exports"</span>, <span class="st">"compatibility"</span>, <span class="st">"gpcm"</span>,</span>
-<span>    <span class="st">"simulation"</span>, <span class="st">"linking"</span>, <span class="st">"network"</span>, <span class="st">"response_time"</span>, <span class="st">"facets"</span>, <span class="st">"conquest"</span>, <span class="st">"r"</span><span class="op">)</span></span>
+<span>    <span class="st">"calibration"</span>, <span class="st">"simulation"</span>, <span class="st">"linking"</span>, <span class="st">"network"</span>, <span class="st">"response_time"</span>, <span class="st">"facets"</span>,</span>
+<span>    <span class="st">"conquest"</span>, <span class="st">"r"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,6 +78,8 @@ local-viewer routes built around <code>mfrm_results(include = ...)</code>. <code
 returns the two-category person-item Rasch route and checks. Other values
 filter to one output family or to bounded-<code>GPCM</code>-relevant routes.
 <code>"linking"</code> returns anchor, drift, and equating route rows.
+<code>"calibration"</code> returns the portable fixed-calibration lifecycle and
+artifact-only scoring route.
 <code>"simulation"</code> and <code>"network"</code> return advanced design-review rows.
 <code>"response_time"</code> returns descriptive response-time QC rows.
 <code>"facets"</code>, <code>"conquest"</code>, and <code>"r"</code> return user-pathway rows for people
@@ -114,7 +119,8 @@ arriving from those workflows.</p></dd>
 <p>Use <code>mfrmr_output_guide("public")</code> or
 <code>mfrmr_output_guide("beginner")</code> for the shortest top-level API map:
 an explicit <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> check and <code><a href="fit_mfrm.html">fit_mfrm()</a></code> MML fit, the lightweight fit summary, the
-comprehensive FACETS-organized summary, the required native Wright map
+comprehensive measurement review (whose historical profile name is
+<code>"facets"</code>; no FACETS software knowledge or installation is required), the native Wright map
 with SE/CI, optional FACETS-style Wright and person-inclusive Infit views,
 and finally report/export. Use <code>mfrmr_output_guide("entry")</code> when you
 specifically need alternative first-screen creation routes, including
@@ -141,369 +147,48 @@ and the table that explains how out-of-scope routes are handled.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">public</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"public"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">public</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"APILayer"</span>, <span class="st">"ObjectRole"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">beginner</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"beginner"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">beginner</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span>, <span class="st">"NextStep"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                  Question</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1. Check score support and fit with explicit data roles</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2          2. Check convergence and fitted-model settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3. Build the comprehensive FACETS-organized review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           3. Build the comprehensive measurement review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  4. Create the required native Wright map with SE or CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5    5. Add optional FACETS-style and Infit pathway views</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6     6. Review, report, and export the completed results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   APILayer                               ObjectRole</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 top_level_public_surface model estimation and result-object entry</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 top_level_public_surface                      fit summary surface</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 top_level_public_surface              comprehensive result object</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 top_level_public_surface            specialist evidence component</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 top_level_public_surface            specialist evidence component</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 top_level_public_surface                      file export surface</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                         describe_mfrm_data(data, person = ..., facets = ..., score = ...); fit &lt;- fit_mfrm(data, person = ..., facets = ..., score = ..., method = "MML")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 describe_mfrm_data(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ...); fit &lt;- fit_mfrm(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ..., method = "MML")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                           summary(fit, profile = "fit", detail = "brief")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                       review &lt;- summary(fit, profile = "facets", detail = "brief"); res &lt;- review$results</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                      plot(res, type = "wright", renderer = "native", show_ci = TRUE, top_n = Inf, preset = "publication")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 fit$prep$score_map; plot(res, type = "wright", renderer = "facets", category_labels = rubric_labels, show_ci = FALSE); plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, person_labels = "none")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                report &lt;- mfrm_report(res); summary(report, view = "reader"); export_mfrm_results(res, preset = "starter")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                    NextStep</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       Review retained/missing categories and the score map, then run the lightweight fit profile and confirm convergence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                     If the fit is usable, request profile = "facets"; otherwise resolve convergence or data issues first.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                   Save review$results as res, then create the native Wright map before optional displays.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 Inspect targeting, facet uncertainty, and every retained step; keep this figure with the analysis record.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     Use rubric labels from the actual instrument and treat person points as case-review prompts, not exclusion decisions.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Read the report summary before export and keep replay plus data-handling metadata with every controlled analysis archive.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">entry</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"entry"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">entry</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"Lifecycle"</span>, <span class="st">"UserLevel"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Start with explicit model roles and a comprehensive first screen</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                 Open a FACETS-style result surface from an existing fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                 Browse the comprehensive result in a local Shiny viewer</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Choose the next purpose-specific helper without scanning the namespace</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11          Use column-selection prompts for exploratory data-frame input</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Lifecycle UserLevel                                       MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7     stable  beginner        fit_mfrm(); diagnose_mfrm(); mfrm_results()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8     stable  beginner                                     mfrm_results()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9     stable  beginner res &lt;- mfrm_results(fit); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10    stable  beginner    mfrmr_output_guide(); summary(res)$next_actions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11    stable  beginner                         mfrm_results_interactive()</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">reviews</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"reviews"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">reviews</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span>, <span class="st">"UseWhen"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                   Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24 Review response-time metadata as descriptive QC context</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25     Decide how strongly precision claims can be phrased</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28               Screen bias, DFF, or interaction evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29            Review anchors, drift, and linking readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30         Compare equal-weighting and bounded-GPCM routes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                 MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24 response_time_review(); mfrm_results(include = "response_time", response_time = ...); plot_response_time_review(); plot_data_components()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                                                                 precision_review_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                            mfrm_results(fit, include = "bias"); estimate_bias(); analyze_dff(); bias_interaction_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                                      review_mfrm_anchors(); detect_anchor_drift(); build_linking_review()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                     build_model_choice_review(); build_weighting_review(); compare_mfrm()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                            UseWhen</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24 You have event-level timing metadata and need rapid/slow-response screening outside the fitted MFRM likelihood.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                   You need to separate model-based, hybrid, and exploratory precision evidence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                       You need screening evidence for follow-up fairness or interaction review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                            You need operational scale-maintenance checks for RSM/PCM workflows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                You need to review whether discrimination-based reweighting changes conclusions.</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"gpcm"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span>, <span class="st">"GPCMStatus"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                               1. Check score support and fit with explicit data roles</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                        2. Check convergence and fitted-model settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                    3. Build the comprehensive FACETS-organized review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                4. Create the required native Wright map with SE or CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                  5. Add optional FACETS-style and Infit pathway views</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                   6. Review, report, and export the completed results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                      Start with explicit model roles and a comprehensive first screen</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                               Open a FACETS-style result surface from an existing fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                               Browse the comprehensive result in a local Shiny viewer</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                        Use column-selection prompts for exploratory data-frame input</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                Open the standard first-screen viewer</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                         Prepare publication-oriented viewer sections</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                      Check validation, fit, and separation surfaces before reporting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                 Inspect bias-screen prompts without choosing contrasts automatically</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                     Inspect pathway-map and row-level misfit prompts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                 Inspect anchor and linking readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                        Prepare a broad reviewer-facing viewer object</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                            Fit ordinary person-item binary responses</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                 Open the first-screen results for a binary Rasch run</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                  Decide how strongly precision claims can be phrased</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26                           Summarize facet variability, separation, and measurability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                Review category functioning and expected-score curves</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                            Screen bias, DFF, or interaction evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                         Review anchors, drift, and linking readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                      Compare equal-weighting and bounded-GPCM routes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                         Turn summaries into reusable appendix tables</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32                                        Assemble manuscript-oriented narrative output</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33                                         Write files for appendix, replay, or handoff</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34                                          Serve a legacy-compatible downstream layout</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35                  Open first-screen anchor and linking readiness from an existing fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36                        Review intended anchor and group-anchor tables before fitting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37                                  Check drift across separately fitted waves or forms</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                          Build a screened equating chain across ordered calibrations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39                               Generate planned, sparse, or peer-review response data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40                                      Evaluate design and recovery operating behavior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41                          Screen diagnostic behavior under misspecification scenarios</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42                     Export simulation operating-characteristic tables for appendices</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43                                Review co-observation connectivity as design evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44                                               Review peer-review assignment topology</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                Check the bounded GPCM support matrix</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46                                Find alternatives for unavailable bounded GPCM routes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47 1. Check score support, then open a FACETS-organized review from an explicit MML fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                           2. Draw the required native Wright map with facet SE or CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                             3. Add the FACETS-style ruler with rubric-labelled steps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                    4. Review Infit by measure, adding persons explicitly when needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                      1. Fit the supported overlap model explicitly with MML in mfrmr</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52              2. State the ConQuest comparison scope before preparing external review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53                       State the FACETS relationship before using FACETS-style routes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                      Translate FACETS direct and group anchor blocks</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                   Review anchor drift across forms, raters, or waves</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                          List fit measures and misfit flags by facet</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57                                                Explain FACETS df and ZSTD conversion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58                                   Bring an external FACETS fit table into the review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59                   Review rating-scale categories, fair averages, and expected curves</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60                            Review FACETS Table 14-style bias and interaction signals</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61                           Draw a Wright map / variable map on the common logit scale</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 64                                               Prepare a scoped ConQuest overlap case</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 65                             Compare extracted ConQuest tables after the external run</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 66                                     State where mfrmr is less flexible than ConQuest</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 70                                             Combine tables and plot data for reports</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                              MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                       describe_mfrm_data(data, person = ..., facets = ..., score = ...); fit &lt;- fit_mfrm(data, person = ..., facets = ..., score = ..., method = "MML")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                                         summary(fit, profile = "fit", detail = "brief")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                     review &lt;- summary(fit, profile = "facets", detail = "brief"); res &lt;- review$results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                    plot(res, type = "wright", renderer = "native", show_ci = TRUE, top_n = Inf, preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5               fit$prep$score_map; plot(res, type = "wright", renderer = "facets", category_labels = rubric_labels, show_ci = FALSE); plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, person_labels = "none")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                              report &lt;- mfrm_report(res); summary(report, view = "reader"); export_mfrm_results(res, preset = "starter")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                                             fit_mfrm(); diagnose_mfrm(); mfrm_results()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                                                                                          mfrm_results()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                                                      res &lt;- mfrm_results(fit); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                                                             mfrm_results_interactive()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                               res &lt;- mfrm_results(fit, include = "standard"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                            res &lt;- mfrm_results(fit, include = "publication"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                                                                             res &lt;- mfrm_results(fit, include = "validation"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                                                                   res &lt;- mfrm_results(fit, include = "bias"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                                                                          res &lt;- mfrm_results(fit, include = "misfit_review"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                                                                                                res &lt;- mfrm_results(fit, include = "linking"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                                                     res &lt;- mfrm_results(fit, include = c("publication", "bias", "misfit_review", "linking")); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                                                              fit_mfrm(data, person = ..., facets = "Item", score = ..., model = "RSM"); mfrm_results()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                                                                                                                  mfrm_results(fit); plot(res, type = "wright"); plot(res, type = "qc")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                                                                                                                                                              precision_review_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                                                                                                                              facet_statistics_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                                                                                            rating_scale_table(); category_structure_report(); category_curves_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                                                                                                                         mfrm_results(fit, include = "bias"); estimate_bias(); analyze_dff(); bias_interaction_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                                                                                                                                   review_mfrm_anchors(); detect_anchor_drift(); build_linking_review()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                                                                                                                                  build_model_choice_review(); build_weighting_review(); compare_mfrm()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                                                                                                                                                                           build_summary_table_bundle()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32                                                                                                                                                                              mfrm_report(); reporting_checklist(); build_apa_outputs()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33                                                                                                                                          export_mfrm_results(); export_summary_appendix(); export_mfrm_bundle(); build_mfrm_manifest()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34                                                                                                                                                        run_mfrm_facets(); facets_output_file_bundle(); facets_output_contract_review()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35                                                                                                                                                                    mfrm_results(fit, include = "linking"); plot(res, type = "anchors")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36                                                                                                                                               make_anchor_table(); review_mfrm_anchors(); fit_mfrm(anchors = ..., group_anchors = ...)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37                                                                                                                          detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2)); build_linking_review(drift = ...); plot_anchor_drift()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                                                                                                           build_equating_chain(list(Form1 = fit1, Form2 = fit2)); build_linking_review(chain = ...); plot_anchor_drift(type = "chain")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39                                                                                                                                                                   build_mfrm_sim_spec(); simulate_mfrm_data(); extract_mfrm_sim_spec()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40                                                                                                                                                               evaluate_mfrm_design(); evaluate_mfrm_recovery(); assess_mfrm_recovery()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41                                                                                                                                                  evaluate_mfrm_diagnostic_screening(); summary(); plot(..., draw = FALSE); plot_data()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42                                                                                                                                          summary(diag_eval); build_summary_table_bundle(diag_eval); export_summary_appendix(diag_eval)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43                                                                                                                                                                                   mfrm_network_analysis(); build_mfrm_network_review()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44                                                                                                                   build_peer_review_sim_spec(); build_peer_review_design_review(); build_mfrm_network_review(peer_review_design = ...)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                                                                                                                                                                               gpcm_capability_matrix()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46                                                                                                                                                                                                          gpcm_runtime_guard_coverage()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47 describe_mfrm_data(data, person = ..., facets = ..., score = ...); fit &lt;- fit_mfrm(data, person = ..., facets = ..., score = ..., method = "MML"); review &lt;- summary(fit, profile = "facets", detail = "brief"); res &lt;- review$results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                                                                                   plot(res, type = "wright", renderer = "native", show_ci = TRUE, top_n = Inf, preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                                                  fit$prep$score_map; plot(res, type = "wright", renderer = "facets", category_labels = rubric_labels, show_ci = FALSE)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                        plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                                                      fit_lr &lt;- fit_mfrm(data, person = "Person", facets = "Item", score = "Score", method = "MML", model = "RSM", population_formula = ~ X, person_data = person_data)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                                                                                                                                                  mfrmr_output_guide("conquest"); build_conquest_overlap_bundle(fit_lr)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53                                                                                                                   facets_positioning_guide(); facets_feature_coverage(); run_mfrm_facets(); mfrmRFacets(); facets_output_file_bundle()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                                                                               review_mfrm_anchors(); make_anchor_table(); fit_mfrm(anchors = ..., group_anchors = ...)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                                                               anchor_to_baseline(); detect_anchor_drift(); build_equating_chain(); plot_anchor_drift()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                                                                                                                                                       fit_measures_table(); facets_chisq_table(); displacement_table()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57                                                                                                                                                                           facets_fit_df_guide(); diagnose_mfrm(fit_df_method = "both")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58                                                                                                                                                       read_facets_fit_table(); facets_fit_review(); plot(..., type = "df_sensitivity")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59                                                                                                                 rating_scale_table(); category_structure_report(); category_curves_report(); fair_average_table(); plot_fair_average()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60                                                                                                       mfrm_results(fit, include = "bias"); estimate_bias(); bias_interaction_report(); bias_pairwise_report(); plot_bias_interaction()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61                                                                                                                                                          plot(fit, type = "wright"); plot_wright_unified(); plot_data(type = "wright")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 64                                                                                                                                                                                                        build_conquest_overlap_bundle()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 65                                                                                                                                                                        normalize_conquest_overlap_exports(); review_conquest_overlap()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 66                                                                                                                                                                                      reporting_checklist(); reference_case_benchmark()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 70                                                                                                                                                                                 build_summary_table_bundle(); build_visual_summaries()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                      GPCMStatus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                         supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                         supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                         supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                         supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                         supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                  summary_appendix_supported; fit_bundle_supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                         supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                         supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                             viewer_only_uses_existing_results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                            viewer_only_uses_existing_results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 anchor_readiness_supported; exploratory_linking_review_supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                            viewer_only_uses_existing_results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                          rsm_recommended_for_ordinary_binary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                       supported_with_caveat; exploratory_gpcm_linking_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31                                                 supported_for_direct_outputs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33                 summary_appendix_supported; fit_bundle_supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34                                graph_only_or_blocked_by_score_side_semantics</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35 anchor_readiness_supported; exploratory_linking_review_supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37                       supported_with_caveat; exploratory_gpcm_linking_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                       supported_with_caveat; exploratory_gpcm_linking_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43                                       design_diagnostic_not_measurement_gate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44                                       design_diagnostic_not_measurement_gate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45                                                       bounded_support_matrix</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46                                                  out_of_scope_route_guidance</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51                                       blocked_for_gpcm; rsm_pcm_overlap_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52                                       blocked_for_gpcm; rsm_pcm_overlap_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53                                graph_only_or_blocked_by_score_side_semantics</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                       supported_with_caveat; exploratory_gpcm_linking_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61                                                        supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 64                                       blocked_for_gpcm; rsm_pcm_overlap_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 65                                       blocked_for_gpcm; rsm_pcm_overlap_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 66                                       blocked_for_gpcm; rsm_pcm_overlap_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 70                                                 supported_for_direct_outputs</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"simulation"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"Lifecycle"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            Question Lifecycle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39           Generate planned, sparse, or peer-review response data  advanced</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40                  Evaluate design and recovery operating behavior  advanced</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41      Screen diagnostic behavior under misspecification scenarios  advanced</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42 Export simulation operating-characteristic tables for appendices  advanced</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"linking"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="co"># Ask for a specialist map only when that question arises.</span></span></span>
+<span class="r-in"><span><span class="va">linking</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"linking"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">linking</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span>, <span class="st">"UseWhen"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                               Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35 Open first-screen anchor and linking readiness from an existing fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36       Review intended anchor and group-anchor tables before fitting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37                 Check drift across separately fitted waves or forms</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38         Build a screened equating chain across ordered calibrations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40 Open first-screen anchor and linking readiness from an existing fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41       Review intended anchor and group-anchor tables before fitting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42                 Check drift across separately fitted waves or forms</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43         Build a screened equating chain across ordered calibrations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                    MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35                                                          mfrm_results(fit, include = "linking"); plot(res, type = "anchors")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36                                     make_anchor_table(); review_mfrm_anchors(); fit_mfrm(anchors = ..., group_anchors = ...)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37                detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2)); build_linking_review(drift = ...); plot_anchor_drift()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38 build_equating_chain(list(Form1 = fit1, Form2 = fit2)); build_linking_review(chain = ...); plot_anchor_drift(type = "chain")</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"facets"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47 1. Check score support, then open a FACETS-organized review from an explicit MML fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                           2. Draw the required native Wright map with facet SE or CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                             3. Add the FACETS-style ruler with rubric-labelled steps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                    4. Review Infit by measure, adding persons explicitly when needed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53                       State the FACETS relationship before using FACETS-style routes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                      Translate FACETS direct and group anchor blocks</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                   Review anchor drift across forms, raters, or waves</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                          List fit measures and misfit flags by facet</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57                                                Explain FACETS df and ZSTD conversion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58                                   Bring an external FACETS fit table into the review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59                   Review rating-scale categories, fair averages, and expected curves</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60                            Review FACETS Table 14-style bias and interaction signals</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61                           Draw a Wright map / variable map on the common logit scale</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 62                Check score support and rater response patterns before fitting claims</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 63                                  Write residual and subset files for external review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                              MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47 describe_mfrm_data(data, person = ..., facets = ..., score = ...); fit &lt;- fit_mfrm(data, person = ..., facets = ..., score = ..., method = "MML"); review &lt;- summary(fit, profile = "facets", detail = "brief"); res &lt;- review$results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48                                                                                                                                   plot(res, type = "wright", renderer = "native", show_ci = TRUE, top_n = Inf, preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49                                                                                                                  fit$prep$score_map; plot(res, type = "wright", renderer = "facets", category_labels = rubric_labels, show_ci = FALSE)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50                                                                                        plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, top_n_person = 12, person_labels = "none", facet_labels = "flagged")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53                                                                                                                   facets_positioning_guide(); facets_feature_coverage(); run_mfrm_facets(); mfrmRFacets(); facets_output_file_bundle()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                                                                                                                                               review_mfrm_anchors(); make_anchor_table(); fit_mfrm(anchors = ..., group_anchors = ...)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                                                                                                                               anchor_to_baseline(); detect_anchor_drift(); build_equating_chain(); plot_anchor_drift()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                                                                                                                                                                       fit_measures_table(); facets_chisq_table(); displacement_table()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57                                                                                                                                                                           facets_fit_df_guide(); diagnose_mfrm(fit_df_method = "both")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58                                                                                                                                                       read_facets_fit_table(); facets_fit_review(); plot(..., type = "df_sensitivity")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59                                                                                                                 rating_scale_table(); category_structure_report(); category_curves_report(); fair_average_table(); plot_fair_average()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60                                                                                                       mfrm_results(fit, include = "bias"); estimate_bias(); bias_interaction_report(); bias_pairwise_report(); plot_bias_interaction()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61                                                                                                                                                          plot(fit, type = "wright"); plot_wright_unified(); plot_data(type = "wright")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 62                                                                                                                                                                                   data_quality_report(); plot(..., type = "dashboard")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 63                                                                                                                                                      write_mfrm_residual_file(); write_mfrm_subset_file(); facets_output_file_bundle()</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"binary"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19            Fit ordinary person-item binary responses</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20               Confirm the two-category score support</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21 Open the first-screen results for a binary Rasch run</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                 MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19 fit_mfrm(data, person = ..., facets = "Item", score = ..., model = "RSM"); mfrm_results()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                  describe_mfrm_data(); fit$prep$score_map; summary(fit)$settings_overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                     mfrm_results(fit); plot(res, type = "wright"); plot(res, type = "qc")</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"viewer"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                Open the standard first-screen viewer</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                         Prepare publication-oriented viewer sections</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14      Check validation, fit, and separation surfaces before reporting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15 Inspect bias-screen prompts without choosing contrasts automatically</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                     Inspect pathway-map and row-level misfit prompts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                 Inspect anchor and linking readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                        Prepare a broad reviewer-facing viewer object</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                          MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                           res &lt;- mfrm_results(fit, include = "standard"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                        res &lt;- mfrm_results(fit, include = "publication"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                         res &lt;- mfrm_results(fit, include = "validation"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                               res &lt;- mfrm_results(fit, include = "bias"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                      res &lt;- mfrm_results(fit, include = "misfit_review"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                            res &lt;- mfrm_results(fit, include = "linking"); launch_mfrmr_viewer(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18 res &lt;- mfrm_results(fit, include = c("publication", "bias", "misfit_review", "linking")); launch_mfrmr_viewer(res)</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"response_time"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                   Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24 Review response-time metadata as descriptive QC context</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 69    Reuse response-time plot data for custom QC graphics</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                 MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24 response_time_review(); mfrm_results(include = "response_time", response_time = ...); plot_response_time_review(); plot_data_components()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 69                                 response_time_review(); plot_response_time_review(..., draw = FALSE); plot_data_components(); plot_data()</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"beginner"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 1. Check score support and fit with explicit data roles</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          2. Check convergence and fitted-model settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3. Build the comprehensive FACETS-organized review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4. Create the required native Wright map with SE or CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    5. Add optional FACETS-style and Infit pathway views</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6. Review, report, and export the completed results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                MainFunction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                         describe_mfrm_data(data, person = ..., facets = ..., score = ...); fit &lt;- fit_mfrm(data, person = ..., facets = ..., score = ..., method = "MML")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                           summary(fit, profile = "fit", detail = "brief")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                       review &lt;- summary(fit, profile = "facets", detail = "brief"); res &lt;- review$results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                      plot(res, type = "wright", renderer = "native", show_ci = TRUE, top_n = Inf, preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 fit$prep$score_map; plot(res, type = "wright", renderer = "facets", category_labels = rubric_labels, show_ci = FALSE); plot(res, type = "fit_pathway", fit_stat = "Infit", include_person = TRUE, person_labels = "none")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                report &lt;- mfrm_report(res); summary(report, view = "reader"); export_mfrm_results(res, preset = "starter")</span>
-<span class="r-in"><span><span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"psychometric"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"DecisionBoundary"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22                   Document the model setup and run settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23      Check whether data were filtered, dropped, or remapped</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25         Decide how strongly precision claims can be phrased</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26  Summarize facet variability, separation, and measurability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27       Review category functioning and expected-score curves</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                Review anchors, drift, and linking readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30             Compare equal-weighting and bounded-GPCM routes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37         Check drift across separately fitted waves or forms</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38 Build a screened equating chain across ordered calibrations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                            DecisionBoundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                            Precision and separation evidence are not inter-rater agreement or standalone validity proof.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                                 Specialist follow-up: inspect the source object and help page before treating output as report evidence.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38 Anchor and linking evidence support scale-maintenance review; drift and equating claims require explicit multi-fit wave or form designs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40                                                          mfrm_results(fit, include = "linking"); plot(res, type = "anchors")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41                                     make_anchor_table(); review_mfrm_anchors(); fit_mfrm(anchors = ..., group_anchors = ...)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42                detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2)); build_linking_review(drift = ...); plot_anchor_drift()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43 build_equating_chain(list(Form1 = fit1, Form2 = fit2)); build_linking_review(chain = ...); plot_anchor_drift(type = "chain")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                  UseWhen</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40                                         You already have an mfrm_fit and want the stored anchor-review evidence in the comprehensive results surface.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41 You are preparing fixed anchors or group anchors and need to catch overlap, duplicate, missing, sparse, or unsupported anchor rows before estimation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42                                           You have two or more independently fitted waves and need common-element drift and thin-link support checks.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43          You have an ordered sequence of forms or administrations and need screened adjacent-link offsets before operational score-scale maintenance.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

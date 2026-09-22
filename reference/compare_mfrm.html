@@ -15,7 +15,7 @@ a likelihood-ratio test is included."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,10 +26,12 @@ a likelihood-ratio test is included."><meta property="og:image" content="https:/
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -46,7 +48,7 @@ a likelihood-ratio test is included."><meta property="og:image" content="https:/
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compare two or more fitted MFRM models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>compare_mfrm.Rd</code></div>
     </div>
 
@@ -123,8 +125,8 @@ and have a selectable integration tier. For fixed-facet MML,
 <code>ICSampleSize</code> is the number of independent
 Persons and <code>ICSampleSizeBasis</code> is <code>"person_count"</code>; response rows and their
 weighted total are retained separately. Explicit all-unit weights are
-eligible, whereas every non-unit observation-weight fit fails closed in
-version 0.2.3.</p>
+eligible, whereas every non-unit observation-weight fit fails closed under
+the current package contract.</p>
 <p>Canonical <code>AIC</code>, <code>BIC</code>, and <code>SABIC</code> are recomputed from the retained
 objective, optimizer-vector dimension, and Person count. A stale stored
 value, a legacy object without the current contract identity, a JML fit, or
@@ -154,6 +156,13 @@ restrictions under shared data and shared constraints:</p><ul><li><p><code>RSM</
 </ul><p>Cross-method comparisons, comparisons that change anchors/dummying/centering,
 and same-family comparisons that do not add fixed interaction terms are not
 automatically promoted to LRT claims.</p>
+<p>Automatic nesting also requires a shared population specification: either
+both fits use the fixed standard-normal population or both use the same
+estimated-normal design, with the same declared columns and design values
+aligned by Person. Coefficient and variance estimates may differ. Row and
+column permutations are aligned; other recodings, changed designs, and
+unavailable design metadata require separate review. Passing this check
+does not grant inference readiness to an estimated-population fit.</p>
 <p>The <strong>likelihood-ratio test (LRT)</strong> is reported only when exactly two
 models are supplied, <code>nested = TRUE</code>, the structural nesting review passes, and the
 difference in the number of parameters is positive:</p>
@@ -216,8 +225,10 @@ nesting boundary; unsupported relations remain unsupported.</p></li>
 <li><p>PCM is the unit-slope response-kernel reduction of the bounded GPCM when
 both use the same explicit step owner. Nevertheless, the current automatic
 nesting review does not authorize a PCM-versus-GPCM chi-square LRT. Use
-same-basis MML information criteria plus <code><a href="build_weighting_review.html">build_weighting_review()</a></code> and
-inspect the recorded <code>PCM_in_GPCM_ic_only</code> relation instead.</p></li>
+<code><a href="build_weighting_review.html">build_weighting_review()</a></code> for descriptive score and weighting comparisons.
+Free-slope GPCM fits currently lack the inference checks required for IC
+ranking, even under MML. Raw criteria, when available, are diagnostic only;
+<code>PCM_in_GPCM_ic_only</code> records a structural relation, not permission to rank.</p></li>
 <li><p>Do not compare models fit to different datasets, different score codings,
 or materially different constraint systems as if they were commensurate.</p></li>
 <li><p>At large Person counts, a small systematic likelihood gain can dominate an
@@ -275,8 +286,9 @@ same prepared rows, explicit step owner, constraints, and MML quadrature
 setting. Use at least 31 common quadrature points for selectable ICs.</p></li>
 <li><p>Compare with <code>compare_mfrm(fit_pcm, fit_gpcm)</code> and start by checking
 <code>comparison$table$ICComparable</code>.</p></li>
-<li><p>Inspect <code>summary(comparison)</code> for AIC/BIC/SABIC diagnostics and, when
-appropriate, an LRT. PCM-versus-GPCM LRT is currently withheld.</p></li>
+<li><p>Inspect <code>summary(comparison)</code> for AIC/BIC/SABIC diagnostics and the reasons
+for withholding ranking or tests. Free-slope GPCM rankings and
+PCM-versus-GPCM LRTs are currently withheld.</p></li>
 <li><p>Use <code>build_weighting_review(fit_pcm, fit_gpcm)</code> to inspect which selected
 facet levels and information shares were reweighted by the slopes.</p></li>
 </ol></div>
@@ -303,34 +315,51 @@ problems in multivariate analysis. <em>Psychometrika, 52</em>(3), 333-343.</p></
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Load one dataset for both models</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">fit_rsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                     method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">31</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit_pcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                     method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"PCM"</span>,</span></span>
-<span class="r-in"><span>                     step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, quad_points <span class="op">=</span> <span class="fl">31</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">comp</span> <span class="op">&lt;-</span> <span class="fu">compare_mfrm</span><span class="op">(</span><span class="va">fit_rsm</span>, <span class="va">fit_pcm</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"RSM"</span>, <span class="st">"PCM"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">comp</span><span class="op">$</span><span class="va">table</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 50</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Label Converged InferenceReady ConvergenceSeverity Model Method  nobs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   TRUE      TRUE           pass                RSM   MML      768</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> PCM   TRUE      TRUE           pass                PCM   MML      768</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 43 more variables: ResponseRows &lt;int&gt;, WeightedN &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   WeightedResponseTotal &lt;dbl&gt;, Persons &lt;int&gt;, ICSampleSize &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ICSampleSizeBasis &lt;chr&gt;, Npar &lt;int&gt;, npar &lt;int&gt;, LogLik &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Deviance &lt;dbl&gt;, AIC &lt;dbl&gt;, BIC &lt;dbl&gt;, SABIC &lt;dbl&gt;, SABICSelectable &lt;lgl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   WeightPolicy &lt;chr&gt;, ICEligible &lt;lgl&gt;, ICSelectable &lt;lgl&gt;, ICStatus &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ICContractVersion &lt;chr&gt;, AICFormula &lt;chr&gt;, BICFormula &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   SABICFormula &lt;chr&gt;, IntegrationEvaluationId &lt;chr&gt;, …</span></span>
-<span class="r-in"><span><span class="va">comp</span><span class="op">$</span><span class="va">evidence_ratios</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model1 Model2 EvidenceRatio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM    PCM            0.466</span>
+<span class="r-in"><span><span class="co"># RSM: shared category thresholds</span></span></span>
+<span class="r-in"><span><span class="va">fit_rsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># PCM: separate category thresholds for each criterion</span></span></span>
+<span class="r-in"><span><span class="va">fit_pcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"PCM"</span>,</span></span>
+<span class="r-in"><span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Check that the fitted models can be compared</span></span></span>
+<span class="r-in"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu">compare_mfrm</span><span class="op">(</span><span class="va">fit_rsm</span>, <span class="va">fit_pcm</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"RSM"</span>, <span class="st">"PCM"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">comparison</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Label"</span>, <span class="st">"Converged"</span>, <span class="st">"ICComparable"</span>, <span class="st">"ICSelectable"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Label Converged ICComparable ICSelectable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   TRUE      TRUE         TRUE        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> PCM   TRUE      TRUE         TRUE        </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Smaller AIC/BIC indicates better relative support among these models</span></span></span>
+<span class="r-in"><span><span class="va">comparison</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Label"</span>, <span class="st">"AIC"</span>, <span class="st">"Delta_AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"Delta_BIC"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Label   AIC Delta_AIC   BIC Delta_BIC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM    712.     0      729.      0   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> PCM    713.     0.375  737.      7.86</span>
+<span class="r-in"><span><span class="co"># Delta is the difference from the lowest value of that criterion</span></span></span>
+<span class="r-in"><span><span class="co"># For close or consequential comparisons, check a denser shared grid with</span></span></span>
+<span class="r-in"><span><span class="co"># mml_quadrature_sensitivity() before choosing a model</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
-<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

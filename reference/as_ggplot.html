@@ -11,7 +11,7 @@ the default; the returned ggplot can be restyled or composed downstream."><meta 
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,10 +22,12 @@ the default; the returned ggplot can be restyled or composed downstream."><meta 
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -42,7 +44,7 @@ the default; the returned ggplot can be restyled or composed downstream."><meta 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Convert draw-free mfrmr plot data to ggplot2</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-as-ggplot.R" class="external-link"><code>R/api-as-ggplot.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-as-ggplot.R" class="external-link"><code>R/api-as-ggplot.R</code></a></small>
       <div class="d-none name"><code>as_ggplot.Rd</code></div>
     </div>
 
@@ -99,15 +101,42 @@ additionally accepts <code>slope_aes</code>, <code>facet_by</code>, and <code>sh
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>ggplot2</code> plot object.</p>
+    <p>A <code>ggplot2</code> plot object, with a <code>mfrmr_notes</code> attribute when the
+source plot payload contains a <code>notes</code> table.
+Paired Wright/CCC payloads from <code><a href="plot_compare_mfrm.html">plot_compare_mfrm()</a></code> retain their selected
+comparison or difference view, group selection and monochrome panel policy.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Dedicated conversions are provided for Wright maps, theta-to-expected-score
 pathways, fit-statistic-to-measure pathways, category characteristic curves,
-bubble charts, and DIF/DFF summaries and heatmaps. Other draw-free payloads
-use a conservative tabular fallback; inspect <code><a href="plot_data_components.html">plot_data_components()</a></code> when
-automatic inference is not appropriate.</p>
+bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
+score review plots, and multivariate D-study comparisons. D-study conversions
+preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
+estimates. They do not refit the model or add confidence intervals.
+Difference-interval plots from <code><a href="mfrm_multivariate_d_compare.html">mfrm_multivariate_d_compare()</a></code> use their
+base <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method or <code><a href="plot_data.html">plot_data()</a></code>; automatic conversion is not supported.
+Automatic conversion of exploratory clustering plots is not supported.
+Use their <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods for silhouettes, feature profiles, dendrograms
+and imputation co-membership heatmaps, or <code><a href="plot_data.html">plot_data()</a></code> for custom graphics.
+For main-effects <code>mfrm_d_study</code> results, use the base <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method or
+<code><a href="plot_data.html">plot_data()</a></code> for custom graphics; automatic conversion is refused because
+generic column selection does not preserve those design comparisons.
+Other draw-free payloads use a conservative tabular
+fallback; inspect <code><a href="plot_data_components.html">plot_data_components()</a></code> when automatic inference is not
+appropriate.
+Titles, subtitles, and captions are wrapped at 72 text columns for ordinary
+figure widths; missing text is omitted. For narrower exports or custom line
+breaks, override these labels with <code><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggplot2::labs()</a></code> on the returned plot.
+Fit plots created with <code>show_title = FALSE</code> or <code>show_notes = FALSE</code> retain
+those settings on conversion. To set them when converting a fit directly,
+pass the flags through <code>...</code>. Interpretation and display notes remain
+available in <code>attr(plot, "mfrmr_notes")</code>, when present in the source payload.
+Wright, pathway, and CCC conversions share the fit-family series palette,
+honour monochrome presets and supplied palette overrides, and preserve
+line-type or point-shape distinctions. CCC categories retain their source
+order. When <code>slope_aes = "colour"</code>, slopes instead use a continuous viridis
+scale (a grey gradient in monochrome); categories still have line types.</p>
     </div>
 
     <div class="section level2">

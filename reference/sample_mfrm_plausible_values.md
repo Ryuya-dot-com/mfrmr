@@ -17,6 +17,8 @@ sample_mfrm_plausible_values(
   population_policy = c("error", "omit"),
   n_draws = 5,
   interval_level = 0.95,
+  scoring_quad_points = 31L,
+  readiness_policy = c("error", "review"),
   seed = NULL
 )
 ```
@@ -60,12 +62,13 @@ sample_mfrm_plausible_values(
 
   Optional one-row-per-person data.frame with the background variables
   required by a latent-regression fit. Ignored for ordinary
-  fixed-calibration scoring. Intercept-only latent-regression fits can
-  reconstruct the minimal scored-person table internally. This is the
-  scoring-time table for `new_data`, not the fit object's replay/export
-  provenance table. For categorical background variables, supply values
-  on the same coding scale used at fit time; the fitted factor levels
-  and contrasts are reused when building the scoring design matrix.
+  fitted-object posterior scoring. Intercept-only latent-regression fits
+  can reconstruct the minimal scored-person table internally. This is
+  the scoring-time table for `new_data`, not the fit object's
+  replay/export provenance table. For categorical background variables,
+  supply values on the same coding scale used at fit time; the fitted
+  factor levels and contrasts are reused when building the scoring
+  design matrix.
 
 - person_id:
 
@@ -86,7 +89,24 @@ sample_mfrm_plausible_values(
 
   Posterior interval level passed to
   [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-  for the accompanying EAP summary table.
+  for the accompanying EAP summary table. The same level selects the
+  empirical draw quantiles reported by
+  [`summary()`](https://rdrr.io/r/base/summary.html).
+
+- scoring_quad_points:
+
+  Number of Gauss-Hermite nodes used only for this scoring call. Passed
+  to
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+  and independent of the fit-time quadrature order. Fixed or adaptive
+  integration is inherited from `fit`.
+
+- readiness_policy:
+
+  Source-fit readiness policy passed to
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
+  Estimated-population fits currently require `"review"`; the returned
+  notes and eligibility labels retain that restriction.
 
 - seed:
 
@@ -118,9 +138,9 @@ An object of class `mfrm_plausible_values` with components:
 
 `sample_mfrm_plausible_values()` is a thin public wrapper around
 [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-that exposes the fixed-calibration posterior draws as a standalone
-object. It is useful when downstream workflows want repeated
-latent-value imputations rather than just one posterior EAP summary.
+that exposes the fitted-object posterior draws as a standalone object.
+It is useful when downstream workflows want repeated latent-value
+imputations rather than just one posterior EAP summary.
 
 In the current `mfrmr` implementation these are **approximate plausible
 values** drawn from the fitted quadrature-grid posterior under the
@@ -147,13 +167,25 @@ many-facet plausible-values system with all ConQuest-style extensions.
   [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
 
 - [`summary()`](https://rdrr.io/r/base/summary.html) reports draw counts
-  and empirical draw summaries by person.
+  and empirical draw summaries by person. `LowerValue` and `UpperValue`
+  use the requested `interval_level` and are labelled with
+  `IntervalLevel` and `DrawSummaryBasis`. They are empirical quantiles
+  of a finite sample of discrete draws, not the continuous posterior
+  limits in the companion estimates table. With few draws they are
+  coarse; one draw has an unavailable empirical SD. Recreate older
+  summaries from the original plausible-values object to update these
+  limits and labels; no refitting or resampling is needed.
 
 ## What this does not justify
 
 This helper does not update the calibration, estimate new non-person
 facet levels, or provide exact future true values. It samples from the
-fixed-grid posterior implied by the existing fixed calibration.
+quadrature- grid posterior implied by the existing fitted-model scoring
+basis, using fixed or Person-specific adaptive nodes according to the
+fit's setting. Calibration and population parameters remain fixed. These
+draws alone do not validate downstream group comparisons or regressions;
+those analyses require a compatible conditioning model and sampling
+design.
 
 ## References
 
@@ -161,10 +193,10 @@ The underlying posterior scoring follows the usual quadrature-based EAP
 framework of Bock and Aitkin (1981). The interpretation of multiple
 posterior draws as plausible-value-style summaries follows the general
 logic discussed by Mislevy (1991), while the current implementation
-remains a practical fixed-calibration approximation rather than a full
-published many-facet plausible-values method. For `JML` source fits, the
-quadrature posterior uses a package-level standard normal reference
-prior for this post hoc scoring layer.
+remains a practical fitted-object posterior approximation rather than a
+full published many-facet plausible-values method. For `JML` source
+fits, the quadrature posterior uses a package-level standard normal
+reference prior for this post hoc scoring layer.
 
 - Bock, R. D., & Aitkin, M. (1981). *Marginal maximum likelihood
   estimation of item parameters: Application of an EM algorithm*.
@@ -198,8 +230,12 @@ new_units <- data.frame(
 )
 pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 summary(pv)$draw_summary
-#> # A tibble: 1 × 6
-#>   Person Draws MeanValue SDValue LowerValue UpperValue
-#>   <chr>  <dbl>     <dbl>   <dbl>      <dbl>      <dbl>
-#> 1 NEW01      3         0       0          0          0
+#> # A tibble: 1 × 18
+#>   Person Draws MeanValue SDValue LowerValue UpperValue IntervalLevel
+#>   <chr>  <dbl>     <dbl>   <dbl>      <dbl>      <dbl>         <dbl>
+#> 1 NEW01      3    -0.373   0.323      -0.56          0          0.95
+#> # ℹ 11 more variables: DrawSummaryBasis <chr>, CalibrationMethod <chr>,
+#> #   Prior <chr>, PriorMean <dbl>, PriorSD <dbl>, WeightedLikelihood <lgl>,
+#> #   UncertaintyBasis <chr>, ScoringAlgorithm <chr>, SourceScoringReady <lgl>,
+#> #   EstimateUse <chr>, DrawBasis <chr>
 ```

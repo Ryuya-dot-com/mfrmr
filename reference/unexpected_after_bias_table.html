@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an unexpected-after-adjustment screening report</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>unexpected_after_bias_table.Rd</code></div>
     </div>
 
@@ -84,7 +86,9 @@
 
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
-<dd><p>Maximum number of rows to return.</p></dd>
+<dd><p>Maximum number of ranked rows to return in <code>table</code>.
+Summary counts, percentages, and before/after comparisons use all flagged
+observations, regardless of this display limit.</p></dd>
 
 
 <dt id="arg-rule">rule<a class="anchor" aria-label="anchor" href="#arg-rule"></a></dt>
@@ -102,7 +106,11 @@
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This helper recomputes expected values and residuals after interaction
-adjustments from <code><a href="estimate_bias.html">estimate_bias()</a></code> have been introduced.</p>
+adjustments from <code><a href="estimate_bias.html">estimate_bias()</a></code> have been introduced.
+Screening coverage is retained separately before and after adjustment.
+Reduction counts, percentages and the comparison plot are unavailable if
+either screen leaves responses unclassified. Recreate older saved results
+with the original settings; the MFRM fit does not need re-estimation.</p>
 <p><code>summary(t10)</code> is supported through <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>.
 <code>plot(t10)</code> is dispatched through <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for class
 <code>mfrm_unexpected_after_bias</code> (<code>type = "scatter"</code>, <code>"severity"</code>,
@@ -181,12 +189,16 @@ observation's expected value.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> After-bias threshold summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                384          20             5.208              20              9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Rule AbsZThreshold ProbThreshold BaselineUnexpectedN AfterBiasUnexpectedN</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  either             2           0.3                  88                   20</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ReducedBy ReducedPercent</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         68         77.273</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                384                   384                       0          80</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  UnexpectedPercent LowProbabilityN LargeResidualN   Rule AbsZThreshold</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             20.833              80              9 either             2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ProbThreshold BaselineUnexpectedN AfterBiasUnexpectedN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            0.3                  88                   80</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  BaselineEvaluatedObservations BaselineUnavailableObservations ReducedBy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            384                               0         8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ReducedPercent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           9.091</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> After-bias flagged rows: table</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual</span>

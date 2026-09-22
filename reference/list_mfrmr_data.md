@@ -66,14 +66,17 @@ synthetic rather than empirical.
 ## Examples
 
 ``` r
-keys <- list_mfrmr_data()
-keys
+library(mfrmr)
+
+# See the names accepted by load_mfrmr_data()
+list_mfrmr_data()
 #> [1] "example_core"        "example_bias"        "example_operational"
 #> [4] "study1"              "study2"              "combined"           
 #> [7] "study1_itercal"      "study2_itercal"      "combined_itercal"   
-list_mfrmr_data(details = TRUE)[, c(
-  "Key", "PrimaryUse", "Design", "CountBasis"
-)]
+
+# Compare the purpose and design of the available datasets
+catalog <- list_mfrmr_data(details = TRUE)
+catalog[, c("Key", "PrimaryUse", "Design")]
 #>                   Key                                          PrimaryUse
 #> 1        example_core                             Idealized fast examples
 #> 2        example_bias    DFF and bias demonstrations with planted effects
@@ -94,18 +97,10 @@ list_mfrmr_data(details = TRUE)[, c(
 #> 7                    Legacy Study 1 variant; rows and scores can differ
 #> 8                    Legacy Study 2 variant; rows and scores can differ
 #> 9 Overlapping IDs; requires explicit anchors/linking for a common scale
-#>                                                  CountBasis
-#> 1                                             unique labels
-#> 2                                             unique labels
-#> 3                                             unique labels
-#> 4                                             unique labels
-#> 5                                             unique labels
-#> 6 raw labels; 513 persons and 30 raters when Study-prefixed
-#> 7                                             unique labels
-#> 8                                             unique labels
-#> 9 raw labels; 513 persons and 30 raters when Study-prefixed
-d <- load_mfrmr_data("example_operational")
-head(d)
+
+# Choose one dataset
+toy <- load_mfrmr_data("example_operational")
+head(toy)
 #>                Study Person Rater    Criterion Score Group
 #> 1 OperationalExample   P001   R01     Language     4     A
 #> 2 OperationalExample   P001   R01 Organization     2     A

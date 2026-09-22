@@ -21,41 +21,39 @@ analyze_facet_equivalence(
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  Requires an inference-ready MML fit with unregularized
+  observed-information covariance and estimable contrasts.
 
 - diagnostics:
 
-  Optional output from
+  Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-  When `NULL`, diagnostics are computed with `residual_pca = "none"`.
+  Supplied diagnostics must retain all target-facet levels, model-based
+  SEs and ordinary-inference eligibility. Estimates and covariance are
+  always taken from `fit`; supplying diagnostics cannot override its
+  restrictions.
 
 - facet:
 
-  Character scalar naming the non-person facet to evaluate. If `NULL`,
-  the function prefers a rater-like facet and otherwise uses the first
-  model facet.
+  Character scalar naming a non-person facet. When `NULL`, a rater-like
+  facet is preferred, otherwise the first model facet is used.
 
 - equivalence_bound:
 
-  Practical-equivalence bound in logits. Default `0.5` is a moderate
-  bound intended as a starting point, not a universal threshold. The
-  TOST/ROPE result depends on both the bound *and* the per-level
-  standard errors, so in small or high-variance designs the test may
-  fail to reject non-equivalence simply because the SEs are wide. Choose
-  `equivalence_bound` based on the smallest difference that would be
-  practically meaningful in your assessment context (commonly 0.3 to 0.5
-  logits for rater-mediated designs) and check `$summary` for per-level
-  SE magnitude before drawing conclusions.
+  Positive practical-equivalence bound in logits. The default `0.5` is
+  not a universal threshold. Choose the smallest practically meaningful
+  difference for the intended use before inspecting the equivalence
+  results.
 
 - ci_level:
 
-  Confidence level used for the forest-style interval view. Default
-  `0.95`.
+  Confidence level for level and grand-mean-deviation intervals (default
+  `0.95`). Pairwise TOST always uses alpha 0.05 and 90% intervals.
 
 - conf_level:
 
-  Deprecated alias for `ci_level`, retained for backward compatibility.
-  Supplying a non-`NULL` value overrides `ci_level` and emits a one-time
-  deprecation warning. Default `0.95`.
+  Deprecated alias for `ci_level`; when supplied it takes precedence and
+  emits a lifecycle deprecation warning.
 
 ## Value
 
@@ -63,145 +61,112 @@ A named list with class `mfrm_facet_equivalence`.
 
 ## Details
 
-This function tests whether facet elements (e.g., raters) are similar
-enough to be treated as practically interchangeable, rather than merely
-testing whether they differ significantly. This is the key distinction
-from a standard chi-square heterogeneity test: absence of evidence for
-difference is not evidence of equivalence.
+Pair differences use the full constrained covariance from the MML
+observed information: \\\mathrm{Var}(A-B) = \mathrm{Var}(A) +
+\mathrm{Var}(B) - 2\mathrm{Cov}(A,B)\\. No model is refitted. JML,
+inference-ineligible fits, missing or regularized covariance, and
+singular contrast covariance stop with an error. Levels with fixed or
+unavailable contrasts are not silently dropped. Known anchors are
+treated as fixed; their uncertainty is excluded. Non-unit observation
+weights are inference-ineligible, including weights normalized to mean
+one. Older bundles must retain the current readiness contract as well as
+the covariance basis before they can be displayed.
 
-The function uses existing facet estimates and their standard errors
-from `diagnostics$measures`; no re-estimation is performed.
+The heterogeneity table uses a joint Wald chi-square test of equality of
+the facet levels. Non-significant heterogeneity is neither necessary nor
+sufficient for practical equivalence. `FixedChiSq`, `FixedDF`, and
+`FixedProb` retain their column names but use this joint contrast test.
+Separation and reliability remain descriptive summaries.
 
-The bundle combines four complementary views:
+`GrandMean` is the equally weighted mean of the facet estimates. For
+each deviation from that mean, uncertainty includes the covariance with
+the estimated mean. `ROPEPct` is the mass of its normal confidence
+distribution inside the practical bound; it is descriptive, not a
+Bayesian posterior probability or a separate equivalence decision.
 
-1.  **Fixed chi-square test**: tests \\H_0\\: all element measures are
-    equal. A non-significant result is *necessary but not sufficient*
-    for interchangeability. It is reported as context, not as direct
-    evidence of equivalence.
-
-2.  **Pairwise TOST (Two One-Sided Tests)**: for each pair of elements,
-    tests whether the difference falls within
-    \\\pm\\`equivalence_bound`. The TOST procedure (Schuirmann, 1987)
-    rejects the null hypothesis of *non-equivalence* when both one-sided
-    tests are significant at level \\\alpha\\. A pair is declared
-    "Equivalent" when the TOST p-value \< 0.05.
-
-3.  **BIC-based Bayes-factor heuristic**: an approximate screening tool
-    (not full Bayesian inference) that compares the evidence for a
-    common-facet model (all elements equal) against a heterogeneity
-    model (elements differ) via \\\mathrm{BF}\_{01} \approx
-    \exp((\mathrm{BIC}\_{H_1} - \mathrm{BIC}\_{H_0}) / 2)\\ (Kass &
-    Raftery, 1995). Values \> 3 favour the common-facet model; \< 1/3
-    favour heterogeneity.
-
-4.  **ROPE-style grand-mean proximity**: the proportion of each
-    element's normal-approximation confidence distribution that falls
-    within \\\pm\\`equivalence_bound` of the weighted grand mean. This
-    is a descriptive proximity summary, not a Bayesian ROPE decision
-    rule around a prespecified null value.
-
-**Choosing `equivalence_bound`**: the default of 0.5 logits is a
-moderate criterion. For high-stakes certification, 0.3 logits may be
-appropriate; for exploratory or low-stakes contexts, 1.0 logits may
-suffice. The bound should reflect the smallest difference that would be
-practically meaningful in your application.
+The former BIC/Bayes-factor heuristic is unavailable: a Wald statistic
+is not a fitted likelihood comparison. For compatibility, `BF01` is `NA`
+and `BF01Label` states why no value is supplied.
 
 ## What this analysis means
 
-`analyze_facet_equivalence()` is a practical-interchangeability screen.
-It asks whether facet levels are close enough, under a user-defined
-logit bound, to be treated as practically similar for the current use
-case.
+The analysis asks whether differences between facet levels fall within a
+prespecified practical bound under the fitted model. These are
+asymptotic normal-approximation tests; numerical eligibility does not
+establish finite-sample coverage or adequacy of the rating design.
 
 ## What this analysis does not justify
 
-- A non-significant chi-square result is not evidence of equivalence.
-
-- Forest/ROPE displays are descriptive and do not replace the pairwise
-  TOST decision rule.
-
-- The BIC-based Bayes-factor summary is a heuristic screen, not a full
-  Bayesian equivalence analysis.
-
-## Interpreting output
-
-Start with `summary$Decision`, which is a conservative summary of the
-pairwise TOST results. Then use the remaining tables as context:
-
-- `chi_square`: is there broad heterogeneity in the facet?
-
-- `pairwise`: which specific pairs meet the practical-equivalence bound?
-
-- `rope` / `forest`: how close is each level to the facet grand mean?
-
-Smaller `equivalence_bound` values make the criterion stricter. If the
-decision is `"partial_pairwise_equivalence"`, that means some pairwise
-contrasts satisfy the practical-equivalence bound but not all of them
-do.
+A non-significant difference is not evidence of equivalence. Pairwise
+conclusions are unadjusted for multiplicity: selecting some positive
+pairs does not provide family-wise error control for that selected set.
+Estimated linking or anchor uncertainty, population transport, and model
+misspecification require separate evaluation.
 
 ## Decision rule
 
-The final `Decision` is a pairwise TOST summary rather than a global
-equivalence proof. If all pairwise contrasts satisfy the practical-
-equivalence bound, the facet is labeled `"all_pairs_equivalent"`. If at
-least one, but not all, pairwise contrasts are equivalent, the facet is
-labeled `"partial_pairwise_equivalence"`. If no pairwise contrasts meet
-the practical-equivalence bound, the facet is labeled
-`"no_pairwise_equivalence_established"`. The chi-square, Bayes-factor,
-and grand-mean proximity summaries are reported as descriptive context.
+Each pair uses two one-sided normal tests at alpha 0.05. `Equivalent` is
+true when both tests reject non-equivalence, equivalently when its 90%
+interval lies strictly inside the bound. `Decision` summarizes all pairs
+as `"all_pairs_equivalent"`, `"partial_pairwise_equivalence"`, or
+`"no_pairwise_equivalence_established"`. No pair may be omitted from the
+all-pairs summary. Heterogeneity and ROPE summaries do not change this
+rule.
+
+## Interpreting output
+
+Start with `summary$Decision` and examine the corresponding `pairwise`
+differences, SEs and intervals. A negative result can reflect
+imprecision or a material difference. `chi_square` addresses exact
+equality, while `rope` and `forest` describe proximity to the facet
+mean.
 
 ## How to read the main outputs
 
-- `summary`: one-row pairwise-TOST decision summary and aggregate
-  context.
+- `summary`: pairwise decision, covariance basis and multiplicity
+  convention.
 
-- `pairwise`: pair-level TOST detail; use this for the primary
-  inferential read.
+- `pairwise`: differences, covariance-aware SEs, 90% intervals and TOST
+  tests.
 
-- `chi_square`: broad heterogeneity screen.
+- `chi_square`: joint Wald heterogeneity test and descriptive
+  separation.
 
-- `rope` / `forest`: level-wise proximity to the weighted grand mean.
+- `rope` / `forest`: `Measure`, marginal `SE` and `CI_Lower`/`CI_Upper`,
+  plus `Deviation`, `DeviationSE` and
+  `DeviationCI_Lower`/`DeviationCI_Upper` for proximity to the equally
+  weighted facet mean.
 
 ## Recommended next step
 
-If the result is borderline or high-stakes, re-run the analysis with a
-tighter or looser `equivalence_bound`, then inspect `pairwise` and
-[`plot_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_equivalence.md)
-before deciding how strongly to claim interchangeability.
+Review numerical integration and the model's uncertainty assumptions
+before interpreting a borderline result. Sensitivity to another
+practical bound should be reported transparently, without selecting a
+bound to obtain a desired decision.
 
 ## Typical workflow
 
-1.  Fit a model with
+1.  Fit and review an MML model with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-2.  Run `analyze_facet_equivalence()` for the facet you want to screen.
+2.  Prespecify the practical bound and run
+    `analyze_facet_equivalence()`.
 
-3.  Read `summary` and `chi_square` first.
+3.  Read `summary` and `pairwise`.
 
 4.  Use
     [`plot_facet_equivalence()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_equivalence.md)
-    to inspect which levels drive the result.
+    for descriptive grand-mean proximity.
 
 ## Output
 
-The returned bundle has class `mfrm_facet_equivalence` and includes:
-
-- `summary`: one-row overview with convergent decision
-
-- `chi_square`: fixed chi-square / separation summary
-
-- `pairwise`: pairwise TOST detail table
-
-- `rope`: element-wise ROPE probabilities around the weighted grand mean
-
-- `forest`: element-wise estimate, confidence interval, and ROPE status
-
-- `settings`: applied facet and threshold settings
+A bundle with `summary`, `chi_square`, `pairwise`, `rope`, `forest`, and
+`settings`. Older bundles without the current inference/covariance basis
+must be recomputed before using
+[`summary()`](https://rdrr.io/r/base/summary.html),
+[`print()`](https://rdrr.io/r/base/print.html), or plotting.
 
 ## References
-
-Kass, R. E., & Raftery, A. E. (1995). Bayes factors. *Journal of the
-American Statistical Association, 90*(430), 773-795.
 
 Schuirmann, D. J. (1987). A comparison of the two one-sided tests
 procedure and the power approach for assessing the equivalence of
@@ -220,12 +185,11 @@ Biopharmaceutics, 15*(6), 657-680.
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                method = "MML", quad_points = 31, maxit = 150)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
 eq$summary[, c("Facet", "Elements", "Decision", "MeanROPE")]
 #>   Facet Elements                     Decision MeanROPE
-#> 1 Rater        4 partial_pairwise_equivalence 97.86251
+#> 1 Rater        4 partial_pairwise_equivalence 99.42802
 head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
 #>   ElementA ElementB Equivalent
 #> 1      R01      R02       TRUE

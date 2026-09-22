@@ -116,10 +116,8 @@ summary(review)
 #> mfrm Model Choice Review
 #> 
 #> Overview
-#>  FitCount   Models HasBoundedGPCM OperationalReference SensitivityModel
-#>         2 RSM, PCM          FALSE                  RSM             <NA>
-#>  ICComparable                     ReviewStatus
-#>          TRUE rasch_family_model_choice_review
+#>  FitCount   Models OperationalReference SensitivityModel
+#>         2 RSM, PCM                  RSM             <NA>
 #> 
 #> Next Actions
 #>  - Read comparison_table for fit evidence, but decide operational use from the
@@ -133,12 +131,9 @@ summary(review)
 #>  Label Model Method Persons Npar   LogLik      AIC      BIC    SABIC Delta_AIC
 #>    RSM   RSM    MML      48    8 -900.013 1816.025 1830.995 1805.897     1.527
 #>    PCM   PCM    MML      48   14 -893.249 1814.498 1840.695 1796.774     0.000
-#>  Delta_BIC Delta_SABIC ICStatus ICIntegrationTier ICSelectable ICComparable
-#>        0.0       9.123       ok    standard_start         TRUE         TRUE
-#>        9.7       0.000       ok    standard_start         TRUE         TRUE
-#>  SABICComparable InferenceReady
-#>             TRUE           TRUE
-#>             TRUE           TRUE
+#>  Delta_BIC Delta_SABIC InferenceReady
+#>        0.0       9.123           TRUE
+#>        9.7       0.000           TRUE
 #>   Full IC audit fields remain available in `$comparison_table`.
 #> 
 #> Model Contracts and Readiness
@@ -154,21 +149,23 @@ summary(review)
 #>    PCM   PCM     fixed at 1        0    0
 #> 
 #> Fit readiness
-#>  Label Model FitReadiness FormalInference
-#>    RSM   RSM        ready              No
-#>    PCM   PCM        ready              No
-#>                                      Interpretation
-#>  Fit gates passed; formal precision review required
-#>  Fit gates passed; formal precision review required
+#>   RSM: numerical convergence: Passed.
+#>   PCM: numerical convergence: Passed.
+#>  Label Model FormalInference
+#>    RSM   RSM              No
+#>    PCM   PCM              No
+#>                                                          Interpretation
+#>  Fit-readiness requirements satisfied; formal precision review required
+#>  Fit-readiness requirements satisfied; formal precision review required
 #>   Full score contracts and readiness reasons remain in `$model_roles`.
 #> 
 #> Downstream Routes
 #>  Label Model FullAPARoute ScoreSideExport LinkingSynthesis RecoveryChecks
-#>    RSM   RSM    supported       supported        supported      supported
-#>    PCM   PCM    supported       supported        supported      supported
+#>    RSM   RSM    Available       Available        Available      Available
+#>    PCM   PCM    Available       Available        Available      Available
 #>  FairAverage BiasScreening SummaryAppendix
-#>    supported     supported       supported
-#>    supported     supported       supported
+#>    Available     Available       Available
+#>    Available     Available       Available
 #> 
 #> Weighting Review Status
 #>  Requested Available

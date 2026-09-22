@@ -193,8 +193,12 @@ evaluate_mfrm_design(
   [`future::plan()`](https://future.futureverse.org/reference/plan.html)
   is currently active. The Suggests package `future.apply` must be
   installed for the parallel path to activate; otherwise the call falls
-  back to serial execution with a single message. Parallel execution
-  applies to replications within each design row.
+  back to serial execution with a single message. A fixed explicit
+  `seed` preallocates the same per-cell simulation seeds before either
+  route, so serial and future execution receive identical stochastic
+  inputs for the same ordered design grid. Parallel dispatch applies to
+  replications within each design row; actual worker concurrency depends
+  on the active future plan.
 
 ## Value
 
@@ -208,10 +212,21 @@ An object of class `mfrm_design_evaluation` with components:
   design-variable alias columns when applicable.
 
 - `rep_overview`: run-level status and timing, with the same
-  design-variable alias columns when applicable. Failed fits retain the
-  condition class, failure component, and category-support state/reason
-  codes when available; a completely failed design still returns the
-  documented zero-row `results` schema rather than a zero-column table.
+  design-variable alias columns when applicable. `Observations` counts
+  generated rating rows; `MaxRatingsPerRater` is the largest row count
+  for a single rater-like facet level. One row is one
+  person-rater-criterion rating, regardless of `Weight`. These workload
+  counts are retained even when fitting or diagnostics fail.
+  `RaterComponents` and `CriterionComponents` count connected components
+  in each generated Person-facet assignment graph, using the same audit
+  as
+  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
+  They refer to the rater-like and criterion-like roles even when custom
+  facet names are used, and also survive failures. Failed fits retain
+  the condition class, failure component, and category-support
+  state/reason codes when available; a completely failed design still
+  returns the documented zero-row `results` schema rather than a
+  zero-column table.
 
 - `design_descriptor`: role-based design-variable metadata used by
   planning summaries and plots

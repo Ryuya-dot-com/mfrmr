@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Score future or partially observed units under the fitted scoring basis</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>predict_mfrm_units.Rd</code></div>
     </div>
 
@@ -59,8 +61,11 @@
 <span>  person_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  population_policy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"omit"</span><span class="op">)</span>,</span>
 <span>  interval_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  scoring_quad_points <span class="op">=</span> <span class="fl">31L</span>,</span>
+<span>  readiness_policy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"review"</span><span class="op">)</span>,</span>
 <span>  n_draws <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  adaptive_quad_points <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -105,7 +110,7 @@ column recorded in <code>fit</code>, if any.</p></dd>
 <dt id="arg-person-data">person_data<a class="anchor" aria-label="anchor" href="#arg-person-data"></a></dt>
 <dd><p>Optional one-row-per-person data.frame with the
 background variables required by a latent-regression fit. Ignored for
-ordinary fixed-calibration scoring. For intercept-only latent-regression
+ordinary fitted-object posterior scoring. For intercept-only latent-regression
 fits (<code>population_formula = ~ 1</code>), <code>mfrmr</code> reconstructs the minimal
 one-row-per-person table internally from the scored person IDs. This is the
 scoring-time table for <code>new_data</code>, not the fit object's replay/export
@@ -132,6 +137,24 @@ scored persons lacking complete covariates and records that omission in
 <dd><p>Posterior interval level returned in <code>Lower</code>/<code>Upper</code>.</p></dd>
 
 
+<dt id="arg-scoring-quad-points">scoring_quad_points<a class="anchor" aria-label="anchor" href="#arg-scoring-quad-points"></a></dt>
+<dd><p>Number of Gauss-Hermite nodes used only for this
+scoring call. It is independent of the quadrature order used while fitting
+<code>fit</code>; the default is 31 and values below 2 are refused.
+The fixed or adaptive integration mode is inherited from <code>fit</code>.</p></dd>
+
+
+<dt id="arg-readiness-policy">readiness_policy<a class="anchor" aria-label="anchor" href="#arg-readiness-policy"></a></dt>
+<dd><p>How a source fit that is not scoring-ready is
+handled. <code>"error"</code> (default) refuses scoring. <code>"review"</code> permits an
+explicitly review-only fitted-object calculation and labels the returned
+estimates and settings accordingly; it does not make the source fit ready.
+Estimated-population fits currently require <code>"review"</code> because their
+identification, boundary and numerical-accuracy acceptance rule is incomplete.
+Earlier population-model predictions labelled scoring-ready must be
+regenerated with explicit review before summary or export.</p></dd>
+
+
 <dt id="arg-n-draws">n_draws<a class="anchor" aria-label="anchor" href="#arg-n-draws"></a></dt>
 <dd><p>Optional number of quadrature-grid posterior draws to return
 per scored person. Use 0 to skip draws.</p></dd>
@@ -139,6 +162,15 @@ per scored person. Use 0 to skip draws.</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional seed for reproducible posterior draws.</p></dd>
+
+
+<dt id="arg-adaptive-quad-points">adaptive_quad_points<a class="anchor" aria-label="anchor" href="#arg-adaptive-quad-points"></a></dt>
+<dd><p>Optional vector of at least two distinct integer
+orders &gt;= 3, for example <code>c(31, 61)</code>. Adds <code>quadrature_review</code>, comparing
+a fixed-prior grid with grids centered and scaled to each Person's
+posterior. Calibration parameters and the prior are held fixed. Inspect
+both fixed/adaptive differences and movement between adaptive orders;
+this diagnostic does not replace estimates, intervals, draws, or readiness.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -148,6 +180,8 @@ per scored person. Use 0 to skip draws.</p></dd>
 <li><p><code>row_review</code>: row-level preparation review for <code>new_data</code></p></li>
 <li><p><code>population_review</code>: optional person-level omission review for
 latent-regression scoring</p></li>
+<li><p><code>quadrature_review</code>, <code>quadrature_overview</code>: optional unrounded numerical
+integration comparison and its compact overview</p></li>
 <li><p><code>input_data</code>: cleaned canonical scoring rows retained from <code>new_data</code></p></li>
 <li><p><code>person_data</code>: cleaned or supplied person-level background data used for
 latent-regression scoring; <code>NULL</code> otherwise</p></li>
@@ -162,20 +196,21 @@ available, the fitted one-dimensional population model to score new or
 partially observed persons via Expected A Posteriori (EAP) summaries on a
 quadrature grid.</p>
 <p>When the original fit uses ordinary <code>method = "MML"</code>, the posterior
-summaries are taken under that fitted MML calibration. When the original fit
+summaries use that fitted MML calibration and a standard normal scoring
+prior, unless a population model was fitted. When the original fit
 uses the latent-regression MML branch, the scoring prior is the fitted
 conditional normal population model \(\theta \mid x \sim
 N(x^\top\hat\beta, \hat\sigma^2)\), so the returned summaries are
 population-model-aware posterior EAP estimates. When the original fit uses
 <code>method = "JML"</code>, <code>mfrmr</code> applies the fitted facet/step parameters with a
 standard normal reference prior on the quadrature grid, so the returned
-person scores remain fixed-calibration EAP summaries rather than direct JML
+person scores remain fitted-object EAP summaries rather than direct JML
 estimates from the fitting step.</p>
 <p>When the fitted population model is intercept-only (<code>population_formula = ~ 1</code>), <code>predict_mfrm_units()</code> still uses the fitted population-model basis,
 but it can reconstruct the minimal scored-person table internally because no
 background covariates are needed beyond the person IDs in <code>new_data</code>.</p>
 <p>The current bounded <code>GPCM</code> branch is included in this scoring layer,
-so fitted <code>GPCM</code> objects can be used for the same fixed-calibration
+so fitted <code>GPCM</code> objects can be used for the same fitted-object
 posterior summaries. This does not imply that every downstream diagnostic or
 reporting helper has already been generalized to <code>GPCM</code>.</p>
 <p>This is appropriate for questions such as:</p><ul><li><p>what posterior location/uncertainty do these partially observed new
@@ -194,7 +229,7 @@ posterior uncertainty summaries, not as deterministic future truth values.</p>
 the fitted facet and step parameters from the joint-likelihood fit, then
 adds a standard normal reference prior only for the scoring layer so that
 new or partially observed units can be summarized on a quadrature grid.
-This is a practical fixed-calibration EAP procedure, not a claim that the
+This is a practical fitted-object EAP procedure, not a claim that the
 original <code>JML</code> fit itself estimated a population model.</p>
     </div>
     <div class="section level2">
@@ -203,16 +238,43 @@ original <code>JML</code> fit itself estimated a population model.</p>
 
 <ul><li><p><code>estimates</code> contains posterior EAP summaries for each person in
 <code>new_data</code>.</p></li>
-<li><p><code>Lower</code> and <code>Upper</code> are quadrature-grid posterior interval bounds at the
-requested <code>interval_level</code>.</p></li>
+<li><p><code>Lower</code> and <code>Upper</code> are continuous equal-tail posterior interval bounds at
+the requested <code>interval_level</code>, computed by numerical CDF inversion.
+EAP, SD, and optional draws still use the selected quadrature rule.
+These intervals condition on the fitted calibration and scoring prior,
+including any estimated population coefficients and variance. They exclude
+uncertainty from estimating calibration or population parameters; they are
+not confidence intervals at each fixed true Person ability.
+Their interpretation also depends on the scoring prior: a new population
+with a different ability mean, spread or shape can have different coverage.
+More quadrature points check numerical approximation under the same prior;
+they do not establish that this prior matches the new population.</p></li>
 <li><p><code>SD</code> is posterior uncertainty under the fitted scoring basis used for
 scoring.</p></li>
+<li><p>Estimate tables retain <code>IntervalLevel</code> without rounding, the prior form,
+per-Person <code>PriorMean</code> and <code>PriorSD</code>, calibration method, interval method
+and uncertainty interpretation. <code>WeightedLikelihood</code> indicates whether
+any response contribution for that Person was raised to a non-unit weight.
+Such weights do not by themselves establish equivalent independent ratings
+or frequentist coverage. Draw tables retain their discrete-grid basis and
+the same prior and calibration interpretation.</p></li>
 <li><p><code>draws</code>, when requested, contains approximate plausible values on the
 fitted quadrature grid.</p></li>
 <li><p><code>population_review</code>, when present, records whether scored persons were
 omitted because their background data were incomplete for a
 latent-regression fit.</p></li>
-</ul></div>
+<li><p><code>quadrature_review</code>, when requested, retains unrounded per-Person
+fixed/adaptive log-marginal, EAP and posterior-SD differences, changes
+between adaptive orders, and computation status/reasons. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> also
+supplies a compact <code>quadrature_overview</code>. A <code>computed</code> status does not
+certify accuracy; inspect the differences and any unavailable rows.</p></li>
+</ul><p>Re-summarize older results to recover recorded interval settings and readable
+notes without changing numerical scores. Prior means/SDs for older
+estimated-population results may be unavailable because those parameters
+were not retained in the result. Re-score with the existing fitted model
+to retain them; no calibration refit is needed. An unrecorded interval
+algorithm is labelled unavailable, not assumed to use continuous quantiles.</p>
+    </div>
     <div class="section level2">
     <h2 id="what-this-does-not-justify">What this does not justify<a class="anchor" aria-label="anchor" href="#what-this-does-not-justify"></a></h2>
 
@@ -275,8 +337,8 @@ EM algorithm</em>. Applied Psychological Measurement, 16(2), 159-176.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Person Estimate Lower Upper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> NEW01    -<span style="color: #BB0000;">0.149</span> -<span style="color: #BB0000;">1.36</span>  1.36</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> NEW02     0.279 -<span style="color: #BB0000;">1.36</span>  1.36</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> NEW01    -<span style="color: #BB0000;">0.17</span>  -<span style="color: #BB0000;">1.50</span>  1.18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> NEW02     0.301 -<span style="color: #BB0000;">1.04</span>  1.68</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

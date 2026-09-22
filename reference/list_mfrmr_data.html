@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>List packaged simulation datasets</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/datasets.R" class="external-link"><code>R/datasets.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/datasets.R" class="external-link"><code>R/datasets.R</code></a></small>
       <div class="d-none name"><code>list_mfrmr_data.Rd</code></div>
     </div>
 
@@ -102,14 +104,17 @@ Every bundled dataset is synthetic rather than empirical.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">keys</span> <span class="op">&lt;-</span> <span class="fu">list_mfrmr_data</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">keys</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># See the names accepted by load_mfrmr_data()</span></span></span>
+<span class="r-in"><span><span class="fu">list_mfrmr_data</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "example_core"        "example_bias"        "example_operational"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4] "study1"              "study2"              "combined"           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [7] "study1_itercal"      "study2_itercal"      "combined_itercal"   </span>
-<span class="r-in"><span><span class="fu">list_mfrmr_data</span><span class="op">(</span>details <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="st">"Key"</span>, <span class="st">"PrimaryUse"</span>, <span class="st">"Design"</span>, <span class="st">"CountBasis"</span></span></span>
-<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compare the purpose and design of the available datasets</span></span></span>
+<span class="r-in"><span><span class="va">catalog</span> <span class="op">&lt;-</span> <span class="fu">list_mfrmr_data</span><span class="op">(</span>details <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">catalog</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Key"</span>, <span class="st">"PrimaryUse"</span>, <span class="st">"Design"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   Key                                          PrimaryUse</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        example_core                             Idealized fast examples</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2        example_bias    DFF and bias demonstrations with planted effects</span>
@@ -130,18 +135,10 @@ Every bundled dataset is synthetic rather than empirical.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7                    Legacy Study 1 variant; rows and scores can differ</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                    Legacy Study 2 variant; rows and scores can differ</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9 Overlapping IDs; requires explicit anchors/linking for a common scale</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  CountBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                             unique labels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                             unique labels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                             unique labels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                             unique labels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                             unique labels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 raw labels; 513 persons and 30 raters when Study-prefixed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                             unique labels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                             unique labels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9 raw labels; 513 persons and 30 raters when Study-prefixed</span>
-<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Choose one dataset</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">toy</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Study Person Rater    Criterion Score Group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 OperationalExample   P001   R01     Language     4     A</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 OperationalExample   P001   R01 Organization     2     A</span>

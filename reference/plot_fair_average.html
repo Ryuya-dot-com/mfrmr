@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot fair-average diagnostics using base R</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
       <div class="d-none name"><code>plot_fair_average.Rd</code></div>
     </div>
 
@@ -53,12 +55,14 @@
 <span>  diagnostics <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  facet <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AdjustedAverage"</span>, <span class="st">"StandardizedAdjustedAverage"</span>, <span class="st">"FairM"</span>, <span class="st">"FairZ"</span><span class="op">)</span>,</span>
-<span>  plot_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"difference"</span>, <span class="st">"scatter"</span><span class="op">)</span>,</span>
+<span>  plot_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"difference"</span>, <span class="st">"scatter"</span>, <span class="st">"measure"</span><span class="op">)</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="fl">40</span>,</span>
 <span>  show_ci <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  preset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"standard"</span>, <span class="st">"publication"</span>, <span class="st">"compact"</span>, <span class="st">"monochrome"</span><span class="op">)</span>,</span>
+<span>  show_title <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  show_notes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -76,7 +80,7 @@
 
 
 <dt id="arg-facet">facet<a class="anchor" aria-label="anchor" href="#arg-facet"></a></dt>
-<dd><p>Optional facet name for level-wise lollipop plots.</p></dd>
+<dd><p>Optional facet name or names. Use <code>"Person"</code> for ability-to-score relationships.</p></dd>
 
 
 <dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
@@ -86,7 +90,7 @@
 
 
 <dt id="arg-plot-type">plot_type<a class="anchor" aria-label="anchor" href="#arg-plot-type"></a></dt>
-<dd><p><code>"difference"</code> or <code>"scatter"</code>.</p></dd>
+<dd><p><code>"difference"</code>, <code>"scatter"</code>, or <code>"measure"</code> (Measure on x, fair score on y).</p></dd>
 
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
@@ -94,21 +98,16 @@
 
 
 <dt id="arg-show-ci">show_ci<a class="anchor" aria-label="anchor" href="#arg-show-ci"></a></dt>
-<dd><p>Logical. When <code>TRUE</code>, draw approximate
-confidence-interval whiskers on the fair metric using a
-delta-method propagation from the logit <code>Measure</code> standard error
-to the observed-score scale. The derivative equals the implied
-score variance <code>Var(X | Measure)</code>, so the fair-scale standard
-error is <code>Var(X) * ModelSE</code>. CI bounds are clipped to the rating
-range. Rows where the score variance is effectively zero (levels
-whose measure sits near the rating boundary, so the delta-method
-approximation becomes uninformative) are drawn with an open
-circle and excluded from the whiskers; the excluded count is
-reported in the subtitle. For bounded <code>GPCM</code> fits, this option requests
-<code>fair_average_table(fair_se = TRUE)</code> when <code>x</code> is a fit object and uses the
-structural delta-method fair-average CI columns when they are available.
-If <code>x</code> is a precomputed fair-average bundle without those columns, the
-plot records an unavailable-CI note.</p></dd>
+<dd><p>Draw approximate fair-score intervals. RSM/PCM propagate
+only the focal measure SE, holding thresholds, other effects and reference
+means fixed. This is not full calibration uncertainty. GPCM uses available
+structural delta-method SEs, conditioning on person EAP/reference means;
+person rows are unavailable. Bounds are clipped to the internal rating
+range. Unavailable intervals are retained as NA with status and notes.
+The difference view treats the observed average as fixed: its whiskers
+are not confidence intervals for the observed-minus-fair gap.
+Returned <code>CI_Eligible</code> is <code>FALSE</code>; <code>CI_ReportingUse</code> distinguishes
+diagnostic-only and unavailable intervals, including stored bundles.</p></dd>
 
 
 <dt id="arg-ci-level">ci_level<a class="anchor" aria-label="anchor" href="#arg-ci-level"></a></dt>
@@ -125,6 +124,15 @@ default <code>0.95</code>. The returned plot-data object gains <code>CI_Lower</c
 <dd><p>Visual preset (<code>"standard"</code>, <code>"publication"</code>, <code>"compact"</code>, or <code>"monochrome"</code>).</p></dd>
 
 
+<dt id="arg-show-title">show_title<a class="anchor" aria-label="anchor" href="#arg-show-title"></a></dt>
+<dd><p>Show the figure title. The title remains in the return value.</p></dd>
+
+
+<dt id="arg-show-notes">show_notes<a class="anchor" aria-label="anchor" href="#arg-show-notes"></a></dt>
+<dd><p>Show short figure annotations. Full interpretation and
+uncertainty notes remain in <code>data$notes</code> and the ggplot <code>mfrmr_notes</code> attribute.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to <code><a href="fair_average_table.html">fair_average_table()</a></code> when <code>x</code> is <code>mfrm_fit</code>.</p></dd>
 
@@ -133,60 +141,36 @@ default <code>0.95</code>. The returned plot-data object gains <code>CI_Lower</c
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A plotting-data object of class <code>mfrm_plot_data</code>.
 With <code>draw = FALSE</code>, the returned plot data includes <code>title</code>, <code>subtitle</code>,
-<code>legend</code>, <code>reference_lines</code>, and the stacked fair-average data.</p>
+<code>legend</code>, <code>reference_lines</code>, and the stacked fair-average <code>data</code>.
+<code>plot_data</code> contains the displayed rows and coordinates; <code>excluded</code> retains
+non-finite rows. <code>notes</code> explains the reference, uncertainty and row selection.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Fair-average plots compare observed scoring tendency against model-based
-fair metrics.</p>
-<p><strong>FairM</strong> is the model-predicted mean score for each element, adjusting
-for the ability distribution of persons actually encountered.  It
-answers: "What average score would this rater/criterion produce if all
-raters/criteria saw the same mix of persons?"</p>
-<p><strong>FairZ</strong> standardises FairM to a z-score across elements within each
-facet, making it easier to compare relative severity across facets
-with different raw-score scales.</p>
-<p>Use FairM when the raw-score metric is meaningful (e.g., reporting
-average ratings on the original 1–4 scale).
-Use FairZ when comparing standardised severity ranks across facets.</p>
+    <p>FairM is an expected score at the mean measures of the other facets; for
+non-person rows it also uses the mean estimated person measure. FairZ uses
+zero reference measures instead. <strong>FairZ is not a z-score.</strong> The historical
+alias <code>StandardizedAdjustedAverage</code> refers to the reference environment,
+not z-standardization. Both metrics use fitted internal score coding.
+PCM/GPCM use an element's own thresholds for the step facet and the mean
+threshold profile for other facets. GPCM uses an element's own slope for
+the slope facet and slope 1 otherwise. These are reporting conventions,
+not averages of predictions over the observed person/assignment distribution.</p>
+<p><code>plot_type = "measure"</code> connects measures (person ability or facet effects)
+to the reported fair score. Select <code>facet = "Person"</code> for an ability-to-score
+view. Points reuse the table values, without fitting a trend across different
+reference profiles. This transformation is not independent validation of
+the fitted model. <code>umean</code>/<code>uscale</code> change Measure units, not score units;
+<code>xtreme</code> changes the reported Measure only and disables conditional intervals.</p>
+<p><code>"difference"</code> ranks absolute observed-minus-fair gaps; <code>"scatter"</code> compares
+observed averages against fair scores with an identity line. These gaps
+also reflect assignment and person mix and do not by themselves diagnose
+leniency, severity or bias. Intervals are conditional approximations with
+full-refit coverage unverified. RSM/PCM intervals require a fitted model;
+a stored bundle alone lacks the calibration needed to calculate them.
+GPCM bundle intervals honor <code>ci_level</code>; older bundles without rating limits
+can only reuse intervals at their recorded confidence level.</p>
     </div>
-    <div class="section level2">
-    <h2 id="plot-types">Plot types<a class="anchor" aria-label="anchor" href="#plot-types"></a></h2>
-
-
-<dl><dt><code>"difference"</code> (default)</dt>
-<dd><p>Lollipop chart showing the gap between
-observed and fair-average score for each element.  X-axis:
-Observed - Fair metric.  Y-axis: element labels.  Points colored
-teal (lenient, gap &gt;= 0) or orange (severe, gap &lt; 0).  Ordered by
-absolute gap.</p></dd>
-
-<dt><code>"scatter"</code></dt>
-<dd><p>Scatter plot of fair metric (x) vs observed average
-(y) with an identity line.  Points colored by facet.  Useful for
-checking overall alignment between observed and model-adjusted
-scores.</p></dd>
-
-
-</dl></div>
-    <div class="section level2">
-    <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
-
-
-<p>Difference plot: ranked element-level gaps (<code>Observed - Fair</code>), useful
-for triage of potentially lenient/severe levels.</p>
-<p>Scatter plot: global agreement pattern relative to the identity line.</p>
-<p>Larger absolute gaps suggest stronger divergence between observed and
-model-adjusted scoring.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
-
-
-<ol><li><p>Start with <code>plot_type = "difference"</code> to find largest discrepancies.</p></li>
-<li><p>Use <code>plot_type = "scatter"</code> to check overall alignment pattern.</p></li>
-<li><p>Follow up with facet-level diagnostics for flagged levels.</p></li>
-</ol></div>
     <div class="section level2">
     <h2 id="further-guidance">Further guidance<a class="anchor" aria-label="anchor" href="#further-guidance"></a></h2>
 
@@ -204,16 +188,33 @@ model-adjusted scoring.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">toy_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">toy_people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy_full</span><span class="op">[</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">toy_people</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_fair_average</span><span class="op">(</span><span class="va">fit</span>, metric <span class="op">=</span> <span class="st">"AdjustedAverage"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="fu">plot_fair_average</span><span class="op">(</span><span class="va">fit</span>, metric <span class="op">=</span> <span class="st">"AdjustedAverage"</span>, plot_type <span class="op">=</span> <span class="st">"difference"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compute diagnostics once for the following checks</span></span></span>
+<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># How do the observed and reference-adjusted person averages compare?</span></span></span>
+<span class="r-in"><span><span class="fu">plot_fair_average</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span>, facet <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>                  metric <span class="op">=</span> <span class="st">"FairM"</span>, plot_type <span class="op">=</span> <span class="st">"scatter"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot_fair_average-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Optional: inspect the gap (observed average minus FairM)</span></span></span>
+<span class="r-in"><span><span class="fu">plot_fair_average</span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span>, facet <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>                  metric <span class="op">=</span> <span class="st">"FairM"</span>, plot_type <span class="op">=</span> <span class="st">"difference"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot_fair_average-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># A positive gap means the observed average is higher than the model-based FairM</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

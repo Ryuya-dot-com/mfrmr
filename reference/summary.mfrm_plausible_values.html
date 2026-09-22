@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize approximate plausible values from posterior scoring</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_plausible_values.Rd</code></div>
     </div>
 
@@ -103,37 +105,39 @@ latent-regression scoring</p></li>
 <span class="r-in"><span><span class="va">pv</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_mfrm_plausible_values.html">sample_mfrm_plausible_values</a></span><span class="op">(</span><span class="va">toy_fit</span>, <span class="va">new_units</span>, n_draws <span class="op">=</span> <span class="fl">3</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pv</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Plausible Values Summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calibration estimated by MML; scoring uses posterior EAP. Prior: Standard</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   normal N(0,1).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   95% intervals: continuous posterior quantiles.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Posterior SDs and intervals condition on point estimates of the calibration</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   and prior; their estimation uncertainty is excluded.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Draw summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Empirical draw summaries (first 10)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Person Draws MeanValue SDValue LowerValue UpperValue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01     3         0       0          0          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01     3    -0.373   0.323      -0.56          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Draw limits are empirical quantiles at the requested level. With few draws</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   they are coarse; use the companion posterior interval and its stated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   calculation method for interval reporting.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Companion estimates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate    SD  Lower Upper Observations WeightedN</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01   -0.097 0.648 -1.356 1.356            2         2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Posterior estimates (first 10)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate    SD  Lower Upper Observations                         Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01   -0.112 0.683 -1.448 1.235            2 No source restriction recorded</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Row preparation review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Response rows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  InputRows KeptRows DroppedRows DroppedMissing DroppedBadScore DroppedBadWeight</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          2        2           0              0               0                0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  DroppedNonpositiveWeight</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Setting      Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      interval_level       0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             n_draws          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         quad_points          5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                seed          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              method        MML</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      source_columns   &lt;list 4&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     posterior_basis legacy_mml</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           person_id       NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   population_policy       NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  population_formula       NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - These draws are sampled from the fixed quadrature-grid posterior under the existing MML calibration.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Use them as approximate plausible-value summaries for posterior uncertainty, not as deterministic future truth values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   These draws are sampled from the quadrature-grid posterior under the existing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MML calibration and its fixed or adaptive integration setting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Use them as approximate plausible-value summaries for posterior uncertainty,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   not as deterministic future truth values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Draws alone do not validate downstream group comparisons or regressions;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   check the conditioning model and sampling design for the intended analysis.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Non-person facets in `new_data` must already exist in the fitted calibration.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Overlapping person IDs are treated as labels in `new_data`; the original</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   fitted person estimates are not updated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   The `draws` component contains quadrature-grid posterior draws that can be</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   used as approximate plausible-value summaries.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

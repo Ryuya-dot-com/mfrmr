@@ -15,7 +15,7 @@ than pass/fail evidence."><meta property="og:image" content="https://ryuya-dot-c
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,10 +26,12 @@ than pass/fail evidence."><meta property="og:image" content="https://ryuya-dot-c
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -46,7 +48,7 @@ than pass/fail evidence."><meta property="og:image" content="https://ryuya-dot-c
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize a diagnostic-screening simulation study</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_diagnostic_screening.Rd</code></div>
     </div>
 
@@ -267,8 +269,8 @@ and runtime views</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Criterion       10       2           2                 2    1         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Criterion       10       2           2                 2    1         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ConvergenceRate MeanElapsedSec MeanLegacyMeanAbsZ MeanLegacyFlaggedLevels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0          1.140              0.589                       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                0          1.156              0.563                       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0          0.925              0.589                       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                0          0.935              0.563                       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  LegacyAnyFlagRate MeanMarginalOverallRMSD MeanMarginalMaxAbsStdResidual</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  0                   0.002                         0.050</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  0                   0.046                         1.705</span>
@@ -287,8 +289,8 @@ and runtime views</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Criterion       10       2           2                 2    1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Criterion       10       2           2                 2    1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  MeanElapsedSec McseElapsedSec MeanElapsedSecPer100Obs LegacyAnyFlagRate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           1.140             NA                    2.85                 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           1.156             NA                    2.89                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           0.925             NA                   2.313                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           0.935             NA                   2.338                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  McseLegacyAnyFlagRate MarginalAnyFlagRate McseMarginalAnyFlagRate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                     NA                   1                      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                     NA                   1                      NA</span>
@@ -364,7 +366,7 @@ and runtime views</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - At least one misspecification scenario increased a strict screening signal relative to the well-specified baseline for an evaluated design row.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - At least one misspecification scenario increased strict pairwise flagging relative to the well-specified baseline for an evaluated design row.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - At least one strict screening signal reacted more strongly than the legacy |ZSTD| screen for an evaluated design row.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts, not validation pass/fail gates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts, not validation pass/fail criteria.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Planning helpers vary one person count and two named non-person facet roles (Rater and Criterion). Estimation may contain additional facets, but planning and forecasting are limited to this role-based design.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Current scalar-argument planning paths allow `n_person`, `n_rater`, `n_criterion`, and `raters_per_person` to vary subject to `raters_per_person &lt;= n_rater`.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Named-facet structural design metadata for person count, non-person facet counts, and assignments per person. These deterministic design summaries do not establish arbitrary-facet simulation support or parameter-recovery performance.</span>

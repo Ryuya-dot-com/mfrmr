@@ -137,51 +137,37 @@ Supported `which` values:
 ## Examples
 
 ``` r
+# \donttest{
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 7, maxit = 30
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-tbl <- apa_table(fit, which = "summary", caption = "Model summary", note = "Toy example")
-tbl_facets <- apa_table(fit, which = "summary", branch = "facets")
-fit_bundle <- build_summary_table_bundle(summary(fit))
-tbl_from_summary <- apa_table(fit_bundle, which = "facet_overview")
-summary(tbl)
-#> APA Table Summary
-#>  Branch Style   Which Rows Columns NumericColumns MissingValues
-#>     apa   apa summary    1      87             40             3
-#> 
-#> Caption
-#>  - Model summary
-#> 
-#> Note
-#>  - Toy example
-#> 
-#> Numeric profile
-#>            Column N   Mean SD    Min    Max
-#>               AIC 1 712.40 NA 712.40 712.40
-#>               BIC 1 729.24 NA 729.24 729.24
-#>        Categories 1   4.00 NA   4.00   4.00
-#>   ConvergenceCode 1   0.00 NA   0.00   0.00
-#>          Deviance 1 694.40 NA 694.40 694.40
-#>      EMIterations 0     NA NA     NA     NA
-#>  EMRelativeChange 0     NA NA     NA     NA
-#>   EffectiveReltol 1   0.00 NA   0.00   0.00
-p <- plot(tbl, draw = FALSE)
-p_facets <- plot(tbl_facets, type = "numeric_profile", draw = FALSE)
-p$data$plot
-#> [1] "numeric_profile"
-p_facets$data$plot
-#> [1] "numeric_profile"
-if (interactive()) {
-  plot(
-    tbl,
-    type = "numeric_profile",
-    main = "APA Table Numeric Profile (Customized)",
-    palette = c(numeric_profile = "#2b8cbe", grid = "#d9d9d9"),
-    label_angle = 45
-  )
-}
-tbl$note
-#> [1] "Toy example"
+
+# Turn one summary table into a table with a caption and note
+results <- summary(fit)
+tbl <- apa_table(results, which = "facet_overview",
+                 caption = "Distribution of estimates within each facet")
+tbl # Prints the table, caption, and note
+#> Distribution of estimates within each facet
+#>      Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate Span
+#>  Criterion      3            0        0.3       -0.34        0.22 0.57
+#>      Rater      6            0        0.4       -0.61        0.41 1.02
+#> Note. No population model was requested; MML used an unconditional normal person distribution.
+
+# Extract the ordinary data frame for further formatting or export
+tbl$table
+#>       Facet Levels MeanEstimate SDEstimate MinEstimate MaxEstimate Span
+#> 1 Criterion      3            0        0.3       -0.34        0.22 0.57
+#> 2     Rater      6            0        0.4       -0.61        0.41 1.02
+# This table summarizes facets; use as.data.frame(fit) for individual estimates
+# }
 ```

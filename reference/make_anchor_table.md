@@ -1,11 +1,17 @@
-# Build an anchor table from fitted estimates
+# Build a candidate direct-anchor table from fitted estimates
 
-Build an anchor table from fitted estimates
+Build a candidate direct-anchor table from fitted estimates
 
 ## Usage
 
 ``` r
-make_anchor_table(fit, facets = NULL, include_person = FALSE, digits = 6)
+make_anchor_table(
+  fit,
+  facets = NULL,
+  include_person = FALSE,
+  digits = 6,
+  readiness_policy = c("error", "review")
+)
 ```
 
 ## Arguments
@@ -21,11 +27,20 @@ make_anchor_table(fit, facets = NULL, include_person = FALSE, digits = 6)
 
 - include_person:
 
-  Include person estimates as anchors.
+  Include person estimates as candidate anchors. Use only when cross-run
+  person identity and the intended longitudinal constraint are
+  substantively justified.
 
 - digits:
 
   Rounding digits for anchor values.
+
+- readiness_policy:
+
+  How a source fit that is not inference-ready is handled. `"error"`
+  (default) refuses anchor export or reuse. `"review"` permits explicit
+  review-only extraction; those values must not be used as operational
+  anchors.
 
 ## Value
 
@@ -33,17 +48,23 @@ A data.frame with `Facet`, `Level`, and `Anchor`.
 
 ## Details
 
-This function exports estimated facet parameters as an anchor table for
-use in subsequent calibrations. This is the standard approach for
-**linking** across administrations: a reference run establishes the
-measurement scale, and anchored re-analyses place new data on that same
-scale.
+This function performs a mechanical conversion from fitted estimates to
+the `Facet`/`Level`/`Anchor` schema accepted by
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+The returned rows are candidate direct constraints, not an approved
+anchor set.
 
-Anchor values should be exported from a well-fitting reference run with
-adequate sample size. If the reference model has convergence issues or
-large misfit, the exported anchors may propagate instability. Re-run
+By default, the function refuses export when the source fit is not
+inference-ready under the current readiness contract. Set
+`readiness_policy = "review"` only to inspect candidate values; this
+does not make them eligible for reuse. The function cannot verify
+cross-run element identity or invariance. Before reuse, document why
+selected elements retain the same meaning, check the observed design's
+connectedness, and run
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
-on the receiving data to verify compatibility before estimation.
+on the receiving data. That review checks schema and receiving-data
+support; it does not validate the source fit or the substantive
+invariance assumption.
 
 The `digits` parameter controls rounding precision. Use at least 4
 digits for research applications; excessive rounding (e.g., 1 digit) can
@@ -59,12 +80,14 @@ introduce avoidable calibration error.
 
 ## Typical workflow
 
-1.  Fit a reference run with
+1.  Fit and diagnose a defensible reference run with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-2.  Export anchors with `make_anchor_table(fit)`.
+2.  Confirm source readiness, element identity, and the intended link.
 
-3.  Pass selected rows back into `fit_mfrm(..., anchors = ...)`.
+3.  Export candidates with `make_anchor_table(fit)` and review them.
+
+4.  Pass selected rows back into `fit_mfrm(..., anchors = ...)`.
 
 ## See also
 

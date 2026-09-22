@@ -3,11 +3,19 @@
 sentinels used in SPSS / SAS / FACETS exports (99, 999, -1,
 "N", "NA", "n/a", ".", "") with NA across the columns
 you select. It is useful before calling fit_mfrm() on data exported with
-those conventions.'><meta property="og:description" content='Convenience helper that replaces the standard non-NA missing-code
+those conventions.
+A sentinel is a value used to mean "missing" instead of an actual score.
+Only recode values that your data documentation defines as missing. For
+custom score markers, specify both columns = "Score" and codes; this
+preserves a person or rater identifier such as 99.'><meta property="og:description" content='Convenience helper that replaces the standard non-NA missing-code
 sentinels used in SPSS / SAS / FACETS exports (99, 999, -1,
 "N", "NA", "n/a", ".", "") with NA across the columns
 you select. It is useful before calling fit_mfrm() on data exported with
-those conventions.'><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+those conventions.
+A sentinel is a value used to mean "missing" instead of an actual score.
+Only recode values that your data documentation defines as missing. For
+custom score markers, specify both columns = "Score" and codes; this
+preserves a person or rater identifier such as 99.'><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -15,7 +23,7 @@ those conventions.'><meta property="og:image" content="https://ryuya-dot-com.git
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,10 +34,12 @@ those conventions.'><meta property="og:image" content="https://ryuya-dot-com.git
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -46,7 +56,7 @@ those conventions.'><meta property="og:image" content="https://ryuya-dot-com.git
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Recode common missing-value sentinels to <code>NA</code></h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>recode_missing_codes.Rd</code></div>
     </div>
 
@@ -55,7 +65,11 @@ those conventions.'><meta property="og:image" content="https://ryuya-dot-com.git
 sentinels used in SPSS / SAS / FACETS exports (<code>99</code>, <code>999</code>, <code>-1</code>,
 <code>"N"</code>, <code>"NA"</code>, <code>"n/a"</code>, <code>"."</code>, <code>""</code>) with <code>NA</code> across the columns
 you select. It is useful before calling <code><a href="fit_mfrm.html">fit_mfrm()</a></code> on data exported with
-those conventions.</p>
+those conventions.
+A sentinel is a value used to mean "missing" instead of an actual score.
+Only recode values that your data documentation defines as missing. For
+custom score markers, specify both <code>columns = "Score"</code> and <code>codes</code>; this
+preserves a person or rater identifier such as <code>99</code>.</p>
     </div>
 
     <div class="section level2">
@@ -105,23 +119,49 @@ replaced by <code>NA</code>. A <code>mfrm_missing_recoding</code> attribute reco
 per-column replacement counts for traceability logs.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Save the returned data, for example <code>cleaned &lt;- recode_missing_codes(...)</code>.
+The original object is unchanged. This helper replaces cells and retains
+every row; later, <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> and <code><a href="fit_mfrm.html">fit_mfrm()</a></code> exclude rating rows
+with missing scores or required identifiers. Inspect the replacement counts
+with <code>attr(cleaned, "mfrm_missing_recoding")</code>, then review and fit <code>cleaned</code>.</p>
+<p>The defaults differ across entry points: this helper scans all columns when
+<code>columns</code> is omitted. In <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> and <code><a href="fit_mfrm.html">fit_mfrm()</a></code>,
+<code>missing_codes = TRUE</code> uses the conventional code set on the score column
+only; an explicit <code>missing_codes</code> vector applies to the person, facet, and
+score columns. Use this helper with an explicit score column when your custom code
+could also be a legitimate identifier.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"P"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"R1"</span>, <span class="st">"R1"</span>, <span class="st">"R2"</span>, <span class="st">"R2"</span>, <span class="st">"R2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  Score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">99</span>, <span class="fl">2</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A small input example: 99 and . mean missing only in the Score column</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"001"</span>, <span class="st">"001"</span>, <span class="st">"002"</span>, <span class="st">"002"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"R1"</span>, <span class="st">"99"</span>, <span class="st">"R1"</span>, <span class="st">"99"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  Score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"3"</span>, <span class="st">"99"</span>, <span class="st">"."</span>, <span class="st">"2"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cleaned</span> <span class="op">&lt;-</span> <span class="fu">recode_missing_codes</span><span class="op">(</span><span class="va">dat</span>, columns <span class="op">=</span> <span class="st">"Score"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cleaned</span><span class="op">$</span><span class="va">Score</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  1 NA  2 NA  3</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">cleaned</span>, <span class="st">"mfrm_missing_recoding"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cleaned</span> <span class="op">&lt;-</span> <span class="fu">recode_missing_codes</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">ratings</span>,</span></span>
+<span class="r-in"><span>  columns <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  codes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"99"</span>, <span class="st">"."</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cleaned</span> <span class="co"># Two scores become NA; rater ID 99 and all four rows remain</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Person Rater Score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    001    R1     3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    001    99  &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    002    R1  &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    002    99     2</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">cleaned</span>, <span class="st">"mfrm_missing_recoding"</span><span class="op">)</span> <span class="co"># Score: Replaced = 2</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Column Replaced</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  Score        2</span>
+<span class="r-in"><span><span class="co"># Use the returned cleaned data for subsequent data review and fitting</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

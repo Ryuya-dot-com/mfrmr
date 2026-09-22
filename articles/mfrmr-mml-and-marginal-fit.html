@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,10 +38,12 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -69,7 +71,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>MML estimation and marginal-fit diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/vignettes/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/vignettes/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-mml-and-marginal-fit.Rmd</code></div>
     </div>
 
@@ -100,33 +102,39 @@ gradients, and strict marginal expected counts aligned.</p>
 and parameter vector
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
 the current <code>MML</code> path targets the marginal likelihood</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∏</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mo>∫</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><mi>θ</mi><mo>,</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><mi>θ</mi><mo>≈</mo><munderover><mo>∏</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><munderover><mo>∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>w</mi><mi>q</mi></msub><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>q</mi></msub><mo>,</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∏</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mo>∫</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><mi>θ</mi><mo>,</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><mi>θ</mi><mo>≈</mo><munderover><mo>∏</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><munderover><mo>∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>w</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><msub><mi>θ</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
 L(\beta) = \prod_{n=1}^{N} \int p(\mathbf{x}_n \mid \theta, \beta) g(\theta) \, d\theta
 \approx
-\prod_{n=1}^{N} \sum_{q=1}^{Q} w_q \, p(\mathbf{x}_n \mid \theta_q, \beta),
+\prod_{n=1}^{N} \sum_{q=1}^{Q} w_{nq}(\beta) \, p(\mathbf{x}_n \mid \theta_{nq}(\beta), \beta),
 </annotation></semantics></math></p>
 <p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>q</mi></msub><mo>,</mo><msub><mi>w</mi><mi>q</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\theta_q, w_q)</annotation></semantics></math>
-are Gauss-Hermite nodes and weights. In <code>mfrmr</code>, the integral
-is approximated with Gauss-Hermite quadrature, the marginal
-log-likelihood is optimized from the same shared kernel, and person
-summaries are computed post hoc from the posterior bundle. When a
-latent-regression population model is active, the package uses
-person-specific transformed nodes derived from the same quadrature basis
-rather than one unconditional fixed grid.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo>,</mo><msub><mi>w</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\theta_{nq}, w_{nq})</annotation></semantics></math>
+are the integration nodes and weights for Person
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.
+In <code>mfrmr</code>, the integral is approximated with Gauss-Hermite
+quadrature, the marginal log-likelihood is optimized from the same
+shared kernel, and person summaries are computed post hoc from the
+posterior bundle. When a latent-regression population model is active,
+the package uses person-specific transformed nodes derived from the same
+quadrature basis rather than one unconditional fixed grid. With
+<code>mml_integration = "adaptive"</code>, nodes also follow each
+Person’s posterior mode and width at every proposed parameter vector.
+Adjusted weights include the normal-density ratio and change of scale,
+so the approximation still targets the original integral. The gradient
+includes changes in the nodes and weights.</p>
 <p>The posterior weight for person
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
 at node
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
 is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>w</mi><mi>q</mi></msub><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>q</mi></msub><mo>,</mo><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo></mrow><mrow><munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>w</mi><mi>r</mi></msub><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>r</mi></msub><mo>,</mo><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>w</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><msub><mi>θ</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo>,</mo><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo></mrow><mrow><munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>w</mi><mrow><mi>n</mi><mi>r</mi></mrow></msub><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>𝐱</mi><mi>n</mi></msub><mo>∣</mo><msub><mi>θ</mi><mrow><mi>n</mi><mi>r</mi></mrow></msub><mo>,</mo><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \omega_{nq} =
-\frac{w_q \, p(\mathbf{x}_n \mid \theta_q, \hat{\beta})}
-{\sum_{r=1}^{Q} w_r \, p(\mathbf{x}_n \mid \theta_r, \hat{\beta})}.
+\frac{w_{nq} \, p(\mathbf{x}_n \mid \theta_{nq}, \hat{\beta})}
+{\sum_{r=1}^{Q} w_{nr} \, p(\mathbf{x}_n \mid \theta_{nr}, \hat{\beta})}.
 </annotation></semantics></math></p>
 <p>Expected a posteriori (EAP) scoring then uses</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>n</mi><mrow><mi mathvariant="normal">E</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">P</mi></mrow></msubsup><mo>=</mo><munderover><mo>∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>θ</mi><mi>q</mi></msub><mspace width="0.167em"></mspace><msub><mi>ω</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\hat{\theta}_n^{\mathrm{EAP}} = \sum_{q=1}^{Q} \theta_q \, \omega_{nq}.
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>n</mi><mrow><mi mathvariant="normal">E</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">P</mi></mrow></msubsup><mo>=</mo><munderover><mo>∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>θ</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mspace width="0.167em"></mspace><msub><mi>ω</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat{\theta}_n^{\mathrm{EAP}} = \sum_{q=1}^{Q} \theta_{nq} \, \omega_{nq}.
 </annotation></semantics></math></p>
 <p>This is the kernel that now feeds <code>logLik</code>, the gradient,
 EAP summaries, and strict marginal expected values.</p>
@@ -143,13 +151,80 @@ quadrature</li>
 optimization of the marginal log-likelihood</li>
 <li>
 <code>mml_engine = "em"</code> and
-<code>mml_engine = "hybrid"</code> are also available for
-<code>RSM</code> / <code>PCM</code>; bounded <code>GPCM</code> uses the
-direct engine regardless of that option</li>
+<code>mml_engine = "hybrid"</code> are available for supported
+<code>RSM</code> / <code>PCM</code> configurations with fixed
+integration; <code>GPCM</code> uses the direct engine</li>
+<li>adaptive integration requires the direct engine without checkpoints;
+nonlinear identification and GPCM boundary evidence remain
+incomplete</li>
 <li>person summaries are reported post-hoc from the integrated
 posterior</li>
 </ul>
 <p>This is the implemented MML-engine scope.</p>
+</div>
+<div class="section level2">
+<h2 id="when-estimates-change-with-quadrature-order">When estimates change with quadrature order<a class="anchor" aria-label="anchor" href="#when-estimates-change-with-quadrature-order"></a>
+</h2>
+<p>A small optimizer gradient shows that the fitted approximation is
+near a stationary point. It does not establish the accuracy of the
+integral. When estimates or posterior SDs move as the order increases,
+one available option is to refit using adaptive integration and check
+its order sensitivity too:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span>
+<span><span class="va">fit_adaptive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">toy</span>, person <span class="op">=</span> <span class="st">"Person"</span>, facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
+<span>  score <span class="op">=</span> <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>,</span>
+<span>  mml_integration <span class="op">=</span> <span class="st">"adaptive"</span>, quad_points <span class="op">=</span> <span class="fl">31</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">quadrature_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit_adaptive</span>, <span class="va">toy</span>, quad_points <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">31</span>, <span class="fl">61</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">quadrature_review</span><span class="op">)</span></span>
+<span><span class="co">#&gt; RSM-MML quadrature sensitivity summary</span></span>
+<span><span class="co">#&gt;  ReferenceNodes ComparedGrids AllEstimationConverged AllHessiansFullRank</span></span>
+<span><span class="co">#&gt;              31             2                   TRUE                TRUE</span></span>
+<span><span class="co">#&gt;  MaxNLLAbsChangePerPerson MaxMeasurementParameterAbsChange MaxSlopeAbsChange</span></span>
+<span><span class="co">#&gt;                         0                                0                NA</span></span>
+<span><span class="co">#&gt;  MaxPopulationSDAbsChange MaxProbabilityAbsChange MaxEAPAbsChange</span></span>
+<span><span class="co">#&gt;                         0                       0               0</span></span>
+<span><span class="co">#&gt;  MaxPosteriorSDAbsChange</span></span>
+<span><span class="co">#&gt;                        0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Grid comparisons</span></span>
+<span><span class="co">#&gt;  Model ReferenceNodes Nodes IsReference NLLChangePerPerson</span></span>
+<span><span class="co">#&gt;    RSM             31    31        TRUE                  0</span></span>
+<span><span class="co">#&gt;    RSM             31    61       FALSE                  0</span></span>
+<span><span class="co">#&gt;  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange</span></span>
+<span><span class="co">#&gt;                      0                                0                NA</span></span>
+<span><span class="co">#&gt;                      0                                0                NA</span></span>
+<span><span class="co">#&gt;  RawSlopeSEMaxAbsChange PopulationSDAbsChange RawPopulationSDSEAbsChange</span></span>
+<span><span class="co">#&gt;                      NA                     0                         NA</span></span>
+<span><span class="co">#&gt;                      NA                     0                         NA</span></span>
+<span><span class="co">#&gt;  ProbabilityMaxAbsChange EAPMaxAbsChange PosteriorSDMaxAbsChange</span></span>
+<span><span class="co">#&gt;                        0               0                       0</span></span>
+<span><span class="co">#&gt;                        0               0                       0</span></span>
+<span><span class="co">#&gt; No automatic stability classification or readiness change is applied.</span></span></code></pre></div>
+<p>The review refits the same data with the same integration mode. Keep
+every candidate and inspect changes in calibration parameters and Person
+scoring; two nearby orders alone are not an accuracy certificate. For an
+external comparison, also check the other program’s integration range
+and density, the population distribution, constraints, and response
+weights.</p>
+<p>Scoring can have separate numerical controls. For example, ConQuest
+uses <code>p_nodes</code> for its Monte Carlo approximation of Person
+posterior means and SDs; its estimation <code>nodes</code> setting does
+not control that calculation. Record <code>p_nodes</code> and the random
+seed when comparing these scores, and examine sensitivity to both. See
+the <a href="https://conquestmanual.acer.org/s4-00.html" class="external-link">ConQuest
+command reference (<code>set</code> and <code>show</code>)</a>.</p>
+<p>In a paper, report the integration mode and order, population
+assumptions, optimizer settings and termination evidence, and the
+sensitivity analysis. Calibration-parameter standard errors and Person
+posterior SDs answer different questions. Stable numerical results or
+agreement between programs do not establish confidence-interval coverage
+or remove stored readiness limitations.</p>
 </div>
 <div class="section level2">
 <h2 id="numerical-readiness-and-bounded-polishing">Numerical readiness and bounded polishing<a class="anchor" aria-label="anchor" href="#numerical-readiness-and-bounded-polishing"></a>
@@ -168,14 +243,16 @@ parameter change, and evaluation counts. For L-BFGS-B, the stage table
 also records the actual <code>factr</code> and <code>pgtol</code>
 controls; <code>EffectiveReltol</code> is not itself a native L-BFGS-B
 argument. EM retains its relative log-likelihood stopping result but
-must also pass the same terminal-gradient gate; use the direct engine
+must also pass the same terminal-gradient check; use the direct engine
 for bounded gradient polishing when an EM fit remains under numerical
 review.</p>
-<p>Read <code>summary(fit)$readiness</code> as separate gates.
-<code>InferenceReady</code> and the Numerical row describe numerical
-optimization, not the design, stability, diagnostic, or reporting
-decision. A small gradient cannot repair a disconnected measurement
-graph or a boundary-separated facet level.</p>
+<p>Read <code>summary(fit)$readiness</code> as separate criteria. The
+Numerical row describes numerical optimization;
+<code>InferenceReady</code> requires all stored fit-readiness components
+to pass. Formal precision support is assessed separately through
+<code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> and the summary’s decision table. A small
+gradient cannot repair a disconnected measurement graph or a
+boundary-separated facet level.</p>
 <div class="section level3">
 <h3 id="choosing-the-iteration-ceiling">Choosing the iteration ceiling<a class="anchor" aria-label="anchor" href="#choosing-the-iteration-ceiling"></a>
 </h3>
@@ -204,10 +281,10 @@ posterior-integrated expectations. For a grouped summary
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>
 and category
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝔼</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>N</mi><mrow><mi>g</mi><mi>c</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><munderover><mo>∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>ω</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mspace width="0.167em"></mspace><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>∈</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo>=</mo><mi>c</mi><mo>∣</mo><msub><mi>θ</mi><mi>q</mi></msub><mo>,</mo><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝔼</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>N</mi><mrow><mi>g</mi><mi>c</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><munderover><mo>∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>ω</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mspace width="0.167em"></mspace><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>∈</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mi>n</mi></msub><mo>=</mo><mi>c</mi><mo>∣</mo><msub><mi>θ</mi><mrow><mi>n</mi><mi>q</mi></mrow></msub><mo>,</mo><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \mathbb{E}_{\hat{\beta}}(N_{gc}) =
 \sum_{n=1}^{N} \sum_{q=1}^{Q}
-\omega_{nq} \, I(n \in g) \, P(X_n = c \mid \theta_q, \hat{\beta}).
+\omega_{nq} \, I(n \in g) \, P(X_n = c \mid \theta_{nq}, \hat{\beta}).
 </annotation></semantics></math></p>
 <p>The corresponding residual compares the observed count to that
 latent-integrated expectation rather than to an <code>EAP</code> plug-in

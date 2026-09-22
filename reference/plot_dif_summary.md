@@ -5,9 +5,9 @@ Compact effect-size summary for a
 /
 [`analyze_dif()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
 result. Shows each contrast's signed effect size as a horizontal bar
-with a vertical reference at zero, coloured by the method-appropriate
-classification. Current residual and refit screening labels use the
-neutral colour; refit output does not receive ETS A/B/C labels.
+with a vertical reference at zero and a neutral colour. Residual
+comparisons do not provide differential-functioning tests or
+classifications.
 
 ## Usage
 
@@ -52,8 +52,9 @@ plot_dif_summary(
 - ci_level:
 
   Optional confidence level for approximate normal intervals drawn from
-  `Effect +/- z * SE` when finite standard errors are available. Use
-  `NULL` (default) to omit intervals.
+  `Effect +/- z * SE` when finite standard errors are available for
+  linked refits. Residual comparisons require `NULL` (default) because
+  their interval uncertainty is not established.
 
 - effect_thresholds:
 
@@ -75,11 +76,12 @@ An `mfrm_plot_data` object whose `data` slot contains columns `Pair`,
 
 Bars are anchored at zero. Width corresponds to effect size on the
 contrast's native scale. For `method = "residual"`, this is the
-observed-minus-expected average screening contrast between groups. For
-`method = "refit"`, this is the subgroup parameter difference on the
-fitted logit scale when linking support allows a comparable contrast.
-Current DFF/DIF classifications are screening-only, so bars use the
-preset's neutral colour.
+observed-minus-expected average difference between groups, in score
+units. For `method = "refit"`, this is the subgroup parameter difference
+on the fitted logit scale when linking support allows a comparable
+contrast. Residual differences do not isolate differential functioning.
+Linked refit intervals omit estimated-anchor uncertainty and cross-refit
+covariance.
 
 ## See also
 
@@ -99,18 +101,18 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = toy)
 unique(dff$dif_table$ClassificationSystem)
-#> [1] "screening"
+#> [1] "descriptive"
 p <- plot_dif_summary(dff, draw = FALSE)
 head(p$data$data)
-#>          Pair      Effect        SE CI_Lower CI_Upper  Classification
-#> 1 R01 | A | B  0.16851952 0.1369979       NA       NA Screen negative
-#> 2 R02 | A | B -0.13201751 0.1419285       NA       NA Screen negative
-#> 3 R03 | A | B -0.11255952 0.1377812       NA       NA Screen negative
-#> 4 R04 | A | B  0.07636974 0.1412431       NA       NA Screen negative
+#>          Pair      Effect SE CI_Lower CI_Upper    Classification
+#> 1 R01 | A | B  0.16851952 NA       NA       NA Residual contrast
+#> 2 R02 | A | B -0.13201751 NA       NA       NA Residual contrast
+#> 3 R03 | A | B -0.11255952 NA       NA       NA Residual contrast
+#> 4 R04 | A | B  0.07636974 NA       NA       NA Residual contrast
 #>   ClassificationSystem   Color
-#> 1            screening #6b7280
-#> 2            screening #6b7280
-#> 3            screening #6b7280
-#> 4            screening #6b7280
+#> 1          descriptive #6b7280
+#> 2          descriptive #6b7280
+#> 3          descriptive #6b7280
+#> 4          descriptive #6b7280
 # }
 ```

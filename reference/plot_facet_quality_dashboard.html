@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot a facet-quality dashboard</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
       <div class="d-none name"><code>plot_facet_quality_dashboard.Rd</code></div>
     </div>
 
@@ -54,8 +56,8 @@
 <span>  facet <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bias_results <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  severity_warn <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  misfit_warn <span class="op">=</span> <span class="fl">1.5</span>,</span>
-<span>  central_tendency_max <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  misfit_warn <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  central_tendency_max <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bias_count_warn <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  bias_abs_t_warn <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  bias_abs_size_warn <span class="op">=</span> <span class="fl">0.5</span>,</span>
@@ -100,8 +102,9 @@ outliers.</p></dd>
 
 
 <dt id="arg-central-tendency-max">central_tendency_max<a class="anchor" aria-label="anchor" href="#arg-central-tendency-max"></a></dt>
-<dd><p>Absolute estimate cutoff used to flag central
-tendency.</p></dd>
+<dd><p>Legacy opt-in absolute estimate cutoff for
+marking facet estimates near the fitted origin. Default <code>NULL</code>; use
+<code><a href="data_quality_report.html">data_quality_report()</a></code> for observed category-use screening.</p></dd>
 
 
 <dt id="arg-bias-count-warn">bias_count_warn<a class="anchor" aria-label="anchor" href="#arg-bias-count-warn"></a></dt>
@@ -155,6 +158,14 @@ from a raw bias bundle.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A plotting-data object of class <code>mfrm_plot_data</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>When <code>x</code> is a dashboard, its stored screening settings define both
+flags and plot guides; threshold arguments apply only when <code>x</code> is a fit.
+Returned plot data retain those settings, interpretation notes and fit
+readiness. Restricted or older dashboards without readiness are labeled
+<code>REVIEW ONLY</code>. Zero observed flags is not a complete diagnostic pass.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

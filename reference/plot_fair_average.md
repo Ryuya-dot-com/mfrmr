@@ -10,12 +10,14 @@ plot_fair_average(
   diagnostics = NULL,
   facet = NULL,
   metric = c("AdjustedAverage", "StandardizedAdjustedAverage", "FairM", "FairZ"),
-  plot_type = c("difference", "scatter"),
+  plot_type = c("difference", "scatter", "measure"),
   top_n = 40,
   show_ci = FALSE,
   ci_level = 0.95,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
+  show_title = TRUE,
+  show_notes = TRUE,
   ...
 )
 ```
@@ -37,7 +39,8 @@ plot_fair_average(
 
 - facet:
 
-  Optional facet name for level-wise lollipop plots.
+  Optional facet name or names. Use `"Person"` for ability-to-score
+  relationships.
 
 - metric:
 
@@ -47,7 +50,8 @@ plot_fair_average(
 
 - plot_type:
 
-  `"difference"` or `"scatter"`.
+  `"difference"`, `"scatter"`, or `"measure"` (Measure on x, fair score
+  on y).
 
 - top_n:
 
@@ -55,20 +59,17 @@ plot_fair_average(
 
 - show_ci:
 
-  Logical. When `TRUE`, draw approximate confidence-interval whiskers on
-  the fair metric using a delta-method propagation from the logit
-  `Measure` standard error to the observed-score scale. The derivative
-  equals the implied score variance `Var(X | Measure)`, so the
-  fair-scale standard error is `Var(X) * ModelSE`. CI bounds are clipped
-  to the rating range. Rows where the score variance is effectively zero
-  (levels whose measure sits near the rating boundary, so the
-  delta-method approximation becomes uninformative) are drawn with an
-  open circle and excluded from the whiskers; the excluded count is
-  reported in the subtitle. For bounded `GPCM` fits, this option
-  requests `fair_average_table(fair_se = TRUE)` when `x` is a fit object
-  and uses the structural delta-method fair-average CI columns when they
-  are available. If `x` is a precomputed fair-average bundle without
-  those columns, the plot records an unavailable-CI note.
+  Draw approximate fair-score intervals. RSM/PCM propagate only the
+  focal measure SE, holding thresholds, other effects and reference
+  means fixed. This is not full calibration uncertainty. GPCM uses
+  available structural delta-method SEs, conditioning on person
+  EAP/reference means; person rows are unavailable. Bounds are clipped
+  to the internal rating range. Unavailable intervals are retained as NA
+  with status and notes. The difference view treats the observed average
+  as fixed: its whiskers are not confidence intervals for the
+  observed-minus-fair gap. Returned `CI_Eligible` is `FALSE`;
+  `CI_ReportingUse` distinguishes diagnostic-only and unavailable
+  intervals, including stored bundles.
 
 - ci_level:
 
@@ -85,6 +86,15 @@ plot_fair_average(
   Visual preset (`"standard"`, `"publication"`, `"compact"`, or
   `"monochrome"`).
 
+- show_title:
+
+  Show the figure title. The title remains in the return value.
+
+- show_notes:
+
+  Show short figure annotations. Full interpretation and uncertainty
+  notes remain in `data$notes` and the ggplot `mfrmr_notes` attribute.
+
 - ...:
 
   Additional arguments passed to
@@ -95,58 +105,41 @@ plot_fair_average(
 
 A plotting-data object of class `mfrm_plot_data`. With `draw = FALSE`,
 the returned plot data includes `title`, `subtitle`, `legend`,
-`reference_lines`, and the stacked fair-average data.
+`reference_lines`, and the stacked fair-average `data`. `plot_data`
+contains the displayed rows and coordinates; `excluded` retains
+non-finite rows. `notes` explains the reference, uncertainty and row
+selection.
 
 ## Details
 
-Fair-average plots compare observed scoring tendency against model-based
-fair metrics.
+FairM is an expected score at the mean measures of the other facets; for
+non-person rows it also uses the mean estimated person measure. FairZ
+uses zero reference measures instead. **FairZ is not a z-score.** The
+historical alias `StandardizedAdjustedAverage` refers to the reference
+environment, not z-standardization. Both metrics use fitted internal
+score coding. PCM/GPCM use an element's own thresholds for the step
+facet and the mean threshold profile for other facets. GPCM uses an
+element's own slope for the slope facet and slope 1 otherwise. These are
+reporting conventions, not averages of predictions over the observed
+person/assignment distribution.
 
-**FairM** is the model-predicted mean score for each element, adjusting
-for the ability distribution of persons actually encountered. It
-answers: "What average score would this rater/criterion produce if all
-raters/criteria saw the same mix of persons?"
+`plot_type = "measure"` connects measures (person ability or facet
+effects) to the reported fair score. Select `facet = "Person"` for an
+ability-to-score view. Points reuse the table values, without fitting a
+trend across different reference profiles. This transformation is not
+independent validation of the fitted model. `umean`/`uscale` change
+Measure units, not score units; `xtreme` changes the reported Measure
+only and disables conditional intervals.
 
-**FairZ** standardises FairM to a z-score across elements within each
-facet, making it easier to compare relative severity across facets with
-different raw-score scales.
-
-Use FairM when the raw-score metric is meaningful (e.g., reporting
-average ratings on the original 1–4 scale). Use FairZ when comparing
-standardised severity ranks across facets.
-
-## Plot types
-
-- `"difference"` (default):
-
-  Lollipop chart showing the gap between observed and fair-average score
-  for each element. X-axis: Observed - Fair metric. Y-axis: element
-  labels. Points colored teal (lenient, gap \>= 0) or orange (severe,
-  gap \< 0). Ordered by absolute gap.
-
-- `"scatter"`:
-
-  Scatter plot of fair metric (x) vs observed average (y) with an
-  identity line. Points colored by facet. Useful for checking overall
-  alignment between observed and model-adjusted scores.
-
-## Interpreting output
-
-Difference plot: ranked element-level gaps (`Observed - Fair`), useful
-for triage of potentially lenient/severe levels.
-
-Scatter plot: global agreement pattern relative to the identity line.
-
-Larger absolute gaps suggest stronger divergence between observed and
-model-adjusted scoring.
-
-## Typical workflow
-
-1.  Start with `plot_type = "difference"` to find largest discrepancies.
-
-2.  Use `plot_type = "scatter"` to check overall alignment pattern.
-
-3.  Follow up with facet-level diagnostics for flagged levels.
+`"difference"` ranks absolute observed-minus-fair gaps; `"scatter"`
+compares observed averages against fair scores with an identity line.
+These gaps also reflect assignment and person mix and do not by
+themselves diagnose leniency, severity or bias. Intervals are
+conditional approximations with full-refit coverage unverified. RSM/PCM
+intervals require a fitted model; a stored bundle alone lacks the
+calibration needed to calculate them. GPCM bundle intervals honor
+`ci_level`; older bundles without rating limits can only reuse intervals
+at their recorded confidence level.
 
 ## Further guidance
 
@@ -167,15 +160,32 @@ and
 
 ``` r
 # \donttest{
-toy_full <- load_mfrmr_data("example_core")
-toy_people <- unique(toy_full$Person)[1:12]
-toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
-fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-p <- plot_fair_average(fit, metric = "AdjustedAverage", draw = FALSE)
-if (interactive()) {
-  plot_fair_average(fit, metric = "AdjustedAverage", plot_type = "difference")
-}
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# How do the observed and reference-adjusted person averages compare?
+plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
+                  metric = "FairM", plot_type = "scatter")
+
+
+# Optional: inspect the gap (observed average minus FairM)
+plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
+                  metric = "FairM", plot_type = "difference")
+
+# A positive gap means the observed average is higher than the model-based FairM
 # }
 ```

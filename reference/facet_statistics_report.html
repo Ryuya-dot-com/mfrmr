@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a facet statistics report (preferred alias)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>facet_statistics_report.Rd</code></div>
     </div>
 
@@ -164,28 +166,50 @@ The returned bundle now includes:</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       1.099 0.347  1.043            1.209         0.120        1.089      3.010</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.271 0.099  0.253            0.074         0.010        0.064      2.564</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.271 0.097  0.253            0.074         0.010        0.064      2.596</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Strata Reliability SEAvailable MeanSE MedianSE MeanInfit MeanOutfit FixedChiSq</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3.421       0.843           4  0.099    0.098     0.994      1.019     25.914</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3.470       0.847           4  0.097    0.097     0.994      1.019     25.914</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3.981       0.882           4  0.099    0.098     0.994      1.019     25.914</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.037       0.885           4  0.097    0.097     0.994      1.019     25.914</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.079       0.888          48  0.360    0.349     1.000      1.019    384.088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.300       0.898          48  0.344    0.330     1.000      1.019    384.088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.123       0.890          48  0.360    0.349     1.000      1.019    384.088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.346       0.901          48  0.344    0.330     1.000      1.019    384.088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3.752       0.868           4  0.099    0.099     0.994      1.019     30.901</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3.795       0.871           4  0.097    0.097     0.994      1.019     30.901</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FixedDF FixedProb RandomVar RandomChiSq RandomDF RandomProb</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.073       2.997        2      0.223</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       47         0     1.089      45.462       46      0.495</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.089       2.999        2      0.223</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        3         0     0.089       2.999        2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Strata Reliability EstimateAvailable SEAvailable ExcludedEstimates</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.421       0.843                 4           4                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.470       0.847                 4           4                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.981       0.882                 4           4                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.037       0.885                 4           4                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.079       0.888                48          48                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.300       0.898                48          48                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.123       0.890                48          48                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.346       0.901                48          48                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.752       0.868                 4           4                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3.795       0.871                 4           4                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                   SummaryNote MeanSE MedianSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Computed over 4 of 4 levels with finite estimates and SEs.  0.099    0.098</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Computed over 4 of 4 levels with finite estimates and SEs.  0.097    0.097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Computed over 4 of 4 levels with finite estimates and SEs.  0.099    0.098</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Computed over 4 of 4 levels with finite estimates and SEs.  0.097    0.097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Computed over 48 of 48 levels with finite estimates and SEs.  0.360    0.349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Computed over 48 of 48 levels with finite estimates and SEs.  0.344    0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Computed over 48 of 48 levels with finite estimates and SEs.  0.360    0.349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Computed over 48 of 48 levels with finite estimates and SEs.  0.344    0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Computed over 4 of 4 levels with finite estimates and SEs.  0.099    0.099</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Computed over 4 of 4 levels with finite estimates and SEs.  0.097    0.097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MeanInfit MeanOutfit FixedChiSq FixedDF FixedProb RandomVar RandomChiSq</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     25.914       3         0     0.073       2.997</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     25.914       3         0     0.073       2.997</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     25.914       3         0     0.073       2.997</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     25.914       3         0     0.073       2.997</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     30.901       3         0     0.089       2.999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     30.901       3         0     0.089       2.999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  RandomDF RandomProb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        46      0.495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Setting                           Value</span>

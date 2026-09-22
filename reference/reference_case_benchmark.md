@@ -121,7 +121,9 @@ remains visible.
 - `design_checks`: exact design recovery checks for each dataset.
 
 - `recovery_checks`: known-truth recovery metrics for the synthetic
-  cases, including the latent-regression reference case.
+  cases, including the latent-regression reference case. If a benchmark
+  fit is not scoring-ready, its posterior-shift row is retained as
+  `Warn` and is not calculated from a review-only score.
 
 - `bias_checks`: source-backed bias/local-measure identity checks.
 

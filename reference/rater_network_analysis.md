@@ -69,20 +69,24 @@ rater_network_analysis(
 
 - min_weight:
 
-  Minimum edge weight retained in the graph.
+  Minimum edge weight retained in the graph. This is an analysis
+  threshold: it changes graph topology and all graph-derived centrality
+  summaries, not only the displayed edges.
 
 - score_diff_tolerance:
 
   Score-difference tolerance for directed severity networks. With the
   default `0`, any higher score contributes to the outgoing leniency
-  edge. Larger values reproduce thresholded disagreement displays such
-  as "only differences greater than 3 marks".
+  edge. This is an analysis tolerance: increasing it changes directional
+  counts, strengths, and `SeverityIndex`; it is not a plot-only filter.
 
 - severity_continuity:
 
   Continuity constant added to incoming and outgoing strengths before
   computing the finite severity index
-  `-log((OutStrength + c) / (InStrength + c))`.
+  `-log((OutStrength + c) / (InStrength + c))`. The default `0.5` is a
+  package finite-value correction. Setting `c = 0` gives the uncorrected
+  published form but can produce non-finite values for zero strengths.
 
 - exact_warn, corr_warn:
 
@@ -105,8 +109,8 @@ A bundle of class `mfrm_rater_network` containing:
 
 - `node_metrics`:
 
-  Rater-level degree, strength, centrality, and severity-direction
-  summaries.
+  Rater-level degree, strength, graph-theoretic centrality, and
+  severity-direction summaries.
 
 - `edge_metrics`:
 
@@ -114,8 +118,8 @@ A bundle of class `mfrm_rater_network` containing:
 
 - `pair_metrics`:
 
-  All eligible pairwise agreement and directional comparison metrics
-  before edge thresholding.
+  All estimated pairwise agreement and directional comparison metrics,
+  including `EligiblePair`, before `min_weight` filtering.
 
 - `caveats`:
 
@@ -136,6 +140,16 @@ summarize pairwise relationships among raters in shared scoring
 contexts, and directed disagreement edges can be interpreted as relative
 leniency/severity indicators. These network summaries are descriptive
 diagnostics, not Rasch logit estimates and not formal fit statistics.
+They describe score relationships conditional on observed shared
+contexts; they do not test the assignment graph's connectedness or
+establish a common measurement scale.
+
+`Degree`, `Strength`, `Betweenness`, and `Closeness` are graph-theoretic
+quantities computed after `min_pair_n`, `min_weight`, and (for directed
+networks) `score_diff_tolerance` are applied. They are not rating-scale
+central tendency or restriction-of-range measures. Use
+[`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md)
+for assignment/co-observation connectedness.
 
 For `mode = "severity_direction"`, outgoing strength means the rater
 more often assigned higher scores than comparison raters; incoming
@@ -143,6 +157,13 @@ strength means comparison raters more often assigned higher scores than
 this rater. The reported `SeverityIndex` is positive for relatively
 severe raters and negative for relatively lenient raters, but it is on a
 network-analysis scale and should not be read as an MFRM severity logit.
+A rater without any retained directional comparisons has an unavailable
+index, not a balanced index. Zero or negative undirected weights remain
+in the pair table but do not form graph edges. Graph distances summarize
+reachable pairs only, so they do not describe distance across
+disconnected components. Recreate older network results from the
+existing fit and matching diagnostics with the original settings before
+summary, plotting or export.
 
 ## References
 

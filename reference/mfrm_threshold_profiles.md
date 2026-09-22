@@ -19,8 +19,9 @@ Use this function to inspect available profile presets before calling
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md).
 
 `profiles` contains thresholds used by warning logic (sample size, fit
-ratios, PCA cutoffs, etc.). `pca_reference_bands` contains
-literature-oriented descriptive bands used in summary text.
+ratios, PCA cutoffs, etc.). `pca_reference_bands` contains uncalibrated
+descriptive references used in summary text; these are not
+dimensionality-test critical values.
 
 ## Interpreting output
 

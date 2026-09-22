@@ -3,9 +3,11 @@
 Builds an N x N heatmap of pairwise standardized residuals between facet
 levels, computed from the diagnostics observation table. Cells with
 large absolute values flag pairs of facet elements (e.g. two raters, two
-items) whose residuals co-move more than the main-effects MFRM expects,
-which is the standard Yen Q3-style indicator of local response
-dependence.
+items) whose residuals co-move more than the main-effects MFRM expects.
+Residuals are averaged within each Person and facet level before
+correlation. This is a Q3-style screen, distinct from raw-residual Yen
+Q3; no fixed correlation cutoff establishes local independence for this
+standardized, aggregated index.
 
 ## Usage
 
@@ -39,8 +41,10 @@ plot_local_dependence_heatmap(
 
 - min_pairs:
 
-  Minimum number of shared response opportunities required to retain a
-  pair. Pairs below the threshold are shown as `NA`.
+  Minimum number of persons with finite aggregated residuals at both
+  levels; an integer of at least three. Unavailable pairs remain in the
+  table with their overlap count and reason, and appear as `NA` in the
+  matrix.
 
 - preset:
 
@@ -53,7 +57,7 @@ plot_local_dependence_heatmap(
 ## Value
 
 An `mfrm_plot_data` whose `data` slot bundles the symmetric residual
-`matrix`, the long-form `pairs` table, and the threshold used.
+`matrix`, one row per unordered pair in `pairs`, and the threshold used.
 
 ## Details
 
@@ -80,9 +84,7 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 p <- plot_local_dependence_heatmap(fit, draw = FALSE)
 dim(p$data$matrix)
 #> [1] 4 4
-# Look for: |off-diagonal correlation| < 0.2 is the typical
-#   acceptable regime; values >= 0.3 (Yen 1984 / Marais 2013
-#   guideline) flag pairs that may share dependence beyond the
-#   main-effects MFRM. Inspect those cells in `diag$obs`.
+# Inspect large absolute correlations alongside shared-person counts.
+# Unavailable pairs are not evidence of local independence.
 # }
 ```

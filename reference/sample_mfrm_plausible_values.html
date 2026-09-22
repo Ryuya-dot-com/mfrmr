@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Sample approximate plausible values under fitted posterior scoring</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>sample_mfrm_plausible_values.Rd</code></div>
     </div>
 
@@ -60,6 +62,8 @@
 <span>  population_policy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"omit"</span><span class="op">)</span>,</span>
 <span>  n_draws <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  interval_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  scoring_quad_points <span class="op">=</span> <span class="fl">31L</span>,</span>
+<span>  readiness_policy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"review"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -103,7 +107,7 @@ column recorded in <code>fit</code>, if any.</p></dd>
 <dt id="arg-person-data">person_data<a class="anchor" aria-label="anchor" href="#arg-person-data"></a></dt>
 <dd><p>Optional one-row-per-person data.frame with the
 background variables required by a latent-regression fit. Ignored for
-ordinary fixed-calibration scoring. Intercept-only latent-regression fits
+ordinary fitted-object posterior scoring. Intercept-only latent-regression fits
 can reconstruct the minimal scored-person table internally. This is the
 scoring-time table for <code>new_data</code>, not the fit object's replay/export
 provenance table. For categorical background variables, supply values on
@@ -129,7 +133,21 @@ integer.</p></dd>
 
 <dt id="arg-interval-level">interval_level<a class="anchor" aria-label="anchor" href="#arg-interval-level"></a></dt>
 <dd><p>Posterior interval level passed to
-<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> for the accompanying EAP summary table.</p></dd>
+<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> for the accompanying EAP summary table. The same
+level selects the empirical draw quantiles reported by <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>.</p></dd>
+
+
+<dt id="arg-scoring-quad-points">scoring_quad_points<a class="anchor" aria-label="anchor" href="#arg-scoring-quad-points"></a></dt>
+<dd><p>Number of Gauss-Hermite nodes used only for this
+scoring call. Passed to <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> and independent of the
+fit-time quadrature order. Fixed or adaptive integration is inherited
+from <code>fit</code>.</p></dd>
+
+
+<dt id="arg-readiness-policy">readiness_policy<a class="anchor" aria-label="anchor" href="#arg-readiness-policy"></a></dt>
+<dd><p>Source-fit readiness policy passed to
+<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>. Estimated-population fits currently require
+<code>"review"</code>; the returned notes and eligibility labels retain that restriction.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -152,7 +170,7 @@ latent-regression scoring; <code>NULL</code> otherwise</p></li>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code>sample_mfrm_plausible_values()</code> is a thin public wrapper around
-<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> that exposes the fixed-calibration posterior draws as
+<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> that exposes the fitted-object posterior draws as
 a standalone object. It is useful when downstream workflows want repeated
 latent-value imputations rather than just one posterior EAP summary.</p>
 <p>In the current <code>mfrmr</code> implementation these are <strong>approximate plausible
@@ -178,15 +196,26 @@ many-facet plausible-values system with all ConQuest-style extensions.</p>
 <ul><li><p><code>values</code> contains one row per person per draw.</p></li>
 <li><p><code>estimates</code> contains the companion posterior EAP summaries from
 <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>.</p></li>
-<li><p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports draw counts and empirical draw summaries by person.</p></li>
+<li><p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports draw counts and empirical draw summaries by person.
+<code>LowerValue</code> and <code>UpperValue</code> use the requested <code>interval_level</code> and are
+labelled with <code>IntervalLevel</code> and <code>DrawSummaryBasis</code>. They are empirical
+quantiles of a finite sample of discrete draws, not the continuous posterior
+limits in the companion estimates table. With few draws they are coarse;
+one draw has an unavailable empirical SD.
+Recreate older summaries from the original plausible-values object to
+update these limits and labels; no refitting or resampling is needed.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="what-this-does-not-justify">What this does not justify<a class="anchor" aria-label="anchor" href="#what-this-does-not-justify"></a></h2>
 
 
 <p>This helper does not update the calibration, estimate new non-person facet
-levels, or provide exact future true values. It samples from the fixed-grid
-posterior implied by the existing fixed calibration.</p>
+levels, or provide exact future true values. It samples from the quadrature-
+grid posterior implied by the existing fitted-model scoring basis, using
+fixed or Person-specific adaptive nodes according to the fit's setting.
+Calibration and population parameters remain fixed. These draws alone do
+not validate downstream group comparisons or regressions; those analyses
+require a compatible conditioning model and sampling design.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -196,7 +225,7 @@ posterior implied by the existing fixed calibration.</p>
 framework of Bock and Aitkin (1981). The interpretation of multiple
 posterior draws as plausible-value-style summaries follows the general logic
 discussed by Mislevy (1991), while the current implementation remains a
-practical fixed-calibration approximation rather than a full published
+practical fitted-object posterior approximation rather than a full published
 many-facet plausible-values method. For <code>JML</code> source fits, the quadrature
 posterior uses a package-level standard normal reference prior for this
 post hoc scoring layer.</p><ul><li><p>Bock, R. D., &amp; Aitkin, M. (1981). <em>Marginal maximum likelihood estimation
@@ -229,10 +258,14 @@ variables from complex samples</em>. Psychometrika, 56(2), 177-196.</p></li>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pv</span> <span class="op">&lt;-</span> <span class="fu">sample_mfrm_plausible_values</span><span class="op">(</span><span class="va">toy_fit</span>, <span class="va">new_units</span>, n_draws <span class="op">=</span> <span class="fl">3</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pv</span><span class="op">)</span><span class="op">$</span><span class="va">draw_summary</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Person Draws MeanValue SDValue LowerValue UpperValue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> NEW01      3         0       0          0          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 18</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Person Draws MeanValue SDValue LowerValue UpperValue IntervalLevel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> NEW01      3    -<span style="color: #BB0000;">0.373</span>   0.323      -<span style="color: #BB0000;">0.56</span>          0          0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 11 more variables: DrawSummaryBasis &lt;chr&gt;, CalibrationMethod &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Prior &lt;chr&gt;, PriorMean &lt;dbl&gt;, PriorSD &lt;dbl&gt;, WeightedLikelihood &lt;lgl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   UncertaintyBasis &lt;chr&gt;, ScoringAlgorithm &lt;chr&gt;, SourceScoringReady &lt;lgl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   EstimateUse &lt;chr&gt;, DrawBasis &lt;chr&gt;</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

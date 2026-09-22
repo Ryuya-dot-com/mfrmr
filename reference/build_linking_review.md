@@ -57,7 +57,10 @@ evidence into one operational review surface with:
 
 The helper keeps the current conservative interpretation policy: anchor
 drift and screened links are operational review tools, not automatic
-proofs of scale equivalence or score comparability.
+proofs of scale equivalence or score comparability. It also does not
+verify source-fit readiness, cross-wave element identity, invariance, or
+the external assumptions behind group anchors; these must be established
+before promoting the synthesized review.
 
 ## Recommended input route
 
@@ -125,20 +128,14 @@ chain <- build_equating_chain(list(Wave1 = fit1, Wave2 = fit2))
 review <- build_linking_review(anchor_review = anchor_review_obj, drift = drift, chain = chain)
 summary(review)
 #> mfrm Linking Review Summary
+#>   Linking flags are review screens, not tests of anchor invariance.
+#>   Source-parameter, estimated-offset and cross-fit covariance are not fully
+#>   propagated. A sufficient element count alone does not establish a common
+#>   scale.
 #> 
 #> Overview
-#>  AnchorReviewAvailable DriftAvailable ChainAvailable
-#>                   TRUE           TRUE           TRUE
-#>                  ReviewStatus TopRiskRows GroupViews SourceModels
-#>  insufficient_anchor_evidence           3          4          RSM
-#>            GPCMSupport
-#>  supported_with_caveat
-#> 
-#> Status
-#>              Item                        Value
-#>    Overall status insufficient_anchor_evidence
-#>  Evidence sources  anchor_review, drift, chain
-#>      Bounded GPCM        supported_with_caveat
+#>  AnchorReviewAvailable DriftAvailable ChainAvailable SourceModels
+#>                   TRUE           TRUE           TRUE          RSM
 #> 
 #> Key Warnings
 #>  - Drift review flagged 2 wave/facet support or drift rows.
@@ -151,14 +148,6 @@ summary(review)
 #>    before using cumulative offsets operationally.
 #> 
 #> Top Linking Risks
-#>                        RiskID                   Area           SourceFamily
-#>    thin_link:Criterion::Wave2 post_fit_element_drift      thin_link_support
-#>        thin_link:Rater::Wave2 post_fit_element_drift      thin_link_support
-#>  chain_support:Wave1 -> Wave2  chain_level_stability equating_chain_support
-#>            SourceTable     SourceRowKey AdministrationID WaveID        LinkKey
-#>  drift$common_by_facet Criterion::Wave2             <NA>  Wave2           <NA>
-#>  drift$common_by_facet     Rater::Wave2             <NA>  Wave2           <NA>
-#>            chain$links   Wave1 -> Wave2             <NA>   <NA> Wave1 -> Wave2
 #>      Facet Level  Wave           Link
 #>  Criterion  <NA> Wave2           <NA>
 #>      Rater  <NA> Wave2           <NA>
@@ -167,25 +156,10 @@ summary(review)
 #>  Retained common-element support is below the package guideline      1.00
 #>  Retained common-element support is below the package guideline      1.00
 #>              Thin retained support in an adjacent screened link      0.48
-#>  SeverityGroup ReviewPriority
-#>           high              1
-#>           high              1
-#>           high              1
 #>                                                                                         Guidance
 #>              Treat drift flags as low-support until more retained common elements are available.
 #>              Treat drift flags as low-support until more retained common elements are available.
 #>  Inspect the adjacent link and cumulative offsets before using the chain for operational review.
-#>                          PrimaryPlotRoute SupportStatus RiskRank
-#>  plot_anchor_drift(drift, type = "drift")     supported        1
-#>  plot_anchor_drift(drift, type = "drift")     supported        2
-#>  plot_anchor_drift(chain, type = "chain")     supported        3
-#> 
-#> Grouping Views
-#>              View Rows                                           Description
-#>           by_wave    1            Concentrated linking risks by fitted wave.
-#>           by_link    1 Concentrated linking risks by adjacent screened link.
-#>          by_facet    2                  Concentrated linking risks by facet.
-#>  by_source_family    2        Volume and priority by evidence source family.
 #> 
 #> Plot Follow-up
 #>        ReviewArea Available                                 PlotHelper
@@ -196,22 +170,14 @@ summary(review)
 #>                            Use when anchor issues or overlap warnings are present.
 #>  Use when fitted waves show flagged drift or thin retained common-element support.
 #>                Use when adjacent links show thin support or large residual spread.
-#> 
-#> Support Status
-#>         Scope                Status
-#>     RSM / PCM             supported
-#>  bounded GPCM supported_with_caveat
-#>                                                                                                      Note
-#>          Supported as a synthesis layer over documented anchor-review, drift, and equating-chain objects.
-#>  Supported with caveat when bounded GPCM source objects are supplied; not active for this RSM/PCM review.
+#>   Detailed risk values, grouped views and support information remain in the
+#>   returned review tables.
 #> 
 #> Notes
-#>  - Linking review is an operational synthesis layer over existing
-#>    package-native anchor, drift, and chain evidence.
-#>  - Drift or thin-support warnings do not prove scale breakdown by themselves;
-#>    they indicate where review is needed.
-#>  - Repeated signals across anchor, drift, and chain evidence deserve priority,
-#>    but this helper does not collapse them into one opaque composite score.
+#>  - Review anchor overlap, fitted-wave drift and adjacent-link residuals
+#>    together before comparing results across administrations.
+#>  - Drift or limited-overlap flags identify comparisons to investigate; they do
+#>    not establish that the measurement scale has changed.
 review$top_linking_risks
 #> # A tibble: 3 × 20
 #>   RiskID     Area  SourceFamily SourceTable SourceRowKey AdministrationID WaveID

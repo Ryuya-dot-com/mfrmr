@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,10 +38,12 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+<li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -69,7 +71,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Migrating from FACETS to mfrmr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-facets-migration.Rmd</code></div>
     </div>
 
@@ -250,7 +252,7 @@ table:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">fair_average</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $raw_by_facet</span></span>
 <span><span class="co">#&gt; $raw_by_facet$Person</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 48 × 18</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 48 × 22</span></span></span>
 <span><span class="co">#&gt;    TotalScore TotalCount WeightdScore WeightdCount ObservedAverage FairM FairZ</span></span>
 <span><span class="co">#&gt;         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>         22          6           22            6            3.67  3.69  3.69</span></span>
@@ -264,12 +266,14 @@ table:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>         20          6           20            6            3.33  3.07  3.07</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>         18          6           18            6            3     3.02  3.02</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 38 more rows</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: Measure &lt;dbl&gt;, ModelSE &lt;dbl&gt;, RealSE &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   InfitMnSq &lt;dbl&gt;, InfitZStd &lt;dbl&gt;, OutfitMnSq &lt;dbl&gt;, OutfitZStd &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   PtMeaCorr &lt;dbl&gt;, Anchor &lt;chr&gt;, Status &lt;chr&gt;, Level &lt;chr&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 15 more variables: FairMReference &lt;chr&gt;, Measure &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   PrimaryMeasure &lt;dbl&gt;, MeasureBasis &lt;chr&gt;, ExtremeAdjustment &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   ModelSE &lt;dbl&gt;, RealSE &lt;dbl&gt;, InfitMnSq &lt;dbl&gt;, InfitZStd &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   OutfitMnSq &lt;dbl&gt;, OutfitZStd &lt;dbl&gt;, PtMeaCorr &lt;dbl&gt;, Anchor &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   Status &lt;chr&gt;, Level &lt;chr&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $raw_by_facet$Rater</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 18</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 22</span></span></span>
 <span><span class="co">#&gt;   TotalScore TotalCount WeightdScore WeightdCount ObservedAverage FairM FairZ</span></span>
 <span><span class="co">#&gt;        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>        115         50          115           50            2.3   2.09  2.23</span></span>
@@ -278,20 +282,24 @@ table:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>         95         44           95           44            2.16  2.29  2.44</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>        147         56          147           56            2.62  2.54  2.70</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>        130         47          130           47            2.77  2.73  2.88</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: Measure &lt;dbl&gt;, ModelSE &lt;dbl&gt;, RealSE &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   InfitMnSq &lt;dbl&gt;, InfitZStd &lt;dbl&gt;, OutfitMnSq &lt;dbl&gt;, OutfitZStd &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   PtMeaCorr &lt;dbl&gt;, Anchor &lt;chr&gt;, Status &lt;chr&gt;, Level &lt;chr&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 15 more variables: FairMReference &lt;chr&gt;, Measure &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   PrimaryMeasure &lt;dbl&gt;, MeasureBasis &lt;chr&gt;, ExtremeAdjustment &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   ModelSE &lt;dbl&gt;, RealSE &lt;dbl&gt;, InfitMnSq &lt;dbl&gt;, InfitZStd &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   OutfitMnSq &lt;dbl&gt;, OutfitZStd &lt;dbl&gt;, PtMeaCorr &lt;dbl&gt;, Anchor &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   Status &lt;chr&gt;, Level &lt;chr&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $raw_by_facet$Criterion</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 18</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 22</span></span></span>
 <span><span class="co">#&gt;   TotalScore TotalCount WeightdScore WeightdCount ObservedAverage FairM FairZ</span></span>
 <span><span class="co">#&gt;        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>        211         94          211           94            2.24  2.16  2.30</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>        218         94          218           94            2.32  2.23  2.37</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>        243         94          243           94            2.59  2.57  2.73</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: Measure &lt;dbl&gt;, ModelSE &lt;dbl&gt;, RealSE &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   InfitMnSq &lt;dbl&gt;, InfitZStd &lt;dbl&gt;, OutfitMnSq &lt;dbl&gt;, OutfitZStd &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   PtMeaCorr &lt;dbl&gt;, Anchor &lt;chr&gt;, Status &lt;chr&gt;, Level &lt;chr&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 15 more variables: FairMReference &lt;chr&gt;, Measure &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   PrimaryMeasure &lt;dbl&gt;, MeasureBasis &lt;chr&gt;, ExtremeAdjustment &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   ModelSE &lt;dbl&gt;, RealSE &lt;dbl&gt;, InfitMnSq &lt;dbl&gt;, InfitZStd &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   OutfitMnSq &lt;dbl&gt;, OutfitZStd &lt;dbl&gt;, PtMeaCorr &lt;dbl&gt;, Anchor &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   Status &lt;chr&gt;, Level &lt;chr&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $by_facet</span></span>
@@ -345,104 +353,153 @@ table:</p>
 <span><span class="co">#&gt; 46           8           6             8             6          1.33</span></span>
 <span><span class="co">#&gt; 47           8           6             8             6          1.33</span></span>
 <span><span class="co">#&gt; 48           7           6             7             6          1.17</span></span>
-<span><span class="co">#&gt;    Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq</span></span>
-<span><span class="co">#&gt; 1             3.69            3.69    2.37       0.76      0.76       0.44</span></span>
-<span><span class="co">#&gt; 2             3.66            3.66    2.26       0.77      0.94       1.51</span></span>
-<span><span class="co">#&gt; 3             3.44            3.44    1.65       0.59      0.65       1.23</span></span>
-<span><span class="co">#&gt; 4             3.41            3.41    1.59       0.58      0.58       1.00</span></span>
-<span><span class="co">#&gt; 5             3.34            3.34    1.44       0.55      0.60       1.22</span></span>
-<span><span class="co">#&gt; 6             3.19            3.19    1.16       0.55      0.71       1.66</span></span>
-<span><span class="co">#&gt; 7             3.19            3.19    1.15       0.53      0.85       2.62</span></span>
-<span><span class="co">#&gt; 8             3.11            3.11    1.01       0.66      0.66       0.56</span></span>
-<span><span class="co">#&gt; 9             3.07            3.07    0.95       0.58      0.70       1.44</span></span>
-<span><span class="co">#&gt; 10            3.02            3.02    0.87       0.53      0.53       0.89</span></span>
-<span><span class="co">#&gt; 11            2.92            2.92    0.71       0.51      0.51       0.72</span></span>
-<span><span class="co">#&gt; 12            2.86            2.86    0.62       0.51      0.67       1.72</span></span>
-<span><span class="co">#&gt; 13            2.76            2.76    0.45       0.57      0.59       1.04</span></span>
-<span><span class="co">#&gt; 14            2.75            2.75    0.45       0.51      0.51       0.69</span></span>
-<span><span class="co">#&gt; 15            2.75            2.75    0.45       0.51      0.51       0.34</span></span>
-<span><span class="co">#&gt; 16            2.69            2.69    0.35       0.53      0.56       1.13</span></span>
-<span><span class="co">#&gt; 17            2.66            2.66    0.30       0.56      0.78       1.95</span></span>
-<span><span class="co">#&gt; 18            2.62            2.62    0.25       0.51      0.52       1.01</span></span>
-<span><span class="co">#&gt; 19            2.58            2.58    0.17       0.52      0.72       1.93</span></span>
-<span><span class="co">#&gt; 20            2.52            2.52    0.09       0.52      0.52       0.14</span></span>
-<span><span class="co">#&gt; 21            2.51            2.51    0.08       0.51      0.62       1.44</span></span>
-<span><span class="co">#&gt; 22            2.35            2.35   -0.18       0.53      0.53       0.13</span></span>
-<span><span class="co">#&gt; 23            2.35            2.35   -0.18       0.53      0.53       0.65</span></span>
-<span><span class="co">#&gt; 24            2.35            2.35   -0.19       0.51      0.51       0.61</span></span>
-<span><span class="co">#&gt; 25            2.35            2.35   -0.19       0.51      0.51       0.61</span></span>
-<span><span class="co">#&gt; 26            2.33            2.33   -0.21       0.57      0.57       0.59</span></span>
-<span><span class="co">#&gt; 27            2.26            2.26   -0.33       0.58      0.60       1.08</span></span>
-<span><span class="co">#&gt; 28            2.18            2.18   -0.45       0.51      0.51       0.29</span></span>
-<span><span class="co">#&gt; 29            2.16            2.16   -0.49       0.54      0.66       1.54</span></span>
-<span><span class="co">#&gt; 30            2.16            2.16   -0.49       0.54      0.82       2.35</span></span>
-<span><span class="co">#&gt; 31            2.10            2.10   -0.59       0.55      0.55       0.43</span></span>
-<span><span class="co">#&gt; 32            2.07            2.07   -0.65       0.60      0.63       1.07</span></span>
-<span><span class="co">#&gt; 33            2.06            2.06   -0.65       0.54      0.54       0.50</span></span>
-<span><span class="co">#&gt; 34            2.06            2.06   -0.65       0.54      0.57       1.11</span></span>
-<span><span class="co">#&gt; 35            2.03            2.03   -0.71       0.52      0.53       1.04</span></span>
-<span><span class="co">#&gt; 36            1.99            1.99   -0.79       0.55      0.55       0.29</span></span>
-<span><span class="co">#&gt; 37            1.90            1.90   -0.95       0.56      0.56       0.79</span></span>
-<span><span class="co">#&gt; 38            1.74            1.74   -1.28       0.55      0.55       0.43</span></span>
-<span><span class="co">#&gt; 39            1.61            1.61   -1.56       0.68      0.68       0.70</span></span>
-<span><span class="co">#&gt; 40            1.58            1.58   -1.64       0.62      0.62       0.54</span></span>
-<span><span class="co">#&gt; 41            1.56            1.56   -1.68       0.68      0.68       0.59</span></span>
-<span><span class="co">#&gt; 42            1.48            1.48   -1.89       0.68      0.71       1.08</span></span>
-<span><span class="co">#&gt; 43            1.48            1.48   -1.89       0.68      1.28       3.53</span></span>
-<span><span class="co">#&gt; 44            1.38            1.38   -2.21       0.79      0.79       0.70</span></span>
-<span><span class="co">#&gt; 45            1.38            1.38   -2.21       0.79      0.79       0.79</span></span>
-<span><span class="co">#&gt; 46            1.36            1.36   -2.26       0.79      0.79       0.73</span></span>
-<span><span class="co">#&gt; 47            1.36            1.36   -2.26       0.79      0.79       0.57</span></span>
-<span><span class="co">#&gt; 48            1.18            1.18   -3.08       1.06      1.08       1.03</span></span>
-<span><span class="co">#&gt;    Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element</span></span>
-<span><span class="co">#&gt; 1       -0.30        0.39       -1.22         NA                P015</span></span>
-<span><span class="co">#&gt; 2        0.77        1.04        0.27         NA                P045</span></span>
-<span><span class="co">#&gt; 3        0.53        1.31        0.68         NA                P036</span></span>
-<span><span class="co">#&gt; 4        0.27        0.99        0.18         NA                P030</span></span>
-<span><span class="co">#&gt; 5        0.52        1.31        0.68         NA                P027</span></span>
-<span><span class="co">#&gt; 6        0.97        1.91        1.44         NA                P013</span></span>
-<span><span class="co">#&gt; 7        1.77        2.59        2.13         NA                P025</span></span>
-<span><span class="co">#&gt; 8       -0.25        0.60       -0.54         NA                P006</span></span>
-<span><span class="co">#&gt; 9        0.74        1.53        0.99         NA                P002</span></span>
-<span><span class="co">#&gt; 10       0.11        0.85       -0.08         NA                P019</span></span>
-<span><span class="co">#&gt; 11      -0.19        0.69       -0.40         NA                P034</span></span>
-<span><span class="co">#&gt; 12       1.07        1.75        1.26         NA                P021</span></span>
-<span><span class="co">#&gt; 13       0.32        1.05        0.29         NA                P001</span></span>
-<span><span class="co">#&gt; 14      -0.25        0.68       -0.42         NA                P031</span></span>
-<span><span class="co">#&gt; 15      -1.01        0.34       -1.39         NA                P035</span></span>
-<span><span class="co">#&gt; 16       0.41        1.09        0.35         NA                P004</span></span>
-<span><span class="co">#&gt; 17       1.20        1.93        1.37         NA                P024</span></span>
-<span><span class="co">#&gt; 18       0.26        1.01        0.20         NA                P038</span></span>
-<span><span class="co">#&gt; 19       1.24        1.95        1.49         NA                P048</span></span>
-<span><span class="co">#&gt; 20      -1.72        0.14       -2.32         NA                P022</span></span>
-<span><span class="co">#&gt; 21       0.77        1.44        0.86         NA                P003</span></span>
-<span><span class="co">#&gt; 22      -1.74        0.12       -2.46         NA                P026</span></span>
-<span><span class="co">#&gt; 23      -0.29        0.67       -0.46         NA                P020</span></span>
-<span><span class="co">#&gt; 24      -0.39        0.62       -0.57         NA                P005</span></span>
-<span><span class="co">#&gt; 25      -0.39        0.62       -0.57         NA                P010</span></span>
-<span><span class="co">#&gt; 26      -0.34        0.62       -0.49         NA                P011</span></span>
-<span><span class="co">#&gt; 27       0.37        1.13        0.40         NA                P028</span></span>
-<span><span class="co">#&gt; 28      -1.17        0.29       -1.58         NA                P008</span></span>
-<span><span class="co">#&gt; 29       0.86        1.49        0.93         NA                P018</span></span>
-<span><span class="co">#&gt; 30       1.56        2.57        2.11         NA                P012</span></span>
-<span><span class="co">#&gt; 31      -0.67        0.43       -1.09         NA                P042</span></span>
-<span><span class="co">#&gt; 32       0.37        1.10        0.36         NA                P039</span></span>
-<span><span class="co">#&gt; 33      -0.56        0.53       -0.81         NA                P046</span></span>
-<span><span class="co">#&gt; 34       0.39        1.03        0.25         NA                P043</span></span>
-<span><span class="co">#&gt; 35       0.30        1.06        0.30         NA                P009</span></span>
-<span><span class="co">#&gt; 36      -1.03        0.31       -1.48         NA                P017</span></span>
-<span><span class="co">#&gt; 37      -0.03        0.79       -0.19         NA                P044</span></span>
-<span><span class="co">#&gt; 38      -0.68        0.42       -1.10         NA                P007</span></span>
-<span><span class="co">#&gt; 39      -0.03        0.72       -0.35         NA                P023</span></span>
-<span><span class="co">#&gt; 40      -0.34        0.58       -0.67         NA                P047</span></span>
-<span><span class="co">#&gt; 41      -0.19        0.64       -0.53         NA                P041</span></span>
-<span><span class="co">#&gt; 42       0.40        0.91        0.04         NA                P014</span></span>
-<span><span class="co">#&gt; 43       1.94        3.31        2.74         NA                P016</span></span>
-<span><span class="co">#&gt; 44       0.07        0.68       -0.42         NA                P037</span></span>
-<span><span class="co">#&gt; 45       0.17        0.88       -0.03         NA                P040</span></span>
-<span><span class="co">#&gt; 46       0.11        0.73       -0.32         NA                P029</span></span>
-<span><span class="co">#&gt; 47      -0.08        0.52       -0.81         NA                P033</span></span>
-<span><span class="co">#&gt; 48         NA        1.23        0.56         NA                P032</span></span>
+<span><span class="co">#&gt;    Fair(M) Average Fair(Z) Average               FairMReference Measure</span></span>
+<span><span class="co">#&gt; 1             3.69            3.69 Mean of other facet measures    2.37</span></span>
+<span><span class="co">#&gt; 2             3.66            3.66 Mean of other facet measures    2.26</span></span>
+<span><span class="co">#&gt; 3             3.44            3.44 Mean of other facet measures    1.65</span></span>
+<span><span class="co">#&gt; 4             3.41            3.41 Mean of other facet measures    1.59</span></span>
+<span><span class="co">#&gt; 5             3.34            3.34 Mean of other facet measures    1.44</span></span>
+<span><span class="co">#&gt; 6             3.19            3.19 Mean of other facet measures    1.16</span></span>
+<span><span class="co">#&gt; 7             3.19            3.19 Mean of other facet measures    1.15</span></span>
+<span><span class="co">#&gt; 8             3.11            3.11 Mean of other facet measures    1.01</span></span>
+<span><span class="co">#&gt; 9             3.07            3.07 Mean of other facet measures    0.95</span></span>
+<span><span class="co">#&gt; 10            3.02            3.02 Mean of other facet measures    0.87</span></span>
+<span><span class="co">#&gt; 11            2.92            2.92 Mean of other facet measures    0.71</span></span>
+<span><span class="co">#&gt; 12            2.86            2.86 Mean of other facet measures    0.62</span></span>
+<span><span class="co">#&gt; 13            2.76            2.76 Mean of other facet measures    0.45</span></span>
+<span><span class="co">#&gt; 14            2.75            2.75 Mean of other facet measures    0.45</span></span>
+<span><span class="co">#&gt; 15            2.75            2.75 Mean of other facet measures    0.45</span></span>
+<span><span class="co">#&gt; 16            2.69            2.69 Mean of other facet measures    0.35</span></span>
+<span><span class="co">#&gt; 17            2.66            2.66 Mean of other facet measures    0.30</span></span>
+<span><span class="co">#&gt; 18            2.62            2.62 Mean of other facet measures    0.25</span></span>
+<span><span class="co">#&gt; 19            2.58            2.58 Mean of other facet measures    0.17</span></span>
+<span><span class="co">#&gt; 20            2.52            2.52 Mean of other facet measures    0.09</span></span>
+<span><span class="co">#&gt; 21            2.51            2.51 Mean of other facet measures    0.08</span></span>
+<span><span class="co">#&gt; 22            2.35            2.35 Mean of other facet measures   -0.18</span></span>
+<span><span class="co">#&gt; 23            2.35            2.35 Mean of other facet measures   -0.18</span></span>
+<span><span class="co">#&gt; 24            2.35            2.35 Mean of other facet measures   -0.19</span></span>
+<span><span class="co">#&gt; 25            2.35            2.35 Mean of other facet measures   -0.19</span></span>
+<span><span class="co">#&gt; 26            2.33            2.33 Mean of other facet measures   -0.21</span></span>
+<span><span class="co">#&gt; 27            2.26            2.26 Mean of other facet measures   -0.33</span></span>
+<span><span class="co">#&gt; 28            2.18            2.18 Mean of other facet measures   -0.45</span></span>
+<span><span class="co">#&gt; 29            2.16            2.16 Mean of other facet measures   -0.49</span></span>
+<span><span class="co">#&gt; 30            2.16            2.16 Mean of other facet measures   -0.49</span></span>
+<span><span class="co">#&gt; 31            2.10            2.10 Mean of other facet measures   -0.59</span></span>
+<span><span class="co">#&gt; 32            2.07            2.07 Mean of other facet measures   -0.65</span></span>
+<span><span class="co">#&gt; 33            2.06            2.06 Mean of other facet measures   -0.65</span></span>
+<span><span class="co">#&gt; 34            2.06            2.06 Mean of other facet measures   -0.65</span></span>
+<span><span class="co">#&gt; 35            2.03            2.03 Mean of other facet measures   -0.71</span></span>
+<span><span class="co">#&gt; 36            1.99            1.99 Mean of other facet measures   -0.79</span></span>
+<span><span class="co">#&gt; 37            1.90            1.90 Mean of other facet measures   -0.95</span></span>
+<span><span class="co">#&gt; 38            1.74            1.74 Mean of other facet measures   -1.28</span></span>
+<span><span class="co">#&gt; 39            1.61            1.61 Mean of other facet measures   -1.56</span></span>
+<span><span class="co">#&gt; 40            1.58            1.58 Mean of other facet measures   -1.64</span></span>
+<span><span class="co">#&gt; 41            1.56            1.56 Mean of other facet measures   -1.68</span></span>
+<span><span class="co">#&gt; 42            1.48            1.48 Mean of other facet measures   -1.89</span></span>
+<span><span class="co">#&gt; 43            1.48            1.48 Mean of other facet measures   -1.89</span></span>
+<span><span class="co">#&gt; 44            1.38            1.38 Mean of other facet measures   -2.21</span></span>
+<span><span class="co">#&gt; 45            1.38            1.38 Mean of other facet measures   -2.21</span></span>
+<span><span class="co">#&gt; 46            1.36            1.36 Mean of other facet measures   -2.26</span></span>
+<span><span class="co">#&gt; 47            1.36            1.36 Mean of other facet measures   -2.26</span></span>
+<span><span class="co">#&gt; 48            1.18            1.18 Mean of other facet measures   -3.08</span></span>
+<span><span class="co">#&gt;    PrimaryMeasure    MeasureBasis ExtremeAdjustment Model S.E. Real S.E.</span></span>
+<span><span class="co">#&gt; 1            2.37 Fitted estimate                 0       0.76      0.76</span></span>
+<span><span class="co">#&gt; 2            2.26 Fitted estimate                 0       0.77      0.94</span></span>
+<span><span class="co">#&gt; 3            1.65 Fitted estimate                 0       0.59      0.65</span></span>
+<span><span class="co">#&gt; 4            1.59 Fitted estimate                 0       0.58      0.58</span></span>
+<span><span class="co">#&gt; 5            1.44 Fitted estimate                 0       0.55      0.60</span></span>
+<span><span class="co">#&gt; 6            1.16 Fitted estimate                 0       0.55      0.71</span></span>
+<span><span class="co">#&gt; 7            1.15 Fitted estimate                 0       0.53      0.85</span></span>
+<span><span class="co">#&gt; 8            1.01 Fitted estimate                 0       0.66      0.66</span></span>
+<span><span class="co">#&gt; 9            0.95 Fitted estimate                 0       0.58      0.70</span></span>
+<span><span class="co">#&gt; 10           0.87 Fitted estimate                 0       0.53      0.53</span></span>
+<span><span class="co">#&gt; 11           0.71 Fitted estimate                 0       0.51      0.51</span></span>
+<span><span class="co">#&gt; 12           0.62 Fitted estimate                 0       0.51      0.67</span></span>
+<span><span class="co">#&gt; 13           0.45 Fitted estimate                 0       0.57      0.59</span></span>
+<span><span class="co">#&gt; 14           0.45 Fitted estimate                 0       0.51      0.51</span></span>
+<span><span class="co">#&gt; 15           0.45 Fitted estimate                 0       0.51      0.51</span></span>
+<span><span class="co">#&gt; 16           0.35 Fitted estimate                 0       0.53      0.56</span></span>
+<span><span class="co">#&gt; 17           0.30 Fitted estimate                 0       0.56      0.78</span></span>
+<span><span class="co">#&gt; 18           0.25 Fitted estimate                 0       0.51      0.52</span></span>
+<span><span class="co">#&gt; 19           0.17 Fitted estimate                 0       0.52      0.72</span></span>
+<span><span class="co">#&gt; 20           0.09 Fitted estimate                 0       0.52      0.52</span></span>
+<span><span class="co">#&gt; 21           0.08 Fitted estimate                 0       0.51      0.62</span></span>
+<span><span class="co">#&gt; 22          -0.18 Fitted estimate                 0       0.53      0.53</span></span>
+<span><span class="co">#&gt; 23          -0.18 Fitted estimate                 0       0.53      0.53</span></span>
+<span><span class="co">#&gt; 24          -0.19 Fitted estimate                 0       0.51      0.51</span></span>
+<span><span class="co">#&gt; 25          -0.19 Fitted estimate                 0       0.51      0.51</span></span>
+<span><span class="co">#&gt; 26          -0.21 Fitted estimate                 0       0.57      0.57</span></span>
+<span><span class="co">#&gt; 27          -0.33 Fitted estimate                 0       0.58      0.60</span></span>
+<span><span class="co">#&gt; 28          -0.45 Fitted estimate                 0       0.51      0.51</span></span>
+<span><span class="co">#&gt; 29          -0.49 Fitted estimate                 0       0.54      0.66</span></span>
+<span><span class="co">#&gt; 30          -0.49 Fitted estimate                 0       0.54      0.82</span></span>
+<span><span class="co">#&gt; 31          -0.59 Fitted estimate                 0       0.55      0.55</span></span>
+<span><span class="co">#&gt; 32          -0.65 Fitted estimate                 0       0.60      0.63</span></span>
+<span><span class="co">#&gt; 33          -0.65 Fitted estimate                 0       0.54      0.54</span></span>
+<span><span class="co">#&gt; 34          -0.65 Fitted estimate                 0       0.54      0.57</span></span>
+<span><span class="co">#&gt; 35          -0.71 Fitted estimate                 0       0.52      0.53</span></span>
+<span><span class="co">#&gt; 36          -0.79 Fitted estimate                 0       0.55      0.55</span></span>
+<span><span class="co">#&gt; 37          -0.95 Fitted estimate                 0       0.56      0.56</span></span>
+<span><span class="co">#&gt; 38          -1.28 Fitted estimate                 0       0.55      0.55</span></span>
+<span><span class="co">#&gt; 39          -1.56 Fitted estimate                 0       0.68      0.68</span></span>
+<span><span class="co">#&gt; 40          -1.64 Fitted estimate                 0       0.62      0.62</span></span>
+<span><span class="co">#&gt; 41          -1.68 Fitted estimate                 0       0.68      0.68</span></span>
+<span><span class="co">#&gt; 42          -1.89 Fitted estimate                 0       0.68      0.71</span></span>
+<span><span class="co">#&gt; 43          -1.89 Fitted estimate                 0       0.68      1.28</span></span>
+<span><span class="co">#&gt; 44          -2.21 Fitted estimate                 0       0.79      0.79</span></span>
+<span><span class="co">#&gt; 45          -2.21 Fitted estimate                 0       0.79      0.79</span></span>
+<span><span class="co">#&gt; 46          -2.26 Fitted estimate                 0       0.79      0.79</span></span>
+<span><span class="co">#&gt; 47          -2.26 Fitted estimate                 0       0.79      0.79</span></span>
+<span><span class="co">#&gt; 48          -3.08 Fitted estimate                 0       1.06      1.08</span></span>
+<span><span class="co">#&gt;    Infit MnSq Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element</span></span>
+<span><span class="co">#&gt; 1        0.44      -0.30        0.39       -1.22         NA                P015</span></span>
+<span><span class="co">#&gt; 2        1.51       0.77        1.04        0.27         NA                P045</span></span>
+<span><span class="co">#&gt; 3        1.23       0.53        1.31        0.68         NA                P036</span></span>
+<span><span class="co">#&gt; 4        1.00       0.27        0.99        0.18         NA                P030</span></span>
+<span><span class="co">#&gt; 5        1.22       0.52        1.31        0.68         NA                P027</span></span>
+<span><span class="co">#&gt; 6        1.66       0.97        1.91        1.44         NA                P013</span></span>
+<span><span class="co">#&gt; 7        2.62       1.77        2.59        2.13         NA                P025</span></span>
+<span><span class="co">#&gt; 8        0.56      -0.25        0.60       -0.54         NA                P006</span></span>
+<span><span class="co">#&gt; 9        1.44       0.74        1.53        0.99         NA                P002</span></span>
+<span><span class="co">#&gt; 10       0.89       0.11        0.85       -0.08         NA                P019</span></span>
+<span><span class="co">#&gt; 11       0.72      -0.19        0.69       -0.40         NA                P034</span></span>
+<span><span class="co">#&gt; 12       1.72       1.07        1.75        1.26         NA                P021</span></span>
+<span><span class="co">#&gt; 13       1.04       0.32        1.05        0.29         NA                P001</span></span>
+<span><span class="co">#&gt; 14       0.34      -1.01        0.34       -1.39         NA                P035</span></span>
+<span><span class="co">#&gt; 15       0.69      -0.25        0.68       -0.42         NA                P031</span></span>
+<span><span class="co">#&gt; 16       1.13       0.41        1.09        0.35         NA                P004</span></span>
+<span><span class="co">#&gt; 17       1.95       1.20        1.93        1.37         NA                P024</span></span>
+<span><span class="co">#&gt; 18       1.01       0.26        1.01        0.20         NA                P038</span></span>
+<span><span class="co">#&gt; 19       1.93       1.24        1.95        1.49         NA                P048</span></span>
+<span><span class="co">#&gt; 20       0.14      -1.72        0.14       -2.32         NA                P022</span></span>
+<span><span class="co">#&gt; 21       1.44       0.77        1.44        0.86         NA                P003</span></span>
+<span><span class="co">#&gt; 22       0.13      -1.74        0.12       -2.46         NA                P026</span></span>
+<span><span class="co">#&gt; 23       0.65      -0.29        0.67       -0.46         NA                P020</span></span>
+<span><span class="co">#&gt; 24       0.61      -0.39        0.62       -0.57         NA                P005</span></span>
+<span><span class="co">#&gt; 25       0.61      -0.39        0.62       -0.57         NA                P010</span></span>
+<span><span class="co">#&gt; 26       0.59      -0.34        0.62       -0.49         NA                P011</span></span>
+<span><span class="co">#&gt; 27       1.08       0.37        1.13        0.40         NA                P028</span></span>
+<span><span class="co">#&gt; 28       0.29      -1.17        0.29       -1.58         NA                P008</span></span>
+<span><span class="co">#&gt; 29       1.54       0.86        1.49        0.93         NA                P018</span></span>
+<span><span class="co">#&gt; 30       2.35       1.56        2.57        2.11         NA                P012</span></span>
+<span><span class="co">#&gt; 31       0.43      -0.67        0.43       -1.09         NA                P042</span></span>
+<span><span class="co">#&gt; 32       1.07       0.37        1.10        0.36         NA                P039</span></span>
+<span><span class="co">#&gt; 33       0.50      -0.56        0.53       -0.81         NA                P046</span></span>
+<span><span class="co">#&gt; 34       1.11       0.39        1.03        0.25         NA                P043</span></span>
+<span><span class="co">#&gt; 35       1.04       0.30        1.06        0.30         NA                P009</span></span>
+<span><span class="co">#&gt; 36       0.29      -1.03        0.31       -1.48         NA                P017</span></span>
+<span><span class="co">#&gt; 37       0.79      -0.03        0.79       -0.19         NA                P044</span></span>
+<span><span class="co">#&gt; 38       0.43      -0.68        0.42       -1.10         NA                P007</span></span>
+<span><span class="co">#&gt; 39       0.70      -0.03        0.72       -0.35         NA                P023</span></span>
+<span><span class="co">#&gt; 40       0.54      -0.34        0.58       -0.67         NA                P047</span></span>
+<span><span class="co">#&gt; 41       0.59      -0.19        0.64       -0.53         NA                P041</span></span>
+<span><span class="co">#&gt; 42       1.08       0.40        0.91        0.04         NA                P014</span></span>
+<span><span class="co">#&gt; 43       3.53       1.94        3.31        2.74         NA                P016</span></span>
+<span><span class="co">#&gt; 44       0.79       0.17        0.88       -0.03         NA                P040</span></span>
+<span><span class="co">#&gt; 45       0.70       0.07        0.68       -0.42         NA                P037</span></span>
+<span><span class="co">#&gt; 46       0.73       0.11        0.73       -0.32         NA                P029</span></span>
+<span><span class="co">#&gt; 47       0.57      -0.08        0.52       -0.81         NA                P033</span></span>
+<span><span class="co">#&gt; 48       1.03         NA        1.23        0.56         NA                P032</span></span>
 <span><span class="co">#&gt;    ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE</span></span>
 <span><span class="co">#&gt; 1             3.67            3.69                        3.69         0.76</span></span>
 <span><span class="co">#&gt; 2             3.67            3.66                        3.66         0.77</span></span>
@@ -550,56 +607,67 @@ table:</p>
 <span><span class="co">#&gt; 4          95          44            95            44          2.16</span></span>
 <span><span class="co">#&gt; 5         147          56           147            56          2.62</span></span>
 <span><span class="co">#&gt; 6         130          47           130            47          2.77</span></span>
-<span><span class="co">#&gt;   Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq</span></span>
-<span><span class="co">#&gt; 1            2.09            2.23    0.37       0.20      0.21       1.13</span></span>
-<span><span class="co">#&gt; 2            2.10            2.24    0.36       0.24      0.24       0.99</span></span>
-<span><span class="co">#&gt; 3            2.17            2.31    0.24       0.20      0.21       1.10</span></span>
-<span><span class="co">#&gt; 4            2.29            2.44    0.03       0.22      0.22       0.79</span></span>
-<span><span class="co">#&gt; 5            2.54            2.70   -0.36       0.18      0.19       1.12</span></span>
-<span><span class="co">#&gt; 6            2.73            2.88   -0.64       0.19      0.19       0.86</span></span>
-<span><span class="co">#&gt;   Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element</span></span>
-<span><span class="co">#&gt; 1       0.56        1.07        0.40       0.59                 R03</span></span>
-<span><span class="co">#&gt; 2       0.08        0.98        0.00       0.59                 R06</span></span>
-<span><span class="co">#&gt; 3       0.42        1.12        0.63       0.59                 R04</span></span>
-<span><span class="co">#&gt; 4      -0.60        0.76       -1.14       0.59                 R05</span></span>
-<span><span class="co">#&gt; 5       0.53        1.24        1.22       0.59                 R02</span></span>
-<span><span class="co">#&gt; 6      -0.46        0.83       -0.82       0.59                 R01</span></span>
-<span><span class="co">#&gt;   ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE</span></span>
-<span><span class="co">#&gt; 1            2.30            2.09                        2.23         0.20</span></span>
-<span><span class="co">#&gt; 2            2.03            2.10                        2.24         0.24</span></span>
-<span><span class="co">#&gt; 3            2.30            2.17                        2.31         0.20</span></span>
-<span><span class="co">#&gt; 4            2.16            2.29                        2.44         0.22</span></span>
-<span><span class="co">#&gt; 5            2.62            2.54                        2.70         0.18</span></span>
-<span><span class="co">#&gt; 6            2.77            2.73                        2.88         0.19</span></span>
-<span><span class="co">#&gt;   FitAdjustedSE</span></span>
-<span><span class="co">#&gt; 1          0.21</span></span>
-<span><span class="co">#&gt; 2          0.24</span></span>
-<span><span class="co">#&gt; 3          0.21</span></span>
-<span><span class="co">#&gt; 4          0.22</span></span>
-<span><span class="co">#&gt; 5          0.19</span></span>
-<span><span class="co">#&gt; 6          0.19</span></span>
+<span><span class="co">#&gt;   Fair(M) Average Fair(Z) Average</span></span>
+<span><span class="co">#&gt; 1            2.09            2.23</span></span>
+<span><span class="co">#&gt; 2            2.10            2.24</span></span>
+<span><span class="co">#&gt; 3            2.17            2.31</span></span>
+<span><span class="co">#&gt; 4            2.29            2.44</span></span>
+<span><span class="co">#&gt; 5            2.54            2.70</span></span>
+<span><span class="co">#&gt; 6            2.73            2.88</span></span>
+<span><span class="co">#&gt;                                   FairMReference Measure PrimaryMeasure</span></span>
+<span><span class="co">#&gt; 1 Mean of fitted Person and other facet measures    0.37           0.37</span></span>
+<span><span class="co">#&gt; 2 Mean of fitted Person and other facet measures    0.36           0.36</span></span>
+<span><span class="co">#&gt; 3 Mean of fitted Person and other facet measures    0.24           0.24</span></span>
+<span><span class="co">#&gt; 4 Mean of fitted Person and other facet measures    0.03           0.03</span></span>
+<span><span class="co">#&gt; 5 Mean of fitted Person and other facet measures   -0.36          -0.36</span></span>
+<span><span class="co">#&gt; 6 Mean of fitted Person and other facet measures   -0.64          -0.64</span></span>
+<span><span class="co">#&gt;      MeasureBasis ExtremeAdjustment Model S.E. Real S.E. Infit MnSq Infit ZStd</span></span>
+<span><span class="co">#&gt; 1 Fitted estimate                 0       0.20      0.21       1.13       0.56</span></span>
+<span><span class="co">#&gt; 2 Fitted estimate                 0       0.24      0.24       0.99       0.08</span></span>
+<span><span class="co">#&gt; 3 Fitted estimate                 0       0.20      0.21       1.10       0.42</span></span>
+<span><span class="co">#&gt; 4 Fitted estimate                 0       0.22      0.22       0.79      -0.60</span></span>
+<span><span class="co">#&gt; 5 Fitted estimate                 0       0.18      0.19       1.12       0.53</span></span>
+<span><span class="co">#&gt; 6 Fitted estimate                 0       0.19      0.19       0.86      -0.46</span></span>
+<span><span class="co">#&gt;   Outfit MnSq Outfit ZStd PtMea Corr Anch Status Element ObservedAverage</span></span>
+<span><span class="co">#&gt; 1        1.07        0.40       0.59                 R03            2.30</span></span>
+<span><span class="co">#&gt; 2        0.98        0.00       0.59                 R06            2.03</span></span>
+<span><span class="co">#&gt; 3        1.12        0.63       0.59                 R04            2.30</span></span>
+<span><span class="co">#&gt; 4        0.76       -1.14       0.59                 R05            2.16</span></span>
+<span><span class="co">#&gt; 5        1.24        1.22       0.59                 R02            2.62</span></span>
+<span><span class="co">#&gt; 6        0.83       -0.82       0.59                 R01            2.77</span></span>
+<span><span class="co">#&gt;   AdjustedAverage StandardizedAdjustedAverage ModelBasedSE FitAdjustedSE</span></span>
+<span><span class="co">#&gt; 1            2.09                        2.23         0.20          0.21</span></span>
+<span><span class="co">#&gt; 2            2.10                        2.24         0.24          0.24</span></span>
+<span><span class="co">#&gt; 3            2.17                        2.31         0.20          0.21</span></span>
+<span><span class="co">#&gt; 4            2.29                        2.44         0.22          0.22</span></span>
+<span><span class="co">#&gt; 5            2.54                        2.70         0.18          0.19</span></span>
+<span><span class="co">#&gt; 6            2.73                        2.88         0.19          0.19</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $by_facet$Criterion</span></span>
 <span><span class="co">#&gt;   Total Score Total Count Weightd Score Weightd Count Obsvd Average</span></span>
 <span><span class="co">#&gt; 1         211          94           211            94          2.24</span></span>
 <span><span class="co">#&gt; 2         218          94           218            94          2.32</span></span>
 <span><span class="co">#&gt; 3         243          94           243            94          2.59</span></span>
-<span><span class="co">#&gt;   Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq</span></span>
-<span><span class="co">#&gt; 1            2.16            2.30    0.26       0.14      0.16       1.20</span></span>
-<span><span class="co">#&gt; 2            2.23            2.37    0.14       0.14      0.14       0.95</span></span>
-<span><span class="co">#&gt; 3            2.57            2.73   -0.40       0.14      0.14       0.88</span></span>
-<span><span class="co">#&gt;   Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element</span></span>
-<span><span class="co">#&gt; 1       1.00        1.21        1.41       0.63             Organization</span></span>
-<span><span class="co">#&gt; 2      -0.17        0.93       -0.45       0.63                 Language</span></span>
-<span><span class="co">#&gt; 3      -0.57        0.89       -0.71       0.63                  Content</span></span>
-<span><span class="co">#&gt;   ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE</span></span>
-<span><span class="co">#&gt; 1            2.24            2.16                        2.30         0.14</span></span>
-<span><span class="co">#&gt; 2            2.32            2.23                        2.37         0.14</span></span>
-<span><span class="co">#&gt; 3            2.59            2.57                        2.73         0.14</span></span>
-<span><span class="co">#&gt;   FitAdjustedSE</span></span>
-<span><span class="co">#&gt; 1          0.16</span></span>
-<span><span class="co">#&gt; 2          0.14</span></span>
-<span><span class="co">#&gt; 3          0.14</span></span>
+<span><span class="co">#&gt;   Fair(M) Average Fair(Z) Average</span></span>
+<span><span class="co">#&gt; 1            2.16            2.30</span></span>
+<span><span class="co">#&gt; 2            2.23            2.37</span></span>
+<span><span class="co">#&gt; 3            2.57            2.73</span></span>
+<span><span class="co">#&gt;                                   FairMReference Measure PrimaryMeasure</span></span>
+<span><span class="co">#&gt; 1 Mean of fitted Person and other facet measures    0.26           0.26</span></span>
+<span><span class="co">#&gt; 2 Mean of fitted Person and other facet measures    0.14           0.14</span></span>
+<span><span class="co">#&gt; 3 Mean of fitted Person and other facet measures   -0.40          -0.40</span></span>
+<span><span class="co">#&gt;      MeasureBasis ExtremeAdjustment Model S.E. Real S.E. Infit MnSq Infit ZStd</span></span>
+<span><span class="co">#&gt; 1 Fitted estimate                 0       0.14      0.16       1.20       1.00</span></span>
+<span><span class="co">#&gt; 2 Fitted estimate                 0       0.14      0.14       0.95      -0.17</span></span>
+<span><span class="co">#&gt; 3 Fitted estimate                 0       0.14      0.14       0.88      -0.57</span></span>
+<span><span class="co">#&gt;   Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element ObservedAverage</span></span>
+<span><span class="co">#&gt; 1        1.21        1.41       0.63             Organization            2.24</span></span>
+<span><span class="co">#&gt; 2        0.93       -0.45       0.63                 Language            2.32</span></span>
+<span><span class="co">#&gt; 3        0.89       -0.71       0.63                  Content            2.59</span></span>
+<span><span class="co">#&gt;   AdjustedAverage StandardizedAdjustedAverage ModelBasedSE FitAdjustedSE</span></span>
+<span><span class="co">#&gt; 1            2.16                        2.30         0.14          0.16</span></span>
+<span><span class="co">#&gt; 2            2.23                        2.37         0.14          0.14</span></span>
+<span><span class="co">#&gt; 3            2.57                        2.73         0.14          0.14</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stacked</span></span>
@@ -661,238 +729,296 @@ table:</p>
 <span><span class="co">#&gt; 55 Criterion         211          94           211            94          2.24</span></span>
 <span><span class="co">#&gt; 56 Criterion         218          94           218            94          2.32</span></span>
 <span><span class="co">#&gt; 57 Criterion         243          94           243            94          2.59</span></span>
-<span><span class="co">#&gt;    Fair(M) Average Fair(Z) Average Measure Model S.E. Real S.E. Infit MnSq</span></span>
-<span><span class="co">#&gt; 1             3.69            3.69    2.37       0.76      0.76       0.44</span></span>
-<span><span class="co">#&gt; 2             3.66            3.66    2.26       0.77      0.94       1.51</span></span>
-<span><span class="co">#&gt; 3             3.44            3.44    1.65       0.59      0.65       1.23</span></span>
-<span><span class="co">#&gt; 4             3.41            3.41    1.59       0.58      0.58       1.00</span></span>
-<span><span class="co">#&gt; 5             3.34            3.34    1.44       0.55      0.60       1.22</span></span>
-<span><span class="co">#&gt; 6             3.19            3.19    1.16       0.55      0.71       1.66</span></span>
-<span><span class="co">#&gt; 7             3.19            3.19    1.15       0.53      0.85       2.62</span></span>
-<span><span class="co">#&gt; 8             3.11            3.11    1.01       0.66      0.66       0.56</span></span>
-<span><span class="co">#&gt; 9             3.07            3.07    0.95       0.58      0.70       1.44</span></span>
-<span><span class="co">#&gt; 10            3.02            3.02    0.87       0.53      0.53       0.89</span></span>
-<span><span class="co">#&gt; 11            2.92            2.92    0.71       0.51      0.51       0.72</span></span>
-<span><span class="co">#&gt; 12            2.86            2.86    0.62       0.51      0.67       1.72</span></span>
-<span><span class="co">#&gt; 13            2.76            2.76    0.45       0.57      0.59       1.04</span></span>
-<span><span class="co">#&gt; 14            2.75            2.75    0.45       0.51      0.51       0.69</span></span>
-<span><span class="co">#&gt; 15            2.75            2.75    0.45       0.51      0.51       0.34</span></span>
-<span><span class="co">#&gt; 16            2.69            2.69    0.35       0.53      0.56       1.13</span></span>
-<span><span class="co">#&gt; 17            2.66            2.66    0.30       0.56      0.78       1.95</span></span>
-<span><span class="co">#&gt; 18            2.62            2.62    0.25       0.51      0.52       1.01</span></span>
-<span><span class="co">#&gt; 19            2.58            2.58    0.17       0.52      0.72       1.93</span></span>
-<span><span class="co">#&gt; 20            2.52            2.52    0.09       0.52      0.52       0.14</span></span>
-<span><span class="co">#&gt; 21            2.51            2.51    0.08       0.51      0.62       1.44</span></span>
-<span><span class="co">#&gt; 22            2.35            2.35   -0.18       0.53      0.53       0.13</span></span>
-<span><span class="co">#&gt; 23            2.35            2.35   -0.18       0.53      0.53       0.65</span></span>
-<span><span class="co">#&gt; 24            2.35            2.35   -0.19       0.51      0.51       0.61</span></span>
-<span><span class="co">#&gt; 25            2.35            2.35   -0.19       0.51      0.51       0.61</span></span>
-<span><span class="co">#&gt; 26            2.33            2.33   -0.21       0.57      0.57       0.59</span></span>
-<span><span class="co">#&gt; 27            2.26            2.26   -0.33       0.58      0.60       1.08</span></span>
-<span><span class="co">#&gt; 28            2.18            2.18   -0.45       0.51      0.51       0.29</span></span>
-<span><span class="co">#&gt; 29            2.16            2.16   -0.49       0.54      0.66       1.54</span></span>
-<span><span class="co">#&gt; 30            2.16            2.16   -0.49       0.54      0.82       2.35</span></span>
-<span><span class="co">#&gt; 31            2.10            2.10   -0.59       0.55      0.55       0.43</span></span>
-<span><span class="co">#&gt; 32            2.07            2.07   -0.65       0.60      0.63       1.07</span></span>
-<span><span class="co">#&gt; 33            2.06            2.06   -0.65       0.54      0.54       0.50</span></span>
-<span><span class="co">#&gt; 34            2.06            2.06   -0.65       0.54      0.57       1.11</span></span>
-<span><span class="co">#&gt; 35            2.03            2.03   -0.71       0.52      0.53       1.04</span></span>
-<span><span class="co">#&gt; 36            1.99            1.99   -0.79       0.55      0.55       0.29</span></span>
-<span><span class="co">#&gt; 37            1.90            1.90   -0.95       0.56      0.56       0.79</span></span>
-<span><span class="co">#&gt; 38            1.74            1.74   -1.28       0.55      0.55       0.43</span></span>
-<span><span class="co">#&gt; 39            1.61            1.61   -1.56       0.68      0.68       0.70</span></span>
-<span><span class="co">#&gt; 40            1.58            1.58   -1.64       0.62      0.62       0.54</span></span>
-<span><span class="co">#&gt; 41            1.56            1.56   -1.68       0.68      0.68       0.59</span></span>
-<span><span class="co">#&gt; 42            1.48            1.48   -1.89       0.68      0.71       1.08</span></span>
-<span><span class="co">#&gt; 43            1.48            1.48   -1.89       0.68      1.28       3.53</span></span>
-<span><span class="co">#&gt; 44            1.38            1.38   -2.21       0.79      0.79       0.70</span></span>
-<span><span class="co">#&gt; 45            1.38            1.38   -2.21       0.79      0.79       0.79</span></span>
-<span><span class="co">#&gt; 46            1.36            1.36   -2.26       0.79      0.79       0.73</span></span>
-<span><span class="co">#&gt; 47            1.36            1.36   -2.26       0.79      0.79       0.57</span></span>
-<span><span class="co">#&gt; 48            1.18            1.18   -3.08       1.06      1.08       1.03</span></span>
-<span><span class="co">#&gt; 49            2.09            2.23    0.37       0.20      0.21       1.13</span></span>
-<span><span class="co">#&gt; 50            2.10            2.24    0.36       0.24      0.24       0.99</span></span>
-<span><span class="co">#&gt; 51            2.17            2.31    0.24       0.20      0.21       1.10</span></span>
-<span><span class="co">#&gt; 52            2.29            2.44    0.03       0.22      0.22       0.79</span></span>
-<span><span class="co">#&gt; 53            2.54            2.70   -0.36       0.18      0.19       1.12</span></span>
-<span><span class="co">#&gt; 54            2.73            2.88   -0.64       0.19      0.19       0.86</span></span>
-<span><span class="co">#&gt; 55            2.16            2.30    0.26       0.14      0.16       1.20</span></span>
-<span><span class="co">#&gt; 56            2.23            2.37    0.14       0.14      0.14       0.95</span></span>
-<span><span class="co">#&gt; 57            2.57            2.73   -0.40       0.14      0.14       0.88</span></span>
-<span><span class="co">#&gt;    Infit ZStd Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element</span></span>
-<span><span class="co">#&gt; 1       -0.30        0.39       -1.22         NA                     P015</span></span>
-<span><span class="co">#&gt; 2        0.77        1.04        0.27         NA                     P045</span></span>
-<span><span class="co">#&gt; 3        0.53        1.31        0.68         NA                     P036</span></span>
-<span><span class="co">#&gt; 4        0.27        0.99        0.18         NA                     P030</span></span>
-<span><span class="co">#&gt; 5        0.52        1.31        0.68         NA                     P027</span></span>
-<span><span class="co">#&gt; 6        0.97        1.91        1.44         NA                     P013</span></span>
-<span><span class="co">#&gt; 7        1.77        2.59        2.13         NA                     P025</span></span>
-<span><span class="co">#&gt; 8       -0.25        0.60       -0.54         NA                     P006</span></span>
-<span><span class="co">#&gt; 9        0.74        1.53        0.99         NA                     P002</span></span>
-<span><span class="co">#&gt; 10       0.11        0.85       -0.08         NA                     P019</span></span>
-<span><span class="co">#&gt; 11      -0.19        0.69       -0.40         NA                     P034</span></span>
-<span><span class="co">#&gt; 12       1.07        1.75        1.26         NA                     P021</span></span>
-<span><span class="co">#&gt; 13       0.32        1.05        0.29         NA                     P001</span></span>
-<span><span class="co">#&gt; 14      -0.25        0.68       -0.42         NA                     P031</span></span>
-<span><span class="co">#&gt; 15      -1.01        0.34       -1.39         NA                     P035</span></span>
-<span><span class="co">#&gt; 16       0.41        1.09        0.35         NA                     P004</span></span>
-<span><span class="co">#&gt; 17       1.20        1.93        1.37         NA                     P024</span></span>
-<span><span class="co">#&gt; 18       0.26        1.01        0.20         NA                     P038</span></span>
-<span><span class="co">#&gt; 19       1.24        1.95        1.49         NA                     P048</span></span>
-<span><span class="co">#&gt; 20      -1.72        0.14       -2.32         NA                     P022</span></span>
-<span><span class="co">#&gt; 21       0.77        1.44        0.86         NA                     P003</span></span>
-<span><span class="co">#&gt; 22      -1.74        0.12       -2.46         NA                     P026</span></span>
-<span><span class="co">#&gt; 23      -0.29        0.67       -0.46         NA                     P020</span></span>
-<span><span class="co">#&gt; 24      -0.39        0.62       -0.57         NA                     P005</span></span>
-<span><span class="co">#&gt; 25      -0.39        0.62       -0.57         NA                     P010</span></span>
-<span><span class="co">#&gt; 26      -0.34        0.62       -0.49         NA                     P011</span></span>
-<span><span class="co">#&gt; 27       0.37        1.13        0.40         NA                     P028</span></span>
-<span><span class="co">#&gt; 28      -1.17        0.29       -1.58         NA                     P008</span></span>
-<span><span class="co">#&gt; 29       0.86        1.49        0.93         NA                     P018</span></span>
-<span><span class="co">#&gt; 30       1.56        2.57        2.11         NA                     P012</span></span>
-<span><span class="co">#&gt; 31      -0.67        0.43       -1.09         NA                     P042</span></span>
-<span><span class="co">#&gt; 32       0.37        1.10        0.36         NA                     P039</span></span>
-<span><span class="co">#&gt; 33      -0.56        0.53       -0.81         NA                     P046</span></span>
-<span><span class="co">#&gt; 34       0.39        1.03        0.25         NA                     P043</span></span>
-<span><span class="co">#&gt; 35       0.30        1.06        0.30         NA                     P009</span></span>
-<span><span class="co">#&gt; 36      -1.03        0.31       -1.48         NA                     P017</span></span>
-<span><span class="co">#&gt; 37      -0.03        0.79       -0.19         NA                     P044</span></span>
-<span><span class="co">#&gt; 38      -0.68        0.42       -1.10         NA                     P007</span></span>
-<span><span class="co">#&gt; 39      -0.03        0.72       -0.35         NA                     P023</span></span>
-<span><span class="co">#&gt; 40      -0.34        0.58       -0.67         NA                     P047</span></span>
-<span><span class="co">#&gt; 41      -0.19        0.64       -0.53         NA                     P041</span></span>
-<span><span class="co">#&gt; 42       0.40        0.91        0.04         NA                     P014</span></span>
-<span><span class="co">#&gt; 43       1.94        3.31        2.74         NA                     P016</span></span>
-<span><span class="co">#&gt; 44       0.07        0.68       -0.42         NA                     P037</span></span>
-<span><span class="co">#&gt; 45       0.17        0.88       -0.03         NA                     P040</span></span>
-<span><span class="co">#&gt; 46       0.11        0.73       -0.32         NA                     P029</span></span>
-<span><span class="co">#&gt; 47      -0.08        0.52       -0.81         NA                     P033</span></span>
-<span><span class="co">#&gt; 48         NA        1.23        0.56         NA                     P032</span></span>
-<span><span class="co">#&gt; 49       0.56        1.07        0.40       0.59                      R03</span></span>
-<span><span class="co">#&gt; 50       0.08        0.98        0.00       0.59                      R06</span></span>
-<span><span class="co">#&gt; 51       0.42        1.12        0.63       0.59                      R04</span></span>
-<span><span class="co">#&gt; 52      -0.60        0.76       -1.14       0.59                      R05</span></span>
-<span><span class="co">#&gt; 53       0.53        1.24        1.22       0.59                      R02</span></span>
-<span><span class="co">#&gt; 54      -0.46        0.83       -0.82       0.59                      R01</span></span>
-<span><span class="co">#&gt; 55       1.00        1.21        1.41       0.63             Organization</span></span>
-<span><span class="co">#&gt; 56      -0.17        0.93       -0.45       0.63                 Language</span></span>
-<span><span class="co">#&gt; 57      -0.57        0.89       -0.71       0.63                  Content</span></span>
-<span><span class="co">#&gt;    ObservedAverage AdjustedAverage StandardizedAdjustedAverage ModelBasedSE</span></span>
-<span><span class="co">#&gt; 1             3.67            3.69                        3.69         0.76</span></span>
-<span><span class="co">#&gt; 2             3.67            3.66                        3.66         0.77</span></span>
-<span><span class="co">#&gt; 3             3.33            3.44                        3.44         0.59</span></span>
-<span><span class="co">#&gt; 4             3.33            3.41                        3.41         0.58</span></span>
-<span><span class="co">#&gt; 5             3.17            3.34                        3.34         0.55</span></span>
-<span><span class="co">#&gt; 6             3.17            3.19                        3.19         0.55</span></span>
-<span><span class="co">#&gt; 7             3.00            3.19                        3.19         0.53</span></span>
-<span><span class="co">#&gt; 8             3.40            3.11                        3.11         0.66</span></span>
-<span><span class="co">#&gt; 9             3.33            3.07                        3.07         0.58</span></span>
-<span><span class="co">#&gt; 10            3.00            3.02                        3.02         0.53</span></span>
-<span><span class="co">#&gt; 11            2.83            2.92                        2.92         0.51</span></span>
-<span><span class="co">#&gt; 12            2.67            2.86                        2.86         0.51</span></span>
-<span><span class="co">#&gt; 13            3.00            2.76                        2.76         0.57</span></span>
-<span><span class="co">#&gt; 14            2.67            2.75                        2.75         0.51</span></span>
-<span><span class="co">#&gt; 15            2.67            2.75                        2.75         0.51</span></span>
-<span><span class="co">#&gt; 16            3.00            2.69                        2.69         0.53</span></span>
-<span><span class="co">#&gt; 17            2.40            2.66                        2.66         0.56</span></span>
-<span><span class="co">#&gt; 18            2.50            2.62                        2.62         0.51</span></span>
-<span><span class="co">#&gt; 19            2.67            2.58                        2.58         0.52</span></span>
-<span><span class="co">#&gt; 20            2.33            2.52                        2.52         0.52</span></span>
-<span><span class="co">#&gt; 21            2.83            2.51                        2.51         0.51</span></span>
-<span><span class="co">#&gt; 22            2.17            2.35                        2.35         0.53</span></span>
-<span><span class="co">#&gt; 23            2.17            2.35                        2.35         0.53</span></span>
-<span><span class="co">#&gt; 24            2.67            2.35                        2.35         0.51</span></span>
-<span><span class="co">#&gt; 25            2.67            2.35                        2.35         0.51</span></span>
-<span><span class="co">#&gt; 26            2.40            2.33                        2.33         0.57</span></span>
-<span><span class="co">#&gt; 27            2.20            2.26                        2.26         0.58</span></span>
-<span><span class="co">#&gt; 28            2.50            2.18                        2.18         0.51</span></span>
-<span><span class="co">#&gt; 29            2.17            2.16                        2.16         0.54</span></span>
-<span><span class="co">#&gt; 30            2.17            2.16                        2.16         0.54</span></span>
-<span><span class="co">#&gt; 31            2.00            2.10                        2.10         0.55</span></span>
-<span><span class="co">#&gt; 32            2.00            2.07                        2.07         0.60</span></span>
-<span><span class="co">#&gt; 33            2.17            2.06                        2.06         0.54</span></span>
-<span><span class="co">#&gt; 34            2.17            2.06                        2.06         0.54</span></span>
-<span><span class="co">#&gt; 35            2.33            2.03                        2.03         0.52</span></span>
-<span><span class="co">#&gt; 36            2.00            1.99                        1.99         0.55</span></span>
-<span><span class="co">#&gt; 37            2.00            1.90                        1.90         0.56</span></span>
-<span><span class="co">#&gt; 38            2.00            1.74                        1.74         0.55</span></span>
-<span><span class="co">#&gt; 39            1.50            1.61                        1.61         0.68</span></span>
-<span><span class="co">#&gt; 40            1.67            1.58                        1.58         0.62</span></span>
-<span><span class="co">#&gt; 41            1.50            1.56                        1.56         0.68</span></span>
-<span><span class="co">#&gt; 42            1.50            1.48                        1.48         0.68</span></span>
-<span><span class="co">#&gt; 43            1.50            1.48                        1.48         0.68</span></span>
-<span><span class="co">#&gt; 44            1.33            1.38                        1.38         0.79</span></span>
-<span><span class="co">#&gt; 45            1.33            1.38                        1.38         0.79</span></span>
-<span><span class="co">#&gt; 46            1.33            1.36                        1.36         0.79</span></span>
-<span><span class="co">#&gt; 47            1.33            1.36                        1.36         0.79</span></span>
-<span><span class="co">#&gt; 48            1.17            1.18                        1.18         1.06</span></span>
-<span><span class="co">#&gt; 49            2.30            2.09                        2.23         0.20</span></span>
-<span><span class="co">#&gt; 50            2.03            2.10                        2.24         0.24</span></span>
-<span><span class="co">#&gt; 51            2.30            2.17                        2.31         0.20</span></span>
-<span><span class="co">#&gt; 52            2.16            2.29                        2.44         0.22</span></span>
-<span><span class="co">#&gt; 53            2.62            2.54                        2.70         0.18</span></span>
-<span><span class="co">#&gt; 54            2.77            2.73                        2.88         0.19</span></span>
-<span><span class="co">#&gt; 55            2.24            2.16                        2.30         0.14</span></span>
-<span><span class="co">#&gt; 56            2.32            2.23                        2.37         0.14</span></span>
-<span><span class="co">#&gt; 57            2.59            2.57                        2.73         0.14</span></span>
-<span><span class="co">#&gt;    FitAdjustedSE</span></span>
-<span><span class="co">#&gt; 1           0.76</span></span>
-<span><span class="co">#&gt; 2           0.94</span></span>
-<span><span class="co">#&gt; 3           0.65</span></span>
-<span><span class="co">#&gt; 4           0.58</span></span>
-<span><span class="co">#&gt; 5           0.60</span></span>
-<span><span class="co">#&gt; 6           0.71</span></span>
-<span><span class="co">#&gt; 7           0.85</span></span>
-<span><span class="co">#&gt; 8           0.66</span></span>
-<span><span class="co">#&gt; 9           0.70</span></span>
-<span><span class="co">#&gt; 10          0.53</span></span>
-<span><span class="co">#&gt; 11          0.51</span></span>
-<span><span class="co">#&gt; 12          0.67</span></span>
-<span><span class="co">#&gt; 13          0.59</span></span>
-<span><span class="co">#&gt; 14          0.51</span></span>
-<span><span class="co">#&gt; 15          0.51</span></span>
-<span><span class="co">#&gt; 16          0.56</span></span>
-<span><span class="co">#&gt; 17          0.78</span></span>
-<span><span class="co">#&gt; 18          0.52</span></span>
-<span><span class="co">#&gt; 19          0.72</span></span>
-<span><span class="co">#&gt; 20          0.52</span></span>
-<span><span class="co">#&gt; 21          0.62</span></span>
-<span><span class="co">#&gt; 22          0.53</span></span>
-<span><span class="co">#&gt; 23          0.53</span></span>
-<span><span class="co">#&gt; 24          0.51</span></span>
-<span><span class="co">#&gt; 25          0.51</span></span>
-<span><span class="co">#&gt; 26          0.57</span></span>
-<span><span class="co">#&gt; 27          0.60</span></span>
-<span><span class="co">#&gt; 28          0.51</span></span>
-<span><span class="co">#&gt; 29          0.66</span></span>
-<span><span class="co">#&gt; 30          0.82</span></span>
-<span><span class="co">#&gt; 31          0.55</span></span>
-<span><span class="co">#&gt; 32          0.63</span></span>
-<span><span class="co">#&gt; 33          0.54</span></span>
-<span><span class="co">#&gt; 34          0.57</span></span>
-<span><span class="co">#&gt; 35          0.53</span></span>
-<span><span class="co">#&gt; 36          0.55</span></span>
-<span><span class="co">#&gt; 37          0.56</span></span>
-<span><span class="co">#&gt; 38          0.55</span></span>
-<span><span class="co">#&gt; 39          0.68</span></span>
-<span><span class="co">#&gt; 40          0.62</span></span>
-<span><span class="co">#&gt; 41          0.68</span></span>
-<span><span class="co">#&gt; 42          0.71</span></span>
-<span><span class="co">#&gt; 43          1.28</span></span>
-<span><span class="co">#&gt; 44          0.79</span></span>
-<span><span class="co">#&gt; 45          0.79</span></span>
-<span><span class="co">#&gt; 46          0.79</span></span>
-<span><span class="co">#&gt; 47          0.79</span></span>
-<span><span class="co">#&gt; 48          1.08</span></span>
-<span><span class="co">#&gt; 49          0.21</span></span>
-<span><span class="co">#&gt; 50          0.24</span></span>
-<span><span class="co">#&gt; 51          0.21</span></span>
-<span><span class="co">#&gt; 52          0.22</span></span>
-<span><span class="co">#&gt; 53          0.19</span></span>
-<span><span class="co">#&gt; 54          0.19</span></span>
-<span><span class="co">#&gt; 55          0.16</span></span>
-<span><span class="co">#&gt; 56          0.14</span></span>
-<span><span class="co">#&gt; 57          0.14</span></span>
+<span><span class="co">#&gt;    Fair(M) Average Fair(Z) Average</span></span>
+<span><span class="co">#&gt; 1             3.69            3.69</span></span>
+<span><span class="co">#&gt; 2             3.66            3.66</span></span>
+<span><span class="co">#&gt; 3             3.44            3.44</span></span>
+<span><span class="co">#&gt; 4             3.41            3.41</span></span>
+<span><span class="co">#&gt; 5             3.34            3.34</span></span>
+<span><span class="co">#&gt; 6             3.19            3.19</span></span>
+<span><span class="co">#&gt; 7             3.19            3.19</span></span>
+<span><span class="co">#&gt; 8             3.11            3.11</span></span>
+<span><span class="co">#&gt; 9             3.07            3.07</span></span>
+<span><span class="co">#&gt; 10            3.02            3.02</span></span>
+<span><span class="co">#&gt; 11            2.92            2.92</span></span>
+<span><span class="co">#&gt; 12            2.86            2.86</span></span>
+<span><span class="co">#&gt; 13            2.76            2.76</span></span>
+<span><span class="co">#&gt; 14            2.75            2.75</span></span>
+<span><span class="co">#&gt; 15            2.75            2.75</span></span>
+<span><span class="co">#&gt; 16            2.69            2.69</span></span>
+<span><span class="co">#&gt; 17            2.66            2.66</span></span>
+<span><span class="co">#&gt; 18            2.62            2.62</span></span>
+<span><span class="co">#&gt; 19            2.58            2.58</span></span>
+<span><span class="co">#&gt; 20            2.52            2.52</span></span>
+<span><span class="co">#&gt; 21            2.51            2.51</span></span>
+<span><span class="co">#&gt; 22            2.35            2.35</span></span>
+<span><span class="co">#&gt; 23            2.35            2.35</span></span>
+<span><span class="co">#&gt; 24            2.35            2.35</span></span>
+<span><span class="co">#&gt; 25            2.35            2.35</span></span>
+<span><span class="co">#&gt; 26            2.33            2.33</span></span>
+<span><span class="co">#&gt; 27            2.26            2.26</span></span>
+<span><span class="co">#&gt; 28            2.18            2.18</span></span>
+<span><span class="co">#&gt; 29            2.16            2.16</span></span>
+<span><span class="co">#&gt; 30            2.16            2.16</span></span>
+<span><span class="co">#&gt; 31            2.10            2.10</span></span>
+<span><span class="co">#&gt; 32            2.07            2.07</span></span>
+<span><span class="co">#&gt; 33            2.06            2.06</span></span>
+<span><span class="co">#&gt; 34            2.06            2.06</span></span>
+<span><span class="co">#&gt; 35            2.03            2.03</span></span>
+<span><span class="co">#&gt; 36            1.99            1.99</span></span>
+<span><span class="co">#&gt; 37            1.90            1.90</span></span>
+<span><span class="co">#&gt; 38            1.74            1.74</span></span>
+<span><span class="co">#&gt; 39            1.61            1.61</span></span>
+<span><span class="co">#&gt; 40            1.58            1.58</span></span>
+<span><span class="co">#&gt; 41            1.56            1.56</span></span>
+<span><span class="co">#&gt; 42            1.48            1.48</span></span>
+<span><span class="co">#&gt; 43            1.48            1.48</span></span>
+<span><span class="co">#&gt; 44            1.38            1.38</span></span>
+<span><span class="co">#&gt; 45            1.38            1.38</span></span>
+<span><span class="co">#&gt; 46            1.36            1.36</span></span>
+<span><span class="co">#&gt; 47            1.36            1.36</span></span>
+<span><span class="co">#&gt; 48            1.18            1.18</span></span>
+<span><span class="co">#&gt; 49            2.09            2.23</span></span>
+<span><span class="co">#&gt; 50            2.10            2.24</span></span>
+<span><span class="co">#&gt; 51            2.17            2.31</span></span>
+<span><span class="co">#&gt; 52            2.29            2.44</span></span>
+<span><span class="co">#&gt; 53            2.54            2.70</span></span>
+<span><span class="co">#&gt; 54            2.73            2.88</span></span>
+<span><span class="co">#&gt; 55            2.16            2.30</span></span>
+<span><span class="co">#&gt; 56            2.23            2.37</span></span>
+<span><span class="co">#&gt; 57            2.57            2.73</span></span>
+<span><span class="co">#&gt;                                    FairMReference Measure PrimaryMeasure</span></span>
+<span><span class="co">#&gt; 1                    Mean of other facet measures    2.37           2.37</span></span>
+<span><span class="co">#&gt; 2                    Mean of other facet measures    2.26           2.26</span></span>
+<span><span class="co">#&gt; 3                    Mean of other facet measures    1.65           1.65</span></span>
+<span><span class="co">#&gt; 4                    Mean of other facet measures    1.59           1.59</span></span>
+<span><span class="co">#&gt; 5                    Mean of other facet measures    1.44           1.44</span></span>
+<span><span class="co">#&gt; 6                    Mean of other facet measures    1.16           1.16</span></span>
+<span><span class="co">#&gt; 7                    Mean of other facet measures    1.15           1.15</span></span>
+<span><span class="co">#&gt; 8                    Mean of other facet measures    1.01           1.01</span></span>
+<span><span class="co">#&gt; 9                    Mean of other facet measures    0.95           0.95</span></span>
+<span><span class="co">#&gt; 10                   Mean of other facet measures    0.87           0.87</span></span>
+<span><span class="co">#&gt; 11                   Mean of other facet measures    0.71           0.71</span></span>
+<span><span class="co">#&gt; 12                   Mean of other facet measures    0.62           0.62</span></span>
+<span><span class="co">#&gt; 13                   Mean of other facet measures    0.45           0.45</span></span>
+<span><span class="co">#&gt; 14                   Mean of other facet measures    0.45           0.45</span></span>
+<span><span class="co">#&gt; 15                   Mean of other facet measures    0.45           0.45</span></span>
+<span><span class="co">#&gt; 16                   Mean of other facet measures    0.35           0.35</span></span>
+<span><span class="co">#&gt; 17                   Mean of other facet measures    0.30           0.30</span></span>
+<span><span class="co">#&gt; 18                   Mean of other facet measures    0.25           0.25</span></span>
+<span><span class="co">#&gt; 19                   Mean of other facet measures    0.17           0.17</span></span>
+<span><span class="co">#&gt; 20                   Mean of other facet measures    0.09           0.09</span></span>
+<span><span class="co">#&gt; 21                   Mean of other facet measures    0.08           0.08</span></span>
+<span><span class="co">#&gt; 22                   Mean of other facet measures   -0.18          -0.18</span></span>
+<span><span class="co">#&gt; 23                   Mean of other facet measures   -0.18          -0.18</span></span>
+<span><span class="co">#&gt; 24                   Mean of other facet measures   -0.19          -0.19</span></span>
+<span><span class="co">#&gt; 25                   Mean of other facet measures   -0.19          -0.19</span></span>
+<span><span class="co">#&gt; 26                   Mean of other facet measures   -0.21          -0.21</span></span>
+<span><span class="co">#&gt; 27                   Mean of other facet measures   -0.33          -0.33</span></span>
+<span><span class="co">#&gt; 28                   Mean of other facet measures   -0.45          -0.45</span></span>
+<span><span class="co">#&gt; 29                   Mean of other facet measures   -0.49          -0.49</span></span>
+<span><span class="co">#&gt; 30                   Mean of other facet measures   -0.49          -0.49</span></span>
+<span><span class="co">#&gt; 31                   Mean of other facet measures   -0.59          -0.59</span></span>
+<span><span class="co">#&gt; 32                   Mean of other facet measures   -0.65          -0.65</span></span>
+<span><span class="co">#&gt; 33                   Mean of other facet measures   -0.65          -0.65</span></span>
+<span><span class="co">#&gt; 34                   Mean of other facet measures   -0.65          -0.65</span></span>
+<span><span class="co">#&gt; 35                   Mean of other facet measures   -0.71          -0.71</span></span>
+<span><span class="co">#&gt; 36                   Mean of other facet measures   -0.79          -0.79</span></span>
+<span><span class="co">#&gt; 37                   Mean of other facet measures   -0.95          -0.95</span></span>
+<span><span class="co">#&gt; 38                   Mean of other facet measures   -1.28          -1.28</span></span>
+<span><span class="co">#&gt; 39                   Mean of other facet measures   -1.56          -1.56</span></span>
+<span><span class="co">#&gt; 40                   Mean of other facet measures   -1.64          -1.64</span></span>
+<span><span class="co">#&gt; 41                   Mean of other facet measures   -1.68          -1.68</span></span>
+<span><span class="co">#&gt; 42                   Mean of other facet measures   -1.89          -1.89</span></span>
+<span><span class="co">#&gt; 43                   Mean of other facet measures   -1.89          -1.89</span></span>
+<span><span class="co">#&gt; 44                   Mean of other facet measures   -2.21          -2.21</span></span>
+<span><span class="co">#&gt; 45                   Mean of other facet measures   -2.21          -2.21</span></span>
+<span><span class="co">#&gt; 46                   Mean of other facet measures   -2.26          -2.26</span></span>
+<span><span class="co">#&gt; 47                   Mean of other facet measures   -2.26          -2.26</span></span>
+<span><span class="co">#&gt; 48                   Mean of other facet measures   -3.08          -3.08</span></span>
+<span><span class="co">#&gt; 49 Mean of fitted Person and other facet measures    0.37           0.37</span></span>
+<span><span class="co">#&gt; 50 Mean of fitted Person and other facet measures    0.36           0.36</span></span>
+<span><span class="co">#&gt; 51 Mean of fitted Person and other facet measures    0.24           0.24</span></span>
+<span><span class="co">#&gt; 52 Mean of fitted Person and other facet measures    0.03           0.03</span></span>
+<span><span class="co">#&gt; 53 Mean of fitted Person and other facet measures   -0.36          -0.36</span></span>
+<span><span class="co">#&gt; 54 Mean of fitted Person and other facet measures   -0.64          -0.64</span></span>
+<span><span class="co">#&gt; 55 Mean of fitted Person and other facet measures    0.26           0.26</span></span>
+<span><span class="co">#&gt; 56 Mean of fitted Person and other facet measures    0.14           0.14</span></span>
+<span><span class="co">#&gt; 57 Mean of fitted Person and other facet measures   -0.40          -0.40</span></span>
+<span><span class="co">#&gt;       MeasureBasis ExtremeAdjustment Model S.E. Real S.E. Infit MnSq Infit ZStd</span></span>
+<span><span class="co">#&gt; 1  Fitted estimate                 0       0.76      0.76       0.44      -0.30</span></span>
+<span><span class="co">#&gt; 2  Fitted estimate                 0       0.77      0.94       1.51       0.77</span></span>
+<span><span class="co">#&gt; 3  Fitted estimate                 0       0.59      0.65       1.23       0.53</span></span>
+<span><span class="co">#&gt; 4  Fitted estimate                 0       0.58      0.58       1.00       0.27</span></span>
+<span><span class="co">#&gt; 5  Fitted estimate                 0       0.55      0.60       1.22       0.52</span></span>
+<span><span class="co">#&gt; 6  Fitted estimate                 0       0.55      0.71       1.66       0.97</span></span>
+<span><span class="co">#&gt; 7  Fitted estimate                 0       0.53      0.85       2.62       1.77</span></span>
+<span><span class="co">#&gt; 8  Fitted estimate                 0       0.66      0.66       0.56      -0.25</span></span>
+<span><span class="co">#&gt; 9  Fitted estimate                 0       0.58      0.70       1.44       0.74</span></span>
+<span><span class="co">#&gt; 10 Fitted estimate                 0       0.53      0.53       0.89       0.11</span></span>
+<span><span class="co">#&gt; 11 Fitted estimate                 0       0.51      0.51       0.72      -0.19</span></span>
+<span><span class="co">#&gt; 12 Fitted estimate                 0       0.51      0.67       1.72       1.07</span></span>
+<span><span class="co">#&gt; 13 Fitted estimate                 0       0.57      0.59       1.04       0.32</span></span>
+<span><span class="co">#&gt; 14 Fitted estimate                 0       0.51      0.51       0.34      -1.01</span></span>
+<span><span class="co">#&gt; 15 Fitted estimate                 0       0.51      0.51       0.69      -0.25</span></span>
+<span><span class="co">#&gt; 16 Fitted estimate                 0       0.53      0.56       1.13       0.41</span></span>
+<span><span class="co">#&gt; 17 Fitted estimate                 0       0.56      0.78       1.95       1.20</span></span>
+<span><span class="co">#&gt; 18 Fitted estimate                 0       0.51      0.52       1.01       0.26</span></span>
+<span><span class="co">#&gt; 19 Fitted estimate                 0       0.52      0.72       1.93       1.24</span></span>
+<span><span class="co">#&gt; 20 Fitted estimate                 0       0.52      0.52       0.14      -1.72</span></span>
+<span><span class="co">#&gt; 21 Fitted estimate                 0       0.51      0.62       1.44       0.77</span></span>
+<span><span class="co">#&gt; 22 Fitted estimate                 0       0.53      0.53       0.13      -1.74</span></span>
+<span><span class="co">#&gt; 23 Fitted estimate                 0       0.53      0.53       0.65      -0.29</span></span>
+<span><span class="co">#&gt; 24 Fitted estimate                 0       0.51      0.51       0.61      -0.39</span></span>
+<span><span class="co">#&gt; 25 Fitted estimate                 0       0.51      0.51       0.61      -0.39</span></span>
+<span><span class="co">#&gt; 26 Fitted estimate                 0       0.57      0.57       0.59      -0.34</span></span>
+<span><span class="co">#&gt; 27 Fitted estimate                 0       0.58      0.60       1.08       0.37</span></span>
+<span><span class="co">#&gt; 28 Fitted estimate                 0       0.51      0.51       0.29      -1.17</span></span>
+<span><span class="co">#&gt; 29 Fitted estimate                 0       0.54      0.66       1.54       0.86</span></span>
+<span><span class="co">#&gt; 30 Fitted estimate                 0       0.54      0.82       2.35       1.56</span></span>
+<span><span class="co">#&gt; 31 Fitted estimate                 0       0.55      0.55       0.43      -0.67</span></span>
+<span><span class="co">#&gt; 32 Fitted estimate                 0       0.60      0.63       1.07       0.37</span></span>
+<span><span class="co">#&gt; 33 Fitted estimate                 0       0.54      0.54       0.50      -0.56</span></span>
+<span><span class="co">#&gt; 34 Fitted estimate                 0       0.54      0.57       1.11       0.39</span></span>
+<span><span class="co">#&gt; 35 Fitted estimate                 0       0.52      0.53       1.04       0.30</span></span>
+<span><span class="co">#&gt; 36 Fitted estimate                 0       0.55      0.55       0.29      -1.03</span></span>
+<span><span class="co">#&gt; 37 Fitted estimate                 0       0.56      0.56       0.79      -0.03</span></span>
+<span><span class="co">#&gt; 38 Fitted estimate                 0       0.55      0.55       0.43      -0.68</span></span>
+<span><span class="co">#&gt; 39 Fitted estimate                 0       0.68      0.68       0.70      -0.03</span></span>
+<span><span class="co">#&gt; 40 Fitted estimate                 0       0.62      0.62       0.54      -0.34</span></span>
+<span><span class="co">#&gt; 41 Fitted estimate                 0       0.68      0.68       0.59      -0.19</span></span>
+<span><span class="co">#&gt; 42 Fitted estimate                 0       0.68      0.71       1.08       0.40</span></span>
+<span><span class="co">#&gt; 43 Fitted estimate                 0       0.68      1.28       3.53       1.94</span></span>
+<span><span class="co">#&gt; 44 Fitted estimate                 0       0.79      0.79       0.79       0.17</span></span>
+<span><span class="co">#&gt; 45 Fitted estimate                 0       0.79      0.79       0.70       0.07</span></span>
+<span><span class="co">#&gt; 46 Fitted estimate                 0       0.79      0.79       0.73       0.11</span></span>
+<span><span class="co">#&gt; 47 Fitted estimate                 0       0.79      0.79       0.57      -0.08</span></span>
+<span><span class="co">#&gt; 48 Fitted estimate                 0       1.06      1.08       1.03         NA</span></span>
+<span><span class="co">#&gt; 49 Fitted estimate                 0       0.20      0.21       1.13       0.56</span></span>
+<span><span class="co">#&gt; 50 Fitted estimate                 0       0.24      0.24       0.99       0.08</span></span>
+<span><span class="co">#&gt; 51 Fitted estimate                 0       0.20      0.21       1.10       0.42</span></span>
+<span><span class="co">#&gt; 52 Fitted estimate                 0       0.22      0.22       0.79      -0.60</span></span>
+<span><span class="co">#&gt; 53 Fitted estimate                 0       0.18      0.19       1.12       0.53</span></span>
+<span><span class="co">#&gt; 54 Fitted estimate                 0       0.19      0.19       0.86      -0.46</span></span>
+<span><span class="co">#&gt; 55 Fitted estimate                 0       0.14      0.16       1.20       1.00</span></span>
+<span><span class="co">#&gt; 56 Fitted estimate                 0       0.14      0.14       0.95      -0.17</span></span>
+<span><span class="co">#&gt; 57 Fitted estimate                 0       0.14      0.14       0.88      -0.57</span></span>
+<span><span class="co">#&gt;    Outfit MnSq Outfit ZStd PtMea Corr Anch Status      Element ObservedAverage</span></span>
+<span><span class="co">#&gt; 1         0.39       -1.22         NA                     P015            3.67</span></span>
+<span><span class="co">#&gt; 2         1.04        0.27         NA                     P045            3.67</span></span>
+<span><span class="co">#&gt; 3         1.31        0.68         NA                     P036            3.33</span></span>
+<span><span class="co">#&gt; 4         0.99        0.18         NA                     P030            3.33</span></span>
+<span><span class="co">#&gt; 5         1.31        0.68         NA                     P027            3.17</span></span>
+<span><span class="co">#&gt; 6         1.91        1.44         NA                     P013            3.17</span></span>
+<span><span class="co">#&gt; 7         2.59        2.13         NA                     P025            3.00</span></span>
+<span><span class="co">#&gt; 8         0.60       -0.54         NA                     P006            3.40</span></span>
+<span><span class="co">#&gt; 9         1.53        0.99         NA                     P002            3.33</span></span>
+<span><span class="co">#&gt; 10        0.85       -0.08         NA                     P019            3.00</span></span>
+<span><span class="co">#&gt; 11        0.69       -0.40         NA                     P034            2.83</span></span>
+<span><span class="co">#&gt; 12        1.75        1.26         NA                     P021            2.67</span></span>
+<span><span class="co">#&gt; 13        1.05        0.29         NA                     P001            3.00</span></span>
+<span><span class="co">#&gt; 14        0.34       -1.39         NA                     P035            2.67</span></span>
+<span><span class="co">#&gt; 15        0.68       -0.42         NA                     P031            2.67</span></span>
+<span><span class="co">#&gt; 16        1.09        0.35         NA                     P004            3.00</span></span>
+<span><span class="co">#&gt; 17        1.93        1.37         NA                     P024            2.40</span></span>
+<span><span class="co">#&gt; 18        1.01        0.20         NA                     P038            2.50</span></span>
+<span><span class="co">#&gt; 19        1.95        1.49         NA                     P048            2.67</span></span>
+<span><span class="co">#&gt; 20        0.14       -2.32         NA                     P022            2.33</span></span>
+<span><span class="co">#&gt; 21        1.44        0.86         NA                     P003            2.83</span></span>
+<span><span class="co">#&gt; 22        0.12       -2.46         NA                     P026            2.17</span></span>
+<span><span class="co">#&gt; 23        0.67       -0.46         NA                     P020            2.17</span></span>
+<span><span class="co">#&gt; 24        0.62       -0.57         NA                     P005            2.67</span></span>
+<span><span class="co">#&gt; 25        0.62       -0.57         NA                     P010            2.67</span></span>
+<span><span class="co">#&gt; 26        0.62       -0.49         NA                     P011            2.40</span></span>
+<span><span class="co">#&gt; 27        1.13        0.40         NA                     P028            2.20</span></span>
+<span><span class="co">#&gt; 28        0.29       -1.58         NA                     P008            2.50</span></span>
+<span><span class="co">#&gt; 29        1.49        0.93         NA                     P018            2.17</span></span>
+<span><span class="co">#&gt; 30        2.57        2.11         NA                     P012            2.17</span></span>
+<span><span class="co">#&gt; 31        0.43       -1.09         NA                     P042            2.00</span></span>
+<span><span class="co">#&gt; 32        1.10        0.36         NA                     P039            2.00</span></span>
+<span><span class="co">#&gt; 33        0.53       -0.81         NA                     P046            2.17</span></span>
+<span><span class="co">#&gt; 34        1.03        0.25         NA                     P043            2.17</span></span>
+<span><span class="co">#&gt; 35        1.06        0.30         NA                     P009            2.33</span></span>
+<span><span class="co">#&gt; 36        0.31       -1.48         NA                     P017            2.00</span></span>
+<span><span class="co">#&gt; 37        0.79       -0.19         NA                     P044            2.00</span></span>
+<span><span class="co">#&gt; 38        0.42       -1.10         NA                     P007            2.00</span></span>
+<span><span class="co">#&gt; 39        0.72       -0.35         NA                     P023            1.50</span></span>
+<span><span class="co">#&gt; 40        0.58       -0.67         NA                     P047            1.67</span></span>
+<span><span class="co">#&gt; 41        0.64       -0.53         NA                     P041            1.50</span></span>
+<span><span class="co">#&gt; 42        0.91        0.04         NA                     P014            1.50</span></span>
+<span><span class="co">#&gt; 43        3.31        2.74         NA                     P016            1.50</span></span>
+<span><span class="co">#&gt; 44        0.88       -0.03         NA                     P040            1.33</span></span>
+<span><span class="co">#&gt; 45        0.68       -0.42         NA                     P037            1.33</span></span>
+<span><span class="co">#&gt; 46        0.73       -0.32         NA                     P029            1.33</span></span>
+<span><span class="co">#&gt; 47        0.52       -0.81         NA                     P033            1.33</span></span>
+<span><span class="co">#&gt; 48        1.23        0.56         NA                     P032            1.17</span></span>
+<span><span class="co">#&gt; 49        1.07        0.40       0.59                      R03            2.30</span></span>
+<span><span class="co">#&gt; 50        0.98        0.00       0.59                      R06            2.03</span></span>
+<span><span class="co">#&gt; 51        1.12        0.63       0.59                      R04            2.30</span></span>
+<span><span class="co">#&gt; 52        0.76       -1.14       0.59                      R05            2.16</span></span>
+<span><span class="co">#&gt; 53        1.24        1.22       0.59                      R02            2.62</span></span>
+<span><span class="co">#&gt; 54        0.83       -0.82       0.59                      R01            2.77</span></span>
+<span><span class="co">#&gt; 55        1.21        1.41       0.63             Organization            2.24</span></span>
+<span><span class="co">#&gt; 56        0.93       -0.45       0.63                 Language            2.32</span></span>
+<span><span class="co">#&gt; 57        0.89       -0.71       0.63                  Content            2.59</span></span>
+<span><span class="co">#&gt;    AdjustedAverage StandardizedAdjustedAverage ModelBasedSE FitAdjustedSE</span></span>
+<span><span class="co">#&gt; 1             3.69                        3.69         0.76          0.76</span></span>
+<span><span class="co">#&gt; 2             3.66                        3.66         0.77          0.94</span></span>
+<span><span class="co">#&gt; 3             3.44                        3.44         0.59          0.65</span></span>
+<span><span class="co">#&gt; 4             3.41                        3.41         0.58          0.58</span></span>
+<span><span class="co">#&gt; 5             3.34                        3.34         0.55          0.60</span></span>
+<span><span class="co">#&gt; 6             3.19                        3.19         0.55          0.71</span></span>
+<span><span class="co">#&gt; 7             3.19                        3.19         0.53          0.85</span></span>
+<span><span class="co">#&gt; 8             3.11                        3.11         0.66          0.66</span></span>
+<span><span class="co">#&gt; 9             3.07                        3.07         0.58          0.70</span></span>
+<span><span class="co">#&gt; 10            3.02                        3.02         0.53          0.53</span></span>
+<span><span class="co">#&gt; 11            2.92                        2.92         0.51          0.51</span></span>
+<span><span class="co">#&gt; 12            2.86                        2.86         0.51          0.67</span></span>
+<span><span class="co">#&gt; 13            2.76                        2.76         0.57          0.59</span></span>
+<span><span class="co">#&gt; 14            2.75                        2.75         0.51          0.51</span></span>
+<span><span class="co">#&gt; 15            2.75                        2.75         0.51          0.51</span></span>
+<span><span class="co">#&gt; 16            2.69                        2.69         0.53          0.56</span></span>
+<span><span class="co">#&gt; 17            2.66                        2.66         0.56          0.78</span></span>
+<span><span class="co">#&gt; 18            2.62                        2.62         0.51          0.52</span></span>
+<span><span class="co">#&gt; 19            2.58                        2.58         0.52          0.72</span></span>
+<span><span class="co">#&gt; 20            2.52                        2.52         0.52          0.52</span></span>
+<span><span class="co">#&gt; 21            2.51                        2.51         0.51          0.62</span></span>
+<span><span class="co">#&gt; 22            2.35                        2.35         0.53          0.53</span></span>
+<span><span class="co">#&gt; 23            2.35                        2.35         0.53          0.53</span></span>
+<span><span class="co">#&gt; 24            2.35                        2.35         0.51          0.51</span></span>
+<span><span class="co">#&gt; 25            2.35                        2.35         0.51          0.51</span></span>
+<span><span class="co">#&gt; 26            2.33                        2.33         0.57          0.57</span></span>
+<span><span class="co">#&gt; 27            2.26                        2.26         0.58          0.60</span></span>
+<span><span class="co">#&gt; 28            2.18                        2.18         0.51          0.51</span></span>
+<span><span class="co">#&gt; 29            2.16                        2.16         0.54          0.66</span></span>
+<span><span class="co">#&gt; 30            2.16                        2.16         0.54          0.82</span></span>
+<span><span class="co">#&gt; 31            2.10                        2.10         0.55          0.55</span></span>
+<span><span class="co">#&gt; 32            2.07                        2.07         0.60          0.63</span></span>
+<span><span class="co">#&gt; 33            2.06                        2.06         0.54          0.54</span></span>
+<span><span class="co">#&gt; 34            2.06                        2.06         0.54          0.57</span></span>
+<span><span class="co">#&gt; 35            2.03                        2.03         0.52          0.53</span></span>
+<span><span class="co">#&gt; 36            1.99                        1.99         0.55          0.55</span></span>
+<span><span class="co">#&gt; 37            1.90                        1.90         0.56          0.56</span></span>
+<span><span class="co">#&gt; 38            1.74                        1.74         0.55          0.55</span></span>
+<span><span class="co">#&gt; 39            1.61                        1.61         0.68          0.68</span></span>
+<span><span class="co">#&gt; 40            1.58                        1.58         0.62          0.62</span></span>
+<span><span class="co">#&gt; 41            1.56                        1.56         0.68          0.68</span></span>
+<span><span class="co">#&gt; 42            1.48                        1.48         0.68          0.71</span></span>
+<span><span class="co">#&gt; 43            1.48                        1.48         0.68          1.28</span></span>
+<span><span class="co">#&gt; 44            1.38                        1.38         0.79          0.79</span></span>
+<span><span class="co">#&gt; 45            1.38                        1.38         0.79          0.79</span></span>
+<span><span class="co">#&gt; 46            1.36                        1.36         0.79          0.79</span></span>
+<span><span class="co">#&gt; 47            1.36                        1.36         0.79          0.79</span></span>
+<span><span class="co">#&gt; 48            1.18                        1.18         1.06          1.08</span></span>
+<span><span class="co">#&gt; 49            2.09                        2.23         0.20          0.21</span></span>
+<span><span class="co">#&gt; 50            2.10                        2.24         0.24          0.24</span></span>
+<span><span class="co">#&gt; 51            2.17                        2.31         0.20          0.21</span></span>
+<span><span class="co">#&gt; 52            2.29                        2.44         0.22          0.22</span></span>
+<span><span class="co">#&gt; 53            2.54                        2.70         0.18          0.19</span></span>
+<span><span class="co">#&gt; 54            2.73                        2.88         0.19          0.19</span></span>
+<span><span class="co">#&gt; 55            2.16                        2.30         0.14          0.16</span></span>
+<span><span class="co">#&gt; 56            2.23                        2.37         0.14          0.14</span></span>
+<span><span class="co">#&gt; 57            2.57                        2.73         0.14          0.14</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $settings</span></span>
 <span><span class="co">#&gt; $settings$facets</span></span>
@@ -928,6 +1054,21 @@ table:</p>
 <span><span class="co">#&gt; $settings$ci_level</span></span>
 <span><span class="co">#&gt; [1] 0.95</span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $settings$rating_min</span></span>
+<span><span class="co">#&gt; [1] 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $settings$rating_max</span></span>
+<span><span class="co">#&gt; [1] 4</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $settings$score_map</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 2</span></span></span>
+<span><span class="co">#&gt;   OriginalScore InternalScore</span></span>
+<span><span class="co">#&gt;           <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>             1             1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>             2             2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>             3             3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>             4             4</span></span>
+<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $settings$model</span></span>
 <span><span class="co">#&gt; [1] "RSM"</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -935,14 +1076,14 @@ table:</p>
 <span><span class="co">#&gt; [1] "PCM/RSM"</span></span></code></pre></div>
 <p><code>method = "JML"</code> is shown here for a JMLE-oriented
 migration comparison. Do not infer readiness from <code>Converged</code>
-alone: require <code>InferenceReady = TRUE</code> for the numerical gate
-and review the terminal-gradient guidance when severity is
-<code>"review"</code> or <code>"fail"</code>. Numerical readiness does
-not override a Data, Design, or Stability hold; use the readiness table
-before interpreting or reporting the fit. For new analysis scripts,
-prefer <code>fit_mfrm(method = "MML")</code> directly. MML integrates
-over the person distribution under an N(0, 1) prior and exposes
-per-person posterior SEs that JML cannot produce.</p>
+alone: require <code>InferenceReady = TRUE</code> for the
+numerical-readiness criteria and review the terminal-gradient guidance
+when severity is <code>"review"</code> or <code>"fail"</code>. Numerical
+readiness does not override a Data, Design, or Stability hold; use the
+readiness table before interpreting or reporting the fit. For new
+analysis scripts, prefer <code>fit_mfrm(method = "MML")</code> directly.
+MML integrates over the person distribution under an N(0, 1) prior and
+exposes per-person posterior SEs that JML cannot produce.</p>
 </div>
 <div class="section level2">
 <h2 id="translating-the-specification-file">Translating the specification file<a class="anchor" aria-label="anchor" href="#translating-the-specification-file"></a>
@@ -1004,9 +1145,12 @@ A = 1, 0.0
 <span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">...</span>, anchors <span class="op">=</span> <span class="va">anchors</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="../reference/review_mfrm_anchors.html">review_mfrm_anchors()</a></code> validates and reports on the
-anchor block before the fit runs, surfacing connectivity, overlap, and
-minimum-sample issues.</p>
+<p><code><a href="../reference/review_mfrm_anchors.html">review_mfrm_anchors()</a></code> normalizes and reports on the
+constraint block before the fit runs, surfacing duplicate/direct-group
+overlap and local support-count issues. It does not evaluate assignment
+connectedness, source-fit readiness, or cross-run element invariance;
+use the design-network route and substantive identity evidence
+separately.</p>
 </div>
 <div class="section level3">
 <h3 id="bias-and-interaction">Bias and interaction<a class="anchor" aria-label="anchor" href="#bias-and-interaction"></a>
@@ -1110,6 +1254,10 @@ and the <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code> f
 <span><span class="va">fit_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">...</span>, group_anchors <span class="op">=</span> <span class="va">group_anchors</span><span class="op">)</span></span>
 <span><span class="va">dff</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_dff.html">analyze_dff</a></span><span class="op">(</span><span class="va">fit_g</span>, <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
 <span>                   group <span class="op">=</span> <span class="st">"FirstLanguage"</span>, method <span class="op">=</span> <span class="st">"refit"</span><span class="op">)</span></span></code></pre></div>
+<p>A group-anchor target is an external mean constraint, not an
+empirical link. Its use requires a defensible equal-mean or known-target
+assumption for the declared elements and does not connect otherwise
+unobserved rating subsets.</p>
 </div>
 </div>
 <div class="section level2">

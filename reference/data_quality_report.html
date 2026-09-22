@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a data quality summary report (preferred alias)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>data_quality_report.Rd</code></div>
     </div>
 
@@ -146,6 +148,26 @@ recoded.</p></li>
 <li><p><code>unknown_elements</code>: facet levels in raw data but not in fitted design.</p></li>
 </ul></div>
     <div class="section level2">
+    <h2 id="local-category-avoidance-is-not-automatically-a-gpcm-problem">Local category avoidance is not automatically a GPCM problem<a class="anchor" aria-label="anchor" href="#local-category-avoidance-is-not-automatically-a-gpcm-problem"></a></h2>
+
+
+<p>Suppose a declared 1–10 scale is observed globally, but one rater uses only
+scores 3–8. If other raters use 1, 2, 9, and 10, the shared score support is
+not globally missing. The affected rater instead has local zero-category use:
+inspect <code>category_usage_by_facet</code>, <code>category_usage_summary</code>, and
+<code>plot(out, type = "facet_category_usage")</code>. This pattern can reflect range
+restriction, assignment/case mix, sparse information, or operational scoring
+practice; the table alone does not identify the cause.</p>
+<p>Do not select <code>GPCM</code> merely to absorb category avoidance. <code>GPCM</code> changes the
+designated step/slope owner's threshold and discrimination structure; it does
+not repair a rater's restricted use of the rubric. When the affected rater is
+itself the <code>step_facet</code>/<code>slope_facet</code> owner, local category gaps can also
+weaken owner-specific PCM/GPCM parameter support and the fit-readiness result
+must be checked. Under RSM, or when another facet owns the steps, the same
+local pattern remains important response-use evidence without automatically
+becoming a distinct response model.</p>
+    </div>
+    <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
 
 
@@ -164,26 +186,31 @@ final estimation/reporting.</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Load the package and example ratings</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit the model</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">data_quality_report</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">fit</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>, person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
-<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, score <span class="op">=</span> <span class="st">"Score"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Review the input-data checks recorded with this fit</span></span></span>
+<span class="r-in"><span><span class="va">quality</span> <span class="op">&lt;-</span> <span class="fu">data_quality_report</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">quality</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Data Quality Summary </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_data_quality</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 14</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data quality overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  TotalLinesInData TotalDataLines TotalNonBlankResponsesFound MissingScoreRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               282            282                         282                0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MissingFacetRows MissingPersonRows InvalidWeightRows OutOfRangeScoreRows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 0                 0                 0                   0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  TotalLinesInData TotalDataLines TotalNonBlankResponsesFound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                NA             NA                          NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ValidResponsesUsedForEstimation ZeroCountScoreCategories</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              282                        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  IntermediateZeroCountScoreCategories FacetLevelsWithZeroCategories</span>
@@ -215,9 +242,11 @@ final estimation/reporting.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Priority QC flags: 1 flag(s), including 0 high-severity flag(s).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Facet-level category use: 0 level(s) have zero-count categories; 0 have</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    zero-count intermediate categories; 6 have sparse non-zero categories.</span>
-<span class="r-in"><span><span class="va">p_dq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p_dq</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "dashboard"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Draw the data-quality overview</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">quality</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="data_quality_report-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

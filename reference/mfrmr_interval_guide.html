@@ -15,7 +15,7 @@ interval should be interpreted."><meta property="og:image" content="https://ryuy
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,10 +26,12 @@ interval should be interpreted."><meta property="og:image" content="https://ryuy
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -46,7 +48,7 @@ interval should be interpreted."><meta property="og:image" content="https://ryuy
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Confidence-interval and uncertainty route guide</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
       <div class="d-none name"><code>mfrmr_interval_guide.Rd</code></div>
     </div>
 
@@ -121,10 +123,10 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  Unified Wright map uncertainty overlay                visual,fit,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                  Rater severity profile                visual,fit,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6           Manuscript Figure 1 composite                visual,fit,reporting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Fair-average structural interval         table,visual,gpcm,reporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Fair-average diagnostic interval         table,visual,gpcm,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8       Bias-interaction interval overlay          visual,bias,gpcm,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9           Displacement interval overlay            visual,linking,reporting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10             DFF / DIF contrast summary          visual,bias,gpcm,reporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                 Group contrast summary          visual,bias,gpcm,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11          Facet-equivalence ROPE review  table,visual,equivalence,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12               Anchor drift forest plot       visual,linking,gpcm,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                  Rater trajectory plot       visual,linking,gpcm,reporting</span>
@@ -137,10 +139,10 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                    plot_wright_unified(fit, show_ci = TRUE, ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                            plot_rater_severity_profile(fit, ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                    plot_apa_figure_one(fit, ci_level = 0.95)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                          fair_average_table(fair_se = TRUE, ci_level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7       plot_fair_average(fit, show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                  plot_bias_interaction(..., show_ci = TRUE, ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                      plot_displacement(..., show_ci = TRUE, ci_level = 0.95)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                      plot_dif_summary(..., ci_level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                       plot_dif_summary(...)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                        analyze_facet_equivalence(ci_level = 0.95); plot_facet_equivalence()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                 plot_rater_trajectory(..., ci_level = 0.95)</span>
@@ -153,11 +155,11 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                              Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                      Use draw = FALSE to reuse the ranked severity table and band labels.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                Use draw = FALSE to reuse wright, severity, threshold, and summary panels.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                          Use plot_fair_average(..., show_ci = TRUE, draw = FALSE) for CI-ready plot data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7               Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                      Use ranked or scatter views; heatmap and profile views intentionally omit intervals.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                     Use plot_type = "lollipop" with draw = FALSE for interval-ready data.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                     Use draw = FALSE when rebuilding the summary figure.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                         Use forest/ROPE review output for equivalence-focused reporting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11             Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12                                         Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                                     Use linked-wave fit lists only; the helper does not perform linking.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14 Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.</span>
@@ -178,70 +180,70 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 15         0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                  IntervalColumns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                   CI_Lower, CI_Upper, CI_Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                   CI_Lower, CI_Upper, CI_Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                      CI_Lower, CI_Upper, CI_Level in locations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                      CI_Lower, CI_Upper, CI_Level in locations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                  Level, Estimate, SE, CI_Lower, CI_Upper, Band</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                           severity panel includes CI_Lower, CI_Upper, ci_level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  AdjustedAverageCI_Lower, AdjustedAverageCI_Upper, AdjustedAverageCI_Level; plot data also uses CI_Lower / CI_Upper / CI_Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                  CI_Lower, CI_Upper, CI_Level on ranked_table and scatter_data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                   CI_Lower, CI_Upper, CI_Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                  CI_Lower, CI_Upper, CI_Level when contrast SEs are available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                           CI_Lower, CI_Upper, CI_Level plus equivalence / ROPE status columns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                  CI_Lower, CI_Upper, CI_Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                  CI_Lower, CI_Upper, CI_Level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                        RawCI_Lower, RawCI_Upper, ShrunkCI_Lower, ShrunkCI_Upper, CI_Level when show_ci = TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                       ICC_CI_Lower, ICC_CI_Upper, ICC_CI_Level, ICC_CI_Method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                    Basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                       Approximate Wald interval on facet measure: estimate +/- z * SE.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                      Approximate Wald interval on facet measure recomputed for the requested ci_level.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                          Approximate facet-level SE overlay on the shared logit scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                          Approximate facet-level SE overlay on the shared logit scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                Approximate Wald interval around centered facet severity using ModelSE.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                             Composite overview; interval evidence comes from the rater severity panel.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  Structural delta-method fair-average interval when the MML covariance route is available; otherwise interval status remains explicit.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                   Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                    Approximate Wald interval around displacement using DisplacementSE.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                              Approximate contrast interval from the DFF / DIF contrast table when SE evidence exists.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                  Model-based interval compared with the requested equivalence bounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                    Approximate drift interval using supplied anchor-drift SE columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                  Approximate per-rater severity interval across already linked waves.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                           Approximate Wald-style whiskers around original and shrunken estimates using SE / ShrunkSE.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                     Profile or fallback interval for ICC, depending on optional backend availability.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                UseFor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                  Report facet estimates with uncertainty in tables.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  Show which facet levels have wide measure uncertainty before discussing fit flags.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                  Show targeting and location uncertainty on a compact variable map.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                              Show targeting and uncertainty across persons, facets, and thresholds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                   Give rater-training feedback with uncertainty and gentle / strict severity bands.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                          Build a manuscript Figure 1 overview while preserving reusable panel data.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    Report slope-aware fair-average uncertainty separately from historical measure-level SE columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8              Screen interaction-bias cells while showing uncertainty around the bias-size estimate.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9            Review anchor or calibration tension without treating displacement as a binary decision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10               Display group-by-facet contrast uncertainty before writing DFF / DIF interpretation.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 Decide whether an interval lies within, overlaps, or falls outside the practical equivalence band.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                             Review whether common elements drift materially across forms or waves.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                Inspect rater movement across anchored waves or training occasions.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                         Show how much partial pooling moved noisy facet estimates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15           Report clustering / nesting uncertainty without treating ICC alone as a design decision.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                     InterpretationBoundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                CI width is precision evidence, not a fit pass/fail rule.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                        Fit status still comes from MnSq/ZSTD review; the CI plot is a precision display.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                             Use for targeting and uncertainty context; it is not global model-fit proof.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                             Use for targeting and uncertainty context; it is not global model-fit proof.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                    Severity bands are calibration feedback, not automatic operational removal decisions.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       Composite figures orient readers; panel intervals should be interpreted through the source helper.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7         Keep structural fair-average intervals distinct from historical FACETS-style measure SE columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  Bias intervals remain screening evidence unless the study design supports stronger inferential wording.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                    Intervals support follow-up review; they do not decide anchor validity by themselves.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10     DFF / DIF wording still depends on grouping design, linking support, and the chosen analysis route.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                Equivalence is a practical review against stated bounds, not a universal validity claim.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                           Drift claims require explicit multi-fit wave or form designs.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                Trajectory movement is interpretable only after the supplied fits are on a common scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14               Shrinkage intervals describe estimation stability, not automatic rater-quality decisions.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                        ICC intervals describe clustering uncertainty, not model adequacy by themselves.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                   IntervalColumns</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                    CI_Lower, CI_Upper, CI_Level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                    CI_Lower, CI_Upper, CI_Level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                       CI_Lower, CI_Upper, CI_Level in locations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                       CI_Lower, CI_Upper, CI_Level in locations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                   Level, Estimate, SE, CI_Lower, CI_Upper, Band</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                            severity panel includes CI_Lower, CI_Upper, ci_level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  AdjustedAverageCI_* / StandardizedAdjustedAverageCI_*, FairCIEligible, FairCIReportingUse in tables; CI_Lower / CI_Upper / CI_Level, CI_Eligible, CI_ReportingUse in plot data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                   CI_Lower, CI_Upper, CI_Level on ranked_table and scatter_data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                    CI_Lower, CI_Upper, CI_Level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                   CI_Lower, CI_Upper, CI_Level when contrast SEs are available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                            CI_Lower, CI_Upper; DeviationCI_Lower, DeviationCI_Upper for plots; CI90_Lower, CI90_Upper for TOST</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                   CI_Lower, CI_Upper, CI_Level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                   CI_Lower, CI_Upper, CI_Level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                         RawCI_Lower, RawCI_Upper, ShrunkCI_Lower, ShrunkCI_Upper, CI_Level when show_ci = TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                        ICC_CI_Lower, ICC_CI_Upper, ICC_CI_Level, ICC_CI_Method</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                               Basis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                  Approximate Wald interval on facet measure: estimate +/- z * SE.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                 Approximate Wald interval on facet measure recomputed for the requested ci_level.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                     Approximate facet-level SE overlay on the shared logit scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                     Approximate facet-level SE overlay on the shared logit scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                           Approximate Wald interval around centered facet severity using ModelSE.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                        Composite overview; interval evidence comes from the rater severity panel.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                              Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                               Approximate Wald interval around displacement using DisplacementSE.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                    Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                   Joint MML covariance for pair differences and deviations from the equally weighted facet mean.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                               Approximate drift interval using supplied anchor-drift SE columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                             Approximate per-rater severity interval across already linked waves.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                              Descriptive normal bands from original and plug-in shrunken SEs; variance estimates are held fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                Profile or fallback interval for ICC, depending on optional backend availability.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                         UseFor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                           Report facet estimates with uncertainty in tables.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                           Show which facet levels have wide measure uncertainty before discussing fit flags.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                           Show targeting and location uncertainty on a compact variable map.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                       Show targeting and uncertainty across persons, facets, and thresholds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                            Give rater-training feedback with uncertainty and gentle / strict severity bands.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                   Build a manuscript Figure 1 overview while preserving reusable panel data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  Inspect fair-score uncertainty separately from historical measure-level SE columns; FairZ is not a z-score.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                       Screen interaction-bias cells while showing uncertainty around the bias-size estimate.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                     Review anchor or calibration tension without treating displacement as a binary decision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10            Describe group residual differences; linked refit intervals require separate uncertainty review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11          Decide whether an interval lies within, overlaps, or falls outside the practical equivalence band.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                      Review whether common elements drift materially across forms or waves.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                         Inspect rater movement across anchored waves or training occasions.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                  Show how much partial pooling moved noisy facet estimates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                    Report clustering / nesting uncertainty without treating ICC alone as a design decision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                     InterpretationBoundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                CI width is precision evidence, not a fit pass/fail rule.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                        Fit status still comes from MnSq/ZSTD review; the CI plot is a precision display.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                             Use for targeting and uncertainty context; it is not global model-fit proof.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                             Use for targeting and uncertainty context; it is not global model-fit proof.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                    Severity bands are calibration feedback, not automatic operational removal decisions.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                       Composite figures orient readers; panel intervals should be interpreted through the source helper.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                          Diagnostic-only: CI_Eligible / FairCIEligible remain FALSE; finite or regularized covariance does not establish full-refit coverage. Gap whiskers hold the observed mean fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                  Bias intervals remain screening evidence unless the study design supports stronger inferential wording.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                    Intervals support follow-up review; they do not decide anchor validity by themselves.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Both routes remain screening-only; adequate linking does not make refit uncertainty formally eligible. Inspect ContrastDirection because residual and severity contrasts use different units and signs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                         Requires inference-ready MML and unregularized covariance; pairwise TOST is unadjusted and ROPE is descriptive.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                           Drift claims require explicit multi-fit wave or form designs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                Trajectory movement is interpretable only after the supplied fits are on a common scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                  No calibrated coverage or automatic rater-quality decision: prior-variance uncertainty and cross-level covariance are omitted; zero width after full pooling is not perfect precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                        ICC intervals describe clustering uncertainty, not model adequacy by themselves.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  GPCMStatus</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                     supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                     supported_with_caveat</span>
@@ -253,27 +255,27 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                     supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                          exploratory_only</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                    supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11           rsm_pcm_route; use GPCM only as documented sensitivity context</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                            unavailable_when_gpcm_inference_is_ineligible</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12            exploratory_for_gpcm; linking synthesis supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13            exploratory_for_gpcm; linking synthesis supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                        not_gpcm_specific</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                        not_gpcm_specific</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                           Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                         The helper already adds CI columns to the returned fit-measure table.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                              Use this when reviewers ask for a forest-style estimate display.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                    The standard plot route also accepts show_ci and ci_level.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                    This explicit helper is useful for publication-style maps.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                Use facet = ... for non-Rater severity facets.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       Designed for RSM/PCM manuscript routes; inspect returned panel data before publication.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                            Under bounded GPCM this is slope-aware direct output with caveats.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                   Heatmaps remain pattern displays and do not draw intervals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                  Best used after reviewing the underlying displacement table.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                     Use together with dif_report() for narrative boundaries.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                     The deprecated conf_level alias still routes to ci_level with a warning.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                          Pair with build_linking_review() only where that route is in scope.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                              Use with anchor-linked waves, not independent raw calibrations.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14 Requires empirical-Bayes shrinkage output; ordinary fits do not carry all shrinkage columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                              Optional profile intervals depend on installed backend support.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                        Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                      The helper already adds CI columns to the returned fit-measure table.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                           Use this when reviewers ask for a forest-style estimate display.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                 The standard plot route also accepts show_ci and ci_level.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                 This explicit helper is useful for publication-style maps.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                             Use facet = ... for non-Rater severity facets.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                    Designed for RSM/PCM manuscript routes; inspect returned panel data before publication.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  The table fair_se option provides bounded GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                Heatmaps remain pattern displays and do not draw intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                               Best used after reviewing the underlying displacement table.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                  Use together with dif_report() for narrative boundaries.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                  The deprecated conf_level alias still routes to ci_level with a warning.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                       Pair with build_linking_review() only where that route is in scope.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                           Use with anchor-linked waves, not independent raw calibrations.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                              Requires empirical-Bayes shrinkage output; ordinary fits do not carry all shrinkage columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                           Optional profile intervals depend on installed backend support.</span>
 <span class="r-in"><span><span class="fu">mfrmr_interval_guide</span><span class="op">(</span><span class="st">"visual"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Route"</span>, <span class="st">"DisplayRoute"</span>, <span class="st">"Basis"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                     Route</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                 Fit-measure forest plot</span>
@@ -281,10 +283,10 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  Unified Wright map uncertainty overlay</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                  Rater severity profile</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6           Manuscript Figure 1 composite</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Fair-average structural interval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Fair-average diagnostic interval</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8       Bias-interaction interval overlay</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9           Displacement interval overlay</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10             DFF / DIF contrast summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                 Group contrast summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11          Facet-equivalence ROPE review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12               Anchor drift forest plot</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                  Rater trajectory plot</span>
@@ -296,35 +298,35 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                              Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                      Use draw = FALSE to reuse the ranked severity table and band labels.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                Use draw = FALSE to reuse wright, severity, threshold, and summary panels.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                          Use plot_fair_average(..., show_ci = TRUE, draw = FALSE) for CI-ready plot data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7               Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                      Use ranked or scatter views; heatmap and profile views intentionally omit intervals.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                     Use plot_type = "lollipop" with draw = FALSE for interval-ready data.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                     Use draw = FALSE when rebuilding the summary figure.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                         Use forest/ROPE review output for equivalence-focused reporting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11             Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12                                         Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                                     Use linked-wave fit lists only; the helper does not perform linking.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14 Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 15                                       Use ICC tables for interval values; plots expose them when finite.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                    Basis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                      Approximate Wald interval on facet measure recomputed for the requested ci_level.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                          Approximate facet-level SE overlay on the shared logit scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                          Approximate facet-level SE overlay on the shared logit scale.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                Approximate Wald interval around centered facet severity using ModelSE.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                             Composite overview; interval evidence comes from the rater severity panel.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  Structural delta-method fair-average interval when the MML covariance route is available; otherwise interval status remains explicit.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                   Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                    Approximate Wald interval around displacement using DisplacementSE.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                              Approximate contrast interval from the DFF / DIF contrast table when SE evidence exists.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                  Model-based interval compared with the requested equivalence bounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                    Approximate drift interval using supplied anchor-drift SE columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                  Approximate per-rater severity interval across already linked waves.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                           Approximate Wald-style whiskers around original and shrunken estimates using SE / ShrunkSE.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                     Profile or fallback interval for ICC, depending on optional backend availability.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                               Basis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                 Approximate Wald interval on facet measure recomputed for the requested ci_level.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                     Approximate facet-level SE overlay on the shared logit scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                     Approximate facet-level SE overlay on the shared logit scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                           Approximate Wald interval around centered facet severity using ModelSE.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                        Composite overview; interval evidence comes from the rater severity panel.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                              Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                               Approximate Wald interval around displacement using DisplacementSE.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                    Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                   Joint MML covariance for pair differences and deviations from the equally weighted facet mean.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                               Approximate drift interval using supplied anchor-drift SE columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                             Approximate per-rater severity interval across already linked waves.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                              Descriptive normal bands from original and plug-in shrunken SEs; variance estimates are held fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                Profile or fallback interval for ICC, depending on optional backend availability.</span>
 <span class="r-in"><span><span class="fu">mfrmr_interval_guide</span><span class="op">(</span><span class="st">"gpcm"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Route"</span>, <span class="st">"GPCMStatus"</span>, <span class="st">"InterpretationBoundary"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                Route</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7   Fair-average structural interval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7   Fair-average diagnostic interval</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8  Bias-interaction interval overlay</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10        DFF / DIF contrast summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10            Group contrast summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12          Anchor drift forest plot</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13             Rater trajectory plot</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                       GPCMStatus</span>
@@ -333,12 +335,12 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                         supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12 exploratory_for_gpcm; linking synthesis supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13 exploratory_for_gpcm; linking synthesis supported_with_caveat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                     InterpretationBoundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7         Keep structural fair-average intervals distinct from historical FACETS-style measure SE columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  Bias intervals remain screening evidence unless the study design supports stronger inferential wording.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10     DFF / DIF wording still depends on grouping design, linking support, and the chosen analysis route.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                           Drift claims require explicit multi-fit wave or form designs.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                Trajectory movement is interpretable only after the supplied fits are on a common scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                     InterpretationBoundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                          Diagnostic-only: CI_Eligible / FairCIEligible remain FALSE; finite or regularized covariance does not establish full-refit coverage. Gap whiskers hold the observed mean fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                  Bias intervals remain screening evidence unless the study design supports stronger inferential wording.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Both routes remain screening-only; adequate linking does not make refit uncertainty formally eligible. Inspect ContrastDirection because residual and severity contrasts use different units and signs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                           Drift claims require explicit multi-fit wave or form designs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                Trajectory movement is interpretable only after the supplied fits are on a common scale.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

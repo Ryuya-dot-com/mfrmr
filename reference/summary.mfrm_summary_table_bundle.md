@@ -134,7 +134,7 @@ summary(bundle)
 #> 
 #> Role summary
 #>                  Role Tables TotalRows TotalCols
-#>          run_overview      1         1        87
+#>          run_overview      1         1        88
 #>         reporting_map      1         6         3
 #>     population_coding      1         0         6
 #>      population_basis      1         1        16
@@ -143,19 +143,19 @@ summary(bundle)
 #>    extreme_person_low      1        10        20
 #>   extreme_person_high      1        10        20
 #>  extreme_facet_levels      1         8         3
-#>   estimation_settings      1         1        28
+#>   estimation_settings      1         1        29
 #>    category_structure      1         1         5
 #>      analysis_caveats      1         0         8
 #> 
 #> Table catalog
 #>                Table Rows Cols                 Role
-#>             overview    1   87         run_overview
+#>             overview    1   88         run_overview
 #>  population_overview    1   16     population_basis
 #>    population_coding    0    6    population_coding
 #>       facet_overview    2    7   facet_distribution
 #>      person_overview    1   10  person_distribution
 #>        step_overview    1    5   category_structure
-#>    settings_overview    1   28  estimation_settings
+#>    settings_overview    1   29  estimation_settings
 #>        reporting_map    6    3        reporting_map
 #>              caveats    0    8     analysis_caveats
 #>       facet_extremes    8    3 extreme_facet_levels
@@ -234,8 +234,8 @@ summary(bundle)
 #>       facet_extremes    8    3              1             0
 #>        reporting_map    6    3              0             0
 #>       facet_overview    2    7              6             0
-#>             overview    1   87             40            14
-#>    settings_overview    1   28              5             5
+#>             overview    1   88             40            14
+#>    settings_overview    1   29              5             5
 #>  population_overview    1   16              5             5
 #>                  Role
 #>   extreme_person_high

@@ -45,9 +45,9 @@ downstream handoffs. It is meant to answer two questions quickly:
 
 2.  Which package-native names should new code use instead?
 
-Internal soft-deprecated helpers are deliberately excluded here. This
-table is only for retained user-facing aliases that remain part of the
-public surface.
+Non-exported soft-deprecated helpers are deliberately excluded here.
+This table is only for retained user-facing aliases that remain part of
+the public surface.
 
 ## Typical workflow
 

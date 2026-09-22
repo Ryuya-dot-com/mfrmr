@@ -233,8 +233,8 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1         1
 #>        Criterion       10       2           2                 2    1         1
 #>  ConvergenceRate MeanElapsedSec MeanLegacyMeanAbsZ MeanLegacyFlaggedLevels
-#>                0          1.140              0.589                       0
-#>                0          1.156              0.563                       0
+#>                0          0.925              0.589                       0
+#>                0          0.935              0.563                       0
 #>  LegacyAnyFlagRate MeanMarginalOverallRMSD MeanMarginalMaxAbsStdResidual
 #>                  0                   0.002                         0.050
 #>                  0                   0.046                         1.705
@@ -253,8 +253,8 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1
 #>        Criterion       10       2           2                 2    1
 #>  MeanElapsedSec McseElapsedSec MeanElapsedSecPer100Obs LegacyAnyFlagRate
-#>           1.140             NA                    2.85                 0
-#>           1.156             NA                    2.89                 0
+#>           0.925             NA                   2.313                 0
+#>           0.935             NA                   2.338                 0
 #>  McseLegacyAnyFlagRate MarginalAnyFlagRate McseMarginalAnyFlagRate
 #>                     NA                   1                      NA
 #>                     NA                   1                      NA
@@ -330,7 +330,7 @@ summary(diag_eval)
 #>  - At least one misspecification scenario increased a strict screening signal relative to the well-specified baseline for an evaluated design row.
 #>  - At least one misspecification scenario increased strict pairwise flagging relative to the well-specified baseline for an evaluated design row.
 #>  - At least one strict screening signal reacted more strongly than the legacy |ZSTD| screen for an evaluated design row.
-#>  - Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts, not validation pass/fail gates.
+#>  - Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts, not validation pass/fail criteria.
 #>  - Planning helpers vary one person count and two named non-person facet roles (Rater and Criterion). Estimation may contain additional facets, but planning and forecasting are limited to this role-based design.
 #>  - Current scalar-argument planning paths allow `n_person`, `n_rater`, `n_criterion`, and `raters_per_person` to vary subject to `raters_per_person <= n_rater`.
 #>  - Named-facet structural design metadata for person count, non-person facet counts, and assignments per person. These deterministic design summaries do not establish arbitrary-facet simulation support or parameter-recovery performance.

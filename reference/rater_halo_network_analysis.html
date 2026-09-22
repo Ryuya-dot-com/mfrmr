@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Analyze rater-by-criterion halo-effect networks</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>rater_halo_network_analysis.Rd</code></div>
     </div>
 
@@ -105,7 +107,9 @@ relationship.</p></dd>
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
 <dd><p>Adjusted p-value threshold for retaining edges. Set to <code>1</code> to
-retain all finite correlations after <code>min_abs_weight</code> filtering.</p></dd>
+retain all finite correlations after <code>min_abs_weight</code> filtering. This
+changes retained-edge counts, graph topology, and graph centrality, but
+not the full-pair halo/non-halo distribution summaries.</p></dd>
 
 
 <dt id="arg-p-adjust">p_adjust<a class="anchor" aria-label="anchor" href="#arg-p-adjust"></a></dt>
@@ -115,17 +119,21 @@ Lamprianou's halo-network example.</p></dd>
 
 
 <dt id="arg-min-abs-weight">min_abs_weight<a class="anchor" aria-label="anchor" href="#arg-min-abs-weight"></a></dt>
-<dd><p>Minimum absolute correlation retained as a graph edge.</p></dd>
+<dd><p>Minimum absolute correlation retained as a graph edge.
+Like <code>alpha</code>, this is an analysis filter for the retained graph, not merely
+a display filter.</p></dd>
 
 
 <dt id="arg-halo-weight-review">halo_weight_review<a class="anchor" aria-label="anchor" href="#arg-halo-weight-review"></a></dt>
 <dd><p>Same-rater cross-criterion mean absolute
-correlation at or above which a rater is marked for review.</p></dd>
+correlation at or above which a rater is marked for review. This is a
+package screening default, not a validated halo cut point.</p></dd>
 
 
 <dt id="arg-halo-contrast-review">halo_contrast_review<a class="anchor" aria-label="anchor" href="#arg-halo-contrast-review"></a></dt>
 <dd><p>Minimum difference between a rater's mean halo
-edge weight and incident non-halo edge weight for a stronger review flag.</p></dd>
+edge weight and incident non-halo edge weight for a stronger review flag.
+This is a package screening default, not a validated halo cut point.</p></dd>
 
 
 <dt id="arg-min-retained-halo-edges">min_retained_halo_edges<a class="anchor" aria-label="anchor" href="#arg-min-retained-halo-edges"></a></dt>
@@ -135,7 +143,10 @@ strong <code>"warning"</code> status is assigned.</p></dd>
 
 <dt id="arg-positive-only">positive_only<a class="anchor" aria-label="anchor" href="#arg-positive-only"></a></dt>
 <dd><p>If <code>TRUE</code>, negative correlations are kept in
-<code>pair_metrics</code> but excluded from the graph edge table.</p></dd>
+<code>pair_metrics</code> but excluded from the graph edge table and retained-edge
+counts. Unfiltered distribution and per-rater summaries use absolute
+correlations regardless of this setting; inspect <code>MeanSignedHaloWeight</code>
+before interpreting a review flag.</p></dd>
 
 
 <dt id="arg-include-graph">include_graph<a class="anchor" aria-label="anchor" href="#arg-include-graph"></a></dt>
@@ -148,14 +159,15 @@ strong <code>"warning"</code> status is assigned.</p></dd>
 <dd><p>One-row halo-network summary and halo/non-halo contrast.</p></dd>
 
 <dt><code>node_metrics</code></dt>
-<dd><p>Rater-by-criterion node strength and centrality.</p></dd>
+<dd><p>Rater-by-criterion node strength and
+graph-theoretic centrality.</p></dd>
 
 <dt><code>edge_metrics</code></dt>
 <dd><p>Retained graph edges.</p></dd>
 
 <dt><code>pair_metrics</code></dt>
-<dd><p>All estimated node-pair correlations before edge
-filtering.</p></dd>
+<dd><p>All estimated node-pair correlations with explicit
+retention flags for each graph filter.</p></dd>
 
 <dt><code>halo_summary_by_rater</code></dt>
 <dd><p>Per-rater summaries of same-rater
@@ -173,16 +185,35 @@ rater-by-criterion combination is a node. Edges are correlations between
 those node score vectors across shared contexts. Edges connecting two nodes
 from the same rater but different criteria are labelled <code>"halo"</code>; all other
 retained edges are labelled <code>"non_halo"</code>.</p>
+<p>This response-profile network does not evaluate assignment connectedness or
+establish a common scale. Its degree, strength, betweenness, and closeness
+columns are graph-theoretic centrality summaries after adjusted-p,
+<code>min_abs_weight</code>, and sign filters are applied.</p>
 <p>Per-rater <code>ReviewStatus</code> combines same-rater cross-criterion mean weight,
 incident non-halo comparison weight, and the number of retained halo edges.
 A <code>"warning"</code> means these criteria converge strongly enough to prioritize
 follow-up; <code>"review"</code> means at least one screening criterion is elevated.
-Neither label is a causal halo diagnosis.</p>
+Neither label is a causal halo diagnosis, and the default review thresholds
+are package conventions rather than validated decision rules. Strong
+negative same-rater correlations are anomalous but are not evidence of a
+positive halo pattern; consult signed correlations in <code>pair_metrics</code> and
+<code>MeanSignedHaloWeight</code>.</p>
 <p>The key descriptive comparison is the distribution of halo-edge weights
 versus non-halo-edge weights. A larger halo-edge distribution is consistent
 with a halo pattern, but this function deliberately reports it as a
-screening diagnostic. The included Welch test is descriptive only because
-edge weights are clustered by rater and node.</p>
+screening diagnostic. <code>MeanHaloWeight</code> and <code>MeanNonHaloWeight</code>
+use all finite absolute correlations meeting <code>min_pair_n</code>, before
+adjusted-p, <code>min_abs_weight</code>, and sign filtering; the corresponding
+<code>MeanRetained*</code> columns describe the filtered graph. Candidate and unavailable
+pair counts accompany these available-pair means. An incomplete comparison
+cannot receive an unqualified no-flag assessment.</p>
+<p><code>WelchT</code>, <code>WelchDF</code> and <code>WelchP</code> remain as unavailable compatibility columns.
+The correlations share observations, raters and nodes; an independent-sample
+test of their difference is not supplied. Pairwise correlation tail areas
+screen association under their sampling assumptions, not halo itself.
+No retained graph edges is not evidence that halo is absent; retain the
+originally specified thresholds. Recreate older network results from the
+existing fit and matching diagnostics before summary, plotting or export.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

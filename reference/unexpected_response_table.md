@@ -37,7 +37,8 @@ unexpected_response_table(
 
 - top_n:
 
-  Maximum number of rows to return.
+  Maximum number of ranked rows to return in `table`. Summary counts and
+  percentages always use all flagged observations.
 
 - rule:
 
@@ -62,6 +63,11 @@ A response is flagged as unexpected when:
 
 - `rule = "both"`: both conditions must be met.
 
+Missing inputs preserve an unavailable rule outcome unless the other
+condition determines the result (for example, a true condition suffices
+for `either`). Summaries retain evaluated and unavailable counts; the
+full-sample percentage is withheld if any outcome is unavailable.
+
 The table includes row-level observed/expected values, residuals,
 observed-category probability, most-likely category, and a composite
 severity score for sorting.
@@ -69,7 +75,7 @@ severity score for sorting.
 ## Interpreting output
 
 - `summary`: prevalence of unexpected responses under current
-  thresholds.
+  thresholds, before limiting the displayed rows with `top_n`.
 
 - `table`: ranked row-level diagnostics for case review.
 
@@ -146,7 +152,13 @@ The `summary` data.frame contains:
 
 - UnexpectedN, UnexpectedPercent:
 
-  Count and share of flagged rows.
+  Known flagged count and full-sample percentage. The percentage is
+  unavailable when any rule outcome is unknown; the count is unavailable
+  when no response can be evaluated.
+
+- EvaluatedObservations, UnavailableObservations:
+
+  Responses whose rule outcome is determined or unavailable.
 
 - AbsZThreshold, ProbThreshold:
 
@@ -167,56 +179,48 @@ The `summary` data.frame contains:
 
 ``` r
 # \donttest{
-toy_full <- load_mfrmr_data("example_core")
-toy_people <- unique(toy_full$Person)[1:12]
-toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
-fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
-summary(t4)
-#> mfrmr Unexpected Response Summary 
-#>   Class: mfrm_unexpected
-#>   Components: 3
-#> 
-#> Threshold summary
-#>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN
-#>                192           5             2.604               5              5
-#>    Rule AbsZThreshold ProbThreshold
-#>  either           1.5           0.4
-#> 
-#> Flagged responses: table
-#>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual
-#>  160   R02     Accuracy      1     1        1    3.071   -2.071      -2.816
-#>  130   R03     Language      1     1        1    2.966   -1.966      -2.602
-#>   55   R01 Organization      1     1        1    2.937   -1.937      -2.548
-#>   48   R04      Content      1     1        1    2.697   -1.697      -2.142
-#>  181   R04     Accuracy      1     1        1    2.660   -1.660      -2.087
-#>  ObsProb MostLikely MostLikelyProb CategoryGap Surprise           Direction
-#>    0.020          3          0.513           2    1.704 Lower than expected
-#>    0.029          3          0.515           2    1.538 Lower than expected
-#>    0.032          3          0.514           2    1.496 Lower than expected
-#>    0.066          3          0.478           2    1.181 Lower than expected
-#>    0.073          3          0.469           2    1.139 Lower than expected
-#>  FlagLowProbability FlagLargeResidual Severity
-#>                TRUE              TRUE    5.519
-#>                TRUE              TRUE    5.139
-#>                TRUE              TRUE    5.045
-#>                TRUE              TRUE    4.323
-#>                TRUE              TRUE    4.226
-#> 
-#> Settings
-#>    Setting  Value
-#>  abs_z_min    1.5
-#>   prob_max    0.4
-#>       rule either
-#> 
-#> Notes
-#>  - Unexpected-response summary for quick residual screening.
-#>  - Person identifiers are suppressed in this summary. Use `include_person =
-#>    TRUE` only under appropriate privacy controls.
-p_t4 <- plot(t4, draw = FALSE)
-p_t4$data$plot
-#> [1] "scatter"
+diagnostics <- diagnose_mfrm(fit)
+unexpected <- unexpected_response_table(
+  fit, diagnostics = diagnostics, abs_z_min = 1.5, prob_max = 0.4, top_n = 5
+)
+unexpected$summary # Counts and percentages for all flagged observations
+#> # A tibble: 1 × 10
+#>   TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN
+#>               <int>                 <int>                   <int>       <int>
+#> 1               282                   282                       0         141
+#> # ℹ 6 more variables: UnexpectedPercent <dbl>, LowProbabilityN <int>,
+#> #   LargeResidualN <int>, Rule <chr>, AbsZThreshold <dbl>, ProbThreshold <dbl>
+unexpected$table   # Only the five highest-ranked cases
+#>   Row Person Rater    Criterion Weight Score Observed Expected  Residual
+#> 1  90   P016   R02 Organization      1     4        4 1.712717  2.287283
+#> 2  69   P012   R03 Organization      1     4        4 1.881621  2.118379
+#> 3 282   P048   R06 Organization      1     4        4 2.126046  1.873954
+#> 4 121   P021   R04      Content      1     1        1 2.867349 -1.867349
+#> 5 145   P025   R04     Language      1     1        1 2.815285 -1.815285
+#>   StdResidual    ObsProb MostLikely MostLikelyProb CategoryGap Surprise
+#> 1    3.204010 0.01227149          2      0.4446563           2 1.911103
+#> 2    2.769635 0.02422218          2      0.4736443           2 1.615787
+#> 3    2.291484 0.05270294          2      0.4734400           2 1.278165
+#> 4   -2.214482 0.04860959          3      0.4171721           2 1.313278
+#> 5   -2.139004 0.05557605          3      0.4123865           2 1.255112
+#>              Direction FlagLowProbability FlagLargeResidual Severity
+#> 1 Higher than expected               TRUE              TRUE 6.115113
+#> 2 Higher than expected               TRUE              TRUE 5.385422
+#> 3 Higher than expected               TRUE              TRUE 4.569650
+#> 4  Lower than expected               TRUE              TRUE 4.527760
+#> 5  Lower than expected               TRUE              TRUE 4.394117
+plot(unexpected)
+
+# The rule is exploratory: inspect the scoring context before changing a rating
 # }
 ```

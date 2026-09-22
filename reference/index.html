@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -83,7 +85,7 @@
           <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>
 
         </dt>
-        <dd>Summarize MFRM input data (TAM-style descriptive snapshot)</dd>
+        <dd>Check rating data before fitting an MFRM</dd>
 
         <dt>
 
@@ -141,6 +143,94 @@
         </dt>
         <dd>mfrmr Workflow and Method Map</dd>
       </dl></div><div class="section level2">
+      <h2 id="external-features-and-exploratory-groups">External features and exploratory groups<a class="anchor" aria-label="anchor" href="#external-features-and-exploratory-groups"></a></h2>
+
+      <div class="section-desc"><p>Review entity-level external attributes and describe exploratory groups.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="mfrm_features.html">mfrm_features()</a></code> <code><a href="mfrm_features.html">print(<i>&lt;mfrm_features&gt;</i>)</a></code> <code><a href="mfrm_features.html">summary(<i>&lt;mfrm_features&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Prepare external features for exploratory grouping</dd>
+
+        <dt>
+
+          <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code> <code><a href="mfrm_cluster.html">print(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">summary(<i>&lt;mfrm_clusters&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Explore groups defined by external features</dd>
+
+        <dt>
+
+          <code><a href="mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical()</a></code> <code><a href="mfrm_cluster_hierarchical.html">plot(<i>&lt;mfrm_hierarchical_clusters&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Hierarchical grouping of external features</dd>
+
+        <dt>
+
+          <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code> <code><a href="mfrm_cluster_imputed.html">print(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster_imputed.html">summary(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compare exploratory groups across external-feature imputations</dd>
+
+        <dt>
+
+          <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code> <code><a href="mfrm_cluster_compare.html">print(<i>&lt;mfrm_cluster_comparison&gt;</i>)</a></code> <code><a href="mfrm_cluster_compare.html">summary(<i>&lt;mfrm_cluster_comparison&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compare exploratory groups across settings and clustering methods</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_clusters.html">plot(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="plot.mfrm_clusters.html">plot(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot exploratory groups and imputation sensitivity</dd>
+      </dl></div><div class="section level2">
+      <h2 id="portable-fixed-calibration">Portable fixed calibration<a class="anchor" aria-label="anchor" href="#portable-fixed-calibration"></a></h2>
+
+      <div class="section-desc"><p>Create, validate, freeze, persist, and apply the bounded RSM/PCM MML calibration artifact.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="mfrm_calibration_capabilities.html">mfrm_calibration_capabilities()</a></code>
+
+        </dt>
+        <dd>Portable fixed-calibration capabilities</dd>
+
+        <dt>
+
+          <code><a href="mfrm_calibration_workflow.html">extract_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">review_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">validate_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">freeze_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">supersede_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">retire_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">save_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">load_mfrm_calibration()</a></code> <code><a href="mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code>
+
+        </dt>
+        <dd>Create and use a portable fixed calibration</dd>
+
+        <dt>
+
+          <code><a href="mfrm_calibration_methods.html">summary(<i>&lt;mfrm_calibration&gt;</i>)</a></code> <code><a href="mfrm_calibration_methods.html">print(<i>&lt;mfrm_calibration&gt;</i>)</a></code> <code><a href="mfrm_calibration_methods.html">print(<i>&lt;summary.mfrm_calibration&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Inspect a portable fixed calibration</dd>
+
+        <dt>
+
+          <code><a href="mfrm_calibration_score_methods.html">summary(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_score_methods.html">print(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_score_methods.html">print(<i>&lt;summary.mfrm_calibration_score&gt;</i>)</a></code> <code><a href="mfrm_calibration_score_methods.html">plot(<i>&lt;mfrm_calibration_score&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Review and plot portable fixed-calibration scores</dd>
+      </dl></div><div class="section level2">
       <h2 id="bounded-gpcm-boundary">Bounded GPCM boundary<a class="anchor" aria-label="anchor" href="#bounded-gpcm-boundary"></a></h2>
 
       <div class="section-desc"><p>Supported, caveated, blocked, and deferred bounded-GPCM routes.</p></div>
@@ -187,10 +277,10 @@
 
         <dt>
 
-          <code><a href="gpcm_mml_quadrature_sensitivity.html">gpcm_mml_quadrature_sensitivity()</a></code>
+          <code><a href="mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code> <code><a href="mml_quadrature_sensitivity.html">gpcm_mml_quadrature_sensitivity()</a></code>
 
         </dt>
-        <dd>Review GPCM-MML sensitivity to the quadrature grid</dd>
+        <dd>Review MML sensitivity to the quadrature grid</dd>
 
         <dt>
 
@@ -555,7 +645,7 @@
           <code><a href="make_anchor_table.html">make_anchor_table()</a></code>
 
         </dt>
-        <dd>Build an anchor table from fitted estimates</dd>
+        <dd>Build a candidate direct-anchor table from fitted estimates</dd>
 
         <dt>
 
@@ -633,6 +723,13 @@
 
         </dt>
         <dd>Generate a differential-functioning interpretation report</dd>
+
+        <dt>
+
+          <code><a href="mfrm_dff_methods.html">summary(<i>&lt;mfrm_dif&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">summary(<i>&lt;mfrm_dff&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;summary.mfrm_dif&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;summary.mfrm_dff&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;mfrm_dif&gt;</i>)</a></code> <code><a href="mfrm_dff_methods.html">print(<i>&lt;mfrm_dff&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Review differential-functioning results</dd>
 
         <dt>
 
@@ -722,7 +819,7 @@
 
         <dt>
 
-          <code><a href="import_mirt_fit.html">import_mirt_fit()</a></code>
+          <code><a href="import_mirt_fit.html">import_mirt_fit()</a></code> <code><a href="import_mirt_fit.html">summary(<i>&lt;mfrm_imported_fit&gt;</i>)</a></code> <code><a href="import_mirt_fit.html">print(<i>&lt;summary.mfrm_imported_fit&gt;</i>)</a></code>
 
         </dt>
         <dd>Import an <code>mirt</code> fit to an mfrmr-compatible bundle</dd>
@@ -1056,7 +1153,7 @@
           <code><a href="compute_facet_design_effect.html">compute_facet_design_effect()</a></code>
 
         </dt>
-        <dd>Compute Kish design effects for each facet</dd>
+        <dd>Compute descriptive design-effect approximations for each facet</dd>
 
         <dt>
 
@@ -1214,10 +1311,52 @@
 
         <dt>
 
+          <code><a href="plot.mfrm_d_study.html">plot(<i>&lt;mfrm_d_study&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot design comparisons from a main-effects D-study</dd>
+
+        <dt>
+
           <code><a href="mfrm_generalizability.html">mfrm_generalizability()</a></code>
 
         </dt>
         <dd>Generalizability-theory variance decomposition for an MFRM design</dd>
+
+        <dt>
+
+          <code><a href="mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy()</a></code> <code><a href="mfrm_multivariate_gstudy.html">print(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code> <code><a href="mfrm_multivariate_gstudy.html">summary(<i>&lt;mfrm_multivariate_gstudy&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Multivariate G-study for crossed or nested rating data</dd>
+
+        <dt>
+
+          <code><a href="mfrm_multivariate_d_study.html">mfrm_multivariate_d_study()</a></code> <code><a href="mfrm_multivariate_d_study.html">print(<i>&lt;mfrm_multivariate_d_study&gt;</i>)</a></code> <code><a href="mfrm_multivariate_d_study.html">summary(<i>&lt;mfrm_multivariate_d_study&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plan measurement conditions with a multivariate D-study</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_multivariate_d_study.html">plot(<i>&lt;mfrm_multivariate_d_study&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compare measurement-condition counts in a multivariate D-study</dd>
+
+        <dt>
+
+          <code><a href="mfrm_multivariate_d_compare.html">mfrm_multivariate_d_compare()</a></code> <code><a href="mfrm_multivariate_d_compare.html">summary(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code> <code><a href="mfrm_multivariate_d_compare.html">print(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compare prespecified multivariate D-study plans</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_multivariate_d_comparison.html">plot(<i>&lt;mfrm_multivariate_d_comparison&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot differences between prespecified D-study plans</dd>
 
         <dt>
 
@@ -1309,6 +1448,13 @@
 
         </dt>
         <dd>Plot a summary-table bundle for manuscript QC</dd>
+
+        <dt>
+
+          <code><a href="plot_compare_mfrm.html">plot_compare_mfrm()</a></code>
+
+        </dt>
+        <dd>Compare Wright maps or category curves from two fitted models</dd>
 
         <dt>
 

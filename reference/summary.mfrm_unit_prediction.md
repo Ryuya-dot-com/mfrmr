@@ -64,32 +64,22 @@ new_units <- data.frame(
 pred_units <- predict_mfrm_units(toy_fit, new_units)
 summary(pred_units)
 #> mfrmr Unit Prediction Summary
+#>   Calibration estimated by MML; scoring uses posterior EAP. Prior: Standard
+#>   normal N(0,1).
+#>   95% intervals: continuous posterior quantiles.
+#>   Posterior SDs and intervals condition on point estimates of the calibration
+#>   and prior; their estimation uncertainty is excluded.
 #> 
-#> Posterior estimates
-#>  Person Estimate    SD  Lower Upper Observations WeightedN
-#>   NEW01   -0.097 0.648 -1.356 1.356            2         2
+#> Posterior estimates (first 10)
+#>  Person Estimate    SD  Lower Upper Observations                         Review
+#>   NEW01   -0.112 0.683 -1.448 1.235            2 No source restriction recorded
 #> 
-#> Row preparation review
+#> Response rows
 #>  InputRows KeptRows DroppedRows DroppedMissing DroppedBadScore DroppedBadWeight
 #>          2        2           0              0               0                0
 #>  DroppedNonpositiveWeight
 #>                         0
-#> 
-#> Settings
-#>             Setting      Value
-#>      interval_level       0.95
-#>             n_draws          0
-#>         quad_points          5
-#>                seed       NULL
-#>              method        MML
-#>      source_columns   <list 4>
-#>     posterior_basis legacy_mml
-#>           person_id       NULL
-#>   population_policy       NULL
-#>  population_formula       NULL
-#> 
-#> Notes
-#>  - Posterior summaries are computed under the fixed fitted MML calibration.
-#>  - Non-person facets in `new_data` must already exist in the fitted calibration.
-#>  - Overlapping person IDs are treated as labels in `new_data`; the original fitted person estimates are not updated.
+#>   Non-person facets in `new_data` must already exist in the fitted calibration.
+#>   Overlapping person IDs are treated as labels in `new_data`; the original
+#>   fitted person estimates are not updated.
 ```

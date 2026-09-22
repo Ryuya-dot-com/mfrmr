@@ -47,49 +47,24 @@ Two plot types are provided for visual triage of QC results:
   pass/warn/fail thresholds. Useful for understanding how close a
   borderline result is to the next verdict level.
 
-## QC checks performed
+## Interpretation
 
-The pipeline evaluates up to 10 checks (depending on available
-diagnostics):
+The rows are the actual checks returned by
+[`run_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_qc_pipeline.md):
+convergence, global fit, selected-facet reliability and separation,
+element misfit, unexpected responses, category structure, connectivity,
+inter-rater agreement, and the functioning/bias screen. Element misfit
+uses the configured mean-square band; it is not a ZSTD test. PCA and
+displacement are separate diagnostics and are not checks in this
+pipeline.
 
-1.  **Convergence**: did the optimizer converge?
-
-2.  **Overall Infit**: global information-weighted mean-square
-
-3.  **Overall Outfit**: global unweighted mean-square
-
-4.  **Misfit rate**: proportion of elements with \\\|\mathrm{ZSTD}\| \>
-    2\\
-
-5.  **Category usage**: minimum observations per score category
-
-6.  **Disordered steps**: whether threshold estimates are monotonic
-
-7.  **Separation** (per facet): element discrimination adequacy
-
-8.  **Residual PCA eigenvalue**: first-component eigenvalue (if
-    computed)
-
-9.  **Displacement**: maximum absolute displacement across elements
-
-10. **Inter-rater agreement**: minimum pairwise exact agreement
-
-## Interpreting plots
-
-- **Green** (Pass): the check meets the current threshold-profile
-  criteria.
-
-- **Amber** (Warn): borderline—monitor but not necessarily
-  disqualifying. Review the detail panel to see how close the value is
-  to the fail threshold.
-
-- **Red** (Fail): requires investigation before strong operational or
-  interpretive claims are made from the current run. Common remedies
-  include collapsing categories (for disordered steps), removing outlier
-  raters (for misfit), or increasing sample size (for low separation).
-
-- The detail view shows numeric values, making it easy to communicate
-  exact results to stakeholders.
+Green (Pass), amber (Warn), and red (Fail) describe the selected
+screening rules. Grey (Skip) marks unrequested or unavailable checks;
+`AffectsOverall` in the returned data distinguishes their contribution
+to the overall result. A missing result is not evidence of acceptable
+fit. High rater separation is not high agreement, and no colour
+establishes statistical validity or justifies deleting raters or
+collapsing categories without further review.
 
 ## See also
 

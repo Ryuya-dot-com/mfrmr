@@ -35,9 +35,9 @@ plot_dif_heatmap(
 - metric:
 
   Which metric to plot: `"obs_exp"` for observed-minus-expected average
-  (default), `"t"` for the standardized residual / t-statistic, or
-  `"contrast"` for pairwise differential-functioning contrast (only for
-  `mfrm_dff` objects with `dif_table`).
+  (default), `"t"` for the descriptive scaled residual (not a t-test),
+  or `"contrast"` for pairwise differential-functioning contrast (only
+  for `mfrm_dff` objects with `dif_table`).
 
 - draw:
 

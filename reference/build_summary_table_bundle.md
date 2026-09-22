@@ -285,13 +285,13 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
 #>                  Table Rows Cols                 Role
-#> 1             overview    1   87         run_overview
+#> 1             overview    1   88         run_overview
 #> 2  population_overview    1   16     population_basis
 #> 5    population_coding    0    6    population_coding
 #> 6       facet_overview    2    7   facet_distribution
 #> 7      person_overview    1   10  person_distribution
 #> 8        step_overview    1    5   category_structure
-#> 10   settings_overview    1   28  estimation_settings
+#> 10   settings_overview    1   29  estimation_settings
 #> 11       reporting_map    6    3        reporting_map
 #> 12             caveats    0    8     analysis_caveats
 #> 13      facet_extremes    8    3 extreme_facet_levels
@@ -312,7 +312,7 @@ bundle$table_index
 #> 15                                                                                                   Lowest person measures from the current fit.
 summary(bundle)$role_summary
 #>                    Role Tables TotalRows TotalCols
-#> 12         run_overview      1         1        87
+#> 12         run_overview      1         1        88
 #> 11        reporting_map      1         6         3
 #> 10    population_coding      1         0         6
 #> 9      population_basis      1         1        16
@@ -321,7 +321,7 @@ summary(bundle)$role_summary
 #> 6    extreme_person_low      1        10        20
 #> 5   extreme_person_high      1        10        20
 #> 4  extreme_facet_levels      1         8         3
-#> 3   estimation_settings      1         1        28
+#> 3   estimation_settings      1         1        29
 #> 2    category_structure      1         1         5
 #> 1      analysis_caveats      1         0         8
 # }

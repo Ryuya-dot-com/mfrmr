@@ -9,7 +9,7 @@ bar chart or a detail panel showing values versus thresholds."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,10 +20,12 @@ bar chart or a detail panel showing values versus thresholds."><meta property="o
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -40,7 +42,7 @@ bar chart or a detail panel showing values versus thresholds."><meta property="o
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot QC pipeline results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-plotting-anchor-qc.R" class="external-link"><code>R/api-plotting-anchor-qc.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-plotting-anchor-qc.R" class="external-link"><code>R/api-plotting-anchor-qc.R</code></a></small>
       <div class="d-none name"><code>plot_qc_pipeline.Rd</code></div>
     </div>
 
@@ -88,36 +90,22 @@ pass/warn/fail thresholds.  Useful for understanding how close a
 borderline result is to the next verdict level.</p></li>
 </ul></div>
     <div class="section level2">
-    <h2 id="qc-checks-performed">QC checks performed<a class="anchor" aria-label="anchor" href="#qc-checks-performed"></a></h2>
+    <h2 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a></h2>
 
 
-<p>The pipeline evaluates up to 10 checks (depending on available
-diagnostics):</p><ol><li><p><strong>Convergence</strong>: did the optimizer converge?</p></li>
-<li><p><strong>Overall Infit</strong>: global information-weighted mean-square</p></li>
-<li><p><strong>Overall Outfit</strong>: global unweighted mean-square</p></li>
-<li><p><strong>Misfit rate</strong>: proportion of elements with \(|\mathrm{ZSTD}| &gt; 2\)</p></li>
-<li><p><strong>Category usage</strong>: minimum observations per score category</p></li>
-<li><p><strong>Disordered steps</strong>: whether threshold estimates are monotonic</p></li>
-<li><p><strong>Separation</strong> (per facet): element discrimination adequacy</p></li>
-<li><p><strong>Residual PCA eigenvalue</strong>: first-component eigenvalue (if computed)</p></li>
-<li><p><strong>Displacement</strong>: maximum absolute displacement across elements</p></li>
-<li><p><strong>Inter-rater agreement</strong>: minimum pairwise exact agreement</p></li>
-</ol></div>
-    <div class="section level2">
-    <h2 id="interpreting-plots">Interpreting plots<a class="anchor" aria-label="anchor" href="#interpreting-plots"></a></h2>
-
-
-<ul><li><p><strong>Green</strong> (Pass): the check meets the current threshold-profile criteria.</p></li>
-<li><p><strong>Amber</strong> (Warn): borderline—monitor but not necessarily
-disqualifying.  Review the detail panel to see how close the value
-is to the fail threshold.</p></li>
-<li><p><strong>Red</strong> (Fail): requires investigation before strong operational or
-interpretive claims are made from the current run. Common remedies include collapsing categories
-(for disordered steps), removing outlier raters (for misfit), or
-increasing sample size (for low separation).</p></li>
-<li><p>The detail view shows numeric values, making it easy to communicate
-exact results to stakeholders.</p></li>
-</ul></div>
+<p>The rows are the actual checks returned by <code><a href="run_qc_pipeline.html">run_qc_pipeline()</a></code>: convergence,
+global fit, selected-facet reliability and separation, element misfit,
+unexpected responses, category structure, connectivity, inter-rater
+agreement, and the functioning/bias screen. Element misfit uses the
+configured mean-square band; it is not a ZSTD test. PCA and displacement
+are separate diagnostics and are not checks in this pipeline.</p>
+<p>Green (Pass), amber (Warn), and red (Fail) describe the selected screening
+rules. Grey (Skip) marks unrequested or unavailable checks; <code>AffectsOverall</code>
+in the returned data distinguishes their contribution to the overall result.
+A missing result is not evidence of acceptable fit. High rater separation
+is not high agreement, and no colour establishes statistical validity or
+justifies deleting raters or collapsing categories without further review.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="run_qc_pipeline.html">run_qc_pipeline()</a></code>, <code><a href="plot_qc_dashboard.html">plot_qc_dashboard()</a></code>,

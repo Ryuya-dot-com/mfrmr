@@ -140,7 +140,7 @@ An object of class `mfrm_recovery_assessment` with:
   caveats separated from parameter-recovery conclusions.
 
 - `diagnostic_reporting_notes`: reporter-facing fit/separation caveats
-  retained as diagnostic context rather than recovery gates.
+  retained as diagnostic context rather than recovery criteria.
 
 - `diagnostic_review`: optional fit/separation operating-characteristic
   context when retained by
@@ -184,7 +184,7 @@ adequate, and those rows do not enter the recovery adequacy status.
 `diagnostic_reporting_notes` should be read first when drafting
 fit/separation language because it separates zero
 separation/reliability, absolute fit-ZSTD flags, and df-sensitive ZSTD
-flags from recovery gates.
+flags from recovery criteria.
 
 `plot.mfrm_recovery_assessment()` is a user-facing review aid. Use
 `type = "status"` first to see where checklist attention is needed, then

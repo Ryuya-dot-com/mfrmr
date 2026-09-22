@@ -47,8 +47,8 @@ A bundle of class `mfrm_network_analysis` containing:
 
 - `summary`: graph-level connectedness and vulnerability metrics
 
-- `node_metrics`: node-level degree, strength, centrality, and cutpoint
-  flags
+- `node_metrics`: node-level degree, strength, graph-theoretic
+  centrality, and cutpoint flags
 
 - `edge_metrics`: edge-level weights, betweenness, and bridge flags
 
@@ -65,10 +65,21 @@ design as an undirected weighted graph. Nodes are person or facet
 levels; edges connect levels that co-occur in at least one observed
 rating; edge weights are co-observation counts. The resulting network
 metrics are design diagnostics, not psychometric measures of person
-ability or rater quality. `plot(net, type = "centrality")`,
-`plot(net, type = "facet_summary")`, and `plot(net, type = "network")`
-provide immediate visual checks; use `draw = FALSE` to extract reusable
-plot data.
+ability or rater quality. This is the package's
+assignment/co-observation network: unlike the score-relation networks
+returned by
+[`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
+and
+[`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md),
+it can expose disconnected measurement subsets relevant to common-scale
+interpretation. `SourceSubsets`, `RetainedSubsets` and `ScopeComplete`
+record whether subset filters retained the full observed design.
+Connectedness of selected subsets cannot be generalized to omitted
+subsets. Recreate older design reviews from the existing fit and
+matching diagnostics to record this coverage.
+`plot(net, type = "centrality")`, `plot(net, type = "facet_summary")`,
+and `plot(net, type = "network")` provide immediate visual checks; use
+`draw = FALSE` to extract reusable plot data.
 
 The most useful review columns are:
 

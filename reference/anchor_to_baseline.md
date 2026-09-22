@@ -2,11 +2,11 @@
 
 Re-estimates a fitted many-facet model on new data while holding
 selected facet parameters fixed at the values from a previous (baseline)
-calibration. This is the standard workflow for placing new data onto an
-existing scale, linking test forms, or carrying a baseline calibration
-across administration windows. For bounded `GPCM`, treat this as direct
-exploratory anchor/drift support rather than as the package's formal
-linking-synthesis route.
+calibration. This transfers baseline coordinates into a new fit through
+direct equality constraints. Common-scale interpretation is conditional
+on a defensible baseline and invariant cross-run element identity. For
+bounded `GPCM`, treat this as direct exploratory anchor/drift support
+rather than as the package's formal linking-synthesis route.
 
 ## Usage
 
@@ -23,6 +23,7 @@ anchor_to_baseline(
   model = NULL,
   method = NULL,
   anchor_policy = "warn",
+  mml_integration = NULL,
   ...
 )
 
@@ -44,7 +45,8 @@ print(x, ...)
 
 - baseline_fit:
 
-  An `mfrm_fit` object from a previous calibration.
+  An inference-ready `mfrm_fit` object from a previous calibration under
+  the current readiness contract.
 
 - person:
 
@@ -64,7 +66,8 @@ print(x, ...)
 
 - include_person:
 
-  If `TRUE`, also anchor person estimates.
+  If `TRUE`, also anchor person estimates. Use only when the same
+  persons are intentionally constrained across runs.
 
 - weight:
 
@@ -82,9 +85,17 @@ print(x, ...)
 
   How to handle anchor issues: `"warn"`, `"error"`, `"silent"`.
 
+- mml_integration:
+
+  MML integration mode passed to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  `NULL` inherits the baseline fit's mode for MML; JML uses `"fixed"`.
+
 - ...:
 
-  Ignored.
+  For `anchor_to_baseline()`, additional arguments passed to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  Ignored by the S3 print and summary methods on this page.
 
 - x:
 
@@ -133,6 +144,14 @@ This function automates the baseline-anchored calibration workflow:
 4.  Computes element-level differences (new estimate minus baseline
     estimate) for every common element.
 
+The helper refuses a baseline unless its current readiness record has
+`InferenceReady = TRUE`. Also confirm compatible model, score coding,
+orientation, and population conventions, and document that anchor labels
+denote the same elements with invariant meaning. The function checks
+object shape and receiving-data anchor compatibility, but does not
+establish those substantive conditions. Fixing parameters can identify
+coordinates; it does not create observed common-rating links.
+
 The `model` and `method` arguments default to the baseline fit's
 settings so the calibration framework remains consistent. Elements
 present in the anchor table but absent from the new data are handled
@@ -152,7 +171,12 @@ in both the baseline and the new calibration: \$\$\Delta_e =
 \hat{\delta}\_{e,\text{new}} - \hat{\delta}\_{e,\text{base}}\$\$ An
 element is **flagged** when \\\|\Delta_e\| \> 0.5\\ logits or
 \\\|\Delta_e / SE\_{\Delta_e}\| \> 2.0\\, where \\SE\_{\Delta_e} =
-\sqrt{SE\_{\mathrm{base}}^2 + SE\_{\mathrm{new}}^2}\\.
+\sqrt{SE\_{\mathrm{base}}^2 + SE\_{\mathrm{new}}^2}\\. `SE_Diff` is a
+plug-in independence calculation. It does not propagate baseline-anchor
+uncertainty or cross-fit covariance, and anchored estimates in the new
+fit are constrained rather than independently re-estimated.
+Consequently, `Drift_SE_Ratio` and `Flag` are descriptive consistency
+screens, not formal z tests or calibrated error-rate decisions.
 
 ## Which function should I use?
 

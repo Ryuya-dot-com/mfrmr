@@ -42,11 +42,11 @@ The phrase *generalized many-facet Rasch model* is broader and is not a
 unique synonym for this implementation. For example, Uto and Ueno (2020,
 equation 9) use multiplicative task and rater slope blocks,
 $`\alpha_i\alpha_r`$, together with rater severity and rater-specific
-steps. By contrast, mfrmr 0.2.3 requires one facet to own both the slope
-and step blocks: `slope_facet == step_facet`. It does not jointly
-estimate task and rater slopes, decouple the slope owner from the step
-owner, or introduce a multidimensional ability vector. The precise name
-used in the 0.2.3 evidence map is therefore **aligned single-owner
+steps. By contrast, the current mfrmr GPCM requires one facet to own
+both the slope and step blocks: `slope_facet == step_facet`. It does not
+jointly estimate task and rater slopes, decouple the slope owner from
+the step owner, or introduce a multidimensional ability vector. The
+implementation is therefore described as an **aligned single-owner
 relative-slope GPCM**.
 
 A rater-owned fit is close to a restricted Uto–Ueno form after
@@ -70,8 +70,8 @@ because their geometric mean is fixed to one.
 |----|----|----|
 | `step_facet = "Criterion"`, `slope_facet = "Criterion"` | Each criterion has its own relative discrimination and criterion-specific steps. | Supported bounded route. |
 | `step_facet = "Rater"`, `slope_facet = "Rater"` | Each rater has its own model-conditional relative discrimination and rater-specific steps. | Code-supported with rater-interpretation caveats; a slope is not automatically evidence of rater consistency. |
-| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in 0.2.3. |
-| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in 0.2.3; this is closer to a multiplicative generalized-MFRM extension. |
+| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in the current package. |
+| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in the current package; this is closer to a multiplicative generalized-MFRM extension. |
 
 Every facet that is not selected remains an additive location term
 inside $`\eta`$. For example, a criterion-owned GPCM can still estimate
@@ -123,6 +123,17 @@ extension. If equal contribution of items, criteria, or raters is part
 of the validity argument, a better-fitting bounded `GPCM` should be
 reported as sensitivity evidence rather than as an automatic
 replacement.
+
+Category avoidance is a separate decision. For example, a rater who uses
+only 3–8 on a declared 1–10 scale shows local restriction of range if
+the omitted categories are used elsewhere. Start with
+[`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+and inspect `category_usage_by_facet` and `category_usage_summary`; also
+examine assignment and case mix, fit, and unexpected responses. Do not
+move to `GPCM` merely because a rater avoids extreme categories. A
+rater-owned PCM/GPCM may expose owner-specific threshold or slope
+support problems, but it changes the model being estimated and does not
+by itself explain or repair the scoring practice.
 
 ### Comparing PCM and bounded GPCM
 
@@ -224,7 +235,7 @@ Every current
 likelihood is ordered categorical. The distinction between response
 values and observation frequencies is essential:
 
-| Input or estimand | 0.2.3 treatment |
+| Input or estimand | Current mfrmr treatment |
 |----|----|
 | Ordered binary response | Supported as a two-category ordered response. |
 | Ordered polytomous response | Supported through RSM, PCM, or bounded GPCM. |
@@ -275,7 +286,7 @@ retain finite-test- length bias as the number of persons grows (Hessen
 2025). An extreme response pattern can additionally make the ordinary
 finite JML maximum unattained. mfrmr therefore keeps recovery/bias
 evidence, boundary handling, numerical convergence, and cross-software
-agreement as separate gates. Under JML, the geometric-mean constraint
+agreement as separate checks. Under JML, the geometric-mean constraint
 resolves the scale of the jointly estimated person coordinates and
 slopes.
 
@@ -316,9 +327,9 @@ gpcm_capability_matrix("supported")[, c("Area", "Status")]
 #>  supported      2
 #> 
 #> Route preview
-#>                                       Area    Status
-#>  Fixed-calibration scoring and information supported
-#>              Core curve and category views supported
+#>                                             Area    Status
+#>  Fitted-object posterior scoring and information supported
+#>                    Core curve and category views supported
 #> 
 #> Filter by status, for example gpcm_capability_matrix("supported_with_caveat").
 #> Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.
@@ -417,11 +428,12 @@ uncertainty is inferentially eligible.
 The same distinction applies to uncertainty.
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 can retain the local covariance calculation as `Optimizer*SE` and
-`Optimizer*CI` fields for numerical review. Ordinary slope `SE` and
-confidence-limit fields remain unavailable when `SEEligible` or
-`CIEligible` is false. This avoids presenting a local Hessian around a
-finite stopping point as uncertainty for a parameter whose applicable
-global boundary status has not been established.
+`Optimizer*CI` fields for numerical review. Free slopes currently have
+`SEEligible = FALSE` and `CIEligible = FALSE`; ordinary slope `SE` and
+confidence-limit fields remain unavailable. Convergence or quadrature
+stability does not change this status. This avoids presenting a local
+Hessian around a finite stopping point as uncertainty for a parameter
+whose applicable global boundary status has not been established.
 
 ## What can and cannot be compared across programs
 
@@ -444,7 +456,7 @@ and retained observations before computing differences.
 `sirt::rm.facets()` provides a useful second MML reference: it estimates
 item and/or rater slopes under product-one centering and an estimated
 normal trait spread. Its item-only GPCM and equal-discrimination
-many-facet reductions are candidate matched lanes after category,
+many-facet reductions are candidate matched comparisons after category,
 threshold, quadrature, and centering conventions are aligned. Its
 general free-slope rater kernel is not the current mfrmr kernel: sirt
 uses the product of item and rater slopes on the trait term while rater
@@ -490,8 +502,8 @@ covariance or slope–intercept cross-covariance required by the nonlinear
 transformation to mfrmr’s relative slopes, thresholds, and free
 population scale. Two positive- definite covariance matrices can
 preserve exactly those reported marginal SEs while producing different
-transformed SEs. The repository audit demonstrates this explicitly and
-withholds the comparison rather than assuming zero covariance. TAM’s
+transformed SEs. This non-identification means the comparison must be
+withheld rather than completed by assuming zero covariance. TAM’s
 documented `tam.se()` route also ignores parameter covariances, so it
 does not close this gap.
 
@@ -684,8 +696,12 @@ screens rather than as Rasch-style invariance evidence:
 The dashboard marks the fair-average panel unavailable under `GPCM`; use
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
 directly for the slope-aware element-conditional table and
-`fair_average_table(fair_se = TRUE)` when you need structural
-fair-average SEs for non-person rows.
+`fair_average_table(fit_gpcm, fair_se = TRUE)` to inspect structural
+fair-average SEs for non-person rows. These condition on Person
+EAP/reference means and remain diagnostic-only:
+`FairCIEligible = FALSE`, including when the covariance is computable or
+regularized. Full-refit coverage remains unverified. Historical
+measure-level SE columns are not fair-score SEs.
 
 ## What is intentionally restricted
 
@@ -707,7 +723,7 @@ score-side summaries. Specifically:
 - Caveated reporting, export, linking, design-forecast, and screening
   helpers must keep their `gpcm_boundary` wording visible and must not
   imply FACETS-equivalent score-side uncertainty, operational scoring,
-  calibrated screening gates, or arbitrary-facet planning validation.
+  calibrated screening criteria, or arbitrary-facet planning validation.
 
 ## Recommended substitutes
 
@@ -748,9 +764,9 @@ or `mfrmr_output_guide("gpcm")` before choosing a downstream route.
 
 The `example_core` dataset includes a small synthetic block that
 supports a bounded `GPCM` fit. This example uses compact quadrature and
-iteration settings to keep optional local execution short; for final
-evidence, rerun with the package default or a higher quadrature setting
-and a larger recovery design.
+iteration settings for a shorter runtime; for substantive analysis,
+rerun with the package default or a higher quadrature setting and a
+larger recovery design.
 
 ``` r
 

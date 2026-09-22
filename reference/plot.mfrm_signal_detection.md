@@ -104,7 +104,7 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #> [1] "DIF target-flag rate"
 #> 
 #> $interpretation_note
-#> [1] "DIF-side rates summarize target/non-target flagging behavior under the selected DFF method and threshold settings."
+#> [1] "DIF detection rates are unavailable; residual differences do not provide a differential-functioning test."
 #> 
 #> $x_var
 #> [1] "n_person"
@@ -23154,7 +23154,7 @@ plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALS
 #> # A tibble: 1 × 3
 #>   n_person     y group      
 #>      <int> <dbl> <chr>      
-#> 1        8     0 All designs
+#> 1        8    NA All designs
 #> 
 # }
 ```

@@ -15,7 +15,7 @@ facet-specific residual PCA on person x facet-level matrices
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,10 +26,12 @@ facet-specific residual PCA on person x facet-level matrices
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -46,7 +48,7 @@ facet-specific residual PCA on person x facet-level matrices
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Run exploratory residual PCA summaries</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>analyze_residual_pca.Rd</code></div>
     </div>
 
@@ -101,13 +103,13 @@ analysis to the PCA tables.</p></dd>
 
 
 <dt id="arg-parallel-quantile">parallel_quantile<a class="anchor" aria-label="anchor" href="#arg-parallel-quantile"></a></dt>
-<dd><p>Upper null quantile used as the exploratory
+<dd><p>Upper permutation quantile used as the exploratory
 comparison cutoff. The default (<code>0.95</code>) follows the common parallel
 analysis convention.</p></dd>
 
 
 <dt id="arg-parallel-method">parallel_method<a class="anchor" aria-label="anchor" href="#arg-parallel-method"></a></dt>
-<dd><p>Parallel-analysis null method. Currently
+<dd><p>Parallel-analysis reference method. Currently
 <code>"residual_permutation"</code> is implemented: standardized residuals are
 permuted within each residual column, preserving each column's residual
 distribution and missingness pattern while breaking residual association.</p></dd>
@@ -158,19 +160,30 @@ separate item-response-layer definition that is not uniquely determined by a
 many-facet long data set. In applied MFRM reporting, residual PCA is best
 triangulated with global residual fit, element fit, and Q3-style
 local-dependence screens.</p>
+<p>Correlations use persons with observed residuals for each pair. Every column
+and pair must have defined correlations, and the resulting matrix must be
+positive semidefinite (allowing numerical roundoff). Missing correlations
+are not set to zero, and invalid matrices are not smoothed. Unavailable
+analyses retain an explanation in <code>errors</code>. Older stored PCA calculations
+are recomputed from the supplied observations when this function is called.</p>
 <p>Output tables use:</p><ul><li><p><code>Component</code>: principal-component index (1, 2, ...)</p></li>
 <li><p><code>Eigenvalue</code>: eigenvalue for each component</p></li>
 <li><p><code>Proportion</code>: component variance proportion</p></li>
 <li><p><code>Cumulative</code>: cumulative variance proportion</p></li>
 </ul><p>When <code>parallel = TRUE</code>, the variance tables additionally include
-data-driven null summaries:</p><ul><li><p><code>ParallelMean</code>: mean permuted-residual eigenvalue</p></li>
+conditional permutation-reference summaries:</p><ul><li><p><code>ParallelMean</code>: mean permuted-residual eigenvalue</p></li>
 <li><p><code>ParallelCutoff</code>: <code>parallel_quantile</code> cutoff of permuted eigenvalues</p></li>
 <li><p><code>ExcessOverParallelCutoff</code>: observed eigenvalue minus the cutoff</p></li>
 <li><p><code>ExceedsParallelCutoff</code>: whether the observed eigenvalue exceeds the
 permutation cutoff</p></li>
-</ul><p>The default <code>parallel_reps = 200</code> is intended as a practical review setting.
-For stable final reporting of the 95% cutoff, use a larger value when the
-residual matrix size makes that computationally reasonable.</p>
+</ul><p>The comparison conditions on the fitted residuals and missingness pattern;
+it does not simulate responses or refit the model. It does not account for
+fitted-parameter uncertainty and is not a calibrated dimensionality test.
+If any requested permutation has unavailable or invalid correlations, the
+comparison is withheld rather than conditioning on successful permutations.
+<code>parallel_status</code> retains the successful count and the reason.
+More permutations improve numerical stability of the reference quantile,
+but do not establish error-rate control for the fitted model.</p>
 <p>For <code>mode = "facet"</code> or <code>"both"</code>, <code>by_facet_table</code> additionally includes
 a <code>Facet</code> column.</p>
 <p><code>summary(pca)</code> is supported through <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>.
@@ -186,10 +199,9 @@ a <code>Facet</code> column.</p>
 
 
 <p>Use <code>overall_table</code> first:</p><ul><li><p>early components with noticeably larger eigenvalues or proportions
-suggest stronger residual structure that may deserve follow-up. Small
-early components can be described as evidence consistent with the specified
-one-dimensional facet structure only when fit and local-dependence screens
-tell the same story.</p></li>
+suggest residual structure that may deserve follow-up. Small early
+components do not establish unidimensionality; inspect the residual
+aggregation, available person overlaps, fit and local-dependence screens.</p></li>
 </ul><p>Then inspect <code>by_facet_table</code>:</p><ul><li><p>helps localize which facet contributes most to residual structure.</p></li>
 </ul><p>Finally, inspect loadings via <code><a href="plot_residual_pca.html">plot_residual_pca()</a></code> to identify which
 variables/elements drive each component.</p>
@@ -205,10 +217,10 @@ extension for many-facet workflows rather than as a direct reproduction of a
 single FACETS/Winsteps output table.</p>
 <p>The optional parallel analysis follows Horn's data-driven eigenvalue
 comparison logic and later recommendations to compare observed eigenvalues
-with high quantiles of an empirical null distribution. Because <code>mfrmr</code>
-applies it to standardized Rasch-family residual matrices, the null
-distribution is generated by within-column residual permutation rather than
-by simulating raw item scores.</p><ul><li><p>Horn, J. L. (1965). A rationale and test for the number of factors in
+with high quantiles of a reference distribution. Here that reference is
+generated by within-column permutation of standardized residuals. The
+cited factor-retention literature does not calibrate this many-facet
+residual comparison as a fitted-model test.</p><ul><li><p>Horn, J. L. (1965). A rationale and test for the number of factors in
 factor analysis. <em>Psychometrika</em>, 30, 179-185.</p></li>
 <li><p>Glorfeld, L. W. (1995). An improvement on Horn's parallel analysis
 methodology for selecting the correct number of factors to retain.
@@ -261,35 +273,25 @@ adaptive testing. <em>Computers &amp; Education</em>, 97, 69-85.</p></li>
 <span class="r-in"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pca2</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">fit</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Residual PCA Summary </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_residual_pca</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 17</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Residual PCA summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> PCA overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Mode Facets OverallComponents FacetComponentRows InferenceTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  both      2                16                  8   exploratory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SupportsFormalInference PrimaryReportingEligible   ReportingUse</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE                    FALSE screening_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                           DecisionUse</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  no_automatic_dimensionality_decision</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Analysis Facets Overall components Facet component rows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      both      2                 16                    8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Eigenvalue / loading rows: overall_table</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Component Eigenvalue Proportion Cumulative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          1      2.114      0.132      0.132</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          2      1.833      0.115      0.247</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          3      1.706      0.107      0.353</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          4      1.519      0.095      0.448</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          5      1.290      0.081      0.529</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          6      1.157      0.072      0.601</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          7      1.098      0.069      0.670</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          8      1.054      0.066      0.736</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          9      0.949      0.059      0.795</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         10      0.846      0.053      0.848</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Residual PCA is exploratory residual-structure screening (overall and/or by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    facet), not a standalone dimensionality test or an automatic decision about</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    dimensions or subscores.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Residual eigenvalues</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PC Eigenvalue Proportion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1      2.114      0.132</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2      1.833      0.115</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3      1.706      0.107</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4      1.519      0.095</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   5      1.290      0.081</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   6      1.157      0.072</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   7      1.098      0.069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   8      1.054      0.066</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   9      0.949      0.059</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  10      0.846      0.053</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Residual PCA is exploratory residual-structure screening (overall and/or by facet), not a standalone dimensionality test or an automatic decision about dimensions or subscores. </span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_residual_pca.html">plot_residual_pca</a></span><span class="op">(</span><span class="va">pca</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, plot_type <span class="op">=</span> <span class="st">"scree"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scree"</span>
@@ -310,12 +312,9 @@ adaptive testing. <em>Computers &amp; Education</em>, 97, 69-85.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Variance explained by residual components"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $legend</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         label      role  aesthetic   value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        Residual eigenvalues component line-point #1f78b4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2             Unit-eigenvalue reference       line #6b7280</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      Critical minimum (1.4) reference       line #6b7280</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Noticeable second dim (2.0) reference       line #6b7280</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     Strong second dim (3.0) reference       line #6b7280</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     label      role  aesthetic   value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                    Residual eigenvalues component line-point #1f78b4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Unit eigenvalue (descriptive reference) reference       line #6b7280</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">pca_pa</span> <span class="op">&lt;-</span> <span class="fu">analyze_residual_pca</span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"overall"</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>, parallel_reps <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca_pa</span><span class="op">$</span><span class="va">overall_table</span><span class="op">)</span></span></span>

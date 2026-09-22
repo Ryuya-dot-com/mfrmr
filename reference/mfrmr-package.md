@@ -7,162 +7,83 @@ documented.
 
 ## Details
 
-Start with the following core workflow before branching into
-diagnostics, bounded `GPCM`, simulation, and planning notes:
+Start with the complete script in the Examples section:
 
-1.  Review long-format data and the intended score support with
-    [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
-    When a planned assignment roster exists, pass it as
-    `expected_design` so absent rows are not confused with unassigned
-    cells
+1.  Load the package and example ratings with
+    [`load_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/load_mfrmr_data.md).
 
-2.  Fit with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-    using `method = "MML"`
+2.  Fit a model with
+    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
-3.  Read `summary(fit, profile = "fit")`, then request the comprehensive
-    FACETS-organized view with `summary(fit, profile = "facets")`
+3.  Draw the Wright map with `plot(fit)`.
 
-4.  Create the required native Wright map with
-    `plot(fit, type = "wright", show_ci = TRUE)`; use the FACETS
-    renderer only as an optional familiar presentation
+4.  Save `results <- summary(fit)` and inspect `results$person_overview`
+    and `results$facet_overview`.
 
-5.  Continue from the summary's `results` component to
-    [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
-    and
-    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+Each data row is one rating event. The `person`, `facets`, and `score`
+arguments name columns. The example uses marginal maximum likelihood
+(`MML`) and a rating-scale model (`RSM`) with shared category
+thresholds. `head(toy)` displays the first six rows. Only `Person`,
+`Rater`, `Criterion`, and `Score` are used by this model; the example's
+`Study` and `Group` columns are additional labels. `<-` saves an object,
+and `$` selects a named part: `results$person_overview` displays one
+table from the saved summary. The overview tables summarize
+distributions; `as.data.frame(fit)` returns individual person, rater,
+and criterion estimates.
 
-6.  Reuse `review$results$diagnostics` for
-    [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
-    and
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md);
-    call
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-    again only for residual PCA or other custom settings. For bounded
-    `GPCM`, read
-    [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-    before interpreting specialist helpers
+Before interpreting or reporting estimates, read `results$decision` and
+follow its `NextAction`. The default summary does not compute
+diagnostics. For your own data, first inspect the design and score
+categories with
+[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
 
-Recommended workflow:
-
-1.  Review the data with
-    [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
-    and fit with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-
-2.  For `RSM` / `PCM`, create the comprehensive summary and reuse its
-    diagnostics; request a separate
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-    call only for custom settings
-
-3.  For `RSM` / `PCM`, run residual PCA with
-    [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md)
-    if needed
-
-4.  For `RSM` / `PCM`, or bounded `GPCM` with the documented screening
-    caveat, estimate interactions with
-    [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-
-5.  For `RSM` / `PCM`, choose a downstream branch:
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    for manuscript/report preparation, or
-    [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md)
-    /
-    [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
-    for operational misfit or anchor/drift review. After
-    [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md),
-    inspect `casebook$group_view_index` before moving to source-specific
-    plots.
-
-6.  For `RSM` / `PCM`, build narrative/report outputs with
-    [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
-    and
-    [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md)
-
-7.  Treat bounded `GPCM`, prediction, and planning helpers as advanced
-    scope after the basic `RSM` / `PCM` route is working cleanly.
-
-Guide pages:
-
-- [`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
-  for the compact purpose-to-helper map
+## Where to go next
 
 - [mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
+  and
+  [`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md)
+  for your own CSV, column mapping, input troubleshooting, and the full
+  analysis workflow. If vignettes are not installed, start with
+  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+  and
+  [`recode_missing_codes()`](https://ryuya-dot-com.github.io/mfrmr/reference/recode_missing_codes.md).
 
 - [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
-
-- [mfrmr_reports_and_tables](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reports_and_tables.md)
+  for choosing follow-up figures.
 
 - [mfrmr_reporting_and_apa](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
+  and
+  [mfrmr_reports_and_tables](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reports_and_tables.md)
+  for reporting.
 
 - [mfrmr_linking_and_dff](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+  for linking and differential facet functioning.
 
 - [gpcm_capability_matrix](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+  for the bounded `GPCM` extension.
 
-- [mfrmr_compatibility_layer](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+- [`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
+  for the broader purpose-to-function map.
 
-Companion vignettes:
+A printable reference card is available at
+`system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")`.
 
-- [`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md)
+## Portable fixed calibration
 
-- [`vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-mml-and-marginal-fit.md)
-
-- [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md)
-
-- [`vignette("mfrmr-reporting-and-apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md)
-
-- [`vignette("mfrmr-linking-and-dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md)
-
-A printable landscape cheatsheet of the public API ships at
-`system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")`
-(pre-rendered) and
-`system.file("cheatsheet", "mfrmr-cheatsheet.Rmd", package = "mfrmr")`
-(source). Open the PDF directly for a printable reference card, or knit
-the source with
-[`rmarkdown::render()`](https://pkgs.rstudio.com/rmarkdown/reference/render.html)
-when you want a customised version.
-
-## First 5-minute route
-
-Use this order before exploring the broader feature surface:
-
-1.  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
-    for score support, column missingness, declared assignment coverage,
-    and Person-facet connectivity
-
-2.  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-    with `method = "MML"`
-
-3.  `summary(fit, profile = "fit")`, followed by
-    `summary(fit, profile = "facets")` for the comprehensive first
-    screen
-
-4.  `plot(fit, type = "wright", show_ci = TRUE)` for the required
-    shared-logit figure
-
-5.  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
-    and
-    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
-    from the summary's `results` component for reporting and
-    reproducible analysis handoff
-
-6.  Add
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-    with `diagnostic_mode = "both"` for deeper `RSM` / `PCM`
-    diagnostics; for bounded `GPCM`, keep diagnostics on the direct
-    exploratory route and read
-    [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-
-7.  Choose the next branch:
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    for reporting,
-    [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
-    for Rasch-versus-`GPCM` weighting review,
-    [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md)
-    for operational case review, or
-    [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
-    for operational linking review (`RSM` / `PCM`) or caveated
-    bounded-`GPCM` linking synthesis
+A saved, versioned calibration artifact can be created from an eligible
+one-scale `RSM` or `PCM` MML fit under the fixed standard-normal scoring
+basis. Use
+[`mfrm_calibration_capabilities()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md)
+before extraction, then follow
+[mfrm_calibration_workflow](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+to review, validate, freeze, save, load, and score the artifact. Review
+the returned batch with
+[mfrm_calibration_score_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
+before using its estimates. Estimated- population or latent-regression
+MML, JML, and bounded `GPCM` remain fitted-object-only scoring routes in
+0.2.4. Artifact score uncertainty is conditional on the frozen point
+calibration and its recorded prior; loading validates consistency but
+does not authenticate an untrusted file.
 
 ## Advanced scope
 
@@ -294,7 +215,7 @@ Function families:
   [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md),
   [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
   (including fit-derived empirical / resampled / skeleton-based
-  simulation specifications; fixed-calibration unit scoring supports
+  simulation specifications; fitted-object posterior scoring supports
   `MML` fits directly, latent-regression `MML` fits through the fitted
   population model when scored units also provide one-row-per-person
   background data, and `JML` fits through a post hoc reference-prior EAP
@@ -397,6 +318,12 @@ Data interface:
   Summary-table exports route those rows through
   `score_category_caveats` or `analysis_caveats`.
 
+- A category can be observed globally but unused by one rater or other
+  facet level. Review that local pattern with
+  [`data_quality_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.md)
+  rather than treating it as a globally missing step or an automatic
+  reason to select `GPCM`.
+
 - Optional columns such as `Subset`, `Weight`, and `Group` support
   linking, weighted analysis, and fairness-focused follow-up workflows.
 
@@ -491,7 +418,7 @@ Core object classes are:
     the fitted marginal model directly, use an active latent-regression
     `MML` fit when scored units also provide one-row-per-person
     background data, or use a `JML` calibration when a post hoc
-    fixed-calibration EAP layer is acceptable; then score with
+    fitted-object EAP layer is acceptable; then score with
     [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
     or
     [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md).
@@ -1007,190 +934,58 @@ Authors:
 ## Examples
 
 ``` r
-mfrm_threshold_profiles()
-#> mfrmr Threshold Profile Summary
-#> 
-#> Overview
-#>  Profiles ThresholdCount PCAReferenceCount DefaultProfile
-#>         3             11                 7       standard
-#> 
-#> Profile thresholds
-#>               Threshold strict standard lenient
-#>        expected_var_min   0.30    2e-01    0.10
-#>             low_cat_min  15.00    1e+01    5.00
-#>        min_facet_levels   4.00    3e+00    2.00
-#>       misfit_ratio_warn   0.08    1e-01    0.15
-#>  missing_fit_ratio_warn   0.15    2e-01    0.30
-#>               n_obs_min 200.00    1e+02   60.00
-#>            n_person_min  50.00    3e+01   20.00
-#>    pca_first_eigen_warn   1.50    2e+00    3.00
-#>     pca_first_prop_warn   0.10    1e-01    0.20
-#>        zstd2_ratio_warn   0.08    1e-01    0.15
-#>        zstd3_ratio_warn   0.03    5e-02    0.08
-#> 
-#> Threshold ranges across profiles
-#>               Threshold   Min Median    Max   Span
-#>        expected_var_min  0.10  2e-01   0.30   0.20
-#>             low_cat_min  5.00  1e+01  15.00  10.00
-#>        min_facet_levels  2.00  3e+00   4.00   2.00
-#>       misfit_ratio_warn  0.08  1e-01   0.15   0.07
-#>  missing_fit_ratio_warn  0.15  2e-01   0.30   0.15
-#>               n_obs_min 60.00  1e+02 200.00 140.00
-#>            n_person_min 20.00  3e+01  50.00  30.00
-#>    pca_first_eigen_warn  1.50  2e+00   3.00   1.50
-#>     pca_first_prop_warn  0.10  1e-01   0.20   0.10
-#>        zstd2_ratio_warn  0.08  1e-01   0.15   0.07
-#>        zstd3_ratio_warn  0.03  5e-02   0.08   0.05
-#> 
-#> PCA reference bands
-#>        Band              Key Value
-#>  eigenvalue critical_minimum  1.40
-#>  eigenvalue          caution  1.50
-#>  eigenvalue           common  2.00
-#>  eigenvalue           strong  3.00
-#>  proportion            minor  0.05
-#>  proportion          caution  0.10
-#>  proportion           strong  0.20
-#> 
-#> Notes
-#>  - Profiles tune warning strictness for build_visual_summaries().Use `thresholds` in build_visual_summaries() to override selected values.
-list_mfrmr_data(details = TRUE)
-#>                   Key Rows Persons Raters Criteria
-#> 1        example_core  768      48      4        4
-#> 2        example_bias  384      48      4        4
-#> 3 example_operational  282      48      6        3
-#> 4              study1 1842     307     18        3
-#> 5              study2 3287     206     12        9
-#> 6            combined 5129     307     18       12
-#> 7      study1_itercal 1842     307     18        3
-#> 8      study2_itercal 3341     206     12        9
-#> 9    combined_itercal 5183     307     18       12
-#>                                                  CountBasis
-#> 1                                             unique labels
-#> 2                                             unique labels
-#> 3                                             unique labels
-#> 4                                             unique labels
-#> 5                                             unique labels
-#> 6 raw labels; 513 persons and 30 raters when Study-prefixed
-#> 7                                             unique labels
-#> 8                                             unique labels
-#> 9 raw labels; 513 persons and 30 raters when Study-prefixed
-#>                                            PrimaryUse
-#> 1                             Idealized fast examples
-#> 2    DFF and bias demonstrations with planted effects
-#> 3                           Beginner applied workflow
-#> 4               Unequal-workload sparse-design review
-#> 5                         Larger sparse-design review
-#> 6      Identity/linking design review; not direct fit
-#> 7                     Legacy synthetic variant review
-#> 8                     Legacy synthetic variant review
-#> 9 Identity/linking sensitivity review; not direct fit
-#>                                                                  Design
-#> 1                               Complete crossing; no planned omissions
-#> 2               Balanced two-rater assignment; planted non-null effects
-#> 3                 Connected two-rater assignment; six planned omissions
-#> 4                 Two raters per person; highly unequal rater workloads
-#> 5                  Two raters per person; incomplete criterion coverage
-#> 6 Overlapping IDs; requires explicit anchors/linking for a common scale
-#> 7                    Legacy Study 1 variant; rows and scores can differ
-#> 8                    Legacy Study 2 variant; rows and scores can differ
-#> 9 Overlapping IDs; requires explicit anchors/linking for a common scale
-#>   Empirical
-#> 1     FALSE
-#> 2     FALSE
-#> 3     FALSE
-#> 4     FALSE
-#> 5     FALSE
-#> 6     FALSE
-#> 7     FALSE
-#> 8     FALSE
-#> 9     FALSE
-
 # \donttest{
+# Load the package
+library(mfrmr)
+
+# Load example ratings and look at the first six rows
 toy <- load_mfrmr_data("example_operational")
+head(toy)
+#>                Study Person Rater    Criterion Score Group
+#> 1 OperationalExample   P001   R01     Language     4     A
+#> 2 OperationalExample   P001   R01 Organization     2     A
+#> 3 OperationalExample   P001   R02      Content     4     A
+#> 4 OperationalExample   P001   R02     Language     3     A
+#> 5 OperationalExample   P001   R02 Organization     2     A
+#> 6 OperationalExample   P002   R01      Content     3     A
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "MML",
-  model = "RSM",
-  quad_points = 7
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-summary(diag)
-#> Many-Facet Measurement Diagnostics Summary
-#>   Observations: 282 | Persons: 48 | Facets: 2 | Categories: 4 | Subsets: 1
-#>   Residual PCA mode: none
-#>   Method: MML | Precision tier: Model-based precision
-#>   Diagnostic mode: Legacy and strict marginal
-#>   Strict marginal fit: Available
-#>   Fair average: Available in diagnostics
-#> 
-#> Decision
-#>  - Interpretation: Ready for formal inference
-#>  - Formal inference: Yes (fit readiness: ready)
-#>  - Why: All stored fit-readiness components passed.
-#>  - Next: Inspect `diagnostic_basis` before comparing legacy residual evidence
-#>    with strict marginal evidence.
-#> 
-#> Status
-#>  - Overall status: Follow-up needed
-#>  - Source fit readiness: ready; fit gates passed, with formal precision
-#>    evaluated separately
-#>  - Diagnostic path: Legacy and strict marginal
-#>  - Strict marginal fit: Available
-#>  - Precision tier: Model-based precision
-#>  - Primary screen: Read strict marginal fit first; use legacy residuals for
-#>    continuity and follow-up.
-#> 
-#> Key warnings
-#>  - Unexpected responses flagged: 63.
-#>  - Flagged displacement levels: 5.
-#>  - MnSq screening flagged 19 element(s) outside the configured 0.5-1.5 band.
-#>  - Person-level fit warnings: 19 row(s); identifiers suppressed. Use
-#>    `include_person = TRUE` only under appropriate privacy controls.
-#>  - Strict marginal fit flagged 2 group-level summaries.
-#> 
-#> Next actions
-#>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with
-#>    strict marginal evidence.
-#>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics =
-#>    diag)` for first-order strict marginal follow-up.
-#>  - Review `top_marginal_pairs` for pairwise local-dependence follow-up.
-#>  - Use `unexpected_response_table()` / `plot_unexpected()` and
-#>    `displacement_table()` / `plot_displacement()` for case-level follow-up.
-#> 
-#> Overall fit
-#>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit
-#>  0.861  0.856    -1.331     -1.776  175.434       282
-#> 
-#> Flag counts
-#>                                 Metric Count
-#>                   Unexpected responses    63
-#>            Flagged displacement levels     5
-#>                       Interaction rows    20
-#>                      Inter-rater pairs    15
-#>            Marginal fit flagged groups     2
-#>  Marginal pairwise flagged level pairs     1
-#> 
-#> Facet precision and spread
-#>      Facet Levels Separation Strata Reliability RealSeparation RealStrata
-#>  Criterion      3      2.526  3.702       0.865          2.526      3.702
-#>     Person     48      1.402  2.203       0.663          1.263      2.018
-#>      Rater      6      1.384  2.179       0.657          1.384      2.179
-#>  RealReliability MeanInfit MeanOutfit
-#>            0.865     0.862      0.856
-#>            0.615     0.852      0.857
-#>            0.657     0.849      0.845
-#> 
-#> Highest-priority non-person fit rows
-#>      Facet   Level Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit  AbsZ
-#>      Rater     R05 0.644  0.636    -1.372     -1.896   25.595        44 1.896
-#>  Criterion Content 0.731  0.751    -1.556     -1.822   59.061        94 1.822
-#> 
-#> Further detail
-#>  - Additional tables remain in the structured summary; use `detail = "full"` to
-#>    print them.
+
+# Plot the results (Wright map)
+plot(fit)
+
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+#> # A tibble: 1 × 11
+#>   Persons DistributionN ReviewExcludedExtremeE…¹ EstimateUse   Mean    SD Median
+#>     <int>         <int>                    <int> <chr>        <dbl> <dbl>  <dbl>
+#> 1      48            48                        0 source_fit… -0.155 0.824 -0.208
+#> # ℹ abbreviated name: ¹​ReviewExcludedExtremeEAPs
+#> # ℹ 4 more variables: Min <dbl>, Max <dbl>, Span <dbl>, MeanPosteriorSD <dbl>
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+#> # A tibble: 2 × 7
+#>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
+#>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
+#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
+#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
+
+# Check the interpretation status and recommended next step
+results$decision
+#>                                                           Interpretation
+#> 1 Fit-readiness requirements satisfied; formal precision review required
+#>   FormalInference FitReadiness                                              Why
+#> 1              No        ready Formal precision support has not been evaluated.
+#>                                                                                                                                                   NextAction
+#> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
 # }
 ```

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an unexpected-response screening report</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>unexpected_response_table.Rd</code></div>
     </div>
 
@@ -79,7 +81,8 @@
 
 
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
-<dd><p>Maximum number of rows to return.</p></dd>
+<dd><p>Maximum number of ranked rows to return in <code>table</code>.
+Summary counts and percentages always use all flagged observations.</p></dd>
 
 
 <dt id="arg-rule">rule<a class="anchor" aria-label="anchor" href="#arg-rule"></a></dt>
@@ -96,7 +99,11 @@
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>A response is flagged as unexpected when:</p><ul><li><p><code>rule = "either"</code>: <code>|StdResidual| &gt;= abs_z_min</code> OR <code>ObsProb &lt;= prob_max</code></p></li>
 <li><p><code>rule = "both"</code>: both conditions must be met.</p></li>
-</ul><p>The table includes row-level observed/expected values, residuals,
+</ul><p>Missing inputs preserve an unavailable rule outcome unless the other
+condition determines the result (for example, a true condition suffices
+for <code>either</code>). Summaries retain evaluated and unavailable counts; the
+full-sample percentage is withheld if any outcome is unavailable.</p>
+<p>The table includes row-level observed/expected values, residuals,
 observed-category probability, most-likely category, and a composite
 severity score for sorting.</p>
     </div>
@@ -104,7 +111,8 @@ severity score for sorting.</p>
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<ul><li><p><code>summary</code>: prevalence of unexpected responses under current thresholds.</p></li>
+<ul><li><p><code>summary</code>: prevalence of unexpected responses under current thresholds,
+before limiting the displayed rows with <code>top_n</code>.</p></li>
 <li><p><code>table</code>: ranked row-level diagnostics for case review.</p></li>
 <li><p><code>thresholds</code>: active cutoffs and flagging rule.</p></li>
 </ul><p>Compare results across <code>rule = "either"</code> and <code>rule = "both"</code> to assess how
@@ -167,7 +175,13 @@ criterion.</p></dd>
 <dd><p>Total observations analyzed.</p></dd>
 
 <dt>UnexpectedN, UnexpectedPercent</dt>
-<dd><p>Count and share of flagged rows.</p></dd>
+<dd><p>Known flagged count and full-sample
+percentage. The percentage is unavailable when any rule outcome is
+unknown; the count is unavailable when no response can be evaluated.</p></dd>
+
+<dt>EvaluatedObservations, UnavailableObservations</dt>
+<dd><p>Responses whose
+rule outcome is determined or unavailable.</p></dd>
 
 <dt>AbsZThreshold, ProbThreshold</dt>
 <dd><p>Applied cutoff values.</p></dd>
@@ -186,57 +200,49 @@ criterion.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">toy_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">toy_people</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy_full</span><span class="op">[</span><span class="va">toy_full</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">toy_people</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">toy</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>
+<span class="r-in"><span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"RSM"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">t4</span> <span class="op">&lt;-</span> <span class="fu">unexpected_response_table</span><span class="op">(</span><span class="va">fit</span>, abs_z_min <span class="op">=</span> <span class="fl">1.5</span>, prob_max <span class="op">=</span> <span class="fl">0.4</span>, top_n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">t4</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Unexpected Response Summary </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Class: mfrm_unexpected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Components: 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Threshold summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  TotalObservations UnexpectedN UnexpectedPercent LowProbabilityN LargeResidualN</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                192           5             2.604               5              5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Rule AbsZThreshold ProbThreshold</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  either           1.5           0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged responses: table</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Row Rater    Criterion Weight Score Observed Expected Residual StdResidual</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  160   R02     Accuracy      1     1        1    3.071   -2.071      -2.816</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  130   R03     Language      1     1        1    2.966   -1.966      -2.602</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   55   R01 Organization      1     1        1    2.937   -1.937      -2.548</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   48   R04      Content      1     1        1    2.697   -1.697      -2.142</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  181   R04     Accuracy      1     1        1    2.660   -1.660      -2.087</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ObsProb MostLikely MostLikelyProb CategoryGap Surprise           Direction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    0.020          3          0.513           2    1.704 Lower than expected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    0.029          3          0.515           2    1.538 Lower than expected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    0.032          3          0.514           2    1.496 Lower than expected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    0.066          3          0.478           2    1.181 Lower than expected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    0.073          3          0.469           2    1.139 Lower than expected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  FlagLowProbability FlagLargeResidual Severity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    5.519</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    5.139</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    5.045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.323</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                TRUE              TRUE    4.226</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Setting  Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  abs_z_min    1.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   prob_max    0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       rule either</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Unexpected-response summary for quick residual screening.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Person identifiers are suppressed in this summary. Use `include_person =</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    TRUE` only under appropriate privacy controls.</span>
-<span class="r-in"><span><span class="va">p_t4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t4</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p_t4</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">plot</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scatter"</span>
+<span class="r-in"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">unexpected</span> <span class="op">&lt;-</span> <span class="fu">unexpected_response_table</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span>, abs_z_min <span class="op">=</span> <span class="fl">1.5</span>, prob_max <span class="op">=</span> <span class="fl">0.4</span>, top_n <span class="op">=</span> <span class="fl">5</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">unexpected</span><span class="op">$</span><span class="va">summary</span> <span class="co"># Counts and percentages for all flagged observations</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TotalObservations EvaluatedObservations UnavailableObservations UnexpectedN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>               282                   282                       0         141</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 6 more variables: UnexpectedPercent &lt;dbl&gt;, LowProbabilityN &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   LargeResidualN &lt;int&gt;, Rule &lt;chr&gt;, AbsZThreshold &lt;dbl&gt;, ProbThreshold &lt;dbl&gt;</span></span>
+<span class="r-in"><span><span class="va">unexpected</span><span class="op">$</span><span class="va">table</span>   <span class="co"># Only the five highest-ranked cases</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Row Person Rater    Criterion Weight Score Observed Expected  Residual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  90   P016   R02 Organization      1     4        4 1.712717  2.287283</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  69   P012   R03 Organization      1     4        4 1.881621  2.118379</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 282   P048   R06 Organization      1     4        4 2.126046  1.873954</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 121   P021   R04      Content      1     1        1 2.867349 -1.867349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 145   P025   R04     Language      1     1        1 2.815285 -1.815285</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   StdResidual    ObsProb MostLikely MostLikelyProb CategoryGap Surprise</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    3.204010 0.01227149          2      0.4446563           2 1.911103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    2.769635 0.02422218          2      0.4736443           2 1.615787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    2.291484 0.05270294          2      0.4734400           2 1.278165</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   -2.214482 0.04860959          3      0.4171721           2 1.313278</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   -2.139004 0.05557605          3      0.4123865           2 1.255112</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Direction FlagLowProbability FlagLargeResidual Severity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Higher than expected               TRUE              TRUE 6.115113</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Higher than expected               TRUE              TRUE 5.385422</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Higher than expected               TRUE              TRUE 4.569650</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  Lower than expected               TRUE              TRUE 4.527760</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  Lower than expected               TRUE              TRUE 4.394117</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">unexpected</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="unexpected_response_table-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># The rule is exploratory: inspect the scoring context before changing a rating</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

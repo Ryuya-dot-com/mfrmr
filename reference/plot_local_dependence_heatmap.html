@@ -3,13 +3,17 @@
 facet levels, computed from the diagnostics observation table.
 Cells with large absolute values flag pairs of facet elements (e.g.
 two raters, two items) whose residuals co-move more than the
-main-effects MFRM expects, which is the standard Yen Q3-style
-indicator of local response dependence."><meta property="og:description" content="Builds an N x N heatmap of pairwise standardized residuals between
+main-effects MFRM expects. Residuals are averaged within each Person
+and facet level before correlation. This is a Q3-style screen, distinct
+from raw-residual Yen Q3; no fixed correlation cutoff establishes local
+independence for this standardized, aggregated index."><meta property="og:description" content="Builds an N x N heatmap of pairwise standardized residuals between
 facet levels, computed from the diagnostics observation table.
 Cells with large absolute values flag pairs of facet elements (e.g.
 two raters, two items) whose residuals co-move more than the
-main-effects MFRM expects, which is the standard Yen Q3-style
-indicator of local response dependence."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+main-effects MFRM expects. Residuals are averaged within each Person
+and facet level before correlation. This is a Q3-style screen, distinct
+from raw-residual Yen Q3; no fixed correlation cutoff establishes local
+independence for this standardized, aggregated index."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -17,7 +21,7 @@ indicator of local response dependence."><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,10 +32,12 @@ indicator of local response dependence."><meta property="og:image" content="http
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -48,7 +54,7 @@ indicator of local response dependence."><meta property="og:image" content="http
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Pairwise standardized-residual heatmap for local-dependence review</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-plotting-secondary.R" class="external-link"><code>R/api-plotting-secondary.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-plotting-secondary.R" class="external-link"><code>R/api-plotting-secondary.R</code></a></small>
       <div class="d-none name"><code>plot_local_dependence_heatmap.Rd</code></div>
     </div>
 
@@ -57,8 +63,10 @@ indicator of local response dependence."><meta property="og:image" content="http
 facet levels, computed from the diagnostics observation table.
 Cells with large absolute values flag pairs of facet elements (e.g.
 two raters, two items) whose residuals co-move more than the
-main-effects MFRM expects, which is the standard Yen Q3-style
-indicator of local response dependence.</p>
+main-effects MFRM expects. Residuals are averaged within each Person
+and facet level before correlation. This is a Q3-style screen, distinct
+from raw-residual Yen Q3; no fixed correlation cutoff establishes local
+independence for this standardized, aggregated index.</p>
     </div>
 
     <div class="section level2">
@@ -92,9 +100,10 @@ on demand when omitted.</p></dd>
 
 
 <dt id="arg-min-pairs">min_pairs<a class="anchor" aria-label="anchor" href="#arg-min-pairs"></a></dt>
-<dd><p>Minimum number of shared response opportunities
-required to retain a pair. Pairs below the threshold are shown
-as <code>NA</code>.</p></dd>
+<dd><p>Minimum number of persons with finite aggregated residuals
+at both levels; an integer of at least three. Unavailable pairs remain
+in the table with their overlap count and reason, and appear as <code>NA</code>
+in the matrix.</p></dd>
 
 
 <dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
@@ -108,8 +117,8 @@ as <code>NA</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An <code>mfrm_plot_data</code> whose <code>data</code> slot bundles the symmetric
-residual <code>matrix</code>, the long-form <code>pairs</code> table, and the threshold
-used.</p>
+residual <code>matrix</code>, one row per unordered pair in <code>pairs</code>, and the
+threshold used.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -134,10 +143,8 @@ scale so an analyst can scan for diagonal blocks or hotspots.</p>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_local_dependence_heatmap</span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4 4</span>
-<span class="r-in"><span><span class="co"># Look for: |off-diagonal correlation| &lt; 0.2 is the typical</span></span></span>
-<span class="r-in"><span><span class="co">#   acceptable regime; values &gt;= 0.3 (Yen 1984 / Marais 2013</span></span></span>
-<span class="r-in"><span><span class="co">#   guideline) flag pairs that may share dependence beyond the</span></span></span>
-<span class="r-in"><span><span class="co">#   main-effects MFRM. Inspect those cells in `diag$obs`.</span></span></span>
+<span class="r-in"><span><span class="co"># Inspect large absolute correlations alongside shared-person counts.</span></span></span>
+<span class="r-in"><span><span class="co"># Unavailable pairs are not evidence of local independence.</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

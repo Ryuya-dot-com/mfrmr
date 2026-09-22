@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,10 +18,12 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
@@ -38,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review and normalize anchor/group-anchor tables</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>review_mfrm_anchors.Rd</code></div>
     </div>
 
@@ -89,12 +91,13 @@
 
 
 <dt id="arg-anchors">anchors<a class="anchor" aria-label="anchor" href="#arg-anchors"></a></dt>
-<dd><p>Optional anchor table (Facet, Level, Anchor).</p></dd>
+<dd><p>Optional direct-anchor table (Facet, Level, Anchor). Retained
+values are fixed during estimation.</p></dd>
 
 
 <dt id="arg-group-anchors">group_anchors<a class="anchor" aria-label="anchor" href="#arg-group-anchors"></a></dt>
 <dd><p>Optional group-anchor table
-(Facet, Level, Group, GroupValue).</p></dd>
+(Facet, Level, Group, GroupValue) defining group-mean constraints.</p></dd>
 
 
 <dt id="arg-weight">weight<a class="anchor" aria-label="anchor" href="#arg-weight"></a></dt>
@@ -122,8 +125,9 @@ across the person, facet, and score columns.</p></dd>
 
 
 <dt id="arg-min-common-anchors">min_common_anchors<a class="anchor" aria-label="anchor" href="#arg-min-common-anchors"></a></dt>
-<dd><p>Minimum anchored levels per linking facet used in
-recommendations (default <code>5</code>).</p></dd>
+<dd><p>Minimum directly anchored levels per non-Person
+facet used in the package count recommendation (default <code>5</code>). The function
+cannot verify that those levels have invariant cross-run identity.</p></dd>
 
 
 <dt id="arg-min-obs-per-element">min_obs_per_element<a class="anchor" aria-label="anchor" href="#arg-min-obs-per-element"></a></dt>
@@ -146,8 +150,8 @@ used in recommendations (default <code>10</code>).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of class <code>mfrm_anchor_review</code> with:</p><ul><li><p><code>anchors</code>: cleaned anchor table used by estimation</p></li>
-<li><p><code>group_anchors</code>: cleaned group-anchor table used by estimation</p></li>
+    <p>A list of class <code>mfrm_anchor_review</code> with:</p><ul><li><p><code>anchors</code>: cleaned direct constraints used by estimation</p></li>
+<li><p><code>group_anchors</code>: cleaned group-mean constraints used by estimation</p></li>
 <li><p><code>facet_summary</code>: counts of levels, constrained levels, and free levels</p></li>
 <li><p><code>design_checks</code>: observation-count checks by level/category</p></li>
 <li><p><code>thresholds</code>: active threshold settings used for recommendations</p></li>
@@ -157,28 +161,34 @@ used in recommendations (default <code>10</code>).</p></dd>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><strong>Anchoring</strong> (also called "fixing" or scale linking) constrains selected
-parameter estimates to pre-specified values, placing the current
-analysis on a previously established scale.  This is essential when
-comparing results across administrations, linking test forms, or
-monitoring rater drift over time.</p>
+    <p>This helper reviews computational constraints. A <em>direct anchor</em> fixes an
+individual parameter to a supplied value. A <em>group anchor</em> constrains the
+mean of declared elements to a supplied target. A <em>common-element link</em> is
+different: it is observed overlap among administrations or subsets. Direct
+or group constraints can transfer coordinates from a defensible reference,
+but they do not manufacture empirical overlap.</p>
 <p>This function applies the same preprocessing and key-resolution rules
 as <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, but returns a review object so constraints can be
-checked <em>before</em> estimation.  Running the review first helps avoid
+checked <em>before</em> estimation. Running the review first helps avoid
 estimation failures caused by misspecified or data-incompatible
-anchors.</p>
+anchors. It does not inspect source-fit readiness or establish that labels
+denote the same invariant elements across runs. Those substantive checks
+remain the caller's responsibility.</p>
 <p><strong>Anchor types:</strong></p><ul><li><p><em>Direct anchors</em> fix individual element measures to specific logit
 values (e.g., Rater R1 anchored at 0.35 logits).</p></li>
 <li><p><em>Group anchors</em> constrain the mean of a set of elements to a
 target value, allowing individual elements to vary freely around
-that mean.</p></li>
-<li><p>When both types overlap for the same element, the direct anchor
-takes precedence.</p></li>
-</ul><p><strong>Design checks</strong> verify that each anchored element has at least
+that mean. The target requires an external justification such as a
+defensible equal-mean or known-scale assumption.</p></li>
+<li><p>When both types include the same element, both constraints are retained:
+the direct anchor fixes that element and the group constraint still fixes
+the declared group mean. Incompatible combinations are rejected by the
+constraint/estimability checks.</p></li>
+</ul><p><strong>Design checks</strong> report whether each observed facet level has at least
 <code>min_obs_per_element</code> weighted observations (default 30) and each
 score category has at least <code>min_obs_per_category</code> (default 10).
-These thresholds follow standard Rasch sample-size recommendations
-(Linacre, 1994).</p>
+These user-configurable counts are package screening recommendations, not
+universal adequacy thresholds and not tests of connectedness or invariance.</p>
     </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -199,7 +209,8 @@ These thresholds follow standard Rasch sample-size recommendations
 </ol></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code>, <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>, <code><a href="make_anchor_table.html">make_anchor_table()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code>, <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>, <code><a href="make_anchor_table.html">make_anchor_table()</a></code>,
+<a href="mfrmr_linking_and_dff.html">mfrmr_linking_and_dff</a></p></div>
     </div>
 
     <div class="section level2">
@@ -267,7 +278,7 @@ These thresholds follow standard Rasch sample-size recommendations
 <span class="r-out co"><span class="r-pr">#&gt;</span>         4  136       136                10       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Recommendations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Linacre guideline: about 30 observations per element are desirable. Low-observation facets: Person.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Package observation-count screen: about 30 observations per element are used for review. Low-observation facets: Person.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - For linked analyses, keep Umean/Uscale from the source calibration so reporting origin and scaling stay consistent.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Current noncenter facet is 'Person'. Other facets are centered unless constrained by anchors/group anchors.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

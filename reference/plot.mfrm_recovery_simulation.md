@@ -112,7 +112,6 @@ plot(rec, type = "summary", metric = "rmse", draw = FALSE)
 #>     $parameter_type : NULL
 #>     $facet : NULL
 #>     $plot_table : data.frame [4 x 22]
-#>     $notes : character [2]
 #>     $plot_name : character [1]
 #>   legend   : 4 entries
 #>   ref lines: 0

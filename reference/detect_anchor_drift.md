@@ -1,8 +1,8 @@
 # Detect anchor drift across multiple calibrations
 
 Compares facet estimates across two or more calibration waves to
-identify elements whose difficulty/severity has shifted beyond
-acceptable thresholds. Useful for monitoring rater drift over time or
+identify elements whose difficulty/severity has shifted beyond supplied
+screening thresholds. Useful for monitoring rater drift over time or
 checking the stability of item banks.
 
 ## Usage
@@ -41,11 +41,11 @@ print(x, ...)
 
 - drift_threshold:
 
-  Absolute drift threshold for flagging (logits, default 0.5).
+  Absolute screening threshold for flagging (logits, default 0.5).
 
 - flag_se_ratio:
 
-  Drift/SE ratio threshold for flagging (default 2.0).
+  Drift/SE ratio screening threshold for flagging (default 2.0).
 
 - reference:
 
@@ -53,7 +53,8 @@ print(x, ...)
 
 - include_person:
 
-  Include person estimates in comparison.
+  Include person estimates in comparison. Use only when the person
+  identifiers refer to the same persons across fitted waves.
 
 - x:
 
@@ -86,7 +87,8 @@ Object of class `mfrm_anchor_drift` with components:
 - common_vs_reference:
 
   Tibble of common-element counts between each wave and the reference
-  wave (i.e., which elements remain comparable across the entire chain).
+  wave (i.e., which labels remain available as candidate common
+  elements).
 
 - n_common_all_waves:
 
@@ -116,13 +118,35 @@ removes the weighted common-element link offset between the two waves so
 that `Drift` represents residual instability rather than the overall
 shift between calibrations. The function also records how many common
 elements survive the screening step within each linking facet and treats
-fewer than 5 retained common elements per facet as thin support.
+fewer than 5 retained common elements per facet as thin support. This
+count is a package screening convention, not a universal adequacy
+threshold.
+
+One `LinkOffset` is pooled across all selected common elements and
+facets. If at least one pair has finite positive SEs, only pairs with
+such SEs contribute to the inverse-variance weighted offset; rows
+without usable SEs can still appear in retained/support counts. If
+preliminary residual screening would retain no row, the current
+implementation falls back to all finite differences. Use a single
+substantively coherent facet when a common shift across facet blocks is
+not defensible, and inspect `drift_table` rather than treating
+`LinkSupportAdequate` as sufficient evidence.
+
+Matching `Facet` and `Level` labels are treated as common elements; the
+helper cannot verify that they have invariant meaning across waves. The
+input fits must therefore use compatible model, score, orientation, and
+population conventions and must be independently reviewed for fit
+readiness. Offset removal aligns coordinates conditionally on those
+assumptions; it is not proof of scale equivalence.
 
 An element is **flagged** when either condition is met: \$\$\|\Delta_e\|
 \> \texttt{drift\\threshold}\$\$ \$\$\|\Delta_e / SE\_{\Delta_e}\| \>
-\texttt{flag\\se\\ratio}\$\$ The dual-criterion approach guards against
-flagging elements with large but imprecise estimates, and against
-missing small but precisely estimated shifts.
+\texttt{flag\\se\\ratio}\$\$ The two criteria are joined by `OR`: a
+large absolute residual is flagged even when imprecise, while a smaller
+residual can be flagged by its SE ratio. The ratio uses only the two
+element SEs and omits uncertainty in the estimated `LinkOffset` and any
+cross-fit covariance. It is therefore a descriptive screen, not a formal
+z test with a calibrated error rate.
 
 When `facets` is `NULL`, all non-Person facets are compared. Providing a
 subset (e.g., `facets = "Criterion"`) restricts comparison to those
@@ -210,7 +234,10 @@ drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 summary(drift)
 #> --- Anchor Drift Screen ---
 #> Reference: Wave1 
-#> Method: screened_common_element_alignment | Intended use: review_screen 
+#>   Linking flags are review screens, not tests of anchor invariance.
+#>   Source-parameter, estimated-offset and cross-fit covariance are not fully
+#>   propagated. A sufficient element count alone does not establish a common
+#>   scale.
 #> Comparisons: 8 | Flagged: 0 
 #> 
 #> Drift summary by facet and wave:
