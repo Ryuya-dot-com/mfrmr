@@ -9,22 +9,24 @@ and examples.
 
 ## Current releases
 
-mfrmr 0.2.4 is a release candidate and has not been released on CRAN. It
-integrates the selected work from stages 1–3 below. GitHub pre-releases
-are available for evaluation; their release pages link to the applicable
-CI results. The final release decision remains pending. The GitHub
-candidate
-[`v0.2.4-rc.2`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.2)
-has passed its five-environment package checks; that does not close this
-roadmap. Use `packageVersion("mfrmr")` and installed help to identify
-available functionality.
+mfrmr 0.2.4 is a release candidate that consolidates the implemented
+work from stages 1–3 on `main`. It has not been released on CRAN; the
+final release decision is separate from integrating the source. GitHub
+pre-releases provide fixed snapshots for evaluation and link to their
+applicable CI results. The latest published candidate,
+[`v0.2.4-rc.3`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.3),
+passed its five-environment package checks. Later main-branch changes
+retain their own checks; they do not change that tag or its archive. Use
+the source tag or commit and matching installed help to identify
+available functionality. Earlier candidates also report package version
+`0.2.4`.
 
 | Workflow | Current position | Role in the planned 0.2.4 |
 |----|----|----|
 | Portable calibration and new-Person scoring | Implemented for the stated fixed-normal RSM/PCM MML scope. | Preserve the supported workflow and corrections during integration. |
 | External-feature clustering and imputation sensitivity | Included in the candidate, including hierarchical trees, plots and setting comparisons. | Preserve descriptive interpretation and paired imputation comparisons. |
 | Multivariate observed-score G/D studies | Crossed/nested point projections and explicit normal-theory intervals for prespecified two-crossed-facet plan differences are included. | Preserve the supported designs, uncertainty assumptions and metric-specific availability. |
-| Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are implemented, including identifiable incomplete or unequal source designs. | Integrate this selected stage-3 scope; other nesting structures and random-facet MFRM remain separate extensions. |
+| Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are implemented, including identifiable incomplete or unequal source designs. | Preserve this integrated stage-3 scope; other nesting structures and random-facet MFRM remain separate extensions. |
 
 ## Purpose and priorities
 
@@ -56,11 +58,12 @@ assumptions and interpretations.
 
 ## Focus for 0.2.4
 
-The published candidate remains under review across the complete
-analysis, rater-feedback, planning and saved-output workflows.
-Subsequent corrections must retain their own validation record before a
-new release. Previously completed checks remain evidence for their
-stated source and scope.
+The implemented analysis, rater-feedback, planning, clustering and
+G/D-study workflows are consolidated in the 0.2.4 source on `main`,
+together with their help, examples, plots, saved-output behavior and
+corrections. Subsequent changes must retain their own validation record.
+Previously completed checks remain evidence for their stated source and
+scope.
 
 The release combines finished exploratory-feature and multivariate
 G/D-study workflows, statistical support and selected model extensions
@@ -72,7 +75,7 @@ remain distinct until implementation and validation are complete.
 | 1\. Finish implemented functions | Consistent clustering/MI comparisons and G/D-study APIs, beginner examples, plots, exports and saved-result behavior. | Supported data-to-result workflows execute; units, identities, exclusions and metric-specific availability are consistent. Remaining defects are corrected with focused checks. |
 | 2\. Extend statistical support | A justified uncertainty method for prespecified G/Phi/SEM planning comparisons, preserving dependence between plans and composites. | Implemented output matches a declared sampling target; boundary/failure handling and coverage or decision error are evaluated under explicit conditions. An uncertainty statement alone does not complete this stage. |
 | 3\. Extend models | Person-by-(Child-within-Parent) G/D-study point estimates, such as task-specific rater teams, with fitting, projections and user guidance. | The selected design has identifiable components, working raw-data estimation and D-study rules, independent calculation checks and an executable assessment example. Nested intervals, other nesting structures and other model families remain separate extensions. |
-| 4\. Integrate as 0.2.4 — candidate published; final decision open | Preserve the selected features and corrections while refining the complete analysis and rater-feedback routes. | Resolve remaining workflow and evidence gaps, then make the release decision using checks for that source and its supported scope. |
+| 4\. Integrate as 0.2.4 — implemented work consolidated on main | Preserve all implemented workflows and corrections in one source line. | Verify the integrated source and matching documentation before updating main. The final release and CRAN submission remain separate decisions. |
 
 Selected methods must meet their stated statistical requirements before
 inclusion; changes to the planned scope will be reflected here. Model
@@ -174,7 +177,7 @@ component and composite scores, between-score covariances matter;
 averaging separate reliability coefficients does not answer the
 composite question.
 
-The candidate includes
+The functions
 [`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
 and
 [`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
@@ -371,7 +374,7 @@ extension.
 
 | Horizon | Outcome and sequencing |
 |----|----|
-| 0.2.4, release candidate | The selected extensions have been integrated and published for evaluation. Finish the remaining workflow and evidence review; verify subsequent corrections before the final release decision. |
+| 0.2.4, release candidate | All currently implemented workflows are consolidated on main. Published candidates preserve checked snapshots; verify subsequent changes before the final release decision. |
 | Further releases | Address needs beyond the selected 0.2.4 scope while maintaining supported APIs, saved-object compatibility and reproducible performance. |
 
 ## Compatibility principles

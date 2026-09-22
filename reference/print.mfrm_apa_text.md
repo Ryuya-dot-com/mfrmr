@@ -89,7 +89,7 @@ apa$report_text
 #> 
 #> Facet measures.
 #> Person measures ranged from -2.18 to 2.68 logits (M = 0.00, SD = 1.10). Rater measures
-#> ranged from -0.33 to 0.33 logits (M = -0.00, SD = 0.31). Criterion measures ranged from
+#> ranged from -0.33 to 0.33 logits (M = 0.00, SD = 0.31). Criterion measures ranged from
 #> -0.42 to 0.25 logits (M = 0.00, SD = 0.29).
 #> 
 #> Fit and precision.

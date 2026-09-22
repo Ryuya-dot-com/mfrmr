@@ -132,13 +132,13 @@ if (requireNamespace("TAM", quietly = TRUE)) {
   imported$summary
 }
 #> ....................................................
-#> Processing Data      2026-09-22 11:46:21.667642 
+#> Processing Data      2026-09-22 12:52:45.509635 
 #>     * Response Data: 20 Persons and  3 Items 
 #>     * Numerical integration with 21 nodes
-#>     * Created Design Matrices   ( 2026-09-22 11:46:21.668845 )
-#>     * Calculated Sufficient Statistics   ( 2026-09-22 11:46:21.669927 )
+#>     * Created Design Matrices   ( 2026-09-22 12:52:45.511069 )
+#>     * Calculated Sufficient Statistics   ( 2026-09-22 12:52:45.512313 )
 #> ....................................................
-#> Iteration 1     2026-09-22 11:46:21.671098
+#> Iteration 1     2026-09-22 12:52:45.51372
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 166.0006
@@ -147,7 +147,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.170222
 #> ....................................................
-#> Iteration 2     2026-09-22 11:46:21.672625
+#> Iteration 2     2026-09-22 12:52:45.515627
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 159.9523 | Absolute change: 6.0483 | Relative change: 0.0378131
@@ -156,7 +156,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.197607
 #> ....................................................
-#> Iteration 3     2026-09-22 11:46:21.673144
+#> Iteration 3     2026-09-22 12:52:45.51633
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 156.8726 | Absolute change: 3.0798 | Relative change: 0.01963247
@@ -165,7 +165,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.146256
 #> ....................................................
-#> Iteration 4     2026-09-22 11:46:21.673652
+#> Iteration 4     2026-09-22 12:52:45.517032
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 155.2944 | Absolute change: 1.5781 | Relative change: 0.01016214
@@ -174,7 +174,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.091922
 #> ....................................................
-#> Iteration 5     2026-09-22 11:46:21.67412
+#> Iteration 5     2026-09-22 12:52:45.517684
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 154.4537 | Absolute change: 0.8407 | Relative change: 0.00544295
@@ -183,7 +183,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.062858
 #> ....................................................
-#> Iteration 6     2026-09-22 11:46:21.674601
+#> Iteration 6     2026-09-22 12:52:45.518362
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 153.8951 | Absolute change: 0.5586 | Relative change: 0.00362978
@@ -192,7 +192,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.045048
 #> ....................................................
-#> Iteration 7     2026-09-22 11:46:21.675061
+#> Iteration 7     2026-09-22 12:52:45.519037
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 153.4999 | Absolute change: 0.3953 | Relative change: 0.00257495
@@ -201,7 +201,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.033731
 #> ....................................................
-#> Iteration 8     2026-09-22 11:46:21.675524
+#> Iteration 8     2026-09-22 12:52:45.519672
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 153.2079 | Absolute change: 0.292 | Relative change: 0.0019059
@@ -210,7 +210,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.026121
 #> ....................................................
-#> Iteration 9     2026-09-22 11:46:21.675969
+#> Iteration 9     2026-09-22 12:52:45.520375
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.9841 | Absolute change: 0.2238 | Relative change: 0.00146308
@@ -219,7 +219,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.020888
 #> ....................................................
-#> Iteration 10     2026-09-22 11:46:21.67642
+#> Iteration 10     2026-09-22 12:52:45.521056
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.808 | Absolute change: 0.1761 | Relative change: 0.00115219
@@ -228,7 +228,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.017098
 #> ....................................................
-#> Iteration 11     2026-09-22 11:46:21.676871
+#> Iteration 11     2026-09-22 12:52:45.521709
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.6645 | Absolute change: 0.1435 | Relative change: 0.00094019
@@ -237,7 +237,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.014397
 #> ....................................................
-#> Iteration 12     2026-09-22 11:46:21.677345
+#> Iteration 12     2026-09-22 12:52:45.522389
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.5437 | Absolute change: 0.1207 | Relative change: 0.00079152
@@ -246,7 +246,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.012415
 #> ....................................................
-#> Iteration 13     2026-09-22 11:46:21.677792
+#> Iteration 13     2026-09-22 12:52:45.52305
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.4376 | Absolute change: 0.1062 | Relative change: 0.0006964
@@ -255,7 +255,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.011036
 #> ....................................................
-#> Iteration 14     2026-09-22 11:46:21.678256
+#> Iteration 14     2026-09-22 12:52:45.523675
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.3395 | Absolute change: 0.0981 | Relative change: 0.00064378
@@ -264,7 +264,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.010121
 #> ....................................................
-#> Iteration 15     2026-09-22 11:46:21.678701
+#> Iteration 15     2026-09-22 12:52:45.524336
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.2431 | Absolute change: 0.0963 | Relative change: 0.00063284
@@ -273,7 +273,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.009618
 #> ....................................................
-#> Iteration 16     2026-09-22 11:46:21.679136
+#> Iteration 16     2026-09-22 12:52:45.525014
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.1411 | Absolute change: 0.102 | Relative change: 0.00067075
@@ -282,7 +282,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.009528
 #> ....................................................
-#> Iteration 17     2026-09-22 11:46:21.679592
+#> Iteration 17     2026-09-22 12:52:45.525734
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 152.0226 | Absolute change: 0.1185 | Relative change: 0.00077931
@@ -291,7 +291,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.009901
 #> ....................................................
-#> Iteration 18     2026-09-22 11:46:21.680021
+#> Iteration 18     2026-09-22 12:52:45.526404
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 151.8682 | Absolute change: 0.1544 | Relative change: 0.00101693
@@ -300,7 +300,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.010899
 #> ....................................................
-#> Iteration 19     2026-09-22 11:46:21.680481
+#> Iteration 19     2026-09-22 12:52:45.527073
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 151.6341 | Absolute change: 0.234 | Relative change: 0.00154344
@@ -309,7 +309,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.012874
 #> ....................................................
-#> Iteration 20     2026-09-22 11:46:21.680914
+#> Iteration 20     2026-09-22 12:52:45.527697
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 151.199 | Absolute change: 0.4351 | Relative change: 0.00287775
@@ -318,7 +318,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.016585
 #> ....................................................
-#> Iteration 21     2026-09-22 11:46:21.681363
+#> Iteration 21     2026-09-22 12:52:45.528352
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 150.1157 | Absolute change: 1.0834 | Relative change: 0.00721686
@@ -327,7 +327,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.023463
 #> ....................................................
-#> Iteration 22     2026-09-22 11:46:21.681797
+#> Iteration 22     2026-09-22 12:52:45.529018
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 146.0336 | Absolute change: 4.082 | Relative change: 0.02795263
@@ -336,7 +336,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.032382
 #> ....................................................
-#> Iteration 23     2026-09-22 11:46:21.682257
+#> Iteration 23     2026-09-22 12:52:45.529641
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 124.7457 | Absolute change: 21.2879 | Relative change: 0.1706508
@@ -345,7 +345,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0.014031
 #> ....................................................
-#> Iteration 24     2026-09-22 11:46:21.682695
+#> Iteration 24     2026-09-22 12:52:45.530292
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 70.539 | Absolute change: 54.2067 | Relative change: 0.7684648
@@ -354,7 +354,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 25     2026-09-22 11:46:21.683126
+#> Iteration 25     2026-09-22 12:52:45.530954
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 70.5388 | Absolute change: 2e-04 | Relative change: 2.97e-06
@@ -363,7 +363,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 26     2026-09-22 11:46:21.683587
+#> Iteration 26     2026-09-22 12:52:45.531573
 #> E Step
 #> M Step Intercepts   |----
 #>   Deviance = 70.5387 | Absolute change: 1e-04 | Relative change: 1.2e-06
@@ -372,7 +372,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 27     2026-09-22 11:46:21.684021
+#> Iteration 27     2026-09-22 12:52:45.532227
 #> E Step
 #> M Step Intercepts   |---
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 5.4e-07
@@ -381,7 +381,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 28     2026-09-22 11:46:21.684425
+#> Iteration 28     2026-09-22 12:52:45.532803
 #> E Step
 #> M Step Intercepts   |---
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 3.1e-07
@@ -390,7 +390,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 29     2026-09-22 11:46:21.684815
+#> Iteration 29     2026-09-22 12:52:45.533361
 #> E Step
 #> M Step Intercepts   |---
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1.9e-07
@@ -399,7 +399,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 30     2026-09-22 11:46:21.685229
+#> Iteration 30     2026-09-22 12:52:45.533941
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1.1e-07
@@ -408,7 +408,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 31     2026-09-22 11:46:21.685584
+#> Iteration 31     2026-09-22 12:52:45.534428
 #> E Step
 #> M Step Intercepts   |---
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 7e-08
@@ -417,7 +417,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 32     2026-09-22 11:46:21.685974
+#> Iteration 32     2026-09-22 12:52:45.53501
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 4e-08
@@ -426,7 +426,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 33     2026-09-22 11:46:21.686342
+#> Iteration 33     2026-09-22 12:52:45.53555
 #> E Step
 #> M Step Intercepts   |---
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 2e-08
@@ -435,7 +435,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 34     2026-09-22 11:46:21.686739
+#> Iteration 34     2026-09-22 12:52:45.536143
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1e-08
@@ -444,7 +444,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 35     2026-09-22 11:46:21.687101
+#> Iteration 35     2026-09-22 12:52:45.536635
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 1e-08
@@ -453,7 +453,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 36     2026-09-22 11:46:21.687476
+#> Iteration 36     2026-09-22 12:52:45.53716
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
@@ -462,7 +462,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 37     2026-09-22 11:46:21.687817
+#> Iteration 37     2026-09-22 12:52:45.53766
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
@@ -471,7 +471,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 38     2026-09-22 11:46:21.688159
+#> Iteration 38     2026-09-22 12:52:45.538172
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
@@ -480,7 +480,7 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #>   Maximum regression parameter change: 0
 #>   Maximum variance parameter change: 0
 #> ....................................................
-#> Iteration 39     2026-09-22 11:46:21.688528
+#> Iteration 39     2026-09-22 12:52:45.538666
 #> E Step
 #> M Step Intercepts   |--
 #>   Deviance = 70.5386 | Absolute change: 0 | Relative change: 0
@@ -514,9 +514,9 @@ if (requireNamespace("TAM", quietly = TRUE)) {
 #> [1] 0
 #> 
 #> -----------------------------
-#> Start:  2026-09-22 11:46:21.66722
-#> End:  2026-09-22 11:46:21.691752 
-#> Time difference of 0.02453279 secs
+#> Start:  2026-09-22 12:52:45.509167
+#> End:  2026-09-22 12:52:45.542897 
+#> Time difference of 0.03372955 secs
 #> 
 #>   Model Method Source  N Persons Facets Categories    LogLik      AIC      BIC
 #> 1   PCM    MML    TAM 20      20      1         NA -35.26929 90.53859 100.4959

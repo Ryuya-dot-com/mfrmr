@@ -112,7 +112,7 @@ summary(review)
 #>    T10    ReducedPercent consistency TRUE  1.01010101010101 1.01010101010101
 #>    T11   LowCountPercent consistency TRUE                 0                0
 #>     T7          ExactAgreement range TRUE 0.361979166666667            [0,1]
-#>     T7  ExpectedExactAgreement range TRUE 0.374634703073566            [0,1]
+#>     T7  ExpectedExactAgreement range TRUE 0.374634703073567            [0,1]
 #>     T7       AdjacentAgreement range TRUE 0.829861111111111            [0,1]
 #>     T7               FixedProb range TRUE               all            [0,1]
 #>     T7              RandomProb range TRUE               all            [0,1]

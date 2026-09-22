@@ -275,9 +275,9 @@ head(scores$quadrature_review[c(
 #> 4 NEW_PERSON_2            61 -1.563277e-05       1.99646e-05
 #>   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status
 #> 1                            NA                           NA computed
-#> 2                  4.440892e-16                 5.551115e-17 computed
+#> 2                 -1.332268e-15                -2.220446e-16 computed
 #> 3                            NA                           NA computed
-#> 4                  7.549517e-15                 1.004752e-13 computed
+#> 4                  7.105427e-15                 1.005862e-13 computed
 ```
 
 Check fixed-versus-adaptive differences and changes between adaptive

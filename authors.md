@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/inst/CITATION)
+[`inst/CITATION`](https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/inst/CITATION)
 
 Komuro R (2026). *mfrmr: Estimation and Diagnostics for Many-Facet
 Measurement Models*. R package version 0.2.4,

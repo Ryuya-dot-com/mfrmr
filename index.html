@@ -81,20 +81,22 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>This README describes the unreleased <code>0.2.4</code> release candidate, including portable calibration, exploratory external-feature groups and multivariate G/D-studies. See <a href="ROADMAP.html">the roadmap</a> for supported scope and future work. Functions and options shown here may differ from an installed release; check <code>packageVersion("mfrmr")</code> and the help shipped with that installation. For an existing analysis, read <a href="#updating-saved-analyses">Updating saved analyses</a> before reusing saved diagnostics, scores or reports.</p>
+<p>This README describes the integrated <code>0.2.4</code> source on <code>main</code>, including portable calibration, exploratory external-feature groups and multivariate G/D-studies. See <a href="ROADMAP.html">the roadmap</a> for supported scope and future work. The version remains a release candidate pending the final release decision. Functions and options shown here may differ from an installed release; retain the installed source tag or commit and use its matching help. Earlier candidates also report <code>0.2.4</code>, so <code>packageVersion("mfrmr")</code> alone cannot distinguish them. For an existing analysis, read <a href="#updating-saved-analyses">Updating saved analyses</a> before reusing saved diagnostics, scores or reports.</p>
 <p>Install the published CRAN release with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mfrmr"</span><span class="op">)</span></span></code></pre></div>
-<p>The CRAN release and the default GitHub branch do not select the development candidate described here. To install a local copy of this source, use the directory containing this README and a <code>DESCRIPTION</code> file with <code>Version: 0.2.4</code>:</p>
+<p>To install the integrated 0.2.4 source from GitHub’s <code>main</code> branch:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"remotes"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_local</span><span class="op">(</span></span>
-<span>  <span class="st">"path/to/mfrmr"</span>,</span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span></span>
+<span>  <span class="st">"Ryuya-dot-com/mfrmr"</span>,</span>
+<span>  ref <span class="op">=</span> <span class="st">"main"</span>,</span>
 <span>  build_vignettes <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>For a reproducible installation, replace <code>"main"</code> with a specific commit or published tag. The <a href="https://github.com/Ryuya-dot-com/mfrmr/releases" class="external-link">release pages</a> provide fixed candidate archives and their validation records. A local checkout can also be installed with <code>remotes::install_local("path/to/mfrmr")</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>

@@ -976,8 +976,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
-#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
+#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
+#> 2 Rater          6            0      0.399      -0.606       0.412 1.02 
 
 # Check the interpretation status and recommended next step
 results$decision

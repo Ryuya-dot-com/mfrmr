@@ -84,7 +84,7 @@ summary(sig_eval)
 #> 
 #> Overview
 #>  Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>        1            1              0             0          0.231
+#>        1            1              0             0           0.31
 #> 
 #> Detection summary (preview)
 #>  design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
@@ -104,7 +104,7 @@ summary(sig_eval)
 #>  BiasScreenMetricAvailabilityRate McseBiasScreenMetricAvailabilityRate
 #>                                 0                                   NA
 #>  BiasScreenFalsePositiveRate McseBiasScreenFalsePositiveRate MeanElapsedSec
-#>                          NaN                              NA          0.231
+#>                          NaN                              NA           0.31
 #>  McseElapsedSec
 #>              NA
 #> 
