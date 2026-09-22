@@ -1,4 +1,4 @@
-# mfrmr 0.2.4.9000 (development version)
+# mfrmr 0.2.4
 
 ## Reliability and reproducibility
 
