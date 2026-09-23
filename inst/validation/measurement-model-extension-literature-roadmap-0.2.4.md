@@ -1,5 +1,14 @@
 # Measurement-model extension roadmap after 0.2.4
 
+Current implementation review (2026-09-23):
+[`extended-model-readiness-review-0.2.4.md`](extended-model-readiness-review-0.2.4.md)
+reconciles the locally implemented shared-rater and testlet APIs with a new
+page-by-page reading of Wang/Wilson's two 2005 papers and Patz et al. (2002).
+The active 0.2.4 scope is in `internal-roadmap-0.2.3.md`; the version plans
+and research-only dispositions below are dated historical records.
+The historical PDF totals below have not been re-audited or incremented by
+this update. API integration does not complete model qualification.
+
 Status: internal architecture and research roadmap; not public support, release
 authorization, or an API promise
 

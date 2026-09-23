@@ -721,7 +721,7 @@
 #' @importFrom utils read.csv tail write.csv
 #' @importFrom lifecycle deprecate_soft
 #' @importFrom rlang .data
-#' @importFrom stats na.omit optim p.adjust pchisq pt rnorm sd setNames uniroot
+#' @importFrom stats confint na.omit optim p.adjust pchisq predict pt rnorm sd setNames uniroot
 #'
 #' @name mfrmr-package
 "_PACKAGE"

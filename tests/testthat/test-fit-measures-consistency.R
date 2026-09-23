@@ -132,6 +132,7 @@ test_that("fit status, subsets, and threshold-profile rates are self-consistent"
     include_person = FALSE,
     fit_df_method = "both",
     threshold_profiles = "all",
+    flag_basis = "mnsq_or_zstd",
     top_n = Inf
   )
   tbl <- as.data.frame(fm$table, stringsAsFactors = FALSE)

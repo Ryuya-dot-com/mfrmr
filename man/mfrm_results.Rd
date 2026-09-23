@@ -13,11 +13,19 @@ mfrm_results(
   response_time_score = NULL,
   output = c("object", "summary", "tables", "html"),
   diagnostics = NULL,
-  compute = c("auto", "never")
+  compute = c("auto", "never"),
+  predictions = NULL,
+  intervals = NULL,
+  scores = NULL,
+  comparison = NULL,
+  response_diagnostics = NULL,
+  calibration_intervals = c("none", "normal"),
+  calibration_level = 0.95
 )
 }
 \arguments{
-\item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}. A standard
+\item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=run_mfrm_facets]{run_mfrm_facets()}},
+\code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} or \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}}. A standard
 long-format \code{data.frame} is also accepted when person and score columns can
 be inferred unambiguously from common names such as \code{Person} and \code{Score};
 remaining measurement columns must use recognizable facet-role names.
@@ -54,14 +62,59 @@ available.}
 \code{"summary"} for its compact summary, \code{"tables"} for a named list of
 available data frames, or \code{"html"} for a temporary HTML report.}
 
-\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When
-supplied, it is identity-checked and reused instead of recomputed.}
+\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. An
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} object is also accepted as an alias for
+\code{response_diagnostics}; do not supply it twice.}
 
 \item{compute}{Diagnostic computation policy. \code{"auto"} preserves the
 standard behavior; \code{"never"} collects only sections that can be built
 without computing diagnostics and marks every requested dependent section
 as \code{"not_computed"}. Matching supplied or stored diagnostics are still
 reused under \code{"never"}.}
+
+\item{predictions}{Optional saved predictions for a testlet or random-rater
+fit: the result of \code{predict(fit, ...)}. Matching calibration, column roles,
+levels, settings and prediction-source metadata are required. Older
+predictions without this metadata must be regenerated from the saved fit
+before attachment; the fit itself does not need to be re-estimated.}
+
+\item{intervals}{Optional saved \code{\link[=mfrm_random_rater_intervals]{mfrm_random_rater_intervals()}} result from
+the exact supplied random-rater fit. No bootstrap is run by this function.}
+
+\item{scores}{Optional saved \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} result for an extension,
+or \code{\link[=score_mfrm_random_rater]{score_mfrm_random_rater()}} output, with matching source calibration.
+For testlets this is an alias for \code{predictions}; supply it once. Shared
+raters can also attach response \code{predictions} and rater \code{intervals}.
+No Person scoring is run here. Complete source-roster identity is required
+for the additional model-aware map routes; see \link{mfrmr_model_maps}.}
+
+\item{comparison}{Optional descriptive extended-model result from
+\code{\link[=compare_mfrm]{compare_mfrm()}}. Calibration, settings and observed/omitted events must
+match this fit. Retained tables and \code{plot(..., type = "comparison")}
+compare centered facet summaries without fitting or automatic ranking.
+When the comparison includes saved response diagnostics, its
+\verb{comparison_response_*} tables and \code{type = "response_comparison"} plot
+retain aligned predictive quantities; select \code{metric} for other indices.}
+
+\item{response_diagnostics}{Optional saved \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}}
+output matching the fit's calibration and exact source roster. It is
+identity-checked and reused without integration. Ordinary RSM MML and
+testlet/shared-rater fits support these descriptive summaries, without
+reference cutoffs. Use \code{compute = "never"} to also avoid computing ordinary
+plug-in diagnostics. Saved posterior summaries appear in
+\verb{response_*} tables and \code{plot(..., type = "response_diagnostics")}.}
+
+\item{calibration_intervals}{For testlet and shared-rater fits, \code{"none"}
+(default) retains calibration estimates and approximate SEs with missing
+bounds. \code{"normal"} explicitly requests pointwise observed-information normal
+intervals for fixed facets and steps; finite-sample coverage is not
+established. Numerical, information and estimated-boundary restrictions
+remain. Saved result tables, testlet calibration plots and reports retain
+the selection. This does not select individual-rater or Person intervals.}
+
+\item{calibration_level}{Nominal level for those calibration intervals,
+between zero and one; default 0.95. Nondefault calibration options are
+unavailable for ordinary MFRM fits.}
 }
 \value{
 Depending on \code{output}, an \code{mfrm_results} object, a
@@ -162,7 +215,7 @@ method, anchors, and missing-data rules are recorded. Use
 
 \section{Visualization and HTML}{
 
-\code{plot(res)} routes to the primary native Wright map when the fitted object
+For ordinary models, \code{plot(res)} routes to the primary native Wright map when the fitted object
 contains compatible person and facet locations. This default retains
 available mfrmr facet uncertainty. Use \code{plot(res, type = "fit")} when the
 explicit three-plot Wright/pathway/category bundle is wanted. The compact
@@ -205,6 +258,36 @@ interactive session.
 \item Use \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or the helper named in
 \code{summary(res)$next_actions} for report-specific follow-up.
 }
+}
+
+\section{Testlet and random-rater results}{
+
+\code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} and \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} results use a separate
+reporting route within the same \code{mfrm_results} class. It always retains
+calibration estimates, numerical checks, settings, data usage and interval
+meanings. Requested ordinary-model sections that are unsupported are
+marked \code{not_available}. Neither \code{compute} setting fits, scores, resamples
+or computes diagnostics for these models. Supply separately computed
+\code{predictions}, \code{scores} or \code{intervals} explicitly; their absence is recorded.
+Rebuild results from an older saved fit to apply current calibration-bound
+defaults without refitting. Previously saved result bundles keep their
+original tables. Explicit normal bounds do not improve their coverage.
+
+Use \code{\link[=mfrm_report]{mfrm_report()}} for a static report and \code{\link[=export_mfrm_results]{export_mfrm_results()}} for
+CSV/HTML/RDS and figures. Numerical convergence does not establish model
+adequacy or general interval coverage. The ordinary Wright map, residual
+diagnostics, Shiny viewer, response-MI pooling and portable-calibration
+workflow do not support these classes. Plot types are \code{"calibration"}
+(first fixed facet by default; select with \code{facet}) and \code{"scores"} for
+testlets, or \code{"raters"}, \code{"intervals"} and \code{"scores"} for random-rater results.
+Both support \code{"comparison"} and, with corresponding saved quantities,
+\code{"response_comparison"} and \code{"response_diagnostics"}. These
+models also support \code{"wright"} and \code{"fit_pathway"} through the separately
+defined conditional-location and posterior-residual routes in
+\link{mfrmr_model_maps}, with matching saved source evidence. All these
+routes require \code{"plots"} in \code{include}; saved predictions/intervals are
+required for their corresponding plots. Report styles use the same stored
+evidence and boundaries; they do not add ordinary-model reporting templates.
 }
 
 \examples{

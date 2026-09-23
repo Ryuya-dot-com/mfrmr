@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{Output from \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}.}
 
-\item{digits}{Number of digits used in numeric summaries.}
+\item{digits}{Number of digits used when printing numeric summaries.}
 
 \item{...}{Reserved for generic compatibility.}
 }
@@ -17,8 +17,12 @@
 An object of class \code{summary.mfrm_signal_detection} with:
 \itemize{
 \item \code{overview}: run-level overview
-\item \code{detection_summary}: aggregated detection rates by design, with
-design-variable alias columns when applicable
+\item \code{detection_summary}: full-precision rates by design, with design-variable
+aliases when applicable. \verb{DIF*} and \verb{BiasScreen*} columns retain \code{Planned},
+\code{Available}, \code{Unavailable}, \code{Positive}, \code{MCLower}, \code{MCUpper},
+\code{AllTrialsLower} and \code{AllTrialsUpper} for target outcomes. Monte Carlo
+bounds are exact 95\% binomial intervals conditional on availability;
+all-trial bounds describe unresolved outcomes, not confidence intervals.
 \item \code{ademp}: simulation-study metadata carried forward from the original object
 \item \code{facet_names}: public facet labels carried from the simulation specification
 \item \code{design_variable_aliases}: accepted public aliases for design variables

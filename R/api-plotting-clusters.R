@@ -3,7 +3,7 @@
 #' Inspect within-sample separation, individual feature profiles, or pairwise
 #' co-membership across imputations using existing clustering results.
 #'
-#' @param x An object returned by [mfrm_cluster()] or
+#' @param x An object returned by [mfrm_cluster()], [mfrm_cluster_kmeans()] or
 #'   [mfrm_cluster_imputed()], as appropriate.
 #' @param type For a single partition, `"silhouette"` or `"profile"`.
 #' @param feature A single selected feature name, required for `type = "profile"`.
@@ -73,11 +73,19 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
   excluded <- x$membership$ID[is.na(x$membership$Cluster)]
   method <- if (is.null(x$settings$linkage)) x$settings$method else
     paste(x$settings$linkage, "linkage")
-  subtitle <- sprintf("%s / Gower | Included: %d | Excluded: %d",
-    method, x$settings$included, length(excluded))
+  subtitle <- sprintf("%s / %s | Included: %d | Excluded: %d",
+    method, x$settings$distance, x$settings$included, length(excluded))
+  if (!is.null(x$settings$space)) {
+    subtitle <- paste0(subtitle, " | ", x$settings$space,
+      if (!is.null(x$settings$components)) paste0(": ", x$settings$components) else "",
+      if (isTRUE(x$settings$scale)) " | Sample-SD scaling" else " | Original-unit scaling")
+  }
   if (type == "silhouette") {
     if (!is.null(feature)) stop("`feature` is only used for type = 'profile'.", call. = FALSE)
     tab <- x$membership[!is.na(x$membership$Cluster), , drop = FALSE]
+    if (!nrow(tab) || any(!is.finite(tab$Silhouette))) {
+      stop("Silhouettes are unavailable; fit with silhouette = TRUE or use a profile plot.", call. = FALSE)
+    }
     tab <- tab[order(tab$Cluster, -tab$Silhouette, tab$ID), , drop = FALSE]
     show_labels <- labels %||% (nrow(tab) <= 50L)
     average <- mean(tab$Silhouette)

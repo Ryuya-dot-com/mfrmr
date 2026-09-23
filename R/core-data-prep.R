@@ -382,6 +382,9 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   }
 
   rows_before_drop <- nrow(df)
+  omitted <- !stats::complete.cases(df) | (!is.na(df$Weight) & df$Weight <= 0)
+  omitted_data <- as.data.frame(df[omitted, , drop = FALSE])
+  omitted_input_rows <- which(omitted)
   df <- df |>
     tidyr::drop_na() |>
     filter(Weight > 0)
@@ -715,6 +718,8 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
     weight_col = if (!is.null(weight_col)) weight_col else NULL,
     keep_original = isTRUE(keep_original),
     row_retention = row_retention,
+    omitted_data = omitted_data,
+    omitted_input_rows = omitted_input_rows,
     preparation_notes = preparation_notes,
     source_columns = list(
       person = person_col,

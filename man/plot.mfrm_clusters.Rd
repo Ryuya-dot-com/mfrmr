@@ -18,7 +18,7 @@
 \method{plot}{mfrm_imputed_clusters}(x, ids = NULL, labels = NULL, draw = TRUE, preset = "standard", ...)
 }
 \arguments{
-\item{x}{An object returned by \code{\link[=mfrm_cluster]{mfrm_cluster()}} or
+\item{x}{An object returned by \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} or
 \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, as appropriate.}
 
 \item{type}{For a single partition, \code{"silhouette"} or \code{"profile"}.}

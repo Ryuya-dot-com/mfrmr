@@ -59,6 +59,13 @@ when that reporting question is needed.
 }
 
 Report rows deliberately distinguish evidence from claims. The
+testlet and random-rater route is a smaller stored-result report: all styles
+retain numerical checks, data usage, interval meanings and supplied
+predictions/intervals. It does not supply ordinary residual diagnostics or
+fit/APA wording templates; \code{template_index} is empty. See the model-specific
+section in \code{\link[=mfrm_results]{mfrm_results()}} for supported tables and plots.
+
+For ordinary models, the
 \code{first_screen} table is the compact entry point: it gives an overall row and
 one row per major evidence area with status, readiness, main issue, next
 action, and primary route. The

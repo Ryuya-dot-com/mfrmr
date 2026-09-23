@@ -6,6 +6,26 @@ with corrections to uncertainty, subgroup comparisons and design planning.
 
 ## Design decisions and saved output
 
+* Plot conversion now refuses unsupported PCA, clustering, pooled-MI,
+  fixed-facet interval, screening-performance and D-study difference views
+  even when `component` is specified. Previously, that option could silently
+  replace the intended axes or intervals with a generic bar chart.
+  Multivariate D-study scenario conversion retains its dedicated panels with
+  `component = "series"`; use `plot_data()` for other tables and custom graphics.
+  Non-supported views give that guidance even when ggplot2 is not installed.
+* PCA score plots distinguish groups by both colour and point shape and retain
+  the encoding in `plot_data()`. Scree plots distinguish retained and omitted
+  components with filled and open points, including monochrome output.
+  Tutorial figures now include alternative text describing the plotted target
+  and the meaning of intervals, missing results and descriptive groups.
+* `mfrmr_output_guide()` now includes `"features"`, `"imputation"` and
+  `"gtheory"` routes, distinguishing their dedicated tables, plots and RDS
+  saving from the fitted-model `mfrm_results()` reporting workflow.
+* Extended-model interval plots and testlet Person scoring now also work in
+  R sessions where the stats package is installed but not attached.
+* Help for `fit_mfrm_imputed()` and `pool_mfrm_imputed()` now renders function
+  links and code formatting correctly.
+
 * Design-evaluation summaries retain full-precision metrics; `digits` now
   controls printing only. Rounding can no longer turn a value just below a
   minimum, or above a maximum, into a passing design recommendation.
@@ -19,6 +39,293 @@ with corrections to uncertainty, subgroup comparisons and design planning.
 
 ## Rater feedback
 
+* Shared-rater and testlet calibration now show point estimates and approximate
+  SEs with missing bounds by default. Explicit pointwise normal approximations
+  remain available through `confint(fit, parm = "calibration", level = ...)`,
+  `summary(fit, calibration_intervals = "normal", level = ...)`, and
+  `mfrm_results(fit, calibration_intervals = "normal", calibration_level = ...)`.
+  Testlet plots accept `intervals = "normal", level = ...`; common results
+  preserve this choice in plots, reports and saved replay. Numerical failures
+  and estimated variance boundaries still withhold bounds. This change does
+  not improve or qualify finite-sample coverage. Rebuild outputs from older
+  saved fits to apply it without refitting; existing result bundles keep their
+  stored tables. Population-SD and conditional Person intervals retain their
+  separate methods and interpretation.
+
+* Shared-rater fitting help now includes a bounded independent comparison of
+  local calibration-likelihood changes using saved joint posterior samples.
+  The tested changes met the stated numerical tolerance; this does not qualify
+  interval coverage, full population-SD profiles or variance boundaries.
+  Extended-model reports and testlet summaries/figures now identify fixed-facet
+  and step intervals explicitly as observed-information normal approximations.
+
+* Testlet fitting now selects a converged optimization start when a failed
+  start has an indistinguishable objective within floating-point precision.
+  Gradient, integration, search-bound and information checks are unchanged.
+  A 480-dataset comparison exposed fourteen such failures; all fourteen
+  passed targeted refits, while four controls retained identical estimates
+  and scores. Refit affected saved models and regenerate their scores;
+  printing an older unavailable result does not repair it.
+* The testlet tutorial now reports an estimated-population comparison with
+  ordinary RSM, including original failures, their separate numerical repair,
+  Monte Carlo uncertainty and known-calibration references. Corrected Person
+  coverage was 94.4% versus 84.9% with 120 Persons and positive local dependence,
+  and 91.7% versus 83.3% with 24 Persons. Testlet EAP mean squared error was
+  higher in those two balanced conditions. Conditional intervals retain their
+  stated interpretation; neither a universal 95% coverage guarantee nor a
+  uniformly more accurate model is established.
+* Shared-rater fits now report `checks$PersonQuadratureStable` separately
+  from overall numerical readiness. When Person integration is insufficient,
+  the warning identifies it and explains refitting with more quadrature
+  points; the tutorial gives the corresponding workflow. Integration
+  tolerances, default order, estimators and interval restrictions are unchanged.
+* Added a testlet application tutorial connecting task/criterion allocation,
+  unequal rubric lengths, possible halo and task-specific dependence to the
+  existing fit and scoring APIs. A complete four-rating enumeration compares
+  model-conditional posterior precision and marginal EAP reliability; a
+  five-versus-two-criterion example compares the influence of one-point changes.
+  Saved scoring results provide plots, tables and report connections. Help
+  distinguishes dependence from halo causation, task difficulty from local
+  variance, and likelihood adjustment from equal task weighting. The current
+  model still estimates one common local variance; no task-specific variance
+  model, general planning API or new coverage claim is introduced.
+* Individual shared-rater prediction intervals are no longer supplied
+  automatically in fits, summaries, plots or report tables. Point estimates,
+  conditional SDs and first-order `PredictionSE` remain available.
+  `confint(fit, parm = "raters")` and `plot(fit, intervals = "normal")`
+  explicitly inspect the normal approximation without refitting. The
+  interval-width view and sorting require that explicit selection. New
+  summaries/reports of earlier saved fits follow this default; raw saved
+  objects and historical plot payloads retain their values. This restriction
+  does not correct coverage or promote bootstrap intervals as a replacement.
+  In a prespecified 800-dataset estimated-population study, conditional rater
+  coverage was 91.6--91.8% with six raters and 94.0--94.1% with 24; finite
+  interval availability was 99% and 87--88%, respectively. None met the joint
+  coverage/availability criterion. All optimizers and information checks
+  passed, but 53 fits failed higher-order Person quadrature checks, and one
+  additional fit estimated zero rater variance. The tutorial reports Monte
+  Carlo uncertainty and paired ordinary-MFRM point comparisons. These results
+  do not qualify Person/testlet intervals or a minimum rater count.
+* `score_mfrm_persons()` scores the complete source roster under ordinary
+  RSM MML, testlet or shared-rater calibration, with optional Person selection.
+  Ordinary scores use continuous posterior moments and equal-tail endpoints,
+  retaining the fitted normal mean/variance. Missing-only Persons remain
+  prior-only; zero ability variance does not produce zero-width intervals.
+  `compare_mfrm(..., person_scores = ...)` checks matching rosters and compares
+  EAPs after population-origin alignment, retaining conditional endpoints and
+  unavailable rows without model-difference intervals or automatic ranking.
+* Saved extension results support model-aware Wright maps and descriptive
+  fit pathways through `type = "wright"` and `"fit_pathway"`. Facet/rater
+  positions include the mean step at a zero-other-effect reference; only
+  Person conditional intervals are drawn. The fit pathway uses posterior
+  residual summaries, with no ordinary fit cutoffs. English labels, shapes,
+  monochrome, text alternatives, panel/Person selection and optional
+  annotations are available in native and ggplot views. Maps and their tables
+  join static reports and saved replay without new scoring. Older testlet
+  scores without roster metadata need rescoring from the existing fit.
+
+* `mfrm_response_diagnostics()` now integrates latent uncertainty for ordinary
+  RSM MML, testlet and shared-rater fits before computing category probabilities, predictive
+  means/variances and descriptive Infit/Outfit. Output selection preserves the
+  full conditioning roster; missing or unresolved rows remain explicit.
+  Shared-rater predictions use normalized category-specific joint Laplace
+  integrals and retain the normalization defect; numerical agreement does not
+  certify approximation accuracy. Paired/scatter displays support ggplot,
+  distinct symbols, monochrome, text alternatives and optional annotations.
+  Saved diagnostics attach to `mfrm_results()` for reports and replay.
+  These same-data summaries have no expectation-one reference, cutoffs, ZSTD
+  or p-values; ordinary plug-in fit indices are not directly comparable.
+
+* `compare_mfrm()` accepts matching saved `response_diagnostics` for an
+  ordinary RSM versus a testlet/shared-rater model. Category probabilities,
+  means, full variances and descriptive Infit/Outfit share one definition.
+  Selected events are matched by contents and multiplicity, including missing
+  scores, rather than row numbers. Paired/difference plots offer metric and
+  category selection, monochrome and optional annotations. Saved comparison
+  tables and figures connect to reports and replay without recomputation.
+  The results are same-data descriptions, with no model preference or fit
+  cutoffs. Ordinary plug-in diagnostics retain their existing definition.
+
+* `fit_measures_table()` now uses mean squares for its default directional
+  screen. ZSTD values and df comparisons remain visible; `ZSTDOnly` identifies
+  additional combined-rule flags. Use `flag_basis = "mnsq_or_zstd"` for the
+  earlier combined rule. Missing indices no longer establish a negative
+  screen; `ScreenComplete` identifies incomplete rows. Low mean squares are
+  described as low residual variability, not poor rater quality or grounds
+  for automatic exclusion. Console follow-up prioritizes high mean squares.
+  Saved reports identify the actual rule; earlier stored tables retain their
+  combined-rule interpretation.
+* `mfrm_screening_sensitivity()` compares declared threshold bands on saved
+  simulation statistics, separating underfit, overfit and their union. It
+  preserves planned trials, unknown outcomes and replication-level Monte
+  Carlo intervals. Labelled tile and curve views support ggplot, monochrome
+  output, text alternatives and optional titles/notes. ZSTD is an explicit
+  alternative rule; no best threshold or universal error guarantee is selected.
+
+* `compare_mfrm()` now accepts one ordinary RSM MML fit and one testlet or
+  shared-rater fit for descriptive, matched-event facet comparisons. It checks
+  category/population/constraint compatibility and repeated or omitted events,
+  centers effects over the same facet levels, and retains raw values and failed
+  checks. Paired and mean-versus-difference plots support ggplot conversion,
+  custom/hidden annotations and text alternatives. Matching comparisons attach
+  to `mfrm_results(..., comparison = ...)` for reports and saved exports.
+  No automatic ranking or difference intervals are implied. Person-score
+  comparison requires the saved scoring outputs described above. Predictive comparisons require the separately supplied diagnostics
+  described above. Ordinary fits now retain omitted events and input-row
+  indices; older fits with unrecorded omissions require refitting for this route.
+
+* Shared-rater and testlet estimate plots now offer interval, precision
+  (estimate versus interval width), and empirical cumulative-distribution
+  views. Shared display controls cover sorting, monochrome output, point/text
+  size, labels, reference lines and custom or hidden titles/captions. Colours
+  are supplemented by symbols; plot data retain text alternatives, complete
+  tables and exclusion reasons. Cumulative distributions exclude prior-only
+  scores and do not estimate a latent population distribution. Shared-rater
+  severity and bootstrap intervals now also convert to ggplot; bootstrap
+  comparisons retain dashed ordinary intervals and arrows for infinite ends.
+  These presentation changes reuse saved estimates without refitting.
+
+* `score_mfrm_random_rater()` supplies conditional Person EAPs, posterior SDs
+  and continuous equal-tail intervals with joint shared-rater integration.
+  Selecting Person IDs retains the full scoring roster; supplied new data
+  replace the roster. Prior-only and unavailable rows stay explicit. The
+  conditional Laplace approximation holds calibration fixed and does not
+  establish general approximation accuracy or interval coverage. Saved scores
+  support plots, ggplot conversion and `mfrm_results(fit, scores = scores)`
+  alongside response predictions and rater bootstrap intervals. Numerical
+  checks, omitted rows and the complete scoring roster remain in the result.
+  A fixed-calibration joint-posterior comparison now supports the stated
+  numerical tolerances for 48 selected scores on twelve linked and reduced
+  three-category RSM rosters. Help separates approximation accuracy from
+  interval coverage, retains the reference-precision limitations, and explains
+  how to select a few output Persons while keeping the full scoring data.
+* `fit_mfrm_random_rater()` now estimates normal ability variance by default.
+  Use `person_sd = 1` for a known standard normal population, or another
+  positive known SD. Calibration-adjusted rater uncertainty includes the
+  ability-SD coordinate; rater-SD profiles re-estimate it, and bootstrap
+  generation/refits preserve the fitted population and known/estimated choice.
+  Both estimated zero variances and the ability search bound are checked.
+  Up to 241 Person quadrature points can be requested when lower orders fail
+  the unchanged accuracy checks.
+  An estimated ability boundary withholds regular intervals and rater-SD
+  profiling. Reports distinguish both variance components; earlier saved fits
+  retain their known N(0,1) population. Existing fixed-population coverage
+  evidence does not qualify this estimated-population workflow.
+* `fit_mfrm_testlet()` now estimates normal ability variance by default,
+  alongside the common local variance. Use `person_sd = 1` for the earlier
+  fixed N(0,1) model, or specify another known positive SD. Both estimated
+  zero-variance boundaries are checked explicitly. Zero ability variance
+  withholds individual scores; search-bound failures retain their checks.
+  Conditional scoring, prior-only rows, summaries, reports and saved results
+  use the matching population. Earlier saved fits retain N(0,1); changing
+  that assumption requires refitting and regenerating scores. Person intervals
+  exclude uncertainty in estimating both variances; earlier fixed-population
+  coverage studies do not qualify this new fit.
+* Random-rater and testlet help now connects the effect-sharing assumptions
+  to measurement-model research, distinguishes the fixed ability-variance
+  restriction from scale identification, and explains which ordinary-MFRM
+  comparisons preserve the data and statistical target. Descriptive matched-facet
+  comparison uses `compare_mfrm()`; predictive diagnostics and their cross-model
+  comparisons use the matching response-probability definition.
+* Testlet and random-rater fits now connect to `mfrm_results()`,
+  `mfrm_report()` and `export_mfrm_results()`. Reports retain calibration,
+  numerical checks, omitted-score accounting and interval meanings, plus
+  explicitly supplied matching predictions and random-rater bootstrap results.
+  CSV/RDS exports preserve prior-only and unavailable rows, failed bootstrap
+  trials and infinite interval endpoints. Replay reloads saved results without
+  fitting, scoring or resampling. Older predictions must be regenerated from
+  their saved fit to attach source metadata; no model refit is needed.
+  Numerical checks are not model-fit diagnostics or general coverage evidence.
+* Testlet results now connect to `as_ggplot()` and the common plot-data
+  accessors, preserving interval labels, prior-only symbols and unavailable
+  rows. `mfrmr_output_guide("models")` and the workflow help compare fixed
+  facets, shared random raters and testlets, including their different
+  prediction targets. The tutorial covers figure and table export. Ordinary
+  diagnostics and the Shiny viewer remain unsupported for the extended
+  models and provide targeted guidance. Replot or convert saved results
+  to use the display changes; no refit or rescoring is required.
+* Added `fit_mfrm_testlet()` for an RSM with explicit, non-overlapping
+  Person-specific testlet memberships, additive fixed facets and a common
+  normal local-effect variance. Nested quadrature, analytic gradients,
+  multiple starts, an exact zero-variance submodel and information checks
+  support calibration; unequal observed block sizes are allowed. `predict()`
+  provides continuous conditional Person intervals, retaining unavailable
+  and prior-only rows. Saved fits, English plots, an interval-guide entry and
+  a complete tutorial cover fitting, feedback, missing assigned scores and
+  reuse. Estimated zero variance withholds regular calibration intervals.
+  Person intervals hold calibration fixed and do not propagate its estimation
+  uncertainty. This local effect is distinct from a rater shared across
+  persons. The separate result class does not support ordinary-model
+  diagnostics, response-MI pooling or portable calibration conversion.
+  Earlier models require a new fit with explicit membership. General coverage,
+  calibration-aware Person intervals and correlated/heterogeneous testlets
+  remain unfinished.
+* Added `mfrm_random_rater_intervals()` to compare model-based bootstrap
+  prediction intervals with ordinary intervals for observed random raters.
+  It generates shared rater effects, persons and scores on the analyzed
+  assignment and refits the same model. Saved prediction errors support
+  studentized and unscaled intervals and different levels without refitting.
+  Failed refits and unavailable studentizers remain in the planned count;
+  uncertainty about their roots widens limits, possibly to infinity.
+  Plots distinguish unbounded endpoints from finite ordinary intervals.
+  Positive source SD and prediction SEs are required. This candidate does
+  not replace population-SD profiles or establish general coverage; boundary
+  sources, simultaneous classification and missingness-model uncertainty
+  remain outside its scope. In a separate 24-dataset comparison (12 per
+  condition, 99 refits each), six-rater coverage was 91.7% for ordinary and
+  100% for studentized intervals, with 40% greater mean width. The improvement
+  occurred in one dataset; its paired change had MCSE 8.3 percentage points.
+  With 24 raters, coverage was 95.5% and 95.1%. All intervals were finite.
+  This small comparison does not qualify 95% coverage or justify making
+  bootstrap intervals the default. The interval guide and tutorial distinguish these
+  realized-rater intervals from population-SD profiles.
+* Added `fit_mfrm_random_rater()` for an RSM with one normal rater effect
+  shared across all persons rated by that rater. Frequentist approximate MML
+  uses Person quadrature and a joint rater Laplace integral through optional
+  RTMB (>= 2.0). The distinct result class retains numerical checks, full
+  covariance, observed-rater feedback, plots and saved-result support.
+  `confint()` profiles the population SD, including zero. Estimated variance
+  boundaries withhold ordinary calibration and rater intervals. `predict()`
+  distinguishes observed raters from replacement raters at specified abilities;
+  it returns marginal score probabilities conditional on calibration, not
+  joint predictions, person scoring or parameter-uncertainty intervals.
+  A complete tutorial explains population assumptions, missing assigned scores,
+  numerical failures and interpretation. PCM, anchors, testlets, latent
+  regression and multidimensional abilities are outside this route. Earlier
+  fixed-rater analyses require a new fit for this model; changing a saved
+  object's class is not a migration. A bounded 160-dataset normal-population
+  pilot returned all population-SD profile intervals. At true SD 0.7,
+  individual-rater interval coverage averaged 84.2% with six raters and 94.4%
+  with 24 raters (40 datasets each). Few-rater interval calibration remains
+  unresolved; these results do not establish general coverage.
+* Added `mfrm_screening_performance()` and its plot for evaluating declared
+  screening rules against known simulation truth. A complete planned roster
+  retains failed and incomplete trials. Per-target and any-target family rates
+  keep separate denominators, exact Monte Carlo intervals and bounds for
+  unresolved outcomes. A tutorial connects simulated ratings to rater flags.
+  In a bounded matched-budget study, the specified Infit/Outfit union detected
+  only 6/100 and 2/100 contaminated-rater cases under two sparse assignments;
+  absence of a warning cannot certify rater quality.
+* Corrected `evaluate_mfrm_signal_detection()` so unavailable bias statistics
+  and descriptive-only DIF classifications remain unavailable rather than
+  counting as negative screens. Target summaries retain full precision,
+  planned/available counts and Monte Carlo bounds; non-target results retain
+  cell availability. Rebuild saved summaries and plots from the original
+  evaluation for target corrections. Earlier non-target averages lack the
+  required cell counts and are withheld; recovering them requires rerunning
+  the simulation. These are conditional screening rates, not general accuracy
+  guarantees or familywise error control.
+* Added `mfrm_facet_intervals()` for pointwise intervals on fixed facet estimates
+  and named linear contrasts, including rater differences. For inference-ready
+  fixed-standard-normal RSM/PCM MML fits with unit weights, compare ordinary
+  observed-information covariance with a one-way sandwich using whole persons
+  or explicitly declared larger independent clusters. The full covariance
+  preserves fitted constraints and covariance between facet levels.
+  A plot and complete tutorial compare methods on the same estimates and
+  retain unavailable intervals. The sandwich describes variability around the
+  working model's target; it does not correct misspecification bias or provide
+  general coverage, small-cluster, random-rater or diagnostic-accuracy guarantees.
+  `mfrmr_interval_guide()` includes this route and assigned-score MI pooling.
 * The introductory CSV examples preserve literal `NA` identifiers and recode
   missing-score markers only in the score column. If an earlier import
   removed valid IDs, reimport the original file and rerun the analysis.
@@ -45,6 +352,13 @@ with corrections to uncertainty, subgroup comparisons and design planning.
 
 ## Multivariate G-theory and assessment planning
 
+* Added a fixed-task-set example using existing multivariate score components
+  and a random-rater facet. It connects task-specific scores, prespecified
+  weights, rater-count scenarios and plots, and checks the result against a
+  directly weighted score. Help distinguishes this target from sampling new
+  tasks, explains workload and common-rater requirements, and retains whole-row
+  omission accounting for incomplete score vectors. No general fixed-facet
+  estimator is added.
 * Added `mfrm_multivariate_gstudy()` and `mfrm_multivariate_d_study()` for
   numeric observed scores with fixed score components and one or two random
   measurement facets. A single score is also supported. Select common tasks,
@@ -102,8 +416,72 @@ with corrections to uncertainty, subgroup comparisons and design planning.
   used and excluded row accounting. Older saved results require a new G-study
   from original data to obtain that accounting; an MFRM refit is unnecessary.
 
+## Missing scores on assigned ratings
+
+* A paired repeated-sampling assessment of joint-RSM imputations now informs
+  the help. In 200 datasets with 80 Persons, three raters and two criteria,
+  MI coverage of a fixed-rater contrast was 96.5% under observed-score-dependent
+  MAR missingness (198 available intervals; 95% Monte Carlo bounds 92.9--98.6%).
+  Low-score-dependent MNAR missingness reduced coverage to 26.0% and introduced
+  +0.574-logit bias despite a similar overall missing fraction near 14%.
+  Direct MML and Bayesian inference showed the same vulnerability. Two MAR
+  posteriors missed the sampling-diagnostic threshold and remain counted as
+  unavailable. These are bounded results for the specified imputer and design;
+  the generic supplied-imputation and pooling calculations are unchanged.
+* The assigned-score tutorial now uses a joint RSM imputation example with
+  uncertainty in calibration and shared Person abilities. Forty supplied
+  posterior predictive completions run without a Bayesian toolchain; an
+  accompanying R/Stan script regenerates them and retains sampling diagnostics.
+  A probability display, direct observed-score comparison and separate
+  lower-score sensitivity analysis connect missing-score assumptions to a
+  fixed-rater contrast. The example preserves unassigned cells and observed
+  scores. Agreement in one example does not establish repeated-sampling
+  coverage or exact compatibility between Bayesian imputation and MML analysis.
+* Pooling help distinguishes uncertainty in an imputation model from bootstrap
+  inference for the entire analysis. Imputer resampling or a common response
+  likelihood alone does not establish valid Rubin intervals. The pooling
+  calculation is unchanged. Direct observed-score MML can estimate the same
+  target under the same likelihood and ignorable missingness assumptions;
+  imputation creates no additional observed information.
+* Added `mfrm_response_imputations()` to review supplied score completions from
+  a retained imputation model. Explicit event IDs and eligible missing-score
+  selections preserve observed scores, person/facet identities and assignment.
+  Unassigned rows remain unassigned; no complete rating grid is constructed.
+  Unselected assigned nonresponse requires an explicit omission decision.
+* `fit_mfrm_imputed()` fits every completion with a common RSM/PCM MML
+  specification, category ladder and fixed-standard-normal person scale.
+  All fits, failures and warnings remain available; incomplete or ineligible
+  analyses cannot be silently omitted from subsequent pooling.
+* `pool_mfrm_imputed()` combines eligible non-person facet estimates or
+  prespecified linear contrasts with full observed-information covariance and
+  Rubin's rules. Results retain within/between/total covariance, reference
+  degrees of freedom and Monte Carlo SEs. A plot displays the stored pointwise
+  intervals and identifies fixed targets without inferential intervals.
+  Person EAPs and posterior SDs are not eligible for this pooling route.
+
 ## External features and exploratory groups
 
+* Added `mfrm_pca()` and `mfrm_cluster_kmeans()` for explicitly selected
+  numeric external attributes. They retain scaling, feature weights, PCA
+  component choices, initialization settings, original-unit profiles, omitted
+  IDs and missingness reasons. PCA input to k-means is used without whitening
+  or rescaling; factors and arbitrary category codes are not converted.
+* PCA provides scree, score and loading plots with exact plotted tables;
+  matching group results can annotate the score view. Existing profiles,
+  silhouettes, saved results and group comparisons support k-means. Comparison
+  summaries identify each analysis's distance, fitted space, scaling and
+  retained component count. Recreate comparisons from saved analyses to add
+  these columns; the existing analyses need no refit. Different geometries do
+  not make silhouettes a common-scale criterion for choosing a feature set.
+* `mfrm_cluster_imputed(method = "kmeans")` supports direct numeric features or
+  explicit PCA reduction within each retained completion. It reuses the same
+  reviewed `mice` model and preserves all completions and their transformations.
+  No PCA basis, component scores or group labels are pooled. Updated examples
+  connect numeric preprocessing, paired comparisons and original-unit profiles.
+* K-means can omit silhouettes explicitly to avoid their pairwise distance
+  allocation. Uncomputed values remain unavailable in summaries and plots.
+  Imputation co-membership matrices still require quadratic memory. Seeds
+  preserve the caller's random state; optimization failures are reported.
 * The external-feature tutorial now uses `mice` chain plots to review
   imputation behavior, so the basic example does not require `rstan`.
 * Added `mfrm_features()` to prepare one row per Person, rater or task from
@@ -246,6 +624,7 @@ and action needed for each affected workflow.
   intervals while fixing the other components did not produce a
   profile-likelihood interval for the ICC ratio. Choose `"boot"` explicitly
   for parametric percentile intervals, subject to the fitted Gaussian model.
+  The interval guide now also points to this explicit bootstrap route.
 * ICC bootstrap results now retain all draws, requested and unavailable counts,
   convergence/singularity diagnostics, and refit warnings/errors. Any missing
   or nonconverged replicate, or a fit warning, withholds intervals; successful

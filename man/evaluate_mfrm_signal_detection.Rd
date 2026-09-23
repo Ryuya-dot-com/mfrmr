@@ -212,7 +212,7 @@ arbitrary-facet planning evidence.
 
 \strong{Detection criteria}:
 A DIF signal is counted as "detected" when the target contrast has
-\eqn{p <} \code{dif_p_cut} \strong{and}, when an absolute contrast cutoff is in
+\eqn{p \le} \code{dif_p_cut} \strong{and}, when an absolute contrast cutoff is in
 force, \eqn{|\mathrm{Contrast}| \ge} \code{dif_abs_cut}. For
 \code{dif_method = "refit"}, \code{dif_abs_cut} is interpreted on the logit scale.
 For \code{dif_method = "residual"}, DIF detection, classification and false-positive
@@ -224,18 +224,40 @@ screening metrics rather than formal inferential quantities. Here, a bias
 cell is counted as \strong{screen-positive} only when those screening metrics are
 available and satisfy
 
-\eqn{p <} \code{bias_p_cut} \strong{and} \eqn{|t| \ge} \code{bias_abs_t}.
+\eqn{p \le} \code{bias_p_cut} \strong{and} \eqn{|t| \ge} \code{bias_abs_t}.
+If either required metric is unavailable, the result is \code{NA}, not \code{FALSE}.
+A descriptive-only DIF classification likewise supplies no classification
+detection outcome, even when the contrast itself is available.
 
 \strong{Power} is the proportion of replications in which the target signal
 was flagged when a comparison statistic is available. Refit DIF rates are
 conditional screening rates, not calibrated inferential power.
 For bias, the primary summary is \code{BiasScreenRate}, a screening hit rate
-rather than formal inferential power.
+rather than formal inferential power. With a zero generating effect, the
+target rate describes null flags rather than sensitivity. The historical
+column name \code{DIFPower} is retained for compatibility.
 
-\strong{False-positive rate} is the proportion of non-target cells that were
-incorrectly flagged. For DIF this is interpreted in the usual testing
-sense. For bias, \code{BiasScreenFalsePositiveRate} is a screening rate and
-should not be read as a calibrated inferential alpha level.
+\strong{False-positive rate} first counts flags among available non-target cells
+within each replication, then averages those proportions across replications.
+\code{DIFNonTargetPlanned}/\code{DIFNonTargetAvailable} and the corresponding
+\verb{BiasNonTarget*} columns retain cell denominators. These rates are neither
+calibrated inferential alpha levels nor probabilities of any false flag in
+a family. For per-target and any-target rates with a complete planned roster,
+use \code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}}.
+
+Target summaries retain planned, available, unavailable and positive counts,
+exact 95\% binomial Monte Carlo bounds, and bounds obtained by assigning every
+unresolved outcome negative or positive. Rates and Monte Carlo intervals
+condition on available outcomes; unresolved-outcome bounds are not confidence
+intervals. These uncertainty calculations describe independent simulation
+replications, not uncertainty about the quality of a real rater.
+
+Rebuild older saved summaries and plots from the original evaluation to
+correct unavailable target outcomes and retain full-precision summaries.
+Older runs lack non-target availability counts, so their non-target rates
+are withheld: recovering those cell rates requires rerunning the simulation.
+This function evaluates Group-by-Criterion DIF and Rater-by-Criterion bias;
+it does not evaluate general Rater-by-Group differential rater functioning.
 
 \strong{Default effect sizes}: \code{dif_effect = 0.6} logits corresponds to a
 moderate criterion-linked differential-functioning effect; \code{bias_effect = -0.8}

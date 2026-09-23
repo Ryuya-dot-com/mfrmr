@@ -1,18 +1,23 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-09-22. This document sets priorities and
+Status: public roadmap, updated 2026-09-24. This document sets priorities and
 completion conditions; it does not promise release dates or unimplemented APIs.
 See [NEWS](NEWS.md) for changes and the [README](README.md) for use and examples.
 
 ## Current releases
 
-mfrmr 0.2.4 is a release candidate that consolidates the implemented work from
-stages 1–3 on `main`. It has not been released on CRAN; the final
+mfrmr 0.2.4 is a release candidate. Its checked baseline consolidates the
+previously completed work from stages 1–3 on `main`. It has not been released
+on CRAN; the final
 release decision is separate from integrating the source. GitHub pre-releases
 provide fixed snapshots for evaluation and link to their applicable CI results.
-The latest published candidate,
+The published candidate
 [`v0.2.4-rc.3`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.3),
-passed its five-environment package checks. Later main-branch changes retain
+passed its five-environment package checks. The expanded numeric-feature,
+assigned-score imputation, fixed-facet intervals, screening evaluation and
+shared random-rater and Person-specific testlet workflows described below
+have completed local integration within the stated scope and have not been
+published on main. Later main-branch changes retain
 their own checks; they do not change that tag or its archive.
 Use the source tag or commit and matching installed help to identify available
 functionality. Earlier candidates also report package version `0.2.4`.
@@ -22,7 +27,7 @@ functionality. Earlier candidates also report package version `0.2.4`.
 | Portable calibration and new-Person scoring | Implemented for the stated fixed-normal RSM/PCM MML scope. | Preserve the supported workflow and corrections during integration. |
 | External-feature clustering and imputation sensitivity | Included in the candidate, including hierarchical trees, plots and setting comparisons. | Preserve descriptive interpretation and paired imputation comparisons. |
 | Multivariate observed-score G/D studies | Crossed/nested point projections and explicit normal-theory intervals for prespecified two-crossed-facet plan differences are included. | Preserve the supported designs, uncertainty assumptions and metric-specific availability. |
-| Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are implemented, including identifiable incomplete or unequal source designs. | Preserve this integrated stage-3 scope; other nesting structures and random-facet MFRM remain separate extensions. |
+| Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are included in the baseline. Shared-rater and testlet RSMs have completed local integration for their bounded conditional/descriptive scope; broader inference remains unqualified. | Retain the G/D-study and two RSM workflows specified below; public release still requires matching CI and publication. |
 
 ## Purpose and priorities
 
@@ -32,8 +37,8 @@ account of what the results support. The development order is:
 
 1. Finish the implemented development workflows: APIs, examples, tables,
    plots, exports, saved results and failure behavior.
-2. Extend statistical support, beginning with uncertainty in multivariate
-   G/D-study planning comparisons.
+2. Qualify statistical support for the retained uncertainty, imputation and
+   rater-feedback targets, reusing the completed G/D-study evidence.
 3. Extend the models for specified assessment designs and analysis targets.
 4. Integrate the completed work from stages 1–3, together with the existing
    calibration workflow and corrections, into mfrmr 0.2.4.
@@ -50,29 +55,94 @@ questions; they must retain their own scales, assumptions and interpretations.
 
 ## Focus for 0.2.4
 
-The implemented analysis, rater-feedback, planning, clustering and G/D-study
-workflows are consolidated in the 0.2.4 source on `main`, together with their
-help, examples, plots, saved-output behavior and corrections. Subsequent changes
-must retain their own validation record. Previously completed checks remain
-evidence for their stated source and scope.
+The release outcome is an assessment workflow that connects rating-design
+review, estimation, qualified uncertainty, rater feedback, assessment planning
+and reproducible output. Educational performance assessment is the principal
+example; the same explicit roles can describe music, clinical assessment or
+judged performances without claiming validation in every domain.
 
-The release combines finished exploratory-feature and multivariate G/D-study
-workflows, statistical support and selected model extensions with portable
-calibration. Current functionality and planned additions remain distinct until
-implementation and validation are complete.
+The following is the retained final scope. These public workflows have completed
+local integration; matching cross-platform checks and publication remain.
+Completion of the previously published candidate alone did not establish this
+expanded scope.
 
-| Stage | Deliverable | Completion condition before integration |
+| Included in 0.2.4 | Outcome required before release | Explicit boundary |
 | --- | --- | --- |
-| 1. Finish implemented functions | Consistent clustering/MI comparisons and G/D-study APIs, beginner examples, plots, exports and saved-result behavior. | Supported data-to-result workflows execute; units, identities, exclusions and metric-specific availability are consistent. Remaining defects are corrected with focused checks. |
-| 2. Extend statistical support | A justified uncertainty method for prespecified G/Phi/SEM planning comparisons, preserving dependence between plans and composites. | Implemented output matches a declared sampling target; boundary/failure handling and coverage or decision error are evaluated under explicit conditions. An uncertainty statement alone does not complete this stage. |
-| 3. Extend models | Person-by-(Child-within-Parent) G/D-study point estimates, such as task-specific rater teams, with fitting, projections and user guidance. | The selected design has identifiable components, working raw-data estimation and D-study rules, independent calculation checks and an executable assessment example. Nested intervals, other nesting structures and other model families remain separate extensions. |
-| 4. Integrate as 0.2.4 — implemented work consolidated on main | Preserve all implemented workflows and corrections in one source line. | Verify the integrated source and matching documentation before updating main. The final release and CRAN submission remain separate decisions. |
+| Existing MFRM and portable calibration | Preserve supported RSM/PCM, bounded GPCM/JML, anchors, linking, diagnostics, new-Person scoring and corrected saved analyses. | Existing model-specific restrictions remain; new engines or unrestricted inference are not implied. |
+| Exploratory external features | Separate Person/rater/task tables; mixed-feature and hierarchical clustering; numeric PCA/k-means; setting and paired-imputation comparisons; interpretable profiles and figures. | Descriptive groups, not latent measurement classes, causal effects or automatic selection of a best partition. |
+| Assigned-score multiple imputation | Review supplied ordinal completions, preserve assignment and observed scores, fit on a common scale and pool eligible non-Person fixed-facet targets; provide a statistically examined example. | No filling unassigned cells, automatic choice of an imputation model, pooled EAPs or imputation for the two new model classes. |
+| Statistical support for feedback | Fixed-facet one-way sandwich intervals with the correct target; planned-roster evaluation of false flags, detection and unavailable results; ordinary-model bias analysis with its existing limits. | A working-model interval does not remove misspecification bias. Screening is evidence for review, not automatic rater exclusion. |
+| Multivariate observed-score G/D studies | Preserve crossed and selected nested estimation, composites, scenarios and supported paired plan-difference intervals. Complete a fixed-task-set / sampled-rater example using fixed score components where that representation is valid. | This example does not add a general fixed-facet solver. Arbitrary nesting, unequal future allocations and universal G-theory structures are outside 0.2.4. |
+| Shared-rater and Person-local testlet RSMs | Finish the two locally implemented models as bounded workflows: fit, appropriate Person scoring, rater feedback, declared uncertainty, predictions, same-data ordinary-MFRM comparisons and saved output. | One substantive ability and adjacent-category RSM. Joint shared-rater/testlet, PCM extensions, heterogeneous/correlated local effects and new substantive dimensions are later work. |
+| Model-aware diagnostics and figures | Define and verify response moments and descriptive Infit/Outfit for the two extensions; provide model-aware location/Wright displays, fit pathways and comparison figures from matching result objects. | Classic fit cutoffs, standardized tests and likelihood-ratio rules are not automatically transferable. Formal extended-model DRF/bias tests and automatic decisions are outside this release. |
+| Help, reporting and migration | Runnable question-to-result tutorials, English plots, consistent help/NEWS, static reports and CSV/HTML/RDS replay; preserve refusals and uncertainty meanings. | The extended-model Shiny viewer and complete feature parity across every result class are not release requirements. |
 
-Selected methods must meet their stated statistical requirements before
-inclusion; changes to the planned scope will be reflected here. Model extensions
-will target specified assessment designs, rather than every G-theory or MFRM
-model family in one version. Compatibility is maintained throughout development;
-stage 4 verifies how the completed features work together.
+Conditional Person intervals remain a legitimate, explicitly conditional
+output: they hold calibration fixed and are not presented as intervals that
+propagate calibration estimation. General calibration-aware Person/contrast
+intervals are a later inferential extension. Their absence does not permit
+mislabeling current intervals. Existing shared-rater interval undercoverage,
+population restrictions and numerical approximation require explicit output
+restrictions. Both extensions now omit automatic fixed-facet and step bounds;
+shared-rater individual bounds are also omitted. Explicit normal approximations
+and the separate approximate population-SD profile remain available under
+stated checks and limitations. This output decision does not improve coverage
+or turn an unqualified inferential claim into a supported one.
+
+The ability-population decision is to add an estimated normal ability
+variance to both RSM extensions before release, retaining fixed N(0,1) as
+an explicit restricted option. With a unit Rasch slope, fixing that variance
+is a substantive assumption, not just a choice of units. Both local APIs now
+estimate ability variance and accept an explicit known SD. Shared-rater
+uncertainty, profiles, bootstrap refits and saved reports use the same population
+contract. The testlet path now has a bounded estimated-population comparison: accounting
+for local dependence improved interval coverage relative to ordinary RSM but
+increased point-score error in two balanced conditions. Small/sparse coverage
+and regular calibration-interval qualification remain inconclusive. Shared-rater
+conditional scoring and local calibration-likelihood changes now have bounded
+independent numerical support. The retained interval-output decision is now
+implemented, and cross-workflow local integration is complete. The extension does
+not add substantive dimensions, heterogeneous ability groups or latent
+regression. Existing fixed-population checks apply only to their original
+branch. Comparisons and descriptive fit summaries must retain matched data,
+population assumptions and a declared response-probability definition.
+
+Broader ambitions are kept visible in the later-work section. Moving a
+required outcome out of this table changes the release scope and must be
+identified as such; it cannot be recorded as implementation completion.
+
+## Milestones and the end of this development cycle
+
+Milestones describe completed user outcomes and evidence, not elapsed time,
+numbers of APIs or numbers of passing expectations. There is no promised
+release date. The statistical question and model definition are settled before
+additional confirmation simulations or a final source freeze.
+
+| Milestone | Completion condition | Current position |
+| --- | --- | --- |
+| M0 — Release scope | Inclusion, exclusions, outstanding decisions and the local/public completion boundary agree across this roadmap and the maintained evidence inventory. | Defined by this revision; it does not certify the included methods. |
+| M1 — Existing workflows | Numeric/external features, assigned-score MI, existing feedback and G/D planning run from input review to saved output. The MI example and fixed-task planning example have explicit statistical targets. | Fixed-task planning and the joint-RSM MI/sensitivity tutorial execute locally. Ordinary screening now has directional threshold sensitivity, a corrected mean-square-only default and a bounded stress audit; adverse false-flag/detection results remain explicit. The MI example now matches the response likelihood and preserves calibration/shared-Person uncertainty; the paired 200-dataset MAR/MNAR comparison is complete, with bounded MAR support and severe MNAR bias/undercoverage. Local workflow integration is complete within these limits. |
+| M2 — Statistical and model decisions | Complete literature-to-equation-to-code correspondence; resolve ability-population constraints, effect sharing, interval targets, comparison likelihoods and diagnostic probabilities. Fix the remaining validation conditions, practical tolerances and Monte Carlo precision before new outcomes. | Ability-variance extension, matched-data comparison and descriptive probability targets are specified. The fixed-facet working-model target is reconciled. A prespecified 800-dataset shared-rater comparison is complete; automatic individual-rater intervals are withdrawn, with explicit approximation access retained. All 53 saved Person-integration failures pass higher-order refits after independent numerical review; the original study decisions remain unchanged. A 480-dataset estimated-population testlet comparison is also complete. Fourteen numerical start-selection failures are repaired; post-repair bounded coverage evidence holds in the two larger balanced conditions, while small/sparse conditions and regular calibration-interval qualification remain inconclusive. Point-score accuracy does not uniformly improve. The paired MI comparison is complete: the declared MAR design meets its bounded criteria, while MNAR coverage falls to 26.0%. A twelve-roster independent posterior comparison now supports the tested 48 conditional Person scores, including endpoint checks using saved joint rater draws. An eight-roster comparison now supports local calibration-likelihood changes at 128 distinct parameter points under the stated numerical tolerance. The retained interval decision is implemented: points/approximate SEs by default, explicit normal calibration bounds, and a separate explicitly requested approximate rater-SD profile. No new variance interval or coverage guarantee is admitted. |
+| M3 — Qualified model workflows | Both extensions have matching scoring, comparisons to ordinary MFRM, declared uncertainty and descriptive diagnostics/figures. Independent numerical checks and bounded statistical comparisons support the retained outputs; adverse and unavailable results remain visible. | Completed locally within the stated scope; matched-event centered facet comparisons now connect both extensions to ordinary RSMs, plots and saved reports. Posterior predictive probabilities, full variances and descriptive residual summaries now share a definition with ordinary RSM MML, including matched-event paired/difference comparisons and saved reporting. Source-roster conditional Person comparisons and model-aware Wright/fit-pathway displays are now implemented locally, with matching saved reports. Estimated-population testlet scoring now has a complete bounded comparison and a verified numerical-selection repair, with explicit small-sample/sparse coverage and point-accuracy limitations. A bounded independent posterior comparison now supports all 48 selected shared-rater EAPs/SDs and 96 endpoints at the stated numerical tolerances. A separate eight-roster comparison also supports local calibration-likelihood changes under the stated tolerance. Neither numerical comparison establishes interval coverage or a full SD-profile qualification. The regular/profile output decision and final cross-workflow source/help/output reconciliation are complete locally. |
+| M4 — User and maintenance integration | Representative assessment examples, all changed help/NEWS, output compatibility, failure behavior, dependencies and measured resource use agree with the admitted scope. Saved results reproduce the displayed values in a fresh session. | Completed locally; extended-model estimates have interval, precision and cumulative-distribution views. A cross-workflow saved-output pass now covers numeric features/groups, assigned-score MI, complete/incomplete G/D planning, fixed-facet intervals, screening and both extensions. Generic conversion no longer discards dedicated axes or interval semantics; public output routes and PCA colour/shape distinctions are reconciled. The installed package now passes API/help identity checks, representative help examples, ordinary/portable baseline checks and fresh-process saved-result replay. Optional-dependency refusals and reuse paths are checked with simulated namespace absence. Two malformed MI help pages and misleading installation guidance for unsupported plots are corrected. Fifteen executed tutorials, 43 figures with alternative text, repaired namespace imports and final archive/API/help/replay checks now complete this local integration. |
+| M5 — Local completion | One frozen source, installable source archive and local documentation pass the applicable integrated package checks. Every included outcome has evidence and no unresolved defect invalidates a supported result. Remaining research is explicitly outside the agreed release scope. | Completed locally on 2026-09-24 for the retained scope. The frozen source archive has matching help and executed tutorials. The full packaged run is reconciled with focused failure/warning repairs; the final structural/example check is clean. This closes the current local-development work, not public release. |
+| M6 — Public release | The same source passes five-environment CI, is integrated into main, and has matching release assets, version/status metadata, installed help and published site. Publication is verified, not inferred from a successful upload. | Future publication step after local completion; previous candidate checks do not satisfy it. |
+
+M1 workflow finishing and M2 read-only model/statistical decisions can progress
+together. M2 precedes new confirmation work; M3 and M4 precede M5. Corrections
+to reproduced calculation or interpretation defects interrupt this order.
+Documentation is maintained during implementation, not postponed entirely to M4.
+
+Local completion supplies a reviewable release candidate; it is neither a
+GitHub final release nor CRAN acceptance. CRAN submission and the external
+review outcome are separate from M6. A current local-development instruction
+does not itself start publishing. The current scope cannot be declared done
+while an included model, diagnostic or statistical decision is unresolved.
+
+If evidence rejects a proposed method, repair it, restrict the affected
+inferential output to a justified scope, or propose an explicit scope change.
+Do not silently defer an entire required workflow, relabel a known failure as
+success, or keep adding simulations until a favorable result appears.
 
 Portable calibration remains part of the integrated release. Its current scope
 is one observed scale, fixed-standard-normal RSM/PCM MML, supported direct/group
@@ -89,6 +159,32 @@ rescoring and refitting. Earlier checks support unchanged content only; the
 expanded 0.2.4 needs its own source identity and final verification. See
 [updating saved analyses](README.md#updating-saved-analyses) and
 `vignette("mfrmr-portable-calibration", package = "mfrmr")`.
+
+## Current local implementation and remaining evidence
+
+The table below records current capability and statistical limits. The release
+scope and milestones above set the completion conditions. Local integration is
+complete; earlier evidence is reused only for unchanged source and matching
+scope. Public release remains pending.
+
+| Workstream | Current status and completion condition |
+| --- | --- |
+| Numeric k-means/PCA | Implemented and checked locally with explicit geometry, component selection, paired feature imputations, plots, comparisons and executed help examples. Not yet published; group validity and inferential guarantees are not established. |
+| Assigned-response multiple imputation | Implemented and checked locally for reviewed supplied imputations and fixed-standard-normal RSM/PCM MML analyses. Event eligibility, assignment, categories and observed evidence are preserved; eligible non-person facet targets use covariance-aware Rubin pooling. The joint-RSM tutorial includes forty posterior predictive completions, shared Person draws, calibration uncertainty, sampling diagnostics, category probabilities and a separate lower-score assumption. In its 30-missing-score example, direct observed-score MML and MI contrasts are 0.463 and 0.468 logits; the lower-score assumption gives 0.667 logits. All eighty completed-data fits are eligible. A paired 200-dataset comparison now adds bounded evidence: under the tested MAR design, MI coverage is 96.5% among 198 available intervals (95% Monte Carlo bounds 92.9--98.6%); two posteriors miss the sampling-diagnostic threshold. Under low-score-dependent MNAR, coverage is 26.0% with +0.574-logit bias despite a similar missing fraction near 14%. The planned comparison is complete. Preserve this scope through integration; proper imputer priors versus MML moments remain an approximation, and arbitrary imputers/designs or general coverage are not qualified. EAP pooling and other model families remain outside this route. |
+| Robust intervals and coverage | A one-way sandwich API is implemented and checked locally for fixed-facet RSM/PCM MML estimates and contrasts, using persons or declared larger independent clusters. Help, plots, independent derivative checks and a 1,600-dataset bounded comparison are complete. All intervals were available; generating-truth coverage still fell to 87% in the joint skewed/sparse scenario. The method targets the working model's limiting parameter and does not remove misspecification bias. This bounded target, its public interpretation and local integration are complete. Small-cluster, multiway/crossed, G/D-study and variance-boundary extensions remain later work. |
+| Rater diagnostic accuracy | A planned-roster API, plot and tutorial are implemented locally, with unavailable outcomes retained and per-target/family rates distinguished. A prespecified 1,000-trial matched-budget study reused 200 results and fitted 800 new datasets. The tested Infit/Outfit union detected only 6/100 and 2/100 contaminated-rater cases under two sparse assignments; false-family flags were 0/100 except 1/100 in one missingness condition. All screens were computable, but three fits required category-support review. Threshold calibration, other departures including differential rater functioning, and broader accuracy remain open. Flagging alone does not justify rater exclusion. |
+| Random-rater MFRM | Implemented locally: shared normal rater effects, estimated or known normal ability SD, approximate MML, observed/replacement-rater probabilities, population-SD profiles, conditional Person scoring, ordinary-model comparisons, descriptive diagnostics, model-aware maps and saved reports. A prespecified 800-dataset estimated-population study found individual-rater conditional coverage of 91.6–91.8% with six raters and 94.0–94.1% with 24; finite-interval availability was 99% and 87–88%. None met the combined qualification criterion. Automatic individual-rater bounds are withdrawn; `confint(fit, parm = "raters")` and `plot(fit, intervals = "normal")` retain explicitly requested approximations without implying corrected coverage. Bootstrap intervals remain an unqualified alternative, not the default. A separate saved-case review resolves all 53 Person-integration failures by higher-order refitting with unchanged tolerances and adds explicit stability/refit guidance. This does not revise the original coverage study or establish a universally adequate order. An independent fixed-calibration posterior comparison now supports all 48 selected conditional Person EAPs/SDs and 96 interval endpoints at the stated numerical tolerances on twelve full/reduced rosters. Original raw-quantile precision limits and the saved-draw CDF refinement remain distinct; this is not coverage qualification. The local calibration-likelihood approximation now has bounded independent support at 128 distinct parameter points in eight saved datasets, with a maximum .0071-log-likelihood error allowance against the .05 tolerance. This does not establish absolute likelihood normalization, full SD-profile accuracy or boundary inference. Calibration bounds are now omitted by default and explicitly requested through `confint(..., parm = "calibration")` or the summary/results options. Rater-SD profiles remain separate explicit approximations; no regular variance interval is added. Earlier known-population pilots remain evidence for their own scope. PCM, anchors and broader populations/designs remain beyond this bounded route. |
+| Testlet MFRM | A local RSM fit, conditional continuous Person scoring, plots, saved results and tutorial are implemented for explicit non-overlapping memberships, estimated normal ability variance and a common local variance. Explicit known ability SD retains the earlier fixed-population model; old saved fits retain N(0,1). Independent likelihood/gradient and continuous-interval checks support the new calculation, including zero-variance handling. Matched ordinary-model facet, predictive and conditional Person comparisons, descriptive diagnostics and model-aware Wright/fit-pathway displays are implemented locally. A 480-dataset estimated-population comparison is complete, with original outcomes retained separately from a verified fourteen-case numerical start-selection repair. The repaired replay supports conditional coverage in the two larger balanced conditions; small/sparse conditions and regular calibration intervals remain inconclusive. Dependence modeling improves coverage relative to ordinary RSM but increases EAP mean-square error in two balanced conditions. Earlier fixed-population evidence retains its own scope. A new executed task/criterion tutorial compares fixed-budget model-conditional precision and unequal-block score sensitivity, while distinguishing halo hypotheses, task-specific variance and policy weighting. This completes an application example, not statistical qualification or a heterogeneous-variance extension. Default calibration bounds are now omitted; explicit normal approximations preserve numerical/boundary guards and the selected level through plots and saved reports. |
+| Multidimensional MFRM | Deferred at the user's request. Dimension membership, loading constraints, latent covariance and scale remain undecided. It is not a 0.2.4 completion requirement. |
+| Broader G-theory structures | Existing one/two-facet crossed and selected nested designs are retained. A runnable fixed-task-set / sampled-rater example uses existing fixed score components, with rater-count plots and direct weighted-score checks for complete and incomplete sources. A general arbitrary-design solver is later work, not a claim attached to that example. |
+
+No method can guarantee nominal coverage or diagnostic accuracy for arbitrary
+unidentified designs, distributions and unspecified missingness mechanisms.
+The statistical work will state its conditions and evaluate performance under
+those conditions; code execution and one successful simulation are insufficient.
+Missing scores on assigned ratings remain distinct from unassigned combinations.
+A general response-imputation route must preserve that distinction and the
+measurement reference used to combine downstream estimates.
 
 ## Rater feedback across application areas
 
@@ -127,8 +223,8 @@ This is evidence for that workload, not a sufficient grid for all data or a
 guarantee of interval coverage or capacity. A small paired simulation pilot
 now supplies preliminary rater-interval evidence for complete, rotating-pair
 and weakly linked assignments under a matching response/population model.
-Confirmation of coverage, challenges to the shared-population assumption,
-calibration of feedback flags and broader capacity evaluation remain pending.
+Remaining evaluations are selected through M2 for the retained release
+claims; this historical workload is not an automatic queue for more pilots.
 Severity, inconsistency and differential functioning answer different questions. Screening flags
 support rubric review and additional common ratings, not automatic rater
 exclusion or a demonstrated effect of training.
@@ -229,16 +325,18 @@ the imputation model. No setting or consensus partition is selected automaticall
 | --- | --- |
 | Use the existing descriptive workflow | The executable tutorial connects ID/omission accounting, profiles, plots and paired imputation comparisons. Preserve these paths during integration and reuse existing stress evidence within its tested workload; input caps are not runtime or memory guarantees. |
 | Relate person, rater and task groups | Preserve separate feature tables and join classifications to planned/observed ratings by ID. Descriptive relationships must not become causal group effects or a joint clustering model. |
-| Use many features or numeric PCA/k-means | Add a specific workflow only after stating its purpose, scaling, distance and the role of PCA. Assess redundant/irrelevant features and interpretation of the transformed space; more features or another algorithm is not itself an improvement. |
+| Use numeric PCA/k-means | The local `mfrm_pca()` / `mfrm_cluster_kmeans()` route retains explicit standardization, squared-distance weights, retained components and initialization. Paired imputation comparisons and original-unit profiles are available; validate selected features and interpretation of the transformed space. |
 | Make claims about stable groups or classify new entities | Specify the sampling or prediction target separately from imputation sensitivity. Evaluate it before adding a stability statistic or assignment API. |
 
 Missing external attributes, unassigned ratings and missing assigned responses
-remain distinct. Response-score imputation is a separate extension: it must
-preserve rating structure and identify how downstream estimates and uncertainty
-are combined on a common scale. It requires an explicit missingness model and
-sensitivity assumptions, not filling every empty cell or treating MAR as a
-correction. Ward linkage, pooled trees, joint cross-facet imputation and pooled
-inferential group effects are outside the present workflow.
+remain distinct. The assigned-response MI workflow is implemented locally and
+included in the 0.2.4 plan. It preserves rating structure and combines eligible
+downstream estimates and uncertainty on a common scale. Its joint-RSM example and paired MAR/MNAR comparison now support the stated
+bounded MAR use while retaining severe MNAR bias and undercoverage. Supplied
+imputation models still require substantive justification and sensitivity
+review; filling every empty cell or labeling missingness MAR is not a correction.
+Ward linkage, pooled trees, joint cross-facet imputation and pooled inferential
+group effects are outside the present external-feature workflow.
 
 See [external-feature examples](README.md#external-features-and-exploratory-groups)
 and `vignette("mfrmr-external-features", package = "mfrmr")`.
@@ -250,7 +348,7 @@ within total workload, per-rater workload and examinee-burden constraints.
 The unit of cost must be explicit: a performance, a scored response and an
 individual criterion rating need not have the same cost.
 
-The next useful extension should reuse existing assignment and coverage review,
+A later assignment extension should reuse existing assignment and coverage review,
 retain disconnected/failed cases and subgroup disadvantages, and compare
 estimation error or qualified interval performance for a named target.
 Connectivity, balanced workload and an anchor percentage alone cannot select
@@ -264,17 +362,27 @@ for replacement raters requires the matching random-rater prediction model.
 
 ## Random-effects MFRM and testlet covariance
 
-This is a possible model-extension track for generalization beyond observed raters:
+This is a requested model-extension track for generalization beyond observed raters:
 how uncertain is a Person comparison when different raters are sampled?
 Current fixed-facet MML, post-fit shrinkage and observed-score G-theory do not
 jointly estimate a random-facet MFRM.
 
-The first proposed scope is one observed scale, unit weights, adjacent-category
-RSM probabilities, one random-rater intercept shared across Persons, fixed
-task/criterion effects and a declared Person distribution. Development requires
-observed-rater and replacement-rater targets, identification/scale constraints,
-a matching likelihood, and estimation/prediction evidence at realistic workloads
-and variance boundaries before a public scoring route.
+The local implementation uses one observed scale, unit weights,
+adjacent-category RSM probabilities, one random-rater intercept shared across
+Persons, fixed task/criterion effects and a normal Person distribution with
+estimated variance by default. A known SD is an explicit restricted option.
+Observed-rater intervals and replacement-rater probabilities at specified
+abilities are distinct outputs. Conditional Person scoring has an independent
+fixed-calibration posterior comparison on twelve full/reduced rosters. Its
+bounded numerical support does not establish repeated-sampling coverage. A
+separate eight-roster comparison now supports local calibration-likelihood
+changes; it does not qualify an entire SD profile or variance boundaries.
+
+The 800-dataset interval comparison did not qualify automatic individual-rater
+normal bounds; these are now withheld by default. Explicit normal approximations
+and bootstrap comparisons retain their limitations, unavailable refits and
+variance boundaries. Availability, width and coverage must be assessed together;
+bootstrap availability alone does not make it a qualified replacement.
 
 Reuse an existing computation only when its probabilities, effect sharing,
 constraints and target match. A cumulative-link ordinal model or a new random
@@ -283,7 +391,45 @@ Person-local testlets require a different covariance structure. PCM, sampled
 tasks, covariance and random slopes follow concrete needs after this initial
 scope; they are not all prerequisites for a first bounded random-rater method.
 
+The initial local testlet workflow now accepts explicit non-overlapping
+membership within a Person, retains fixed facet roles and fits one common
+normal local variance, with normal ability variance now estimated by default.
+An explicit known ability SD retains a fixed-population analysis.
+Nested-quadrature checks, continuous conditional Person
+scoring, saved fits, plots and beginner guidance form a usable bounded route.
+Scoring uses the complete supplied rating set, without implicitly appending
+responses or conditioning on saved local modes. Prior-only and unavailable
+rows remain explicit. Estimated variance boundaries withhold regular
+calibration intervals; no regular variance interval is supplied.
+
+Both local model routes now connect stored calibration and explicitly supplied
+predictions or random-rater bootstrap intervals to the common results,
+static-report and CSV/HTML/RDS export workflow. Reports preserve numerical
+checks, missing-score accounting and interval limitations without refitting.
+Model-aware comparison, scoring, descriptive diagnostics and figures are
+implemented locally. The retained interval-output decision is implemented:
+fixed-facet and step estimates/approximate SEs remain the default, with explicit
+normal bounds and a separate approximate rater-SD profile. Numerical/boundary
+restrictions and unavailable rows remain. The remaining M3/M4 work is final
+cross-workflow source, output, help and evidence reconciliation. The interactive viewer and broader inferential
+extensions have the separate scope stated above.
+
+Calibration-aware Person uncertainty remains a later extension. For testlets,
+the 480-dataset estimated-population study and numerical-selection repair now
+support the stated conditional-coverage criterion in two larger balanced
+conditions. Small/sparse conditions and regular calibration intervals remain
+inconclusive; Person point estimates do not uniformly improve relative to
+ordinary RSM. Numerical comparisons of additional memberships, categories and
+unequal blocks do not establish their coverage. Retain earlier fixed-population
+results under their original assumptions. Correlated or heterogeneous testlets
+and joint shared-rater/testlet models remain separate extensions.
+
 ## Model scope
+
+Joint multidimensional MFRM is deferred while the existing APIs, shared help,
+visualization and reporting boundaries are consolidated. Dimension assignment,
+loading constraints and covariance identification remain undecided; this
+deferral does not imply implementation or completion.
 
 | Area | Current restriction or trigger for further work |
 | --- | --- |
@@ -325,10 +471,20 @@ any future adapter extension.
 
 ## Version direction
 
-| Horizon | Outcome and sequencing |
-| --- | --- |
-| 0.2.4, release candidate | All currently implemented workflows are consolidated on main. Published candidates preserve checked snapshots; verify subsequent changes before the final release decision. |
-| Further releases | Address needs beyond the selected 0.2.4 scope while maintaining supported APIs, saved-object compatibility and reproducible performance. |
+| Horizon | Outcome | Evidence needed to begin or finish |
+| --- | --- | --- |
+| 0.2.4 local candidate | Complete the included assessment workflows through M5. | All mandatory rows have source-specific evidence; no workflow is replaced by a promise or a research-only calculation. |
+| 0.2.4 public release | Complete M6 for that source; handle CRAN submission and review separately. | Matching platform checks, main source, archive, version status and help/site identity. |
+| Maintenance after release | Correct reproducible defects, preserve saved-object compatibility, and assess reported workloads and dependency changes. | A user-visible failure or identified compatibility risk justifies focused reproduction; passing unchanged numerical studies are reused. |
+| Further statistical support | Calibration-aware Person/contrast intervals, few-cluster or multiway methods, extended-model DRF and calibrated decision rules. | A named estimand and action, adequate design information, independent calculation and prespecified error/coverage evaluation. A method is not added merely to make every class expose the same columns. |
+| Further model/design coverage | Selected additional G-theory structures, heterogeneous or joint random effects, and eventually substantive multidimensional MFRM. | A use case the supported workflows cannot answer, literature and identification, comparison with existing software, measurable benefit and an affordable maintenance path. Multidimensional decisions remain deferred. |
+
+Later work has no automatic version assignment. Revisit it using actual
+assessment needs and release feedback, selecting one justified extension at a
+time. A fixed collection of tasks represented by score components does not
+complete general G-theory, and local testlet dimensions do not complete
+substantive multidimensional measurement. Response-time and process models
+retain the separate admission conditions above.
 
 ## Compatibility principles
 

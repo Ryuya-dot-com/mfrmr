@@ -19,7 +19,8 @@ fit_measures_table(
   df_zstd_large_shift = 0.5,
   df_ratio_tolerance = 0.05,
   sort_by = c("status", "abs_zstd", "facet", "level"),
-  top_n = Inf
+  top_n = Inf,
+  flag_basis = c("mnsq", "mnsq_or_zstd")
 )
 }
 \arguments{
@@ -37,7 +38,8 @@ facet so operational facet elements are shown first.}
 \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}.}
 
 \item{zstd_cut}{Absolute ZSTD cutoff used for directional underfit/overfit
-flags. Default \code{2}.}
+flags when \code{flag_basis = "mnsq_or_zstd"}; also used for the separate
+ZSTD and df-sensitivity columns. Default \code{2}.}
 
 \item{ci_level}{Confidence level used to add approximate Wald intervals for
 facet measures. Default \code{0.95}.}
@@ -71,6 +73,10 @@ engine-vs-FACETS-style df difference. Default \code{0.05}.}
 sort alphabetically.}
 
 \item{top_n}{Optional maximum number of rows in the returned main table.}
+
+\item{flag_basis}{\code{"mnsq"} (default) bases directional status on Infit/Outfit
+mean squares. \code{"mnsq_or_zstd"} also flags either large positive or negative
+ZSTD, reproducing the previous combined rule when all indices are available.}
 }
 \value{
 A bundle of class \code{mfrm_fit_measures} with:
@@ -98,11 +104,21 @@ This helper gives users a direct table route for the common FACETS-style
 question: which raters, criteria, or other facet elements show underfit or
 overfit? It uses the fit statistics already computed by \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 
-Directional labels are based on both mean-square and ZSTD evidence:
-high MnSq or positive large ZSTD is labeled \code{underfit}; low MnSq or negative
-large ZSTD is labeled \code{overfit}. Rows with conflicting directions are labeled
-\code{mixed}. Treat the table as a review screen and inspect substantive context
-before removing raters or changing an instrument.
+Directional labels use the selected \code{flag_basis}. By default, high mean
+squares are labeled \code{underfit} and low mean squares \code{overfit}; conflicting
+directions are \code{mixed}. ZSTD values remain visible, and \code{ZSTDOnly} identifies
+combined-rule flags when the mean-square screen is known negative. These
+standardized values are sample-size and df-convention dependent. A ZSTD-only
+departure is not automatically a substantively important misfit.
+
+Missing indices cannot establish a negative screen: one positive is retained,
+but no positive plus an unavailable index is \code{not_available}. \code{ScreenComplete}
+records whether all indices required by the selected rule were available.
+Low mean squares indicate less residual variability than expected. They do
+not diagnose misconduct, poor rater quality or machine-learning overfitting,
+and are not an automatic reason for exclusion. Investigate high mean squares
+and substantive consequences first. Published bands are contextual heuristics,
+not calibrated error probabilities or universal thresholds for all facets.
 
 FACETS-style ZSTD comparison is controlled by \code{fit_df_method}. MnSq values
 should be compared first; df and ZSTD columns explain how the same MnSq values
@@ -129,9 +145,17 @@ fm_facets <- fit_measures_table(fit, facet = "Rater", fit_df_method = "both")
 fm_facets$df_conversion_guide$decision_guide
 }
 }
+\references{
+Linacre, J. M. (2003). Size vs. significance: standardized
+chi-square fit statistic. \emph{Rasch Measurement Transactions}, 17(1), 918.
+\url{https://www.rasch.org/rmt/rmt171n.htm}.
+Wright, B. D. and Linacre, J. M. (1994). Reasonable mean-square fit values.
+\emph{Rasch Measurement Transactions}, 8(3), 370.
+\url{https://www.rasch.org/rmt/rmt83b.htm}.
+}
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_fit_review]{facets_fit_review()}}, \code{\link[=plot_bubble]{plot_bubble()}},
-\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}
+\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}, \code{\link[=mfrm_screening_sensitivity]{mfrm_screening_sensitivity()}}
 }
 \concept{confidence intervals}
 \concept{fit statistics}

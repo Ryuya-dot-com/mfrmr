@@ -12,6 +12,7 @@
 ^src/.*[.](gcda|gcno|gcov)$
 ^src/symbols[.]rds$
 ^vignettes/[.]install_extras$
+^vignettes/[^/]+_cache($|/)
 ^vignettes/.*[.]html$
 ^vignettes/.*[.]R$
 ^\.github$

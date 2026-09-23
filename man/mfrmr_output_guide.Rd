@@ -8,7 +8,7 @@ mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
     "calibration", "simulation", "linking", "network", "response_time", "facets",
-    "conquest", "r")
+    "conquest", "r", "models", "features", "imputation", "gtheory")
 )
 }
 \arguments{
@@ -25,6 +25,11 @@ filter to one output family or to bounded-\code{GPCM}-relevant routes.
 artifact-only scoring route.
 \code{"simulation"} and \code{"network"} return advanced design-review rows.
 \code{"response_time"} returns descriptive response-time QC rows.
+\code{"models"} compares fixed-facet, shared-rater and Person-specific testlet
+workflows, including their distinct prediction and reporting boundaries.
+\code{"features"}, \code{"imputation"} and \code{"gtheory"} show exploratory attributes,
+assigned-score multiple imputation and observed-score G/D-study workflows,
+including their own table, plot and saving routes.
 \code{"facets"}, \code{"conquest"}, and \code{"r"} return user-pathway rows for people
 arriving from those workflows.}
 }

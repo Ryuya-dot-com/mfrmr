@@ -655,6 +655,10 @@ mfrm_results_shiny_app <- function(x, top_n = 100L) {
 #'   `return_app = FALSE`.
 #'
 #' @details
+#' Testlet and random-rater results are not supported by this viewer. Use
+#' `mfrm_report(res, output = "html")` or [export_mfrm_results()] for their
+#' static results and model-specific figures.
+#'
 #' The viewer assumes that fitting, diagnostics, and section selection have
 #' already happened through [mfrm_results()]. This keeps GUI exploration
 #' separate from reproducible analysis setup: the Replay tab displays the
@@ -699,6 +703,9 @@ launch_mfrmr_viewer <- function(x,
                                 display.mode = c("auto", "normal", "showcase"),
                                 return_app = FALSE,
                                 ...) {
+  if (inherits(x, "mfrm_results") && mfrm_extended_fit(x$fit)) {
+    stop("The Shiny viewer does not support testlet or random-rater results; use mfrm_report(res, output = 'html') or export_mfrm_results().", call. = FALSE)
+  }
   if (!inherits(x, "mfrm_results")) {
     stop(
       "`x` must be an mfrm_results object. Call `mfrm_results()` first, ",

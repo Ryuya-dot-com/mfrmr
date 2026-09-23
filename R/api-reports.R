@@ -59,6 +59,7 @@ fit_measure_status_label <- function(values, lower, upper, zstd_cut, kind = c("m
   out <- rep("not_available", length(vals))
   ok <- is.finite(vals)
   if (identical(kind, "mnsq")) {
+    ok <- ok & vals >= 0
     out[ok & vals < lower] <- "overfit"
     out[ok & vals > upper] <- "underfit"
     out[ok & vals >= lower & vals <= upper] <- "within_band"
@@ -396,25 +397,29 @@ fit_measure_threshold_profile_table <- function(lower,
   literature
 }
 
-fit_measure_status_for_band <- function(tbl, lower, upper, zstd_cut) {
-  infit_band <- fit_measure_status_label(tbl$Infit, lower, upper, zstd_cut, "mnsq")
-  outfit_band <- fit_measure_status_label(tbl$Outfit, lower, upper, zstd_cut, "mnsq")
-  infit_z_band <- fit_measure_status_label(tbl$InfitZSTD, lower, upper, zstd_cut, "zstd")
-  outfit_z_band <- fit_measure_status_label(tbl$OutfitZSTD, lower, upper, zstd_cut, "zstd")
-  underfit <- infit_band == "underfit" | outfit_band == "underfit" |
-    infit_z_band == "underfit" | outfit_z_band == "underfit"
-  overfit <- infit_band == "overfit" | outfit_band == "overfit" |
-    infit_z_band == "overfit" | outfit_z_band == "overfit"
-  available <- is.finite(tbl$Infit) | is.finite(tbl$Outfit) |
-    is.finite(tbl$InfitZSTD) | is.finite(tbl$OutfitZSTD)
-  ifelse(
-    !available, "not_available",
-    ifelse(underfit & overfit, "mixed",
-      ifelse(underfit, "underfit",
-        ifelse(overfit, "overfit", "within_band")
-      )
-    )
-  )
+# A missing index is unknown, not a negative screen. Keep directions distinct.
+mfrm_fit_flags <- function(tbl, lower, upper, statistic = "either", zstd_cut = NULL) {
+  columns <- if (statistic == "either") c("Infit", "Outfit") else statistic
+  values <- lapply(columns, function(name) tbl[[name]])
+  low <- lapply(values, function(v) ifelse(is.finite(v) & v >= 0, v < lower, NA))
+  high <- lapply(values, function(v) ifelse(is.finite(v) & v >= 0, v > upper, NA))
+  if (!is.null(zstd_cut)) {
+    z <- lapply(paste0(columns, "ZSTD"), function(name) tbl[[name]])
+    low <- c(low, lapply(z, function(v) ifelse(is.finite(v), v <= -zstd_cut, NA)))
+    high <- c(high, lapply(z, function(v) ifelse(is.finite(v), v >= zstd_cut, NA)))
+  }
+  under <- Reduce(`|`, high); over <- Reduce(`|`, low)
+  data.frame(underfit = under, overfit = over, either = under | over,
+    Complete = Reduce(`&`, lapply(c(low, high), function(v) !is.na(v))))
+}
+
+fit_measure_status_for_band <- function(tbl, lower, upper, zstd_cut, flag_basis = "mnsq") {
+  flags <- mfrm_fit_flags(tbl, lower, upper,
+    zstd_cut = if (flag_basis == "mnsq_or_zstd") zstd_cut else NULL)
+  ifelse(flags$underfit %in% TRUE & flags$overfit %in% TRUE, "mixed",
+    ifelse(flags$underfit %in% TRUE, "underfit",
+      ifelse(flags$overfit %in% TRUE, "overfit",
+        ifelse(is.na(flags$either), "not_available", "within_band"))))
 }
 
 fit_measure_profile_counts <- function(tbl, facet_value) {
@@ -443,10 +448,11 @@ fit_measure_profile_counts <- function(tbl, facet_value) {
   )
 }
 
-summarize_fit_measure_profiles <- function(tbl, profile_tbl, zstd_cut) {
+summarize_fit_measure_profiles <- function(tbl, profile_tbl, zstd_cut, flag_basis = "mnsq") {
   if (nrow(profile_tbl) == 0L || nrow(tbl) == 0L) {
     out <- profile_tbl[0, , drop = FALSE]
     out$ZSTDCut <- numeric(0)
+    out$FlagBasis <- character(0)
     out$Facet <- character(0)
     out$Rows <- integer(0)
     out$AvailableRows <- integer(0)
@@ -469,7 +475,7 @@ summarize_fit_measure_profiles <- function(tbl, profile_tbl, zstd_cut) {
       tmp,
       lower = profile$Lower,
       upper = profile$Upper,
-      zstd_cut = zstd_cut
+      zstd_cut = zstd_cut, flag_basis = flag_basis
     )
     facets <- sort(unique(as.character(tmp$Facet)))
     facet_counts <- do.call(rbind, lapply(facets, function(facet) {
@@ -479,7 +485,7 @@ summarize_fit_measure_profiles <- function(tbl, profile_tbl, zstd_cut) {
     counts <- rbind(overall_counts, facet_counts)
     chunks[[i]] <- cbind(
       profile[rep(1L, nrow(counts)), , drop = FALSE],
-      ZSTDCut = zstd_cut,
+      ZSTDCut = zstd_cut, FlagBasis = flag_basis,
       counts,
       row.names = NULL
     )
@@ -639,7 +645,8 @@ summarize_fit_measure_df_sensitivity <- function(df_sensitivity) {
 #' @param lower,upper Optional mean-square review band. Defaults to
 #'   [mfrm_misfit_thresholds()].
 #' @param zstd_cut Absolute ZSTD cutoff used for directional underfit/overfit
-#'   flags. Default `2`.
+#'   flags when `flag_basis = "mnsq_or_zstd"`; also used for the separate
+#'   ZSTD and df-sensitivity columns. Default `2`.
 #' @param ci_level Confidence level used to add approximate Wald intervals for
 #'   facet measures. Default `0.95`.
 #' @param threshold_profiles Which mean-square threshold profiles to summarize
@@ -665,17 +672,30 @@ summarize_fit_measure_df_sensitivity <- function(df_sensitivity) {
 #'   `"abs_zstd"` sorts by largest absolute ZSTD, and `"facet"` / `"level"`
 #'   sort alphabetically.
 #' @param top_n Optional maximum number of rows in the returned main table.
+#' @param flag_basis `"mnsq"` (default) bases directional status on Infit/Outfit
+#'   mean squares. `"mnsq_or_zstd"` also flags either large positive or negative
+#'   ZSTD, reproducing the previous combined rule when all indices are available.
 #'
 #' @details
 #' This helper gives users a direct table route for the common FACETS-style
 #' question: which raters, criteria, or other facet elements show underfit or
 #' overfit? It uses the fit statistics already computed by [diagnose_mfrm()].
 #'
-#' Directional labels are based on both mean-square and ZSTD evidence:
-#' high MnSq or positive large ZSTD is labeled `underfit`; low MnSq or negative
-#' large ZSTD is labeled `overfit`. Rows with conflicting directions are labeled
-#' `mixed`. Treat the table as a review screen and inspect substantive context
-#' before removing raters or changing an instrument.
+#' Directional labels use the selected `flag_basis`. By default, high mean
+#' squares are labeled `underfit` and low mean squares `overfit`; conflicting
+#' directions are `mixed`. ZSTD values remain visible, and `ZSTDOnly` identifies
+#' combined-rule flags when the mean-square screen is known negative. These
+#' standardized values are sample-size and df-convention dependent. A ZSTD-only
+#' departure is not automatically a substantively important misfit.
+#'
+#' Missing indices cannot establish a negative screen: one positive is retained,
+#' but no positive plus an unavailable index is `not_available`. `ScreenComplete`
+#' records whether all indices required by the selected rule were available.
+#' Low mean squares indicate less residual variability than expected. They do
+#' not diagnose misconduct, poor rater quality or machine-learning overfitting,
+#' and are not an automatic reason for exclusion. Investigate high mean squares
+#' and substantive consequences first. Published bands are contextual heuristics,
+#' not calibrated error probabilities or universal thresholds for all facets.
 #'
 #' FACETS-style ZSTD comparison is controlled by `fit_df_method`. MnSq values
 #' should be compared first; df and ZSTD columns explain how the same MnSq values
@@ -702,7 +722,13 @@ summarize_fit_measure_df_sensitivity <- function(df_sensitivity) {
 #' - `settings`: thresholds and filters used
 #'
 #' @seealso [diagnose_mfrm()], [facets_fit_review()], [plot_bubble()],
-#'   [mfrm_misfit_thresholds()]
+#'   [mfrm_misfit_thresholds()], [mfrm_screening_sensitivity()]
+#' @references Linacre, J. M. (2003). Size vs. significance: standardized
+#'   chi-square fit statistic. *Rasch Measurement Transactions*, 17(1), 918.
+#'   \url{https://www.rasch.org/rmt/rmt171n.htm}.
+#'   Wright, B. D. and Linacre, J. M. (1994). Reasonable mean-square fit values.
+#'   *Rasch Measurement Transactions*, 8(3), 370.
+#'   \url{https://www.rasch.org/rmt/rmt83b.htm}.
 #' @concept confidence intervals
 #' @concept fit statistics
 #' @examples
@@ -735,7 +761,9 @@ fit_measures_table <- function(x,
                                df_zstd_large_shift = 0.5,
                                df_ratio_tolerance = 0.05,
                                sort_by = c("status", "abs_zstd", "facet", "level"),
-                               top_n = Inf) {
+                               top_n = Inf,
+                               flag_basis = c("mnsq", "mnsq_or_zstd")) {
+  flag_basis <- match.arg(flag_basis)
   sort_by <- match.arg(tolower(as.character(sort_by[1])), c("status", "abs_zstd", "facet", "level"))
   threshold_profiles <- match.arg(
     tolower(as.character(threshold_profiles[1])),
@@ -869,19 +897,15 @@ fit_measures_table <- function(x,
   outfit_band <- fit_measure_status_label(outfit, lower, upper, zstd_cut, "mnsq")
   infit_z_band <- fit_measure_status_label(infit_z, lower, upper, zstd_cut, "zstd")
   outfit_z_band <- fit_measure_status_label(outfit_z, lower, upper, zstd_cut, "zstd")
-  underfit <- infit_band == "underfit" | outfit_band == "underfit" |
-    infit_z_band == "underfit" | outfit_z_band == "underfit"
-  overfit <- infit_band == "overfit" | outfit_band == "overfit" |
-    infit_z_band == "overfit" | outfit_z_band == "overfit"
-  available <- is.finite(infit) | is.finite(outfit) | is.finite(infit_z) | is.finite(outfit_z)
-  status <- ifelse(
-    !available, "not_available",
-    ifelse(underfit & overfit, "mixed",
-      ifelse(underfit, "underfit",
-        ifelse(overfit, "overfit", "within_band")
-      )
-    )
-  )
+  screen_table <- data.frame(Infit = infit, Outfit = outfit,
+    InfitZSTD = infit_z, OutfitZSTD = outfit_z)
+  active_flags <- mfrm_fit_flags(screen_table, lower, upper,
+    zstd_cut = if (flag_basis == "mnsq_or_zstd") zstd_cut else NULL)
+  mnsq_flags <- mfrm_fit_flags(screen_table, lower, upper)
+  combined_flags <- mfrm_fit_flags(screen_table, lower, upper, zstd_cut = zstd_cut)
+  underfit <- active_flags$underfit; overfit <- active_flags$overfit
+  status <- fit_measure_status_for_band(screen_table, lower, upper, zstd_cut, flag_basis)
+  available <- status != "not_available"
   max_abs_z <- apply(cbind(abs(infit_z), abs(outfit_z)), 1L, function(v) {
     if (!any(is.finite(v))) NA_real_ else max(v, na.rm = TRUE)
   })
@@ -892,12 +916,12 @@ fit_measures_table <- function(x,
     fit_measure_reason,
     infit_band,
     outfit_band,
-    infit_z_band,
-    outfit_z_band,
+    if (flag_basis == "mnsq_or_zstd") infit_z_band else rep("", length(infit_z_band)),
+    if (flag_basis == "mnsq_or_zstd") outfit_z_band else rep("", length(outfit_z_band)),
     USE.NAMES = FALSE
   )
   reason_out <- ifelse(nzchar(reasons), reasons, "Within selected review band")
-  reason_out[!available] <- "Fit statistics unavailable"
+  reason_out[!available] <- "Selected screen incomplete; no positive result established"
   z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
   ci_ok <- is.finite(estimate) & is.finite(se) & se >= 0
   ci_lower <- ifelse(ci_ok, estimate - z_ci * se, NA_real_)
@@ -935,6 +959,8 @@ fit_measures_table <- function(x,
     Underfit = underfit,
     Overfit = overfit,
     FitStatus = status,
+    ScreenComplete = active_flags$Complete,
+    ZSTDOnly = combined_flags$either & !mnsq_flags$either,
     ReviewReason = reason_out,
     MaxAbsZSTD = max_abs_z,
     MaxMnSqDistance = max_mnsq_distance,
@@ -1068,7 +1094,7 @@ fit_measures_table <- function(x,
   profile_summary <- summarize_fit_measure_profiles(
     out_full[, setdiff(names(out_full), "FitStatusRank"), drop = FALSE],
     profile_tbl,
-    zstd_cut = zstd_cut
+    zstd_cut = zstd_cut, flag_basis = flag_basis
   )
   profile_summary_overall <- profile_summary[
     profile_summary$Facet == "All facets", ,
@@ -1101,6 +1127,7 @@ fit_measures_table <- function(x,
       lower = lower,
       upper = upper,
       zstd_cut = zstd_cut,
+      flag_basis = flag_basis,
       ci_level = ci_level,
       df_zstd_tolerance = df_zstd_tolerance,
       df_zstd_large_shift = df_zstd_large_shift,

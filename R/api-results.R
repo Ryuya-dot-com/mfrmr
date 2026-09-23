@@ -453,6 +453,12 @@ mfrm_results_mapping_table <- function(mapping) {
 }
 
 mfrm_results_resolve_input <- function(x, compute = c("auto", "never")) {
+  if (inherits(x, "mfrm_random_rater_scores")) {
+    stop("Supply the random-rater fit first and its saved Person scores as `scores`.", call. = FALSE)
+  }
+  if (inherits(x, "mfrm_testlet_scores")) {
+    stop("Supply the testlet fit as the first argument and its saved scores as `predictions`.", call. = FALSE)
+  }
   if (inherits(x, "mfrm_imported_fit")) {
     stop("Comprehensive mfrmr reports require a native fit. Use summary(imported_fit) for source-scale tables or plot(imported_fit) for a point-only Wright map.", call. = FALSE)
   }
@@ -2515,6 +2521,7 @@ mfrm_report_fit_unavailable_row <- function(kind) {
       DfConventionDifferenceRows = NA_integer_,
       FitDfMethod = NA_character_,
       ThresholdProfiles = NA_character_,
+      FlagBasis = NA_character_,
       FacetsCompanionAvailable = FALSE,
       Source = "not_available",
       Route = "mfrm_results(fit, include = c(\"diagnostics\", \"tables\"))",
@@ -2600,6 +2607,7 @@ mfrm_report_fit_evidence_summary <- function(x) {
     DfConventionDifferenceRows = suppressWarnings(as.integer(mfrm_report_column_or(sum_tbl, "DfConventionDifferenceRows", NA_integer_))),
     FitDfMethod = paste(fit_df_method[nzchar(fit_df_method)], collapse = ", "),
     ThresholdProfiles = paste(threshold_profiles[nzchar(threshold_profiles)], collapse = ", "),
+    FlagBasis = settings$flag_basis %||% "mnsq_or_zstd",
     FacetsCompanionAvailable = mfrm_report_has_facets_companion_fit(fit_bundle),
     Source = fit_info$source,
     Route = "res$components$fit_measures$summary",
@@ -2649,6 +2657,7 @@ mfrm_report_fit_threshold_sensitivity <- function(x) {
     }
   }
   profile <- profile[, needed, drop = FALSE]
+  profile$FlagBasis <- fit_bundle$settings$flag_basis %||% "mnsq_or_zstd"
   profile$Status <- "available"
   profile$Source <- fit_info$source
   profile$Route <- "res$components$fit_measures$profile_summary_overall"
@@ -2656,7 +2665,7 @@ mfrm_report_fit_threshold_sensitivity <- function(x) {
     "Use profile disagreement as sensitivity evidence. Do not present one ",
     "published MnSq band as universal."
   )
-  profile[, c("Status", needed, "Source", "Route", "ReportBoundary"), drop = FALSE]
+  profile[, c("Status", needed, "FlagBasis", "Source", "Route", "ReportBoundary"), drop = FALSE]
 }
 
 mfrm_report_fit_df_sensitivity_summary <- function(x) {
@@ -2930,6 +2939,7 @@ mfrm_report_fit_reporting_templates <- function(style,
       style_lead, " Element fit was screened for ", rows_n,
       " facet-element row(s) using the stored mean-square profile set",
       if (nzchar(threshold_profiles)) paste0(" (", threshold_profiles, ")") else "",
+      if (identical(ev$FlagBasis[1], "mnsq")) " and a mean-square-only rule" else " and a mean-square-or-ZSTD rule",
       "; ", underfit, " row(s) were flagged for underfit, ", overfit,
       " for overfit, ", mixed, " as mixed, and ", within,
       " remained within the selected band."
@@ -4798,6 +4808,7 @@ mfrm_report_markdown <- function(report) {
 }
 
 mfrm_report_build <- function(x, style) {
+  if (mfrm_extended_fit(x$fit)) return(mfrm_extended_report(x, style))
   sx <- summary(
     x,
     top_n = max(10L, nrow(as.data.frame(x$table_index %||% data.frame())) + 1L)
@@ -4919,6 +4930,9 @@ mfrm_report_build <- function(x, style) {
   if (nrow(as.data.frame(sx$mapping %||% data.frame())) > 0L) {
     tables$mapping <- sx$mapping
   }
+  if (!is.null(x$response_diagnostics)) {
+    tables <- c(tables, mfrm_response_diagnostic_tables(x$response_diagnostics))
+  }
   out <- list(
     style = style,
     title = mfrm_report_title(style),
@@ -4967,6 +4981,12 @@ mfrm_report_build <- function(x, style) {
     source = x
   )
   out$markdown <- mfrm_report_markdown(out)
+  if (!is.null(x$response_diagnostics)) {
+    out$markdown <- paste(out$markdown, "## Posterior predictive residuals",
+      "Same-data descriptive summaries with calibration fixed; no reference cutoffs or tests. These do not replace the ordinary plug-in fit indices.",
+      mfrm_report_markdown_table(tables$response_measures),
+      "All selected rows and probabilities remain in report$tables and CSV exports.", sep = "\n\n")
+  }
   class(out) <- "mfrm_report"
   out
 }
@@ -5259,6 +5279,13 @@ mfrm_report_html <- function(report) {
 #'    when that reporting question is needed.
 #'
 #' Report rows deliberately distinguish evidence from claims. The
+#' testlet and random-rater route is a smaller stored-result report: all styles
+#' retain numerical checks, data usage, interval meanings and supplied
+#' predictions/intervals. It does not supply ordinary residual diagnostics or
+#' fit/APA wording templates; `template_index` is empty. See the model-specific
+#' section in [mfrm_results()] for supported tables and plots.
+#'
+#' For ordinary models, the
 #' `first_screen` table is the compact entry point: it gives an overall row and
 #' one row per major evidence area with status, readiness, main issue, next
 #' action, and primary route. The
@@ -5421,7 +5448,7 @@ mfrm_results_export_component_sensitivity <- function(component) {
   "review_before_sharing"
 }
 
-mfrm_results_export_index_html <- function(prefix, written_files, plot_errors) {
+mfrm_results_export_index_html <- function(prefix, written_files, plot_errors, extended = FALSE) {
   files <- as.data.frame(written_files %||% data.frame(), stringsAsFactors = FALSE)
   errors <- as.data.frame(plot_errors %||% data.frame(), stringsAsFactors = FALSE)
   component_file <- function(component) {
@@ -5449,6 +5476,16 @@ mfrm_results_export_index_html <- function(prefix, written_files, plot_errors) {
   } else {
     "<p class=\"warning\">The required Wright-map PNG was not created. Review the plot-errors file and rerun the export before handoff.</p>"
   }
+  if (extended) {
+    images <- files[files$Format %in% "png", , drop = FALSE]
+    wright_block <- unlist(lapply(seq_len(nrow(images)), function(i) {
+      file <- html_escape(basename(images$Path[i]))
+      description <- if (nzchar(images$Note[i])) images$Note[i] else
+        paste("Saved", gsub("_", " ", sub("^plot_", "", images$Component[i])), "display; see the report for values and interpretation.")
+      paste0('<figure><a href="', file, '"><img src="', file,
+        '" alt="', html_escape(description), '"></a></figure>')
+    }))
+  }
   plot_error_note <- if (nrow(errors) > 0L) {
     paste0("<p class=\"warning\">", nrow(errors),
            " optional plot route(s) failed. See the written-files manifest and plot-errors CSV.</p>")
@@ -5467,18 +5504,20 @@ mfrm_results_export_index_html <- function(prefix, written_files, plot_errors) {
       "It may contain direct person identifiers, person-level estimates, original labels, local paths, and a complete RDS result object. ",
       "Review and transform every file under the applicable data-handling policy before sharing.</p>"
     ),
-    "<p>Use this reading order for the fitted analysis. The Wright map is the required first figure; the remaining plots and tables are follow-up evidence.</p>",
+    if (extended) "<p>Review the stored calibration, numerical checks and interval meanings before interpreting the available figures. Model-aware Wright maps show conditional reference locations; fit pathways use descriptive posterior residuals without ordinary-model cutoffs. Only saved Person conditional intervals appear in these maps.</p>" else
+      "<p>Use this reading order for the fitted analysis. The Wright map is the required first figure; the remaining plots and tables are follow-up evidence.</p>",
     "<ol>",
     paste0("<li><strong>Fit and result summary:</strong> ", link("results_html", "open the results summary"), ".</li>"),
-    paste0("<li><strong>Required scale display:</strong> ", link("plot_wright", "open the Wright map PNG"), ".</li>"),
-    paste0("<li><strong>Focused fit pathway:</strong> ", link("plot_fit_pathway", "open the Infit-versus-measure PNG"), "; the export includes selected person rows.</li>"),
-    paste0("<li><strong>Other diagnostics:</strong> use the remaining plot files and summary triage; do not turn a single flag into an exclusion rule.</li>"),
+    if (!extended) c(
+      paste0("<li><strong>Required scale display:</strong> ", link("plot_wright", "open the Wright map PNG"), ".</li>"),
+      paste0("<li><strong>Focused fit pathway:</strong> ", link("plot_fit_pathway", "open the Infit-versus-measure PNG"), "; the export includes selected person rows.</li>"),
+      "<li><strong>Other diagnostics:</strong> use the remaining plot files and summary triage; do not turn a single flag into an exclusion rule.</li>"),
     paste0("<li><strong>Report readiness:</strong> ", link("report_html", "open the report"), ".</li>"),
     paste0("<li><strong>Reproducibility:</strong> ", link("replay_code", "review the replay script"), " and ", link("written_files", "the written-files manifest"), ".</li>"),
     "</ol>",
     wright_block,
     plot_error_note,
-    "<p class=\"boundary\"><strong>Interpretation boundary:</strong> these files summarize the fitted model and its diagnostics. They do not establish validity, fairness, or an automatic pass/fail decision by themselves.</p>",
+    "<p class=\"boundary\"><strong>Interpretation boundary:</strong> these files summarize stored results and their availability. They do not establish validity, fairness, or an automatic pass/fail decision by themselves.</p>",
     "</body></html>"
   )
 }
@@ -5574,7 +5613,8 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   `"plots"` to write available plot routes as PNG files, or use `"all"`.
 #' @param preset Optional reader-facing analysis-archive preset. `"starter"` adds the
 #'   report and plot routes to the default files and writes `index.html` with
-#'   the required Wright map embedded at the start of the reading flow.
+#'   the required Wright map for ordinary models, or the available model-specific
+#'   figures for testlet and random-rater results.
 #' @param overwrite Logical; if `FALSE`, existing files stop the export.
 #' @param acknowledge_sensitive Logical; set to `TRUE` only after acknowledging
 #'   that every preset can contain direct person identifiers, person-level
@@ -5601,6 +5641,14 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' - a replay `.R` script from `x$input$reproducible_code`;
 #' - a written-files manifest and compact export summary.
 #'
+#' For testlet, random-rater and ordinary results with saved posterior response
+#' diagnostics, replay reloads the exported RDS without
+#' refitting, rescoring or resampling. Requesting `"replay"` also includes
+#' `"rds"`. Run the script from the exported folder. Stored prediction settings,
+#' unavailable rows, numerical checks and interval meanings travel with the
+#' result. A bootstrap interval may have infinite endpoints; exports retain
+#' them instead of substituting finite ordinary intervals.
+#'
 #' All presets, including `"starter"`, are analysis archives. In particular,
 #' the default `.rds` file retains the complete result object, and CSV, HTML,
 #' plot, and replay artifacts can retain direct identifiers or other sensitive
@@ -5613,7 +5661,7 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' comparatively slow or require richer graphics devices. Plot failures are
 #' recorded in the returned `plot_errors` table rather than stopping the export.
 #' The `"starter"` preset is the recommended reader-oriented analysis archive
-#' because it always
+#' because, for ordinary models, it
 #' requests the Wright map in addition to the result summary, report, replay
 #' script, and manifest. Its Infit pathway includes a bounded selection of
 #' person rows so person fit can be reviewed without replacing the required
@@ -5680,6 +5728,8 @@ export_mfrm_results <- function(x,
     tolower(as.character(preset[1])), c("starter")
   )
   include <- mfrm_results_export_include(include, preset = preset)
+  stored_replay <- mfrm_extended_fit(x$fit) || !is.null(x$response_diagnostics)
+  if (stored_replay && "replay" %in% include) include <- unique(c(include, "rds"))
   overwrite <- isTRUE(overwrite)
   acknowledge_sensitive <- isTRUE(acknowledge_sensitive)
   zip_bundle <- isTRUE(zip_bundle)
@@ -5821,6 +5871,11 @@ export_mfrm_results <- function(x,
 
   if ("replay" %in% include) {
     replay_code <- as.character(x$input$reproducible_code %||% "")
+    if (stored_replay) {
+      replay_code <- paste(c("# Run from the exported folder; this reloads results without refitting.",
+        "library(mfrmr)", paste0("res <- readRDS(", encodeString(paste0(prefix, "_results.rds"), quote = '"'), ")"),
+        "summary(res)", "report <- mfrm_report(res)", "summary(report)"), collapse = "\n")
+    }
     if (!nzchar(replay_code)) {
       replay_code <- paste(as.character(summary(x)$reproducible_code$Code %||% ""), collapse = "\n")
     }
@@ -5852,11 +5907,11 @@ export_mfrm_results <- function(x,
         {
           grDevices::png(filename = plot_path, width = plot_width, height = plot_height, res = plot_res)
           plot_args <- list(x = x, type = type)
-          if (identical(type, "wright")) {
+          if (identical(type, "wright") && !mfrm_extended_fit(x$fit)) {
             plot_args$renderer <- "native"
             plot_args$show_ci <- TRUE
             plot_args$top_n <- Inf
-          } else if (identical(type, "fit_pathway")) {
+          } else if (identical(type, "fit_pathway") && !mfrm_extended_fit(x$fit)) {
             plot_args$fit_stat <- "Infit"
             plot_args$include_person <- TRUE
             plot_args$top_n_person <- 12
@@ -5878,11 +5933,15 @@ export_mfrm_results <- function(x,
           paste0("plot_", tag),
           "png",
           plot_path,
-          note = if (identical(type, "wright")) {
+          note = if (identical(type,"wright") && mfrm_extended_fit(x$fit)) {
+            "Model-aware conditional reference locations; whiskers show only saved Person conditional intervals."
+          } else if (identical(type, "wright")) {
             paste0(
               "Complete native Wright map with all fitted facet and step locations retained and available mfrmr uncertainty intervals; ",
               "text labels remain collision-aware."
             )
+          } else if (identical(type,"fit_pathway") && mfrm_extended_fit(x$fit)) {
+            "Selected-row posterior Infit versus conditional reference location; no classic fit cutoffs."
           } else if (identical(type, "fit_pathway")) {
             "Infit-versus-measure pathway with up to 12 selected person rows included; IDs remain in the result data."
           } else {
@@ -5905,11 +5964,12 @@ export_mfrm_results <- function(x,
 
   if (identical(preset_name, "starter")) {
     write_text(
-      mfrm_results_export_index_html(prefix, written_files, plot_errors),
+      mfrm_results_export_index_html(prefix, written_files, plot_errors, extended = mfrm_extended_fit(x$fit)),
       "index.html",
       "starter_index",
       format = "html",
-      note = "Reader-first index with the required Wright map and ordered fit-to-report flow."
+      note = if (mfrm_extended_fit(x$fit)) "Index of stored model-specific results, available plots and interpretation limits." else
+        "Reader-first index with the required Wright map and ordered fit-to-report flow."
     )
   }
 
@@ -6022,7 +6082,8 @@ export_mfrm_results <- function(x,
 
 #' Build comprehensive first-screen MFRM results
 #'
-#' @param fit Output from [fit_mfrm()] or [run_mfrm_facets()]. A standard
+#' @param fit Output from [fit_mfrm()], [run_mfrm_facets()],
+#'   [fit_mfrm_testlet()] or [fit_mfrm_random_rater()]. A standard
 #'   long-format `data.frame` is also accepted when person and score columns can
 #'   be inferred unambiguously from common names such as `Person` and `Score`;
 #'   remaining measurement columns must use recognizable facet-role names.
@@ -6119,7 +6180,7 @@ export_mfrm_results <- function(x,
 #' [mfrm_results_interactive()] only for opt-in column selection at the console.
 #'
 #' @section Visualization and HTML:
-#' `plot(res)` routes to the primary native Wright map when the fitted object
+#' For ordinary models, `plot(res)` routes to the primary native Wright map when the fitted object
 #' contains compatible person and facet locations. This default retains
 #' available mfrmr facet uncertainty. Use `plot(res, type = "fit")` when the
 #' explicit three-plot Wright/pathway/category bundle is wanted. The compact
@@ -6172,13 +6233,79 @@ export_mfrm_results <- function(x,
 #' @param response_time_score Optional score column for response-time
 #'   summaries. Defaults to the fitted model's source score column when
 #'   available.
-#' @param diagnostics Optional matching output from [diagnose_mfrm()]. When
-#'   supplied, it is identity-checked and reused instead of recomputed.
+#' @param diagnostics Optional matching output from [diagnose_mfrm()]. An
+#'   [mfrm_response_diagnostics()] object is also accepted as an alias for
+#'   `response_diagnostics`; do not supply it twice.
+#' @param response_diagnostics Optional saved [mfrm_response_diagnostics()]
+#'   output matching the fit's calibration and exact source roster. It is
+#'   identity-checked and reused without integration. Ordinary RSM MML and
+#'   testlet/shared-rater fits support these descriptive summaries, without
+#'   reference cutoffs. Use `compute = "never"` to also avoid computing ordinary
+#'   plug-in diagnostics. Saved posterior summaries appear in
+#'   `response_*` tables and `plot(..., type = "response_diagnostics")`.
 #' @param compute Diagnostic computation policy. `"auto"` preserves the
 #'   standard behavior; `"never"` collects only sections that can be built
 #'   without computing diagnostics and marks every requested dependent section
 #'   as `"not_computed"`. Matching supplied or stored diagnostics are still
 #'   reused under `"never"`.
+#' @param predictions Optional saved predictions for a testlet or random-rater
+#'   fit: the result of `predict(fit, ...)`. Matching calibration, column roles,
+#'   levels, settings and prediction-source metadata are required. Older
+#'   predictions without this metadata must be regenerated from the saved fit
+#'   before attachment; the fit itself does not need to be re-estimated.
+#' @param scores Optional saved [score_mfrm_persons()] result for an extension,
+#'   or [score_mfrm_random_rater()] output, with matching source calibration.
+#'   For testlets this is an alias for `predictions`; supply it once. Shared
+#'   raters can also attach response `predictions` and rater `intervals`.
+#'   No Person scoring is run here. Complete source-roster identity is required
+#'   for the additional model-aware map routes; see [mfrmr_model_maps].
+#' @param comparison Optional descriptive extended-model result from
+#'   [compare_mfrm()]. Calibration, settings and observed/omitted events must
+#'   match this fit. Retained tables and `plot(..., type = "comparison")`
+#'   compare centered facet summaries without fitting or automatic ranking.
+#'   When the comparison includes saved response diagnostics, its
+#'   `comparison_response_*` tables and `type = "response_comparison"` plot
+#'   retain aligned predictive quantities; select `metric` for other indices.
+#' @param calibration_intervals For testlet and shared-rater fits, `"none"`
+#'   (default) retains calibration estimates and approximate SEs with missing
+#'   bounds. `"normal"` explicitly requests pointwise observed-information normal
+#'   intervals for fixed facets and steps; finite-sample coverage is not
+#'   established. Numerical, information and estimated-boundary restrictions
+#'   remain. Saved result tables, testlet calibration plots and reports retain
+#'   the selection. This does not select individual-rater or Person intervals.
+#' @param calibration_level Nominal level for those calibration intervals,
+#'   between zero and one; default 0.95. Nondefault calibration options are
+#'   unavailable for ordinary MFRM fits.
+#' @param intervals Optional saved [mfrm_random_rater_intervals()] result from
+#'   the exact supplied random-rater fit. No bootstrap is run by this function.
+#'
+#' @section Testlet and random-rater results:
+#' [fit_mfrm_testlet()] and [fit_mfrm_random_rater()] results use a separate
+#' reporting route within the same `mfrm_results` class. It always retains
+#' calibration estimates, numerical checks, settings, data usage and interval
+#' meanings. Requested ordinary-model sections that are unsupported are
+#' marked `not_available`. Neither `compute` setting fits, scores, resamples
+#' or computes diagnostics for these models. Supply separately computed
+#' `predictions`, `scores` or `intervals` explicitly; their absence is recorded.
+#' Rebuild results from an older saved fit to apply current calibration-bound
+#' defaults without refitting. Previously saved result bundles keep their
+#' original tables. Explicit normal bounds do not improve their coverage.
+#'
+#' Use [mfrm_report()] for a static report and [export_mfrm_results()] for
+#' CSV/HTML/RDS and figures. Numerical convergence does not establish model
+#' adequacy or general interval coverage. The ordinary Wright map, residual
+#' diagnostics, Shiny viewer, response-MI pooling and portable-calibration
+#' workflow do not support these classes. Plot types are `"calibration"`
+#' (first fixed facet by default; select with `facet`) and `"scores"` for
+#' testlets, or `"raters"`, `"intervals"` and `"scores"` for random-rater results.
+#' Both support `"comparison"` and, with corresponding saved quantities,
+#' `"response_comparison"` and `"response_diagnostics"`. These
+#' models also support `"wright"` and `"fit_pathway"` through the separately
+#' defined conditional-location and posterior-residual routes in
+#' [mfrmr_model_maps], with matching saved source evidence. All these
+#' routes require `"plots"` in `include`; saved predictions/intervals are
+#' required for their corresponding plots. Report styles use the same stored
+#' evidence and boundaries; they do not add ordinary-model reporting templates.
 #'
 #' @return Depending on `output`, an `mfrm_results` object, a
 #'   `summary.mfrm_results` object, a named table list, or an
@@ -6221,10 +6348,45 @@ mfrm_results <- function(fit,
                          response_time_score = NULL,
                          output = c("object", "summary", "tables", "html"),
                          diagnostics = NULL,
-                         compute = c("auto", "never")) {
+                         compute = c("auto", "never"),
+                         predictions = NULL,
+                         intervals = NULL,
+                         scores = NULL,
+                         comparison = NULL,
+                         response_diagnostics = NULL,
+                         calibration_intervals = c("none", "normal"),
+                         calibration_level = .95) {
+  calibration_intervals <- match.arg(calibration_intervals)
+  mfrm_random_rater_interval_level(calibration_level)
   output <- match.arg(tolower(as.character(output[1])), c("object", "summary", "tables", "html"))
   compute <- match.arg(tolower(as.character(compute[1])), c("auto", "never"))
   include <- mfrm_results_resolve_include(include)
+  if (inherits(diagnostics, "mfrm_response_diagnostics")) {
+    if (!is.null(response_diagnostics)) stop("Supply saved response diagnostics only once.", call. = FALSE)
+    response_diagnostics <- diagnostics
+    diagnostics <- NULL
+  }
+  if (!is.null(response_diagnostics)) mfrm_validate_response_diagnostics(fit, response_diagnostics)
+  if (mfrm_extended_fit(fit)) {
+    if (!is.null(diagnostics) && !is.null(response_diagnostics)) stop("Ordinary diagnostics are unavailable for this model class.", call. = FALSE)
+    if (inherits(fit,"mfrm_testlet") && !is.null(scores)) {
+      if(!is.null(predictions)) stop("Supply testlet Person scores once, through scores or predictions.",call.=FALSE)
+      predictions <- scores; scores <- NULL
+    }
+    if (any(!vapply(list(response_time, response_time_data,
+        response_time_facets, response_time_score), is.null, logical(1)))) {
+      stop("Ordinary diagnostics and response-time sections are unavailable for this model class.", call. = FALSE)
+    }
+    out <- mfrm_extended_results(fit, include, predictions, intervals, scores, comparison,
+      response_diagnostics %||% diagnostics, calibration_intervals, calibration_level)
+    return(switch(output, object = out, summary = summary(out), tables = out$tables,
+      html = mfrm_results_html(out)))
+  }
+  if (calibration_intervals != "none" || calibration_level != .95) stop("`calibration_intervals` and `calibration_level` select approximations only for testlet and random-rater fits.", call. = FALSE)
+  if (!is.null(comparison)) stop("`comparison` can be attached to its matching testlet or random-rater fit.", call. = FALSE)
+  if (!is.null(predictions) || !is.null(intervals) || !is.null(scores)) {
+    stop("`predictions`, `scores` and `intervals` are supported only for testlet and random-rater fits.", call. = FALSE)
+  }
   ctx <- mfrm_results_resolve_input(fit, compute = compute)
   if (!is.null(diagnostics)) {
     if (!inherits(diagnostics, "mfrm_diagnostics")) {
@@ -6263,6 +6425,20 @@ mfrm_results <- function(fit,
     score = response_time_score
   )
   out <- mfrm_results_build(ctx, include = include)
+  if (!is.null(response_diagnostics)) {
+    out$response_diagnostics <- response_diagnostics
+    out$components$response_diagnostics <- response_diagnostics
+    out$tables <- c(out$tables, mfrm_response_diagnostic_tables(response_diagnostics))
+    out$table_index <- mfrm_results_table_index(out$tables)
+    out$status <- rbind(out$status, mfrm_results_status_row("response_diagnostics", "available",
+      "Saved same-data posterior predictive residuals; descriptive only, without fit cutoffs."))
+    out$plot_map <- dplyr::bind_rows(out$plot_map, data.frame(Type = "response_diagnostics",
+      Available = "plots" %in% include, RequiredArtifact = FALSE,
+      Route = 'plot(res, type = "response_diagnostics")',
+      Detail = "Saved posterior predictive residuals; no calibrated fit test or cutoffs.",
+      InterpretationStatus = "descriptive_only", InterpretationReady = FALSE,
+      ReadinessRoute = "res$tables$response_diagnostic_settings"))
+  }
 
   switch(
     output,
@@ -6424,6 +6600,7 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
   fit <- object$fit
+  if (mfrm_extended_fit(fit)) return(mfrm_extended_results_summary(object, digits, top_n, view))
   fit_summary <- as.data.frame(fit$summary %||% data.frame(), stringsAsFactors = FALSE)
   ov <- if (nrow(fit_summary) > 0L) fit_summary[1, , drop = FALSE] else data.frame()
   overview <- data.frame(
@@ -6565,7 +6742,7 @@ print.summary.mfrm_results <- function(x, ...) {
     cat("\nPlot routes\n")
     plot_map <- as.data.frame(x$plot_map)
     if (brief) {
-      plot_map <- plot_map[plot_map$Type %in% c("wright", "fit_pathway", "qc"), , drop = FALSE]
+      if (is.null(x$model_family)) plot_map <- plot_map[plot_map$Type %in% c("wright", "fit_pathway", "qc"), , drop = FALSE]
       keep <- intersect(c("Type", "Available", "RequiredArtifact"), names(plot_map))
       print(plot_map[, keep, drop = FALSE], row.names = FALSE)
       if (all(c("Type", "Route") %in% names(plot_map))) {
@@ -6729,8 +6906,9 @@ plot.mfrm_results <- function(x,
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object.", call. = FALSE)
   }
+  if (mfrm_extended_fit(x$fit)) return(mfrm_extended_results_plot(x, type, ...))
   available <- as.data.frame(x$plot_map %||% data.frame(), stringsAsFactors = FALSE)
-  type_choices <- c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables")
+  type_choices <- c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables", "response_diagnostics")
   type_missing <- missing(type) || is.null(type)
   if (isTRUE(type_missing)) {
     person_tbl <- as.data.frame(x$fit$facets$person %||% data.frame(), stringsAsFactors = FALSE)
@@ -6763,6 +6941,10 @@ plot.mfrm_results <- function(x,
         call. = FALSE
       )
     }
+  }
+  if (identical(type, "response_diagnostics")) {
+    if (is.null(x$response_diagnostics)) stop("Supply saved response_diagnostics to mfrm_results() first.", call. = FALSE)
+    return(plot(x$response_diagnostics, ...))
   }
   if (identical(type, "fit")) {
     dots <- list(...)

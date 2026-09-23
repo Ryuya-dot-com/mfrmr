@@ -70,5 +70,6 @@ features$missing
 features$row_summary
 }
 \seealso{
-\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
+\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
+\code{\link[=mfrm_pca]{mfrm_pca()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}
 }

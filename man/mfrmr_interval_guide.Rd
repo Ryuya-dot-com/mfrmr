@@ -59,7 +59,9 @@ mfrmr_interval_guide("gpcm")[, c("Route", "GPCMStatus", "InterpretationBoundary"
 \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}},
 \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_wright_unified]{plot_wright_unified()}},
 \code{\link[=plot_rater_severity_profile]{plot_rater_severity_profile()}}, \code{\link[=plot_apa_figure_one]{plot_apa_figure_one()}},
-\code{\link[=fit_measures_table]{fit_measures_table()}}
+\code{\link[=fit_measures_table]{fit_measures_table()}}, \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}},
+\code{\link[=mfrm_random_rater_intervals]{mfrm_random_rater_intervals()}}, \code{\link[=confint.mfrm_random_rater]{confint.mfrm_random_rater()}},
+\code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}}, \code{\link[=predict.mfrm_testlet]{predict.mfrm_testlet()}}
 }
 \concept{confidence intervals}
 \concept{reporting workflow}

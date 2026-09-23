@@ -11,8 +11,11 @@ local_dif_fixtures <- function(env = parent.frame()) {
   )
   toy$Group <- grp_map[toy$Person]
 
-  fit <- fit_mfrm(toy, person = "Person", facets = c("Rater", "Criterion"),
-                  score = "Score", method = "JML")
+  expect_warning(
+    fit <- fit_mfrm(toy, person = "Person", facets = c("Rater", "Criterion"),
+                    score = "Score", method = "JML"),
+    "^Category support is retained but requires review:")
+  expect_identical(fit$summary$CategoryState, "weak_information")
   diag <- diagnose_mfrm(fit, residual_pca = "none")
 
   assign("toy",  toy,  envir = env)
@@ -1007,7 +1010,8 @@ test_that("compare_mfrm suppresses IC ranking when a fit is marked unconverged",
   fit2 <- mark_test_inference_review(fit2)
 
   expect_warning(
-    comp <- compare_mfrm(RSM = fit, PCM = fit2),
+    expect_warning(comp <- compare_mfrm(RSM = fit, PCM = fit2),
+      "^Information-criterion ranking is limited to converged MML fits"),
     "Inference readiness is not satisfied: PCM/JML: .*Numerical convergence requires review"
   )
 

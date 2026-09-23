@@ -965,6 +965,32 @@
     y = if (coefficients) "Dependability (higher is better)" else "SEM in score units (lower is better)")
 }
 
+# Earlier saved plot payloads are upgraded only for rendering, without refitting.
+.mfrmr_gg_extended_payload <- function(payload, name) {
+  if (!is.null(payload$display$style)) return(.mfrmr_gg_extended_estimates(payload))
+  scores <- name %in% c("testlet_scores", "random_rater_scores", "person_scores")
+  raters <- name %in% c("random_rater_severity", "random_rater_interval_bootstrap")
+  bootstrap <- name == "random_rater_interval_bootstrap"
+  labels <- payload$labels %||% if (scores) payload$table$Person else if (raters) payload$table$Rater else payload$table$Level
+  title <- payload$title %||% if (scores) "Conditional Person scores" else if (bootstrap) "Observed-rater prediction intervals" else if (raters) "Shared-rater severity" else paste("Fixed", payload$settings$facet, "effects")
+  xlab <- payload$xlab %||% if (scores) "Person ability (logits)" else if (raters) "Rater severity (logits)" else "Facet severity (logits)"
+  note <- payload$caption %||% if (scores) sprintf(
+    "%.0f%% conditional intervals | calibration fixed | %sopen: prior only", 100 * payload$settings$level,
+    if (name == "random_rater_scores") "rater Laplace | " else ""
+  ) else if (bootstrap) sprintf("Nominal %.0f%% pointwise | %d planned refits | arrows: unbounded%s",
+    100 * payload$settings$plotted_level, payload$settings$nsim,
+    if (isTRUE(payload$settings$comparison)) "\nSolid: bootstrap; dashed: ordinary normal." else "") else if (raters) {
+    if (isTRUE(payload$checks$EstimatedVarianceBoundary) || isTRUE(payload$checks$EstimatedPersonVarianceBoundary))
+      "Estimated variance is zero; regular intervals unavailable" else if (!isTRUE(payload$checks$NumericalReady) || !isTRUE(payload$checks$InformationPositive))
+      "Numerical review required; intervals unavailable" else
+      "Saved 95% normal approximation, with calibration uncertainty to first order; nominal coverage is not established"
+  } else "Approximate 95% intervals | missing whiskers: unavailable"
+  updated <- mfrm_extended_estimate_plot(payload$table, labels, name, title, xlab, note,
+    FALSE, payload$settings, show_title = payload$display$show_title %||% TRUE,
+    show_notes = payload$display$show_notes %||% TRUE)
+  .mfrmr_gg_extended_estimates(updated$data)
+}
+
 #' Convert draw-free mfrmr plot data to ggplot2
 #'
 #' `as_ggplot()` is an optional renderer for an `mfrm_plot_data` object or an
@@ -974,9 +1000,27 @@
 #' Dedicated conversions are provided for Wright maps, theta-to-expected-score
 #' pathways, fit-statistic-to-measure pathways, category characteristic curves,
 #' bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
-#' score review plots, and multivariate D-study comparisons. D-study conversions
+#' score review plots, testlet calibration, shared-rater severity and bootstrap
+#' intervals, conditional Person scores, and
+#' multivariate D-study comparisons. Matched ordinary/extended facet comparisons
+#' preserve centered effects, paired/difference views, excluded rows, display
+#' controls and alternative text; see [plot.mfrm_extended_comparison()].
+#' Threshold-sensitivity tile and curve payloads also preserve their selected
+#' view, display controls and text alternatives; see
+#' [plot.mfrm_screening_sensitivity()].
+#' Posterior predictive residual displays preserve their descriptive meaning
+#' and lack of reference cutoffs; see [plot.mfrm_response_diagnostics()].
+#' Testlet conversions retain unavailable
+#' rows, prior-only symbols and the conditional-interval note; they do not
+#' estimate diagnostics or add calibration uncertainty. Extended-model interval,
+#' precision and empirical-distribution views preserve display settings, data
+#' exclusions and text alternatives; see [plot.mfrm_testlet_scores()]. Bootstrap
+#' conversion retains infinite endpoints as arrows and ordinary intervals as
+#' a dashed comparison. D-study conversions
 #' preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
 #' estimates. They do not refit the model or add confidence intervals.
+#' For multivariate D-study plots, an explicit `component = "series"` keeps
+#' this dedicated conversion; use [plot_data()] for other tables.
 #' Difference-interval plots from [mfrm_multivariate_d_compare()] use their
 #' base `plot()` method or [plot_data()]; automatic conversion is not supported.
 #' Automatic conversion of exploratory clustering plots is not supported.
@@ -985,6 +1029,10 @@
 #' For main-effects `mfrm_d_study` results, use the base `plot()` method or
 #' [plot_data()] for custom graphics; automatic conversion is refused because
 #' generic column selection does not preserve those design comparisons.
+#' Selecting `component` does not enable unsupported conversions: it cannot
+#' preserve PCA axes, clustering membership, MI intervals or D-study differences
+#' through generic column selection. Use [plot_data()] to extract the table
+#' and specify the axes, intervals and grouping explicitly in custom graphics.
 #' Other draw-free payloads use a conservative tabular
 #' fallback; inspect [plot_data_components()] when automatic inference is not
 #' appropriate.
@@ -1086,23 +1134,56 @@ as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL,
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
-  .require_mfrmr_ggplot2()
-  payload <- x$data %||% list()
-  dots <- list(...)
-  if (is.null(component) && identical(x$name, "multivariate_d_comparison")) {
+  if (x$name %in% c("pooled_facet_intervals", "facet_interval_methods", "screening_performance")) {
+    stop("Use plot() for pooled facet intervals, fixed-facet interval methods, screening performance, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
+  }
+  if (identical(x$name, "multivariate_d_comparison")) {
     stop("Use plot() for D-study difference intervals, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
   }
-  if (is.null(component) && x$name %in% c("cluster_silhouette", "cluster_profile",
-                                        "cluster_dendrogram", "cluster_co_membership")) {
+  if (x$name %in% c("cluster_silhouette", "cluster_profile",
+                    "cluster_dendrogram", "cluster_co_membership",
+                    "feature_pca_scree", "feature_pca_scores", "feature_pca_loadings")) {
     stop("Automatic ggplot conversion is not available for exploratory clustering plots. ",
       "Use plot(x) to preserve the selected view, or plot_data() for custom graphics.", call. = FALSE)
   }
-  if (is.null(component) && identical(x$name, "multivariate_d_study")) {
-    return(.mfrmr_gg_multivariate_d_study(payload))
-  }
-  if (is.null(component) && identical(x$name, "d_study")) {
+  if (identical(x$name, "d_study")) {
     stop("Automatic ggplot conversion is not available for mfrm_d_study plots. ",
       "Use plot(x) to preserve the selected design comparisons, or plot_data() for custom graphics.", call. = FALSE)
+  }
+  .require_mfrmr_ggplot2()
+  payload <- x$data %||% list()
+  dots <- list(...)
+  if (identical(x$name,"extended_model_map")) {
+    rlang::check_dots_empty()
+    if(!is.null(component) && !identical(component,"table")) stop("Use plot_data() for other map components.",call.=FALSE)
+    return(.mfrmr_gg_model_map(payload))
+  }
+  if (identical(x$name, "response_diagnostics")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table")) stop("Use component = 'table', or plot_data() for other diagnostic components.", call. = FALSE)
+    return(.mfrmr_gg_response_diagnostics(payload))
+  }
+  if (identical(x$name, "screening_sensitivity")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table")) stop("Use component = 'table', or plot_data() for other screening components.", call. = FALSE)
+    return(.mfrmr_gg_screening_sensitivity(payload))
+  }
+  if (identical(x$name, "extended_model_comparison")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table")) stop("Use component = 'table', or plot_data() for other comparison components.", call. = FALSE)
+    return(.mfrmr_gg_extended_comparison(payload))
+  }
+  if (x$name %in% c("testlet_calibration", "testlet_scores", "random_rater_scores", "person_scores", "random_rater_severity", "random_rater_interval_bootstrap")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table")) stop(
+      "Extended-model graphics use component = 'table'; use plot_data() for other components.", call. = FALSE)
+    return(.mfrmr_gg_extended_payload(payload, x$name))
+  }
+  if (identical(x$name, "multivariate_d_study")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "series")) stop(
+      "D-study conversion uses component = 'series'; use plot_data() for tables and other components.", call. = FALSE)
+    return(.mfrmr_gg_multivariate_d_study(payload))
   }
   if (is.null(component) && identical(x$name, "fair_average") && !is.null(payload$plot_data)) {
     df <- payload$plot_data

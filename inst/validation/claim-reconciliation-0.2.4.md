@@ -1,7 +1,8 @@
 # 0.2.4 integrated claim and evidence ledger
 
-Date: 2026-09-14. **All 18 claim groups reconciled; claim closure and release
-approval remain open.** This is the successor status assessment to the
+Date: 2026-09-24. **The expanded 0.2.4 is complete locally within the retained
+release scope; public release remains open.** The original eighteen-group
+reconciliation remains historical evidence. This is the successor assessment to the
 [September 9 inventory](public-claim-evidence-review-0.2.4.md), under the
 [public roadmap](../../ROADMAP.md). It does not broaden API support or replace
 the source identities, protocols, failures or results in earlier records.
@@ -14,6 +15,316 @@ release. Historical exclusions and candidate checks do not automatically define
 its scope. Reconcile new retained claims and their source-specific evidence
 before the final integration decision, following the
 [current work plan](internal-roadmap-0.2.3.md#current-work-plan).
+
+## September 23: expanded release scope and completion evidence
+
+This is the current inventory for the expanded local 0.2.4, following the
+[public release scope](../../ROADMAP.md#focus-for-024) and its
+[M0–M6 milestones](../../ROADMAP.md#milestones-and-the-end-of-this-development-cycle).
+It extends this ledger in place. The original eighteen-group CSV and the
+September 22 A01–A16 disposition remain historical baseline evidence; neither
+certifies the later model, uncertainty or diagnostic additions. A local source manifest for integrated verification was frozen on September 24;
+the final disposition below now establishes M5 within the retained scope. The inventory distinguishes
+the initial scope decision from subsequent implementation and statistical
+checkpoints, each with its own source identity and limitations.
+
+| Retained outcome | Evidence available for reuse | Local disposition and remaining limitation | Milestone |
+| --- | --- | --- | --- |
+| Existing MFRM, portable calibration, anchors/linking and saved-output repairs | The source-specific baseline dispositions below and the published candidate's recorded checks. | Closed locally. The packaged regression, ordinary/portable installed checks and fresh-session replay preserve the supported outputs, restrictions and migration behavior. The final archive has its own identity; earlier CI does not certify publication of this source. | M4/M5, then M6 |
+| External-feature and numeric PCA/k-means workflows | Existing clustering/MI comparisons; the numeric workflow checkpoint in the active roadmap and independent transformation/reference checks in `test-numeric-feature-workflows.R`. | Closed locally for descriptive geometry, identity, comparisons and output. Executed tutorial, installed examples, PCA/group replay and colour/shape checks agree; unsupported conversions fail explicitly. The order-dependent PCA test spy is repaired and rechecked. Group validity and best-partition inference are not claimed. | M1/M4/M5 |
+| Assigned-score MI and eligible non-Person Rubin pooling | Assignment/category/observed-score protections, independent pooling checks, the [joint RSM example](response-mi-joint-record-0.2.4.md), and the [paired repeated-sampling record](response-mi-coverage-record-0.2.4.md): 200 datasets with MAR/MNAR masks, direct MML/Bayes references and every failure retained. | Closed locally for reviewed supplied completions and eligible fixed-facet inference. The joint-RSM tutorial, source/help, examples and saved output agree. MAR coverage is 96.5% among 198 available intervals, with two unavailable imputers; MNAR coverage is 26.0% with +.574-logit bias. This does not qualify arbitrary imputers/designs, pooled EAPs or exact prior/MML congeniality. | M4/M5 for the bounded workflow; broader qualification outside this evidence |
+| One-way fixed-facet sandwich inference | [Derivative checks, bounded comparison and M2 target reconciliation](facet-sandwich-record-0.2.4.md). Current computation/help hashes and public wording were checked without repeating the study. | Closed locally for the one-way working-model target, with executed tutorial and retained output. Generating-truth undercoverage and the distinction from misspecification-bias correction remain explicit. Few-cluster/multiway robustness and general coverage are outside this scope. | M4/M5 |
+| Rater-feedback and screening-performance evaluation | [Matched-budget and threshold-stress studies](rater-screening-matched-record-0.2.4.md), including 900 new fixed-protocol fits, 800 reused raw-statistic fits, directional error/detection comparisons and the EAP plug-in reference discrepancy. | Closed locally for mean-square-only descriptive screening, explicit alternative thresholds, sensitivity plots and complete failure denominators. The executed tutorial and replay agree. Heavy-missingness false flags and low contamination sensitivity remain; automatic exclusion and general diagnostic accuracy are not supported. | M1/M2/M4 |
+| Multivariate crossed/nested G/D studies and fixed-task planning | Existing ANOVA/MINQUE, composite, nested-design and paired normal-theory interval records below. The fixed-task README/help example now agrees with direct weighted-score analyses for complete/incomplete sources and independent balanced ANOVA. | Closed locally for the supported designs, normal-theory plan comparisons and fixed-task example. Independent weighted-score agreement, installed examples, complete/incomplete saved replay and dedicated plot panels are retained. Arbitrary fixed/random designs and general robust inference remain later work. | M1/M4 |
+| Shared-rater RSM | [Initial implementation and pilot](random-rater-record-0.2.4.md), [paired bootstrap comparison](random-rater-interval-record-0.2.4.md), independent joint-likelihood references, the estimated ability-population and joint conditional Person-scoring checkpoints (rater covariance, profile/refits, bootstrap, scoring references and saved reports), the saved-estimate view/accessibility checkpoint (display contracts and offline replay, not diagnostic qualification), and the [crossed-model mapping](extended-model-readiness-review-0.2.4.md#m2-literature-follow-through). | Closed locally for the bounded shared-normal RSM, conditional scoring and descriptive output. The 800-dataset qualification remains inconclusive; automatic individual-rater/calibration bounds are absent and explicit approximations keep their guards. All 53 saved integration failures have separate higher-order repair evidence; 48 scores/96 endpoints and 128 local-likelihood points have bounded independent numerical support. Final installed help, executed tutorial and replay agree. These checks do not qualify general coverage, full profiles or bootstrap intervals. | M2/M3/M4 |
+| Person-local testlet RSM | [Fit/scoring/output record](testlet-api-record-0.2.4.md), independent variance-boundary/tensor/continuous-interval checks, [model-aware comparisons and maps](model-maps-record-0.2.4.md), and the task/criterion application tutorial. The [480-dataset estimated-population comparison and numerical repair](testlet-estimated-qualification-record-0.2.4.md) retain all original outcomes plus a separate fourteen-case repair and four unchanged controls. | Closed locally for common-variance non-overlapping testlets, conditional scoring and descriptive output. The 480-dataset comparison retains original failures and a separate fourteen-case start-selection repair; only the two larger balanced conditions have post-repair bounded conditional coverage support. Small/sparse and regular calibration intervals remain inconclusive, and point accuracy does not uniformly improve. Both executed tutorials, installed help, explicit interval controls and replay agree. Task-specific variances and automatic halo diagnosis are not implemented. | M2/M3/M4 |
+| Extended-model comparison, Infit/Outfit and Wright/pathway displays | [Literature-to-implementation audit](extended-model-readiness-review-0.2.4.md) and the active M2 checkpoint specify matched events, latent integration, full predictive variance and descriptive residual targets. | Closed locally for aligned events, specified posterior moments/full variances, centered facet/conditional Person comparisons and descriptive maps. Independent numerical checks and final saved reports preserve these targets. Ordinary plug-in cutoffs, formal extended-model DRF/LRT and automatic ranking are not inherited. | M2/M3/M4 |
+| Local integration and later publication | Existing static-report/export connections and historical archive/help/source checks supply reusable methods, not current completion evidence. | M5 closed by the final source/archive disposition below. The completed broad suite is reconciled with focused repairs, executed tutorial provenance and a clean final structural/example check. M6 still requires matching five-environment CI, main integration, release assets and published documentation. | M5 local endpoint; M6 public release |
+
+The September 24 entry review resolved the retained implementation and
+statistical decisions. The final integration disposition below now closes M1–M5
+for those outcomes. M6 remains open. Each closure uses source-specific checks
+and the stated statistical boundary; the number of tests is not evidence of
+general coverage, diagnostic accuracy or arbitrary-design support.
+
+
+The subsequent M1 example checkpoint is recorded in the active work plan and
+`validation-results/m1-workflows-20260923/`. It closes the fixed-task example
+requirement and corrects a missing source of variation in the illustrative
+ordinal imputer. It does not close the entire release row or endorse the
+imputation model: parameter resampling does not remedy conditional-model
+misspecification, and one held-out set cannot establish population bias or
+interval coverage. No model-family or release-readiness claim is added.
+
+Explicit later work includes substantive multidimensional MFRM; arbitrary
+G-theory structures; general calibration-aware Person/contrast intervals;
+few-cluster/multiway and robust/nested G-D inference; formal extended-model
+DRF/bias tests; joint shared-rater/testlet, PCM and heterogeneous/correlated
+extensions; automatic rater removal or allocation optimization; and extended
+Shiny support. Conditional intervals are retained only with their actual
+conditioning and qualified scope. Known adverse results cannot be resolved
+solely by adding a warning. A required workflow may not be silently moved to
+later work to declare M5 complete. Such a change requires an explicit
+release-scope decision recorded in the public roadmap and active work plan.
+
+## September 24: saved-output integration
+
+The question was whether each included analysis family can reach its documented
+summary, graph and saved result without changing the statistical target or
+silently taking an unsupported generic route. Source inspection and a saved-
+object replay found and repaired an actual display defect: explicitly selecting
+`component = "table"` bypassed conversion restrictions. PCA lost PC2, a pooled
+MI result lost both bounds, and a D-study graphed scenario numbers instead of
+G/Phi. The original reproductions are retained. Unsupported families now refuse
+that route; supported multivariate D-study plots accept `component = "series"`
+through their dedicated converter. Unclassified custom tabular payloads keep
+the documented generic fallback.
+
+The public routing guide now has `features`, `imputation` and `gtheory` sections,
+with dedicated summary/plot/RDS/CSV routes and explicit separation from
+`mfrm_results()`. It does not imply plot methods for raw feature reviews,
+partition comparisons or G-study component objects. PCA score plots add shared
+package colours and point shapes; retained/omitted scree points use filled/open
+symbols. Encoding and ID-aligned coordinates are retained, with shape recycling
+after six groups stated. No statistical estimate or cluster assignment changed.
+
+Evidence is in `validation-results/workflow-output-integration-20260924/`:
+
+| Workflow | Executed integration check | Limits preserved |
+| --- | --- | --- |
+| Numeric PCA / external groups | Saved PCA, a direct and reduced-space partition comparison, RDS/CSV summaries and plotted coordinates; public-method routing and monochrome rendering. | Projection and descriptive groups only; no automatic ggplot conversion or pooled labels. Mixed-feature and feature-MI calculations reuse earlier evidence; this is not a new recovery study. |
+| Assigned-score MI | Reused the saved joint-RSM pooled example, retaining the full source RDS, summary CSV and interval endpoints. | Eligible fixed-facet Rubin target only; no new imputation, fit or coverage claim. |
+| Observed-score G/D study | Reused complete and incomplete fixed-task/sampled-rater results; summaries, exact series, two-panel G/Phi figures and RDS/CSV replay agree. Existing tests retain metric-specific availability, score units and nested counts. | Source incompleteness does not change the future balanced-design interpretation; plan-difference inference has its separate normal/crossed scope. |
+| Fixed-facet uncertainty and screening | Saved sandwich, screening-performance and threshold-sensitivity objects preserve summaries, graph data and supported/refused conversions without recomputation. | Working-model target, planned denominators, unresolved outcomes and directional rules remain unchanged. |
+| Both extended RSMs | Rebuilt results from previously saved fits with matched scores, comparisons and diagnostics; Person tables and model locations remain identical. Wright/fit-pathway/comparison plots, static reports and archive replay work with fitting/scoring/diagnostic computation blocked. | Current calibration defaults apply without changing Person scores or model assumptions. Descriptive residuals retain no automatic classic fit cutoffs. |
+
+Five focused files pass 749 expectations (routing 106, numeric features 109,
+output guide 316, D-study plots 139, existing ggplot routes 79), with zero
+failures, warnings or skips in their final runs. The initial new renderer test
+mistook points drawn by the score-plot legend for scree points; isolating the
+scree capture fixed the test without changing the drawing implementation.
+That initial failure is retained separately. Four changed Rd topics are
+regenerated, parsed and HTML-rendered. Tutorials, NEWS and README include the
+routing and migration changes. PCA colour/monochrome/scree, pooled-MI and
+D-study figures were visually inspected for axes, marks, labels and clipping.
+
+This closes the identified output-routing defect and the representative
+cross-workflow saved-output pass in M4. It does not declare all M1–M4 closed or
+constitute M5: final source/installed-help identity, examples, optional-dependency
+behavior and applicable integrated package checks remain. No new simulation,
+full-suite run, commit, push or publication was performed. Follow those concrete
+integration requirements next; do not reopen bounded coverage studies merely
+to add more conditions.
+
+## September 24: installed-workflow integration
+
+The question was whether the expanded workflows remain usable from an installed
+source archive, without `pkgload`, development-only helpers or an implicit
+refit. The package was built and installed in an isolated temporary library;
+each checking process asserted the loaded package path. Source and installed
+help agree on all 204 exports and 262 S3 registrations. Code/documentation
+argument checks and Rd-content checks pass across 269 help topics. Regenerating
+all topics from the source identified exactly two differences:
+`fit_mfrm_imputed` and `pool_mfrm_imputed` had been generated without Markdown
+processing. Their links and code formatting are now generated correctly from
+the package settings, with no change to estimation or pooling.
+
+A separate reproduced failure concerned capability guidance: unsupported PCA,
+clustering and interval conversions checked for ggplot2 first. They could tell
+a user to install a package that would still not enable that view. The shared
+converter now refuses unsupported views first and gives the available base-
+plot/plot-data route; supported ggplot conversions retain their dependency check.
+
+Evidence is in `validation-results/installed-workflows-20260924/`:
+
+| Check | Result and scope |
+| --- | --- |
+| Installed API and generated help | All exports documented, S3 registrations resolve, argument/Rd checks pass, and every generated help topic matches source. The two corrected pages render without literal Markdown markers. |
+| Representative help examples | Seventeen installed examples execute without warnings/errors: mixed/numeric/hierarchical groups, feature MI, G/D studies and plan differences, fixed-facet intervals, screening/sensitivity and routing guides. `donttest`/`dontrun` blocks and whole vignettes are not counted as executed here. |
+| Preserved ordinary and portable baseline | The existing ordinary RSM/PCM smoke route passes 54 expectations; the portable installed/fresh-process test passes 12, including CSV identities, unavailable facet/category refusals and scoring agreement. These ran on the initial inspection installation; their implementation is unchanged in the final inspection archive. |
+| Optional dependencies | Actual installed examples exercise mice/cluster. With namespace availability explicitly mocked to false for ggplot2, cluster, mice and RTMB, numeric PCA/k-means without silhouettes, all 40 shipped assigned-score completions, and saved extended-model tables/normal intervals/base maps/reports still work. PAM/hierarchies/silhouettes, mids import, shared-rater fitting/profiling and supported ggplot conversion give their required-dependency messages. This is simulated absence, not a separate minimal-library installation. No user package was removed. |
+| Saved results in a fresh installed process | Nine existing PCA/group/comparison, pooled-MI, complete/incomplete D-study, interval and screening objects preserve summaries/plot data and remain unmodified. Both extended-model public export scripts replay with matching report tables and supported model maps. Fitting/scoring/statistical recomputation is blocked during this check. |
+| Focused conversion regressions | 186 expectations pass with no failure, warning or skip: routing 107 and existing ggplot routes 79. The first installed run exposed a new test's implicit `pkgload` dependency; adding its explicit package name fixes the test. That initial failure is retained separately and is not a statistical/package-output failure. |
+| Archive boundaries and identity | 626 packaged R/help/native/test/vignette and NEWS/NAMESPACE files match the current source byte for byte. Validation records, internal roadmap, local library and Rplots.pdf are excluded. The archive and file hashes are retained. |
+
+The final inspection archive has SHA256
+`bbb2518ef8401a70d9a19903a048dbfb3fcc438d6ff6b4d4e4b46af2d6a00b6f`.
+It was built with `--no-build-vignettes --no-manual`. It verifies installation
+and the checks above, not the full tutorial build or final integrated package
+check. The initial archive and failures remain separate. No numerical study,
+full suite, commit, push or publication was repeated/performed.
+
+This closes the installed-workflow checkpoint within M4. The remaining sequence
+is to reconcile each retained release outcome with its existing evidence and
+explicit restrictions, then freeze one source for M5, build its complete
+vignettes/local documentation and run the applicable integrated checks. Do not
+reopen bounded coverage studies just because their broader, non-retained claims
+remain unqualified. Do not declare M5 or M6 from this inspection archive.
+
+## September 24: entry to final integrated verification
+
+The per-outcome review now resolves the prior generic "complete statistical
+qualification" action into the retained claims of the public release scope.
+It does not accept a new inferential guarantee or remove an included workflow.
+
+| Retained outcome | Disposition before the integrated check |
+| --- | --- |
+| Existing MFRM / portable calibration | Preserve the established bounded model/anchor/linking interfaces. The installed ordinary and portable checks pass; the packaged suite must also preserve the earlier ICC, variance-scale, shrinkage and interaction/replay corrections. |
+| External features / numeric PCA and k-means | The descriptive feature geometry, per-entity identity, mixed/hierarchical routes, paired imputation comparison and output/refusal contracts have implementation and reference evidence. No group-validity or best-partition inference is claimed. |
+| Assigned-score MI | The review/fit/pool workflow and the proper joint-RSM example are implemented. The declared MAR comparison is complete, and adverse MNAR results/failures remain in the tutorial. The retained target is eligible fixed-facet inference under adequate supplied imputations, not arbitrary-imputer or missingness correction. |
+| Fixed-facet intervals / rater screening | The one-way sandwich working-model target and observed-versus-generating-parameter distinction are resolved. Mean-square-only screening, explicit alternative thresholds and complete failure denominators have bounded evidence. General diagnostic accuracy, removal rules and multiway robustness are not claimed. |
+| G/D studies | Crossed/selected nested components, composites, complete future plans, metric-specific availability and the supported normal-theory plan differences retain their established scope. The fixed-task/sampled-rater example has direct independent agreement. No additional generic design solver is needed for this release scope. |
+| Shared-rater / testlet workflows | The estimated-normal-population choice, effect sharing, zero-variance reductions, conditional scoring and declared uncertainty are implemented. The independent posterior/local-likelihood checks and bounded fitted-model comparisons support their specified targets. Failed cases and adverse coverage/point-accuracy results remain recorded. Automatic unqualified calibration/individual-rater bounds have been removed; explicit approximations retain their guards. Full-profile numerical and general coverage qualification are not inferred. |
+| Model-aware comparisons / diagnostics / figures | Matched events and population/location conventions, same-data posterior moments/full variances and conditional Person comparisons are implemented and independently checked. Wright/reference-location and descriptive fit-pathway figures retain their units, selected counts and unsupported-inference restrictions. No automatic classical fit bands, formal extended bias test or model-ranking rule is promised. |
+| User output / maintenance | Generated help, representative examples, source/installed API identity, dependency boundaries, saved-value replay and user-facing routing have passed their focused integration checks. Full tutorial execution and the final packaged regression/documentation check are the remaining gate. Workload records describe measured configurations and do not claim a universal capacity bound. |
+
+M1/M2 decisions and M3 retained workflows are ready for integrated verification;
+this is not M5 completion. M4's remaining whole-tutorial check is included in
+that gate. The frozen local snapshot in
+`validation-results/final-integration-20260924/source/mfrmr/` has a manifest
+of 662 source inputs. It represents the dirty local working tree, not the old
+Git commit. Building uses the complete vignettes; the package check uses the
+full packaged test tier (`NOT_CRAN=true`). Historical research scripts and
+slow external confirmation protocols remain outside the package and are not
+rerun. The complete vignette build executes the tutorials; `R CMD check` then
+uses `--no-manual --no-vignettes` on that exact archive to avoid executing the
+same tutorials another two times. Vignette presence/source identity, ordinary
+Rd examples and the full packaged tests remain checked. This is not a PDF
+manual build or a substitute for the later five-platform CI. Any failure is
+retained and repaired before accepting the corresponding
+source/archive; no blanket pass is assumed.
+
+### Integrated build findings and repairs
+
+The complete 15-vignette build succeeded, retaining 43 rendered figures and
+matching article sources. The first archive audit found 19 figures with empty
+HTML alternatives. Five tutorial sources now supply target-specific `fig.alt`
+text, including separate alternatives for multi-plot chunks. The repaired full
+build succeeds, all 43 figures have nonempty alternatives, and visible article
+text contains no local user paths or internal validation-directory paths.
+Figure coordinates, tables and executed R expressions are unchanged.
+
+The initial package check also found unresolved unqualified `confint` and
+`predict` calls. This was an actual runtime defect, not only a static NOTE:
+with `R_DEFAULT_PACKAGES=base`, normal-rater plotting failed because `confint`
+was not found. The package now imports both generics from stats. Under the same
+minimal attached-package session, the repaired installed archive supports
+normal-rater and bootstrap-interval plotting and source-Person testlet scoring;
+the latter agrees with direct `stats::predict()` without a calibration refit.
+Roxygen-generated NAMESPACE and the package source annotation agree.
+
+The first repaired archive is
+`validation-results/final-integration-20260924/repair/mfrmr_0.2.4.tar.gz`, SHA256
+`41067098f73ea0410b4fa24f76689f147bb782430a9adf06ff3e912aaaa6793d`.
+Its `R CMD check --no-manual --no-vignettes --no-tests` result is **Status: OK**.
+The initial full packaged suite then finished with **22,364 passed expectations,
+2 failures, 42 warnings and 44 skipped tests**. That original failed receipt is
+retained; it is not relabelled as a clean run.
+
+The two failures were a missing CRAN execution guard in seven new tutorials
+and an order-dependent PCA renderer spy. Registered numeric S3 methods reproduce
+the latter failure; observing/restoring the registered methods fixes the test
+without changing the renderer or weakening its shape/legend assertions. The
+39 category-support warnings are now expected and their weak-information state
+asserted in the deliberate fixtures. One comparison test explicitly expects
+both readiness and JML-ranking warnings. A larger test device removes two label
+crowding warnings while preserving the intentional frequency-overflow check.
+No product warning is suppressed. Source-only documentation checks also found
+and corrected internal validation wording in the README.
+
+Eight affected/source-only test files now pass **1,590 expectations, with no
+failure, error, warning or skip**. The earlier intermediate failures and their
+repaired reruns are retained separately. Twelve documentation/help checks skipped
+in the installed suite now execute from source. The other 32 skips depend on
+excluded repository-only GPCM/external research artifacts; their existing
+source-specific records are reused rather than re-executing those studies.
+
+The initial build took 546.85 seconds. Its `/usr/bin/time -l` wrapper failed
+while reading `kern.clockrate` after the archive had been built; no RSS is
+claimed for that attempt. The repaired build used Python `getrusage` and
+finished in 562.06 seconds with a maximum child-process RSS of 2,942,255,104
+bytes (2.74 GiB). The repaired structural/example package check took 99.60
+seconds, maximum child RSS 787,496,960 bytes. These are observed local workloads
+on R 4.6.1/macOS arm64, not summed concurrent-process memory, model-level
+benchmarks or general capacity guarantees. Dependency-index requests to
+CRAN/Bioconductor were unavailable in the sandbox; installed dependencies
+satisfied the check, which reported no resulting NOTE/warning/error. No online
+repository/URL validation or PDF-manual compilation is claimed.
+
+
+### Local completion decision and final source
+
+**M1–M5 are complete locally for the retained release scope. M6 is open.** No
+required included workflow or known defect invalidating a supported default
+remains pending. Broader inferential claims remain excluded as specified in the
+public roadmap; inconclusive/adverse study results are not changed by this decision.
+
+The final local archive is
+`validation-results/final-integration-20260924/final/mfrmr_0.2.4.tar.gz`, SHA256
+`9eceab3943bf5ae6d6e76fda2b95787272e77a6d62f1fac931ea3b630658f3c0`.
+Its `source-sha256.csv` identifies 708 source/build-document inputs, including
+the prebuilt tutorials; the 662 original package-source inputs are reconciled
+with the working tree. This is a frozen dirty-tree snapshot, not a Git commit.
+
+- All executable package R expressions and compiled-code sources are unchanged
+  from the completed broad suite. The only runtime namespace change imports
+  `stats::confint` and `stats::predict`, separately verified against the final
+  installed archive in a session without attached stats. Test-only changes,
+  README/NEWS and vignette options are recorded in the source manifests.
+- The fifteen fully executed tutorials and all image bytes are inherited from
+  the successful first-repair build. Seven **hidden setup chunks only** add the
+  existing CRAN guard; all analysis expressions, prose and display options match.
+  Twenty-one true/false/unset setup branches pass. Matching Rmd files and freshly
+  extracted R scripts accompany the unchanged executed HTML. The final build
+  uses `--no-build-vignettes` to preserve these outputs without refitting.
+  All 43 images have nonempty alternative text; source/asset identity and absence
+  of local/internal paths in visible article text pass.
+- The exact final archive passes `R CMD check --no-manual --no-vignettes --no-tests`
+  with **0 errors, 0 warnings, 0 NOTEs**. This covers installation, namespace,
+  compiled code, Rd/usage/cross-references, ordinary examples and vignette assets.
+  It is combined with the completed broad run and the 1,590 repaired/source-only
+  expectations above, not described as a second clean full-suite run.
+- The final installed package retains **204 exports, 262 S3 registrations and
+  269 Rd topics**. Fresh-process replay preserves nine workflow objects and both
+  model export/report scripts with statistical recomputation blocked. Earlier
+  optional-dependency and ordinary/portable checks remain applicable to unchanged
+  executable code. Saved-analysis migration instructions remain in README/help.
+- Final packaging took 3.72 seconds and the structural/example check 97.50 seconds,
+  maximum child RSS 799,506,432 bytes. The full packaged run took 1,206.86 seconds,
+  maximum child RSS 3,038,806,016 bytes. These are local observations with the same
+  per-process memory limitation described above.
+
+The local result is an installable candidate with matching help and executed
+articles. Five-environment CI, main/tag/asset/site publication, online URL and
+repository checks, and PDF-manual compilation are not part of this local receipt.
+No commit, push, publication or CRAN submission was made. Future changes must be
+mapped to the applicable evidence before reusing this archive's disposition.
+
+### September 24: publication-candidate preparation
+
+The M5 checks above remain the local qualification. The publication candidate
+is assembled on `development/0.2.4-expanded-workflows-20260922`, based on main
+`2230003f2caa1c0e615c2a1c96f99320db78ac71`. A read-only GitHub check on
+September 24 confirms that main still points there and `v0.2.4-rc.3` is the
+latest published candidate; neither contains this expansion. The existing
+five-environment workflow includes the new feature/MI/interval/screening and
+model test files. Release metadata consistency passes locally.
+
+`cran-comments.md` now describes this expansion and its actual local checks,
+instead of the earlier archive. Incidental `Rplots.pdf` is ignored by Git as
+well as source packaging. Staging the new files exposed one trailing space in
+testlet tutorial prose; it is removed without changing rendered HTML or R code.
+The publication-preparation archive is
+`validation-results/release-preparation-20260924/mfrmr_0.2.4.tar.gz`, SHA256
+`776465bc7b637d0b1859988485f9ac711ebc60c521aa476b4ef22c6a6497f134`.
+Its exact member comparison with the checked M5 archive finds only that prose
+space, the same change in the embedded Rmd, and the generated packaging timestamp.
+Every executable source, test, Rd topic, dataset, extracted tutorial script,
+rendered HTML and image is byte-identical. Existing checks are reused on that
+basis; no new full run is claimed. M6 still requires matching hosted results
+and verification of integration/publication.
+
+## Earlier candidate and claim-reconciliation evidence
 
 ### September 21: selected additions in the integrated candidate
 

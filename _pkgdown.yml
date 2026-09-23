@@ -34,9 +34,51 @@ reference:
       - mfrm_features
       - mfrm_cluster
       - mfrm_cluster_hierarchical
+      - mfrm_pca
+      - plot.mfrm_pca
+      - mfrm_cluster_kmeans
       - mfrm_cluster_imputed
       - mfrm_cluster_compare
       - plot.mfrm_clusters
+
+  - title: "Missing assigned scores"
+    desc: "Review response imputations, fit a common MFRM and pool eligible facet targets."
+    contents:
+      - mfrm_response_imputations
+      - fit_mfrm_imputed
+      - pool_mfrm_imputed
+      - plot.mfrm_pooled
+
+  - title: "Fixed-facet uncertainty"
+    desc: "Compare observed-information and one-way sandwich intervals for fixed facet estimates and contrasts."
+    contents:
+      - mfrm_facet_intervals
+      - plot.mfrm_facet_intervals
+
+  - title: "Shared random raters"
+    desc: "Estimate a rater population and distinguish observed-rater feedback from replacement-rater probabilities."
+    contents:
+      - fit_mfrm_random_rater
+      - score_mfrm_random_rater
+      - score_mfrm_persons
+      - mfrmr_model_maps
+      - mfrm_response_diagnostics
+      - plot.mfrm_response_diagnostics
+      - plot.mfrm_random_rater_scores
+      - confint.mfrm_random_rater
+      - predict.mfrm_random_rater
+      - plot.mfrm_random_rater
+      - mfrm_random_rater_intervals
+      - plot.mfrm_random_rater_intervals
+
+  - title: "Person-specific testlets"
+    desc: "Model local dependence within a Person and score conditionally on fitted calibration."
+    contents:
+      - fit_mfrm_testlet
+      - confint.mfrm_testlet
+      - predict.mfrm_testlet
+      - plot.mfrm_testlet
+      - plot.mfrm_testlet_scores
 
   - title: "Portable fixed calibration"
     desc: "Create, validate, freeze, persist, and apply the bounded RSM/PCM MML calibration artifact."
@@ -110,6 +152,10 @@ reference:
       - evaluate_mfrm_design
       - evaluate_mfrm_diagnostic_screening
       - evaluate_mfrm_signal_detection
+      - mfrm_screening_performance
+      - plot.mfrm_screening_performance
+      - mfrm_screening_sensitivity
+      - plot.mfrm_screening_sensitivity
       - predict_mfrm_population
       - build_mfrm_resampling_spec
       - draw_mfrm_resamples
@@ -173,6 +219,7 @@ reference:
       - build_peer_review_sim_spec
       - build_peer_review_design_review
       - compare_mfrm
+      - plot.mfrm_extended_comparison
       - compatibility_alias_table
       - compute_facet_design_effect
       - compute_facet_icc

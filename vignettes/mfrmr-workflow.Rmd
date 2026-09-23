@@ -34,6 +34,15 @@ knitr::opts_chunk$set(
 
 ## Quick start
 
+This tutorial follows the ordinary fixed-facet `fit_mfrm()` workflow. To
+choose between fixed facets, shared random raters and Person-specific
+testlets, use `mfrmr_output_guide("models")` or
+`help("mfrmr_workflow_methods")`. The extended models have dedicated tutorials:
+`vignette("mfrmr-random-raters", package = "mfrmr")` and
+`vignette("mfrmr-testlets", package = "mfrmr")`. Their prediction targets and
+reporting support differ; the diagnostics and comprehensive reports below
+require an ordinary `mfrm_fit` result.
+
 This example estimates person abilities while accounting for rater severity
 and criterion difficulty. A *facet* is a source of variation in scores; here,
 `Rater` and `Criterion` are facets, and individual raters and criteria are their
@@ -634,6 +643,7 @@ vignette_artifact("workflow_export_files.csv")
 | --- | --- |
 | Do category thresholds need to differ by criterion? | `compare_mfrm()` and `mml_quadrature_sensitivity()`; fit candidates to the same observations and review numerical sensitivity. |
 | Do specific rater-by-criterion or group contrasts depart from the model? | `estimate_bias()` or `analyze_dff()`; specify the contrasts, screening rules, and multiplicity plan. See the reporting vignette and `mfrmr-linking-and-dff`. |
+| How often does a declared rater-warning rule detect a specified departure or falsely flag an unaffected rater? | `mfrm_screening_performance()` with known simulation truth and all planned trials. See `mfrmr-screening-performance` for individual/family rates, unavailable results and Monte Carlo uncertainty. |
 | Would the conclusions change under a bounded GPCM? | `gpcm_capability_matrix()` and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
 | Are forms or waves on a comparable scale? | `mfrmr-linking-and-dff` and `mfrmr-portable-calibration`; common labels alone do not establish linking. |
 | How does a proposed rating design perform under stated assumptions? | `build_mfrm_sim_spec()`, `evaluate_mfrm_recovery()`, and `assess_mfrm_recovery()`; report generating conditions, repetitions, failures, and Monte Carlo uncertainty. |

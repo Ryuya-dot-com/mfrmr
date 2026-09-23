@@ -2,6 +2,7 @@
 .DS_Store
 
 # R build/check artifacts
+Rplots.pdf
 *.Rcheck/
 *.tar.gz
 build_run.log

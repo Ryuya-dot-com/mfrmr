@@ -53,6 +53,52 @@ the review and pass the corrected data frame to \code{\link[=fit_mfrm]{fit_mfrm(
 \code{data_review} object contains checks; it is not the rating data to fit.
 }
 
+\section{Choose which ratings share an effect}{
+
+The routine fit/diagnose/results/report workflow on this page is for
+\code{\link[=fit_mfrm]{fit_mfrm()}} objects. Use \code{mfrmr_output_guide("models")} to compare:
+\itemize{
+\item \strong{Fixed facets:} \code{\link[=fit_mfrm]{fit_mfrm()}} describes the specified rater and task
+levels. Its native diagnostics, Wright map and comprehensive reports use
+the \code{mfrm_fit} result.
+\item \strong{Shared random raters:} \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} models one rater effect
+shared across all Persons rated by that rater. \code{predict()} gives score
+probabilities at supplied abilities for observed or replacement raters;
+it does not estimate Person abilities. See
+\code{vignette("mfrmr-random-raters", package = "mfrmr")}.
+\item \strong{Person-specific testlets:} \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} groups dependent ratings
+within each Person. \code{predict()} estimates Person abilities conditional on
+fitted calibration. A Rater column can specify both usual fixed severity
+and local within-Person membership. See
+\code{vignette("mfrmr-testlets", package = "mfrmr")}.
+}
+
+All three have \code{summary()}, \code{plot()}, \code{\link[=plot_data]{plot_data()}} and ordinary RDS saving.
+Extended-model plots additionally support \code{\link[=as_ggplot]{as_ggplot()}}, preserving each
+interval's target, prior-only symbols and unavailable rows. Check
+\code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} for each interval's target and limitations.
+The two extended models have their own classes. \code{\link[=mfrm_results]{mfrm_results()}} collects
+their saved calibration, numerical checks and interval meanings; attach
+separately computed \code{predictions} and random-rater \code{intervals} explicitly.
+Calibration tables retain estimates and approximate SEs but omit bounds by
+default. For either extension, \code{confint(fit, parm = "calibration")} explicitly
+requests pointwise normal approximations with unestablished finite-sample
+coverage. Use \code{mfrm_results(fit, calibration_intervals = "normal", calibration_level = 0.95)} to retain that choice in reports and saved output.
+\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} reuse these results without
+fitting, scoring or resampling. Older predictions need regeneration from
+the saved fit to carry matching source metadata; no refit is needed.
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, the viewer, ordinary Wright maps, response-MI pooling
+and portable-calibration extraction do not accept these model classes.
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} separately integrates latent uncertainty to
+produce same-data posterior predictive residuals and descriptive Infit/Outfit
+for either extension. Paired/scatter plots have no reference cutoffs;
+ordinary plug-in fit values are not directly comparable. Attach saved output
+with \code{mfrm_results(fit, diagnostics = response_review)}; no integration runs
+during reporting. Numerical checks are not substitute model-fit diagnostics. Refit when
+changing the statistical model; editing a saved object's class is invalid.
+Replotting or exporting an existing table does not require refitting.
+}
+
 \section{From the first summary to diagnostics}{
 
 A \code{FormalInference = "No"} entry in \code{results$decision} can mean that precision
@@ -73,12 +119,42 @@ source designs and reading G/Phi/SEM plots. For prespecified plan differences
 under normal random effects with two crossed facets, see
 \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}. These analyses do not require an MFRM fit
 and do not estimate reliability on its latent scale.
+In particular, a testlet variance is on the latent logit scale and cannot
+be substituted for an observed-score G-study component. Start G/D analyses
+from the ratings and their declared G-study design.
 
 To group persons, raters or tasks by external attributes, use \code{\link[=mfrm_features]{mfrm_features()}}
-followed by \code{\link[=mfrm_cluster]{mfrm_cluster()}} or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}. See
+followed by \code{\link[=mfrm_cluster]{mfrm_cluster()}} or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for mixed
+attributes. \code{\link[=mfrm_pca]{mfrm_pca()}} and \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} use selected numeric
+features with explicitly chosen scaling and component counts. See
 \code{vignette("mfrmr-external-features", package = "mfrmr")} for imputation and
 setting comparisons. These are exploratory attribute groups, not estimated
 ability classes or rater-quality judgments.
+Use \code{mfrmr_output_guide("features")} or \code{mfrmr_output_guide("gtheory")} for
+their dedicated output routes. Use \code{summary()} for reviews and comparisons,
+and \code{plot()} or \code{\link[=plot_data]{plot_data()}} for fitted PCA, partitions and D-studies.
+Save the full analysis with \code{saveRDS()}; these are not \code{\link[=mfrm_results]{mfrm_results()}} inputs.
+Export a chosen summary with \code{write.csv(summary(result), ..., row.names = FALSE)}
+and keep the full source object for its settings, excluded rows and assumptions.
+Multivariate D-study scenario plots support \code{\link[=as_ggplot]{as_ggplot()}}, preserving G/Phi
+or SEM panels. Plan-difference intervals, PCA and clustering instead use
+their base plots or explicit custom graphics from \code{\link[=plot_data]{plot_data()}}.
+}
+
+\section{Missing scores on assigned ratings}{
+
+\code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}} reviews supplied ordinal completions;
+\code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}} fits each dataset and retains failures. Inspect every
+completion before \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}} combines eligible non-Person facet
+estimates or prespecified contrasts and their covariance. This route does
+not fill unassigned cells or pool Person EAPs. The imputation model and the
+fixed-standard-normal RSM/PCM MML analysis must be justified together.
+See \code{mfrmr_output_guide("imputation")} and
+\code{vignette("mfrmr-response-imputation")} for an executed example and its limits.
+A pooled result has dedicated \code{summary()}, \code{plot()} and \code{\link[=plot_data]{plot_data()}} routes;
+use \code{saveRDS()} for the complete analysis or \code{write.csv(summary(pooled), ...)}
+for a selected table. It is not an \code{\link[=mfrm_results]{mfrm_results()}} input and does not support
+\code{\link[=as_ggplot]{as_ggplot()}}. Selecting a plot \code{component} cannot supply a missing conversion.
 }
 
 \section{Updating saved analyses for 0.2.4}{
@@ -390,6 +466,11 @@ boundary. Use
 before branching into less common helpers.
 Residual DIF/DFF differences remain descriptive; their detection and
 false-positive rates are unavailable in \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}.
+To evaluate your own declared rater-warning procedure against known
+simulation truth, use \code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}} with a complete planned
+roster. It distinguishes individual and any-target rates, Monte Carlo
+uncertainty and unavailable outcomes. See
+\code{vignette("mfrmr-screening-performance", package = "mfrmr")}.
 \item (Optional, \code{RSM} / \code{PCM}; bounded \code{GPCM} with caveat) Estimate
 interaction bias with \code{\link[=estimate_bias]{estimate_bias()}}.
 \item Choose a downstream branch:

@@ -6,7 +6,7 @@
 #' the same imputations.
 #'
 #' @param analyses A named list of at least two results from [mfrm_cluster()]
-#'   and/or [mfrm_cluster_hierarchical()],
+#'   and/or [mfrm_cluster_hierarchical()] or [mfrm_cluster_kmeans()],
 #'   or a named list of results from [mfrm_cluster_imputed()]. Do not mix the two
 #'   result types. Names must be unique and nonblank. All results must use the
 #'   same entity IDs and included entities. Selected features may differ;
@@ -20,7 +20,8 @@
 #'   Reuse one fitted imputation model.
 #' @return An `mfrm_cluster_comparison` object containing:
 #'   \itemize{
-#'   \item `analysis_summary`: method, linkage (unavailable for PAM), group
+#'   \item `analysis_summary`: method, distance, fitted space, scaling, retained
+#'     component count, linkage (unavailable for PAM and k-means), group
 #'     count, selected feature count (`Features`), included/excluded entity counts,
 #'     smallest/largest group sizes, and mean silhouette for each analysis and
 #'     imputation. `Imputation` is `NA` for ordinary clustering results.
@@ -100,7 +101,7 @@ mfrm_cluster_compare <- function(analyses) {
   }
   imputed <- all(vapply(analyses, inherits, logical(1), "mfrm_imputed_clusters"))
   if (!imputed && !all(vapply(analyses, inherits, logical(1), "mfrm_clusters"))) {
-    stop("Supply only mfrm_cluster() / mfrm_cluster_hierarchical() results, or only mfrm_cluster_imputed() results.", call. = FALSE)
+    stop("Supply only mfrm_cluster() / mfrm_cluster_hierarchical() / mfrm_cluster_kmeans() results, or only mfrm_cluster_imputed() results.", call. = FALSE)
   }
   partitions <- if (imputed) lapply(analyses, `[[`, "analyses") else lapply(analyses, list)
   m <- length(partitions[[1L]])
@@ -202,7 +203,11 @@ mfrm_cluster_compare <- function(analyses) {
         Features = length(feature_sets[[i]]),
         Included = sum(included), Excluded = sum(!included),
         MinGroupSize = min(sizes), MaxGroupSize = max(sizes),
-        MeanSilhouette = mean(member$Silhouette, na.rm = TRUE))
+        MeanSilhouette = mean_available_silhouette(member$Silhouette),
+        Distance = a$settings$distance, Space = a$settings$space %||% "Mixed features",
+        Scaling = if (identical(a$settings$distance, "Gower")) "Range" else
+          if (isTRUE(a$settings$scale)) "Sample SD" else "Original units",
+        Components = a$settings$components %||% NA_integer_)
     }
     weights <- partitions[[i]][[1L]]$settings$weights
     weight_tables[[i]] <- data.frame(Analysis = names(analyses)[i],

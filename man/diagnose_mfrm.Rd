@@ -252,6 +252,10 @@ generalized-model contract.
 
 \section{Interpreting output}{
 
+Testlet and shared-rater fits use \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} instead of
+this ordinary-model route. Their same-data posterior predictive residual
+summaries do not inherit ordinary fit cutoffs, ZSTD or p-values.
+
 Start with \code{overall_fit} and \code{reliability}, then move to element-level
 diagnostics (\code{fit}) and targeted bundles (\code{unexpected}, \code{displacement},
 \code{interrater}, \code{facets_chisq}). Treat \code{fair_average} as available only for

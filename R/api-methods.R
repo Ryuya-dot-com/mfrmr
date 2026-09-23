@@ -1185,7 +1185,9 @@ summarize_fit_measures_bundle <- function(object, digits = 3, top_n = 10) {
   df_summary <- bundle_component_table(object, "df_sensitivity_summary")
   df_sensitive <- bundle_component_table(object, "df_sensitive")
 
-  notes <- "Fit-measures table with directional underfit/overfit screening."
+  basis <- object$settings$flag_basis %||% "mnsq_or_zstd"
+  notes <- c(paste0("Fit-measures directional screen: ", basis, "."),
+    "Low mean squares describe low residual variability; they do not establish poor rater quality or justify automatic exclusion.")
   if (nrow(df_summary) > 0L) {
     changed <- suppressWarnings(as.integer(df_summary$FlagChangedByDfRows[1] %||% 0L))
     sensitive <- nrow(df_sensitive)
@@ -7678,13 +7680,15 @@ summary.mfrm_diagnostics <- function(object,
     }
     worst <- warning_rows |>
       dplyr::mutate(
+        UnderfitPriority = (is.finite(.data$Infit) & .data$Infit > misfit_upper) |
+          (is.finite(.data$Outfit) & .data$Outfit > misfit_upper),
         WorstMnSq = pmax(
           ifelse(is.finite(.data$Outfit), abs(log(pmax(.data$Outfit, 1e-6))), 0),
           ifelse(is.finite(.data$Infit), abs(log(pmax(.data$Infit, 1e-6))), 0),
           na.rm = TRUE
         )
       ) |>
-      dplyr::arrange(dplyr::desc(.data$WorstMnSq)) |>
+      dplyr::arrange(dplyr::desc(.data$UnderfitPriority), dplyr::desc(.data$WorstMnSq)) |>
       dplyr::slice_head(n = 3L)
     msgs <- if (nrow(worst) > 0L) vapply(seq_len(nrow(worst)), function(i) {
       sprintf(

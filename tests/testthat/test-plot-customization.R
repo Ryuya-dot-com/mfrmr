@@ -156,7 +156,7 @@ test_that("plot APIs accept title/palette/label customization", {
 test_that("fit plot presentation flags retain notes and numerical payloads", {
   skip_if_not_installed("ggplot2", minimum_version = "3.4.0")
   fit <- make_toy_fit(model = "PCM", maxit = 20)
-  grDevices::pdf(NULL, width = 7, height = 5)
+  grDevices::pdf(NULL, width = 12, height = 10)
   on.exit(grDevices::dev.off(), add = TRUE)
   text_drawn <- character()
   original_mtext <- graphics::mtext

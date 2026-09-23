@@ -34,7 +34,8 @@ underscores.}
 
 \item{preset}{Optional reader-facing analysis-archive preset. \code{"starter"} adds the
 report and plot routes to the default files and writes \code{index.html} with
-the required Wright map embedded at the start of the reading flow.}
+the required Wright map for ordinary models, or the available model-specific
+figures for testlet and random-rater results.}
 
 \item{overwrite}{Logical; if \code{FALSE}, existing files stop the export.}
 
@@ -78,6 +79,14 @@ for the already-created object;
 \item a written-files manifest and compact export summary.
 }
 
+For testlet, random-rater and ordinary results with saved posterior response
+diagnostics, replay reloads the exported RDS without
+refitting, rescoring or resampling. Requesting \code{"replay"} also includes
+\code{"rds"}. Run the script from the exported folder. Stored prediction settings,
+unavailable rows, numerical checks and interval meanings travel with the
+result. A bootstrap interval may have infinite endpoints; exports retain
+them instead of substituting finite ordinary intervals.
+
 All presets, including \code{"starter"}, are analysis archives. In particular,
 the default \code{.rds} file retains the complete result object, and CSV, HTML,
 plot, and replay artifacts can retain direct identifiers or other sensitive
@@ -90,7 +99,7 @@ Plot export is intentionally optional because some plot routes can be
 comparatively slow or require richer graphics devices. Plot failures are
 recorded in the returned \code{plot_errors} table rather than stopping the export.
 The \code{"starter"} preset is the recommended reader-oriented analysis archive
-because it always
+because, for ordinary models, it
 requests the Wright map in addition to the result summary, report, replay
 script, and manifest. Its Infit pathway includes a bounded selection of
 person rows so person fit can be reviewed without replacing the required

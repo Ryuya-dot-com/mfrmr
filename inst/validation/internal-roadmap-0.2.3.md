@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-22.
+Status: repository-only maintainer plan, refined 2026-09-24.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -11,7 +11,7 @@ The roadmap is repository-only and is excluded from source-package tarballs.
 
 ## Current work plan
 
-Updated 2026-09-22 after the user's local-refinement decision. Preserve the
+Updated 2026-09-24 after the user's release-scope and milestone request. Preserve the
 sequencing decision: finish implemented
 development functions, extend statistical support, extend models, then integrate
 them as 0.2.4. This replaces the previous release-first recommendation. This
@@ -22,6 +22,530 @@ superseded plans; their imperatives are not current execution instructions.
 In particular, the September 18 DRF-first queue, automatic full-suite/matrix
 requirements, old numbered feature releases and research-prototype gates do
 not override this plan. Their original protocols and results remain intact.
+
+### Active milestones and completion boundary, 2026-09-23
+
+The public [release scope](../../ROADMAP.md#focus-for-024) and
+[M0–M6 milestones](../../ROADMAP.md#milestones-and-the-end-of-this-development-cycle)
+are the current release plan established by this roadmap revision. This section
+owns execution details. The September 22 A01–A16 disposition below remains
+evidence for its baseline, not a completion certificate for new models.
+The historical eighteen-claim ledger is extended in place with current scope
+and evidence; do not create a parallel dashboard or another active task list.
+
+**Current position:** M0–M5 are complete locally for the retained release scope,
+following the [final source/archive disposition](claim-reconciliation-0.2.4.md#local-completion-decision-and-final-source).
+The full packaged regression is reconciled with focused repairs; fifteen executed
+tutorials, final installed help/API identity and fresh-session saved-output replay
+agree. The exact final structural/example check is clean. M6 remains open and no
+publication action was taken. This does not qualify broader coverage, model-ranking,
+formal extended diagnostics or arbitrary G-theory claims.
+
+
+| Milestone | Work and acceptance evidence | Dependencies and original audit |
+| --- | --- | --- |
+| M0 | Reconcile all local features, promised outputs, explicit later work, source-specific evidence and unresolved decisions. Public scope and this plan agree; updating a plan does not admit a method. | This revision; A16 adoption/maintenance and the expanded claim ledger. |
+| M1 | Finish existing feature/MI/fixed-facet-feedback/G-D workflows through save/reload and executable help. Reuse numeric-feature and Rubin references. Specify one defensible ordinal-imputation example and its downstream target; a successful import is insufficient. The fixed-task example and direct-composite checks are now complete. The joint RSM tutorial now preserves calibration/shared-Person uncertainty and reconciles MI with direct observed-score inference; the paired MAR/MNAR comparison now provides bounded MAR support and retains severe MNAR failure. Local integration is complete within the stated scope. | Existing 1a/1b/2a/2b/3d interfaces; A04/A06/A08/A15. No new arbitrary-design solver or duplicate wrapper. |
+| M2 | Close the model/population, prediction and diagnostic decisions listed below. Freeze any new statistical comparison protocol, decision tolerances, workload and Monte Carlo precision before generating new outcomes. Determine which existing results apply. | Can proceed alongside M1 finishing; precedes new confirmation and M3 admission. A05/A11/A13/A14/A16. |
+| M3 | Complete both RSM model workflows with Person scoring, declared conditional uncertainty, observed/replacement-rater distinctions, same-data ordinary-MFRM comparison, response moments, descriptive Infit/Outfit, model-aware Wright/location, pathway and comparison plots. Validate probability/moment calculations, numerical approximation and retained statistical interpretations separately. | M2 decisions; A05/A07/A11/A12/A14. Fit cutoffs, formal DRF/LRT and general calibration-aware intervals are not silently added. |
+| M4 | Close examples, user help, NEWS, capability refusals, shared output, migration, dependencies and workload evidence across the included routes. Preserve the baseline shrinkage, variance-scale and portable-interaction corrections. One observed educational assessment anchors interpretation; reuse existing role-preserving examples to explain another domain without claiming new domain validation. Inspect actual plotted values and English labels, not only object classes. | M1/M3; A01–A04/A06–A09/A11. Maintain docs during work; this is final reconciliation, not the first documentation pass. |
+| M5 | Freeze one local source and archive; run the necessary integrated package check on that source, verify archive contents/installed help/examples and fresh-session replay, and retain hashes and a concise unresolved-issues disposition. No included outcome is pending or contradicted by a supported default. Deliver source/archive, matching local help, evidence and migration instructions. | M1–M4 closed. Local-development endpoint, not release/CRAN acceptance. A10 local package integration is requalified by the final source/archive receipt; later cross-platform/publication checks remain M6. |
+| M6 | After publication is authorized for the concrete source, run five-environment CI, integrate the checked content into main, verify final tag/asset/download and site/installed-help identity, and update candidate/version status consistently. Changes introduced during merge require matching verification. CRAN submission and acceptance are separately reported external states. | M5; no push or publication in the current local-development phase. No reuse of old CI as evidence for new source. |
+
+The user-requested ordinary-screen threshold audit is complete locally: nine
+prespecified conditions with 100 replications, plus reanalysis of 800 existing
+raw-statistic fits. It identified excessive ZSTD-driven low-side warnings and
+nontrivial low-side false flags even for the [.5,1.5] MnSq band under heavy
+missingness. The mean-square-only default, explicit ZSTD alternative, reusable
+threshold sensitivity, figures/help and stored-report rule provenance address
+M1/M2/M4. See the [screening record](rater-screening-matched-record-0.2.4.md).
+These are descriptive review tools, not calibrated error-controlled decisions.
+This audit did not close M3. Subsequent implementation now supplies joint
+posterior response moments, descriptive Infit/Outfit, aligned predictive/Person
+comparisons and model-aware maps. The retained-target decision and local integration are now complete. The original
+bounded/adverse outcomes remain in their records; ordinary bands and Z tests are
+not transferred. M6 requires the same source to pass the later publication checks.
+
+
+#### M2 decisions that must be settled before further model experiments
+
+1. **Model and population.** Complete the literature/equation/code mapping for
+   shared `u_r`, Person-local `gamma_pb`, fixed facets and the ability
+   distribution. **Decision, 2026-09-23:** both extensions need an estimated
+   normal ability variance before release, retaining fixed N(0,1) as an
+   explicit restricted option and reference. Keep mean zero, unit Rasch slope,
+   free step location and the existing effect-sharing structure. Do not add
+   a second free location or a substantive dimension. The literature mapping
+   is recorded in the extended-model audit supplement below. The decision is
+   implemented in both local models with design-specific information checks;
+   current-source local integration is complete. The dated checkpoints below retain the
+   numerical and bounded statistical evidence.
+2. **Comparison.** Use identical response rows, category coding, omission and
+   scale conventions. Testlet variance zero retains fixed raters; shared-rater
+   variance zero removes rater heterogeneity. Reuse existing zero/fixed-point
+   references. Determine eligible likelihood comparisons/parameter counts;
+   do not infer fixed-vs-random nesting or copy Person-count BIC for crossed
+   marginal likelihoods. Descriptive differences remain available where a
+   formal comparison is not justified. Hold-out units follow the specified
+   new-Person/new-rater target, not arbitrary rating-row splits.
+3. **Uncertainty and diagnostics.** Declare conditional versus calibration-
+   adjusted uncertainty and the sampling unit. Person scoring in 0.2.4 may
+   remain explicitly conditional on calibration; it must integrate the
+   relevant latent effects and retain shared-effect uncertainty. Do not
+   substitute a fixed-rater score or a rater-mode plug-in as that integration.
+   Define response probabilities/moments before descriptive Infit/Outfit or
+   fit pathways; calibrate any displayed reference behavior with appropriate
+   null simulations/refitting. No automatic classic cutoffs, formal extended
+   bias tests or automatic rater exclusions are required or admitted.
+4. **Evidence reuse and remaining comparisons.** Reuse saved testlet/TAM,
+   shared-rater joint integration/Stan and bounded statistical results only
+   where the mathematical target and source still match. Inventory reusable
+   datasets before adding the missing ordinary-MFRM fits. Include a no-added-
+   effect control, a practically relevant effect, and a named sparse/weak-
+   information challenge; ability-distribution sensitivity follows decision
+   1. Do not grow a factorial study solely to fill a condition grid.
+5. **Acceptance.** Fix estimands, practically meaningful effects, allowable
+   numerical/interval/decision error, Monte Carlo precision, planned trials,
+   failure accounting and resource budget before new confirmation outcomes.
+   Use replicate-level uncertainty when raters share a dataset and paired
+   uncertainty for paired methods. A nominal point estimate or a nonsignificant
+   difference is not qualification. Retain width, bias, availability and worst
+   named conditions; do not hide an adverse condition in an overall average.
+   Existing pilot results cannot be retrospectively relabeled confirmation.
+
+M2 also sets the remaining statistical-example work for MI and the existing
+fixed-facet interval/feedback routes. It does not demand a universal coverage
+proof. The MI example must preserve ordinal support, parameter uncertainty,
+assignment and the dependence relevant to the pooled estimand; examine a
+declared ignorable-missingness case and a relevant failure/sensitivity case.
+If the existing illustrative imputer cannot support the intended inference,
+correct the example/model or restrict its interpretation explicitly.
+
+#### M1 follow-through: fixed tasks and ordinal-imputation example, 2026-09-23
+
+This checkpoint addresses the two concrete example gaps in M1; it neither
+closes all M1 outcomes nor advances M3/M5 by counting documentation changes.
+
+- **Fixed-task planning is implemented through the existing API.** The README
+  now uses Interview/Presentation/Discussion as fixed score columns and one
+  common random Rater facet, with weights .5/.3/.2 and 1/2/4-rater plans.
+  G/D help explains the fixed task universe, same-rater identity, task-rating
+  workload, whole-vector omission and complete future design. Direct weighted
+  scores agree with multivariate projections; a separate balanced ANOVA using
+  row/column means and residual sums of squares agrees within 1e-10. The
+  incomplete MINQUE case also agrees with the direct score on identical
+  retained rows (412 input rows, 411 retained after one incomplete vector).
+  This closes the specific 3d example requirement, not general G-theory.
+- **The previous MI example omitted an uncertainty source.** Inspection of
+  installed `mice` 3.19.0's `mice.impute.polr()` found a fitted ordinal model
+  followed by category draws, with no parameter draw/resampling in this
+  single-incomplete-variable, complete-predictor setup. Official ordinal
+  documentation/source and `mice()`'s `ignore`/`where` contracts were checked.
+  The revised tutorial bootstraps observed Person rows and obtains one
+  completion per ordinal model. `ignore` excludes the original observed-score
+  contributions; mice's augmentation still uses the available predictor
+  matrix, including prediction rows. Bootstrap rows never enter MFRM analyses.
+  Models, sample indices, versions and logged events are
+  retained. This is approximate parameter-uncertainty propagation, not a new
+  generic imputation API or proof of congeniality with RSM/PCM.
+- **The statistical limitation is visible in the actual example.** Twenty
+  baseline completions and twenty paired lower-score sensitivity completions
+  all have eligible MML fits; the ordinal models report no logged fallback or
+  predictor-removal events. R04-minus-R01 is 0.454878 (SE 0.137525) under the
+  baseline and 0.502696 (SE 0.136968) after lowering only missing assigned scores
+  by one category, floored at 1. The paired change is 0.047818 (MCSE 0.001744).
+  These are one-data-set illustration results, not coverage or systematic-bias
+  evidence. The six masked scores average 1.667 versus 2.525 across imputations;
+  the held-out table prompts review of the coarse predictor/conditional model.
+  The tutorial now says so and withholds endorsement for substantive rater
+  decisions. Do not call the imputation model statistically qualified because
+  the workflow and pooling execute. M2 must still resolve that retained target.
+
+The code, saved objects, rendered tutorial and English plots are retained in
+`validation-results/m1-workflows-20260923/`. Public NEWS describes completed
+example/help changes only. Numerical estimators and exported interfaces have
+not changed. Validation is scoped to the examples, independent composite
+calculation, saved-result replay and changed Rd/Markdown; no full-suite or
+old simulation rerun belongs to this checkpoint.
+
+At that checkpoint the unresolved M1/M2 dependency was an adequate imputation model for the
+declared pooled target; preserve this example as evidence of the remaining
+issue rather than selecting a more favorable mask. The ability-population,
+ordinary-MFRM comparison and diagnostic definitions are advanced by the M2
+checkpoint below; their implementation and statistical qualification remain open.
+
+#### M2 decision checkpoint: population, comparisons and MI, 2026-09-23
+
+The [audit supplement](extended-model-readiness-review-0.2.4.md#m2-literature-follow-through)
+maps Van den Noortgate et al. (18 pages), Huang/Cai (existing 31-page review,
+targeted revisit) and Bartlett/Hughes (14 pages) to the current code. This
+settles the following design decisions; it does not admit a new estimator.
+
+**Ability population.** Fixed mean zero identifies location while free RSM
+steps absorb the overall location. With the Rasch slope one, ability SD is
+estimable from dependence between a person's responses when the design is
+informative; fixing it to one is an additional restriction. Required M3 work
+is a common estimated normal SD for each extension, with explicit known-SD
+support to preserve the N(0,1) reference. Prefer `person_sd = NULL` (estimated)
+and a positive numeric known SD; finalize bounds and zero-boundary handling
+with the estimator, before admitting the interface. Do not introduce a free
+ability mean in addition to the free step location. Estimated zero or an
+uninformative likelihood must be represented explicitly, not hidden behind
+a tiny positive SD. At the decision checkpoint both APIs still fitted
+fixed N(0,1). The subsequent testlet implementation and its numerical evidence
+are recorded in `testlet-api-record-0.2.4.md`; the subsequent shared-rater
+population implementation is recorded in `random-rater-record-0.2.4.md`.
+
+Testlet is the first implementation because its nested quadrature and
+zero-local-variance reference isolate this change. Likelihood, gradients,
+information, continuous scoring, boundaries, predictions and saved settings
+now include ability variance. Shared-rater fitting, the joint Laplace likelihood,
+first-order rater covariance, profile nuisance refits and bootstrap
+generation/refits now retain this population contract too. Estimated ability
+boundaries block the current rater-SD profile reference; this is an explicit
+restriction, not qualification of an additional nuisance-boundary asymptotic. Old saved objects retain their original N(0,1)
+interpretation. Existing fixed-population evidence supports only that branch;
+it is not evidence for the new estimated-SD fit. Normality, independent
+assignment and homogeneous populations remain assumptions, not repaired by
+estimating one SD. Covariate/group populations are not silently added.
+
+**Same-data comparison.** Require the same multiset of observed rating events
+(including repeated events), IDs, scores, categories, omissions and fixed
+facets other than the deliberately changed rater treatment. Retain both
+models' population and constraint metadata. Testlet v=0 matches fixed-rater
+RSM; shared-rater SD=0 matches a no-rater-effect RSM. Fixed-versus-random
+raters is not that zero-variance reduction. The ordinary estimated-population
+reference is `population_formula = ~1`; verify its location transformation
+to the extension's mean-zero/free-step convention by identical probabilities,
+not identical raw coordinates. Align contrasts and explicitly chosen
+prediction settings. Numerical success, shrinkage, a narrower interval or a
+different log likelihood does not select a preferred model.
+
+The locally implemented `compare_mfrm()` extension reports matched-data/
+accounting checks, population assumptions, centered facet-summary changes and
+missing/failed outputs. It matches omitted identities from newly retained
+ordinary preprocessing records. Paired/difference figures and report/export
+attachment reuse saved fits. Separately supplied posterior response diagnostics
+now add category probabilities, means, full variances and descriptive
+Infit/Outfit comparisons under one definition. Event contents, multiplicity,
+selection and group accounting must match; original row numbers are retained.
+Separately supplied source-roster conditional scores now add Person
+comparisons after centering each fitted population origin; steps remain
+outside the comparison route. Do not add
+automatic AIC weights, a preferred model, Person-count BIC or chi-squared
+variance-component tests. This is an explicit limit on formal ranking, not
+a ban on descriptive comparisons. Existing and replacement raters require
+different predictive targets; validation splits must respect that target.
+
+**Scoring and descriptive fit.** For calibration held at its fitted value,
+use the joint latent posterior given the retained observed ratings. In the
+testlet model integrate ability and the corresponding Person-local effect;
+in the shared-rater model integrate the jointly uncertain rater vector and
+ability, rather than plug in rater modes. For row i define
+`p_ik = E[P(Y_i^rep=k | latent effects, calibration) | Y_obs, calibration]`,
+`mu_i = sum(k*p_ik)` and `V_i = sum((k-mu_i)^2*p_ik)`.
+This includes both components of the law of total variance. Define descriptive
+Outfit as `mean((y_i-mu_i)^2/V_i)` and Infit as
+`sum((y_i-mu_i)^2)/sum(V_i)` over the declared group and unit-weight rows.
+Reject nonfinite/zero variances explicitly. These are posterior-predictive
+residual summaries using the same data for fitting and checking: do not
+claim expectation one or equivalence to an ordinary plug-in statistic.
+Expose the probability definition in the result and figure; no classic fit
+bands, Z transform, p-values or automatic flags. Formal reference calibration
+would additionally require shared-response covariance and refitting and is
+outside this release. Native-versus-extended descriptive comparison must
+recompute moments under the same definition; do not compare unlike Infit
+columns. Wright positions condition local effects at zero and label their
+origin; marginal probabilities are separate from these locations. Pathways
+use these verified descriptive statistics, not inherited ordinary cutoffs.
+
+The local `mfrm_response_diagnostics()` route now implements those response
+moments and descriptive summaries for ordinary RSM MML and both extensions, with paired/scatter
+figures and matching saved-result/report/export attachment. It preserves
+selected-row denominators, missing scores, unresolved integrations and the
+complete conditioning roster. Shared-rater category probabilities use
+normalized category-specific joint Laplace numerator integrals; raw
+normalization defects are retained and do not certify approximation accuracy.
+The [response-diagnostics record](response-diagnostics-record-0.2.4.md) covers
+independent continuous/tensor references, both zero-effect reductions and
+existing fitted examples without refitting. This closes the bounded numerical
+implementation checkpoint, not M3. The [predictive-comparison record](predictive-comparison-record-0.2.4.md)
+adds the ordinary same-definition calculation, matched predictive comparisons,
+figures and replay from existing fits. The [model-map/scoring record](model-maps-record-0.2.4.md)
+adds source-roster continuous conditional Person scores/comparisons and
+model-aware Wright/fit-pathway displays. Statistical qualification remains.
+
+**MI.** The existing ordinal bootstrap varies the imputer's parameters and
+then analyzes the original roster. It is not outer bootstrap inference and
+does not fix uncongeniality. Retain generic supplied-completion/Rubin APIs.
+For the required statistical example, first specify the joint observed-score
+model, ignorable selection conditional on available variables, fixed-rater
+contrast and complete-data covariance. A model-based predictive completion
+must integrate calibration uncertainty and retain one shared ability per
+Person across that Person's missing responses; plug-in EAP or independent
+per-rating ability draws are not substitutes. Auxiliary features may still
+be needed for the missingness assumption. This is a requirement on a proposed
+example, not a claim that MFRM posterior draws automatically prove congeniality
+or a commitment to a general built-in imputation engine. Preserve unassigned
+cells and observed scores and keep sensitivity assumptions in separate pools.
+
+**Current M2/M3 decision.** The [frozen estimated-population protocol](estimated-model-qualification-0.2.4.md)
+and [complete result and output decision](estimated-model-qualification-record-0.2.4.md)
+now replace the pending shared-rater experiment: all 800 datasets and their
+ordinary-MFRM comparisons are complete. All four primary interval decisions
+are inconclusive under the frozen joint coverage/availability criteria.
+Conditional coverage is 91.6–91.8% for six raters and 94.0–94.1% for 24; the
+24-rater finite-interval rate is only 87–88% at the specified Q61 rule.
+Retain all 53 integration failures and the additional variance boundary.
+The combined old/new evidence does not support automatic individual-rater
+normal intervals. These bounds are now withheld in fits, summaries, new
+plots and reports; explicit `confint(..., parm = "raters")` / normal plots
+reuse saved estimates. This changes the output contract, not interval
+accuracy, and does not qualify a bootstrap replacement or close M3.
+
+The [saved-case integration review](shared-rater-integration-review-0.2.4.md)
+now resolves the numerical cause for all 53 saved failures. All 53 pass after
+121-point refitting and 243-point checking, without changed tolerances or a
+replacement of the original study. Independent continuous references verify
+likelihood, gradients and rater curvature in the four worst cases; 123/241
+fixed-calibration checks cover all failures and five controls. New fits expose
+Person quadrature stability and actionable refit guidance. This does not
+establish a universally adequate order, change interval defaults or qualify
+the shared-rater Laplace approximation. Do not rerun all 800 cases or increase
+n to obtain a favorable coverage decision. The subsequent conditional-scoring
+reference below now supplies bounded approximation evidence; calibration-
+likelihood Laplace accuracy and retained variance/regular intervals remain
+separate questions.
+The [estimated-population testlet comparison and repair](testlet-estimated-qualification-record-0.2.4.md)
+are now complete: 480 original datasets, original failures/decisions and a
+separate fourteen-case numerical repair are retained. All original testlet
+primary decisions are inconclusive. The repair resolves all fourteen failed
+start selections without relaxed checks; four controls retain identical
+parameters and scores, and the other 466 selections are unchanged. Applying
+the original rule to the corrected replay supports only the two N=120 balanced
+conditions. Small/sparse conditional coverage remains 91.7%/93.3%; regular
+fixed-facet interval qualification is inconclusive. Coverage improves relative
+to ordinary RSM while EAP MSE increases in the two balanced positive-dependence
+conditions. No uniformly superior model or general coverage claim follows.
+
+This completes that planned comparison and the concrete numerical repair,
+not M3. Conditional Person outputs retain their declared calibration-fixed
+meaning; regular calibration intervals retain their explicit normal-
+approximation scope and unresolved qualification. The next cross-workflow
+priority was the required defensible assigned-score MI example and its
+inferential target; the next checkpoint now supplies that example, without
+claiming repeated-sampling qualification. Shared-rater Laplace accuracy, retained scoring/variance
+uncertainty and regular-interval qualification remain required decisions;
+they are not silently deferred. These studies do not qualify MI, posterior
+diagnostic cutoffs, rater-SD profiles or bootstrap intervals. M2 remains
+partial, M3 incomplete and M5 unreached.
+
+#### M1/M2 follow-through: joint RSM assigned-score example, 2026-09-23
+
+The [prespecified example and numerical record](response-mi-joint-record-0.2.4.md)
+replace the tutorial's ordinal-regression imputer. The supplied-completion API
+and Rubin calculation remain unchanged. The joint RSM uses the same categories,
+centering constraints and fixed N(0,1) population as the MML analyses, with
+proper calibration priors and one shared ability draw per Person in each
+completion. The new mask was fixed before sampling to demonstrate MAR based on
+observed R01 scores and multiple missing scores per Person, not selected to
+improve held-out agreement. Earlier ordinal results remain preserved.
+
+The four chains pass the prespecified diagnostics; forty predictive completions
+and forty paired lower-score completions give eligible fits. Direct observed-
+score MML, observed-score Bayes and MI contrast estimates are 0.463006,
+0.464363 and 0.468187 logits; the MI SE is 0.145713 and MCSE 0.008225. Lowering
+only missing scores by one category changes the contrast by 0.199279
+(MCSE 0.003517). Held-out/predicted means are 2.10/2.242 over thirty events.
+The likelihood/probability calculations agree with the package kernel and
+explicit observed-event selection leaves the original estimates unchanged.
+
+This completes the specific model-based example, dependence/uncertainty
+correction and direct-inference comparison. It does not establish a coverage
+rate or exact congeniality: MML means/covariances approximate, rather than equal,
+posterior moments under the imputer's proper prior. The remaining MI question
+is repeated-sampling performance for this declared fixed-rater target under
+correct-model ignorable missingness and a relevant adverse assumption, with a
+protocol/MC precision fixed before any new study. The shared-rater Laplace/
+scoring and regular-interval decisions remain independent M2/M3 obligations.
+No full-suite, earlier simulation rerun or new exported imputer was introduced.
+
+The [MI repeated-sampling protocol](response-mi-coverage-0.2.4.md) and
+[result/disposition](response-mi-coverage-record-0.2.4.md) are now complete:
+200 reused RSM/N=80 datasets, paired MAR and low-score-dependent MNAR masks,
+forty completions per roster and direct observed-score MML/Bayes references.
+MAR MI coverage is 191/198 (96.46%; exact MC bounds 92.85--98.57), with bias
+-.003654 logits and availability 198/200. All frozen bounded criteria pass.
+Two posteriors miss the fixed MCMC Rhat threshold and remain unavailable;
+full-denominator available-and-covered performance is 191/200 (95.5%). All
+15,920 completed-data fits from retained posteriors are eligible. Under MNAR,
+MI coverage is 26.0% and bias +.574395 logits, despite nearly identical average
+missing fractions (14.14%/14.19%). Direct MML/Bayes show the same failure.
+
+This closes the planned bounded MI comparison. Keep its assumptions,
+Monte Carlo uncertainty, imputer failures and MNAR sensitivity in the user
+workflow and final integration. It does not qualify arbitrary supplied
+imputers, PCM, unknown/non-normal populations or generic sparse designs;
+sharing the likelihood does not prove exact Bayesian congeniality. Do not
+add another replication series merely to obtain tighter favorable bounds.
+The [shared-rater scoring reference](shared-rater-scoring-reference-record-0.2.4.md)
+now completes the planned bounded conditional-scoring comparison. Twelve
+rosters (eight full 240-Person rosters and four reduced 48-Person rosters)
+provide 48 selected scores at unchanged calibration. All EAP/SD errors meet
+.05-logit criteria with Monte Carlo allowances. The original raw-quantile
+comparison leaves 24 endpoints unresolved; a prespecified follow-through
+integrates conditional ability CDFs using the same saved joint rater draws,
+and supports the unchanged .10-logit tolerance for all 96 endpoints. No new
+chains, replacement cases or calibration refits were used. A class-indexing
+bug in the validation-only joint-density audit was corrected by replay;
+original archives and their failed audit values are retained. The independent
+480-point log-density check then agrees within 6.9e-12. Production numerical
+code is unchanged, and no general coverage or calibration-likelihood accuracy
+claim follows. Computational cost and output-selection guidance are retained.
+
+The [local calibration-likelihood comparison](shared-rater-calibration-reference-record-0.2.4.md)
+is now complete using the same saved posterior samples. Eight full rosters
+supply 144 planned local comparisons (128 distinct parameter points).
+The original reference leaves 61 comparisons unresolved; a subsequently frozen
+joint affine change-of-variables calculation resolves reference precision
+without changing points, target integrals or tolerance. All comparisons meet
+the .05-log-likelihood criterion with Monte Carlo allowances; the largest
+allowance is .007035. No new sampling or fitted calibration was introduced.
+This closes the specified local likelihood-shape comparison, not exact-MLE,
+absolute-normalization, full-profile, variance-boundary or coverage claims.
+
+The [retained interval contract](extended-interval-contract-0.2.4.md) is now
+implemented and checked (2026-09-24). Both extensions omit automatic calibration
+bounds, keep estimates/approximate SEs, and supply explicitly selected normal
+bounds with all numerical/boundary guards. Summary, testlet plots, common
+results, reports and replay preserve the level. Individual-rater defaults and
+explicit approximate SD profiles retain their separate restrictions. Saved
+fits need no refit for the display change; old result bundles keep their tables.
+This closes the interval-output decision, not coverage qualification.
+
+The representative cross-workflow saved-output pass is complete (2026-09-24):
+PCA/groups, assigned-score MI, complete/incomplete G/D planning, fixed-facet
+intervals, screening and both extended models retain their displayed/saved
+values. Explicit generic conversion previously discarded axes/intervals/metrics;
+the shared dispatcher now preserves dedicated routes and refuses unsupported
+ones. Public guides and PCA non-colour encodings are updated. See the
+[maintained evidence inventory](claim-reconciliation-0.2.4.md#september-24-saved-output-integration).
+
+The M4 installed-workflow checkpoint is now complete (2026-09-24): all public
+exports, registered S3 methods and generated help are reconciled; representative
+examples, ordinary/portable baseline checks and fresh-process saved-result
+replay pass. Two malformed MI help pages are regenerated. Unsupported plot
+conversions now give their capability guidance before checking ggplot2.
+Optional-dependency absence is simulated without uninstalling user packages;
+base plots/saved intervals/reports remain usable under the documented rules.
+See the [installed-workflow record](claim-reconciliation-0.2.4.md#september-24-installed-workflow-integration).
+
+The per-outcome review and frozen-source integration are complete for the retained
+scope. The final archive, executed tutorials, installed help, full regression
+with focused repairs, and fresh-session replay are reconciled in the
+[local completion decision](claim-reconciliation-0.2.4.md#local-completion-decision-and-final-source).
+The earlier inspection archive remains an intermediate receipt. Completed
+numerical/coverage evidence was reused; no new statistical experiment was needed.
+M5 is complete locally, while M6 remains a separate publication step.
+
+The one-way fixed-facet interval target/interpretation decision is now resolved
+for its bounded release scope. The existing interval/plot/core source, help,
+tests and tutorial were checked against the earlier verification record;
+unchanged numerical evidence is reused. Public wording consistently targets
+the working model and preserves the adverse generating-truth result. See
+the [M2 reconciliation](facet-sandwich-record-0.2.4.md#m2-target-reconciliation-2026-09-23).
+Local integration of that bounded route is also complete. This does not establish
+general MI, shared-rater/testlet, few-cluster or multiway coverage.
+
+The subsequent user-requested testlet application checkpoint adds an executed
+[task/criterion planning and unequal-block tutorial](testlet-api-record-0.2.4.md#task-and-rubric-applications-20260923).
+This is M1/M4 use-case work: 81 complete response patterns per four-rating plan
+under fixed fitted calibration, plus complete-roster one-point sensitivity.
+It explicitly refuses to equate common local variance with halo causation,
+task-specific variance estimates or equal task weights. It does not qualify
+estimated-population intervals or change the common-variance release scope.
+Task-specific variances would require a separately specified joint model,
+linked multi-task data and boundary/comparison qualification; they are not
+implemented by per-task fitting or by changing testlet labels. The numerical
+and statistical blockers above retain their separate scope; the subsequent
+integration review closes only the 53 saved Person-integration failures.
+
+#### Release blockers and legitimate later work
+
+Release blockers are: a wrong probability/ownership/scale; an unqualified
+inferential default contradicted by retained evidence; a required scoring,
+comparison or diagnostic route still missing; invalid uncertainty or diagnostic
+values presented as usable; changed identities/assignments or omitted failures;
+and mismatched source/archive/help or failing applicable package checks.
+The shared-rater 84.2% coverage pilot remains adverse evidence, not a passed
+gate. The implemented/tested output restriction removes automatic individual-
+rater and calibration bounds, with explicit approximation access and retained
+unavailable cases. The retained interval contract records that decision;
+finite explicit bounds do not establish nominal coverage.
+No entire model workflow is removed or relabeled complete without an explicit
+release-scope decision. Evidence against a method can justify repair, a narrow
+scope or a proposed deferral; it does not justify repeated trials until success.
+
+The following are **explicitly later work**, not completed functionality:
+general calibration-aware Person/contrast intervals; few-cluster/multiway and
+robust/nested G-D intervals; formal extended-model DRF/bias inference;
+arbitrary fixed/random/nested G-theory solvers; combined shared-rater/testlet,
+heterogeneous/correlated local effects and PCM extensions; substantive MIRT;
+automatic rater removal/design optimization; and the extended Shiny viewer.
+These boundaries refine the broad earlier requests into a finite release.
+The fixed-task example in M1 uses existing fixed multivariate score components
+where possible; it does not count as an implemented general mixed-facet solver.
+New coverage research is not automatically a release blocker when the release
+does not make the corresponding inferential claim.
+
+#### Stop, reopen and maintain
+
+The current local task ends at M5 **only when every mandatory release row is
+closed for the frozen source**, no blocker remains, and each outstanding item
+is either a documented supported limitation or expressly later work. A document,
+commit, successful subset test or release candidate upload is not that endpoint.
+The final handoff reports local completion, publication and CRAN status as
+three different facts. User authorization for a previous candidate does not
+replace the current instruction to develop locally.
+
+Use focused checks for changed behavior. At M5 run a single planned broad
+integration campaign on settled source; a reproduced failure or subsequent
+code change can justify rerunning affected checks. Neither new prose nor an
+unchanged result justifies rerunning all tests or old simulations. Record
+time/RSS and numerical accuracy for selected representative/stress workloads;
+do not invent a universal sample-size or memory ceiling. Reuse existing
+ordinary-model workload evidence rather than running it again for a new label.
+
+Reassess the whole scope at M2, after the M3 evidence decision and before M5.
+An added task must name the user outcome, milestone, existing evidence and
+stop condition; otherwise keep it out of the active queue. No adjacent study,
+new model, universal registry or complete cross-class feature parity is added
+merely because one implementation makes it possible. Preserve a small set of
+independent probability/derivative/moment references and saved-object contracts;
+test dependency changes against those references before expanding support.
+After release, prioritize reported correctness/compatibility issues and user
+workloads. Reopen one later extension only for a concrete unmet use with an
+identifiable model, suitable data, a justified alternative analysis and a
+feasible maintenance cost; no automatic version number is assigned.
+
+The testlet estimated-ability-variance path is now implemented locally through
+scoring, boundary handling, saved output and reporting; the population
+checkpoint in `testlet-api-record-0.2.4.md` separates numerical checks from
+statistical qualification. The matching shared-rater population contract is
+now implemented locally as recorded in `random-rater-record-0.2.4.md`. The
+shared-rater Person-scoring route is now locally implemented using a
+conditional joint-rater Laplace integral at each ability, continuous posterior
+normalization and complete-roster semantics. Independent conditional-Laplace
+and tiny exact references distinguish implementation accuracy from remaining
+approximation error. See the scoring checkpoint in `random-rater-record-0.2.4.md`.
+Matched ordinary-model facet, predictive and conditional Person comparisons,
+descriptive diagnostics and model-aware maps are now implemented locally.
+Next fix the remaining statistical protocol and qualify the retained
+approximation/interval claims. These are workflow dependencies; the new population parameter alone
+does not close M3 or resolve the known interval undercoverage.
+M2 still needs MI-model and interval qualification decisions and the bounded
+statistical protocol before broad confirmation runs. The fixed-task example
+is complete; do not repeat its checks without a relevant change or failure.
 
 The user's later explicit instruction authorized publication of commit
 `4a6f8fb`. Its five ordinary platform cells succeeded, and `v0.2.4-rc.2`,
@@ -79,28 +603,309 @@ source links point to `31e9197`, and the 334-page inspection found no internal
 paths. Evidence is `validation-results/github-publication-31e9197-20260922/`.
 The earlier candidate/tag and its evidence remain intact.
 
-That checkpoint completed candidate integration and publication for the selected
-scope. The user's subsequent instruction now requires consolidating all current
-implemented workflows on `main` as 0.2.4. The integration branch merges the
-existing main history into the complete development line; the three conflicts
-concern citation date, package date and the superseded public roadmap, not
-estimation code. Preserve the main-side historical validation records and all
-current R/native code, exported APIs, tests, help, examples and data.
+The implemented source was subsequently integrated into local and GitHub main
+at `2230003`. Its five ordinary package checks each reported zero errors,
+warnings and notes; the five archives match all 571 packaged source files.
+The corresponding site publication completed and nine live pages matched.
+Evidence is `validation-results/main-integration-20260922/`.
 
-The integrated source has its own five-platform check before the exact checked
-commit advances `main`. Use a manual dispatch for that source and a skip marker
-on the integration commit so branch promotion does not repeat the same matrix.
-Dispatch the site update from the resulting main source. Deployment already
-builds the site, so the separate build step is needed only for pull requests.
-README and ROADMAP identify the implemented main scope and distinguish source
-tags/commits even when their package version is the same. Evidence belongs in
-`validation-results/main-integration-20260922/`.
+### Active local expansion after main integration
 
-The final release decision and CRAN submission remain separate; GitHub's stable
-latest release remains `v0.2.2`. Broader research/model questions remain
-identified under their own scope. Do not repeat unchanged numerical studies.
-The sixteen-action assessment is scoped to the original acceptance conditions;
-it does not close every research question or future feature in the public roadmap.
+The following table tracks the requested expansion and its final bounded local
+disposition. The work remains on `development/0.2.4-expanded-workflows-20260922`; no push,
+hosted CI, site deployment, release tag or CRAN submission is authorized by
+this local-development instruction. Preserve the checked main snapshot.
+The first response-imputation target, explicitly selected by the user, is a
+missing score on an assigned rating; unassigned combinations remain unassigned.
+
+| Sequence / workstream | Concrete deliverable and acceptance | State |
+| --- | --- | --- |
+| 1a. Numeric feature workflows | Numeric PCA and k-means with explicit scaling, weights, component selection, IDs, omission accounting and reproducible starts; comparisons, imputation pairing, saved results, plots and runnable user help. Verify transformation geometry, independent reference calculations and failure cases. | Implemented and checked locally; not published. |
+| 1b. Assigned-response multiple imputation | Preserve assignment rows, observed scores, categories and facet identities; retain the specified imputation model and all completions. Analyze on a common identified measurement scale, distinguish conditional scores from estimable model parameters, and combine uncertainty only for an eligible common estimand. Test missingness selection, structural exclusions and model incompatibility; document a complete rating example. | Implemented and checked locally for supplied imputations, fixed-standard-normal RSM/PCM MML and non-person facet/contrast Rubin pooling. The joint RSM example now propagates calibration and shared-Person uncertainty, includes a declared MAR mask and separate lower-score sensitivity pool, and reconciles likelihoods and direct MML/Bayes/MI inference. All eighty example fits are eligible. The paired 200-dataset MAR/MNAR comparison is complete, with bounded MAR support (96.5% available-interval coverage) and severe MNAR failure (26.0% coverage, +.574-logit bias). This scope is preserved in the completed local integration; arbitrary imputer/design qualification and exact prior-versus-MML congeniality are not established. |
+| 2a. Robust intervals | M1/M2: qualify the retained one-way fixed-facet MML sandwich target and independent sampling unit. Reconcile working-model and generating targets, coverage, width, unavailable intervals and Monte Carlo uncertainty in the existing nonnormal/sparse comparison. Restrict unsupported inference; do not require a new multiway or G/D interval method for this release. | First one-way fixed-facet MML sandwich API implemented locally with help/plots, independent score checks and 1,600-dataset bounded comparison. All intervals returned; generating-truth coverage still fell to 87% in the joint skewed/sparse case. General qualification, few clusters, multiway, G/D and variance-boundary extensions remain open. |
+| 2b. Rater diagnostic accuracy | M1/M2: finish the planned-roster evaluation and feedback workflow, preserving declared rater targets, thresholds, selection/refitting and all unavailable cases. Reuse the matched-budget comparison and report per-condition false flags, detection and uncertainty. Release the evaluation tool with its observed limitations; do not promise a generally accurate classifier or require every alternative departure to be simulated. | Planned-roster API, plot/help and matched-budget 1,000-trial comparison implemented locally; 200 screens reused, 800 new fits. Detection only 6/100 and 2/100 for the specified contaminated rater. Broader departures, threshold calibration and general accuracy remain open. See `rater-screening-matched-record-0.2.4.md`. |
+| 3a. Random-rater MFRM | M2/M3: one shared effect across persons with a declared ability population; observed/replacement-rater targets, proper Person scoring, ordinary-MFRM comparison, qualified uncertainty, descriptive fit and corresponding figures. Reuse independent joint-likelihood references. | Completed locally for the retained shared-normal RSM with estimated/known ability variance, conditional scoring, comparisons, descriptive diagnostics/maps and saved output. The 800-dataset study remains inconclusive; automatic unqualified bounds are withheld and explicit normal/profile/bootstrap approximations retain their restrictions. Independent posterior/local-likelihood checks and the separate 53-case integration repair supply bounded numerical evidence. See the final per-outcome disposition in `claim-reconciliation-0.2.4.md`; no general coverage is established. |
+| 3b. Testlet MFRM | M2/M3: explicit non-overlapping memberships, supported ability population and local variance; fit, conditional scoring, ordinary-MFRM comparison, descriptive fit, model-aware figures and saved output. General calibration-aware Person intervals are expressly later work. | Initial public interfaces implemented locally: explicit memberships, common-variance RSM MML, numerical/information checks, conditional continuous Person intervals, saved results, plots and tutorial. Matched facet/predictive/Person comparisons, descriptive diagnostics and model-aware maps are locally implemented. The 480-dataset estimated-population comparison and fourteen-case numerical-selection repair are complete; conditional Person coverage and point-accuracy limitations remain explicit, and regular calibration-interval qualification is inconclusive. See `testlet-estimated-qualification-record-0.2.4.md`. Final executed tutorials, installed help and saved replay now complete this row locally for the retained conditional/descriptive scope; the inconclusive broader inference is not admitted. |
+| 3c. Multidimensional MFRM | Explicit score-to-dimension design, loading/scale constraints and covariance target; distinguish multiple independent scales from joint latent dimensions. Validate likelihood, identification, rotation/reference equivalence, recovery and uncertainty before public inclusion. | Deferred at the user's request on 2026-09-23; public implementation pending. Prioritize existing-API help, visualization and integration. |
+| 3d. G-theory scope and fixed-task planning | M1: preserve existing crossed/nested models and complete a fixed-task-set / sampled-rater workflow using tasks as fixed score components and the existing one-random-facet covariance model where identities match. Verify a direct weighted-composite reduction; do not vary the fixed task set as though sampling new tasks. | Specific fixed-task workflow complete locally: executable README, G/D help, plots, independent balanced ANOVA and complete/incomplete direct-composite checks. Existing estimators are unchanged. This replaces the open-ended additional-structure requirement with a bounded use of existing machinery. An arbitrary mixed/fixed/nested G-theory solver remains explicit later work, not completed by this example. |
+| 4. Integrate expanded 0.2.4 locally | Bring completed workflows, focused checks, help, examples, plots, NEWS and compatibility guidance together. A later broad package check is for a settled integrated change, not every substep. | Completed locally on the final frozen source/archive: tutorials, help, reports/export/replay, the full packaged run with focused repairs and the clean final structural/example check are reconciled. No external publication occurred; broader inferential/model targets remain explicitly later work. |
+
+The September 23 user-requested literature and implementation review is in
+[`extended-model-readiness-review-0.2.4.md`](extended-model-readiness-review-0.2.4.md).
+It checks the two Wang/Wilson papers and the Patz et al. HRM paper page by
+page against the current local APIs; its M2 supplement adds the crossed-model
+mapping and MI inference review. Existing reference calculations remain
+evidence for their stated scopes. Subsequent work implements the estimated
+ability variance, matched comparisons, conditional scores and descriptive
+probability/variance targets. Independent numerical checks, bounded fitted-model
+comparisons, uncertainty restrictions and final integration now close rows
+3a/3b for those outputs. Wright maps retain matching scales/targets and pathway
+displays remain descriptive; formal extended bias analysis is later work.
+The same review connects these decisions to rows 2a/2b and A14/A16. Completion
+does not imply general coverage, diagnostic accuracy or a public release.
+
+The initial row 3a implementation and bounded pilot are recorded in
+`random-rater-record-0.2.4.md`. It preserves the frequentist MML/JML direction:
+Person quadrature conditional on shared raters, then a joint-rater Laplace
+integral using optional RTMB. Numerical integration/optimization, statistical
+coverage and model scope are separate decisions. All 160 fits and population
+SD profiles returned, but the six-rater regular intervals under-covered.
+Do not mark row 3a inferential qualification or stage 3 complete. The justified
+few-rater comparison is now implemented as `mfrm_random_rater_intervals()` and
+recorded in `random-rater-interval-record-0.2.4.md`: 24 new datasets with 99
+refits each, preserving the original realized-rater target and unresolved
+roots. Six-rater coverage changed from 91.7% to 100% with 40% wider intervals,
+but the gain occurred in one dataset and its paired MCSE is 8.3 percentage
+points. No clear 24-rater improvement was observed. Keep this an explicit
+comparison, not a replacement default or completed coverage qualification.
+Do not grow this pilot until a favorable nominal percentage appears.
+
+Row 3b now has a bounded local fit/scoring/save/plot/help workflow, recorded in
+`testlet-api-record-0.2.4.md`. It reuses the existing 1,200-dataset evidence for
+its two-rater/three-criterion scope without rerunning that study. Independent
+fixed-point and three-block/four-category comparisons check generalization of
+the computation, not interval coverage. Person scores remain conditional on
+estimated calibration. Random-rater Person scoring and qualification of the
+retained uncertainty, model comparison and descriptive diagnostics are current
+M3 requirements. General calibration-aware Person uncertainty, joint
+multidimensional and arbitrary G-theory structures remain expressly later work.
+The user has deferred row 3c because its design needs multiple decisions.
+Current work follows M1/M2 before completing M3 and consolidating the
+corresponding help and outputs;
+no multidimensional design or coding starts in this phase. No main-branch integration or external release follows
+from this checkpoint; local interface availability is not release qualification.
+
+The numeric-feature checkpoint adds `mfrm_pca()` and `mfrm_cluster_kmeans()`
+using base R's `prcomp()` and `kmeans()`, plus existing comparison/MI/profile
+machinery. The current focused evidence has 109 passing numeric-workflow
+expectations and four namespace checks; the four unchanged related feature,
+hierarchy, comparison and plot files contribute 332 passes. The initial
+namespace-list failure was corrected by registering the three new PCA methods;
+its corrected check passed. No full package suite, earlier simulation or hosted
+CI was rerun. Executed reference examples and the complete external-feature
+article include numeric imputation comparisons and PCA views. The local site
+preview is under `validation-results/expanded-workflows-20260922/site/`.
+The first article build used an older installed package in a separate process;
+using the current loaded development source resolved that preview failure.
+Home/NEWS rendering required public CRAN metadata reads; no site was deployed.
+The statistical-support and model-extension rows above are unresolved, not
+completed by this checkpoint.
+
+The assigned-response workflow now preserves explicit event IDs, assignments,
+observed scores, category support and the specified imputation model. It fits
+every completion on the same RSM/PCM MML scale and pools non-person facet
+targets using their full constrained covariance. It retains failures rather
+than selecting successful completions. Conditional EAP/posterior-SD pooling,
+estimated-population and other model families are excluded. Focused tests
+cover 89 expectations plus the four namespace checks, including independent
+Rubin calculations, agreement with `mice::pool.scalar()`, common-scale and
+response identity, PCM, fixed anchors, no-between-imputation variation, saved
+results, and plot reuse. A test initially changed a negative facet sign to the
+same value; correcting that test to reverse the sign verified the refusal.
+These are software/mathematical checks, not MI coverage validation.
+
+The initial response tutorial used a wide, person-level ordinal imputation
+model for one incomplete rating. Its completely observed score summaries are
+an illustrative conditional-model simplification, not an automatically
+congenial MFRM imputer. It separated six unassigned from six assigned missing
+ratings and retained five demonstration completions. The M1 follow-through
+above supersedes that example with twenty Person-bootstrap completions and
+held-out/sensitivity checks, while retaining its unresolved adequacy issue. The local
+`mice::mice.impute.2l.bin` implementation was inspected and not selected: its
+installed random-effect draws use the marginal rather than observed-person
+conditional distribution. No dependency upgrade or substitute imputation
+engine was introduced. Choose/qualify an imputation model for an actual design
+before interpreting pooled intervals substantively.
+
+The response-review import check also retained 100,000 rows, 10,000 Persons,
+two completions, 10,000 unassigned rows and 12,857 selected missing scores per
+completion. That import took 0.107 seconds in this local run; `object.size()`
+reported 39,371,672 bytes for the retained object, not peak process memory.
+It is an input-preservation check, not a capacity guarantee or a large-data
+MFRM estimation benchmark. Evidence is `response-import-stress.csv` under the
+local expanded-workflow results directory. The two executed tutorials and the
+new reference topics were rendered locally; pooled-interval and PCA views were
+visually inspected. The diagnostics plot uses explicit layout and background
+settings so its axes remain legible.
+
+The first implemented part of row 2a is recorded below; its remaining scope
+stays open. The older
+`mml-structural-coverage-record-0.2.4.md` retains its 20,000 correct-model
+datasets and bounded bias findings; do not repeat it or reinterpret it as
+misspecification-robust evidence. The older G-theory bootstrap record checks
+mechanics only and cannot establish interval coverage. A candidate method
+must identify its sampling units and estimand before new performance runs.
+
+#### First robust-interval method and bounded validation, fixed before outcomes
+
+Implement observed-facet/contrast intervals for inference-ready RSM/PCM MML
+with the fixed standard-normal population and fixed quadrature. Reuse the
+likelihood, posterior category moments and constraint maps; do not refit or
+alter estimates. The primary sampling unit is a whole Person response vector.
+An explicit one-row-per-Person mapping may aggregate these vectors into larger
+independent clusters (e.g. schools). It cannot split a Person across clusters.
+This is one-way cluster inference, not multiway rater/task resampling or
+G/D-study intervals. The MFRM conditions on its observed fixed facet levels;
+replacement-rater inference belongs to the random-rater extension.
+
+The sandwich is H^-1 sum_g(s_g s_g') H^-1, using the full marginal-likelihood
+score of each independent cluster and observed-information H. Retain the
+model-based covariance for comparison. Optional G/(G-1) scaling is recorded;
+neither it nor a cluster count is a small-sample coverage certificate. Use
+pointwise normal intervals. Reject ineligible fits, unsupported models and
+singular information; report fixed and unavailable target intervals explicitly.
+Validate Person and cluster identities, analytic score aggregation against the
+existing objective gradient, per-Person scores against independent continuous
+integration/central differences, full-covariance contrasts and archive/plot
+replay. Do not pool these new covariances through the earlier MI API silently.
+
+The repeated-sampling check will use eight prespecified cells: RSM/PCM,
+80/320 Persons, and (a) standard-normal ability with six ratings per Person or
+(b) centered unit-variance lognormal ability with three ratings per Person.
+Three-rating assignments choose either complementary criterion pattern with
+equal probability independently of ability and responses. Three fixed raters,
+two criteria, categories 0--2, and structural truth match the earlier
+information generator: rater (0.3,-0.1,-0.2), criterion (0.4,-0.4), RSM steps
+(-0.6,0.6), PCM steps (-0.7,0.7) and (-0.2,0.2). The adverse cell deliberately
+combines sparsity and nonnormality; it evaluates that joint use case, not their
+separate causal contributions. Target the three rater differences and one
+criterion difference. At 200 independent datasets per cell, nominal-95%
+coverage has MCSE about 1.54 percentage points. This is a bounded comparison,
+not a high-precision general coverage qualification.
+
+Before simulation, enumerate the finite response-pattern distributions with
+independent integration over the generating latent distribution. Minimize
+expected working-model negative log likelihood to obtain its pseudo-true
+target, checking finer integration and probability normalization. Evaluate
+coverage against both generating structural truth and this working-model
+target. This prevents a sandwich variance correction from hiding persistent
+misspecification bias. Compare ordinary and uncorrected Person-sandwich
+intervals on each same fitted data set; retain all seeds, errors, unavailable
+results, widths, bias and paired coverage differences with Monte Carlo
+uncertainty. Initial execution cases are software preflight, not replacement
+seeds or evidence for a universal guarantee. Reuse the earlier 20,000-dataset
+ordinary-interval study; do not repeat its full run.
+
+Execution outcome: the one-way fixed-facet API, plot and tutorial are now
+implemented locally. All 1,600 planned datasets returned both interval methods,
+but generating-truth coverage remained as low as 87% for sandwich intervals
+in the joint skewed/sparse scenario. The independent pseudo-true reference
+separates covariance behavior from persistent bias. Full conditions, paired
+differences, Monte Carlo uncertainty, source hashes and the remaining scope
+are recorded in `facet-sandwich-record-0.2.4.md`. This completes the first
+bounded method comparison, not the whole of row 2a. Do not relabel the broader
+coverage, diagnostic-accuracy or model-extension requests complete.
+
+#### Rater-screening follow-up fixed before new outcomes, 2026-09-23
+
+Row 2b next evaluates the existing Infit/Outfit union screen at a matched
+planned rating budget. Its target is the specific independent-uniform-response
+contamination used in A12, not severity, DRF or general rater quality. The public
+addition `mfrm_screening_performance()` will accept a complete planned roster
+and known truth plus possibly incomplete result rows. It must retain planned,
+available, positive and unavailable counts; conditional per-target rates;
+per-replication any-false-flag and any-detection events; exact binomial Monte
+Carlo bounds; and realized all-trial bounds for unresolved outcomes. Correlated
+raters are not independent binomial replications. A partial family with an
+observed positive is known positive; an otherwise negative partial family is
+unknown. Preserve the rule, source rows, saved output and plot data.
+
+The earlier A12 study's 200 rotating-design null/contaminated results will be
+reused, not refitted. Their per-target flags are exactly recoverable only
+because all screens were available and every unaffected-family any-flag result
+was false; the affected R6 flag is stored separately. Check these facts and
+the unchanged estimation/diagnostic source before reuse. Reuse only the
+pre-selection screens, not removal/refit conclusions. The archived generator
+function and protocol provide the same paired latent and full-rating draws.
+
+The new study has ten cells (two assignments by five scenarios), 100 fixed
+replications per cell. Two cells reuse the above 200 outputs; 800 new fits are
+planned. There are 120 Persons, six fixed raters, three criteria, categories
+0–3, the A12 fixed rater/criterion/step values, and two assigned raters per
+Person. Each design schedules 720 ratings, 120 per rater. Assignments are:
+
+1. Rotating cycle: pairs (1,2), (2,3), (3,4), (4,5), (5,6), (6,1), repeated.
+2. Weak bridge: the first 60 Persons use pairs within raters 1–3 and the
+   remaining 60 within 4–6. Swap two slots at Persons 1 and 61 to create pairs
+   (1,4) and (2,5). Every rater keeps the same workload; only two Persons
+   connect the two panels. Both designs remain connected.
+
+Scenarios are: normal null; R6 contamination (each assigned R6 score replaced
+by an independent uniform category with probability .5); ability-linked null;
+MCAR null; and score-dependent nonresponse null. The ability-linked condition
+assigns these pair patterns by the rank of the already generated normal ability,
+keeping the overall latent draws unchanged; the weak bridge then connects
+panels with different ability distributions. This is a null for rater response
+inconsistency, not a claim that the fitted population/assignment model is correct.
+
+Both missing-score scenarios remove exactly 144 assigned scores (20%), leaving
+576 observations. MCAR chooses uniformly; score-dependent nonresponse uses
+exponential-race weighted sampling without replacement, with fourfold selection
+weight for a generated score of zero. The same independent event-level random
+draws pair missingness conditions and assignments. Unassigned combinations
+remain absent. Fits explicitly use the observed assigned scores; no imputation
+or missingness correction is evaluated. These comparisons match planned and,
+within the two missingness scenarios, observed budgets; missingness necessarily
+reduces the observed budget relative to the complete-response scenarios.
+
+The unchanged screen flags Infit OR Outfit outside [0.5,1.5]. An unavailable
+component does not turn a potentially positive union into a known negative.
+Use MML/RSM q61, maxit400 and the original score ladder. Record computability
+and fit readiness separately; no eligibility guard is relaxed and no automatic
+rater exclusion is implemented. Retain all planned trials, errors, warning
+messages, rater metrics, observation counts and per-target flags. A failed
+attempt is not replaced. Reuse A12 seeds 2026092301–2026092400 to pair conditions;
+freeze a separate missingness stream. Execution preflight uses a seed outside
+that range. No threshold, alternative, sample count or seed will be tuned after
+new outcomes. At a 5% or 95% rate, 100 replications give MCSE about 2.18
+percentage points; zero events have a two-sided exact 95% upper bound of 3.62%.
+This is a bounded comparison, not high-precision general accuracy qualification.
+
+The old DIF/bias evaluator also needs its missing-statistic accounting fixed:
+an unavailable bias t/p or descriptive-only DIF classification must remain NA.
+Retain target denominators and non-target availability counts, and distinguish
+per-cell rates from any-family rates. Earlier non-target averages cannot be
+fully repaired without their missing cell outcomes; do not silently reuse them
+as corrected evidence. Saved target availability supports no-refit correction.
+
+Execution outcome: all planned cells completed without replacement. All 6,000
+target screens were computable; 997/1,000 fits were inference-ready, while three
+score-dependent nonresponse fits required category-support review. The retained
+descriptive union screen detected R6 in 6/100 rotating trials and 2/100 weak-bridge
+trials. Any-unaffected-rater flags were zero except 1/100 under weak-bridge MCAR.
+Zero observed flags still have a 3.62% exact upper Monte Carlo bound. The paired
+detection difference is -4 percentage points, MCSE 2.81 points; it does not
+establish a general ranking of designs. Low false-flag rates do not offset this
+poor sensitivity. No threshold was tuned and no rater-removal function added.
+
+The API now retains per-target and family denominators, unresolved outcomes,
+full-precision summaries and plot data. DIF/bias missing-statistic handling and
+saved-output migration are corrected; the tutorial, NEWS and public roadmap
+state the limits. Reuse this bounded evidence instead of adding more seeds or
+nearby conditions by default. The remaining model work begins with the public
+random-rater likelihood and target definition in row 3a; broader statistical
+qualification remains open rather than being silently absorbed into that task.
+
+The existing testlet study in `local-testlet-main-coverage-0.2.4.md` covers
+1,200 generated datasets in four bounded cells with two fixed raters and three
+criteria. It does not evaluate a rater effect shared across persons or an
+uncertainty correction. The positive local-variance person targets showed a
+plug-in-versus-oracle coverage loss of 1.278 percentage points at N=24 and
+0.380 at N=120; pair targets differ. The subsequent saved-failure follow-up
+resolved eight optimizer stops without revising the original study. Reuse
+these records. The local public interface now labels conditional intervals
+explicitly; qualify same-sample calibration uncertainty and its target before
+claiming calibration-aware intervals or completing row 3b.
+
+Unconditional coverage or diagnostic-accuracy guarantees are not attainable
+for arbitrary distributions, unidentified designs or unspecified nonresponse.
+The requested guarantees must become explicit target/assumption/performance
+contracts; software success, a returned interval or one simulation setting is
+not such a guarantee. No unresolved requested item is completed merely by
+adding this plan, a limitation paragraph or a research prototype.
+Reuse numerical evidence only when source, model, estimand and design match.
+For each working feature, update its public help and NEWS after implementation
+and targeted validation; keep unresolved items visible in ROADMAP.
 
 ### Historical September 22 freeze of the subsequently published candidate
 

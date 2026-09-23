@@ -1,10 +1,13 @@
 make_qc_study1_fit <- function() {
   toy <- load_mfrmr_data("study1")
-  .mfrmr_muffle_expected_warnings(
-    fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-             method = "JML", maxit = 25),
-    "^Optimization convergence review did not produce"
-  )
+  expect_warning(
+    fit <- .mfrmr_muffle_expected_warnings(
+      fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+               method = "JML", maxit = 25),
+      "^Optimization convergence review did not produce"),
+    "^Category support is retained but requires review:")
+  expect_identical(fit$summary$CategoryState, "weak_information")
+  fit
 }
 
 test_that("run_qc_pipeline returns correct class and structure", {

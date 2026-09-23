@@ -13,8 +13,14 @@ mfrm_cluster_imputed(
   k,
   weights = NULL,
   missing = c("error", "omit"),
-  method = c("pam", "hierarchical"),
-  linkage = NULL
+  method = c("pam", "hierarchical", "kmeans"),
+  linkage = NULL,
+  components = NULL,
+  scale = TRUE,
+  nstart = 25,
+  iter.max = 100,
+  seed = 1,
+  silhouette = TRUE
 )
 
 \method{print}{mfrm_imputed_clusters}(x, ...)
@@ -45,12 +51,21 @@ imputation.}
 features remaining after imputation. Explicit omission retains excluded
 IDs with unavailable memberships and pairwise proportions.}
 
-\item{method}{\code{"pam"} (default) or \code{"hierarchical"}. The same method is used
+\item{method}{\code{"pam"} (default), \code{"hierarchical"}, or \code{"kmeans"}. The same method is used
 for every completion. Hierarchical analyses retain separate trees.}
 
 \item{linkage}{For \code{method = "hierarchical"}, \code{"average"} (the default when
 \code{NULL}) or \code{"complete"}; see \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}. Must be \code{NULL}
-for PAM, which has no linkage.}
+for PAM and k-means, which have no linkage.}
+
+\item{components}{For k-means, \code{NULL} uses numeric features directly. An integer
+fits PCA separately in each completion and uses that many leading components.
+No whitening, pooled PCA basis or component-sign matching is performed.}
+
+\item{scale, nstart, iter.max, seed, silhouette}{For \code{method = "kmeans"}, as in
+\code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}. These arguments must not be supplied for other methods.
+The same seed and settings are used for every completion; sensitivity still
+includes possible changes in local optima. Review alternative seeds separately.}
 
 \item{...}{Reserved for method compatibility.}
 
@@ -69,7 +84,7 @@ Hierarchical partitions inherit from \code{mfrm_clusters} and retain their
 trees. Method and linkage are retained in \code{settings}.
 }
 \description{
-Apply the same Gower clustering analysis to each completed data set from \code{mice},
+Apply the same external-feature clustering analysis to each completed data set from \code{mice},
 retaining all analyses and the fraction of imputations in which each pair
 of entities belongs to the same group.
 }
@@ -100,6 +115,9 @@ stops the comparison with its imputation number; no failures are discarded.
 Remaining missingness, and thus the included sample, is the same across
 imputations. Gower numeric ranges are recalculated in each completed sample;
 differences may reflect changes in both feature values and scaling.
+Numeric k-means likewise recalculates centers, standard deviations and, when
+requested, the PCA basis in each completion. Only partitions are compared;
+component scores/loadings and group labels are not averaged or Rubin-pooled.
 Hierarchical trees belong to individual completions; no pooled tree,
 consensus hierarchy, or branch-support estimate is returned.
 

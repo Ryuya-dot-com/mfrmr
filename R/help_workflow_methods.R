@@ -42,6 +42,49 @@
 #' the review and pass the corrected data frame to [fit_mfrm()]. A
 #' `data_review` object contains checks; it is not the rating data to fit.
 #'
+#' @section Choose which ratings share an effect:
+#' The routine fit/diagnose/results/report workflow on this page is for
+#' [fit_mfrm()] objects. Use `mfrmr_output_guide("models")` to compare:
+#' - **Fixed facets:** [fit_mfrm()] describes the specified rater and task
+#'   levels. Its native diagnostics, Wright map and comprehensive reports use
+#'   the `mfrm_fit` result.
+#' - **Shared random raters:** [fit_mfrm_random_rater()] models one rater effect
+#'   shared across all Persons rated by that rater. `predict()` gives score
+#'   probabilities at supplied abilities for observed or replacement raters;
+#'   it does not estimate Person abilities. See
+#'   `vignette("mfrmr-random-raters", package = "mfrmr")`.
+#' - **Person-specific testlets:** [fit_mfrm_testlet()] groups dependent ratings
+#'   within each Person. `predict()` estimates Person abilities conditional on
+#'   fitted calibration. A Rater column can specify both usual fixed severity
+#'   and local within-Person membership. See
+#'   `vignette("mfrmr-testlets", package = "mfrmr")`.
+#'
+#' All three have `summary()`, `plot()`, [plot_data()] and ordinary RDS saving.
+#' Extended-model plots additionally support [as_ggplot()], preserving each
+#' interval's target, prior-only symbols and unavailable rows. Check
+#' [mfrmr_interval_guide()] for each interval's target and limitations.
+#' The two extended models have their own classes. [mfrm_results()] collects
+#' their saved calibration, numerical checks and interval meanings; attach
+#' separately computed `predictions` and random-rater `intervals` explicitly.
+#' Calibration tables retain estimates and approximate SEs but omit bounds by
+#' default. For either extension, `confint(fit, parm = "calibration")` explicitly
+#' requests pointwise normal approximations with unestablished finite-sample
+#' coverage. Use `mfrm_results(fit, calibration_intervals = "normal",
+#' calibration_level = 0.95)` to retain that choice in reports and saved output.
+#' [mfrm_report()] and [export_mfrm_results()] reuse these results without
+#' fitting, scoring or resampling. Older predictions need regeneration from
+#' the saved fit to carry matching source metadata; no refit is needed.
+#' [diagnose_mfrm()], the viewer, ordinary Wright maps, response-MI pooling
+#' and portable-calibration extraction do not accept these model classes.
+#' [mfrm_response_diagnostics()] separately integrates latent uncertainty to
+#' produce same-data posterior predictive residuals and descriptive Infit/Outfit
+#' for either extension. Paired/scatter plots have no reference cutoffs;
+#' ordinary plug-in fit values are not directly comparable. Attach saved output
+#' with `mfrm_results(fit, diagnostics = response_review)`; no integration runs
+#' during reporting. Numerical checks are not substitute model-fit diagnostics. Refit when
+#' changing the statistical model; editing a saved object's class is invalid.
+#' Replotting or exporting an existing table does not require refitting.
+#'
 #' @section From the first summary to diagnostics:
 #' A `FormalInference = "No"` entry in `results$decision` can mean that precision
 #' has not yet been reviewed. Read `Why` and `NextAction` to distinguish that
@@ -59,12 +102,40 @@
 #' under normal random effects with two crossed facets, see
 #' [mfrm_multivariate_d_compare()]. These analyses do not require an MFRM fit
 #' and do not estimate reliability on its latent scale.
+#' In particular, a testlet variance is on the latent logit scale and cannot
+#' be substituted for an observed-score G-study component. Start G/D analyses
+#' from the ratings and their declared G-study design.
 #'
 #' To group persons, raters or tasks by external attributes, use [mfrm_features()]
-#' followed by [mfrm_cluster()] or [mfrm_cluster_hierarchical()]. See
+#' followed by [mfrm_cluster()] or [mfrm_cluster_hierarchical()] for mixed
+#' attributes. [mfrm_pca()] and [mfrm_cluster_kmeans()] use selected numeric
+#' features with explicitly chosen scaling and component counts. See
 #' `vignette("mfrmr-external-features", package = "mfrmr")` for imputation and
 #' setting comparisons. These are exploratory attribute groups, not estimated
 #' ability classes or rater-quality judgments.
+#' Use `mfrmr_output_guide("features")` or `mfrmr_output_guide("gtheory")` for
+#' their dedicated output routes. Use `summary()` for reviews and comparisons,
+#' and `plot()` or [plot_data()] for fitted PCA, partitions and D-studies.
+#' Save the full analysis with `saveRDS()`; these are not [mfrm_results()] inputs.
+#' Export a chosen summary with `write.csv(summary(result), ..., row.names = FALSE)`
+#' and keep the full source object for its settings, excluded rows and assumptions.
+#' Multivariate D-study scenario plots support [as_ggplot()], preserving G/Phi
+#' or SEM panels. Plan-difference intervals, PCA and clustering instead use
+#' their base plots or explicit custom graphics from [plot_data()].
+#'
+#' @section Missing scores on assigned ratings:
+#' [mfrm_response_imputations()] reviews supplied ordinal completions;
+#' [fit_mfrm_imputed()] fits each dataset and retains failures. Inspect every
+#' completion before [pool_mfrm_imputed()] combines eligible non-Person facet
+#' estimates or prespecified contrasts and their covariance. This route does
+#' not fill unassigned cells or pool Person EAPs. The imputation model and the
+#' fixed-standard-normal RSM/PCM MML analysis must be justified together.
+#' See `mfrmr_output_guide("imputation")` and
+#' `vignette("mfrmr-response-imputation")` for an executed example and its limits.
+#' A pooled result has dedicated `summary()`, `plot()` and [plot_data()] routes;
+#' use `saveRDS()` for the complete analysis or `write.csv(summary(pooled), ...)`
+#' for a selected table. It is not an [mfrm_results()] input and does not support
+#' [as_ggplot()]. Selecting a plot `component` cannot supply a missing conversion.
 #'
 #' @section Updating saved analyses for 0.2.4:
 #' Keep the original objects, data and analysis settings. Installing an update
@@ -356,6 +427,11 @@
 #'    before branching into less common helpers.
 #'    Residual DIF/DFF differences remain descriptive; their detection and
 #'    false-positive rates are unavailable in [evaluate_mfrm_signal_detection()].
+#'    To evaluate your own declared rater-warning procedure against known
+#'    simulation truth, use [mfrm_screening_performance()] with a complete planned
+#'    roster. It distinguishes individual and any-target rates, Monte Carlo
+#'    uncertainty and unavailable outcomes. See
+#'    `vignette("mfrmr-screening-performance", package = "mfrmr")`.
 #' 6. (Optional, `RSM` / `PCM`; bounded `GPCM` with caveat) Estimate
 #'    interaction bias with [estimate_bias()].
 #' 7. Choose a downstream branch:

@@ -51,6 +51,7 @@ Imports:
 LinkingTo:
     cpp11
 Suggests:
+    RTMB (>= 2.0),
     cluster,
     mice,
     testthat (>= 3.0.0),

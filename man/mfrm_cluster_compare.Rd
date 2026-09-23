@@ -14,7 +14,7 @@ mfrm_cluster_compare(analyses)
 }
 \arguments{
 \item{analyses}{A named list of at least two results from \code{\link[=mfrm_cluster]{mfrm_cluster()}}
-and/or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}},
+and/or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} or \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}},
 or a named list of results from \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}. Do not mix the two
 result types. Names must be unique and nonblank. All results must use the
 same entity IDs and included entities. Selected features may differ;
@@ -34,7 +34,8 @@ Reuse one fitted imputation model.}
 \value{
 An \code{mfrm_cluster_comparison} object containing:
 \itemize{
-\item \code{analysis_summary}: method, linkage (unavailable for PAM), group
+\item \code{analysis_summary}: method, distance, fitted space, scaling, retained
+component count, linkage (unavailable for PAM and k-means), group
 count, selected feature count (\code{Features}), included/excluded entity counts,
 smallest/largest group sizes, and mean silhouette for each analysis and
 imputation. \code{Imputation} is \code{NA} for ordinary clustering results.

@@ -121,6 +121,10 @@ The same formulas apply to a Person-by-Rater design or to facets selected
 by \code{facets}, with names replaced in the declared order. For a single
 facet F and its planned count n, relative error is \code{E/n} and absolute
 error is \code{(F + E)/n}. A D-study cannot introduce an absent facet.
+For fixed tasks represented by score columns in a Person-by-Rater model,
+vary only \code{Raters}. The task set remains fixed, and each planned rater
+scores all tasks. See "Fixed tasks as score components" in
+\code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} for the target and allocation requirements.
 
 For raters nested within tasks, use the five components \code{P}, \code{T},
 \code{R(T)}, \code{PT}, and \code{E}, where \code{E} includes the Person-by-Rater-within-Task

@@ -8,9 +8,10 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 available <- requireNamespace("mice", quietly = TRUE) &&
   requireNamespace("cluster", quietly = TRUE)
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = available)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = !is_cran_check && available)
 ```
 
 An assessment team wants to describe its raters' backgrounds before planning
@@ -133,7 +134,7 @@ the methods and predictor controls used below. `WorkshopHours` can help predict
 unrecorded attributes without becoming a clustering feature. The identifier
 is neither imputed nor used to predict other variables.
 
-```{r imputation}
+```{r imputation, fig.alt="Imputation-chain means and standard deviations across iterations for experience years and annual rating workload. These traces help review mixing; they do not establish that the imputation model is appropriate."}
 eligible <- subset(features$missing, Reason == "Not recorded")
 imputation_data <- raters[c("Rater", feature_names, "WorkshopHours")]
 where <- matrix(FALSE, nrow(imputation_data), ncol(imputation_data),
@@ -282,7 +283,7 @@ profile and nearby groups; high widths do not establish useful or stable types.
 The dashed line is the overall mean. Raters excluded from clustering have no
 width; their IDs remain in the returned plot data.
 
-```{r silhouette, fig.width=7, fig.height=5}
+```{r silhouette, fig.width=7, fig.height=5, fig.alt="Rater silhouette widths grouped by the descriptive partition in one completion. The dashed line is the overall mean; negative widths indicate profiles to inspect, not poor rater quality."}
 plot(one_completion)
 ```
 
@@ -291,7 +292,7 @@ Numeric profiles show means and medians in original units, without confidence
 intervals. Categorical profiles show proportions within each group, preserving
 the order of training levels. These are descriptions of this completion only.
 
-```{r profiles, fig.width=7, fig.height=5}
+```{r profiles, fig.width=7, fig.height=5, fig.alt=c("Experience in years summarized by descriptive rater group, with means and medians in the original units and no confidence intervals.", "Proportions of ordered training levels within each descriptive rater group. These profiles describe one imputed table, not effects of training.")}
 plot(one_completion, type = "profile", feature = "ExperienceYears")
 plot(one_completion, type = "profile", feature = "TrainingLevel")
 ```
@@ -302,7 +303,7 @@ it does not recluster them, change the denominator, or represent the remaining
 pairs. Omit `ids` to display all raters. By default, ID labels are hidden above
 50 displayed entities; the data are never sampled automatically.
 
-```{r co-membership, fig.width=7, fig.height=6}
+```{r co-membership, fig.width=7, fig.height=6, fig.alt="Pairwise co-membership proportions across imputations for the first twenty rater IDs. The scale runs from zero to one; unavailable pairs are grey. These proportions are imputation sensitivity, not sampling stability."}
 plot(analyses$ThreeGroups, ids = raters$Rater[1:20])
 ```
 
@@ -346,7 +347,7 @@ supplied choices; they do not select a preferred algorithm or establish true
 rater types. Substantively different profiles or very small groups deserve
 inspection even when the overall pair agreement is high.
 
-```{r dendrogram, fig.width=7, fig.height=5}
+```{r dendrogram, fig.width=7, fig.height=5, fig.alt="Average-linkage hierarchy from Gower dissimilarities in one completed rater-feature table. Boxes mark three groups; all 120 raters are included. Heights are dissimilarities, not significance or branch support."}
 plot(average$analyses[[1]])
 ```
 
@@ -583,20 +584,95 @@ not evidence that a clustering structure was preserved. A two-component
 plot is a projection, not a test for the existence of clusters.
 
 Ordinary PCA and k-means should not receive arbitrary numeric codes for
-nominal categories such as specialty. The present mixed-feature API uses
-Gower distances with PAM or average/complete linkage; it does not implement
-PCA, k-means, or automatic feature selection. Base R provides
+nominal categories such as specialty. Keep Gower/PAM or average/complete
+linkage for mixed features. For selected numeric attributes, `mfrm_pca()` and
+`mfrm_cluster_kmeans()` use R's
 [`prcomp()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html)
-and [`kmeans()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html)
-for separately specified numeric analyses. A future integrated route needs
-explicit scaling, retained dimensions, initialization, and uncertainty
-handling. Simply sending PC scores to the current Gower interface would
-range-scale them again and would not reproduce Euclidean k-means.
+and [`kmeans()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html).
+They center features and, by default, divide by sample standard deviations.
+Positive feature weights apply to **squared Euclidean distances**. The fitted
+transformation, original units, entity IDs and missingness accounting remain
+available. No automatic feature, component or group-count selection is performed.
+
+Here the question is whether grouping experience, annual workload and workshop
+hours changes when those three attributes are represented by two components.
+The same already fitted imputation model supplies both analyses. Workshop
+hours remain a predictor in that model whether or not they are selected for
+clustering. These numeric selections answer a different question from the
+mixed-background groups above; specialty and training level are not numeric
+inputs to this PCA.
+
+```{r numeric-grouping}
+numeric_names <- c("ExperienceYears", "AnnualRatings", "WorkshopHours")
+numeric_review <- mfrm_features(raters, "Rater", numeric_names)
+numeric_direct <- mfrm_cluster_imputed(numeric_review, model,
+  numeric_review$missing, k = 3, method = "kmeans", seed = 42)
+numeric_reduced <- mfrm_cluster_imputed(numeric_review, model,
+  numeric_review$missing, k = 3, method = "kmeans", components = 2, seed = 42)
+numeric_comparison <- mfrm_cluster_compare(list(
+  StandardizedFeatures = numeric_direct, TwoComponents = numeric_reduced))
+numeric_comparison$analysis_summary
+summary(numeric_comparison)
+```
+
+Read `Space`, `Scaling` and `Components` before comparing the partitions.
+`ChangedFraction` measures changed together/apart pairs, allowing arbitrary
+renumbering of clusters. Different component counts change distances, so
+silhouette widths do not provide a common-scale test that one analysis is
+better. The default 25 random starts and fixed seed make this execution
+reproducible, but do not prove a global optimum. Assess another seed separately
+if initialization sensitivity matters.
+
+```{r numeric-pca-views, fig.width=8, fig.height=6, fig.alt=c("Explained-variance scree plot for numeric rater features in one completion. Filled points identify retained components and open points identify omitted components.", "Scores on the first two principal components, with descriptive k-means groups distinguished by colour and point shape. This projection is not a latent ability or rater-quality scale.", "First-component loadings for the transformed numeric rater features. Their signs are arbitrary and the coefficients are not original-unit correlations.", "Experience in years summarized by the k-means groups fitted in the retained principal-component space. The original-unit profile describes this completion only.")}
+first_numeric <- numeric_reduced$analyses[[1]]
+summary(first_numeric$pca)
+first_numeric$pca$loadings
+plot(first_numeric$pca)  # The full explained-variance table, including omitted PCs.
+plot(first_numeric$pca, type = "scores", groups = first_numeric, labels = FALSE)
+plot(first_numeric$pca, type = "loadings", components = 1)
+plot(first_numeric, type = "profile", feature = "ExperienceYears")
+```
+
+The first-completion score plot annotates a two-dimensional projection with
+that completion's group labels. Colour and point shape distinguish groups;
+`preset = "monochrome"` retains the shapes. Shapes repeat after six groups,
+so inspect `plot_data()` for IDs and encodings in crowded views. Filled/open
+scree points distinguish retained/omitted components. Loadings are coefficients in the transformed
+feature space, not correlations in original units. Their signs are arbitrary.
+Inspect the original-unit profiles to explain what distinguishes the groups.
+No view establishes ability, severity, rater quality or an effect of training.
+
+Every completion retains its own centering, standard deviations and PCA basis.
+The comparison pairs the same completions, while allowing these transformations
+to change as imputed values change. It compares partitions; it does not average
+PCA scores, loadings or arbitrary group numbers, and it does not Rubin-pool
+inference. These functions impute no rating scores.
+
+For an already complete numeric table, use `mfrm_cluster_kmeans(review, k=3)`
+directly. To inspect and retain a specific reduction, fit
+`pca <- mfrm_pca(review, components=2)` and then
+`mfrm_cluster_kmeans(pca, k=3)`. Passing a PCA object uses its scores exactly,
+without further standardization, range scaling or whitening. Save that PCA
+and its grouping together. `plot()` and `mfrm_cluster_compare()` reuse saved
+results; changing features, component counts, weights or seeds requires the
+corresponding new analysis. `mfrmr_output_guide("features")` lists the dedicated
+output routes. Use `summary()` for partition comparisons, and `plot()` or
+`plot_data()` for fitted PCA and grouping views. Automatic `as_ggplot()`
+conversion is unavailable, including when selecting a table component. A
+custom scores plot must explicitly retain both selected PC axes and its group
+labels; plotting the first numeric column alone does not reproduce that view.
 
 ## Plan for the size of the analysis
 
+K-means can explicitly omit silhouettes with `silhouette = FALSE`, avoiding
+their quadratic distance matrix. Those silhouettes are unavailable, not zero;
+profile plots and partition comparisons remain available. PCA itself uses a
+numeric matrix decomposition whose cost depends on both entity and feature
+counts. Neither option promises a universal capacity limit. The imputation
+co-membership matrix remains quadratic even with silhouettes disabled.
+
 Pairwise distances require memory that grows quadratically with the number
-of raters. Ordinary clustering permits up to 5,000 included entities; the
+of raters. Gower/PAM and hierarchical clustering permit up to 5,000 included entities; the
 imputation workflow permits up to 5,000 total entities because its comparison
 matrix includes excluded IDs. These are input limits, not a guarantee of low
 memory use or acceptable run time. Multiple imputations also retain every

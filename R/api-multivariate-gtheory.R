@@ -137,6 +137,32 @@
 #'   for arbitrary sparse assignments or missingness mechanisms. This function
 #'   returns point estimates, not sampling intervals.
 #'
+#' @section Fixed tasks as score components:
+#'   To plan ratings of the same fixed interview, presentation and discussion,
+#'   put the three task scores in separate columns and use `task = NULL`.
+#'   Each row is one Person/Rater pair; the same rater and person identities
+#'   must apply to every task column. The tasks and prespecified score weights
+#'   define the fixed composite. Only raters are sampled measurement conditions.
+#'   Different task-specific rater teams do not satisfy this representation.
+#'
+#'   The Person covariance includes stable Person-by-fixed-task differences.
+#'   For weight vector `w` and `n_r` planned raters, universe variance is
+#'   `w' P w`, relative error is `w' E w / n_r`, and absolute error is
+#'   `w' (R + E) w / n_r`. These match a univariate Person-by-Rater analysis
+#'   of the directly weighted task score. Do not average task-specific
+#'   reliability coefficients or additionally divide error by the task count.
+#'   Each planned rater scores every fixed task. Two raters for three fixed
+#'   tasks require six ratings per person, not two or three.
+#'
+#'   MINQUE(0) permits identifiable incomplete Person/Rater source designs;
+#'   every retained row still needs all task scores. Explicit `missing = "omit"`
+#'   removes a whole incomplete score vector. Do not impute unassigned tasks
+#'   to manufacture common score identities. The D-study projects a future
+#'   complete common-rater design; it does not estimate sparse-roster reliability.
+#'   Adding or replacing tasks, partial rater sharing and an arbitrary mixture
+#'   of fixed/random facets are not implemented by this representation. Holding
+#'   the task count constant in a random-task model is a different assumption.
+#'
 #' @section Nested measurement facets:
 #'   Suppose each task has its own rater team, and each team rates the same
 #'   persons on both Content and Organization. Use `nesting = c(Rater = "Task")`
@@ -656,6 +682,10 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   by `facets`, with names replaced in the declared order. For a single
 #'   facet F and its planned count n, relative error is `E/n` and absolute
 #'   error is `(F + E)/n`. A D-study cannot introduce an absent facet.
+#'   For fixed tasks represented by score columns in a Person-by-Rater model,
+#'   vary only `Raters`. The task set remains fixed, and each planned rater
+#'   scores all tasks. See "Fixed tasks as score components" in
+#'   [mfrm_multivariate_gstudy()] for the target and allocation requirements.
 #'
 #'   For raters nested within tasks, use the five components `P`, `T`,
 #'   `R(T)`, `PT`, and `E`, where `E` includes the Person-by-Rater-within-Task

@@ -762,7 +762,9 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
 #'   [plot_fair_average()], [plot_bias_interaction()],
 #'   [plot_displacement()], [plot_wright_unified()],
 #'   [plot_rater_severity_profile()], [plot_apa_figure_one()],
-#'   [fit_measures_table()]
+#'   [fit_measures_table()], [mfrm_facet_intervals()], [pool_mfrm_imputed()],
+#'   [mfrm_random_rater_intervals()], [confint.mfrm_random_rater()],
+#'   [fit_mfrm_testlet()], [predict.mfrm_testlet()]
 #' @concept confidence intervals
 #' @concept uncertainty displays
 #' @concept visual diagnostics
@@ -824,7 +826,7 @@ mfrmr_interval_guide <- function(scope = c(
       "detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)",
       "plot_rater_trajectory(..., ci_level = 0.95)",
       "plot_shrinkage_funnel(..., show_ci = TRUE, ci_level = 0.95); plot(fit, type = \"shrinkage\", show_ci = TRUE, ci_level = 0.95)",
-      "compute_facet_icc(ci_level = 0.95); plot(analyze_hierarchical_structure(...))"
+      "compute_facet_icc(ci_method = \"boot\", ci_level = 0.95); plot(analyze_hierarchical_structure(...))"
     ),
     DisplayRoute = c(
       "Use the returned table or facets_table.",
@@ -876,7 +878,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Approximate drift interval using supplied anchor-drift SE columns.",
       "Approximate per-rater severity interval across already linked waves.",
       "Descriptive normal bands from original and plug-in shrunken SEs; variance estimates are held fixed.",
-      "Profile or fallback interval for ICC, depending on optional backend availability."
+      "Explicit parametric percentile bootstrap of refitted ICC ratios; the default supplies point estimates only."
     ),
     UseFor = c(
       "Report facet estimates with uncertainty in tables.",
@@ -944,10 +946,121 @@ mfrmr_interval_guide <- function(scope = c(
       "Pair with build_linking_review() only where that route is in scope.",
       "Use with anchor-linked waves, not independent raw calibrations.",
       "Requires empirical-Bayes shrinkage output; ordinary fits do not carry all shrinkage columns.",
-      "Optional profile intervals depend on installed backend support."
+      "Requires lme4 for the fitted random-intercept model. Inspect bootstrap failures and ICC_CI_Status; the former profile method is withdrawn."
     ),
     stringsAsFactors = FALSE
   )
+
+  out <- rbind(out, data.frame(
+    Route = c("Fixed-facet model/sandwich intervals", "Assigned-score MI facet intervals"),
+    Scope = c("table,visual,fit,reporting", "table,visual,fit,reporting"),
+    PrimaryHelper = c(
+      "mfrm_facet_intervals(fit, facet, method = \"sandwich\", level = 0.95)",
+      "pool_mfrm_imputed(analyses, facet, ci_level = 0.95)"
+    ),
+    DisplayRoute = c(
+      "Use summary(result) or plot(result, comparison = TRUE, draw = FALSE).",
+      "Use summary(result) or plot(result, draw = FALSE)."
+    ),
+    DefaultLevel = c(0.95, 0.95),
+    IntervalColumns = c(
+      "Lower, Upper, SE, ModelLower, ModelUpper, ModelSE, Status",
+      "Lower, Upper, SE, DF, Status"
+    ),
+    Basis = c(
+      "Pointwise normal intervals from full observed-information or one-way cluster sandwich covariance; estimates are unchanged.",
+      "Rubin pooling of full within-imputation model covariance and between-imputation covariance, with scalar t reference."
+    ),
+    UseFor = c(
+      "Compare uncertainty for fixed facet estimates and prespecified contrasts, including rater differences.",
+      "Report eligible fixed facet estimates and contrasts after proper imputation of missing assigned scores."
+    ),
+    InterpretationBoundary = c(
+      "Requires many independent Persons or declared larger clusters; covariance correction does not remove misspecification bias or establish general coverage.",
+      "Depends on adequate imputations and complete-data inference; excludes EAP pooling, sandwich pooling and simultaneous rater decisions."
+    ),
+    GPCMStatus = c("unavailable; RSM/PCM MML only", "unavailable; RSM/PCM MML only"),
+    Notes = c(
+      "Fixed-standard-normal MML, unit weights, fixed quadrature and unregularized information. Inspect Status; not replacement-rater or G/D-study inference.",
+      "All completions must qualify on a common identified scale; unassigned events stay unassigned. Inspect Status and the imputation model."
+    ),
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = c("Observed random-rater explicit normal approximation", "Observed random-rater bootstrap intervals",
+      "Random-rater population SD profile"),
+    Scope = c("table,visual,fit,reporting", "table,visual,fit,reporting", "table,fit,reporting"),
+    PrimaryHelper = c("confint(fit, parm = \"raters\", level = 0.95)",
+      "mfrm_random_rater_intervals(fit, nsim = 499, seed = 123, level = 0.95)",
+      "confint(fit, parm = \"rater_sd\", level = 0.95)"),
+    DisplayRoute = c("Use plot(fit, intervals = \"normal\", draw = FALSE); defaults show point estimates only.",
+      "Use plot(result, draw = FALSE), summary(result) or confint(result).",
+      "Inspect the interval and its profile attribute."),
+    DefaultLevel = rep(0.95, 3),
+    IntervalColumns = c("Lower, Upper; method, target and note attributes", "Lower, Upper; availability attribute",
+      "Lower, Upper; profile attribute"),
+    Basis = c("Normal prediction interval with first-order calibration-adjusted prediction SE.",
+      "Full-refit parametric prediction-error bootstrap; studentized by default, unscaled error comparison available.",
+      "Profile likelihood with an asymptotic one-degree chi-square cutoff; includes zero."),
+    UseFor = c("Describe realized observed-rater effects relative to the assumed population mean.",
+      "Compare model-based pointwise prediction intervals for the same realized observed-rater target.",
+      "Estimate variation across the assumed rater population, including at an estimated zero variance."),
+    InterpretationBoundary = c("Nominal coverage is not established; explicit approximation only, not a quality classification. Automatic bounds are withheld.",
+      "Positive source SD/SE required. Unresolved roots can give unbounded limits; no general coverage or familywise guarantee.",
+      "This is a population-variation target, not an interval for any one rater or future score; finite-sample accuracy is not guaranteed."),
+    GPCMStatus = rep("unavailable; shared-rater RSM only", 3),
+    Notes = c("Numerical/information failures and estimated variance boundaries withhold regular intervals.",
+      "Generate from the fitted ability population and refit estimated SDs. Preserve all planned draws and inspect tail resolution; saved roots support new levels without refitting.",
+      "Profiles need RTMB and refit estimated ability SD; an estimated ability-variance boundary blocks this profile. Failed checks retain the evaluated profile."),
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = c("Testlet fixed-facet calibration", "Testlet conditional Person scores"),
+    Scope = rep("table,visual,fit,reporting", 2),
+    PrimaryHelper = c("confint(fit, parm = 'calibration', level = 0.95)", "predict(testlet_fit, newdata)"),
+    DisplayRoute = c("Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.",
+      "Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores)."),
+    DefaultLevel = rep(0.95, 2),
+    IntervalColumns = c("Lower, Upper, SE", "Lower, Upper, ConditionalSD, Status, Reason"),
+    Basis = c("Explicit observed-information normal approximation for fixed facets and steps in the Person-specific testlet RSM.",
+      "Continuous equal-tail posterior intervals conditional on calibration and the fitted or specified normal Person population."),
+    UseFor = c("Describe fixed facet effects while modeling dependence within Person/testlet blocks.",
+      "Score all supplied ratings jointly for a Person without re-estimating calibration."),
+    InterpretationBoundary = c("Finite-sample coverage is not established. Estimated variance boundaries withhold bounds; no regular variance interval is supplied.",
+      "Excludes calibration/population estimation uncertainty, Person-contrast inference and simultaneous decisions. Missing Persons return the prior only; zero ability variance withholds scores."),
+    GPCMStatus = rep("unavailable; Person-specific testlet RSM only", 2),
+    Notes = c("Numerical and information checks must pass. Not a random rater shared across Persons.",
+      "Unavailable rows retain reasons; new fixed-facet levels are refused. Supply the complete rating set for each Person. Small calibration samples can reduce marginal interval coverage; see vignette('mfrmr-testlets')."),
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = "Shared-rater fixed-facet and step calibration", Scope = "table,fit,reporting",
+    PrimaryHelper = "confint(fit, parm = 'calibration', level = 0.95)",
+    DisplayRoute = "Use summary(fit, calibration_intervals = 'normal', level = 0.95) or mfrm_results(fit, calibration_intervals = 'normal', calibration_level = 0.95). Defaults omit bounds.",
+    DefaultLevel = 0.95, IntervalColumns = "Lower, Upper, SE",
+    Basis = "Explicit observed-information normal approximation for fixed facets and steps in the shared-rater RSM.",
+    UseFor = "Describe calibration effects separately from realized rater effects and population SDs.",
+    InterpretationBoundary = "Finite-sample coverage is not established. Numerical/information failures and estimated variance boundaries withhold bounds.",
+    GPCMStatus = "unavailable; shared-rater RSM only",
+    Notes = "Uses saved estimates and SEs without refitting. Rebuild output from older fits to apply the default; older result bundles retain their stored tables.",
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = "Shared-rater conditional Person scores", Scope = "table,visual,fit,reporting",
+    PrimaryHelper = "score_mfrm_random_rater(fit, persons = ids)",
+    DisplayRoute = "Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).",
+    DefaultLevel = 0.95, IntervalColumns = "Lower, Upper, ConditionalSD, Status, Reason",
+    Basis = "Continuous marginal posterior with joint conditional rater Laplace integration and calibration held fixed.",
+    UseFor = "Score requested Persons while retaining the complete scoring roster and shared-rater uncertainty.",
+    InterpretationBoundary = "Excludes calibration/population estimation uncertainty, Person contrasts and coverage guarantees. Numerical checks do not certify Laplace accuracy.",
+    GPCMStatus = "unavailable; shared-rater RSM only",
+    Notes = "persons selects outputs, not data. newdata replaces the entire roster. Prior-only and unavailable rows remain explicit.",
+    stringsAsFactors = FALSE
+  ))
 
   if (identical(scope, "all")) {
     return(out)

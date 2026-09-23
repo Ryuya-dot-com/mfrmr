@@ -207,6 +207,11 @@ NULL
 #'   artifact-only scoring route.
 #'   `"simulation"` and `"network"` return advanced design-review rows.
 #'   `"response_time"` returns descriptive response-time QC rows.
+#'   `"models"` compares fixed-facet, shared-rater and Person-specific testlet
+#'   workflows, including their distinct prediction and reporting boundaries.
+#'   `"features"`, `"imputation"` and `"gtheory"` show exploratory attributes,
+#'   assigned-score multiple imputation and observed-score G/D-study workflows,
+#'   including their own table, plot and saving routes.
 #'   `"facets"`, `"conquest"`, and `"r"` return user-pathway rows for people
 #'   arriving from those workflows.
 #'
@@ -276,7 +281,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
                                          "entry", "viewer", "binary", "tables", "reports", "reviews",
                                          "bundles", "exports", "compatibility",
                                          "gpcm", "calibration", "simulation", "linking", "network",
-                                         "response_time", "facets", "conquest", "r")) {
+                                         "response_time", "facets", "conquest", "r", "models",
+                                         "features", "imputation", "gtheory")) {
   scope <- match.arg(scope)
 
   out <- data.frame(
@@ -1000,7 +1006,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Start with facets_positioning_guide(), then use native mfrmr objects for inference and FACETS-style files for handoff layout.",
       "Review issue_counts and recommendations before choosing anchor_policy for fit_mfrm().",
       "Check drift flags and link residuals before treating linked measures as comparable.",
-      "Use threshold profiles to show how underfit/overfit rates depend on the chosen band.",
+      "Use threshold profiles for mean-square sensitivity; ZSTD-only evidence is separate by default. Use mfrm_screening_sensitivity() for known-truth simulation rates.",
       "Compare MnSq first, then df, then ZSTD; label convention-sensitive flags explicitly.",
       "Normalize the external table first, then inspect df_sensitivity, df_sensitive, and external_comparison.",
       "Check zero/sparse categories and threshold ordering before reporting fair averages.",
@@ -1059,9 +1065,55 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     stringsAsFactors = FALSE
   )
 
+  model_rows <- data.frame(
+    Scope = rep("models", 3),
+    Question = c("Describe specified fixed raters and tasks",
+      "Generalize from a sampled rater population",
+      "Model dependence among ratings within a Person"),
+    OutputFamily = rep("entry", 3),
+    MainFunction = c("fit_mfrm()", "fit_mfrm_random_rater()", "fit_mfrm_testlet()"),
+    UseWhen = c("The estimand concerns the specified fixed facet levels.",
+      "One random rater effect is shared across all Persons rated by that rater; population assumptions are justified.",
+      "An explicit non-overlapping testlet groups ratings within each Person; fixed facets retain separate roles."),
+    TypicalInput = rep("Long-format ratings with explicit column roles and score categories", 3),
+    NextStep = c("summary(); diagnose_mfrm(); mfrm_results(); ordinary Wright maps and reports",
+      "score_mfrm_random_rater() for conditional Person scores; predict() for probabilities at supplied abilities; plot(); plot_data(); mfrm_results() -> mfrm_report() -> export_mfrm_results(); see vignette('mfrmr-random-raters').",
+      "summary(); predict() for conditional Person scores; plot(); plot_data(); as_ggplot(); mfrm_results() -> mfrm_report() -> export_mfrm_results(); see vignette('mfrmr-testlets') and vignette('mfrmr-testlet-applications') for task/criterion allocation and unequal-block examples."),
+    GPCMStatus = c("supported_with_caveat", "unavailable; RSM only", "unavailable; RSM only"),
+    Notes = c("Native diagnostics and comprehensive reporting require matching mfrm_fit results and readiness checks.",
+      "Distinct mfrm_random_rater class: reports accept matching saved Person scores, response predictions and bootstrap intervals. Person scoring uses joint conditional rater Laplace integration and excludes calibration uncertainty. Ordinary diagnostics, viewer, response-MI pooling and portable calibration are unavailable; few-rater accuracy remains unresolved.",
+      "Distinct mfrm_testlet class: stored-result reports accept matching saved Person scores. One common local variance; no task-specific variances, halo diagnosis or enforced equal task weights. Numerical checks are not model-fit diagnostics; Person intervals exclude calibration uncertainty. Ordinary diagnostics, viewer, response-MI pooling and portable calibration are unavailable."),
+    stringsAsFactors = FALSE
+  )
+
+  workflow_rows <- data.frame(
+    Scope = c("features", "imputation", "gtheory"),
+    Question = c("Describe groups from external person, rater or task attributes",
+      "Analyze missing scores on assigned ratings with multiple imputation",
+      "Plan assessment counts or weights on an observed-score scale"),
+    OutputFamily = rep("entry", 3),
+    MainFunction = c("mfrm_features(); mfrm_cluster(); mfrm_cluster_hierarchical(); mfrm_pca(); mfrm_cluster_kmeans(); mfrm_cluster_imputed(); mfrm_cluster_compare()",
+      "mfrm_response_imputations(); fit_mfrm_imputed(); pool_mfrm_imputed()",
+      "mfrm_multivariate_gstudy(); mfrm_multivariate_d_study(); mfrm_multivariate_d_compare()"),
+    UseWhen = c("Exploratory groups summarize selected external attributes; numeric PCA/k-means and mixed-feature grouping use different distances.",
+      "Reviewed completions preserve observed scores, allowed categories and the assigned roster, with a justified imputation model.",
+      "The question concerns G/Phi/SEM for declared crossed or supported nested facets and fixed score components."),
+    TypicalInput = c("One row per entity with explicit IDs and selected features; use separate tables for different entity roles.",
+      "Original long-format rating roster and every completed dataset, with assigned missing scores distinguished from unassigned combinations.",
+      "Numeric observed scores, Person IDs, declared facet columns, future counts and score weights."),
+    NextStep = c("summary() for reviews and comparisons; plot() and plot_data() for fitted PCA, partitions and imputation co-membership. Retain the transformation and grouping with saveRDS(); export selected tables with write.csv(). See vignette('mfrmr-external-features').",
+      "Inspect summary(analyses) for every completion; summary(pooled); plot(pooled); plot_data(pooled); saveRDS(pooled); write.csv(summary(pooled), ...). See vignette('mfrmr-response-imputation').",
+      "Inspect source components and row usage; summary(d); plot(d); plot_data(d); as_ggplot(d) for D-study scenario plots; saveRDS(d); write.csv(summary(d), ...). See help('mfrm_multivariate_d_study')."),
+    GPCMStatus = c("not_applicable", "unavailable; fixed-standard-normal RSM/PCM MML only", "not_applicable"),
+    Notes = c("Descriptive groups, not abilities, rater quality or validated latent classes. Pair the same feature imputations when comparing settings; do not pool cluster labels or PCA bases. Use dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() conversion is unavailable.",
+      "Pool eligible non-Person facet targets and full covariances only; no EAP, cluster-label or fit-statistic pooling. No unassigned-cell filling, general coverage guarantee or extended-model pooling. The pooled object uses dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() conversion is unavailable.",
+      "Observed-score reliability is distinct from latent MFRM precision. Component admissibility and G/Phi/SEM availability remain separate. Paired plan-difference intervals require two crossed facets and explicit normal random effects; no general solver or nested intervals. Use dedicated tables and RDS saving, not mfrm_results(); difference-interval plots have no as_ggplot() conversion."),
+    stringsAsFactors = FALSE
+  )
+
   out <- rbind(
     public_rows, calibration_rows, entry_rows, viewer_rows, binary_rows, out, linking_rows,
-    advanced_rows, gpcm_rows, migration_entry_rows, user_pathway_rows
+    advanced_rows, gpcm_rows, migration_entry_rows, user_pathway_rows, model_rows, workflow_rows
   )
   out$Lifecycle <- "stable"
   out$Lifecycle[out$OutputFamily %in% "compatibility" | out$Scope %in% c("compatibility", "facets", "conquest")] <- "compatibility"
@@ -1149,6 +1201,11 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     "Compatibility rows are presentation or migration contracts, not numerical equivalence claims unless external outputs are explicitly compared."
 
   out$RecommendedEntry <- out$Scope %in% c("public", "calibration", "entry", "viewer", "binary")
+  dedicated <- out$Scope %in% c("features", "imputation", "gtheory")
+  out$DecisionBoundary[dedicated | out$Scope == "models"] <- out$Notes[dedicated | out$Scope == "models"]
+  out$ObjectRole[dedicated] <- "dedicated analysis and saved-output workflow"
+  out$Lifecycle[dedicated] <- "advanced"
+  out$Lifecycle[out$Scope == "models" & out$MainFunction != "fit_mfrm()"] <- "advanced"
   out <- out[, c(
     "Scope", "Question", "OutputFamily", "Lifecycle", "UserLevel",
     "APILayer", "ObjectRole", "DecisionBoundary", "RecommendedEntry",
@@ -1171,7 +1228,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     return(out[keep, , drop = FALSE])
   }
   if (identical(scope, "gpcm")) {
-    keep <- out$GPCMStatus != "supported"
+    keep <- !out$GPCMStatus %in% c("supported", "not_applicable")
     return(out[keep, , drop = FALSE])
   }
   if (identical(scope, "response_time")) {

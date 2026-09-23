@@ -50,9 +50,27 @@ the default; the returned \code{ggplot} can be restyled or composed downstream.
 Dedicated conversions are provided for Wright maps, theta-to-expected-score
 pathways, fit-statistic-to-measure pathways, category characteristic curves,
 bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
-score review plots, and multivariate D-study comparisons. D-study conversions
+score review plots, testlet calibration, shared-rater severity and bootstrap
+intervals, conditional Person scores, and
+multivariate D-study comparisons. Matched ordinary/extended facet comparisons
+preserve centered effects, paired/difference views, excluded rows, display
+controls and alternative text; see \code{\link[=plot.mfrm_extended_comparison]{plot.mfrm_extended_comparison()}}.
+Threshold-sensitivity tile and curve payloads also preserve their selected
+view, display controls and text alternatives; see
+\code{\link[=plot.mfrm_screening_sensitivity]{plot.mfrm_screening_sensitivity()}}.
+Posterior predictive residual displays preserve their descriptive meaning
+and lack of reference cutoffs; see \code{\link[=plot.mfrm_response_diagnostics]{plot.mfrm_response_diagnostics()}}.
+Testlet conversions retain unavailable
+rows, prior-only symbols and the conditional-interval note; they do not
+estimate diagnostics or add calibration uncertainty. Extended-model interval,
+precision and empirical-distribution views preserve display settings, data
+exclusions and text alternatives; see \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}. Bootstrap
+conversion retains infinite endpoints as arrows and ordinary intervals as
+a dashed comparison. D-study conversions
 preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
 estimates. They do not refit the model or add confidence intervals.
+For multivariate D-study plots, an explicit \code{component = "series"} keeps
+this dedicated conversion; use \code{\link[=plot_data]{plot_data()}} for other tables.
 Difference-interval plots from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} use their
 base \code{plot()} method or \code{\link[=plot_data]{plot_data()}}; automatic conversion is not supported.
 Automatic conversion of exploratory clustering plots is not supported.
@@ -61,6 +79,10 @@ and imputation co-membership heatmaps, or \code{\link[=plot_data]{plot_data()}} 
 For main-effects \code{mfrm_d_study} results, use the base \code{plot()} method or
 \code{\link[=plot_data]{plot_data()}} for custom graphics; automatic conversion is refused because
 generic column selection does not preserve those design comparisons.
+Selecting \code{component} does not enable unsupported conversions: it cannot
+preserve PCA axes, clustering membership, MI intervals or D-study differences
+through generic column selection. Use \code{\link[=plot_data]{plot_data()}} to extract the table
+and specify the axes, intervals and grouping explicitly in custom graphics.
 Other draw-free payloads use a conservative tabular
 fallback; inspect \code{\link[=plot_data_components]{plot_data_components()}} when automatic inference is not
 appropriate.
