@@ -19,7 +19,6 @@ establish its statistical significance or the model’s suitability for
 another population.
 
 ``` r
-
 library(mfrmr)
 
 mfrm_calibration_capabilities()[, c(
@@ -48,7 +47,6 @@ Persons to keep vignette runtime modest; a substantive analysis should
 use its planned sample and design rather than copying that count.
 
 ``` r
-
 synthetic <- load_mfrmr_data("example_core")
 person_ids <- unique(as.character(synthetic$Person))
 training_ids <- person_ids[seq_len(18L)]
@@ -145,7 +143,6 @@ validation object, and training data before loading the artifact, so
 none can influence the score.
 
 ``` r
-
 new_rows <- synthetic[
   as.character(synthetic$Person) %in% person_ids[19:20],
   c("Person", "Rater", "Criterion", "Score"),
@@ -212,7 +209,6 @@ origin.](mfrmr-portable-calibration_files/figure-html/score-from-artifact-1.png)
 
 ``` r
 
-
 unlink(artifact_file)
 ```
 
@@ -232,7 +228,6 @@ Two focused follow-up views use the same score object without consulting
 the source fit:
 
 ``` r
-
 # Valid response rows versus posterior SD.
 plot(scores, type = "precision", preset = "publication")
 
@@ -255,7 +250,6 @@ scaling their spacing to its local width. It holds the calibration
 parameters and prior fixed.
 
 ``` r
-
 summary(scores)$quadrature_overview
 #>   FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
 #> 1         31            31       2           0             0.002445619
@@ -368,7 +362,6 @@ populations.
 For a separate scoring script, the essential code is:
 
 ``` r
-
 library(mfrmr)
 
 calibration <- load_mfrm_calibration("reviewed-calibration.rds")

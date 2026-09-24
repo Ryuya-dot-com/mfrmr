@@ -9,6 +9,10 @@ design planning.
 
 ### Getting started
 
+- Linking, reporting, workflow and visual-diagnostic tutorial figures
+  now have descriptive alternative text, including both response-time
+  views. Source archives include executed output and figures for all
+  fifteen tutorials.
 - Extended-model help examples now reuse packaged synthetic fits,
   scores, diagnostics and bootstrap results. Summaries, figures and
   interval-level changes run immediately; expensive recomputation calls

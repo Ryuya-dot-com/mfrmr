@@ -51,27 +51,25 @@ before reusing saved diagnostics, scores or reports.
 Install the published CRAN release with:
 
 ``` r
-
 install.packages("mfrmr")
 ```
 
 To install the expanded 0.2.4 candidate from its fixed GitHub tag:
 
 ``` r
-
 if (!requireNamespace("remotes", quietly = TRUE)) {
   install.packages("remotes")
 }
 
 remotes::install_github(
   "Ryuya-dot-com/mfrmr",
-  ref = "v0.2.4-rc.4",
+  ref = "v0.2.4-rc.5",
   build_vignettes = TRUE
 )
 ```
 
 The [release
-page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.4)
+page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5)
 provides the source archive with prebuilt tutorials, its checksum and
 the applicable check results. Use `ref = "main"` only when you want the
 latest development source; it may change after this candidate. A local
@@ -95,7 +93,6 @@ rating-scale model with shared category thresholds (the transitions
 between adjacent scores).
 
 ``` r
-
 # Load the package
 library(mfrmr)
 
@@ -159,7 +156,6 @@ show differences among levels.
 ### Inspect individual estimates
 
 ``` r
-
 estimates <- as.data.frame(fit)
 head(subset(estimates, Facet == "Person")) # First six persons
 subset(estimates, Facet == "Rater")       # All raters
@@ -178,7 +174,6 @@ not necessarily mean that fitting failed. The default summary does not
 compute diagnostics.
 
 ``` r
-
 diagnostics <- diagnose_mfrm(fit)
 diagnostic_summary <- summary(diagnostics)
 diagnostic_summary$decision
@@ -297,7 +292,6 @@ estimates and their uncertainty, followed by the detailed screening
 results:
 
 ``` r
-
 # Review severity on the fitted scale without heuristic guide bands
 severity <- plot_rater_severity_profile(
   fit, diagnostics = diagnostics, facet = "Rater",
@@ -359,7 +353,6 @@ a rater difference, specify named contrast coefficients so the
 calculation includes covariance between rater estimates:
 
 ``` r
-
 rater_levels <- as.character(subset(as.data.frame(fit), Facet == "Rater")$Level)
 contrast <- matrix(0, nrow = 1, ncol = length(rater_levels),
   dimnames = list("R01 minus R02", rater_levels))
@@ -422,7 +415,6 @@ and bootstrap refits retain the same estimated or known population
 specification.
 
 ``` r
-
 random_fit <- fit_mfrm_random_rater(
   load_mfrmr_data("example_core"), "Person", "Rater", "Score",
   facets = "Criterion", score_levels = 1:4, quad_points = 121
@@ -509,7 +501,6 @@ each person. Reusing that rater label for another person creates an
 independent local effect.
 
 ``` r
-
 ratings <- load_mfrmr_data("example_core")
 testlet_fit <- fit_mfrm_testlet(
   ratings, "Person", "Score", "Rater", c("Rater", "Criterion"),
@@ -576,7 +567,6 @@ fit indices. Shared-rater computation uses a joint Laplace
 approximation; its numerical checks do not certify accuracy.
 
 ``` r
-
 residuals <- mfrm_response_diagnostics(testlet_fit, group_by = "Rater")
 plot(residuals, style = "paired")
 as_ggplot(residuals, style = "scatter", show_title = FALSE)
@@ -587,7 +577,6 @@ For a comparison on the same definition, compute the ordinary RSM’s
 posterior predictions once and attach both saved results:
 
 ``` r
-
 ordinary_residuals <- mfrm_response_diagnostics(ordinary_fit, group_by = "Rater")
 comparison <- compare_mfrm(ordinary_fit, testlet_fit,
   response_diagnostics = list(ordinary_residuals, residuals))
@@ -654,7 +643,6 @@ Export the rating sheet as **CSV UTF-8**, with column names in the first
 row. For the four-column layout above, run:
 
 ``` r
-
 library(mfrmr)
 
 # Select your CSV file in the file dialog
@@ -692,7 +680,6 @@ above.
 ### Check the data before fitting
 
 ``` r
-
 data_review <- describe_mfrm_data(
   data = ratings,
   person = "Person",
@@ -730,7 +717,6 @@ After resolving the data-review findings, use the same columns and score
 scale:
 
 ``` r
-
 csv_fit <- fit_mfrm(
   data = ratings,
   person = "Person",
@@ -818,7 +804,6 @@ three omissions per group leave 141 observed rows in Group A and 141 in
 Group B:
 
 ``` r
-
 library(mfrmr)
 
 dat <- load_mfrmr_data("example_operational")
@@ -842,7 +827,6 @@ Before fitting, state the complete rubric support and inspect retained,
 missing, and zero-count categories:
 
 ``` r
-
 data_review <- describe_mfrm_data(
   data = dat,
   person = "Person",
@@ -885,7 +869,6 @@ the reported score map before interpreting steps.
 For a new analysis, start with marginal maximum likelihood:
 
 ``` r
-
 fit <- fit_mfrm(
   data = dat,
   person = "Person",
@@ -919,7 +902,6 @@ requested grids; `summary(q_review)` only summarizes the returned
 review:
 
 ``` r
-
 q_review <- mml_quadrature_sensitivity(
   fit,
   data = dat,
@@ -955,7 +937,6 @@ measurement rationale, not from a single fit statistic.
 The default summary is deliberately lightweight:
 
 ``` r
-
 fit_summary <- summary(
   fit,
   profile = "fit",
@@ -981,7 +962,6 @@ themselves validate standard errors, confidence intervals or
 reliability. Review precision with matching diagnostics:
 
 ``` r
-
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 summary(fit, diagnostics = diag)$decision
 # Equivalent precision-aware decision:
@@ -1025,7 +1005,6 @@ below before inferential reuse.
 Use the `facets` profile for the main review:
 
 ``` r
-
 facets_summary <- summary(
   fit,
   profile = "facets",
@@ -1076,7 +1055,6 @@ The native renderer is the primary targeting figure because it keeps
 uncertainty visible:
 
 ``` r
-
 plot(
   res,
   type = "wright",
@@ -1132,7 +1110,6 @@ center or being mistaken for a complete visible interval.
 Use study-specific rubric labels rather than anonymous category numbers:
 
 ``` r
-
 rubric_labels <- c(
   "1" = "Beginning",
   "2" = "Developing",
@@ -1243,7 +1220,6 @@ The fit pathway uses Infit on the horizontal axis and measure on the
 vertical axis:
 
 ``` r
-
 plot(
   res,
   type = "fit_pathway",
@@ -1291,7 +1267,6 @@ reflect person mix and assignment; they do not by themselves establish
 bias.
 
 ``` r
-
 p_fair <- plot_fair_average(
   fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
   plot_type = "measure", show_ci = TRUE, preset = "monochrome",
@@ -1328,7 +1303,6 @@ observed-minus-fair gap.
 Start with the brief result summary:
 
 ``` r
-
 results_summary <- summary(res, view = "brief")
 results_summary$overview
 results_summary$triage
@@ -1339,7 +1313,6 @@ results_summary$plot_map
 Build a report-oriented object from the same fitted results:
 
 ``` r
-
 report <- mfrm_report(
   res,
   style = "qc"
@@ -1357,7 +1330,6 @@ diagnostic thresholds into a validity decision.
 Export a reader-oriented, controlled analysis archive:
 
 ``` r
-
 exported <- export_mfrm_results(
   res,
   output_dir = "mfrmr-results",
@@ -1469,7 +1441,6 @@ runs ConQuest separately, and mfrmr then normalizes the requested
 exports.
 
 ``` r
-
 # fit_lr must satisfy the documented overlap conditions.
 bundle <- build_conquest_overlap_bundle(
   fit = fit_lr,
@@ -1548,7 +1519,6 @@ groups those profiles using Gower distances and PAM; install the
 optional `cluster` package to use it.
 
 ``` r
-
 features <- mfrm_features(rater_attributes, id = "Rater",
                          features = c("ExperienceYears", "Specialty"))
 summary(features)
@@ -1584,7 +1554,6 @@ For a hierarchy, fit a separate Gower-based analysis using average
 linkage (default) or complete linkage:
 
 ``` r
-
 hierarchy <- mfrm_cluster_hierarchical(features, k = 3, linkage = "average")
 plot(hierarchy)
 summary(mfrm_cluster_compare(list(PAM = groups, Average = hierarchy)))
@@ -1607,7 +1576,6 @@ missingness and IDs. A fitted PCA can be passed directly to k-means
 without whitening or rescaling its retained scores:
 
 ``` r
-
 numeric_features <- mfrm_features(rater_attributes, "Rater",
   c("ExperienceYears", "AnnualRatings", "WorkshopHours"))
 pca <- mfrm_pca(numeric_features, components = 2)
@@ -1653,7 +1621,6 @@ named results to
 The comparison reuses these results without refitting:
 
 ``` r
-
 alternatives <- list(
   TwoGroups = mfrm_cluster(features, k = 2),
   ThreeGroups = groups,
@@ -1708,7 +1675,6 @@ The following outline assumes that `ratings`, `completed`, `impute_ids`
 and `model` have been constructed as in that tutorial:
 
 ``` r
-
 review <- mfrm_response_imputations(
   ratings, completed, person = "Person", facets = c("Rater", "Criterion"),
   score = "Score", event_id = "Event", impute = impute_ids, categories = 1:4,
@@ -1795,7 +1761,6 @@ containing `Person`, `Assessor`, `Session`, `Content`, and
 `Organization`:
 
 ``` r
-
 g_repeat <- mfrm_multivariate_gstudy(repeat_ratings,
   scores = c("Content", "Organization"),
   facets = c(Rater = "Assessor", Occasion = "Session"))
@@ -1830,7 +1795,6 @@ The following fictional continuous scores illustrate the arrangement.
 They are not ordinal MFRM estimates or evidence about a real assessment.
 
 ``` r
-
 set.seed(923)
 fixed_tasks <- expand.grid(Person = paste0("P", 1:60), Rater = paste0("R", 1:8),
                            stringsAsFactors = FALSE)
@@ -1872,7 +1836,6 @@ three separate G coefficients or divide their errors by three again. A
 direct weighted-score analysis gives the same composite result:
 
 ``` r
-
 fixed_tasks$WeightedScore <- drop(as.matrix(fixed_tasks[task_names]) %*% w)
 g_direct <- mfrm_multivariate_gstudy(fixed_tasks, "WeightedScore", task = NULL)
 d_direct <- mfrm_multivariate_d_study(g_direct, rater_plans)
@@ -1915,7 +1878,6 @@ With `nested_ratings` containing one row per observed Person/Task/Rater
 and both score columns:
 
 ``` r
-
 g_nested <- mfrm_multivariate_gstudy(nested_ratings,
   scores = c("Content", "Organization"), nesting = c(Rater = "Task"))
 g_nested$design$child_counts # Raters within each observed task.
@@ -1954,7 +1916,6 @@ mGENOVA*, Table 12: ten persons, six common items (named `Task` here),
 and scores V and W.
 
 ``` r
-
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
 g_task <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
 d_task <- mfrm_multivariate_d_study(g_task,
@@ -1992,7 +1953,6 @@ With `ratings` containing `Person`, `Rater`, `Task`, `Content`, and
 `Organization` columns:
 
 ``` r
-
 g <- mfrm_multivariate_gstudy(ratings, scores = c("Content", "Organization"))
 g$component_diagnostics
 g$components$Person
@@ -2025,7 +1985,6 @@ To compare feasible plans with twelve ratings per person, reuse the same
 G-study and score weights:
 
 ``` r
-
 plans <- data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))
 d_plans <- mfrm_multivariate_d_study(g, plans,
   weights = c(Content = 0.6, Organization = 0.4))
@@ -2052,7 +2011,6 @@ are a defensible model for the persons and both facets; the function
 does not test that assumption:
 
 ``` r
-
 comparison <- mfrm_multivariate_d_compare(d_plans, reference = 1,
   assumption = "normal")
 summary(comparison) # Every plan minus row 1: two raters and six tasks.
@@ -2080,7 +2038,6 @@ the difference between Content and Organization under the same planned
 assessment designs:
 
 ``` r
-
 weight_choices <- cbind(
   Equal = c(Content = 0.5, Organization = 0.5),
   ContentFocus = c(Content = 0.8, Organization = 0.2),
@@ -2136,7 +2093,6 @@ components across the sample ([Rao,
 selection model or covariate-dependent means.
 
 ``` r
-
 # Thin the example to illustrate an incomplete assignment roster.
 sparse <- tasks[(tasks$Person + tasks$Task) %% 3 != 0, ]
 sparse$V[1] <- NA_real_ # Additionally, one assigned score was not recorded.
@@ -2354,7 +2310,6 @@ score coding. The portable calibration vignette below supplies a
 complete example defining these objects.
 
 ``` r
-
 q_review <- mml_quadrature_sensitivity(
   fit, training_data, quad_points = c(31, 61)
 )
@@ -2435,7 +2390,6 @@ For bounded `GPCM`, inspect the capability table before choosing a
 downstream helper:
 
 ``` r
-
 gpcm_capability_matrix()
 vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
@@ -2541,7 +2495,6 @@ matrices manually. After fitting the same data as `fit_pcm` and
 `fit_gpcm` (see the GPCM scope vignette), use:
 
 ``` r
-
 choice <- build_model_choice_review(PCM = fit_pcm, GPCM = fit_gpcm)
 choice$model_roles[, c(
   "Model", "StepCoordinates", "FreeStepParameters",
@@ -2576,7 +2529,6 @@ map, and covariance information have been matched.
 For strict MML diagnostics, keep the two evidence bases distinct:
 
 ``` r
-
 diag_both <- diagnose_mfrm(
   fit,
   residual_pca = "none",
@@ -2681,7 +2633,6 @@ and
 Use the package citation supplied with the installed version:
 
 ``` r
-
 citation("mfrmr")
 ```
 

@@ -16,7 +16,6 @@ correcting biased estimates. The example uses fictional ratings.
 ## Fit the model and identify the comparison
 
 ``` r
-
 library(mfrmr)
 ratings <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
@@ -49,7 +48,6 @@ Looking for overlap between their separate intervals does not calculate
 an interval for that difference.
 
 ``` r
-
 contrast <- matrix(c(1, -1, 0, 0), nrow = 1,
   dimnames = list("R01 minus R02", c("R01", "R02", "R03", "R04")))
 difference <- mfrm_facet_intervals(fit, "Rater", contrasts = contrast,
@@ -74,7 +72,6 @@ protection for a set of comparisons. Choosing whichever method gives a
 preferred conclusion is not a valid analysis strategy.
 
 ``` r
-
 plot(difference)
 ```
 
@@ -105,7 +102,6 @@ demonstrates the syntax: it is not evidence that the example contains
 actual schools.
 
 ``` r
-
 persons <- sort(unique(ratings$Person))
 schools <- data.frame(Person = persons,
   Cluster = rep(sprintf("School%02d", 1:16), each = 3))
@@ -150,7 +146,6 @@ and no inferential interval; its uncertainty is outside this
 calculation.
 
 ``` r
-
 two_groups <- schools
 two_groups$Cluster <- rep(c("A", "B"), each = 24)
 unavailable <- mfrm_facet_intervals(
@@ -240,7 +235,6 @@ assignment and nonresponse were not evaluated by this simulation.
 ## Save the analysis and use the plotted data
 
 ``` r
-
 saved <- tempfile(fileext = ".rds")
 saveRDS(difference, saved)
 restored <- readRDS(saved)

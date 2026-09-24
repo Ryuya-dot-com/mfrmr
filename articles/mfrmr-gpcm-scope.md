@@ -153,7 +153,6 @@ The package provides three complementary comparison layers:
     boundaries, and the weighting review.
 
 ``` r
-
 fit_pcm <- fit_mfrm(
   dat, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", model = "PCM",
@@ -318,7 +317,6 @@ and `RecommendedRoute` for the route to use next. The default print is
 deliberately compact; subset by status to inspect a focused set of rows.
 
 ``` r
-
 library(mfrmr)
 gpcm_capability_matrix("supported")[, c("Area", "Status")]
 #> mfrmr bounded-GPCM workflow availability
@@ -336,7 +334,6 @@ gpcm_capability_matrix("supported")[, c("Area", "Status")]
 ```
 
 ``` r
-
 gpcm_capability_matrix("supported_with_caveat")[, c("Area", "Status")]
 #> mfrmr bounded-GPCM workflow availability
 #> 
@@ -361,7 +358,6 @@ gpcm_capability_matrix("supported_with_caveat")[, c("Area", "Status")]
 ```
 
 ``` r
-
 gpcm_capability_matrix("blocked")[, c("Area", "Status", "RecommendedRoute")]
 #> mfrmr bounded-GPCM workflow availability
 #> 
@@ -377,7 +373,6 @@ gpcm_capability_matrix("blocked")[, c("Area", "Status", "RecommendedRoute")]
 ```
 
 ``` r
-
 gpcm_capability_matrix("deferred")[, c("Area", "Status", "Boundary", "RecommendedRoute")]
 #> mfrmr bounded-GPCM workflow availability
 #> 
@@ -769,7 +764,6 @@ rerun with the package default or a higher quadrature setting and a
 larger recovery design.
 
 ``` r
-
 library(mfrmr)
 toy <- load_mfrmr_data("example_core")
 

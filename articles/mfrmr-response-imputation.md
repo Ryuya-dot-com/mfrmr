@@ -33,7 +33,6 @@ solely to check predictions; they are never supplied to the imputation
 model.
 
 ``` r
-
 library(mfrmr)
 example <- readRDS(system.file("examples", "response-imputation.rds", package = "mfrmr"))
 ratings <- example$ratings
@@ -108,7 +107,6 @@ E-BFMI of at least 0.3. It saves all chains before reviewing these
 diagnostics and stops if they fail.
 
 ``` r
-
 diagnostics <- model$diagnostics
 c(MaxRhat = max(diagnostics$rhat),
   MinBulkESS = min(diagnostics$ess_bulk),
@@ -149,7 +147,6 @@ toolchain. The script is specific to this example, not a general
 imputation API.
 
 ``` r
-
 source(system.file("examples", "response-imputation.R", package = "mfrmr"))
 example <- response_imputation_example("mi-example-output")
 ```
@@ -169,7 +166,6 @@ a successful import do not establish compatibility with the analysis
 model.
 
 ``` r
-
 completed <- lapply(seq_len(m), function(i) {
   result <- ratings
   result$Score[missing_assigned] <- example$scores[, i]
@@ -212,7 +208,6 @@ prediction; dependence between rows is preserved in the joint
 completions.
 
 ``` r
-
 probabilities <- example$probability_mean
 n <- nrow(probabilities)
 image(1:4, seq_len(n), t(probabilities[n:1, , drop = FALSE]),
@@ -236,7 +231,6 @@ predictions with held-out values. The Brier score compares probabilities
 with the observed category; smaller is better.
 
 ``` r
-
 prediction_check <- data.frame(
   Event = impute_ids, HeldOutScore = held_out_scores,
   PredictedMean = drop(probabilities %*% (1:4)),
@@ -272,7 +266,6 @@ fixed-standard-normal RSM/PCM MML analysis. PCM requires
 but are treated as known: their uncertainty is not included.
 
 ``` r
-
 analyses <- fit_mfrm_imputed(review, model = "RSM", quad_points = 61)
 summary(analyses)[, c("Imputation", "Status", "Error", "Warnings")]
 #>    Imputation   Status Error Warnings
@@ -337,7 +330,6 @@ estimates contributes to their difference’s variance in every completed
 analysis.
 
 ``` r
-
 levels <- analyses$fits[[1]]$config$facet_specs$Rater$levels
 contrast <- matrix(0, 1, length(levels),
                    dimnames = list("R04 minus R01", levels))
@@ -351,7 +343,6 @@ summary(pooled)
 ```
 
 ``` r
-
 plot(pooled)
 ```
 
@@ -407,7 +398,6 @@ retains an input-review state, which the interval helper will ask you to
 resolve.
 
 ``` r
-
 observed_ratings <- subset(ratings, Assigned & !is.na(Score))
 observed_fit <- fit_mfrm(observed_ratings, "Person", c("Rater", "Criterion"),
   "Score", model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
@@ -519,7 +509,6 @@ and pool each assumption separately, rather than treating the
 assumptions as additional imputations of one model.
 
 ``` r
-
 lower_scores <- lapply(completed, function(d) {
   d$Score[missing_assigned] <- pmax(1L, d$Score[missing_assigned] - 1L)
   d
@@ -564,7 +553,6 @@ these two assumptions; it is not a sampling SE for that change.
 ## Save enough to review and reproduce the result
 
 ``` r
-
 saveRDS(pooled, "rater-imputation-result.rds")
 saved <- readRDS("rater-imputation-result.rds")
 summary(saved)

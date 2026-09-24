@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-workflow.Rmd</code></div>
     </div>
 
@@ -136,7 +136,7 @@ transitions between adjacent scores).</p>
 <span></span>
 <span><span class="co"># Plot the results (Wright map)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/quick-start-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/quick-start-1.png" class="r-plt" alt="Wright map of fitted person abilities, rater severities, criterion difficulties and shared category steps for the synthetic ratings. All locations use the same logit scale." width="672"></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Save the summary, then display its tables</span></span>
@@ -152,8 +152,8 @@ transitions between adjacent scores).</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
 <span><span class="co">#&gt;   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3     0   <span style="color: #949494;"> </span>         0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater          6    -<span style="color: #BB0000;">4.64</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3            0      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater          6            0      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02</span></span>
 <span></span>
 <span><span class="co"># Check the interpretation status and recommended next step</span></span>
 <span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span>
@@ -497,7 +497,7 @@ decision does not establish the validity of the assessment or answer the
 study’s substantive question.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">csv_fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/csv-results-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/csv-results-1.png" class="r-plt" alt="Wright map for the ratings read from the example CSV. Compare person, facet and step locations on the fitted scale; the display does not establish that model assumptions hold." width="672"></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">csv_estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">csv_fit</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">csv_estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Person"</span><span class="op">)</span><span class="op">)</span></span>
@@ -625,7 +625,7 @@ scores, reshape the criterion columns into rating rows:</p>
 <span>  Content <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span>
 <span>  Style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">ratings_long</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
+<span><span class="va">ratings_long</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tidyr/man/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
 <span>  <span class="va">wide</span>,</span>
 <span>  cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Style"</span><span class="op">)</span>,</span>
 <span>  names_to <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
@@ -780,7 +780,7 @@ faster substitute for MML.</p>
 <span></span>
 <span><span class="co"># View the fitted locations with their uncertainty</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/precision-and-fit-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/precision-and-fit-1.png" class="r-plt" alt="Fitted person, facet and step locations with the requested uncertainty display. Interpret precision using the accompanying table and its stated interval basis." width="672"></p>
 <p>The fit-only summary reports <code>FormalInference = "No"</code>
 until precision evidence is supplied. Read the diagnostic decision’s
 <code>Why</code> and <code>NextAction</code> together with the precision
@@ -819,7 +819,7 @@ rubric:</p>
 <span><span class="co">#&gt; 2   1.3864320             2             3            FALSE                </span></span>
 <span><span class="co">#&gt; 3   0.8960916             3             4            FALSE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scale_toy</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/category-review-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/category-review-1.png" class="r-plt" alt="Category-use and threshold summaries for the fitted rubric. Sparse categories and transition ordering should be reviewed together with the rating design." width="672"></p>
 <p>The bars show observed category counts; the line shows fitted
 expected counts. Look for rarely used categories, changes in average
 person measure across categories, and threshold order. Explain the
@@ -856,7 +856,7 @@ cases:</p>
 <span><span class="co">#&gt; 9    P024   R03      Content        1 2.656778   -1.931313</span></span>
 <span><span class="co">#&gt; 10   P018   R02     Language        4 2.340191    1.961204</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">unexpected_toy</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/diagnostics-reporting-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/diagnostics-reporting-1.png" class="r-plt" alt="Unusual rating observations selected by the stated residual and probability thresholds. Flags support review of the underlying records, not automatic removal." width="672"></p>
 <p>Read the rule in <code>$summary</code> with the residuals. The
 displayed cases are a selected preview; <code>top_n</code> limits the
 table, while the summary counts all flagged ratings. Here this broad
@@ -878,7 +878,7 @@ reporting:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> strict_pairwise_local_dependence computed      screening_only             </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> posterior_predictive_follow_up   not_available screening_only</span></span>
 <span><span class="fu"><a href="../reference/plot_marginal_fit.html">plot_marginal_fit</a></span><span class="op">(</span><span class="va">fit_toy</span>, diagnostics <span class="op">=</span> <span class="va">diag_toy</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-workflow_files/figure-html/diagnostic-bases-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-workflow_files/figure-html/diagnostic-bases-1.png" class="r-plt" alt="Marginal fit display based on posterior-averaged response probabilities. Its probability basis differs from conditional residual diagnostics." width="672"></p>
 <p>Follow a pairwise warning with <code><a href="../reference/plot_marginal_pairwise.html">plot_marginal_pairwise()</a></code>.
 Add residual PCA only when residual structure is relevant to the
 question, using

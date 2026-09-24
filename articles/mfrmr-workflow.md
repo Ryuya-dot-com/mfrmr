@@ -28,7 +28,6 @@ rating-scale model with shared category thresholds (the transitions
 between adjacent scores).
 
 ``` r
-
 # Load the package
 library(mfrmr)
 
@@ -57,10 +56,12 @@ fit <- fit_mfrm(
 plot(fit)
 ```
 
-![](mfrmr-workflow_files/figure-html/quick-start-1.png)
+![Wright map of fitted person abilities, rater severities, criterion
+difficulties and shared category steps for the synthetic ratings. All
+locations use the same logit
+scale.](mfrmr-workflow_files/figure-html/quick-start-1.png)
 
 ``` r
-
 
 # Save the summary, then display its tables
 results <- summary(fit)
@@ -75,8 +76,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
-#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02
+#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
+#> 2 Rater          6            0      0.399      -0.606       0.412 1.02
 
 # Check the interpretation status and recommended next step
 results$decision
@@ -109,7 +110,6 @@ show differences among levels.
 ### Inspect individual estimates
 
 ``` r
-
 estimates <- as.data.frame(fit)
 head(subset(estimates, Facet == "Person")) # First six persons
 #>    Facet Level    Estimate Extreme
@@ -146,7 +146,6 @@ not necessarily mean that fitting failed. The default summary does not
 compute diagnostics.
 
 ``` r
-
 diagnostics <- diagnose_mfrm(fit)
 diagnostic_summary <- summary(diagnostics)
 diagnostic_summary$decision
@@ -194,7 +193,6 @@ You can practice the full workflow without supplying a file. This block
 writes the packaged synthetic ratings to a new temporary CSV:
 
 ``` r
-
 library(mfrmr)
 csv_path <- tempfile(fileext = ".csv")
 write.csv(load_mfrmr_data("example_operational"), csv_path,
@@ -206,7 +204,6 @@ column names in the first row. Skip the practice block above and select
 your file instead:
 
 ``` r
-
 library(mfrmr)
 csv_path <- file.choose()
 ```
@@ -218,7 +215,6 @@ path such as `"data/ratings.csv"`, relative to the folder shown by
 same import and analysis code:
 
 ``` r
-
 ratings <- read.csv(
   csv_path,
   colClasses = "character",
@@ -280,7 +276,6 @@ rubric. Keep the same values in the data review and the fit.
 including categories with no observations.
 
 ``` r
-
 data_review <- describe_mfrm_data(
   data = ratings,
   person = "Person",
@@ -363,7 +358,6 @@ the choice should reflect the scoring design. Diagnostics then supply
 evidence for the interpretation decision.
 
 ``` r
-
 csv_fit <- fit_mfrm(
   data = ratings,
   person = "Person",
@@ -393,14 +387,15 @@ it. Even a supported precision decision does not establish the validity
 of the assessment or answer the study’s substantive question.
 
 ``` r
-
 plot(csv_fit)
 ```
 
-![](mfrmr-workflow_files/figure-html/csv-results-1.png)
+![Wright map for the ratings read from the example CSV. Compare person,
+facet and step locations on the fitted scale; the display does not
+establish that model assumptions
+hold.](mfrmr-workflow_files/figure-html/csv-results-1.png)
 
 ``` r
-
 csv_estimates <- as.data.frame(csv_fit)
 head(subset(csv_estimates, Facet == "Person"))
 #>    Facet Level    Estimate Extreme
@@ -459,7 +454,6 @@ recode only that column before step 2. This preserves an ID such as
 `99`:
 
 ``` r
-
 ratings <- recode_missing_codes(
   ratings, columns = "Score", codes = c("99", ".")
 )
@@ -476,7 +470,6 @@ For a sheet with one row per person-rater pair and separate criterion
 scores, reshape the criterion columns into rating rows:
 
 ``` r
-
 wide <- data.frame(
   Person = c("001", "001"),
   Rater = c("R1", "R2"),
@@ -516,7 +509,6 @@ helper calls and review your own assignment roster if one exists.
 ### 1. Check the data and estimation record
 
 ``` r
-
 fit_toy <- fit
 diag_toy <- diagnostics
 
@@ -598,7 +590,6 @@ appropriate, not as a faster substitute for MML.
 ### 2. Read precision and model fit before interpreting differences
 
 ``` r
-
 diagnostic_summary_toy <- summary(diag_toy)
 diagnostic_summary_toy$decision
 #>               Interpretation FormalInference FitReadiness
@@ -643,7 +634,10 @@ precision_toy$checks
 plot(fit_toy, diagnostics = diag_toy, show_ci = TRUE)
 ```
 
-![](mfrmr-workflow_files/figure-html/precision-and-fit-1.png)
+![Fitted person, facet and step locations with the requested uncertainty
+display. Interpret precision using the accompanying table and its stated
+interval
+basis.](mfrmr-workflow_files/figure-html/precision-and-fit-1.png)
 
 The fit-only summary reports `FormalInference = "No"` until precision
 evidence is supplied. Read the diagnostic decision’s `Why` and
@@ -665,7 +659,6 @@ significance test.
 and the transitions between scores on the declared rubric:
 
 ``` r
-
 scale_toy <- rating_scale_table(fit_toy, diagnostics = diag_toy)
 scale_toy$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
 #>   Category Count AvgPersonMeasure     Infit    Outfit
@@ -685,7 +678,9 @@ scale_toy$threshold_table
 plot(scale_toy)
 ```
 
-![](mfrmr-workflow_files/figure-html/category-review-1.png)
+![Category-use and threshold summaries for the fitted rubric. Sparse
+categories and transition ordering should be reviewed together with the
+rating design.](mfrmr-workflow_files/figure-html/category-review-1.png)
 
 The bars show observed category counts; the line shows fitted expected
 counts. Look for rarely used categories, changes in average person
@@ -697,7 +692,6 @@ not an automatic instruction to merge categories.
 an explicit exploratory rule and shows up to ten cases:
 
 ``` r
-
 unexpected_toy <- unexpected_response_table(
   fit_toy,
   diagnostics = diag_toy,
@@ -727,7 +721,10 @@ unexpected_toy$table[, c("Person", "Rater", "Criterion", "Observed", "Expected",
 plot(unexpected_toy)
 ```
 
-![](mfrmr-workflow_files/figure-html/diagnostics-reporting-1.png)
+![Unusual rating observations selected by the stated residual and
+probability thresholds. Flags support review of the underlying records,
+not automatic
+removal.](mfrmr-workflow_files/figure-html/diagnostics-reporting-1.png)
 
 Read the rule in `$summary` with the residuals. The displayed cases are
 a selected preview; `top_n` limits the table, while the summary counts
@@ -742,7 +739,6 @@ latent-integrated marginal screening path. The latter includes category
 and pairwise agreement gaps. Keep their bases separate when reporting:
 
 ``` r
-
 diagnostic_summary_toy$diagnostic_basis[, c("DiagnosticPath", "Status", "ReportingUse")]
 #> # A tibble: 4 × 3
 #>   DiagnosticPath                   Status        ReportingUse               
@@ -754,7 +750,9 @@ diagnostic_summary_toy$diagnostic_basis[, c("DiagnosticPath", "Status", "Reporti
 plot_marginal_fit(fit_toy, diagnostics = diag_toy)
 ```
 
-![](mfrmr-workflow_files/figure-html/diagnostic-bases-1.png)
+![Marginal fit display based on posterior-averaged response
+probabilities. Its probability basis differs from conditional residual
+diagnostics.](mfrmr-workflow_files/figure-html/diagnostic-bases-1.png)
 
 Follow a pairwise warning with
 [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md).
@@ -772,7 +770,6 @@ category checks above, then view severity and its uncertainty alongside
 the screening results. Reuse the same fit and diagnostics:
 
 ``` r
-
 plot_rater_severity_profile(
   fit_toy, diagnostics = diag_toy, facet = "Rater", show_bands = FALSE
 )
@@ -784,7 +781,6 @@ fitted
 reference.](mfrmr-workflow_files/figure-html/rater-feedback-1.png)
 
 ``` r
-
 rater_review <- facet_quality_dashboard(
   fit_toy, diagnostics = diag_toy, facet = "Rater"
 )
@@ -803,10 +799,9 @@ knitr::kable(
 | R05   |  44 |    0.184 | 0.234 | 0.648 |  0.640 |
 | R06   |  38 |    0.412 | 0.249 | 0.820 |  0.798 |
 
-Rater estimates and fit {.table}
+Rater estimates and fit
 
 ``` r
-
 knitr::kable(
   rater_review$detail[, c("Level", "MissingMetrics", "SeverityFlag", "MisfitFlag")],
   row.names = FALSE, caption = "Availability and screening flags"
@@ -822,10 +817,9 @@ knitr::kable(
 | R05   |                | FALSE        | FALSE      |
 | R06   |                | FALSE        | FALSE      |
 
-Availability and screening flags {.table}
+Availability and screening flags
 
 ``` r
-
 rater_review$settings
 #>                                   Setting Value
 #> facet                               facet Rater
@@ -886,7 +880,6 @@ for that export route.
 ### 4. Assemble the evidence for a report
 
 ``` r
-
 res_toy <- mfrm_results(fit_toy, diagnostics = diag_toy, include = "publication")
 report_toy <- mfrm_report(res_toy, style = "apa")
 report_toy$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
@@ -950,7 +943,6 @@ interpretations, and a worked question-to-result explanation.
 ### 5. Display a table and save the analysis
 
 ``` r
-
 measurements_toy <- fit_measures_table(fit_toy, diagnostics = diag_toy)
 rater_table_toy <- subset(
   measurements_toy$table, Facet == "Rater",
@@ -977,7 +969,6 @@ sentence answering the study’s question instead of repeating every cell
 of the table.
 
 ``` r
-
 # A new temporary directory keeps this synthetic example repeatable
 export_dir <- tempfile("mfrmr-workflow-export-")
 export_toy <- export_mfrm_results(
@@ -1001,7 +992,7 @@ knitr::kable(export_preview, row.names = FALSE,
 | summary_fit_readiness_components | csv | mfrmr_results_summary_fit_readiness_components.csv |
 | summary_fit_readiness_parameters | csv | mfrmr_results_summary_fit_readiness_parameters.csv |
 
-First six exported files (filenames only) {.table}
+First six exported files (filenames only)
 
 This archive retains the collected results.
 `acknowledge_sensitive = TRUE` is used because the example contains
@@ -1057,7 +1048,6 @@ building this vignette. Display aliases replace source identifiers in
 the example’s tables; aliases do not make a rating archive anonymous.
 
 ``` r
-
 library(mfrmr)
 data("data.ratings1", package = "sirt")
 wide <- data.ratings1

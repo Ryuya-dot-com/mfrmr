@@ -83,7 +83,6 @@ available option is to refit using adaptive integration and check its
 order sensitivity too:
 
 ``` r
-
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
 fit_adaptive <- fit_mfrm(

@@ -45,7 +45,6 @@ here uses one common local variance; it does not estimate a separate
 inconsistency parameter for each rater.
 
 ``` r
-
 ratings <- load_mfrmr_data("example_core")
 head(ratings[c("Person", "Rater", "Criterion", "Score")], 8)
 #>   Person Rater Criterion Score
@@ -69,7 +68,6 @@ overlapping groups.
 ## Fit and check the calibration
 
 ``` r
-
 testlet_fit <- fit_mfrm_testlet(
   ratings, person = "Person", score = "Score", testlet = "Rater",
   facets = c("Rater", "Criterion"), score_levels = 1:4,
@@ -185,7 +183,6 @@ not demonstrate better accuracy when the true abilities are unknown.
 ## Review fixed-rater feedback
 
 ``` r
-
 subset(testlet_fit$calibration_table, Facet == "Rater")
 #>     Parameter Facet Level   Estimate         SE Upper Lower
 #> 1 Fixed facet Rater   R01 -0.1855659 0.08667868    NA    NA
@@ -243,7 +240,6 @@ method to supply an explicit rating table. For a shared-rater model,
 supplied abilities and returns response probabilities.
 
 ``` r
-
 first <- ratings[ratings$Person %in% unique(ratings$Person)[1:4], ]
 scores <- predict(testlet_fit, first)
 scores$table
@@ -266,7 +262,6 @@ variances, is held
 fixed.](mfrmr-testlets_files/figure-html/scoring-1.png)
 
 ``` r
-
 stopifnot(all(scores$table$Status == "available_conditional"))
 ```
 
@@ -363,7 +358,6 @@ analyzing the observed ratings is appropriate; it records omissions
 without imputing scores or correcting informative nonresponse.
 
 ``` r
-
 incomplete <- first
 last_person <- tail(unique(incomplete$Person), 1)
 incomplete$Score[incomplete$Person == last_person] <- NA_real_
@@ -392,7 +386,6 @@ from the fitted population; other points use their remaining observed
 ratings.](mfrmr-testlets_files/figure-html/missing-1.png)
 
 ``` r
-
 stopifnot(sum(review$table$Status == "prior_only") == 1)
 ```
 
@@ -425,7 +418,6 @@ that person’s complete set with the correct shared memberships. Do not
 duplicate the old rows when assembling it.
 
 ``` r
-
 path <- tempfile(fileext = ".rds")
 saveRDS(testlet_fit, path)
 restored <- readRDS(path)
@@ -462,7 +454,6 @@ The shared plot accessors work directly on the testlet results. They
 return the stored results without drawing or refitting:
 
 ``` r
-
 plot_data_components(scores)
 #>          PlotName         Component                Role ObjectType Rows Columns
 #> 1  testlet_scores             table        primary_data data.frame    4      10
@@ -548,7 +539,6 @@ change the model or recalculate an interval. The incomplete-data result
 makes those distinctions visible:
 
 ``` r
-
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   figure <- as_ggplot(review)
   print(figure + ggplot2::theme_minimal(base_size = 12))
@@ -592,7 +582,6 @@ finite scores. An RDS object preserves settings that a CSV table alone
 cannot:
 
 ``` r
-
 csv_path <- tempfile(fileext = ".csv")
 utils::write.csv(review$table, csv_path, row.names = FALSE, na = "NA")
 score_path <- tempfile(fileext = ".rds")
@@ -609,7 +598,6 @@ effects; it does not test whether the local variance is zero or select a
 preferred model.
 
 ``` r
-
 ordinary_fit <- fit_mfrm(
   ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
   model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
@@ -619,7 +607,6 @@ ordinary_fit <- fit_mfrm(
 ```
 
 ``` r
-
 model_comparison <- compare_mfrm(
   ordinary_fit, testlet_fit, labels = c("Ordinary RSM", "Testlet RSM")
 )
@@ -710,7 +697,6 @@ are not established; a lower value is not evidence that a rater should
 be removed.
 
 ``` r
-
 response_review <- mfrm_response_diagnostics(testlet_fit, group_by = "Rater")
 response_review$measures
 #>   Facet Level Selected Observed Missing Available     Infit    Outfit
@@ -759,7 +745,6 @@ plug-in indices returned by
 have a different definition and cannot replace this step.
 
 ``` r
-
 ordinary_response_review <- mfrm_response_diagnostics(ordinary_fit,
   group_by = "Rater")
 model_comparison <- compare_mfrm(ordinary_fit, testlet_fit,
@@ -796,7 +781,6 @@ these predictions reuse the observations being checked, and their mean
 squares have no established reference value of one.
 
 ``` r
-
 as_ggplot(model_comparison, metric = "probability", show_labels = FALSE,
   palette = "mono", show_title = FALSE, show_notes = FALSE)
 ```
@@ -833,7 +817,6 @@ observed responses. The ordinary model’s scoring retains its fitted
 normal mean and variance.
 
 ``` r
-
 source_scores <- score_mfrm_persons(testlet_fit, persons = scores$table$Person)
 ordinary_person_scores <- score_mfrm_persons(ordinary_fit,
   persons = source_scores$table$Person)
@@ -883,7 +866,6 @@ test between Persons. Prior-only and unavailable differences remain
 withheld.
 
 ``` r
-
 map_results <- mfrm_results(testlet_fit, scores = source_scores,
   response_diagnostics = response_review, comparison = model_comparison)
 plot(map_results, type = "wright", show_labels = TRUE)
@@ -912,7 +894,6 @@ is drawn. The separate calibration/rater plots retain their original
 uncertainty targets.
 
 ``` r
-
 as_ggplot(plot(map_results, type = "fit_pathway", facet = "Rater",
   palette = "mono", show_title = FALSE, draw = FALSE))
 ```
@@ -950,7 +931,6 @@ requested Person, including prior-only and unavailable rows with their
 reasons.
 
 ``` r
-
 res <- mfrm_results(testlet_fit, scores = source_scores, comparison = model_comparison,
                     diagnostics = response_review)
 res$tables$interval_basis

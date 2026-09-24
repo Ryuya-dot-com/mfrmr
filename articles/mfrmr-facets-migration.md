@@ -23,7 +23,6 @@ Before treating a legacy workflow as covered, inspect the public
 coverage boundary:
 
 ``` r
-
 facets_feature_coverage()
 facets_feature_coverage("not_implemented")
 ```
@@ -56,7 +55,6 @@ plumbing, use
 [`mfrmRFacets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)):
 
 ``` r
-
 library(mfrmr)
 data("mfrmr_example_operational", package = "mfrmr")
 
@@ -82,7 +80,6 @@ objects that a step-by-step pipeline produces, plus the iteration log,
 fair-average table, and rating-scale table:
 
 ``` r
-
 jml_status <- summary(run$fit, profile = "fit", detail = "brief")
 jml_status$overview[, c(
   "Model", "Method", "Converged", "InferenceReady",
@@ -968,7 +965,6 @@ The mapping below covers the most common FACETS specification keywords.
 translates to:
 
 ``` r
-
 fit_mfrm(
   data = examinee_long,
   person = "Examinee",
@@ -1003,7 +999,6 @@ A FACETS `D = 2, A =` block:
 becomes an `anchors` data frame:
 
 ``` r
-
 anchors <- data.frame(
   facet = "Rater",
   level = c("R1", "R2"),
@@ -1026,7 +1021,6 @@ For FACETS Table 14 bias output between Rater and Criterion, the closest
 mfrmr screening route is:
 
 ``` r
-
 diag <- diagnose_mfrm(fit)
 bias <- estimate_bias(fit, diag,
                       facet_a = "Rater", facet_b = "Criterion")
@@ -1043,7 +1037,6 @@ thresholds, first create the FACETS-organized summary and retain its
 result object:
 
 ``` r
-
 review <- summary(fit, profile = "facets", detail = "brief")
 review$decision
 res <- review$results
@@ -1067,7 +1060,6 @@ and horizontal, rubric-labelled category transitions, define one label
 for every retained original score:
 
 ``` r
-
 rubric_labels <- setNames(
   your_rubric_labels,
   fit$prep$score_map$OriginalScore
@@ -1087,7 +1079,6 @@ Infit on the horizontal axis and the measure on the vertical axis.
 Person rows remain opt-in:
 
 ``` r
-
 plot(res, type = "fit_pathway", fit_stat = "Infit",
      include_person = TRUE, top_n_person = 12,
      person_labels = "none", facet_labels = "flagged")
@@ -1105,7 +1096,6 @@ columns to explain how the same MnSq values were standardized. The
 direct review path is:
 
 ``` r
-
 diag <- diagnose_mfrm(fit, residual_pca = "none", fit_df_method = "both")
 fm <- fit_measures_table(fit, diagnostics = diag,
                          facet = "Rater", fit_df_method = "both")
@@ -1131,7 +1121,6 @@ functioning translate to the `group_anchors` argument and the
 follow-up:
 
 ``` r
-
 group_anchors <- data.frame(
   facet = "Criterion",
   level = "Content",
@@ -1157,7 +1146,6 @@ checks whether the package-generated report components satisfy the
 FACETS-style output contract encoded in the package:
 
 ``` r
-
 contract_review <- facets_output_contract_review(
   fit,
   diagnostics = diag,
@@ -1188,7 +1176,6 @@ run the fit review. This does not run FACETS; it consumes an exported or
 otherwise harmonized table.
 
 ``` r
-
 facets_fit <- read_facets_fit_table(
   "score.2.txt",
   facet_map = c("1" = "Person", "2" = "Rater", "3" = "Criterion")
@@ -1221,7 +1208,6 @@ For traceability or downstream tools that expect FACETS output files,
 writes a parallel set of fixed-width or CSV exports:
 
 ``` r
-
 files <- facets_output_file_bundle(
   fit,
   diagnostics = diag,

@@ -19,7 +19,6 @@ mirror the public plotting family shown here.
 ## Minimal setup
 
 ``` r
-
 library(mfrmr)
 
 toy <- load_mfrmr_data("example_operational")
@@ -68,11 +67,13 @@ Use the Wright map first when you want one shared logit view of persons,
 facet levels, and step thresholds.
 
 ``` r
-
 plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/wright-1.png)
+![Wright map of person abilities, facet levels and category steps on the
+fitted logit scale, with requested uncertainty intervals. Higher facet
+locations indicate stricter scoring or greater
+difficulty.](mfrmr-visual-diagnostics_files/figure-html/wright-1.png)
 
 Interpretation:
 
@@ -94,7 +95,6 @@ fitted points. Step thresholds form one vertical ladder and their labels
 include the fitted transition logits.
 
 ``` r
-
 plot(
   fit,
   type = "wright",
@@ -105,7 +105,10 @@ plot(
 )
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.png)
+![Text-style Wright display with rubric labels Beginning, Developing,
+Secure and Advanced. Locations share a fitted logit scale; labels
+describe ordered categories rather than equal observed-score
+intervals.](mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.png)
 
 This renderer uses one common logit ruler, a `*` person-frequency
 column, signed facet headers, every facet level, and short labeled
@@ -122,11 +125,13 @@ Next, use the pathway map when you want to see how expected scores
 progress across theta.
 
 ``` r
-
 plot(fit, type = "pathway", preset = "publication")
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/pathway-1.png)
+![Pathway display of fitted response probabilities across ability,
+separated by display layer. It shows model predictions rather than tests
+of rater
+bias.](mfrmr-visual-diagnostics_files/figure-html/pathway-1.png)
 
 Interpretation:
 
@@ -140,7 +145,6 @@ against Infit, place Infit on the horizontal axis and include person
 rows explicitly:
 
 ``` r
-
 plot(
   fit,
   type = "fit_pathway",
@@ -153,7 +157,10 @@ plot(
 )
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png)
+![Infit mean squares against fitted locations for persons and facet
+levels, with requested location intervals. Mean-square bands are
+descriptive review thresholds, not automatic
+decisions.](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png)
 
 Interpretation:
 
@@ -171,7 +178,6 @@ Interpretation:
 Unexpected-response screening is useful for case-level review.
 
 ``` r
-
 plot_unexpected(
   fit,
   diagnostics = diag,
@@ -182,7 +188,10 @@ plot_unexpected(
 )
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/unexpected-1.png)
+![Observed ratings screened by standardized residual size and fitted
+response probability. Highlighted observations merit contextual review
+rather than automatic
+deletion.](mfrmr-visual-diagnostics_files/figure-html/unexpected-1.png)
 
 Interpretation:
 
@@ -194,7 +203,6 @@ Interpretation:
 Displacement focuses on level movement rather than individual responses.
 
 ``` r
-
 plot_displacement(
   fit,
   diagnostics = diag,
@@ -204,7 +212,10 @@ plot_displacement(
 )
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/displacement-1.png)
+![Level-specific displacement summaries for the fitted facets, including
+unanchored levels. The displayed shifts are diagnostic summaries, not
+evidence that a level changed over
+time.](mfrmr-visual-diagnostics_files/figure-html/displacement-1.png)
 
 Interpretation:
 
@@ -222,7 +233,6 @@ quadrature for a shorter runtime; final reporting should be based on a
 refit with the package default or a higher quadrature setting.
 
 ``` r
-
 fit_strict <- fit_mfrm(
   toy,
   person = "Person",
@@ -261,7 +271,10 @@ plot_marginal_fit(
 )
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/strict-marginal-1.png)
+![Marginal fit summaries using posterior-averaged response
+probabilities. These diagnostics have a different probability basis from
+conditional residual
+screens.](mfrmr-visual-diagnostics_files/figure-html/strict-marginal-1.png)
 
 Interpretation:
 
@@ -278,12 +291,13 @@ When the design may be incomplete or spread across subsets, inspect the
 coverage matrix before interpreting cross-subset contrasts.
 
 ``` r
-
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 plot(sc, type = "design_matrix", preset = "publication")
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/linking-1.png)
+![Observed connections across rating-design subsets. Separate blocks
+identify a need to examine linking before comparing locations across
+subsets.](mfrmr-visual-diagnostics_files/figure-html/linking-1.png)
 
 Interpretation:
 
@@ -307,7 +321,6 @@ If you are working across administrations, follow up with anchor-drift
 plots:
 
 ``` r
-
 drift <- detect_anchor_drift(current_fit, baseline = baseline_anchors)
 plot_anchor_drift(drift, type = "heatmap", preset = "publication")
 ```
@@ -317,7 +330,6 @@ plot_anchor_drift(drift, type = "heatmap", preset = "publication")
 Residual PCA is a follow-up layer after the main fit screen.
 
 ``` r
-
 diag_pca <- diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)
 pca <- analyze_residual_pca(diag_pca, mode = "both")
 summary(pca)
@@ -358,7 +370,6 @@ Interpretation:
 For interaction screening, use the packaged bias example.
 
 ``` r
-
 bias_df <- load_mfrmr_data("example_bias")
 
 fit_bias <- fit_mfrm(
@@ -381,7 +392,10 @@ plot_bias_interaction(
 )
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/bias-1.png)
+![Rater-by-criterion interaction profiles from the fitted bias analysis.
+Differences identify combinations for review and do not establish a
+causal
+explanation.](mfrmr-visual-diagnostics_files/figure-html/bias-1.png)
 
 Interpretation:
 
@@ -399,14 +413,15 @@ dashboards, or lab-specific styles, use `draw = FALSE` and the plot-data
 accessors instead of editing screenshots.
 
 ``` r
-
 plot(fit, type = "wright", preset = "monochrome")
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png)
+![Monochrome Wright map of person, facet and step locations on the
+common logit scale. The accompanying code extracts the plotted locations
+for custom
+displays.](mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png)
 
 ``` r
-
 
 wright_payload <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 plot_data_components(wright_payload)
@@ -578,7 +593,6 @@ When you build a custom figure, keep the helper’s guidance tables with
 the plot data:
 
 ``` r
-
 names(wright_payload$data)
 #>  [1] "wright_style"          "renderer"              "visual_contract"      
 #>  [4] "person"                "person_exclusions"     "person_hist"          
@@ -611,7 +625,6 @@ scale, not a z-score. Observed-minus-fair gaps also reflect assignment
 and person mix, so they do not by themselves establish rater bias.
 
 ``` r
-
 p_fair <- plot_fair_average(
   fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
   plot_type = "measure", show_ci = TRUE, preset = "monochrome",
@@ -694,7 +707,6 @@ should not be treated as proof of disengagement, cheating, or
 speededness.
 
 ``` r
-
 toy_rt <- toy
 toy_rt$ResponseTime <- 12 + (seq_len(nrow(toy_rt)) %% 7) +
   as.numeric(toy_rt$Score)
@@ -750,14 +762,18 @@ summary(rt)
 plot_response_time_review(rt, type = "distribution", preset = "publication")
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png)
+![Distribution of synthetic response times with selected lower and upper
+quantile screens. These thresholds describe this example and do not
+diagnose careless
+responding.](mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png)
 
 ``` r
-
 plot_response_time_review(rt, type = "person", preset = "publication")
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png)
+![Person-level summaries of synthetic response times. Compare flagged
+patterns with their rating counts and context before drawing substantive
+conclusions.](mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png)
 
 Interpretation:
 
@@ -777,7 +793,6 @@ each level toward the facet mean and whether the uncertainty remains
 wide after pooling.
 
 ``` r
-
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
 
 shrink <- plot_shrinkage_funnel(
@@ -816,7 +831,10 @@ plot_shrinkage_funnel(
 )
 ```
 
-![](mfrmr-visual-diagnostics_files/figure-html/shrinkage-funnel-1.png)
+![Raw and empirically shrunken facet estimates with their displayed
+uncertainty. Movement toward a facet center reflects shrinkage, not a
+change in observed
+ratings.](mfrmr-visual-diagnostics_files/figure-html/shrinkage-funnel-1.png)
 
 Interpretation:
 
@@ -835,7 +853,6 @@ is not a fitted-model diagnostic object. Review it through its own
 methods:
 
 ``` r
-
 summary(scores)
 plot(scores, type = "interval", preset = "publication")
 plot(scores, type = "precision", preset = "publication")

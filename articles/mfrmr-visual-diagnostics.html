@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Visual Diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-visual-diagnostics.Rmd</code></div>
     </div>
 
@@ -151,7 +151,7 @@ family shown here.</p>
 persons, facet levels, and step thresholds.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/wright-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/wright-1.png" class="r-plt" alt="Wright map of person abilities, facet levels and category steps on the fitted logit scale, with requested uncertainty intervals. Higher facet locations indicate stricter scoring or greater difficulty." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Compare person density on the left to facet and step locations on
@@ -179,7 +179,7 @@ include the fitted transition logits.</p>
 <span>    `1` <span class="op">=</span> <span class="st">"Beginning"</span>, `2` <span class="op">=</span> <span class="st">"Developing"</span>, `3` <span class="op">=</span> <span class="st">"Secure"</span>, `4` <span class="op">=</span> <span class="st">"Advanced"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/wright-facets-style-1.png" class="r-plt" alt="Text-style Wright display with rubric labels Beginning, Developing, Secure and Advanced. Locations share a fitted logit scale; labels describe ordered categories rather than equal observed-score intervals." width="672"></p>
 <p>This renderer uses one common logit ruler, a <code>*</code>
 person-frequency column, signed facet headers, every facet level, and
 short labeled score-transition lines. It is FACETS-style visual
@@ -195,7 +195,7 @@ ggplot2 or another graphics system.</p>
 progress across theta.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"pathway"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/pathway-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/pathway-1.png" class="r-plt" alt="Pathway display of fitted response probabilities across ability, separated by display layer. It shows model predictions rather than tests of rater bias." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Steeper rises indicate stronger score progression.</li>
@@ -217,7 +217,7 @@ rows explicitly:</p>
 <span>  show_ci <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png" class="r-plt" alt="Infit mean squares against fitted locations for persons and facet levels, with requested location intervals. Mean-square bands are descriptive review thresholds, not automatic decisions." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>The vertical axis remains the fitted measure in logits.</li>
@@ -243,7 +243,7 @@ exclusions.</li>
 <span>  plot_type <span class="op">=</span> <span class="st">"scatter"</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/unexpected-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/unexpected-1.png" class="r-plt" alt="Observed ratings screened by standardized residual size and fitted response probability. Highlighted observations merit contextual review rather than automatic deletion." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Upper corners combine large residual mismatch with low model
@@ -261,7 +261,7 @@ responses.</p>
 <span>  plot_type <span class="op">=</span> <span class="st">"lollipop"</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/displacement-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/displacement-1.png" class="r-plt" alt="Level-specific displacement summaries for the fitted facets, including unanchored levels. The displayed shifts are diagnostic summaries, not evidence that a level changed over time." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Large absolute displacement indicates stronger tension between
@@ -315,7 +315,7 @@ quadrature setting.</p>
 <span>  top_n <span class="op">=</span> <span class="fl">12</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/strict-marginal-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/strict-marginal-1.png" class="r-plt" alt="Marginal fit summaries using posterior-averaged response probabilities. These diagnostics have a different probability basis from conditional residual screens." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Treat strict marginal plots as exploratory corroboration screens,
@@ -335,7 +335,7 @@ the coverage matrix before interpreting cross-subset contrasts.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_connectivity_report.html">subset_connectivity_report</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc</span>, type <span class="op">=</span> <span class="st">"design_matrix"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/linking-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/linking-1.png" class="r-plt" alt="Observed connections across rating-design subsets. Separate blocks identify a need to examine linking before comparing locations across subsets." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Sparse rows or columns indicate weak subset coverage.</li>
@@ -419,7 +419,7 @@ component of interest.</li>
 <span>  plot <span class="op">=</span> <span class="st">"facet_profile"</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/bias-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/bias-1.png" class="r-plt" alt="Rater-by-criterion interaction profiles from the fitted bias analysis. Differences identify combinations for review and do not establish a causal explanation." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Facet profiles are useful for seeing whether a small number of
@@ -439,7 +439,7 @@ material, dashboards, or lab-specific styles, use
 screenshots.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png" class="r-plt" alt="Monochrome Wright map of person, facet and step locations on the common logit scale. The accompanying code extracts the plotted locations for custom displays." width="672"></p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">wright_payload</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>
@@ -778,10 +778,10 @@ speededness.</p>
 <span><span class="co">#&gt; - Sample quantiles describe the observed distribution, not validated rapid-guessing, low-effort or speed cutoffs. Missing times and censoring are not modeled.</span></span>
 <span><span class="co">#&gt; - Score-level summaries are descriptive and should not be read as response-time model parameters.</span></span>
 <span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png" class="r-plt" alt="Distribution of synthetic response times with selected lower and upper quantile screens. These thresholds describe this example and do not diagnose careless responding." width="672"></p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"person"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png" class="r-plt" alt="Person-level summaries of synthetic response times. Compare flagged patterns with their rating counts and context before drawing substantive conclusions." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Start with the distribution plot to see whether the rapid/slow
@@ -838,7 +838,7 @@ remains wide after pooling.</p>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  preset <span class="op">=</span> <span class="st">"publication"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/shrinkage-funnel-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/shrinkage-funnel-1.png" class="r-plt" alt="Raw and empirically shrunken facet estimates with their displayed uncertainty. Movement toward a facet center reflects shrinkage, not a change in observed ratings." width="672"></p>
 <p>Interpretation:</p>
 <ul>
 <li>Long raw-to-shrunken segments identify levels most affected by the
