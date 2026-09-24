@@ -74,6 +74,11 @@ Shiny app object when `return_app = TRUE`.
 
 ## Details
 
+Testlet and random-rater results are not supported by this viewer. Use
+`mfrm_report(res, output = "html")` or
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+for their static results and model-specific figures.
+
 The viewer assumes that fitting, diagnostics, and section selection have
 already happened through
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).

@@ -3,11 +3,21 @@
 heuristic mean-square (Infit / Outfit MnSq) review band when flagging
 element-level misfit. Defaults use the published 0.5-1.5 interval as a
 screening convention; both ends can be overridden via R options. The
-interval is not a universal acceptance rule or an automatic exclusion rule."><meta property="og:description" content="Returns the lower / upper bounds that mfrmr screens treat as the
+interval is not a universal acceptance rule or an automatic exclusion rule.
+Low mean squares describe low residual variability rather than poor rater
+quality. fit_measures_table() uses this mean-square screen by default;
+ZSTD-only evidence is separate unless its combined rule is requested.
+Compare declared bands against known simulation truth with
+mfrm_screening_sensitivity()."><meta property="og:description" content="Returns the lower / upper bounds that mfrmr screens treat as the
 heuristic mean-square (Infit / Outfit MnSq) review band when flagging
 element-level misfit. Defaults use the published 0.5-1.5 interval as a
 screening convention; both ends can be overridden via R options. The
-interval is not a universal acceptance rule or an automatic exclusion rule."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+interval is not a universal acceptance rule or an automatic exclusion rule.
+Low mean squares describe low residual variability rather than poor rater
+quality. fit_measures_table() uses this mean-square screen by default;
+ZSTD-only evidence is separate unless its combined rule is requested.
+Compare declared bands against known simulation truth with
+mfrm_screening_sensitivity()."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -27,12 +37,18 @@ interval is not a universal acceptance rule or an automatic exclusion rule."><me
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -48,7 +64,7 @@ interval is not a universal acceptance rule or an automatic exclusion rule."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>MnSq misfit threshold pair used across mfrmr screening helpers</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/reporting.R" class="external-link"><code>R/reporting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/reporting.R" class="external-link"><code>R/reporting.R</code></a></small>
       <div class="d-none name"><code>mfrm_misfit_thresholds.Rd</code></div>
     </div>
 
@@ -57,7 +73,12 @@ interval is not a universal acceptance rule or an automatic exclusion rule."><me
 heuristic mean-square (Infit / Outfit MnSq) review band when flagging
 element-level misfit. Defaults use the published 0.5-1.5 interval as a
 screening convention; both ends can be overridden via R options. The
-interval is not a universal acceptance rule or an automatic exclusion rule.</p>
+interval is not a universal acceptance rule or an automatic exclusion rule.
+Low mean squares describe low residual variability rather than poor rater
+quality. <code><a href="fit_measures_table.html">fit_measures_table()</a></code> uses this mean-square screen by default;
+ZSTD-only evidence is separate unless its combined rule is requested.
+Compare declared bands against known simulation truth with
+<code><a href="mfrm_screening_sensitivity.html">mfrm_screening_sensitivity()</a></code>.</p>
     </div>
 
     <div class="section level2">

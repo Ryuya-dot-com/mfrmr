@@ -2,6 +2,18 @@
 
 ## Quick start
 
+This tutorial follows the ordinary fixed-facet
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+workflow. To choose between fixed facets, shared random raters and
+Person-specific testlets, use `mfrmr_output_guide("models")` or
+[`help("mfrmr_workflow_methods")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md).
+The extended models have dedicated tutorials:
+[`vignette("mfrmr-random-raters", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.md)
+and
+[`vignette("mfrmr-testlets", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.md).
+Their prediction targets and reporting support differ; the diagnostics
+and comprehensive reports below require an ordinary `mfrm_fit` result.
+
 This example estimates person abilities while accounting for rater
 severity and criterion difficulty. A *facet* is a source of variation in
 scores; here, `Rater` and `Criterion` are facets, and individual raters
@@ -63,8 +75,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
-#> 2 Rater          6            0      0.399      -0.606       0.412 1.02
+#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
+#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02
 
 # Check the interpretation status and recommended next step
 results$decision
@@ -1010,6 +1022,7 @@ table, figure, and their notes, follow Section 5 of
 |----|----|
 | Do category thresholds need to differ by criterion? | [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md) and [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md); fit candidates to the same observations and review numerical sensitivity. |
 | Do specific rater-by-criterion or group contrasts depart from the model? | [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) or [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md); specify the contrasts, screening rules, and multiplicity plan. See the reporting vignette and `mfrmr-linking-and-dff`. |
+| How often does a declared rater-warning rule detect a specified departure or falsely flag an unaffected rater? | [`mfrm_screening_performance()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md) with known simulation truth and all planned trials. See `mfrmr-screening-performance` for individual/family rates, unavailable results and Monte Carlo uncertainty. |
 | Would the conclusions change under a bounded GPCM? | [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md) and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
 | Are forms or waves on a comparable scale? | `mfrmr-linking-and-dff` and `mfrmr-portable-calibration`; common labels alone do not establish linking. |
 | How does a proposed rating design perform under stated assumptions? | [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md), [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md), and [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md); report generating conditions, repetitions, failures, and Monte Carlo uncertainty. |

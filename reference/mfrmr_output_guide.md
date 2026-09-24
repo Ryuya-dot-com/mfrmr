@@ -1,8 +1,10 @@
 # Choose an mfrmr output helper by user goal
 
-`mfrmr_output_guide()` returns a compact table for choosing among the
-main table, report, review, bundle, export, and compatibility helpers.
-It is a user-facing map, not an analysis result.
+Find a function for the next question in your analysis. Start with
+`mfrmr_output_guide("beginner")` and read its `Question` and
+`MainFunction` columns. With no argument the function returns the full
+specialist catalogue, which includes tables, reports, reviews and
+exports. It does not analyze data.
 
 ## Usage
 
@@ -11,7 +13,7 @@ mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
     "calibration", "simulation", "linking", "network", "response_time", "facets",
-    "conquest", "r")
+    "conquest", "r", "models", "features", "imputation", "gtheory")
 )
 ```
 
@@ -31,8 +33,13 @@ mfrmr_output_guide(
   returns the portable fixed-calibration lifecycle and artifact-only
   scoring route. `"simulation"` and `"network"` return advanced
   design-review rows. `"response_time"` returns descriptive
-  response-time QC rows. `"facets"`, `"conquest"`, and `"r"` return
-  user-pathway rows for people arriving from those workflows.
+  response-time QC rows. `"models"` compares fixed-facet, shared-rater
+  and Person-specific testlet workflows, including their distinct
+  prediction and reporting boundaries. `"features"`, `"imputation"` and
+  `"gtheory"` show exploratory attributes, assigned-score multiple
+  imputation and observed-score G/D-study workflows, including their own
+  table, plot and saving routes. `"facets"`, `"conquest"`, and `"r"`
+  return user-pathway rows for people arriving from those workflows.
 
 ## Value
 
@@ -89,11 +96,11 @@ for the shortest top-level API map: an explicit
 [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
 check and
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-MML fit, the lightweight fit summary, the comprehensive measurement
-review (whose historical profile name is `"facets"`; no FACETS software
-knowledge or installation is required), the native Wright map with
-SE/CI, optional FACETS-style Wright and person-inclusive Infit views,
-and finally report/export. Use `mfrmr_output_guide("entry")` when you
+MML fit, the lightweight fit summary, the fuller fit and precision
+review (whose profile name is `"facets"`; no FACETS software knowledge
+or installation is required), the native Wright map with uncertainty,
+optional FACETS-style Wright and person-inclusive Infit views, and
+finally report/export. Use `mfrmr_output_guide("entry")` when you
 specifically need alternative first-screen creation routes, including
 existing result objects, the optional viewer, or interactive console
 work. After creating `res`, use `summary(res)$next_actions` to choose a
@@ -107,24 +114,28 @@ checked before manuscript use.
 
 ## How to use this guide
 
-Treat `MainFunction` as the route to try next and `UseWhen` as the
-guardrail. The guide is not a replacement for the help pages of the
-listed functions; it is a namespace map for deciding which page to open.
-For bounded `GPCM`, use `scope = "gpcm"` to find both the support matrix
-and the table that explains how out-of-scope routes are handled.
+Read `Question` first, then open the help for a function in
+`MainFunction`. `UseWhen` describes its inputs and purpose; `NextStep`
+explains what to inspect. Cells containing `...` are outlines, not
+complete scripts to paste and run. Use
+[mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
+for a runnable introduction and an explanation of function names.
+Inspect `DecisionBoundary` before interpreting a result. For bounded
+`GPCM`, use `scope = "gpcm"` to find both the support matrix and the
+table that explains how out-of-scope routes are handled.
 
 ## Examples
 
 ``` r
 beginner <- mfrmr_output_guide("beginner")
 beginner[, c("Question", "MainFunction", "NextStep")]
-#>                                                  Question
-#> 1 1. Check score support and fit with explicit data roles
-#> 2          2. Check convergence and fitted-model settings
-#> 3           3. Build the comprehensive measurement review
-#> 4  4. Create the required native Wright map with SE or CI
-#> 5    5. Add optional FACETS-style and Infit pathway views
-#> 6     6. Review, report, and export the completed results
+#>                                                 Question
+#> 1            1. Check your rating data and fit the model
+#> 2  2. Read the fit summary and its recommended next step
+#> 3                 3. Review estimates, fit and precision
+#> 4 4. Plot abilities and facet estimates with uncertainty
+#> 5       5. Add other maps when they answer your question
+#> 6       6. Read the report and save the reviewed results
 #>                                                                                                                                                                                                                MainFunction
 #> 1 describe_mfrm_data(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ...); fit <- fit_mfrm(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ..., method = "MML")
 #> 2                                                                                                                                                                           summary(fit, profile = "fit", detail = "brief")

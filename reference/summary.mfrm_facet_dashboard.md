@@ -42,8 +42,7 @@ An object of class `summary.mfrm_facet_dashboard`.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 summary(facet_quality_dashboard(fit, diagnostics = diag))
 #> mfrmr Facet Quality Dashboard Summary
@@ -54,7 +53,7 @@ summary(facet_quality_dashboard(fit, diagnostics = diag))
 #> 
 #> Summary
 #>  Facet Levels MeanEstimate    SD MinEstimate MaxEstimate MeanInfit MeanOutfit
-#>  Rater      4            0 0.313      -0.329       0.333     0.994      1.019
+#>  Rater      4            0 0.313      -0.329       0.333     0.993      1.019
 #>  SeverityFlagged MisfitFlagged CentralTendencyFlagged BiasFlagged AnyFlagged
 #>                0             0                      0           0          0
 #>  BiasRows
@@ -79,7 +78,7 @@ summary(facet_quality_dashboard(fit, diagnostics = diag))
 #>  - Severity is relative to the fitted reference; inspect workload, category use and common ratings before comparing levels.
 #>  - FlagCount counts observed flags only. MissingMetrics identifies unavailable diagnostics; zero flags does not mean all checks passed.
 #>  - BiasCount counts flagged cells in supplied bias results only; zero does not establish absence of bias.
-#>  - Review-only display: Fit=blocked, Numerical=fail, Data=pass, Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and `fit$data_review` before substantive or cross-subset interpretation.
+#>  - Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.
 #>  - Legacy CentralTendencyFlag is disabled by default because origin proximity does not diagnose observed category avoidance or range restriction.
 #>  - No level-level flags were triggered under the current thresholds.
 # }

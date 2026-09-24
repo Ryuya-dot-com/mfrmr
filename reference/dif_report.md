@@ -116,9 +116,8 @@ from unwanted measurement bias is grounded in:
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", model = "RSM", maxit = 30
+  method = "JML", model = "RSM", maxit = 300
 )
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)

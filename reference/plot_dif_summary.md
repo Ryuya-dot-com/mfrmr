@@ -95,8 +95,7 @@ covariance.
 # \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = toy)
@@ -105,10 +104,10 @@ unique(dff$dif_table$ClassificationSystem)
 p <- plot_dif_summary(dff, draw = FALSE)
 head(p$data$data)
 #>          Pair      Effect SE CI_Lower CI_Upper    Classification
-#> 1 R01 | A | B  0.16851952 NA       NA       NA Residual contrast
-#> 2 R02 | A | B -0.13201751 NA       NA       NA Residual contrast
-#> 3 R03 | A | B -0.11255952 NA       NA       NA Residual contrast
-#> 4 R04 | A | B  0.07636974 NA       NA       NA Residual contrast
+#> 1 R01 | A | B  0.16845853 NA       NA       NA Residual contrast
+#> 2 R02 | A | B -0.13221860 NA       NA       NA Residual contrast
+#> 3 R03 | A | B -0.11261117 NA       NA       NA Residual contrast
+#> 4 R04 | A | B  0.07637118 NA       NA       NA Residual contrast
 #>   ClassificationSystem   Color
 #> 1          descriptive #6b7280
 #> 2          descriptive #6b7280

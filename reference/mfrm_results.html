@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build comprehensive first-screen MFRM results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>mfrm_results.Rd</code></div>
     </div>
 
@@ -59,7 +65,14 @@
 <span>  response_time_score <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"object"</span>, <span class="st">"summary"</span>, <span class="st">"tables"</span>, <span class="st">"html"</span><span class="op">)</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  compute <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"never"</span><span class="op">)</span></span>
+<span>  compute <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"never"</span><span class="op">)</span>,</span>
+<span>  predictions <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scores <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  comparison <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  response_diagnostics <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  calibration_intervals <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"normal"</span><span class="op">)</span>,</span>
+<span>  calibration_level <span class="op">=</span> <span class="fl">0.95</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -68,7 +81,8 @@
 
 
 <dl><dt id="arg-fit">fit<a class="anchor" aria-label="anchor" href="#arg-fit"></a></dt>
-<dd><p>Output from <code><a href="fit_mfrm.html">fit_mfrm()</a></code> or <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code>. A standard
+<dd><p>Output from <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code>,
+<code><a href="fit_mfrm_testlet.html">fit_mfrm_testlet()</a></code> or <code><a href="fit_mfrm_random_rater.html">fit_mfrm_random_rater()</a></code>. A standard
 long-format <code>data.frame</code> is also accepted when person and score columns can
 be inferred unambiguously from common names such as <code>Person</code> and <code>Score</code>;
 remaining measurement columns must use recognizable facet-role names.
@@ -119,8 +133,9 @@ available data frames, or <code>"html"</code> for a temporary HTML report.</p></
 
 
 <dt id="arg-diagnostics">diagnostics<a class="anchor" aria-label="anchor" href="#arg-diagnostics"></a></dt>
-<dd><p>Optional matching output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. When
-supplied, it is identity-checked and reused instead of recomputed.</p></dd>
+<dd><p>Optional matching output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. An
+<code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code> object is also accepted as an alias for
+<code>response_diagnostics</code>; do not supply it twice.</p></dd>
 
 
 <dt id="arg-compute">compute<a class="anchor" aria-label="anchor" href="#arg-compute"></a></dt>
@@ -129,6 +144,64 @@ standard behavior; <code>"never"</code> collects only sections that can be built
 without computing diagnostics and marks every requested dependent section
 as <code>"not_computed"</code>. Matching supplied or stored diagnostics are still
 reused under <code>"never"</code>.</p></dd>
+
+
+<dt id="arg-predictions">predictions<a class="anchor" aria-label="anchor" href="#arg-predictions"></a></dt>
+<dd><p>Optional saved predictions for a testlet or random-rater
+fit: the result of <code>predict(fit, ...)</code>. Matching calibration, column roles,
+levels, settings and prediction-source metadata are required. Older
+predictions without this metadata must be regenerated from the saved fit
+before attachment; the fit itself does not need to be re-estimated.</p></dd>
+
+
+<dt id="arg-intervals">intervals<a class="anchor" aria-label="anchor" href="#arg-intervals"></a></dt>
+<dd><p>Optional saved <code><a href="mfrm_random_rater_intervals.html">mfrm_random_rater_intervals()</a></code> result from
+the exact supplied random-rater fit. No bootstrap is run by this function.</p></dd>
+
+
+<dt id="arg-scores">scores<a class="anchor" aria-label="anchor" href="#arg-scores"></a></dt>
+<dd><p>Optional saved <code><a href="score_mfrm_persons.html">score_mfrm_persons()</a></code> result for an extension,
+or <code><a href="score_mfrm_random_rater.html">score_mfrm_random_rater()</a></code> output, with matching source calibration.
+For testlets this is an alias for <code>predictions</code>; supply it once. Shared
+raters can also attach response <code>predictions</code> and rater <code>intervals</code>.
+No Person scoring is run here. Complete source-roster identity is required
+for the additional model-aware map routes; see <a href="mfrmr_model_maps.html">mfrmr_model_maps</a>.</p></dd>
+
+
+<dt id="arg-comparison">comparison<a class="anchor" aria-label="anchor" href="#arg-comparison"></a></dt>
+<dd><p>Optional descriptive extended-model result from
+<code><a href="compare_mfrm.html">compare_mfrm()</a></code>. Calibration, settings and observed/omitted events must
+match this fit. Retained tables and <code>plot(..., type = "comparison")</code>
+compare centered facet summaries without fitting or automatic ranking.
+When the comparison includes saved response diagnostics, its
+<code>comparison_response_*</code> tables and <code>type = "response_comparison"</code> plot
+retain aligned predictive quantities; select <code>metric</code> for other indices.</p></dd>
+
+
+<dt id="arg-response-diagnostics">response_diagnostics<a class="anchor" aria-label="anchor" href="#arg-response-diagnostics"></a></dt>
+<dd><p>Optional saved <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code>
+output matching the fit's calibration and exact source roster. It is
+identity-checked and reused without integration. Ordinary RSM MML and
+testlet/shared-rater fits support these descriptive summaries, without
+reference cutoffs. Use <code>compute = "never"</code> to also avoid computing ordinary
+plug-in diagnostics. Saved posterior summaries appear in
+<code>response_*</code> tables and <code>plot(..., type = "response_diagnostics")</code>.</p></dd>
+
+
+<dt id="arg-calibration-intervals">calibration_intervals<a class="anchor" aria-label="anchor" href="#arg-calibration-intervals"></a></dt>
+<dd><p>For testlet and shared-rater fits, <code>"none"</code>
+(default) retains calibration estimates and approximate SEs with missing
+bounds. <code>"normal"</code> explicitly requests pointwise observed-information normal
+intervals for fixed facets and steps; finite-sample coverage is not
+established. Numerical, information and estimated-boundary restrictions
+remain. Saved result tables, testlet calibration plots and reports retain
+the selection. This does not select individual-rater or Person intervals.</p></dd>
+
+
+<dt id="arg-calibration-level">calibration_level<a class="anchor" aria-label="anchor" href="#arg-calibration-level"></a></dt>
+<dd><p>Nominal level for those calibration intervals,
+between zero and one; default 0.95. Nondefault calibration options are
+unavailable for ordinary MFRM fits.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -230,7 +303,7 @@ method, anchors, and missing-data rules are recorded. Use
     <h2 id="visualization-and-html">Visualization and HTML<a class="anchor" aria-label="anchor" href="#visualization-and-html"></a></h2>
 
 
-<p><code>plot(res)</code> routes to the primary native Wright map when the fitted object
+<p>For ordinary models, <code>plot(res)</code> routes to the primary native Wright map when the fitted object
 contains compatible person and facet locations. This default retains
 available mfrmr facet uncertainty. Use <code>plot(res, type = "fit")</code> when the
 explicit three-plot Wright/pathway/category bundle is wanted. The compact
@@ -273,6 +346,36 @@ interactive session.</p></li>
 <li><p>Use <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> or the helper named in
 <code>summary(res)$next_actions</code> for report-specific follow-up.</p></li>
 </ol></div>
+    <div class="section level2">
+    <h2 id="testlet-and-random-rater-results">Testlet and random-rater results<a class="anchor" aria-label="anchor" href="#testlet-and-random-rater-results"></a></h2>
+
+
+<p><code><a href="fit_mfrm_testlet.html">fit_mfrm_testlet()</a></code> and <code><a href="fit_mfrm_random_rater.html">fit_mfrm_random_rater()</a></code> results use a separate
+reporting route within the same <code>mfrm_results</code> class. It always retains
+calibration estimates, numerical checks, settings, data usage and interval
+meanings. Requested ordinary-model sections that are unsupported are
+marked <code>not_available</code>. Neither <code>compute</code> setting fits, scores, resamples
+or computes diagnostics for these models. Supply separately computed
+<code>predictions</code>, <code>scores</code> or <code>intervals</code> explicitly; their absence is recorded.
+Rebuild results from an older saved fit to apply current calibration-bound
+defaults without refitting. Previously saved result bundles keep their
+original tables. Explicit normal bounds do not improve their coverage.</p>
+<p>Use <code><a href="mfrm_report.html">mfrm_report()</a></code> for a static report and <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> for
+CSV/HTML/RDS and figures. Numerical convergence does not establish model
+adequacy or general interval coverage. The ordinary Wright map, residual
+diagnostics, Shiny viewer, response-MI pooling and portable-calibration
+workflow do not support these classes. Plot types are <code>"calibration"</code>
+(first fixed facet by default; select with <code>facet</code>) and <code>"scores"</code> for
+testlets, or <code>"raters"</code>, <code>"intervals"</code> and <code>"scores"</code> for random-rater results.
+Both support <code>"comparison"</code> and, with corresponding saved quantities,
+<code>"response_comparison"</code> and <code>"response_diagnostics"</code>. These
+models also support <code>"wright"</code> and <code>"fit_pathway"</code> through the separately
+defined conditional-location and posterior-residual routes in
+<a href="mfrmr_model_maps.html">mfrmr_model_maps</a>, with matching saved source evidence. All these
+routes require <code>"plots"</code> in <code>include</code>; saved predictions/intervals are
+required for their corresponding plots. Report styles use the same stored
+evidence and boundaries; they do not add ordinary-model reporting templates.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="fit_mfrm.html">fit_mfrm()</a></code>, <code><a href="run_mfrm_facets.html">run_mfrm_facets()</a></code>, <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>,

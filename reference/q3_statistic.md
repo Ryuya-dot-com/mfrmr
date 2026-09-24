@@ -171,12 +171,11 @@ does not currently provide that procedure.
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                method = "JML", maxit = 300)
 q3 <- q3_statistic(fit)
 q3$summary
 #>   CandidatePairs AvailablePairs UnavailablePairs     MeanQ3  MaxAbsQ3
-#> 1              6              6                0 -0.3277129 0.4631436
+#> 1              6              6                0 -0.3277176 0.4631367
 #>   YenFlagged MaraisFlagged RelativeFlagged
 #> 1          5             4               1
 # Look for: use MaxAbsQ3 and the pair table to rank follow-up. The default
@@ -184,12 +183,12 @@ q3$summary
 #   index, not standalone local-independence tests.
 head(q3$pairs)
 #>   Level1 Level2          Q3  N      AbsQ3 YenFlag MaraisFlag RelativeFlag
-#> 3    R01    R04 -0.46314357 48 0.46314357    TRUE       TRUE        FALSE
-#> 2    R01    R03 -0.43827728 48 0.43827728    TRUE       TRUE        FALSE
-#> 5    R02    R04 -0.42439186 48 0.42439186    TRUE       TRUE        FALSE
-#> 4    R02    R03 -0.36329400 48 0.36329400    TRUE       TRUE        FALSE
-#> 6    R03    R04 -0.26388437 48 0.26388437    TRUE      FALSE        FALSE
-#> 1    R01    R02 -0.01328644 48 0.01328644   FALSE      FALSE         TRUE
+#> 3    R01    R04 -0.46313671 48 0.46313671    TRUE       TRUE        FALSE
+#> 2    R01    R03 -0.43828943 48 0.43828943    TRUE       TRUE        FALSE
+#> 5    R02    R04 -0.42439987 48 0.42439987    TRUE       TRUE        FALSE
+#> 4    R02    R03 -0.36331502 48 0.36331502    TRUE       TRUE        FALSE
+#> 6    R03    R04 -0.26385969 48 0.26385969    TRUE      FALSE        FALSE
+#> 1    R01    R02 -0.01330509 48 0.01330509   FALSE      FALSE         TRUE
 #>                            Interpretation
 #> 3  stricter heuristic (|Q3-style| > 0.30)
 #> 2  stricter heuristic (|Q3-style| > 0.30)

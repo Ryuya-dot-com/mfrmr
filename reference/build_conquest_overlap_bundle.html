@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a scoped ConQuest-overlap bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
       <div class="d-none name"><code>build_conquest_overlap_bundle.Rd</code></div>
     </div>
 
@@ -127,9 +133,11 @@ one-row-per-person wide CSV, stores the corresponding person covariates, and
 records the <code>mfrmr</code> estimates that should be compared externally.
 It also records the actual <code>mfrmr</code> optimizer controls, MML engine, terminal
 gradient, convergence status and severity, and inference-readiness decision.
-A fit that is not inference-ready remains available for convergence review,
-but its estimates should not be used for inferential comparison with
-ConQuest until the convergence issue is resolved and the model is refit.
+A fit that is not inference-ready remains available for descriptive
+numerical review. Inspect the source fit's readiness checks and supported
+inferential scope: lack of readiness need not mean optimizer failure, and
+convergence alone does not establish readiness. The comparison does not
+validate standard errors or confidence intervals.
 The generated ConQuest benchmark template fixes its parameter-change
 criterion at <code>1e-8</code>, deviance-change criterion at <code>1e-10</code>, and iteration
 ceiling at <code>2000</code>; these controls are written into the command, summary, and
@@ -154,6 +162,26 @@ the person-data file contains identifiers and covariates; and case-EAP files
 contain identifiers and person-level estimates. When files are written, the
 helper emits a warning and writes an artifact-level privacy notice. Apply the
 study's data-handling policy before sharing or moving any bundle file.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="running-conquest-locally">Running ConQuest locally<a class="anchor" aria-label="anchor" href="#running-conquest-locally"></a></h2>
+
+
+<p>This function writes inputs; it does not launch or install ConQuest. Open
+the generated <code>.cqc</code> file in your local ConQuest installation and use its
+containing directory as the working directory, so the relative CSV paths
+resolve. A native command-line installation can also read that command file
+as standard input from the same directory. Check the ConQuest console for
+successful estimation and the requested exports before normalizing them.
+ConQuest is optional and is not needed for the package's examples or tests.</p>
+<p>ConQuest's EAP calculation uses Monte Carlo posterior integration with
+separate <code>p_nodes</code> and <code>seed</code> controls. The <code>estimate</code> command's quadrature
+node count does not set this posterior simulation budget. Record both
+controls when comparing Person scores; close calibration estimates do not
+imply identical EAPs. See the
+<a href="https://conquestmanual.acer.org/s4-00.html" class="external-link">ConQuest command reference</a>,
+<code>set</code> and <code>show</code>. This template leaves those posterior controls at the
+local ConQuest defaults.</p>
     </div>
     <div class="section level2">
     <h2 id="comparison-targets">Comparison targets<a class="anchor" aria-label="anchor" href="#comparison-targets"></a></h2>
@@ -201,18 +229,20 @@ and convergence state</p></li>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu">build_conquest_overlap_bundle</span><span class="op">(</span>quad_points <span class="op">=</span> <span class="fl">3</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu">build_conquest_overlap_bundle</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  quad_points <span class="op">=</span> <span class="fl">31</span>, maxit <span class="op">=</span> <span class="fl">2000</span>, reltol <span class="op">=</span> <span class="fl">1e-10</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bundle</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Case"</span>, <span class="st">"Facet"</span>, <span class="st">"Covariate"</span>, <span class="st">"Persons"</span>, <span class="st">"Items"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                          Case     Facet Covariate Persons Items</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 synthetic_latent_regression Criterion         X      60     6</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">mfrmr_fit_status</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                           Item     Value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1              MML engine used    direct</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           Maximum iterations        30</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Relative tolerance     1e-09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           Maximum iterations      2000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Relative tolerance     1e-10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                  Convergence Converged</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                     Severity      Pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Terminal gradient (sup-norm)  9.59e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Terminal gradient (sup-norm)  6.16e-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7              Inference ready        No</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">conquest_command_scope</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                   Area                        Status</span>

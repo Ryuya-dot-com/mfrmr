@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Normalize extracted ConQuest overlap files to the <code>mfrmr</code> review contract</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
       <div class="d-none name"><code>normalize_conquest_overlap_files.Rd</code></div>
     </div>
 
@@ -227,15 +233,15 @@ text, and to check duplicate-ID / non-numeric-estimate pre-review flags.</p>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="review_conquest_overlap.html">review_conquest_overlap</a></span><span class="op">(</span><span class="va">bundle</span>, <span class="va">normalized</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span><span class="op">$</span><span class="va">summary</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PopulationParametersExpected PopulationParametersCompared PopulationMae</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                            3                            2  4.163336e-16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                            3                            2  2.220446e-16</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PopulationMaxAbsDifference PopulationMaxAbsParameter ItemRowsExpected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1               4.440892e-16                         X                6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               4.440892e-16                    sigma2                6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ItemRowsCompared ItemCenteredCorrelation ItemCenteredMae</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                6                       1    5.019133e-16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                6                       1    1.048929e-15</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ItemCenteredMaxAbsDifference ItemCenteredMaxAbsItem CaseRowsExpected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 1.554312e-15                   I006               60</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CaseRowsCompared CaseCorrelation     CaseMae CaseMaxAbsDifference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1               60               1 6.88743e-16         4.884981e-15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 3.108624e-15                   I006               60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CaseRowsCompared CaseCorrelation      CaseMae CaseMaxAbsDifference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               60               1 6.984286e-16         4.884981e-15</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   AttentionItems AttentionMissing AttentionDuplicate AttentionNonNumeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1              0                0                  0                   0</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

@@ -1,11 +1,10 @@
 # Multivariate G-study for crossed or nested rating data
 
-Estimate observed-score variance-covariance components for fixed score
-components with one or two common random measurement facets, such as
-raters, tasks, or occasions. Use balanced ANOVA for a complete design or
-explicitly select MINQUE(0) for incomplete or unequal observed designs.
-Conditions have common identities across persons and scores. This is not
-an MFRM fit.
+Investigate how observed assessment scores vary across people, raters
+and tasks. With several score columns, such as fluency and accuracy,
+also study how their sources of variation relate. Use
+[`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+next to compare plans with different numbers of raters or tasks.
 
 ## Usage
 
@@ -115,6 +114,13 @@ completeness, balance, potential cells and observed cell fraction), and
 
 ## Details
 
+Estimate observed-score variance-covariance components for fixed score
+components with one or two common random measurement facets, such as
+raters, tasks, or occasions. Use balanced ANOVA for a complete design or
+explicitly select MINQUE(0) for incomplete or unequal observed designs.
+Conditions have common identities across persons and scores. This is not
+an MFRM fit.
+
 Every retained cell must have every selected score. Duplicate cells are
 not supported. The same identifier (parent/child pair for a nested
 child) must denote the same condition across persons and scores. Equal
@@ -213,6 +219,35 @@ MINQUE(0) additionally agrees with direct covariance-kernel calculations
 for incomplete designs. These checks do not establish population
 recovery for arbitrary sparse assignments or missingness mechanisms.
 This function returns point estimates, not sampling intervals.
+
+## Fixed tasks as score components
+
+To plan ratings of the same fixed interview, presentation and
+discussion, put the three task scores in separate columns and use
+`task = NULL`. Each row is one Person/Rater pair; the same rater and
+person identities must apply to every task column. The tasks and
+prespecified score weights define the fixed composite. Only raters are
+sampled measurement conditions. Different task-specific rater teams do
+not satisfy this representation.
+
+The Person covariance includes stable Person-by-fixed-task differences.
+For weight vector `w` and `n_r` planned raters, universe variance is
+`w' P w`, relative error is `w' E w / n_r`, and absolute error is
+`w' (R + E) w / n_r`. These match a univariate Person-by-Rater analysis
+of the directly weighted task score. Do not average task-specific
+reliability coefficients or additionally divide error by the task count.
+Each planned rater scores every fixed task. Two raters for three fixed
+tasks require six ratings per person, not two or three.
+
+MINQUE(0) permits identifiable incomplete Person/Rater source designs;
+every retained row still needs all task scores. Explicit
+`missing = "omit"` removes a whole incomplete score vector. Do not
+impute unassigned tasks to manufacture common score identities. The
+D-study projects a future complete common-rater design; it does not
+estimate sparse-roster reliability. Adding or replacing tasks, partial
+rater sharing and an arbitrary mixture of fixed/random facets are not
+implemented by this representation. Holding the task count constant in a
+random-task model is a different assumption.
 
 ## Nested measurement facets
 

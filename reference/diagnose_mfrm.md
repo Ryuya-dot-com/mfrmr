@@ -309,6 +309,12 @@ Practical interpretation often starts with:
 
 ## Interpreting output
 
+Testlet and shared-rater fits use
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+instead of this ordinary-model route. Their same-data posterior
+predictive residual summaries do not inherit ordinary fit cutoffs, ZSTD
+or p-values.
+
 Start with `overall_fit` and `reliability`, then move to element-level
 diagnostics (`fit`) and targeted bundles (`unexpected`, `displacement`,
 `interrater`, `facets_chisq`). Treat `fair_average` as available only

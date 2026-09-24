@@ -62,14 +62,13 @@ An `mfrm_plot_data` whose `data` slot bundles a tidy `Facet`, `Metric`,
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                 method = "JML", maxit = 300)
 p <- plot_reliability_snapshot(fit, draw = FALSE)
 p$data$table
 #>       Facet      Metric     Value
-#> 1     Rater reliability 0.9031062
-#> 2    Person reliability 0.9005787
-#> 3 Criterion reliability 0.8852450
+#> 1     Rater reliability 0.9031009
+#> 2    Person reliability 0.9005676
+#> 3 Criterion reliability 0.8852451
 # Look for (default `metric = "reliability"`):
 # - >= 0.9 strong, 0.7-0.9 adequate, < 0.7 weak (Wright & Masters 1982).
 # - The Person row is the operative reliability for ability scores.

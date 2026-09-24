@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="logo.png" class="logo" alt=""><h1>Contributing to mfrmr</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/CONTRIBUTING.md" class="external-link"><code>CONTRIBUTING.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/CONTRIBUTING.md" class="external-link"><code>CONTRIBUTING.md</code></a></small>
     </div>
 
 <div id="contributing-to-mfrmr" class="section level1">
@@ -83,16 +89,18 @@
 <h2 id="examples-and-timing-policy">Examples and timing policy<a class="anchor" aria-label="anchor" href="#examples-and-timing-policy"></a></h2>
 <p>CRAN examples are fast executable illustrations, not the full validation suite. Keep Rd examples short enough to run on slower Windows check hosts, and move realistic multi-step analyses to README/vignettes or non-CRAN tests.</p>
 <ul><li>Use <code>example_operational</code> for applied tutorials, <code>example_core</code> for idealized fast checks, and <code>example_bias</code> only when a planted non-null DFF/bias signal is needed.</li>
-<li>Prefer <code>method = "JML"</code>, <code>maxit = 30</code>, and <code>diagnose_mfrm(..., residual_pca = "none")</code> in standard Rd examples.</li>
-<li>Wrap multi-fit workflows, MML examples, recovery simulations, design simulations, external-Suggests examples, and long reporting pipelines in <code>\donttest{}</code> unless the function cannot be demonstrated otherwise.</li>
+<li>Match the estimator and population assumptions to the example’s question. Do not substitute JML for MML, truncate optimization, or lower integration accuracy solely to shorten a check. Omit diagnostics that do not illustrate the documented function, such as optional residual PCA.</li>
+<li>Time ordinary examples and <code>\donttest{}</code> examples. The latter are normally included by <code>R CMD check --as-cran</code>; the wrapper does not solve a slow example. Keep short complete examples executable, and place longer multi-step analyses in executed vignettes. Explain any remaining wrapper. Guard optional Suggests with <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> or the relevant feature check, rather than relying on <code>\donttest{}</code> to avoid the dependency.</li>
 <li>Reserve <code>\dontrun{}</code> for examples that genuinely cannot execute during a check, such as workflows that require files produced by external software. Reserve <code>@examplesIf interactive()</code> for functions that genuinely require an interactive session.</li>
-<li>When an MML example must run in standard examples, set a small <code>quad_points</code> value and explain that it is an exploratory speed setting.</li>
+<li>For a measured long calculation, a commented recomputation call may accompany an executable example that reads and uses its saved synthetic result. Include the complete regeneration recipe, preserve its data and numerical settings, and check that the saved objects match and replay without refitting. A replay check does not replace numerical tests of the estimator. Do not comment out the entire workflow or advertise an unexecuted recipe as a fresh validation.</li>
+<li>Check that the retained example’s optimization and integration controls support its stated purpose. Show the model’s numerical checks where relevant; no quadrature order is a universally sufficient accuracy setting.</li>
 <li>Use <code>draw = FALSE</code> in examples that only need to demonstrate returned plot payloads.</li>
 <li>Do not shrink example data below a meaningful many-facet structure just to satisfy CRAN timing. Reduce what CRAN executes; keep realistic examples in vignettes and in the full packaged <code>NOT_CRAN=true</code> test run.</li>
 <li>Choose verification from the changed behavior and its callers. Use focused regressions for bounded fixes and reuse unaffected results. Do not repeat the complete test suite for each small fix, documentation edit, or result record.</li>
 <li>CRAN-time <code>testthat</code> and ordinary push/PR CI run the representative workflow and selected contracts from <code>tests/testthat.R</code>. For broad changes or a batched release review, explicitly enable <code>full_suite</code> when manually running <code>R-CMD-check</code>; only Ubuntu release then uses <code>NOT_CRAN=true</code>. Record the reason and source revision for a full run. Historical full-suite evidence remains tied to its original source and must not be relabelled as a new run.</li>
 <li>Source-tree-only historical and research validation tests are excluded from the package. Run them only for the affected area, with their recorded source version and optional runtime.</li>
 <li>Before release, run an <code>--as-cran</code> check with timing enabled and ensure the ordinary and <code>donttest</code> examples both execute. Treat the summed CRAN-side package workload for ordinary examples, <code>donttest</code> examples, tests, and vignette rebuilding above 600 seconds as a release concern. Retain the sum of all timed top-level check components as diagnostic context, but do not charge dependency, installation, manual, or other check-infrastructure time to this package-controlled threshold. Do not apply the threshold to the deliberately exhaustive <code>NOT_CRAN=true</code> regression job.</li>
+<li>When reusing executed articles with <code>--no-build-vignettes</code>, retain their <code>build/vignette.rds</code> index as well as <code>inst/doc</code>. Verify that its source, output and extracted R filenames match the current packaged articles; copying the HTML alone does not produce a complete vignette distribution.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="pull-request-checklist">Pull request checklist<a class="anchor" aria-label="anchor" href="#pull-request-checklist"></a></h2>

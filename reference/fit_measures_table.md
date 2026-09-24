@@ -20,7 +20,8 @@ fit_measures_table(
   df_zstd_large_shift = 0.5,
   df_ratio_tolerance = 0.05,
   sort_by = c("status", "abs_zstd", "facet", "level"),
-  top_n = Inf
+  top_n = Inf,
+  flag_basis = c("mnsq", "mnsq_or_zstd")
 )
 ```
 
@@ -54,8 +55,9 @@ fit_measures_table(
 
 - zstd_cut:
 
-  Absolute ZSTD cutoff used for directional underfit/overfit flags.
-  Default `2`.
+  Absolute ZSTD cutoff used for directional underfit/overfit flags when
+  `flag_basis = "mnsq_or_zstd"`; also used for the separate ZSTD and
+  df-sensitivity columns. Default `2`.
 
 - ci_level:
 
@@ -106,6 +108,13 @@ fit_measures_table(
 
   Optional maximum number of rows in the returned main table.
 
+- flag_basis:
+
+  `"mnsq"` (default) bases directional status on Infit/Outfit mean
+  squares. `"mnsq_or_zstd"` also flags either large positive or negative
+  ZSTD, reproducing the previous combined rule when all indices are
+  available.
+
 ## Value
 
 A bundle of class `mfrm_fit_measures` with:
@@ -141,11 +150,23 @@ question: which raters, criteria, or other facet elements show underfit
 or overfit? It uses the fit statistics already computed by
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
 
-Directional labels are based on both mean-square and ZSTD evidence: high
-MnSq or positive large ZSTD is labeled `underfit`; low MnSq or negative
-large ZSTD is labeled `overfit`. Rows with conflicting directions are
-labeled `mixed`. Treat the table as a review screen and inspect
-substantive context before removing raters or changing an instrument.
+Directional labels use the selected `flag_basis`. By default, high mean
+squares are labeled `underfit` and low mean squares `overfit`;
+conflicting directions are `mixed`. ZSTD values remain visible, and
+`ZSTDOnly` identifies combined-rule flags when the mean-square screen is
+known negative. These standardized values are sample-size and
+df-convention dependent. A ZSTD-only departure is not automatically a
+substantively important misfit.
+
+Missing indices cannot establish a negative screen: one positive is
+retained, but no positive plus an unavailable index is `not_available`.
+`ScreenComplete` records whether all indices required by the selected
+rule were available. Low mean squares indicate less residual variability
+than expected. They do not diagnose misconduct, poor rater quality or
+machine-learning overfitting, and are not an automatic reason for
+exclusion. Investigate high mean squares and substantive consequences
+first. Published bands are contextual heuristics, not calibrated error
+probabilities or universal thresholds for all facets.
 
 FACETS-style ZSTD comparison is controlled by `fit_df_method`. MnSq
 values should be compared first; df and ZSTD columns explain how the
@@ -156,12 +177,21 @@ change across df conventions. The `df_zstd_tolerance`,
 df-sensitivity screen explicit so the same table can be reproduced under
 stricter or more permissive review rules.
 
+## References
+
+Linacre, J. M. (2003). Size vs. significance: standardized chi-square
+fit statistic. *Rasch Measurement Transactions*, 17(1), 918.
+<https://www.rasch.org/rmt/rmt171n.htm>. Wright, B. D. and Linacre, J.
+M. (1994). Reasonable mean-square fit values. *Rasch Measurement
+Transactions*, 8(3), 370. <https://www.rasch.org/rmt/rmt83b.htm>.
+
 ## See also
 
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`facets_fit_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md),
 [`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md),
-[`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md)
+[`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md),
+[`mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_sensitivity.md)
 
 ## Examples
 
@@ -234,18 +264,20 @@ fm$underfit
 #> [29] Underfit                                
 #> [30] Overfit                                 
 #> [31] FitStatus                               
-#> [32] ReviewReason                            
-#> [33] MaxAbsZSTD                              
-#> [34] MaxMnSqDistance                         
-#> [35] InfitZSTDDiff_FACETS_minus_ENGINE       
-#> [36] OutfitZSTDDiff_FACETS_minus_ENGINE      
-#> [37] MaxAbsZSTDDiff_FACETS_vs_ENGINE         
-#> [38] MaxAbsLogDFRatio_ENGINE_over_FACETS     
-#> [39] MaxDFRelativeDifference_ENGINE_vs_FACETS
-#> [40] EngineFlagAbsZ                          
-#> [41] FacetsStyleFlagAbsZ                     
-#> [42] FlagChangedByDf                         
-#> [43] DfSensitivityStatus                     
+#> [32] ScreenComplete                          
+#> [33] ZSTDOnly                                
+#> [34] ReviewReason                            
+#> [35] MaxAbsZSTD                              
+#> [36] MaxMnSqDistance                         
+#> [37] InfitZSTDDiff_FACETS_minus_ENGINE       
+#> [38] OutfitZSTDDiff_FACETS_minus_ENGINE      
+#> [39] MaxAbsZSTDDiff_FACETS_vs_ENGINE         
+#> [40] MaxAbsLogDFRatio_ENGINE_over_FACETS     
+#> [41] MaxDFRelativeDifference_ENGINE_vs_FACETS
+#> [42] EngineFlagAbsZ                          
+#> [43] FacetsStyleFlagAbsZ                     
+#> [44] FlagChangedByDf                         
+#> [45] DfSensitivityStatus                     
 #> <0 rows> (or 0-length row.names)
 
 # Include FACETS-style df/ZSTD companion columns for comparison.

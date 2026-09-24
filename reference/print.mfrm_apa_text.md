@@ -49,8 +49,7 @@ breaks.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 apa <- build_apa_outputs(fit, diag)
 apa$report_text
@@ -69,14 +68,13 @@ apa$report_text
 #> exploratory in this run. Recommended use for this precision profile: JML standard errors
 #> and normal bands are exploratory approximations. Changing to MML does not by itself
 #> establish valid uncertainty; review the fitted model and its uncertainty assumptions..
-#> Optimization did not meet the package convergence checks after 76 function evaluations and
-#> 30 gradient evaluations (LogLik = -820.949). MML model-comparison criteria are unavailable
-#> for this fit; numerical completion alone does not establish comparability. Legacy
-#> descriptive AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common
-#> MML ranking panel. Terminal gradient sup-norm = 0.0035 (review threshold = 0.0001).
-#> Optimizer reached the iteration limit before the terminal gradient became small enough for
-#> review-only acceptance. Constraint settings: noncenter facet = Person; anchored levels = 0
-#> (facets: none); group anchors = 0 (facets: none); dummy facets = none.
+#> Optimization met the numerical convergence checks after 203 function evaluations and 53
+#> gradient evaluations (LogLik = -820.949). MML model-comparison criteria are unavailable for
+#> this fit; numerical completion alone does not establish comparability. Legacy descriptive
+#> AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common MML ranking
+#> panel. Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Constraint
+#> settings: noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0
+#> (facets: none); dummy facets = none.
 #> 
 #> Results.
 #> 

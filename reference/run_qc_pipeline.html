@@ -23,12 +23,18 @@ and DIF/bias into a single pass/warn/fail report."><meta property="og:image" con
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -44,7 +50,7 @@ and DIF/bias into a single pass/warn/fail report."><meta property="og:image" con
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Run automated quality control pipeline</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>run_qc_pipeline.Rd</code></div>
     </div>
 
@@ -212,10 +218,9 @@ collapsing categories automatically.</p></li>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"study1"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
 <span class="r-in"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu">run_qc_pipeline</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">qc</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- QC Pipeline ---</span>
@@ -224,19 +229,19 @@ collapsing categories automatically.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   QC flags describe the selected screening rules. Pass does not establish</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   validity or adequate uncertainty. Unrequested checks do not affect the</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   overall result.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Convergence               Numerical convergence requires review. One or more categories provide weak information; One or more boundary parameters are excluded; Numerical convergence failed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Global Fit                Global Infit=0.999, Outfit=0.990</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [WARN] Convergence               Numerical convergence passed. One or more categories provide weak information; One or more boundary parameters are excluded.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Global Fit                Global Infit=0.996, Outfit=0.971</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [SKIP] Reliability               No facet differentiation target specified; low rater separation is not evidence of poor agreement.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [SKIP] Separation                No facet differentiation target specified; low rater separation is not evidence of poor agreement.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Element Misfit            143 of 328 elements misfitting (43.6%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Unexpected Responses      22.5% unexpected responses</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Element Misfit            139 of 328 elements misfitting (42.4%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Unexpected Responses      22.4% unexpected responses</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Category Structure        Thresholds ordered, min category count = 215</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [PASS] Connectivity              1 disjoint subset(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [WARN] Inter-rater Agreement     Exact agreement = 36.2%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [FAIL] Functioning/Bias Screen   80.0% of screened interactions crossed |screening t| &gt; 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Recommendations:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical-readiness criteria are satisfied. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - The fit is not inference-ready. Inspect the convergence status, model specification, data support, starting values, and optimizer diagnostics before changing controls or interpreting estimates. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Inspect unexpected_response_table() for unusual responses and missing residual information. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. </span>
@@ -245,15 +250,15 @@ collapsing categories automatically.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall: Fail </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pass describes the selected screening rules, not a statistical validation.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Unrequested checks do not affect the overall result.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pass: 3 | Warn: 1 | Fail: 4 | Skip: 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pass: 3 | Warn: 2 | Fail: 3 | Skip: 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    Check Verdict                                  Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Convergence    Fail  Numerical convergence requires review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               Global Fit    Pass                Infit=1.00, Outfit=0.99</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Convergence    Warn           Numerical convergence passed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Global Fit    Pass                Infit=1.00, Outfit=0.97</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Reliability    Skip                          Not requested</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Separation    Skip                          Not requested</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Element Misfit    Fail                        143/328 (43.6%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Unexpected Responses    Fail                                  22.5%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Element Misfit    Fail                        139/328 (42.4%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Unexpected Responses    Fail                                  22.4%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Category Structure    Pass Order=Nondecreasing, minimum count=215</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Connectivity    Pass                                      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Inter-rater Agreement    Warn                                  36.2%</span>
@@ -269,17 +274,17 @@ collapsing categories automatically.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                     Pass=1, Warn=2, Fail&gt;=3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                        Pass&gt;=50%, Warn&gt;=30%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                          Pass&lt;=0%, Fail&gt;10%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                               Detail</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Numerical convergence requires review. One or more categories provide weak information; One or more boundary parameters are excluded; Numerical convergence failed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                     Global Infit=0.999, Outfit=0.990</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   No facet differentiation target specified; low rater separation is not evidence of poor agreement.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   No facet differentiation target specified; low rater separation is not evidence of poor agreement.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                               143 of 328 elements misfitting (43.6%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                           22.5% unexpected responses</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                         Thresholds ordered, min category count = 215</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                 1 disjoint subset(s)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                              Exact agreement = 36.2%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                             80.0% of screened interactions crossed |screening t| &gt; 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                        Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Numerical convergence passed. One or more categories provide weak information; One or more boundary parameters are excluded.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                              Global Infit=0.996, Outfit=0.971</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            No facet differentiation target specified; low rater separation is not evidence of poor agreement.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            No facet differentiation target specified; low rater separation is not evidence of poor agreement.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                        139 of 328 elements misfitting (42.4%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                    22.4% unexpected responses</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                  Thresholds ordered, min category count = 215</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                          1 disjoint subset(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                       Exact agreement = 36.2%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                      80.0% of screened interactions crossed |screening t| &gt; 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  AffectsOverall</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            TRUE</span>
@@ -293,7 +298,7 @@ collapsing categories automatically.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Recommendations:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical-readiness criteria are satisfied. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - The fit is not inference-ready. Inspect the convergence status, model specification, data support, starting values, and optimizer diagnostics before changing controls or interpreting estimates. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Inspect unexpected_response_table() for unusual responses and missing residual information. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. </span>
@@ -301,12 +306,12 @@ collapsing categories automatically.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Check                   Verdict Value         Threshold Detail AffectsOverall</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Convergence             Fail    Numerical co… Numerica… Numer… TRUE          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Convergence             Warn    Numerical co… Numerica… Numer… TRUE          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Global Fit              Pass    Infit=1.00, … [0.50, 1… Globa… TRUE          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Reliability             Skip    Not requested No diffe… No fa… FALSE         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Separation              Skip    Not requested No diffe… No fa… FALSE         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Element Misfit          Fail    143/328 (43.… Pass&lt;=5%… 143 o… TRUE          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Unexpected Responses    Fail    22.5%         Pass&lt;=2%… 22.5%… TRUE          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Element Misfit          Fail    139/328 (42.… Pass&lt;=5%… 139 o… TRUE          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Unexpected Responses    Fail    22.4%         Pass&lt;=2%… 22.4%… TRUE          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> Category Structure      Pass    Order=Nondec… Nondecre… Thres… TRUE          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> Connectivity            Pass    1             Pass=1, … 1 dis… TRUE          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> Inter-rater Agreement   Warn    36.2%         Pass&gt;=50… Exact… TRUE          </span>

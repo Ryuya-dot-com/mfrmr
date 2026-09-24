@@ -107,8 +107,7 @@ Practical read order:
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- category_structure_report(fit)
 summary(out)
 #> mfrmr Category Structure Summary
@@ -121,10 +120,10 @@ summary(out)
 #> 
 #> Category rows
 #>  Category Count Percent Expected count Infit Outfit Infit ZSTD Outfit ZSTD
-#>         1   139  18.099        138.998 1.806  1.602      3.947       4.292
-#>         2   241  31.380        241.000 0.613  0.780     -3.710      -2.586
-#>         3   252  32.812        252.001 0.556  0.617     -4.511      -4.977
-#>         4   136  17.708        136.002 1.871  1.590      4.081       4.176
+#>         1   139  18.099            139 1.806  1.602      3.947       4.292
+#>         2   241  31.380            241 0.613  0.780     -3.711      -2.587
+#>         3   252  32.812            252 0.556  0.617     -4.511      -4.978
+#>         4   136  17.708            136 1.871  1.590      4.081       4.176
 #>   Category-structure diagnostics with mode boundaries and half-score reference
 #>   points.
 #>   Category counts were available for all 4 categories: 0 unused and 0 below 10.
@@ -133,10 +132,10 @@ summary(out)
 #>   decisions do not indicate an absence of warnings.
 head(out$category_table[, c("Category", "Count", "Infit", "Outfit")])
 #>   Category Count     Infit    Outfit
-#> 1        1   139 1.8058940 1.6016812
-#> 2        2   241 0.6131071 0.7801200
-#> 3        3   252 0.5555712 0.6169771
-#> 4        4   136 1.8705501 1.5900752
+#> 1        1   139 1.8058056 1.6016256
+#> 2        2   241 0.6130391 0.7800174
+#> 3        3   252 0.5555312 0.6169201
+#> 4        4   136 1.8705483 1.5900860
 p_cs <- plot(out, draw = FALSE)
 p_cs$data$plot
 #> [1] "counts"

@@ -142,7 +142,12 @@ relative-error covariance is `E/n_t`, absolute-error covariance is
 formulas apply to a Person-by-Rater design or to facets selected by
 `facets`, with names replaced in the declared order. For a single facet
 F and its planned count n, relative error is `E/n` and absolute error is
-`(F + E)/n`. A D-study cannot introduce an absent facet.
+`(F + E)/n`. A D-study cannot introduce an absent facet. For fixed tasks
+represented by score columns in a Person-by-Rater model, vary only
+`Raters`. The task set remains fixed, and each planned rater scores all
+tasks. See "Fixed tasks as score components" in
+[`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
+for the target and allocation requirements.
 
 For raters nested within tasks, use the five components `P`, `T`,
 `R(T)`, `PT`, and `E`, where `E` includes the

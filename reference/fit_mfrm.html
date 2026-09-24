@@ -14,7 +14,10 @@ For your own CSV, see the &quot;Use your own CSV&quot; section of
 vignette(&quot;mfrmr-workflow&quot;, package = &quot;mfrmr&quot;). If the vignette is not
 installed, mfrmr_workflow_methods and describe_mfrm_data() explain the
 input checks. Pass the reviewed rating data frame to data, not the object
-returned by describe_mfrm_data()."><meta property="og:description" content="Estimate person abilities while accounting for rater severity and other
+returned by describe_mfrm_data().
+Before adapting the example, read &quot;Check defaults before adapting an example&quot;
+in mfrmr_workflow_methods. The score ladder, missing-row handling and
+population distribution are analysis choices even when arguments are omitted."><meta property="og:description" content="Estimate person abilities while accounting for rater severity and other
 influences on scores, such as criterion difficulty. A facet is one such
 source of variation; its levels are the individual raters or criteria.
 Each data row is one rating. Supply its column names with person,
@@ -29,7 +32,10 @@ For your own CSV, see the &quot;Use your own CSV&quot; section of
 vignette(&quot;mfrmr-workflow&quot;, package = &quot;mfrmr&quot;). If the vignette is not
 installed, mfrmr_workflow_methods and describe_mfrm_data() explain the
 input checks. Pass the reviewed rating data frame to data, not the object
-returned by describe_mfrm_data()."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+returned by describe_mfrm_data().
+Before adapting the example, read &quot;Check defaults before adapting an example&quot;
+in mfrmr_workflow_methods. The score ladder, missing-row handling and
+population distribution are analysis choices even when arguments are omitted."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -49,12 +55,18 @@ returned by describe_mfrm_data()."><meta property="og:image" content="https://ry
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -70,7 +82,7 @@ returned by describe_mfrm_data()."><meta property="og:image" content="https://ry
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit many-facet ordered-response models with a flexible number of facets</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>fit_mfrm.Rd</code></div>
     </div>
 
@@ -90,7 +102,10 @@ For your own CSV, see the "Use your own CSV" section of
 <code><a href="../articles/mfrmr-workflow.html">vignette("mfrmr-workflow", package = "mfrmr")</a></code>. If the vignette is not
 installed, <a href="mfrmr_workflow_methods.html">mfrmr_workflow_methods</a> and <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> explain the
 input checks. Pass the reviewed rating data frame to <code>data</code>, not the object
-returned by <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>.</p>
+returned by <code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code>.
+Before adapting the example, read "Check defaults before adapting an example"
+in <a href="mfrmr_workflow_methods.html">mfrmr_workflow_methods</a>. The score ladder, missing-row handling and
+population distribution are analysis choices even when arguments are omitted.</p>
     </div>
 
     <div class="section level2">
@@ -197,7 +212,10 @@ records the mapping in <code>fit$prep$score_map</code> (the downstream Count = 0
 rows are consequently absent). <code>TRUE</code> preserves the declared scale so
 unused intermediate categories remain visible in
 <code><a href="rating_scale_table.html">rating_scale_table()</a></code> and APA outputs, which is recommended for
-publication reporting.</p></dd>
+preserving the rubric. This changes which category steps are fitted, not
+just their displayed labels. Fitting stops if a retained internal category
+has no observations; reviewing or revising that ladder is a substantive
+decision, not a formatting option.</p></dd>
 
 
 <dt id="arg-missing-codes">missing_codes<a class="anchor" aria-label="anchor" href="#arg-missing-codes"></a></dt>
@@ -216,7 +234,7 @@ surfaced by <code><a href="build_mfrm_manifest.html">build_mfrm_manifest()</a></
 
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
-<dd><p><code>"RSM"</code>, <code>"PCM"</code>, or bounded <code>"GPCM"</code>.</p></dd>
+<dd><p><code>"RSM"</code> (default), <code>"PCM"</code>, or bounded <code>"GPCM"</code>.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -1287,8 +1305,8 @@ problems in multivariate analysis</em>. Psychometrika, 52(3), 333-343.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3            0      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6            0      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3     0   <span style="color: #949494;"> </span>         0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6    -<span style="color: #BB0000;">4.64</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Check the interpretation status and recommended next step</span></span></span>
 <span class="r-in"><span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span></span>

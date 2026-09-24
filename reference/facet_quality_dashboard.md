@@ -51,8 +51,12 @@ facet_quality_dashboard(
 
 - misfit_warn:
 
-  Mean-square cutoff used to flag misfit. Values above this cutoff or
-  below its reciprocal are flagged.
+  `NULL` (default) uses both bounds returned by
+  [`mfrm_misfit_thresholds()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_misfit_thresholds.md),
+  including any session options. A numeric value instead uses that upper
+  cutoff and its reciprocal as the lower cutoff; it does not preserve
+  the current lower bound. For example, `1.5` selects about 0.67–1.5,
+  whereas the unmodified package defaults are 0.5–1.5.
 
 - central_tendency_max:
 

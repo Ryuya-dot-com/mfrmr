@@ -153,8 +153,7 @@ information formula.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- category_curves_report(fit, theta_points = 101)
 summary(out)
 #> mfrmr Category Curves Summary 
@@ -240,9 +239,9 @@ head(p_cum$data$cumulative_boundaries)
 #> 2     Common             2                    2             3                 3
 #> 3     Common             3                    3             4                 4
 #>   CumulativeDirection TargetProbability ThurstonianThreshold InThetaRange
-#> 1         at_or_below               0.5              -1.5400         TRUE
+#> 1         at_or_below               0.5              -1.5399         TRUE
 #> 2         at_or_below               0.5              -0.0335         TRUE
-#> 3         at_or_below               0.5               1.5722         TRUE
+#> 3         at_or_below               0.5               1.5721         TRUE
 #>   CrossingCount BoundaryStatus   BoundaryLabel
 #> 1             1       in_range P(X <= 1) = 0.5
 #> 2             1       in_range P(X <= 2) = 0.5

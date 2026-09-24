@@ -18,7 +18,7 @@ summary(object, digits = 3, ...)
 
 - digits:
 
-  Number of digits used in numeric summaries.
+  Number of digits used when printing numeric summaries.
 
 - ...:
 
@@ -30,8 +30,13 @@ An object of class `summary.mfrm_signal_detection` with:
 
 - `overview`: run-level overview
 
-- `detection_summary`: aggregated detection rates by design, with
-  design-variable alias columns when applicable
+- `detection_summary`: full-precision rates by design, with
+  design-variable aliases when applicable. `DIF*` and `BiasScreen*`
+  columns retain `Planned`, `Available`, `Unavailable`, `Positive`,
+  `MCLower`, `MCUpper`, `AllTrialsLower` and `AllTrialsUpper` for target
+  outcomes. Monte Carlo bounds are exact 95% binomial intervals
+  conditional on availability; all-trial bounds describe unresolved
+  outcomes, not confidence intervals.
 
 - `ademp`: simulation-study metadata carried forward from the original
   object
@@ -84,7 +89,7 @@ summary(sig_eval)
 #> 
 #> Overview
 #>  Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>        1            1              0             0           0.31
+#>        1            1              0             0          0.328
 #> 
 #> Detection summary (preview)
 #>  design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
@@ -98,15 +103,21 @@ summary(sig_eval)
 #>  McseTargetContrastAbs DIFFalsePositiveRate McseDIFFalsePositiveRate
 #>                     NA                   NA                       NA
 #>  BiasScreenRate McseBiasScreenRate MeanTargetBias McseTargetBias
-#>               0                 NA            NaN             NA
+#>              NA                 NA            NaN             NA
 #>  MeanAbsTargetBias McseAbsTargetBias MeanTargetBiasT McseTargetBiasT
 #>                NaN                NA             NaN              NA
 #>  BiasScreenMetricAvailabilityRate McseBiasScreenMetricAvailabilityRate
 #>                                 0                                   NA
 #>  BiasScreenFalsePositiveRate McseBiasScreenFalsePositiveRate MeanElapsedSec
-#>                          NaN                              NA           0.31
-#>  McseElapsedSec
-#>              NA
+#>                           NA                              NA          0.328
+#>  McseElapsedSec DIFPlanned DIFAvailable DIFUnavailable DIFPositive DIFMCLower
+#>              NA          1            0              1           0         NA
+#>  DIFMCUpper DIFAllTrialsLower DIFAllTrialsUpper BiasScreenPlanned
+#>          NA                 0                 1                 1
+#>  BiasScreenAvailable BiasScreenUnavailable BiasScreenPositive BiasScreenMCLower
+#>                    0                     1                  0                NA
+#>  BiasScreenMCUpper BiasScreenAllTrialsLower BiasScreenAllTrialsUpper
+#>                 NA                        0                        1
 #> 
 #> Structural design review
 #>  review_available n_designs recommended_design_id   view  mode surface
@@ -125,10 +136,11 @@ summary(sig_eval)
 #> 
 #> Notes
 #>  - Some design conditions did not converge in every replication.
-#>  - Some design conditions showed bias-screen hit rates below 0.80.
 #>  - Some design conditions did not yield usable bias-screening t/p metrics in every replication.
-#>  - DIF detection rates are unavailable; residual differences do not provide a differential-functioning test.
+#>  - DIF detection rates are unavailable. Missing test statistics and descriptive residual differences are not negative screening outcomes.
 #>  - Bias-side rates are screening summaries derived from `estimate_bias()` output and should not be interpreted as formal power or alpha-calibrated false-positive rates.
+#>  - Target rates condition on available screens. Planned/available counts, exact 95% Monte Carlo bounds and all-trial unresolved-outcome bounds are retained; these do not establish general diagnostic accuracy.
+#>  - Non-target rates average within-replication proportions over available cells; they are not the probability of any false flag across a family.
 #>  - MCSE columns summarize finite-replication uncertainty around the reported means and rates.
 #>  - Planning helpers vary one person count and two named non-person facet roles (Rater and Criterion). Estimation may contain additional facets, but planning and forecasting are limited to this role-based design.
 #>  - Current scalar-argument planning paths allow `n_person`, `n_rater`, `n_criterion`, and `raters_per_person` to vary subject to `raters_per_person <= n_rater`.

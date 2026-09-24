@@ -3,15 +3,21 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   mfrmr-external-features: mfrmr-external-features.html
+  mfrmr-facet-intervals: mfrmr-facet-intervals.html
   mfrmr-facets-migration: mfrmr-facets-migration.html
   mfrmr-gpcm-scope: mfrmr-gpcm-scope.html
   mfrmr-linking-and-dff: mfrmr-linking-and-dff.html
   mfrmr-mml-and-marginal-fit: mfrmr-mml-and-marginal-fit.html
   mfrmr-portable-calibration: mfrmr-portable-calibration.html
+  mfrmr-random-raters: mfrmr-random-raters.html
   mfrmr-reporting-and-apa: mfrmr-reporting-and-apa.html
+  mfrmr-response-imputation: mfrmr-response-imputation.html
+  mfrmr-screening-performance: mfrmr-screening-performance.html
+  mfrmr-testlet-applications: mfrmr-testlet-applications.html
+  mfrmr-testlets: mfrmr-testlets.html
   mfrmr-visual-diagnostics: mfrmr-visual-diagnostics.html
   mfrmr-workflow: mfrmr-workflow.html
-last_built: 2026-09-22T12:50Z
+last_built: 2026-09-24T03:30Z
 urls:
   reference: https://ryuya-dot-com.github.io/mfrmr/reference
   article: https://ryuya-dot-com.github.io/mfrmr/articles

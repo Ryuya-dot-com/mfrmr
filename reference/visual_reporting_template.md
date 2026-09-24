@@ -278,21 +278,28 @@ visual_reporting_template("surface")
 #>                                                          ThreeDPolicy
 #> 4 advanced surface data only; no package-native interactive renderer.
 mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
-#>                                     Route
-#> 2                 Fit-measure forest plot
-#> 3          Wright map uncertainty overlay
-#> 4  Unified Wright map uncertainty overlay
-#> 5                  Rater severity profile
-#> 6           Manuscript Figure 1 composite
-#> 7        Fair-average diagnostic interval
-#> 8       Bias-interaction interval overlay
-#> 9           Displacement interval overlay
-#> 10                 Group contrast summary
-#> 11          Facet-equivalence ROPE review
-#> 12               Anchor drift forest plot
-#> 13                  Rater trajectory plot
-#> 14       Empirical-Bayes shrinkage funnel
-#> 15              Facet ICC interval review
+#>                                                  Route
+#> 2                              Fit-measure forest plot
+#> 3                       Wright map uncertainty overlay
+#> 4               Unified Wright map uncertainty overlay
+#> 5                               Rater severity profile
+#> 6                        Manuscript Figure 1 composite
+#> 7                     Fair-average diagnostic interval
+#> 8                    Bias-interaction interval overlay
+#> 9                        Displacement interval overlay
+#> 10                              Group contrast summary
+#> 11                       Facet-equivalence ROPE review
+#> 12                            Anchor drift forest plot
+#> 13                               Rater trajectory plot
+#> 14                    Empirical-Bayes shrinkage funnel
+#> 15                           Facet ICC interval review
+#> 16                Fixed-facet model/sandwich intervals
+#> 17                   Assigned-score MI facet intervals
+#> 18 Observed random-rater explicit normal approximation
+#> 19           Observed random-rater bootstrap intervals
+#> 21                     Testlet fixed-facet calibration
+#> 22                   Testlet conditional Person scores
+#> 24              Shared-rater conditional Person scores
 #>                                                                                                                  PrimaryHelper
 #> 2                                                          fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)
 #> 3                                                                  plot(fit, type = "wright", show_ci = TRUE, ci_level = 0.95)
@@ -307,7 +314,14 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 12                                                                detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)
 #> 13                                                                                 plot_rater_trajectory(..., ci_level = 0.95)
 #> 14 plot_shrinkage_funnel(..., show_ci = TRUE, ci_level = 0.95); plot(fit, type = "shrinkage", show_ci = TRUE, ci_level = 0.95)
-#> 15                                               compute_facet_icc(ci_level = 0.95); plot(analyze_hierarchical_structure(...))
+#> 15                           compute_facet_icc(ci_method = "boot", ci_level = 0.95); plot(analyze_hierarchical_structure(...))
+#> 16                                                         mfrm_facet_intervals(fit, facet, method = "sandwich", level = 0.95)
+#> 17                                                                         pool_mfrm_imputed(analyses, facet, ci_level = 0.95)
+#> 18                                                                                 confint(fit, parm = "raters", level = 0.95)
+#> 19                                                      mfrm_random_rater_intervals(fit, nsim = 499, seed = 123, level = 0.95)
+#> 21                                                                            confint(fit, parm = 'calibration', level = 0.95)
+#> 22                                                                                               predict(testlet_fit, newdata)
+#> 24                                                                                 score_mfrm_random_rater(fit, persons = ids)
 #>    DefaultLevel
 #> 2          0.95
 #> 3          0.95
@@ -323,4 +337,11 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 13         0.95
 #> 14         0.95
 #> 15         0.95
+#> 16         0.95
+#> 17         0.95
+#> 18         0.95
+#> 19         0.95
+#> 21         0.95
+#> 22         0.95
+#> 24         0.95
 ```

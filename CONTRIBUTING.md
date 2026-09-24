@@ -50,18 +50,34 @@ non-CRAN tests.
 - Use `example_operational` for applied tutorials, `example_core` for
   idealized fast checks, and `example_bias` only when a planted non-null
   DFF/bias signal is needed.
-- Prefer `method = "JML"`, `maxit = 30`, and
-  `diagnose_mfrm(..., residual_pca = "none")` in standard Rd examples.
-- Wrap multi-fit workflows, MML examples, recovery simulations, design
-  simulations, external-Suggests examples, and long reporting pipelines
-  in `\donttest{}` unless the function cannot be demonstrated otherwise.
+- Match the estimator and population assumptions to the example’s
+  question. Do not substitute JML for MML, truncate optimization, or
+  lower integration accuracy solely to shorten a check. Omit diagnostics
+  that do not illustrate the documented function, such as optional
+  residual PCA.
+- Time ordinary examples and `\donttest{}` examples. The latter are
+  normally included by `R CMD check --as-cran`; the wrapper does not
+  solve a slow example. Keep short complete examples executable, and
+  place longer multi-step analyses in executed vignettes. Explain any
+  remaining wrapper. Guard optional Suggests with
+  [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) or the
+  relevant feature check, rather than relying on `\donttest{}` to avoid
+  the dependency.
 - Reserve `\dontrun{}` for examples that genuinely cannot execute during
   a check, such as workflows that require files produced by external
   software. Reserve `@examplesIf interactive()` for functions that
   genuinely require an interactive session.
-- When an MML example must run in standard examples, set a small
-  `quad_points` value and explain that it is an exploratory speed
-  setting.
+- For a measured long calculation, a commented recomputation call may
+  accompany an executable example that reads and uses its saved
+  synthetic result. Include the complete regeneration recipe, preserve
+  its data and numerical settings, and check that the saved objects
+  match and replay without refitting. A replay check does not replace
+  numerical tests of the estimator. Do not comment out the entire
+  workflow or advertise an unexecuted recipe as a fresh validation.
+- Check that the retained example’s optimization and integration
+  controls support its stated purpose. Show the model’s numerical checks
+  where relevant; no quadrature order is a universally sufficient
+  accuracy setting.
 - Use `draw = FALSE` in examples that only need to demonstrate returned
   plot payloads.
 - Do not shrink example data below a meaningful many-facet structure
@@ -91,6 +107,11 @@ non-CRAN tests.
   installation, manual, or other check-infrastructure time to this
   package-controlled threshold. Do not apply the threshold to the
   deliberately exhaustive `NOT_CRAN=true` regression job.
+- When reusing executed articles with `--no-build-vignettes`, retain
+  their `build/vignette.rds` index as well as `inst/doc`. Verify that
+  its source, output and extracted R filenames match the current
+  packaged articles; copying the HTML alone does not produce a complete
+  vignette distribution.
 
 ## Pull request checklist
 

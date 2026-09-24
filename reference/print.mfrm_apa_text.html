@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Print APA narrative text with preserved line breaks</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>print.mfrm_apa_text.Rd</code></div>
     </div>
 
@@ -96,8 +102,7 @@ report output in the console.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">apa</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_apa_outputs.html">build_apa_outputs</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">diag</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">apa</span><span class="op">$</span><span class="va">report_text</span></span></span>
@@ -116,14 +121,13 @@ report output in the console.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> exploratory in this run. Recommended use for this precision profile: JML standard errors</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> and normal bands are exploratory approximations. Changing to MML does not by itself</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> establish valid uncertainty; review the fitted model and its uncertainty assumptions..</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Optimization did not meet the package convergence checks after 76 function evaluations and</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30 gradient evaluations (LogLik = -820.949). MML model-comparison criteria are unavailable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> for this fit; numerical completion alone does not establish comparability. Legacy</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> descriptive AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> MML ranking panel. Terminal gradient sup-norm = 0.0035 (review threshold = 0.0001).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Optimizer reached the iteration limit before the terminal gradient became small enough for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> review-only acceptance. Constraint settings: noncenter facet = Person; anchored levels = 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (facets: none); group anchors = 0 (facets: none); dummy facets = none.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Optimization met the numerical convergence checks after 203 function evaluations and 53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> gradient evaluations (LogLik = -820.949). MML model-comparison criteria are unavailable for</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> this fit; numerical completion alone does not establish comparability. Legacy descriptive</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AIC = 1753.898; legacy descriptive BIC = 2013.950; neither enters the common MML ranking</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> panel. Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Constraint</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> settings: noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (facets: none); dummy facets = none.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Results.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

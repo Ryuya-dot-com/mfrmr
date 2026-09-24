@@ -93,8 +93,7 @@ dispatched through
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- facet_statistics_report(fit)
 summary(out)
 #> mfrmr Facet Profile Summary 
@@ -122,19 +121,19 @@ summary(out)
 #>       0.249 0.097  0.229            0.062         0.010        0.053      2.353
 #>       0.288 0.099  0.270            0.083         0.010        0.073      2.736
 #>       0.288 0.097  0.271            0.083         0.010        0.073      2.777
-#>       1.088 0.365  1.025            1.184         0.133        1.051      2.809
-#>       1.088 0.347  1.031            1.184         0.120        1.064      2.975
-#>       1.099 0.365  1.037            1.209         0.133        1.076      2.843
-#>       1.099 0.347  1.043            1.209         0.120        1.089      3.010
+#>       1.088 0.365  1.025            1.184         0.133        1.050      2.809
+#>       1.088 0.347  1.031            1.184         0.120        1.063      2.974
+#>       1.099 0.365  1.037            1.209         0.133        1.076      2.842
+#>       1.099 0.347  1.043            1.209         0.120        1.089      3.009
 #>       0.271 0.099  0.253            0.074         0.010        0.064      2.564
-#>       0.271 0.097  0.253            0.074         0.010        0.064      2.596
+#>       0.271 0.097  0.253            0.074         0.009        0.064      2.596
 #>  Strata Reliability EstimateAvailable SEAvailable ExcludedEstimates
 #>   3.421       0.843                 4           4                 0
 #>   3.470       0.847                 4           4                 0
 #>   3.981       0.882                 4           4                 0
 #>   4.037       0.885                 4           4                 0
 #>   4.079       0.888                48          48                 0
-#>   4.300       0.898                48          48                 0
+#>   4.299       0.898                48          48                 0
 #>   4.123       0.890                48          48                 0
 #>   4.346       0.901                48          48                 0
 #>   3.752       0.868                 4           4                 0
@@ -155,12 +154,12 @@ summary(out)
 #>      0.994      1.019     25.914       3         0     0.073       2.997
 #>      0.994      1.019     25.914       3         0     0.073       2.997
 #>      0.994      1.019     25.914       3         0     0.073       2.997
-#>      1.000      1.019    384.088      47         0     1.089      45.462
-#>      1.000      1.019    384.088      47         0     1.089      45.462
-#>      1.000      1.019    384.088      47         0     1.089      45.462
-#>      1.000      1.019    384.088      47         0     1.089      45.462
-#>      0.994      1.019     30.901       3         0     0.089       2.999
-#>      0.994      1.019     30.901       3         0     0.089       2.999
+#>      1.000      1.019    384.048      47         0     1.089      45.462
+#>      1.000      1.019    384.048      47         0     1.089      45.462
+#>      1.000      1.019    384.048      47         0     1.089      45.462
+#>      1.000      1.019    384.048      47         0     1.089      45.462
+#>      0.993      1.019     30.899       3         0     0.089       2.999
+#>      0.993      1.019     30.899       3         0     0.089       2.999
 #>  RandomDF RandomProb
 #>         2      0.223
 #>         2      0.223

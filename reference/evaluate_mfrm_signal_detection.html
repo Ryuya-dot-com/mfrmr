@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Evaluate DIF power and bias-screening behavior under known simulated signals</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>evaluate_mfrm_signal_detection.Rd</code></div>
     </div>
 
@@ -328,7 +334,7 @@ formal inferential power, alpha calibration, operational scoring, or
 arbitrary-facet planning evidence.</p>
 <p><strong>Detection criteria</strong>:
 A DIF signal is counted as "detected" when the target contrast has
-\(p &lt;\) <code>dif_p_cut</code> <strong>and</strong>, when an absolute contrast cutoff is in
+\(p \le\) <code>dif_p_cut</code> <strong>and</strong>, when an absolute contrast cutoff is in
 force, \(|\mathrm{Contrast}| \ge\) <code>dif_abs_cut</code>. For
 <code>dif_method = "refit"</code>, <code>dif_abs_cut</code> is interpreted on the logit scale.
 For <code>dif_method = "residual"</code>, DIF detection, classification and false-positive
@@ -338,16 +344,36 @@ descriptive summaries; a missing test is not counted as a non-detection.</p>
 screening metrics rather than formal inferential quantities. Here, a bias
 cell is counted as <strong>screen-positive</strong> only when those screening metrics are
 available and satisfy</p>
-<p>\(p &lt;\) <code>bias_p_cut</code> <strong>and</strong> \(|t| \ge\) <code>bias_abs_t</code>.</p>
+<p>\(p \le\) <code>bias_p_cut</code> <strong>and</strong> \(|t| \ge\) <code>bias_abs_t</code>.
+If either required metric is unavailable, the result is <code>NA</code>, not <code>FALSE</code>.
+A descriptive-only DIF classification likewise supplies no classification
+detection outcome, even when the contrast itself is available.</p>
 <p><strong>Power</strong> is the proportion of replications in which the target signal
 was flagged when a comparison statistic is available. Refit DIF rates are
 conditional screening rates, not calibrated inferential power.
 For bias, the primary summary is <code>BiasScreenRate</code>, a screening hit rate
-rather than formal inferential power.</p>
-<p><strong>False-positive rate</strong> is the proportion of non-target cells that were
-incorrectly flagged. For DIF this is interpreted in the usual testing
-sense. For bias, <code>BiasScreenFalsePositiveRate</code> is a screening rate and
-should not be read as a calibrated inferential alpha level.</p>
+rather than formal inferential power. With a zero generating effect, the
+target rate describes null flags rather than sensitivity. The historical
+column name <code>DIFPower</code> is retained for compatibility.</p>
+<p><strong>False-positive rate</strong> first counts flags among available non-target cells
+within each replication, then averages those proportions across replications.
+<code>DIFNonTargetPlanned</code>/<code>DIFNonTargetAvailable</code> and the corresponding
+<code>BiasNonTarget*</code> columns retain cell denominators. These rates are neither
+calibrated inferential alpha levels nor probabilities of any false flag in
+a family. For per-target and any-target rates with a complete planned roster,
+use <code><a href="mfrm_screening_performance.html">mfrm_screening_performance()</a></code>.</p>
+<p>Target summaries retain planned, available, unavailable and positive counts,
+exact 95% binomial Monte Carlo bounds, and bounds obtained by assigning every
+unresolved outcome negative or positive. Rates and Monte Carlo intervals
+condition on available outcomes; unresolved-outcome bounds are not confidence
+intervals. These uncertainty calculations describe independent simulation
+replications, not uncertainty about the quality of a real rater.</p>
+<p>Rebuild older saved summaries and plots from the original evaluation to
+correct unavailable target outcomes and retain full-precision summaries.
+Older runs lack non-target availability counts, so their non-target rates
+are withheld: recovering those cell rates requires rerunning the simulation.
+This function evaluates Group-by-Criterion DIF and Rater-by-Criterion bias;
+it does not evaluate general Rater-by-Group differential rater functioning.</p>
 <p><strong>Default effect sizes</strong>: <code>dif_effect = 0.6</code> logits corresponds to a
 moderate criterion-linked differential-functioning effect; <code>bias_effect = -0.8</code>
 logits represents a substantial rater-criterion interaction.  Adjust
@@ -409,8 +435,8 @@ reporting</em>. Psychological Methods.</p></li>
 <span class="r-in"><span><span class="va">s_sig</span><span class="op">$</span><span class="va">overview</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1            1              1             0           1.01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1            1              1             0          0.918</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

@@ -216,10 +216,9 @@ The 10 checks are:
 # \donttest{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", maxit = 30
+  method = "JML", maxit = 300
 )
 #> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 qc <- run_qc_pipeline(fit)
 qc
 #> --- QC Pipeline ---
@@ -228,19 +227,19 @@ qc
 #>   QC flags describe the selected screening rules. Pass does not establish
 #>   validity or adequate uncertainty. Unrequested checks do not affect the
 #>   overall result.
-#>   [FAIL] Convergence               Numerical convergence requires review. One or more categories provide weak information; One or more boundary parameters are excluded; Numerical convergence failed.
-#>   [PASS] Global Fit                Global Infit=0.999, Outfit=0.990
+#>   [WARN] Convergence               Numerical convergence passed. One or more categories provide weak information; One or more boundary parameters are excluded.
+#>   [PASS] Global Fit                Global Infit=0.996, Outfit=0.971
 #>   [SKIP] Reliability               No facet differentiation target specified; low rater separation is not evidence of poor agreement.
 #>   [SKIP] Separation                No facet differentiation target specified; low rater separation is not evidence of poor agreement.
-#>   [FAIL] Element Misfit            143 of 328 elements misfitting (43.6%)
-#>   [FAIL] Unexpected Responses      22.5% unexpected responses
+#>   [FAIL] Element Misfit            139 of 328 elements misfitting (42.4%)
+#>   [FAIL] Unexpected Responses      22.4% unexpected responses
 #>   [PASS] Category Structure        Thresholds ordered, min category count = 215
 #>   [PASS] Connectivity              1 disjoint subset(s)
 #>   [WARN] Inter-rater Agreement     Exact agreement = 36.2%
 #>   [FAIL] Functioning/Bias Screen   80.0% of screened interactions crossed |screening t| > 2
 #> 
 #> Recommendations:
-#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical-readiness criteria are satisfied. 
+#>   - The fit is not inference-ready. Inspect the convergence status, model specification, data support, starting values, and optimizer diagnostics before changing controls or interpreting estimates. 
 #>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. 
 #>   - Inspect unexpected_response_table() for unusual responses and missing residual information. 
 #>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
@@ -249,15 +248,15 @@ summary(qc)
 #> Overall: Fail 
 #>   Pass describes the selected screening rules, not a statistical validation.
 #>   Unrequested checks do not affect the overall result.
-#> Pass: 3 | Warn: 1 | Fail: 4 | Skip: 2
+#> Pass: 3 | Warn: 2 | Fail: 3 | Skip: 2
 #> 
 #>                    Check Verdict                                  Value
-#>              Convergence    Fail  Numerical convergence requires review
-#>               Global Fit    Pass                Infit=1.00, Outfit=0.99
+#>              Convergence    Warn           Numerical convergence passed
+#>               Global Fit    Pass                Infit=1.00, Outfit=0.97
 #>              Reliability    Skip                          Not requested
 #>               Separation    Skip                          Not requested
-#>           Element Misfit    Fail                        143/328 (43.6%)
-#>     Unexpected Responses    Fail                                  22.5%
+#>           Element Misfit    Fail                        139/328 (42.4%)
+#>     Unexpected Responses    Fail                                  22.4%
 #>       Category Structure    Pass Order=Nondecreasing, minimum count=215
 #>             Connectivity    Pass                                      1
 #>    Inter-rater Agreement    Warn                                  36.2%
@@ -273,17 +272,17 @@ summary(qc)
 #>                     Pass=1, Warn=2, Fail>=3
 #>                        Pass>=50%, Warn>=30%
 #>                          Pass<=0%, Fail>10%
-#>                                                                                                                                                               Detail
-#>  Numerical convergence requires review. One or more categories provide weak information; One or more boundary parameters are excluded; Numerical convergence failed.
-#>                                                                                                                                     Global Infit=0.999, Outfit=0.990
-#>                                                                   No facet differentiation target specified; low rater separation is not evidence of poor agreement.
-#>                                                                   No facet differentiation target specified; low rater separation is not evidence of poor agreement.
-#>                                                                                                                               143 of 328 elements misfitting (43.6%)
-#>                                                                                                                                           22.5% unexpected responses
-#>                                                                                                                         Thresholds ordered, min category count = 215
-#>                                                                                                                                                 1 disjoint subset(s)
-#>                                                                                                                                              Exact agreement = 36.2%
-#>                                                                                                             80.0% of screened interactions crossed |screening t| > 2
+#>                                                                                                                        Detail
+#>  Numerical convergence passed. One or more categories provide weak information; One or more boundary parameters are excluded.
+#>                                                                                              Global Infit=0.996, Outfit=0.971
+#>                            No facet differentiation target specified; low rater separation is not evidence of poor agreement.
+#>                            No facet differentiation target specified; low rater separation is not evidence of poor agreement.
+#>                                                                                        139 of 328 elements misfitting (42.4%)
+#>                                                                                                    22.4% unexpected responses
+#>                                                                                  Thresholds ordered, min category count = 215
+#>                                                                                                          1 disjoint subset(s)
+#>                                                                                                       Exact agreement = 36.2%
+#>                                                                      80.0% of screened interactions crossed |screening t| > 2
 #>  AffectsOverall
 #>            TRUE
 #>            TRUE
@@ -297,7 +296,7 @@ summary(qc)
 #>            TRUE
 #> 
 #> Recommendations:
-#>   - The fit reached its iteration ceiling and is not inference-ready. Do not interpret or select its estimates; refit the same specification with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical-readiness criteria are satisfied. 
+#>   - The fit is not inference-ready. Inspect the convergence status, model specification, data support, starting values, and optimizer diagnostics before changing controls or interpreting estimates. 
 #>   - Review individual element fit statistics and any unavailable values before interpreting the misfit rate. 
 #>   - Inspect unexpected_response_table() for unusual responses and missing residual information. 
 #>   - Many interaction cells were screen-positive. Review estimate_bias() or analyze_dff() before making substantive bias claims. 
@@ -305,12 +304,12 @@ qc$verdicts
 #> # A tibble: 10 × 6
 #>    Check                   Verdict Value         Threshold Detail AffectsOverall
 #>    <chr>                   <chr>   <chr>         <chr>     <chr>  <lgl>         
-#>  1 Convergence             Fail    Numerical co… Numerica… Numer… TRUE          
+#>  1 Convergence             Warn    Numerical co… Numerica… Numer… TRUE          
 #>  2 Global Fit              Pass    Infit=1.00, … [0.50, 1… Globa… TRUE          
 #>  3 Reliability             Skip    Not requested No diffe… No fa… FALSE         
 #>  4 Separation              Skip    Not requested No diffe… No fa… FALSE         
-#>  5 Element Misfit          Fail    143/328 (43.… Pass<=5%… 143 o… TRUE          
-#>  6 Unexpected Responses    Fail    22.5%         Pass<=2%… 22.5%… TRUE          
+#>  5 Element Misfit          Fail    139/328 (42.… Pass<=5%… 139 o… TRUE          
+#>  6 Unexpected Responses    Fail    22.4%         Pass<=2%… 22.4%… TRUE          
 #>  7 Category Structure      Pass    Order=Nondec… Nondecre… Thres… TRUE          
 #>  8 Connectivity            Pass    1             Pass=1, … 1 dis… TRUE          
 #>  9 Inter-rater Agreement   Warn    36.2%         Pass>=50… Exact… TRUE          

@@ -185,7 +185,10 @@ model$loggedEvents
 plot(model, c("ExperienceYears", "AnnualRatings"), layout = c(2, 2))
 ```
 
-![](mfrmr-external-features_files/figure-html/imputation-1.png)
+![Imputation-chain means and standard deviations across iterations for
+experience years and annual rating workload. These traces help review
+mixing; they do not establish that the imputation model is
+appropriate.](mfrmr-external-features_files/figure-html/imputation-1.png)
 
 Five imputations and five iterations keep this executable example short;
 they are not an adequacy recommendation. The plot shows the mean and
@@ -231,22 +234,38 @@ comparison$analysis_summary
 #> 13 ExperienceWeighted    PAM    <NA>          3 3        5      120        0
 #> 14 ExperienceWeighted    PAM    <NA>          4 3        5      120        0
 #> 15 ExperienceWeighted    PAM    <NA>          5 3        5      120        0
-#>    MinGroupSize MaxGroupSize MeanSilhouette
-#> 1            51           69      0.2841483
-#> 2            52           68      0.2584725
-#> 3            56           64      0.2681527
-#> 4            47           73      0.2338481
-#> 5            57           63      0.2578823
-#> 6            37           43      0.2526199
-#> 7            37           42      0.2813456
-#> 8            37           42      0.2628245
-#> 9            36           44      0.2401655
-#> 10           39           42      0.2521256
-#> 11           32           47      0.1915956
-#> 12           36           45      0.1964619
-#> 13           34           47      0.2290490
-#> 14           36           46      0.2250179
-#> 15           36           47      0.2256632
+#>    MinGroupSize MaxGroupSize MeanSilhouette Distance          Space Scaling
+#> 1            51           69      0.2841483    Gower Mixed features   Range
+#> 2            52           68      0.2584725    Gower Mixed features   Range
+#> 3            56           64      0.2681527    Gower Mixed features   Range
+#> 4            47           73      0.2338481    Gower Mixed features   Range
+#> 5            57           63      0.2578823    Gower Mixed features   Range
+#> 6            37           43      0.2526199    Gower Mixed features   Range
+#> 7            37           42      0.2813456    Gower Mixed features   Range
+#> 8            37           42      0.2628245    Gower Mixed features   Range
+#> 9            36           44      0.2401655    Gower Mixed features   Range
+#> 10           39           42      0.2521256    Gower Mixed features   Range
+#> 11           32           47      0.1915956    Gower Mixed features   Range
+#> 12           36           45      0.1964619    Gower Mixed features   Range
+#> 13           34           47      0.2290490    Gower Mixed features   Range
+#> 14           36           46      0.2250179    Gower Mixed features   Range
+#> 15           36           47      0.2256632    Gower Mixed features   Range
+#>    Components
+#> 1          NA
+#> 2          NA
+#> 3          NA
+#> 4          NA
+#> 5          NA
+#> 6          NA
+#> 7          NA
+#> 8          NA
+#> 9          NA
+#> 10         NA
+#> 11         NA
+#> 12         NA
+#> 13         NA
+#> 14         NA
+#> 15         NA
 summary(comparison)
 #>         First             Second Partitions Included Pairs MeanChangedFraction
 #> 1   TwoGroups        ThreeGroups          5      120  7140           0.3199160
@@ -310,17 +329,28 @@ feature_comparison$analysis_summary
 #> 8  WithoutWorkload    PAM    <NA>          3 3        4      120        0
 #> 9  WithoutWorkload    PAM    <NA>          4 3        4      120        0
 #> 10 WithoutWorkload    PAM    <NA>          5 3        4      120        0
-#>    MinGroupSize MaxGroupSize MeanSilhouette
-#> 1            37           43      0.2526199
-#> 2            37           42      0.2813456
-#> 3            37           42      0.2628245
-#> 4            36           44      0.2401655
-#> 5            39           42      0.2521256
-#> 6            38           42      0.3037361
-#> 7            38           42      0.2797405
-#> 8            35           49      0.2571784
-#> 9            36           44      0.2639301
-#> 10           37           42      0.2940627
+#>    MinGroupSize MaxGroupSize MeanSilhouette Distance          Space Scaling
+#> 1            37           43      0.2526199    Gower Mixed features   Range
+#> 2            37           42      0.2813456    Gower Mixed features   Range
+#> 3            37           42      0.2628245    Gower Mixed features   Range
+#> 4            36           44      0.2401655    Gower Mixed features   Range
+#> 5            39           42      0.2521256    Gower Mixed features   Range
+#> 6            38           42      0.3037361    Gower Mixed features   Range
+#> 7            38           42      0.2797405    Gower Mixed features   Range
+#> 8            35           49      0.2571784    Gower Mixed features   Range
+#> 9            36           44      0.2639301    Gower Mixed features   Range
+#> 10           37           42      0.2940627    Gower Mixed features   Range
+#>    Components
+#> 1          NA
+#> 2          NA
+#> 3          NA
+#> 4          NA
+#> 5          NA
+#> 6          NA
+#> 7          NA
+#> 8          NA
+#> 9          NA
+#> 10         NA
 feature_comparison$weights
 #>          Analysis         Feature Weight
 #> 1    WithWorkload ExperienceYears      1
@@ -435,7 +465,10 @@ plot data.
 plot(one_completion)
 ```
 
-![](mfrmr-external-features_files/figure-html/silhouette-1.png)
+![Rater silhouette widths grouped by the descriptive partition in one
+completion. The dashed line is the overall mean; negative widths
+indicate profiles to inspect, not poor rater
+quality.](mfrmr-external-features_files/figure-html/silhouette-1.png)
 
 Inspect one feature at a time so that its units and categories remain
 clear. Numeric profiles show means and medians in original units,
@@ -448,14 +481,18 @@ descriptions of this completion only.
 plot(one_completion, type = "profile", feature = "ExperienceYears")
 ```
 
-![](mfrmr-external-features_files/figure-html/profiles-1.png)
+![Experience in years summarized by descriptive rater group, with means
+and medians in the original units and no confidence
+intervals.](mfrmr-external-features_files/figure-html/profiles-1.png)
 
 ``` r
 
 plot(one_completion, type = "profile", feature = "TrainingLevel")
 ```
 
-![](mfrmr-external-features_files/figure-html/profiles-2.png)
+![Proportions of ordered training levels within each descriptive rater
+group. These profiles describe one imputed table, not effects of
+training.](mfrmr-external-features_files/figure-html/profiles-2.png)
 
 The next heatmap asks which pairs remain together across imputations.
 For readability, this view explicitly selects the first 20 IDs in the
@@ -469,7 +506,10 @@ never sampled automatically.
 plot(analyses$ThreeGroups, ids = raters$Rater[1:20])
 ```
 
-![](mfrmr-external-features_files/figure-html/co-membership-1.png)
+![Pairwise co-membership proportions across imputations for the first
+twenty rater IDs. The scale runs from zero to one; unavailable pairs are
+grey. These proportions are imputation sensitivity, not sampling
+stability.](mfrmr-external-features_files/figure-html/co-membership-1.png)
 
 The colour scale always runs from zero to one. Grey denotes unavailable
 pairs involving excluded raters, not pairs that never share a group.
@@ -531,22 +571,38 @@ method_comparison$analysis_summary
 #> 13 Complete Hierarchical complete          3 3        5      120        0
 #> 14 Complete Hierarchical complete          4 3        5      120        0
 #> 15 Complete Hierarchical complete          5 3        5      120        0
-#>    MinGroupSize MaxGroupSize MeanSilhouette
-#> 1            37           43      0.2526199
-#> 2            37           42      0.2813456
-#> 3            37           42      0.2628245
-#> 4            36           44      0.2401655
-#> 5            39           42      0.2521256
-#> 6            32           48      0.3452806
-#> 7            35           43      0.3409728
-#> 8            33           46      0.3469410
-#> 9            34           46      0.3398082
-#> 10           33           45      0.3389007
-#> 11           32           48      0.3452806
-#> 12           35           43      0.3409728
-#> 13           20           54      0.3053761
-#> 14           20           67      0.2888587
-#> 15           38           42      0.3861780
+#>    MinGroupSize MaxGroupSize MeanSilhouette Distance          Space Scaling
+#> 1            37           43      0.2526199    Gower Mixed features   Range
+#> 2            37           42      0.2813456    Gower Mixed features   Range
+#> 3            37           42      0.2628245    Gower Mixed features   Range
+#> 4            36           44      0.2401655    Gower Mixed features   Range
+#> 5            39           42      0.2521256    Gower Mixed features   Range
+#> 6            32           48      0.3452806    Gower Mixed features   Range
+#> 7            35           43      0.3409728    Gower Mixed features   Range
+#> 8            33           46      0.3469410    Gower Mixed features   Range
+#> 9            34           46      0.3398082    Gower Mixed features   Range
+#> 10           33           45      0.3389007    Gower Mixed features   Range
+#> 11           32           48      0.3452806    Gower Mixed features   Range
+#> 12           35           43      0.3409728    Gower Mixed features   Range
+#> 13           20           54      0.3053761    Gower Mixed features   Range
+#> 14           20           67      0.2888587    Gower Mixed features   Range
+#> 15           38           42      0.3861780    Gower Mixed features   Range
+#>    Components
+#> 1          NA
+#> 2          NA
+#> 3          NA
+#> 4          NA
+#> 5          NA
+#> 6          NA
+#> 7          NA
+#> 8          NA
+#> 9          NA
+#> 10         NA
+#> 11         NA
+#> 12         NA
+#> 13         NA
+#> 14         NA
+#> 15         NA
 summary(method_comparison)
 #>     First   Second Partitions Included Pairs MeanChangedFraction
 #> 1     PAM  Average          5      120  7140           0.3474230
@@ -570,7 +626,10 @@ high.
 plot(average$analyses[[1]])
 ```
 
-![](mfrmr-external-features_files/figure-html/dendrogram-1.png)
+![Average-linkage hierarchy from Gower dissimilarities in one completed
+rater-feature table. Boxes mark three groups; all 120 raters are
+included. Heights are dissimilarities, not significance or branch
+support.](mfrmr-external-features_files/figure-html/dendrogram-1.png)
 
 This is the full tree for **one completion**, with boxes marking its
 three groups. The 120 raters are all included; ID labels are hidden by
@@ -872,27 +931,197 @@ structure was preserved. A two-component plot is a projection, not a
 test for the existence of clusters.
 
 Ordinary PCA and k-means should not receive arbitrary numeric codes for
-nominal categories such as specialty. The present mixed-feature API uses
-Gower distances with PAM or average/complete linkage; it does not
-implement PCA, k-means, or automatic feature selection. Base R provides
+nominal categories such as specialty. Keep Gower/PAM or average/complete
+linkage for mixed features. For selected numeric attributes,
+[`mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md)
+and
+[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
+use R’s
 [`prcomp()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html)
 and
-[`kmeans()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html)
-for separately specified numeric analyses. A future integrated route
-needs explicit scaling, retained dimensions, initialization, and
-uncertainty handling. Simply sending PC scores to the current Gower
-interface would range-scale them again and would not reproduce Euclidean
-k-means.
+[`kmeans()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html).
+They center features and, by default, divide by sample standard
+deviations. Positive feature weights apply to **squared Euclidean
+distances**. The fitted transformation, original units, entity IDs and
+missingness accounting remain available. No automatic feature, component
+or group-count selection is performed.
+
+Here the question is whether grouping experience, annual workload and
+workshop hours changes when those three attributes are represented by
+two components. The same already fitted imputation model supplies both
+analyses. Workshop hours remain a predictor in that model whether or not
+they are selected for clustering. These numeric selections answer a
+different question from the mixed-background groups above; specialty and
+training level are not numeric inputs to this PCA.
+
+``` r
+
+numeric_names <- c("ExperienceYears", "AnnualRatings", "WorkshopHours")
+numeric_review <- mfrm_features(raters, "Rater", numeric_names)
+numeric_direct <- mfrm_cluster_imputed(numeric_review, model,
+  numeric_review$missing, k = 3, method = "kmeans", seed = 42)
+numeric_reduced <- mfrm_cluster_imputed(numeric_review, model,
+  numeric_review$missing, k = 3, method = "kmeans", components = 2, seed = 42)
+numeric_comparison <- mfrm_cluster_compare(list(
+  StandardizedFeatures = numeric_direct, TwoComponents = numeric_reduced))
+numeric_comparison$analysis_summary
+#>                Analysis  Method Linkage Imputation K Features Included Excluded
+#> 1  StandardizedFeatures k-means    <NA>          1 3        3      120        0
+#> 2  StandardizedFeatures k-means    <NA>          2 3        3      120        0
+#> 3  StandardizedFeatures k-means    <NA>          3 3        3      120        0
+#> 4  StandardizedFeatures k-means    <NA>          4 3        3      120        0
+#> 5  StandardizedFeatures k-means    <NA>          5 3        3      120        0
+#> 6         TwoComponents k-means    <NA>          1 3        3      120        0
+#> 7         TwoComponents k-means    <NA>          2 3        3      120        0
+#> 8         TwoComponents k-means    <NA>          3 3        3      120        0
+#> 9         TwoComponents k-means    <NA>          4 3        3      120        0
+#> 10        TwoComponents k-means    <NA>          5 3        3      120        0
+#>    MinGroupSize MaxGroupSize MeanSilhouette  Distance                Space
+#> 1            23           55      0.2946332 Euclidean     Numeric features
+#> 2            31           49      0.2921438 Euclidean     Numeric features
+#> 3            30           47      0.2890823 Euclidean     Numeric features
+#> 4            21           51      0.2841480 Euclidean     Numeric features
+#> 5            23           53      0.2742463 Euclidean     Numeric features
+#> 6            27           51      0.4118746 Euclidean Principal components
+#> 7            29           50      0.4118474 Euclidean Principal components
+#> 8            27           52      0.3786295 Euclidean Principal components
+#> 9            34           44      0.3871943 Euclidean Principal components
+#> 10           28           51      0.3811840 Euclidean Principal components
+#>      Scaling Components
+#> 1  Sample SD         NA
+#> 2  Sample SD         NA
+#> 3  Sample SD         NA
+#> 4  Sample SD         NA
+#> 5  Sample SD         NA
+#> 6  Sample SD          2
+#> 7  Sample SD          2
+#> 8  Sample SD          2
+#> 9  Sample SD          2
+#> 10 Sample SD          2
+summary(numeric_comparison)
+#>                  First        Second Partitions Included Pairs
+#> 1 StandardizedFeatures TwoComponents          5      120  7140
+#>   MeanChangedFraction MinChangedFraction MaxChangedFraction MeanAdjustedRand
+#> 1           0.1959384         0.02072829          0.3857143        0.5701576
+```
+
+Read `Space`, `Scaling` and `Components` before comparing the
+partitions. `ChangedFraction` measures changed together/apart pairs,
+allowing arbitrary renumbering of clusters. Different component counts
+change distances, so silhouette widths do not provide a common-scale
+test that one analysis is better. The default 25 random starts and fixed
+seed make this execution reproducible, but do not prove a global
+optimum. Assess another seed separately if initialization sensitivity
+matters.
+
+``` r
+
+first_numeric <- numeric_reduced$analyses[[1]]
+summary(first_numeric$pca)
+#>   Component  Variance Proportion Cumulative Retained
+#> 1       PC1 1.1248279  0.3749426  0.3749426     TRUE
+#> 2       PC2 0.9952593  0.3317531  0.7066957     TRUE
+#> 3       PC3 0.8799128  0.2933043  1.0000000    FALSE
+first_numeric$pca$loadings
+#>                        PC1          PC2
+#> ExperienceYears -0.4657154  0.761955112
+#> AnnualRatings    0.5411158  0.647598960
+#> WorkshopHours   -0.7002163 -0.006324086
+plot(first_numeric$pca)  # The full explained-variance table, including omitted PCs.
+```
+
+![Explained-variance scree plot for numeric rater features in one
+completion. Filled points identify retained components and open points
+identify omitted
+components.](mfrmr-external-features_files/figure-html/numeric-pca-views-1.png)
+
+``` r
+
+plot(first_numeric$pca, type = "scores", groups = first_numeric, labels = FALSE)
+```
+
+![Scores on the first two principal components, with descriptive k-means
+groups distinguished by colour and point shape. This projection is not a
+latent ability or rater-quality
+scale.](mfrmr-external-features_files/figure-html/numeric-pca-views-2.png)
+
+``` r
+
+plot(first_numeric$pca, type = "loadings", components = 1)
+```
+
+![First-component loadings for the transformed numeric rater features.
+Their signs are arbitrary and the coefficients are not original-unit
+correlations.](mfrmr-external-features_files/figure-html/numeric-pca-views-3.png)
+
+``` r
+
+plot(first_numeric, type = "profile", feature = "ExperienceYears")
+```
+
+![Experience in years summarized by the k-means groups fitted in the
+retained principal-component space. The original-unit profile describes
+this completion
+only.](mfrmr-external-features_files/figure-html/numeric-pca-views-4.png)
+
+The first-completion score plot annotates a two-dimensional projection
+with that completion’s group labels. Colour and point shape distinguish
+groups; `preset = "monochrome"` retains the shapes. Shapes repeat after
+six groups, so inspect
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for IDs and encodings in crowded views. Filled/open scree points
+distinguish retained/omitted components. Loadings are coefficients in
+the transformed feature space, not correlations in original units. Their
+signs are arbitrary. Inspect the original-unit profiles to explain what
+distinguishes the groups. No view establishes ability, severity, rater
+quality or an effect of training.
+
+Every completion retains its own centering, standard deviations and PCA
+basis. The comparison pairs the same completions, while allowing these
+transformations to change as imputed values change. It compares
+partitions; it does not average PCA scores, loadings or arbitrary group
+numbers, and it does not Rubin-pool inference. These functions impute no
+rating scores.
+
+For an already complete numeric table, use
+`mfrm_cluster_kmeans(review, k=3)` directly. To inspect and retain a
+specific reduction, fit `pca <- mfrm_pca(review, components=2)` and then
+`mfrm_cluster_kmeans(pca, k=3)`. Passing a PCA object uses its scores
+exactly, without further standardization, range scaling or whitening.
+Save that PCA and its grouping together.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
+reuse saved results; changing features, component counts, weights or
+seeds requires the corresponding new analysis.
+`mfrmr_output_guide("features")` lists the dedicated output routes. Use
+[`summary()`](https://rdrr.io/r/base/summary.html) for partition
+comparisons, and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) or
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for fitted PCA and grouping views. Automatic
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+conversion is unavailable, including when selecting a table component. A
+custom scores plot must explicitly retain both selected PC axes and its
+group labels; plotting the first numeric column alone does not reproduce
+that view.
 
 ## Plan for the size of the analysis
 
+K-means can explicitly omit silhouettes with `silhouette = FALSE`,
+avoiding their quadratic distance matrix. Those silhouettes are
+unavailable, not zero; profile plots and partition comparisons remain
+available. PCA itself uses a numeric matrix decomposition whose cost
+depends on both entity and feature counts. Neither option promises a
+universal capacity limit. The imputation co-membership matrix remains
+quadratic even with silhouettes disabled.
+
 Pairwise distances require memory that grows quadratically with the
-number of raters. Ordinary clustering permits up to 5,000 included
-entities; the imputation workflow permits up to 5,000 total entities
-because its comparison matrix includes excluded IDs. These are input
-limits, not a guarantee of low memory use or acceptable run time.
-Multiple imputations also retain every completed analysis. Save the
-fitted imputation model and clustering results;
+number of raters. Gower/PAM and hierarchical clustering permit up to
+5,000 included entities; the imputation workflow permits up to 5,000
+total entities because its comparison matrix includes excluded IDs.
+These are input limits, not a guarantee of low memory use or acceptable
+run time. Multiple imputations also retain every completed analysis.
+Save the fitted imputation model and clustering results;
 [`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
 reuses them without repeating the fits.
 

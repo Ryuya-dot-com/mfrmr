@@ -117,8 +117,7 @@ The `table` data.frame contains:
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 chi <- facets_chisq_table(fit)
 summary(chi)
 #> mfrmr Facet Variability Summary 
@@ -127,14 +126,14 @@ summary(chi)
 #> 
 #> Facet variability summary
 #>  Facets FixedSignificant RandomSignificant MeanRandomVar MaxFixedChiSq
-#>       3                3                 0         0.417       384.088
+#>       3                3                 0         0.417       384.048
 #>  MaxRandomChiSq
 #>          45.462
 #> 
 #> Facet rows: table
 #>      Facet Levels MeanMeasure    SD FixedChiSq FixedDF RandomVar FixedProb
-#>     Person     48       0.001 1.099    384.088      47     1.089         0
-#>      Rater      4       0.000 0.313     30.901       3     0.089         0
+#>     Person     48       0.001 1.099    384.048      47     1.089         0
+#>      Rater      4       0.000 0.313     30.899       3     0.089         0
 #>  Criterion      4       0.000 0.288     25.914       3     0.073         0
 #>  RandomChiSq RandomDF RandomProb FixedFlag RandomFlag
 #>       45.462       46      0.495      TRUE      FALSE

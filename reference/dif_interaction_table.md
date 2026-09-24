@@ -170,8 +170,7 @@ fitted model; no refit is needed.
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", model = "RSM", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                 method = "JML", model = "RSM", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 int <- dif_interaction_table(fit, diag, facet = "Rater",
                              group = "Group", data = toy, min_obs = 2)
@@ -187,9 +186,9 @@ head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
 #>   Level GroupValue ObsExpAvg flag_bias
 #>   <chr> <chr>          <dbl> <lgl>    
 #> 1 R01   A             0.0842 FALSE    
-#> 2 R01   B            -0.0843 FALSE    
-#> 3 R02   A            -0.0660 FALSE    
-#> 4 R02   B             0.0660 FALSE    
+#> 2 R01   B            -0.0842 FALSE    
+#> 3 R02   A            -0.0661 FALSE    
+#> 4 R02   B             0.0661 FALSE    
 #> 5 R03   A            -0.0563 FALSE    
 #> 6 R03   B             0.0563 FALSE    
 # }

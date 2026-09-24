@@ -139,9 +139,8 @@ table.
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", maxit = 30
+  method = "JML", maxit = 300
 )
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 review <- facets_fit_review(fit)
 summary(review)
 #> mfrmr FACETS Fit Review Summary
@@ -164,7 +163,7 @@ summary(review)
 #> 
 #> Fit-standardization rows requiring review
 #>      Facet        Level Infit Outfit MaxAbsZDiff FlagChanged
-#>  Criterion Organization 0.867  0.858       0.492       FALSE
+#>  Criterion Organization 0.866  0.858       0.492       FALSE
 #>           ReviewStatus
 #>  DF convention differs
 #> 

@@ -275,8 +275,7 @@ many-facet residual comparison as a fitted-model test.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "both")
 pca <- analyze_residual_pca(diag, mode = "both")
 pca2 <- analyze_residual_pca(fit, mode = "both")
@@ -327,19 +326,19 @@ head(p$data)
 pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
 head(pca_pa$overall_table)
 #>   Component Eigenvalue Proportion Cumulative ParallelMean ParallelSD
-#> 1         1   2.113536 0.13209603  0.1320960     2.160913 0.14855479
-#> 2         2   1.832881 0.11455503  0.2466511     1.918642 0.07914670
-#> 3         3   1.706244 0.10664025  0.3532913     1.697861 0.06202269
-#> 4         4   1.519047 0.09494041  0.4482317     1.485696 0.07926864
-#> 5         5   1.289965 0.08062283  0.5288545     1.297380 0.04976408
-#> 6         6   1.157293 0.07233083  0.6011854     1.199561 0.04272479
+#> 1         1   2.113557 0.13209732  0.1320973     2.160927 0.14855886
+#> 2         2   1.832887 0.11455546  0.2466528     1.918644 0.07914518
+#> 3         3   1.706239 0.10663995  0.3532927     1.697854 0.06203292
+#> 4         4   1.519039 0.09493995  0.4482327     1.485691 0.07927506
+#> 5         5   1.289992 0.08062450  0.5288572     1.297384 0.04976571
+#> 6         6   1.157287 0.07233045  0.6011876     1.199563 0.04271580
 #>   ParallelCutoff ParallelQuantile ExcessOverParallelCutoff
-#> 1       2.449711             0.95              -0.33617439
-#> 2       2.025522             0.95              -0.19264184
-#> 3       1.801769             0.95              -0.09552545
-#> 4       1.628377             0.95              -0.10933074
-#> 5       1.407579             0.95              -0.11761333
-#> 6       1.257088             0.95              -0.09979494
+#> 1       2.449728             0.95              -0.33617090
+#> 2       2.025494             0.95              -0.19260707
+#> 3       1.801772             0.95              -0.09553311
+#> 4       1.628404             0.95              -0.10936434
+#> 5       1.407595             0.95              -0.11760270
+#> 6       1.257091             0.95              -0.09980357
 #>   ExceedsParallelCutoff ParallelReps SuccessfulParallelReps
 #> 1                 FALSE           10                     10
 #> 2                 FALSE           10                     10
@@ -356,11 +355,11 @@ head(pca_pa$overall_table)
 #> 6 residual_permutation
 head(pca$overall_table)
 #>   Component Eigenvalue Proportion Cumulative
-#> 1         1   2.113536 0.13209603  0.1320960
-#> 2         2   1.832881 0.11455503  0.2466511
-#> 3         3   1.706244 0.10664025  0.3532913
-#> 4         4   1.519047 0.09494041  0.4482317
-#> 5         5   1.289965 0.08062283  0.5288545
-#> 6         6   1.157293 0.07233083  0.6011854
+#> 1         1   2.113557 0.13209732  0.1320973
+#> 2         2   1.832887 0.11455546  0.2466528
+#> 3         3   1.706239 0.10663995  0.3532927
+#> 4         4   1.519039 0.09493995  0.4482327
+#> 5         5   1.289992 0.08062450  0.5288572
+#> 6         6   1.157287 0.07233045  0.6011876
 # }
 ```

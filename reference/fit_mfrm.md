@@ -19,6 +19,11 @@ and
 explain the input checks. Pass the reviewed rating data frame to `data`,
 not the object returned by
 [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
+Before adapting the example, read "Check defaults before adapting an
+example" in
+[mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md).
+The score ladder, missing-row handling and population distribution are
+analysis choices even when arguments are omitted.
 
 ## Usage
 
@@ -121,7 +126,11 @@ fit_mfrm(
   consequently absent). `TRUE` preserves the declared scale so unused
   intermediate categories remain visible in
   [`rating_scale_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/rating_scale_table.md)
-  and APA outputs, which is recommended for publication reporting.
+  and APA outputs, which is recommended for preserving the rubric. This
+  changes which category steps are fitted, not just their displayed
+  labels. Fitting stops if a retained internal category has no
+  observations; reviewing or revising that ladder is a substantive
+  decision, not a formatting option.
 
 - missing_codes:
 
@@ -147,7 +156,7 @@ fit_mfrm(
 
 - model:
 
-  `"RSM"`, `"PCM"`, or bounded `"GPCM"`.
+  `"RSM"` (default), `"PCM"`, or bounded `"GPCM"`.
 
 - method:
 
@@ -1424,8 +1433,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
-#> 2 Rater          6            0      0.399      -0.606       0.412 1.02 
+#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
+#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
 
 # Check the interpretation status and recommended next step
 results$decision

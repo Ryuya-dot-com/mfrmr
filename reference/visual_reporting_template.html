@@ -29,12 +29,18 @@ this figure ready for the current run?".'><meta property="og:image" content="htt
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -50,7 +56,7 @@ this figure ready for the current run?".'><meta property="og:image" content="htt
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Figure-reporting template for visual diagnostics</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
       <div class="d-none name"><code>visual_reporting_template.Rd</code></div>
     </div>
 
@@ -323,21 +329,28 @@ decide how to describe the resulting figure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                          ThreeDPolicy</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 advanced surface data only; no package-native interactive renderer.</span>
 <span class="r-in"><span><span class="fu"><a href="mfrmr_interval_guide.html">mfrmr_interval_guide</a></span><span class="op">(</span><span class="st">"visual"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Route"</span>, <span class="st">"PrimaryHelper"</span>, <span class="st">"DefaultLevel"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                     Route</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                 Fit-measure forest plot</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          Wright map uncertainty overlay</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  Unified Wright map uncertainty overlay</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                  Rater severity profile</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6           Manuscript Figure 1 composite</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Fair-average diagnostic interval</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8       Bias-interaction interval overlay</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9           Displacement interval overlay</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                 Group contrast summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11          Facet-equivalence ROPE review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12               Anchor drift forest plot</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                  Rater trajectory plot</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14       Empirical-Bayes shrinkage funnel</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15              Facet ICC interval review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  Route</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                              Fit-measure forest plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                       Wright map uncertainty overlay</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4               Unified Wright map uncertainty overlay</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                               Rater severity profile</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                        Manuscript Figure 1 composite</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                     Fair-average diagnostic interval</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                    Bias-interaction interval overlay</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                        Displacement interval overlay</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                              Group contrast summary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                       Facet-equivalence ROPE review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                            Anchor drift forest plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                               Rater trajectory plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                    Empirical-Bayes shrinkage funnel</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                           Facet ICC interval review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                Fixed-facet model/sandwich intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                   Assigned-score MI facet intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18 Observed random-rater explicit normal approximation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19           Observed random-rater bootstrap intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                     Testlet fixed-facet calibration</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                   Testlet conditional Person scores</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24              Shared-rater conditional Person scores</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                  PrimaryHelper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                          fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                  plot(fit, type = "wright", show_ci = TRUE, ci_level = 0.95)</span>
@@ -352,7 +365,14 @@ decide how to describe the resulting figure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                 plot_rater_trajectory(..., ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14 plot_shrinkage_funnel(..., show_ci = TRUE, ci_level = 0.95); plot(fit, type = "shrinkage", show_ci = TRUE, ci_level = 0.95)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                               compute_facet_icc(ci_level = 0.95); plot(analyze_hierarchical_structure(...))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                           compute_facet_icc(ci_method = "boot", ci_level = 0.95); plot(analyze_hierarchical_structure(...))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                         mfrm_facet_intervals(fit, facet, method = "sandwich", level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                         pool_mfrm_imputed(analyses, facet, ci_level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                 confint(fit, parm = "raters", level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                      mfrm_random_rater_intervals(fit, nsim = 499, seed = 123, level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                            confint(fit, parm = 'calibration', level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                               predict(testlet_fit, newdata)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                 score_mfrm_random_rater(fit, persons = ids)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    DefaultLevel</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2          0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3          0.95</span>
@@ -368,6 +388,13 @@ decide how to describe the resulting figure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 14         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 15         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24         0.95</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

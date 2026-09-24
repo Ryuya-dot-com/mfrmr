@@ -190,8 +190,7 @@ for the current scope.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 summary(out)
 #> mfrmr Output File Bundle Summary 
@@ -211,7 +210,7 @@ summary(out)
 #>    R01   Content        2    3.384   -1.384      -2.077 0.444      1       1
 #>    R01   Content        3    1.930    1.070       1.398 0.586      1       2
 #>    R01   Content        3    3.384   -0.384      -0.576 0.444      1       2
-#>    R01   Content        3    1.848    1.152       1.540 0.560      1       2
+#>    R01   Content        3    1.848    1.152       1.539 0.560      1       2
 #>    R01   Content        3    2.309    0.691       0.853 0.656      1       2
 #>    R01   Content        2    3.282   -1.282      -1.832 0.490      1       1
 #>  PersonMeasure ScoreSlope ScoreInformation ObservedScoreDerivative PrObserved

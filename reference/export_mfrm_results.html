@@ -25,12 +25,18 @@ validation step. The folder is not deidentified or automatically shareable."><me
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -46,7 +52,7 @@ validation step. The folder is not deidentified or automatically shareable."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Export an mfrm_results analysis archive</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>export_mfrm_results.Rd</code></div>
     </div>
 
@@ -102,7 +108,8 @@ underscores.</p></dd>
 <dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
 <dd><p>Optional reader-facing analysis-archive preset. <code>"starter"</code> adds the
 report and plot routes to the default files and writes <code>index.html</code> with
-the required Wright map embedded at the start of the reading flow.</p></dd>
+the required Wright map for ordinary models, or the available model-specific
+figures for testlet and random-rater results.</p></dd>
 
 
 <dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
@@ -149,7 +156,14 @@ for the already-created object;</p></li>
 <li><p>an <code>.rds</code> copy of the <code>mfrm_results</code> object;</p></li>
 <li><p>a replay <code>.R</code> script from <code>x$input$reproducible_code</code>;</p></li>
 <li><p>a written-files manifest and compact export summary.</p></li>
-</ul><p>All presets, including <code>"starter"</code>, are analysis archives. In particular,
+</ul><p>For testlet, random-rater and ordinary results with saved posterior response
+diagnostics, replay reloads the exported RDS without
+refitting, rescoring or resampling. Requesting <code>"replay"</code> also includes
+<code>"rds"</code>. Run the script from the exported folder. Stored prediction settings,
+unavailable rows, numerical checks and interval meanings travel with the
+result. A bootstrap interval may have infinite endpoints; exports retain
+them instead of substituting finite ordinary intervals.</p>
+<p>All presets, including <code>"starter"</code>, are analysis archives. In particular,
 the default <code>.rds</code> file retains the complete result object, and CSV, HTML,
 plot, and replay artifacts can retain direct identifiers or other sensitive
 study information. The manifest labels each file for review, but the helper
@@ -160,7 +174,7 @@ analysis environment.</p>
 comparatively slow or require richer graphics devices. Plot failures are
 recorded in the returned <code>plot_errors</code> table rather than stopping the export.
 The <code>"starter"</code> preset is the recommended reader-oriented analysis archive
-because it always
+because, for ordinary models, it
 requests the Wright map in addition to the result summary, report, replay
 script, and manifest. Its Infit pathway includes a bounded selection of
 person rows so person fit can be reviewed without replacing the required

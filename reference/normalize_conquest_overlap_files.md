@@ -186,15 +186,15 @@ summary(normalized)$normalization_scope
 review <- review_conquest_overlap(bundle, normalized)
 summary(review)$summary
 #>   PopulationParametersExpected PopulationParametersCompared PopulationMae
-#> 1                            3                            2  4.163336e-16
+#> 1                            3                            2  2.220446e-16
 #>   PopulationMaxAbsDifference PopulationMaxAbsParameter ItemRowsExpected
-#> 1               4.440892e-16                         X                6
+#> 1               4.440892e-16                    sigma2                6
 #>   ItemRowsCompared ItemCenteredCorrelation ItemCenteredMae
-#> 1                6                       1    5.019133e-16
+#> 1                6                       1    1.048929e-15
 #>   ItemCenteredMaxAbsDifference ItemCenteredMaxAbsItem CaseRowsExpected
-#> 1                 1.554312e-15                   I006               60
-#>   CaseRowsCompared CaseCorrelation     CaseMae CaseMaxAbsDifference
-#> 1               60               1 6.88743e-16         4.884981e-15
+#> 1                 3.108624e-15                   I006               60
+#>   CaseRowsCompared CaseCorrelation      CaseMae CaseMaxAbsDifference
+#> 1               60               1 6.984286e-16         4.884981e-15
 #>   AttentionItems AttentionMissing AttentionDuplicate AttentionNonNumeric
 #> 1              0                0                  0                   0
 # }

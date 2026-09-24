@@ -3,21 +3,42 @@
 Produce a side-by-side comparison of multiple
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
 results using AIC, Person-based BIC, Sclove SABIC, log-likelihood, and
-free-parameter counts. When exactly two models are supplied and the
-current conservative nesting review passes, a likelihood-ratio test is
-included.
+free-parameter counts. An ordinary RSM paired with a testlet or
+shared-rater fit instead follows a descriptive facet-effect route, with
+no automatic ranking. For ordinary models, when exactly two models are
+supplied and the current conservative nesting review passes, a
+likelihood-ratio test is included.
 
 ## Usage
 
 ``` r
-compare_mfrm(..., labels = NULL, warn_constraints = TRUE, nested = FALSE)
+compare_mfrm(
+  ...,
+  labels = NULL,
+  warn_constraints = TRUE,
+  nested = FALSE,
+  response_diagnostics = NULL,
+  person_scores = NULL
+)
+
+# S3 method for class 'mfrm_extended_comparison'
+summary(object, ...)
+
+# S3 method for class 'mfrm_extended_comparison'
+print(x, ...)
 ```
 
 ## Arguments
 
 - ...:
 
-  Two or more `mfrm_fit` objects to compare.
+  Two or more `mfrm_fit` objects, or exactly one ordinary `mfrm_fit` and
+  one
+  [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+  or
+  [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+  result. The latter route is descriptive; see the extended-model
+  section.
 
 - labels:
 
@@ -40,9 +61,33 @@ compare_mfrm(..., labels = NULL, warn_constraints = TRUE, nested = FALSE)
   runs a conservative structural nesting review and computes the LRT
   only for supported nesting patterns.
 
+- response_diagnostics:
+
+  Optional list of two saved
+  [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  outputs in the same order as the fits. Supported for an ordinary RSM
+  paired with a testlet or shared-rater fit. This adds descriptive
+  predictive comparisons without computing integrals.
+
+- person_scores:
+
+  Optional list of two saved
+  [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+  results in fit order for an ordinary versus extended RSM comparison.
+  Both must score the same complete source roster, return the same
+  Person IDs and use the same conditional interval level. No scoring is
+  run here.
+
+- object, x:
+
+  An extended-model comparison returned by `compare_mfrm()`.
+
 ## Value
 
-An object of class `mfrm_comparison` (named list) with:
+With one extended model, an `mfrm_extended_comparison` containing
+`models`, `checks`, centered `effects`, `notes`, and source/omission
+metadata. With ordinary models only, an object of class
+`mfrm_comparison` (named list) with:
 
 - `table`: data.frame of model-level statistics including `LogLik`,
   `Deviance`, `Npar` (and equal compatibility alias `npar`), `AIC`,
@@ -145,6 +190,96 @@ chi-square p-value can be incorrect. At large Person counts, a very
 small practical improvement can also become statistically significant.
 Read the p-value as formal nested-fit evidence, not as an automatic
 practical model preference or evidence that a subscore is useful.
+
+## Ordinary versus extended RSMs
+
+Exactly one ordinary RSM MML fit and one testlet/shared-rater fit return
+an `mfrm_extended_comparison`, with `models`, `checks`, `effects` and
+`notes`. The information-criterion and LRT sections describe ordinary
+`mfrm_fit` comparisons only. This route does not rank models, compute
+difference intervals, or provide an AIC/BIC preference. `nested = TRUE`
+is refused.
+
+Both fits must use identical observed rating events, including repeated
+events, category coding, unit weights and fixed facets except for the
+deliberately changed rater treatment. Use unanchored additive severity
+facets, `noncenter_facet = "Person"`, no facet shrinkage, and matching
+person/score column roles. Category recoding must preserve the same
+consecutive adjacent-category scale. These checks cannot be disabled by
+`warn_constraints = FALSE`.
+
+Match the population assumption: ordinary `population_formula = ~1` with
+both extension defaults estimates a common normal ability SD; the
+ordinary default and extension `person_sd = 1` impose known N(0,1).
+Covariate-dependent populations and fixed nonunit SDs have no matching
+ordinary route here. Population intercepts and free step locations may
+use different origins; they are recorded, not compared as substantive
+mean differences.
+
+The source roster and omitted counts must agree. New ordinary fits
+retain `prep$omitted_data` and `prep$omitted_input_rows`. When scores
+were omitted, their identities must match, including repeated events.
+Older fits without this provenance require refitting from the complete
+assigned-score roster. Missing IDs, excluded weights and population-data
+omissions are unsupported.
+
+Effects are centered at the unweighted mean of the same complete set of
+levels within each facet. This preserves pairwise contrasts while
+removing arbitrary facet origins. `SourceReference`/`SourceComparison`
+retain raw values and `CenterReference`/`CenterComparison` retain the
+subtracted means. `Difference` is comparison minus reference.
+Conditional rater modes and fixed coefficients are labeled separately;
+shrinkage is not evidence of greater accuracy or rater quality. Failed
+numerical checks or a missing level estimate withhold affected
+differences without dropping source rows. Native inference readiness
+remains explicit even when descriptive numerical checks pass. No SE or
+confidence interval for model differences is implied.
+
+With `response_diagnostics`, `responses` retains matched category
+probabilities, means, full mixture variances and grouped descriptive
+Infit/Outfit. Both saved diagnostics must use the same probability
+target, selected event multiset and shared `group_by` identifier
+columns. Matching uses event contents, including repeated-event
+multiplicities and missing scores, rather than assuming row numbers
+agree. Identical repeated events match in source occurrence order.
+`responses$events` and `responses$rows` retain the matching and original
+row numbers. Missing or unavailable rows remain explicit and differences
+involving them are withheld.
+
+All observed source events condition each model; selecting a Person's
+rows does not remove other Persons from shared-rater inference. These
+are same-data descriptive comparisons with calibration held fixed, not
+held-out predictive performance. A smaller Infit/Outfit is not evidence
+of improvement. Do not substitute ordinary plug-in diagnostics or their
+reference cutoffs. See
+[`plot.mfrm_extended_comparison()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_extended_comparison.md)
+for predictive paired and difference displays.
+
+With `person_scores`, `persons$table` compares conditional EAPs after
+subtracting each fitted population mean, retaining original estimates,
+origins, posterior SDs and aligned conditional endpoints. Unit Rasch
+slopes retain the logit unit; centering removes the arbitrary origin,
+not shrinkage or changes in the assumed population variance. Prior-only
+and unavailable differences are withheld. Separate conditional intervals
+are not intervals for model differences or tests of Person differences.
+Use `metric = "person"` in
+[`plot.mfrm_extended_comparison()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_extended_comparison.md)
+for a paired/difference display.
+
+The default facet-only output does not compare Person scores, steps,
+predictive Infit/Outfit or replacement-rater predictions. For testlets,
+zero local variance retains the fixed facets; zero shared-rater variance
+removes rater differences and is not the fixed-rater model. Numerical
+zero-reduction agreement does not establish model adequacy or
+variance-boundary inference.
+
+Use `plot(comparison, style = "paired")` for matched effects, or
+`style = "difference"` for differences versus means. See
+[`plot.mfrm_extended_comparison()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_extended_comparison.md)
+for display and accessibility controls. Attach saved results with
+`mfrm_results(extended_fit, comparison = comparison)` for static
+reports, tables, figures and replay. No comparison/report step fits,
+scores or resamples either model.
 
 ## Information-criterion diagnostics
 

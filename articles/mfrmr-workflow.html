@@ -39,12 +39,18 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul>
@@ -71,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-workflow.Rmd</code></div>
     </div>
 
@@ -80,6 +86,17 @@
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
+<p>This tutorial follows the ordinary fixed-facet
+<code><a href="../reference/fit_mfrm.html">fit_mfrm()</a></code> workflow. To choose between fixed facets, shared
+random raters and Person-specific testlets, use
+<code>mfrmr_output_guide("models")</code> or
+<code><a href="../reference/mfrmr_workflow_methods.html">help("mfrmr_workflow_methods")</a></code>. The extended models have
+dedicated tutorials:
+<code><a href="../articles/mfrmr-random-raters.html">vignette("mfrmr-random-raters", package = "mfrmr")</a></code> and
+<code><a href="../articles/mfrmr-testlets.html">vignette("mfrmr-testlets", package = "mfrmr")</a></code>. Their
+prediction targets and reporting support differ; the diagnostics and
+comprehensive reports below require an ordinary <code>mfrm_fit</code>
+result.</p>
 <p>This example estimates person abilities while accounting for rater
 severity and criterion difficulty. A <em>facet</em> is a source of
 variation in scores; here, <code>Rater</code> and <code>Criterion</code>
@@ -135,8 +152,8 @@ transitions between adjacent scores).</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
 <span><span class="co">#&gt;   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3            0      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater          6            0      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Criterion      3     0   <span style="color: #949494;"> </span>         0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater          6    -<span style="color: #BB0000;">4.64</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02</span></span>
 <span></span>
 <span><span class="co"># Check the interpretation status and recommended next step</span></span>
 <span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span>
@@ -1242,20 +1259,29 @@ the contrasts, screening rules, and multiplicity plan. See the reporting
 vignette and <code>mfrmr-linking-and-dff</code>.</td>
 </tr>
 <tr class="odd">
+<td>How often does a declared rater-warning rule detect a specified
+departure or falsely flag an unaffected rater?</td>
+<td>
+<code><a href="../reference/mfrm_screening_performance.html">mfrm_screening_performance()</a></code> with known simulation
+truth and all planned trials. See
+<code>mfrmr-screening-performance</code> for individual/family rates,
+unavailable results and Monte Carlo uncertainty.</td>
+</tr>
+<tr class="even">
 <td>Would the conclusions change under a bounded GPCM?</td>
 <td>
 <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> and
 <code>mfrmr-gpcm-scope</code>; explain what discrimination reweighting
 means for the score interpretation.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Are forms or waves on a comparable scale?</td>
 <td>
 <code>mfrmr-linking-and-dff</code> and
 <code>mfrmr-portable-calibration</code>; common labels alone do not
 establish linking.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>How does a proposed rating design perform under stated
 assumptions?</td>
 <td>
@@ -1264,7 +1290,7 @@ assumptions?</td>
 <code><a href="../reference/assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code>; report generating conditions,
 repetitions, failures, and Monte Carlo uncertainty.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>How should new persons be scored under an existing calibration?</td>
 <td>
 <code><a href="../reference/predict_mfrm_units.html">predict_mfrm_units()</a></code> and

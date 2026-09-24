@@ -157,8 +157,7 @@ views.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 out <- bias_interaction_report(bias, top_n = 10)
@@ -188,11 +187,11 @@ summary(out)
 #>        Level2 ObsExpAverage BiasSize    SE      t  Prob ObservedCount LRChiSq
 #>      Accuracy             0   -1.102 0.333 -3.310 0.003            24      NA
 #>      Accuracy             0    0.777 0.308  2.521 0.019            24      NA
-#>  Organization             0    0.683 0.299  2.281 0.032            24      NA
+#>  Organization             0    0.683 0.300  2.281 0.032            24      NA
 #>  Organization             0   -0.362 0.293 -1.235 0.229            24      NA
 #>  Organization             0   -0.313 0.296 -1.059 0.301            24      NA
 #>       Content             0   -0.277 0.301 -0.921 0.367            24      NA
-#>      Accuracy             0    0.247 0.288  0.856 0.401            24      NA
+#>      Accuracy             0    0.247 0.288  0.857 0.401            24      NA
 #>      Language             0    0.234 0.297  0.788 0.439            24      NA
 #>       Content             0    0.247 0.315  0.783 0.442            24      NA
 #>      Language             0   -0.208 0.294 -0.709 0.485            24      NA
@@ -214,7 +213,7 @@ summary(out)
 #>             <NA> R01 | Organization 1.235   0.362 FALSE    FALSE FALSE FALSE
 #>             <NA> R03 | Organization 1.059   0.313 FALSE    FALSE FALSE FALSE
 #>             <NA>      R01 | Content 0.921   0.277 FALSE    FALSE FALSE FALSE
-#>             <NA>     R02 | Accuracy 0.856   0.247 FALSE    FALSE FALSE FALSE
+#>             <NA>     R02 | Accuracy 0.857   0.247 FALSE    FALSE FALSE FALSE
 #>             <NA>     R04 | Language 0.788   0.234 FALSE    FALSE FALSE FALSE
 #>             <NA>      R03 | Content 0.783   0.247 FALSE    FALSE FALSE FALSE
 #>             <NA>     R02 | Language 0.709   0.208 FALSE    FALSE FALSE FALSE

@@ -83,7 +83,7 @@ s$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
-#> 1       1            1              1             1           1.06
+#> 1       1            1              1             1           1.04
 s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 #> # A tibble: 3 × 3
 #>   Facet     MeanSeparation McseSeparation

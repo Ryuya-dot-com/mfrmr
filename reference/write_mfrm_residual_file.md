@@ -79,8 +79,7 @@ bundle.
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 path <- tempfile(fileext = ".csv")
 out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)
@@ -89,7 +88,7 @@ data.frame(
   File = basename(out$written_files$Path)
 )
 #>       Component                 File
-#> 1 residual_file file1b832f24560f.csv
+#> 1 residual_file file1af822f4b5d8.csv
 # Full paths remain in out$written_files$Path.
 # }
 ```

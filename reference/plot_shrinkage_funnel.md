@@ -80,21 +80,20 @@ or a `fit_mfrm(..., facet_shrinkage = "empirical_bayes")` run, so that
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                 method = "JML", maxit = 300)
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
 p <- plot_shrinkage_funnel(fit_eb, draw = FALSE)
 head(p$data$table)
 #>   Facet Level RawEstimate         SE ShrunkEstimate   ShrunkSE ShrinkageFactor
-#> 2 Rater   R02  -0.3287963 0.09769808     -0.2861443 0.09114128       0.1297216
-#> 3 Rater   R01  -0.1957561 0.09730123     -0.1705417 0.09081883       0.1288054
-#> 4 Rater   R03   0.1910876 0.09724282      0.1665002 0.09077133       0.1286707
-#> 1 Rater   R04   0.3334649 0.09763161      0.2902585 0.09108731       0.1295680
+#> 2 Rater   R02  -0.3287812 0.09769555     -0.2861288 0.09113855       0.1297287
+#> 3 Rater   R01  -0.1957463 0.09729871     -0.1705317 0.09081612       0.1288124
+#> 4 Rater   R03   0.1910898 0.09724038      0.1665008 0.09076868       0.1286778
+#> 1 Rater   R04   0.3334376 0.09762913      0.2902324 0.09108462       0.1295752
 #>      Movement RowOrder SupportsFormalInference
-#> 2  0.04265200        1                   FALSE
-#> 3  0.02521444        2                   FALSE
-#> 4 -0.02458737        3                   FALSE
-#> 1 -0.04320639        4                   FALSE
+#> 2  0.04265234        1                   FALSE
+#> 3  0.02521454        2                   FALSE
+#> 4 -0.02458902        3                   FALSE
+#> 1 -0.04320524        4                   FALSE
 #>                                                                                                                                                             Interpretation
 #> 2 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
 #> 3 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.

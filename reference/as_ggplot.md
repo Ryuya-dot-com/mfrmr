@@ -64,11 +64,32 @@ monochrome panel policy.
 Dedicated conversions are provided for Wright maps,
 theta-to-expected-score pathways, fit-statistic-to-measure pathways,
 category characteristic curves, bubble charts, DIF/DFF summaries and
-heatmaps, portable-calibration score review plots, and multivariate
-D-study comparisons. D-study conversions preserve G/Phi or SEM panels,
-fixed-count groups, score units, and unavailable estimates. They do not
-refit the model or add confidence intervals. Difference-interval plots
-from
+heatmaps, portable-calibration score review plots, testlet calibration,
+shared-rater severity and bootstrap intervals, conditional Person
+scores, and multivariate D-study comparisons. Matched ordinary/extended
+facet comparisons preserve centered effects, paired/difference views,
+excluded rows, display controls and alternative text; see
+[`plot.mfrm_extended_comparison()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_extended_comparison.md).
+Threshold-sensitivity tile and curve payloads also preserve their
+selected view, display controls and text alternatives; see
+[`plot.mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_screening_sensitivity.md).
+Posterior predictive residual displays preserve their descriptive
+meaning and lack of reference cutoffs; see
+[`plot.mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_diagnostics.md).
+Testlet conversions retain unavailable rows, prior-only symbols and the
+conditional-interval note; they do not estimate diagnostics or add
+calibration uncertainty. Extended-model interval, precision and
+empirical-distribution views preserve display settings, data exclusions
+and text alternatives; see
+[`plot.mfrm_testlet_scores()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_testlet_scores.md).
+Bootstrap conversion retains infinite endpoints as arrows and ordinary
+intervals as a dashed comparison. D-study conversions preserve G/Phi or
+SEM panels, fixed-count groups, score units, and unavailable estimates.
+They do not refit the model or add confidence intervals. For
+multivariate D-study plots, an explicit `component = "series"` keeps
+this dedicated conversion; use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for other tables. Difference-interval plots from
 [`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
 use their base [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 method or
@@ -83,8 +104,14 @@ for custom graphics. For main-effects `mfrm_d_study` results, use the
 base [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method or
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
 for custom graphics; automatic conversion is refused because generic
-column selection does not preserve those design comparisons. Other
-draw-free payloads use a conservative tabular fallback; inspect
+column selection does not preserve those design comparisons. Selecting
+`component` does not enable unsupported conversions: it cannot preserve
+PCA axes, clustering membership, MI intervals or D-study differences
+through generic column selection. Use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+to extract the table and specify the axes, intervals and grouping
+explicitly in custom graphics. Other draw-free payloads use a
+conservative tabular fallback; inspect
 [`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md)
 when automatic inference is not appropriate. Titles, subtitles, and
 captions are wrapped at 72 text columns for ordinary figure widths;

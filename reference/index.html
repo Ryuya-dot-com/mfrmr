@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -175,6 +181,27 @@
 
         <dt>
 
+          <code><a href="mfrm_pca.html">mfrm_pca()</a></code> <code><a href="mfrm_pca.html">print(<i>&lt;mfrm_pca&gt;</i>)</a></code> <code><a href="mfrm_pca.html">summary(<i>&lt;mfrm_pca&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Principal components of numeric external features</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_pca.html">plot(<i>&lt;mfrm_pca&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot numeric feature PCA and optional exploratory groups</dd>
+
+        <dt>
+
+          <code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code>
+
+        </dt>
+        <dd>K-means groups from numeric features or retained principal components</dd>
+
+        <dt>
+
           <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code> <code><a href="mfrm_cluster_imputed.html">print(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster_imputed.html">summary(<i>&lt;mfrm_imputed_clusters&gt;</i>)</a></code>
 
         </dt>
@@ -193,6 +220,203 @@
 
         </dt>
         <dd>Plot exploratory groups and imputation sensitivity</dd>
+      </dl></div><div class="section level2">
+      <h2 id="missing-assigned-scores">Missing assigned scores<a class="anchor" aria-label="anchor" href="#missing-assigned-scores"></a></h2>
+
+      <div class="section-desc"><p>Review response imputations, fit a common MFRM and pool eligible facet targets.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="mfrm_response_imputations.html">mfrm_response_imputations()</a></code> <code><a href="mfrm_response_imputations.html">print(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">summary(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Review multiple imputations of scores on assigned ratings</dd>
+
+        <dt>
+
+          <code><a href="fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code> <code><a href="fit_mfrm_imputed.html">print(<i>&lt;mfrm_imputed_fits&gt;</i>)</a></code> <code><a href="fit_mfrm_imputed.html">summary(<i>&lt;mfrm_imputed_fits&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Fit the same MFRM to every completed rating data set</dd>
+
+        <dt>
+
+          <code><a href="pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code> <code><a href="pool_mfrm_imputed.html">print(<i>&lt;mfrm_pooled&gt;</i>)</a></code> <code><a href="pool_mfrm_imputed.html">summary(<i>&lt;mfrm_pooled&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Pool common facet targets across imputed rating analyses</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_pooled.html">plot(<i>&lt;mfrm_pooled&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot pooled facet estimates or prespecified contrasts</dd>
+      </dl></div><div class="section level2">
+      <h2 id="fixed-facet-uncertainty">Fixed-facet uncertainty<a class="anchor" aria-label="anchor" href="#fixed-facet-uncertainty"></a></h2>
+
+      <div class="section-desc"><p>Compare observed-information and one-way sandwich intervals for fixed facet estimates and contrasts.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> <code><a href="mfrm_facet_intervals.html">print(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code> <code><a href="mfrm_facet_intervals.html">summary(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Pointwise intervals for fixed facet estimates and contrasts</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_facet_intervals.html">plot(<i>&lt;mfrm_facet_intervals&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot fixed-facet interval methods</dd>
+      </dl></div><div class="section level2">
+      <h2 id="shared-random-raters">Shared random raters<a class="anchor" aria-label="anchor" href="#shared-random-raters"></a></h2>
+
+      <div class="section-desc"><p>Estimate a rater population and distinguish observed-rater feedback from replacement-rater probabilities.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="fit_mfrm_random_rater.html">fit_mfrm_random_rater()</a></code> <code><a href="fit_mfrm_random_rater.html">summary(<i>&lt;mfrm_random_rater&gt;</i>)</a></code> <code><a href="fit_mfrm_random_rater.html">print(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Fit a rating-scale model with shared random rater severity</dd>
+
+        <dt>
+
+          <code><a href="score_mfrm_random_rater.html">score_mfrm_random_rater()</a></code> <code><a href="score_mfrm_random_rater.html">summary(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code> <code><a href="score_mfrm_random_rater.html">print(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Score Persons while integrating shared random raters</dd>
+
+        <dt>
+
+          <code><a href="score_mfrm_persons.html">score_mfrm_persons()</a></code> <code><a href="score_mfrm_persons.html">summary(<i>&lt;mfrm_person_scores&gt;</i>)</a></code> <code><a href="score_mfrm_persons.html">print(<i>&lt;mfrm_person_scores&gt;</i>)</a></code> <code><a href="score_mfrm_persons.html">plot(<i>&lt;mfrm_person_scores&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Estimate abilities for people already included in a fitted RSM</dd>
+
+        <dt>
+
+          <code><a href="mfrmr_model_maps.html">mfrmr_model_maps</a></code>
+
+        </dt>
+        <dd>Wright and Pathway maps for extended RSMs</dd>
+
+        <dt>
+
+          <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code> <code><a href="mfrm_response_diagnostics.html">summary(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code> <code><a href="mfrm_response_diagnostics.html">print(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Describe posterior predictive residuals for ordinary and extended RSMs</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_response_diagnostics.html">plot(<i>&lt;mfrm_response_diagnostics&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot descriptive posterior predictive residual summaries</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_random_rater_scores.html">plot(<i>&lt;mfrm_random_rater_scores&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot Person scores from a shared-rater model</dd>
+
+        <dt>
+
+          <code><a href="confint.mfrm_random_rater.html">confint(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Population-SD profiles and explicit shared-rater model intervals</dd>
+
+        <dt>
+
+          <code><a href="predict.mfrm_random_rater.html">predict(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Predict category probabilities for observed or replacement raters</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_random_rater.html">plot(<i>&lt;mfrm_random_rater&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot observed-rater severity under a shared-rater RSM</dd>
+
+        <dt>
+
+          <code><a href="mfrm_random_rater_intervals.html">mfrm_random_rater_intervals()</a></code> <code><a href="mfrm_random_rater_intervals.html">confint(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code> <code><a href="mfrm_random_rater_intervals.html">summary(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code> <code><a href="mfrm_random_rater_intervals.html">print(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Bootstrap prediction intervals for observed random raters</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_random_rater_intervals.html">plot(<i>&lt;mfrm_random_rater_intervals&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compare bootstrap and ordinary random-rater intervals</dd>
+      </dl></div><div class="section level2">
+      <h2 id="person-specific-testlets">Person-specific testlets<a class="anchor" aria-label="anchor" href="#person-specific-testlets"></a></h2>
+
+      <div class="section-desc"><p>Model local dependence within a Person and score conditionally on fitted calibration.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="fit_mfrm_testlet.html">fit_mfrm_testlet()</a></code> <code><a href="fit_mfrm_testlet.html">summary(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="fit_mfrm_testlet.html">print(<i>&lt;mfrm_testlet&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Fit a rating-scale model with dependence within Person-specific testlets</dd>
+
+        <dt>
+
+          <code><a href="confint.mfrm_testlet.html">confint(<i>&lt;mfrm_testlet&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Explicit normal-approximation intervals for testlet calibration</dd>
+
+        <dt>
+
+          <code><a href="predict.mfrm_testlet.html">predict(<i>&lt;mfrm_testlet&gt;</i>)</a></code> <code><a href="predict.mfrm_testlet.html">summary(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code> <code><a href="predict.mfrm_testlet.html">print(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Score Persons using a fixed testlet calibration</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_testlet.html">plot(<i>&lt;mfrm_testlet&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot testlet-model fixed-facet estimates</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_testlet_scores.html">plot(<i>&lt;mfrm_testlet_scores&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot conditional Person scores from a testlet model</dd>
       </dl></div><div class="section level2">
       <h2 id="portable-fixed-calibration">Portable fixed calibration<a class="anchor" aria-label="anchor" href="#portable-fixed-calibration"></a></h2>
 
@@ -609,6 +833,34 @@
 
         </dt>
         <dd>Evaluate DIF power and bias-screening behavior under known simulated signals</dd>
+
+        <dt>
+
+          <code><a href="mfrm_screening_performance.html">mfrm_screening_performance()</a></code> <code><a href="mfrm_screening_performance.html">summary(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code> <code><a href="mfrm_screening_performance.html">print(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Evaluate screening outcomes against a planned simulation roster</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_screening_performance.html">plot(<i>&lt;mfrm_screening_performance&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot screening performance and unresolved outcomes</dd>
+
+        <dt>
+
+          <code><a href="mfrm_screening_sensitivity.html">mfrm_screening_sensitivity()</a></code> <code><a href="mfrm_screening_sensitivity.html">summary(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code> <code><a href="mfrm_screening_sensitivity.html">print(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compare fit-screening thresholds against known simulation truth</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_screening_sensitivity.html">plot(<i>&lt;mfrm_screening_sensitivity&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot directional screening rates across threshold profiles</dd>
 
         <dt>
 
@@ -1136,10 +1388,17 @@
 
         <dt>
 
-          <code><a href="compare_mfrm.html">compare_mfrm()</a></code>
+          <code><a href="compare_mfrm.html">compare_mfrm()</a></code> <code><a href="compare_mfrm.html">summary(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code> <code><a href="compare_mfrm.html">print(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code>
 
         </dt>
         <dd>Compare two or more fitted MFRM models</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_extended_comparison.html">plot(<i>&lt;mfrm_extended_comparison&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot matched facet effects or posterior predictions across MFRMs</dd>
 
         <dt>
 

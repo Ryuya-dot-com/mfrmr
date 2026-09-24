@@ -34,12 +34,14 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the integrated `0.2.4` source on `main`, including
-portable calibration, exploratory external-feature groups and
-multivariate G/D-studies. See [the
+This README describes the expanded `0.2.4` release candidate, including
+portable calibration, exploratory external-feature groups, numeric
+PCA/k-means, assigned-score imputation, fixed-facet sandwich intervals,
+screening evaluation, multivariate G/D-studies, and shared random-rater
+and Person-specific testlet RSMs. See [the
 roadmap](https://ryuya-dot-com.github.io/mfrmr/ROADMAP.md) for supported
-scope and future work. The version remains a release candidate pending
-the final release decision. Functions and options shown here may differ
+scope and future work. The candidate is intended for evaluation and has
+not been released on CRAN. Functions and options shown here may differ
 from an installed release; retain the installed source tag or commit and
 use its matching help. Earlier candidates also report `0.2.4`, so
 `packageVersion("mfrmr")` alone cannot distinguish them. For an existing
@@ -53,7 +55,7 @@ Install the published CRAN release with:
 install.packages("mfrmr")
 ```
 
-To install the integrated 0.2.4 source from GitHub’s `main` branch:
+To install the expanded 0.2.4 candidate from its fixed GitHub tag:
 
 ``` r
 
@@ -63,16 +65,19 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 
 remotes::install_github(
   "Ryuya-dot-com/mfrmr",
-  ref = "main",
+  ref = "v0.2.4-rc.4",
   build_vignettes = TRUE
 )
 ```
 
-For a reproducible installation, replace `"main"` with a specific commit
-or published tag. The [release
-pages](https://github.com/Ryuya-dot-com/mfrmr/releases) provide fixed
-candidate archives and their validation records. A local checkout can
-also be installed with `remotes::install_local("path/to/mfrmr")`.
+The [release
+page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.4)
+provides the source archive with prebuilt tutorials, its checksum and
+the applicable check results. Use `ref = "main"` only when you want the
+latest development source; it may change after this candidate. A local
+checkout can also be installed with
+`remotes::install_local("path/to/mfrmr")`, using the directory
+containing `DESCRIPTION` and this README.
 
 ## Quick start
 
@@ -104,8 +109,10 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, keep_original = TRUE,
   method = "MML",
-  model = "RSM"
+  model = "RSM",
+  population_formula = NULL # Fixed N(0,1) ability distribution
 )
 
 # Plot the results (Wright map)
@@ -124,6 +131,17 @@ results$decision
 `fit` holds the model, and `results` holds its summary. `$` selects a
 named part: `results$person_overview` displays just that table. Enter
 `results` to print the full summary.
+
+These settings describe this example, not every assessment. The bounds 1
+and 4 come from its rubric; change them for your own data.
+`keep_original = TRUE` preserves that category ladder. The ordinary
+default is `FALSE`, which can collapse unused internal categories and
+change the model’s steps. Preserving an unsupported internal category
+instead stops fitting for review. `population_formula = NULL` fixes the
+ordinary RSM/PCM ability distribution at N(0,1); it does not estimate
+the population variance. Both extended RSMs estimate that variance by
+default, so copying defaults across models does not necessarily provide
+a matched comparison.
 
 The Wright map displays the estimates in logits, the model’s measurement
 units, rather than the original 1-to-4 scores. With this example’s
@@ -185,6 +203,91 @@ when choosing a figure and
 [`help("mfrmr_reporting_and_apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
 when moving from a reviewed fit to tables and manuscript-draft output.
 
+### Choose a function by your question
+
+You do not need to learn every function before starting. Continue with
+the question you have and open the named function’s help, for example
+[`help("mfrm_response_imputations", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md).
+
+| Your question | Start with | What you receive |
+|----|----|----|
+| Are my rating rows and categories usable? | [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md) | A data review; correct problems in the rating table before fitting. |
+| How severe are these raters, allowing for person ability and criterion difficulty? | [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md) | A fitted model; use [`summary()`](https://rdrr.io/r/base/summary.html) and [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md) to review it. |
+| What are the abilities of people already in my fitted RSM? | [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md) | Conditional ability scores under a supported ordinary, shared-rater or testlet RSM. |
+| Do raters with similar backgrounds form descriptive groups? | [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md), then [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md) or [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md) | Groups based on external attributes, not rater quality. [`mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md) optionally summarizes numeric attributes first. |
+| How do I analyze several completed versions of missing assigned scores? | [`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md), then [`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md) and [`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md) | A review, separate fits and pooled eligible facet estimates. Supply the completed data; the first function does not generate replacements. |
+| Would more raters or tasks make scores more dependable? | [`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md), then [`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md) | Sources of variation in observed scores, then projections for the plans you specify. |
+| How often does my warning rule miss a simulated problem or raise a false flag? | [`mfrm_screening_performance()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md); [`mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_sensitivity.md) to compare thresholds | Simulation summaries with known truth, not an accuracy estimate from real ratings alone. |
+
+[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+uses partitioning around medoids (PAM), which represents each group by
+an actual member and accepts mixed numeric/categorical attributes.
+[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
+uses numeric group means. For a tree of nested groups and a dendrogram,
+choose
+[`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md).
+These are different algorithms; the shorter name does not choose among
+them automatically.
+
+The verbs help identify the operation: `fit_` estimates a model,
+`score_` estimates person abilities using a fitted calibration, `pool_`
+combines eligible analyses, and `export_` writes files. The package is
+named **mfrmr**; **mfrm** in function names refers to a many-facet Rasch
+model. Some help guides use the package prefix `mfrmr_`. These prefixes
+do not select different estimators. Use `summary(object)` and
+`plot(object)` rather than calling class-specific names such as
+`plot.mfrm_testlet` directly.
+
+Two distinctions matter when choosing an extension:
+
+- [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+  models one rater effect shared across everyone that rater evaluates.
+  [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+  models an extra local effect shared by a group of ratings **within one
+  person**, such as criteria from one performance. Choose this structure
+  from the assessment design, not the function name alone.
+- For people already included in a supported fitted RSM,
+  `score_mfrm_persons(fit)` provides a common scoring entry.
+  [`predict()`](https://rdrr.io/r/stats/predict.html) has model-specific
+  meanings: shared-rater prediction needs supplied abilities and returns
+  response probabilities, while testlet prediction estimates abilities
+  from ratings. For new people with ordinary RSM/PCM calibration, see
+  [`help("score_mfrm_calibration")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md).
+
+Shared-rater ability scoring can be slow: each selected person’s
+calculation uses the complete rating table to account for uncertainty
+about shared raters. Start with a few existing IDs using `persons`, for
+example `score_mfrm_persons(fit, persons = c("P01", "P02"))` when those
+IDs occur in your fit. This selects the output rows; it does not discard
+the other people’s ratings. Omitting `persons` requests everyone.
+
+A **calibration** is the fitted set of model parameters, such as rater
+severity, criterion difficulty and category thresholds. A
+**conditional** ability interval holds that calibration fixed; it does
+not include uncertainty from estimating those parameters. **EAP** means
+the mean of the conditional ability distribution. An **SE** describes
+uncertainty in an estimate; an **SD** describes spread, such as the
+variation among persons. Check which quantity a table’s SD represents.
+
+`mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]` gives
+a compact ordinary-MFRM route. The full
+[`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
+is a specialist reference; use `"models"`, `"features"`, `"imputation"`
+or `"gtheory"` for a focused guide. See
+[`help("mfrmr_workflow_methods")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
+for the supported inputs and next steps.
+
+Before adapting an example, read **Check defaults before adapting an
+example** in that help page. It explains different missing-value
+policies, fixed facets versus testlet membership, feature scaling and
+weights, G/D-study plans, interval methods and screening bands. For
+example, calling
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+without `method` requests model-based intervals; request
+`method = "sandwich"` explicitly for that alternative. PCA and direct
+k-means standardize features by default. These are analysis choices, not
+just display preferences. Check the settings stored with each result.
+
 ### Give feedback to raters
 
 Use the fitted model and diagnostics above to ask which rating patterns
@@ -245,6 +348,281 @@ severity alone does not establish a training effect. See
 and
 [`help("subset_connectivity_report")`](https://ryuya-dot-com.github.io/mfrmr/reference/subset_connectivity_report.md)
 for the supporting checks.
+
+### Compare uncertainty for a rater difference
+
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+compares ordinary observed-information intervals with a sandwich
+covariance for eligible fixed-standard-normal RSM/PCM MML fits. By
+default, each person’s full response vector is one independent unit. For
+a rater difference, specify named contrast coefficients so the
+calculation includes covariance between rater estimates:
+
+``` r
+
+rater_levels <- as.character(subset(as.data.frame(fit), Facet == "Rater")$Level)
+contrast <- matrix(0, nrow = 1, ncol = length(rater_levels),
+  dimnames = list("R01 minus R02", rater_levels))
+contrast[1, c("R01", "R02")] <- c(1, -1)
+intervals <- mfrm_facet_intervals(
+  fit, "Rater", contrasts = contrast, method = "sandwich"
+)
+summary(intervals)
+plot(intervals)
+```
+
+Use level names from your fitted facet. Both covariance methods share
+the same point estimate; changing interval width does not correct bias
+from a wrong population model or informative assignment. Larger
+independent clusters can be declared explicitly, but few clusters can
+give poor intervals. These are pointwise intervals conditional on the
+observed fixed raters, not random-rater inference or a rater-exclusion
+rule. The tutorial explains the assumptions, unavailable results and
+saved output:
+[`vignette("mfrmr-facet-intervals", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.md).
+
+To evaluate a warning rule in a simulation, use
+`mfrm_screening_performance(roster, results, rule = "your prespecified rule")`.
+Declare every planned condition, replication and target in `roster`,
+together with known `Affected` truth. Supply logical `Flag` outcomes in
+`results`, keeping unavailable screens as `NA`. The helper separates
+per-rater rates from the probability of any false warning among raters
+and retains Monte Carlo intervals and unresolved trials. It does not
+supply truth labels for actual raters. An implemented screen can have
+poor sensitivity: in a bounded comparison, Infit/Outfit outside \[0.5,
+1.5\] detected only 6/100 and 2/100 contaminated-rater cases under two
+sparse assignments. See
+[`vignette("mfrmr-screening-performance", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-screening-performance.md)
+for runnable examples, plots, study conditions and interpretation.
+
+For several prespecified bands, use
+`mfrm_screening_sensitivity(roster, measures, thresholds, rule = ...)`
+with saved Infit/Outfit columns. Plot `direction = "underfit"` and
+`"overfit"` separately, or choose `style = "curves"` for Monte Carlo
+intervals. Labelled tiles, monochrome rendering, ggplot conversion and
+hidden/custom annotations are supported.
+[`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md)
+now bases its default status on mean squares; ZSTD remains separate
+evidence. The earlier combined rule is available with
+`flag_basis = "mnsq_or_zstd"`. A low mean square is not an automatic
+reason to exclude a rater, and these ordinary-model thresholds do not
+qualify extended-model posterior-predictive diagnostics.
+
+### Model a population of raters
+
+[`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+fits an RSM in which the same random severity enters all ratings from a
+given rater. It uses frequentist approximate marginal maximum likelihood
+with Person quadrature and a joint rater Laplace integral. It requires
+optional `RTMB` version 2.0 or later, an independent normal rater
+population and a connected assignment. Normal Person variance is
+estimated by default, with mean zero and Rasch slope one; use
+`person_sd = 1` only for an explicitly known N(0,1) population. Profiles
+and bootstrap refits retain the same estimated or known population
+specification.
+
+``` r
+
+random_fit <- fit_mfrm_random_rater(
+  load_mfrmr_data("example_core"), "Person", "Rater", "Score",
+  facets = "Criterion", score_levels = 1:4, quad_points = 121
+)
+random_fit$checks
+plot(random_fit)
+confint(random_fit, parm = "rater_sd")
+```
+
+The default plot shows severity point estimates. Explicitly choose
+`plot(random_fit, style = "precision", intervals = "normal")` to inspect
+approximate interval width, or `style = "distribution"` for the
+empirical cumulative distribution of the observed estimates. These views
+also work for extended-model Person scores and testlet fixed facets.
+They do not estimate fit or the latent population distribution. Use
+`palette = "mono"`, `sort = "estimate"`, `show_title = FALSE` and
+`show_notes = FALSE` to adapt a figure, or replace `title` and
+`caption`. Saved plot data retain interpretation notes, text
+alternatives, complete tables and exclusion reasons;
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+preserves the selected view and supports further styling.
+
+`compare_mfrm(ordinary_fit, random_fit)` compares centered facet
+summaries when the ordinary RSM MML uses matching data, categories and
+population assumptions (`population_formula = ~1` for estimated ability
+SD). It retains checks and raw values, and supports paired/difference
+plots and attachment via
+`mfrm_results(random_fit, comparison = comparison)`. The same route
+accepts a testlet fit. This is descriptive: no automatic model
+preference, difference intervals or cross-model Infit comparison is
+supplied.
+
+`score_mfrm_random_rater(random_fit, persons = c("P001", "P002"))`
+scores selected Persons while retaining all source responses. It
+integrates the shared raters jointly, holds calibration fixed and
+returns continuous conditional intervals, prior-only rows and
+unavailable reasons. New scoring data replace the entire response
+roster; selecting output IDs does not drop other Persons’ evidence.
+Attach saved scores with `mfrm_results(random_fit, scores = scores)`;
+response predictions and bootstrap intervals may be attached at the same
+time. The scoring calculation uses a conditional Laplace approximation,
+whose accuracy is separate from its numerical checks and from
+repeated-sample coverage.
+
+Individual-rater bounds are not supplied automatically: their nominal
+coverage is not established. `confint(random_fit, parm = "raters")`
+explicitly returns the first-order normal approximation without
+refitting; `plot(random_fit, intervals = "normal")` displays it. Earlier
+saved fits also show no automatic bounds in new summaries, plots and
+reports. This output restriction does not correct the approximation’s
+coverage. Observed-rater intervals describe realized severities; the
+profile interval describes population variation and may include zero.
+[`predict()`](https://rdrr.io/r/stats/predict.html) distinguishes
+observed from replacement raters at explicitly supplied abilities,
+holding calibration fixed. Numerical checks do not certify coverage or
+the accuracy of the rater approximation, especially with few raters. A
+study with estimated ability SD used 200 datasets in each of four
+assignment/rater-count conditions. Conditional coverage was 91.6–91.8%
+with six raters and 94.0–94.1% with 24, but finite-interval availability
+was 99% and 87–88%, respectively. None met the combined qualification
+criterion. The tutorial reports Monte Carlo uncertainty, numerical
+failures and the earlier known-population pilot.
+`mfrm_random_rater_intervals(random_fit, nsim = 499, seed = 123)` adds a
+model-based bootstrap comparison by generating persons, shared raters
+and scores and refitting each dataset. It retains unavailable results,
+can return unbounded limits, and saves draws for
+[`confint()`](https://rdrr.io/r/stats/confint.html) and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) without further
+fitting. More accurate coverage is a question to verify, not a
+consequence of using a bootstrap. Bootstrap intervals do not become the
+default. The result has its own methods; fixed-facet diagnostics, MI
+pooling and portable calibration do not accept it. See
+[`vignette("mfrmr-random-raters", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.md)
+for the complete feedback, prediction and save/load workflow.
+
+## Dependence within a person’s ratings
+
+[`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+models an extra effect shared by ratings in the same Person/testlet
+group. For example, one examiner’s impression of a performance may
+influence several criterion scores. A fixed `Rater` effect can describe
+usual severity while `testlet = "Rater"` groups those criteria within
+each person. Reusing that rater label for another person creates an
+independent local effect.
+
+``` r
+
+ratings <- load_mfrmr_data("example_core")
+testlet_fit <- fit_mfrm_testlet(
+  ratings, "Person", "Score", "Rater", c("Rater", "Criterion"),
+  score_levels = 1:4, quad_points = 121
+)
+testlet_fit$checks
+plot(testlet_fit, facet = "Rater")
+first <- ratings[ratings$Person %in% unique(ratings$Person)[1:4], ]
+scores <- predict(testlet_fit, first)
+plot(scores)
+```
+
+This is frequentist MML for an RSM with mean-zero normal abilities and
+one common normal local variance. Ability variance is estimated by
+default; use `person_sd = 1` for a known standard-normal population.
+Numerical and information checks must pass before scoring. Unequal
+blocks and sparse assignments are allowed, subject to design
+requirements; missing assigned scores require explicit omission. The
+Person intervals are conditional on fitted calibration and exclude its
+estimation uncertainty. Entirely missing persons are labeled
+`prior_only`. Use `mfrmr_output_guide("models")` to compare the three
+model routes and
+[`help("mfrmr_workflow_methods")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
+to find their supported outputs. The testlet class supports
+[`summary()`](https://rdrr.io/r/base/summary.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
+[`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md)
+and save/load. `as_ggplot(scores)` and
+`as_ggplot(testlet_fit, facet = "Rater")` preserve interval meanings,
+unavailable rows and prior-only symbols. Existing saved results need no
+refit for these displays. For a report, use
+`res <- mfrm_results(testlet_fit, predictions = scores)`, then
+`mfrm_report(res)` or
+`export_mfrm_results(res, output_dir = "testlet-results", preset = "starter")`.
+The random-rater route also accepts separately computed `intervals` from
+[`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md).
+These routes collect saved results without fitting, scoring or
+resampling; older predictions require regeneration from the saved fit to
+add source metadata. Ordinary-model diagnostics, the Shiny viewer,
+response-MI pooling and portable calibration remain unavailable. See
+[`vignette("mfrmr-testlets", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.md)
+for membership, missingness, variance boundaries and reuse. Broader
+coverage and calibration-aware Person intervals remain unfinished.
+
+[`vignette("mfrmr-testlet-applications", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlet-applications.md)
+connects this model to assessment decisions: allocating four ratings
+across tasks, comparing one-point changes in five- versus two-criterion
+tasks, reviewing possible halo, and recognizing the limits of a common
+local variance. The executed planning example averages all 81 possible
+score patterns under a fixed fitted model; its marginal EAP reliability
+is neither a G/Phi coefficient nor a coverage guarantee. Large local
+variance does not diagnose halo or show that criteria should be merged.
+Task-specific variances and enforced equal task weighting are not
+supplied by the current API.
+
+Use `mfrm_response_diagnostics(fit, group_by = "Rater")` with an
+ordinary RSM MML fit or either extension for category probabilities,
+predictive means/variances and **descriptive** Infit/Outfit. These
+integrate latent uncertainty given the same observed responses and
+fitted calibration. They have no established expectation of one or
+reference cutoffs, and cannot be directly compared with ordinary plug-in
+fit indices. Shared-rater computation uses a joint Laplace
+approximation; its numerical checks do not certify accuracy.
+
+``` r
+
+residuals <- mfrm_response_diagnostics(testlet_fit, group_by = "Rater")
+plot(residuals, style = "paired")
+as_ggplot(residuals, style = "scatter", show_title = FALSE)
+res <- mfrm_results(testlet_fit, predictions = scores, diagnostics = residuals)
+```
+
+For a comparison on the same definition, compute the ordinary RSM’s
+posterior predictions once and attach both saved results:
+
+``` r
+
+ordinary_residuals <- mfrm_response_diagnostics(ordinary_fit, group_by = "Rater")
+comparison <- compare_mfrm(ordinary_fit, testlet_fit,
+  response_diagnostics = list(ordinary_residuals, residuals))
+plot(comparison, metric = "infit", style = "difference")
+as_ggplot(comparison, metric = "probability", show_labels = FALSE)
+```
+
+Use matching events, output selections, group identifiers and population
+assumptions. These paired/difference displays compare category
+probabilities, expected scores, full predictive variances or descriptive
+Infit/Outfit. Smaller residual indices do not establish improvement on
+new data or model adequacy. See the two model tutorials for a complete
+example and saved reports.
+
+Missing scores and failed calculations remain visible. Selecting `rows`
+limits the summaries, while all observed source ratings continue to
+inform the posterior. Paired/scatter figures, reports and saved replay
+reuse the computed diagnostics. They do not supply formal model-fit
+tests.
+
+[`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+provides source-roster conditional EAPs and continuous intervals for the
+ordinary RSM and both extensions. Attach two saved scores with
+`compare_mfrm(..., person_scores = list(ordinary_scores, extended_scores))`
+and select `metric = "person"` to compare population-centered EAPs.
+
+For either extension, collect source scores and residuals with
+`mfrm_results(fit, scores = extended_scores, response_diagnostics = residuals)`.
+Then `plot(res, type = "wright")` displays conditional reference
+locations and `plot(res, type = "fit_pathway", facet = "Rater")`
+connects them to descriptive Infit. Whiskers are Person conditional
+intervals only; no ordinary fit bands are transferred. See
+[`?mfrmr_model_maps`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_model_maps.md)
+and the two tutorials for the location formula, selected-roster counts,
+missing results and presentation controls.
 
 ## Data format
 
@@ -692,7 +1070,7 @@ Person identifiers are omitted from the brief console view. Request
 detailed person output only when the analysis purpose and data-handling
 plan require it.
 
-### 5. Draw the required native Wright map
+### 5. Inspect targeting with the native Wright map
 
 The native renderer is the primary targeting figure because it keeps
 uncertainty visible:
@@ -1007,7 +1385,7 @@ warning; it does not remove or pseudonymize any data.
 
 ## A practical reading order
 
-For most studies, review the output in this order:
+For an ordinary MFRM analysis, review the output in this order:
 
 1.  Confirm the data roles, score range, row retention, and model.
 2.  Confirm convergence and the estimation settings.
@@ -1023,6 +1401,20 @@ For most studies, review the output in this order:
 Do not reduce this sequence to a single pass/fail index. Fit, precision,
 targeting, category function, fairness, and validity answer different
 questions.
+
+For other analysis goals, `mfrmr_output_guide("features")`,
+`mfrmr_output_guide("imputation")` and `mfrmr_output_guide("gtheory")`
+connect external-feature groups, assigned-score MI and observed-score
+G/D planning to their dedicated output routes. Use their summaries,
+supported [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+methods and
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
+then [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) for the full
+analysis or [`write.csv()`](https://rdrr.io/r/utils/write.table.html)
+for a selected table. These analysis objects are not inputs to
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
+The separate `mfrmr_output_guide("models")` describes the fitted-model
+report routes, including shared-rater and testlet results.
 
 ## FACETS users
 
@@ -1205,6 +1597,35 @@ below. Set `method = "hierarchical", linkage = "average"` in
 [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
 to retain a tree for each completion. No pooled tree is estimated.
 
+For meaningful numeric features, the local
+[`mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md)
+and
+[`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
+additions provide a Euclidean workflow. PCA summarizes variation;
+k-means forms groups. Both retain the chosen scaling, weights,
+missingness and IDs. A fitted PCA can be passed directly to k-means
+without whitening or rescaling its retained scores:
+
+``` r
+
+numeric_features <- mfrm_features(rater_attributes, "Rater",
+  c("ExperienceYears", "AnnualRatings", "WorkshopHours"))
+pca <- mfrm_pca(numeric_features, components = 2)
+numeric_groups <- mfrm_cluster_kmeans(pca, k = 3, seed = 42)
+summary(pca)
+plot(pca, type = "scores", groups = numeric_groups)
+plot(pca, type = "loadings", components = 1)
+plot(numeric_groups, type = "profile", feature = "ExperienceYears")
+```
+
+These three numeric columns must exist in the user’s rater table; the
+tutorial provides a complete fictional example. Select component and
+group counts for the question. Truncating PCA changes the distance
+objective, and explained variance does not validate clusters. For
+incomplete numeric attributes, use `method = "kmeans"` and an optional
+`components` count in the imputation workflow below. Every completion
+retains its own transformation and PCA.
+
 For incomplete external attributes,
 [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
 accepts a model fitted with the optional `mice` package. Select eligible
@@ -1221,8 +1642,9 @@ reports how often each pair belongs to the same group across all
 supplied imputations, independent of group numbering. A failed analysis
 stops the comparison. These proportions describe sensitivity to the
 imputations, conditional on the chosen model and clustering settings;
-they are not membership probabilities or sampling stability. No
-automatic missing-score correction is performed.
+they are not membership probabilities or sampling stability. This
+feature-imputation workflow does not impute rating responses. For
+missing assigned scores, use the separate workflow below.
 
 To review sensitivity to selected features, group count, weights, or
 clustering method, fit the settings you want to compare and pass the
@@ -1272,6 +1694,53 @@ input guards, not performance or memory guarantees; multiply imputed
 analyses also retain every completed result. Reuse saved results when
 comparing settings.
 
+## Missing scores on assigned ratings
+
+The assigned-score workflow preserves the original roster and
+distinguishes unassigned combinations from assigned ratings with missing
+scores. Start with
+[`vignette("mfrmr-response-imputation", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.md):
+its complete example fits and reviews an ordinal imputation model,
+returns each completion to the original event IDs, and estimates a rater
+difference.
+
+The following outline assumes that `ratings`, `completed`, `impute_ids`
+and `model` have been constructed as in that tutorial:
+
+``` r
+
+review <- mfrm_response_imputations(
+  ratings, completed, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", event_id = "Event", impute = impute_ids, categories = 1:4,
+  assigned = "Assigned", imputation_model = model
+)
+summary(review)                  # Original observed and imputed support
+analyses <- fit_mfrm_imputed(review, model = "RSM")
+summary(analyses)                # Every fit's status, errors and warnings
+pooled <- pool_mfrm_imputed(analyses, facet = "Rater")
+summary(pooled)
+plot(pooled)
+```
+
+Supply at least two completed data frames with their retained model, or
+a long-format `mids` object. Only the selected missing assigned scores
+may change. The analysis uses a common category ladder and
+fixed-standard-normal RSM/PCM MML scale; every fit must qualify before
+pooling. For a rater difference, supply a named contrast matrix to
+[`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md).
+Its variance includes covariance between rater estimates,
+within-imputation uncertainty and between-imputation variation.
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) retains the whole
+review and analysis.
+
+Choose a proper imputation model that reflects score categories,
+dependence and nonresponse predictors. Passing these checks does not
+establish MAR or imputation-model compatibility. The resulting intervals
+are pointwise and model-based, with a large-sample complete-data
+reference by default; they are not robust or generally
+coverage-guaranteed. Person EAPs and posterior SDs cannot be pooled by
+this function. Unassigned cells remain unassigned.
+
 ## Multivariate G-theory
 
 For a first runnable example, start with the bundled two-score data
@@ -1314,6 +1783,7 @@ Choose the facets explicitly:
 |----|----|----|
 | Persons and common tasks | `rater = NULL` | `Tasks` |
 | Persons and common raters | `task = NULL` | `Raters` |
+| The same fixed tasks, each scored by common raters | One score column per fixed task; `task = NULL` | `Raters`; keep the task set fixed |
 | Persons, common raters, and common tasks | Defaults | `Raters`, `Tasks` |
 | Persons and tasks with a different rater team for each task | `nesting = c(Rater = "Task")` | `Raters` **per task**, `Tasks` |
 | One or two other common random facets | `facets = c(Rater = "Assessor", Occasion = "Session")` | Exact labels: `Rater`, `Occasion` |
@@ -1341,7 +1811,94 @@ rater counts are held constant within each line. Occasions must be
 defensibly treated as exchangeable random conditions; this specification
 does not estimate learning, growth, a time trend, or serial correlation.
 All included facets are random; the default model is crossed. Fixed
-facets and three or more measurement facets remain unsupported.
+facets and three or more measurement facets are not accepted as model
+factors. The fixed-score representation below addresses a narrower
+fixed-task question.
+
+### The same fixed tasks with more raters
+
+An oral assessment uses an interview, a presentation and a discussion.
+Its question is: **would using more raters improve the dependability of
+the weighted score on these same three tasks?** The task set and weights
+define the score; they are not a sample of tasks to be replaced. Put
+each fixed task in its own score column, with one row per Person/Rater.
+The same rater must denote the same individual across all three columns
+and persons. Different rater teams for each task do not satisfy this
+representation.
+
+The following fictional continuous scores illustrate the arrangement.
+They are not ordinal MFRM estimates or evidence about a real assessment.
+
+``` r
+
+set.seed(923)
+fixed_tasks <- expand.grid(Person = paste0("P", 1:60), Rater = paste0("R", 1:8),
+                           stringsAsFactors = FALSE)
+task_names <- c("Interview", "Presentation", "Discussion")
+p <- match(fixed_tasks$Person, unique(fixed_tasks$Person))
+r <- match(fixed_tasks$Rater, unique(fixed_tasks$Rater))
+person_common <- rnorm(60, sd = 1.8)
+rater_common <- rnorm(8, sd = 0.6)
+for (nm in task_names) {
+  fixed_tasks[[nm]] <- 12 + person_common[p] + rnorm(60, sd = 0.8)[p] +
+    rater_common[r] + rnorm(8, sd = 0.5)[r] + rnorm(nrow(fixed_tasks))
+}
+g_fixed <- mfrm_multivariate_gstudy(fixed_tasks, scores = task_names,
+                                   task = NULL)
+g_fixed$component_diagnostics
+w <- c(Interview = 0.5, Presentation = 0.3, Discussion = 0.2)
+rater_plans <- data.frame(Raters = c(1, 2, 4))
+d_fixed <- mfrm_multivariate_d_study(g_fixed, rater_plans, weights = w)
+subset(summary(d_fixed), Kind == "Composite",
+       select = c(Raters, G, Phi, RelativeSEM, AbsoluteSEM, Status, ComponentPSD))
+plot(d_fixed, x_var = "Raters")
+plot(d_fixed, x_var = "Raters", type = "sem")
+```
+
+Each planned rater scores all three fixed tasks. Two raters therefore
+require six task ratings per person, and four require twelve; the number
+of tasks does not change. G describes relative ranking and Phi
+absolute-score dependability, with SEMs in weighted-score units. These
+are point projections, not confidence intervals or demonstrated
+improvements from a new study. Inspect component and metric status even
+when coefficients are available.
+
+The Person covariance includes stable differences among persons on the
+fixed tasks. For weights `w`, universe variance is `w' P w`,
+relative-error variance is `w' E w / n_r`, and absolute-error variance
+is `w' (R + E) w / n_r`. Task-specific rater behavior and residual
+covariances enter through the component matrices. Do not average the
+three separate G coefficients or divide their errors by three again. A
+direct weighted-score analysis gives the same composite result:
+
+``` r
+
+fixed_tasks$WeightedScore <- drop(as.matrix(fixed_tasks[task_names]) %*% w)
+g_direct <- mfrm_multivariate_gstudy(fixed_tasks, "WeightedScore", task = NULL)
+d_direct <- mfrm_multivariate_d_study(g_direct, rater_plans)
+metrics <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+             "G", "Phi", "RelativeSEM", "AbsoluteSEM")
+stopifnot(isTRUE(all.equal(
+  as.matrix(subset(summary(d_fixed), Kind == "Composite")[metrics]),
+  as.matrix(summary(d_direct)[metrics]), check.attributes = FALSE)))
+```
+
+For an incomplete source, `method = "minque0"` requires identifiable
+covariance components. A retained Person/Rater row must have every task
+score: `missing = "omit"` excludes the entire incomplete vector, not
+just one task’s value. Keep the assignment roster to distinguish
+nonassignment from missing assigned scores; do not fill unassigned task
+scores to create this table. The D-study still describes a future
+complete design using common raters across all fixed tasks. It does not
+estimate reliability of the observed sparse roster.
+
+Changing the weights changes the specified composite; sampling new tasks
+is a different question requiring a random-task model. A fixed task
+count in a random-task D-study is not equivalent to treating these
+particular tasks as fixed. This example uses the existing multivariate
+score model, not a general fixed/random-facet formula interface. See the
+“Fixed tasks as score components” section in
+[`?mfrm_multivariate_gstudy`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md).
 
 ### Different rater teams for different tasks
 
@@ -2065,6 +2622,8 @@ estimation checks:
 | Saved result | Required action |
 |----|----|
 | Fit-summary wording | Reprint the summary. Stored calculations and missing precision evidence do not change. |
+| Generic conversions of dedicated plots | Recreate affected figures from the saved analysis with its base [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method or use [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md) for explicitly specified custom graphics. Previously, `as_ggplot(..., component = "table")` could discard PCA axes, MI intervals or D-study metrics; that bypass is now refused. Supported multivariate D-study scenario conversions use the default or `component = "series"`. Refitting is unnecessary, but previously saved ggplots/images are not automatically corrected. |
+| Shared-rater/testlet calibration bounds | Rebuild `summary(fit)`, `mfrm_results(fit)` and dependent reports from the saved fit; refitting is unnecessary. Defaults now retain estimates and approximate SEs with missing bounds. Request `confint(fit, parm = "calibration", level = .95)` or `mfrm_results(fit, calibration_intervals = "normal", calibration_level = .95)` explicitly for pointwise normal approximations with unestablished finite-sample coverage. Testlet plots accept `intervals = "normal", level = .95`. Older result bundles retain their original tables; changing display does not correct coverage. |
 | Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |
 | Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
 | ICC and design effects | Rerun [`compute_facet_icc()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.md) or [`analyze_hierarchical_structure()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_hierarchical_structure.md) from the original data/settings, explicitly choosing how to handle missing values. Recreate design effects from the new ICC result’s row accounting. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
@@ -2076,6 +2635,7 @@ estimation checks:
 | Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |
 | External imports | Re-import the saved source-package fit, then recreate derived output; source-model re-estimation is unnecessary. |
 | Simulation/design evaluations | Re-summarize retained runs for corrected denominators and unrounded recommendation metrics; older rounded summaries cannot recover precision themselves. Missing connectivity or workload records require repeating the original evaluation if needed for a recommendation. |
+| DIF/bias screening simulations | Rebuild target summaries and plots from the original evaluation to preserve unavailable outcomes and full precision. Earlier non-target averages lack cell availability counts and are withheld; rerun only if those corrected cell rates are needed. |
 
 The complete instructions, including function names and exceptions, are
 in “Updating saved analyses for 0.2.4” under
@@ -2097,6 +2657,11 @@ below to read the guide shipped with your installed version.
 | MML estimation and marginal-fit diagnostics | [`vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-mml-and-marginal-fit.md) |
 | Portable calibration and fresh-session scoring | [`vignette("mfrmr-portable-calibration", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.md) |
 | Exploring person, rater, and task attributes | [`vignette("mfrmr-external-features", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md) |
+| Missing scores on assigned ratings | [`vignette("mfrmr-response-imputation", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.md) |
+| Uncertainty in rater estimates and differences | [`vignette("mfrmr-facet-intervals", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.md) |
+| Accuracy and availability of rater warnings | [`vignette("mfrmr-screening-performance", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-screening-performance.md) |
+| A rater population, observed-rater feedback and replacement raters | [`vignette("mfrmr-random-raters", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-random-raters.md) |
+| Dependence within a person’s ratings and conditional testlet scoring | [`vignette("mfrmr-testlets", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlets.md) |
 | Migrating from FACETS | [`vignette("mfrmr-facets-migration", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facets-migration.md) |
 | Visual diagnostics | [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md) |
 | Reporting and APA-oriented output | [`vignette("mfrmr-reporting-and-apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md) |

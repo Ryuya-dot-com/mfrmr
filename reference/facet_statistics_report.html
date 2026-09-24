@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a facet statistics report (preferred alias)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>facet_statistics_report.Rd</code></div>
     </div>
 
@@ -131,8 +137,7 @@ The returned bundle now includes:</p></li>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.</span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">facet_statistics_report</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Facet Profile Summary </span>
@@ -160,19 +165,19 @@ The returned bundle now includes:</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.249 0.097  0.229            0.062         0.010        0.053      2.353</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.288 0.099  0.270            0.083         0.010        0.073      2.736</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.288 0.097  0.271            0.083         0.010        0.073      2.777</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1.088 0.365  1.025            1.184         0.133        1.051      2.809</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1.088 0.347  1.031            1.184         0.120        1.064      2.975</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1.099 0.365  1.037            1.209         0.133        1.076      2.843</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1.099 0.347  1.043            1.209         0.120        1.089      3.010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.088 0.365  1.025            1.184         0.133        1.050      2.809</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.088 0.347  1.031            1.184         0.120        1.063      2.974</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.099 0.365  1.037            1.209         0.133        1.076      2.842</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       1.099 0.347  1.043            1.209         0.120        1.089      3.009</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       0.271 0.099  0.253            0.074         0.010        0.064      2.564</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       0.271 0.097  0.253            0.074         0.010        0.064      2.596</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       0.271 0.097  0.253            0.074         0.009        0.064      2.596</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Strata Reliability EstimateAvailable SEAvailable ExcludedEstimates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3.421       0.843                 4           4                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3.470       0.847                 4           4                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3.981       0.882                 4           4                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   4.037       0.885                 4           4                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   4.079       0.888                48          48                 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.300       0.898                48          48                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.299       0.898                48          48                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   4.123       0.890                48          48                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   4.346       0.901                48          48                 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3.752       0.868                 4           4                 0</span>
@@ -193,12 +198,12 @@ The returned bundle now includes:</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     25.914       3         0     0.073       2.997</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     25.914       3         0     0.073       2.997</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     25.914       3         0     0.073       2.997</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.088      47         0     1.089      45.462</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     30.901       3         0     0.089       2.999</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      0.994      1.019     30.901       3         0     0.089       2.999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.048      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.048      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.048      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.000      1.019    384.048      47         0     1.089      45.462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.993      1.019     30.899       3         0     0.089       2.999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.993      1.019     30.899       3         0     0.089       2.999</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  RandomDF RandomProb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         2      0.223</span>

@@ -14,7 +14,14 @@ mfrm_results(
   response_time_score = NULL,
   output = c("object", "summary", "tables", "html"),
   diagnostics = NULL,
-  compute = c("auto", "never")
+  compute = c("auto", "never"),
+  predictions = NULL,
+  intervals = NULL,
+  scores = NULL,
+  comparison = NULL,
+  response_diagnostics = NULL,
+  calibration_intervals = c("none", "normal"),
+  calibration_level = 0.95
 )
 ```
 
@@ -23,9 +30,11 @@ mfrm_results(
 - fit:
 
   Output from
-  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+  [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md),
+  [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
   or
-  [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md).
+  [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md).
   A standard long-format `data.frame` is also accepted when person and
   score columns can be inferred unambiguously from common names such as
   `Person` and `Score`; remaining measurement columns must use
@@ -76,8 +85,10 @@ mfrm_results(
 
   Optional matching output from
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
-  When supplied, it is identity-checked and reused instead of
-  recomputed.
+  An
+  [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  object is also accepted as an alias for `response_diagnostics`; do not
+  supply it twice.
 
 - compute:
 
@@ -86,6 +97,75 @@ mfrm_results(
   computing diagnostics and marks every requested dependent section as
   `"not_computed"`. Matching supplied or stored diagnostics are still
   reused under `"never"`.
+
+- predictions:
+
+  Optional saved predictions for a testlet or random-rater fit: the
+  result of `predict(fit, ...)`. Matching calibration, column roles,
+  levels, settings and prediction-source metadata are required. Older
+  predictions without this metadata must be regenerated from the saved
+  fit before attachment; the fit itself does not need to be
+  re-estimated.
+
+- intervals:
+
+  Optional saved
+  [`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
+  result from the exact supplied random-rater fit. No bootstrap is run
+  by this function.
+
+- scores:
+
+  Optional saved
+  [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+  result for an extension, or
+  [`score_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
+  output, with matching source calibration. For testlets this is an
+  alias for `predictions`; supply it once. Shared raters can also attach
+  response `predictions` and rater `intervals`. No Person scoring is run
+  here. Complete source-roster identity is required for the additional
+  model-aware map routes; see
+  [mfrmr_model_maps](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_model_maps.md).
+
+- comparison:
+
+  Optional descriptive extended-model result from
+  [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
+  Calibration, settings and observed/omitted events must match this fit.
+  Retained tables and `plot(..., type = "comparison")` compare centered
+  facet summaries without fitting or automatic ranking. When the
+  comparison includes saved response diagnostics, its
+  `comparison_response_*` tables and `type = "response_comparison"` plot
+  retain aligned predictive quantities; select `metric` for other
+  indices.
+
+- response_diagnostics:
+
+  Optional saved
+  [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  output matching the fit's calibration and exact source roster. It is
+  identity-checked and reused without integration. Ordinary RSM MML and
+  testlet/shared-rater fits support these descriptive summaries, without
+  reference cutoffs. Use `compute = "never"` to also avoid computing
+  ordinary plug-in diagnostics. Saved posterior summaries appear in
+  `response_*` tables and `plot(..., type = "response_diagnostics")`.
+
+- calibration_intervals:
+
+  For testlet and shared-rater fits, `"none"` (default) retains
+  calibration estimates and approximate SEs with missing bounds.
+  `"normal"` explicitly requests pointwise observed-information normal
+  intervals for fixed facets and steps; finite-sample coverage is not
+  established. Numerical, information and estimated-boundary
+  restrictions remain. Saved result tables, testlet calibration plots
+  and reports retain the selection. This does not select
+  individual-rater or Person intervals.
+
+- calibration_level:
+
+  Nominal level for those calibration intervals, between zero and one;
+  default 0.95. Nondefault calibration options are unavailable for
+  ordinary MFRM fits.
 
 ## Value
 
@@ -207,18 +287,19 @@ only for opt-in column selection at the console.
 
 ## Visualization and HTML
 
-`plot(res)` routes to the primary native Wright map when the fitted
-object contains compatible person and facet locations. This default
-retains available mfrmr facet uncertainty. Use `plot(res, type = "fit")`
-when the explicit three-plot Wright/pathway/category bundle is wanted.
-The compact native default discloses any omitted facet locations in its
-subtitle and `data$retention`; use `plot(res, top_n = Inf)` for a
-complete final map. Other routes include `plot(res, type = "wright")`,
-`"pathway"`, `"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`,
-`"response_time"`, and `"tables"`. The Wright map is the required first
-fitted-scale figure; `"fit_pathway"` is a follow-up with Infit or Outfit
-on the horizontal axis and measure on the vertical axis.
-`output = "html"` writes a lightweight temporary HTML file; use
+For ordinary models, `plot(res)` routes to the primary native Wright map
+when the fitted object contains compatible person and facet locations.
+This default retains available mfrmr facet uncertainty. Use
+`plot(res, type = "fit")` when the explicit three-plot
+Wright/pathway/category bundle is wanted. The compact native default
+discloses any omitted facet locations in its subtitle and
+`data$retention`; use `plot(res, top_n = Inf)` for a complete final map.
+Other routes include `plot(res, type = "wright")`, `"pathway"`,
+`"fit_pathway"`, `"qc"`, `"category"`, `"anchors"`, `"response_time"`,
+and `"tables"`. The Wright map is the required first fitted-scale
+figure; `"fit_pathway"` is a follow-up with Infit or Outfit on the
+horizontal axis and measure on the vertical axis. `output = "html"`
+writes a lightweight temporary HTML file; use
 [`launch_mfrmr_viewer()`](https://ryuya-dot-com.github.io/mfrmr/reference/launch_mfrmr_viewer.md)
 when you want an optional local Shiny reader for an already-created
 `mfrm_results` object. Use
@@ -264,6 +345,43 @@ deidentifies its contents.
     [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
     or the helper named in `summary(res)$next_actions` for
     report-specific follow-up.
+
+## Testlet and random-rater results
+
+[`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+and
+[`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+results use a separate reporting route within the same `mfrm_results`
+class. It always retains calibration estimates, numerical checks,
+settings, data usage and interval meanings. Requested ordinary-model
+sections that are unsupported are marked `not_available`. Neither
+`compute` setting fits, scores, resamples or computes diagnostics for
+these models. Supply separately computed `predictions`, `scores` or
+`intervals` explicitly; their absence is recorded. Rebuild results from
+an older saved fit to apply current calibration-bound defaults without
+refitting. Previously saved result bundles keep their original tables.
+Explicit normal bounds do not improve their coverage.
+
+Use
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+for a static report and
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+for CSV/HTML/RDS and figures. Numerical convergence does not establish
+model adequacy or general interval coverage. The ordinary Wright map,
+residual diagnostics, Shiny viewer, response-MI pooling and
+portable-calibration workflow do not support these classes. Plot types
+are `"calibration"` (first fixed facet by default; select with `facet`)
+and `"scores"` for testlets, or `"raters"`, `"intervals"` and `"scores"`
+for random-rater results. Both support `"comparison"` and, with
+corresponding saved quantities, `"response_comparison"` and
+`"response_diagnostics"`. These models also support `"wright"` and
+`"fit_pathway"` through the separately defined conditional-location and
+posterior-residual routes in
+[mfrmr_model_maps](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_model_maps.md),
+with matching saved source evidence. All these routes require `"plots"`
+in `include`; saved predictions/intervals are required for their
+corresponding plots. Report styles use the same stored evidence and
+boundaries; they do not add ordinary-model reporting templates.
 
 ## See also
 

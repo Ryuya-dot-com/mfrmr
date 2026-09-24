@@ -19,12 +19,18 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul></li>
@@ -40,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a FACETS-style fit-measures review table</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>fit_measures_table.Rd</code></div>
     </div>
 
@@ -65,7 +71,8 @@
 <span>  df_zstd_large_shift <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  df_ratio_tolerance <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  sort_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"status"</span>, <span class="st">"abs_zstd"</span>, <span class="st">"facet"</span>, <span class="st">"level"</span><span class="op">)</span>,</span>
-<span>  top_n <span class="op">=</span> <span class="cn">Inf</span></span>
+<span>  top_n <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  flag_basis <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mnsq"</span>, <span class="st">"mnsq_or_zstd"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -98,7 +105,8 @@ facet so operational facet elements are shown first.</p></dd>
 
 <dt id="arg-zstd-cut">zstd_cut<a class="anchor" aria-label="anchor" href="#arg-zstd-cut"></a></dt>
 <dd><p>Absolute ZSTD cutoff used for directional underfit/overfit
-flags. Default <code>2</code>.</p></dd>
+flags when <code>flag_basis = "mnsq_or_zstd"</code>; also used for the separate
+ZSTD and df-sensitivity columns. Default <code>2</code>.</p></dd>
 
 
 <dt id="arg-ci-level">ci_level<a class="anchor" aria-label="anchor" href="#arg-ci-level"></a></dt>
@@ -149,6 +157,12 @@ sort alphabetically.</p></dd>
 <dt id="arg-top-n">top_n<a class="anchor" aria-label="anchor" href="#arg-top-n"></a></dt>
 <dd><p>Optional maximum number of rows in the returned main table.</p></dd>
 
+
+<dt id="arg-flag-basis">flag_basis<a class="anchor" aria-label="anchor" href="#arg-flag-basis"></a></dt>
+<dd><p><code>"mnsq"</code> (default) bases directional status on Infit/Outfit
+mean squares. <code>"mnsq_or_zstd"</code> also flags either large positive or negative
+ZSTD, reproducing the previous combined rule when all indices are available.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -171,11 +185,20 @@ or materially changes ZSTD interpretation</p></li>
     <p>This helper gives users a direct table route for the common FACETS-style
 question: which raters, criteria, or other facet elements show underfit or
 overfit? It uses the fit statistics already computed by <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>.</p>
-<p>Directional labels are based on both mean-square and ZSTD evidence:
-high MnSq or positive large ZSTD is labeled <code>underfit</code>; low MnSq or negative
-large ZSTD is labeled <code>overfit</code>. Rows with conflicting directions are labeled
-<code>mixed</code>. Treat the table as a review screen and inspect substantive context
-before removing raters or changing an instrument.</p>
+<p>Directional labels use the selected <code>flag_basis</code>. By default, high mean
+squares are labeled <code>underfit</code> and low mean squares <code>overfit</code>; conflicting
+directions are <code>mixed</code>. ZSTD values remain visible, and <code>ZSTDOnly</code> identifies
+combined-rule flags when the mean-square screen is known negative. These
+standardized values are sample-size and df-convention dependent. A ZSTD-only
+departure is not automatically a substantively important misfit.</p>
+<p>Missing indices cannot establish a negative screen: one positive is retained,
+but no positive plus an unavailable index is <code>not_available</code>. <code>ScreenComplete</code>
+records whether all indices required by the selected rule were available.
+Low mean squares indicate less residual variability than expected. They do
+not diagnose misconduct, poor rater quality or machine-learning overfitting,
+and are not an automatic reason for exclusion. Investigate high mean squares
+and substantive consequences first. Published bands are contextual heuristics,
+not calibrated error probabilities or universal thresholds for all facets.</p>
 <p>FACETS-style ZSTD comparison is controlled by <code>fit_df_method</code>. MnSq values
 should be compared first; df and ZSTD columns explain how the same MnSq values
 are standardized. Use <code>fit_df_method = "both"</code> when preparing a table for
@@ -186,9 +209,18 @@ the same table can be reproduced under stricter or more permissive review
 rules.</p>
     </div>
     <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Linacre, J. M. (2003). Size vs. significance: standardized
+chi-square fit statistic. <em>Rasch Measurement Transactions</em>, 17(1), 918.
+<a href="https://www.rasch.org/rmt/rmt171n.htm" class="external-link">https://www.rasch.org/rmt/rmt171n.htm</a>.
+Wright, B. D. and Linacre, J. M. (1994). Reasonable mean-square fit values.
+<em>Rasch Measurement Transactions</em>, 8(3), 370.
+<a href="https://www.rasch.org/rmt/rmt83b.htm" class="external-link">https://www.rasch.org/rmt/rmt83b.htm</a>.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, <code><a href="facets_fit_review.html">facets_fit_review()</a></code>, <code><a href="plot_bubble.html">plot_bubble()</a></code>,
-<code><a href="mfrm_misfit_thresholds.html">mfrm_misfit_thresholds()</a></code></p></div>
+<code><a href="mfrm_misfit_thresholds.html">mfrm_misfit_thresholds()</a></code>, <code><a href="mfrm_screening_sensitivity.html">mfrm_screening_sensitivity()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -261,18 +293,20 @@ rules.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [29] Underfit                                </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [30] Overfit                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [31] FitStatus                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [32] ReviewReason                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] MaxAbsZSTD                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [34] MaxMnSqDistance                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [35] InfitZSTDDiff_FACETS_minus_ENGINE       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [36] OutfitZSTDDiff_FACETS_minus_ENGINE      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [37] MaxAbsZSTDDiff_FACETS_vs_ENGINE         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [38] MaxAbsLogDFRatio_ENGINE_over_FACETS     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [39] MaxDFRelativeDifference_ENGINE_vs_FACETS</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [40] EngineFlagAbsZ                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [41] FacetsStyleFlagAbsZ                     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [42] FlagChangedByDf                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [43] DfSensitivityStatus                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [32] ScreenComplete                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [33] ZSTDOnly                                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [34] ReviewReason                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [35] MaxAbsZSTD                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [36] MaxMnSqDistance                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [37] InfitZSTDDiff_FACETS_minus_ENGINE       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [38] OutfitZSTDDiff_FACETS_minus_ENGINE      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [39] MaxAbsZSTDDiff_FACETS_vs_ENGINE         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [40] MaxAbsLogDFRatio_ENGINE_over_FACETS     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [41] MaxDFRelativeDifference_ENGINE_vs_FACETS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [42] EngineFlagAbsZ                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [43] FacetsStyleFlagAbsZ                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [44] FlagChangedByDf                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [45] DfSensitivityStatus                     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Include FACETS-style df/ZSTD companion columns for comparison.</span></span></span>

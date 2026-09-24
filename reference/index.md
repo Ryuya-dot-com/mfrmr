@@ -67,6 +67,15 @@ Review entity-level external attributes and describe exploratory groups.
 - [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
   [`plot(`*`<mfrm_hierarchical_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
   : Hierarchical grouping of external features
+- [`mfrm_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md)
+  [`print(`*`<mfrm_pca>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md)
+  [`summary(`*`<mfrm_pca>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_pca.md)
+  : Principal components of numeric external features
+- [`plot(`*`<mfrm_pca>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_pca.md)
+  : Plot numeric feature PCA and optional exploratory groups
+- [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
+  : K-means groups from numeric features or retained principal
+  components
 - [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
   [`print(`*`<mfrm_imputed_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
   [`summary(`*`<mfrm_imputed_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
@@ -78,6 +87,102 @@ Review entity-level external attributes and describe exploratory groups.
 - [`plot(`*`<mfrm_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_clusters.md)
   [`plot(`*`<mfrm_imputed_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_clusters.md)
   : Plot exploratory groups and imputation sensitivity
+
+## Missing assigned scores
+
+Review response imputations, fit a common MFRM and pool eligible facet
+targets.
+
+- [`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+  [`print(`*`<mfrm_response_imputations>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+  [`summary(`*`<mfrm_response_imputations>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+  : Review multiple imputations of scores on assigned ratings
+- [`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md)
+  [`print(`*`<mfrm_imputed_fits>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md)
+  [`summary(`*`<mfrm_imputed_fits>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md)
+  : Fit the same MFRM to every completed rating data set
+- [`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md)
+  [`print(`*`<mfrm_pooled>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md)
+  [`summary(`*`<mfrm_pooled>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md)
+  : Pool common facet targets across imputed rating analyses
+- [`plot(`*`<mfrm_pooled>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_pooled.md)
+  : Plot pooled facet estimates or prespecified contrasts
+
+## Fixed-facet uncertainty
+
+Compare observed-information and one-way sandwich intervals for fixed
+facet estimates and contrasts.
+
+- [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+  [`print(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+  [`summary(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+  : Pointwise intervals for fixed facet estimates and contrasts
+- [`plot(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_facet_intervals.md)
+  : Plot fixed-facet interval methods
+
+## Shared random raters
+
+Estimate a rater population and distinguish observed-rater feedback from
+replacement-rater probabilities.
+
+- [`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+  [`summary(`*`<mfrm_random_rater>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+  [`print(`*`<mfrm_random_rater>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md)
+  : Fit a rating-scale model with shared random rater severity
+- [`score_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
+  [`summary(`*`<mfrm_random_rater_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
+  [`print(`*`<mfrm_random_rater_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
+  : Score Persons while integrating shared random raters
+- [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+  [`summary(`*`<mfrm_person_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+  [`print(`*`<mfrm_person_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+  [`plot(`*`<mfrm_person_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
+  : Estimate abilities for people already included in a fitted RSM
+- [`mfrmr_model_maps`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_model_maps.md)
+  : Wright and Pathway maps for extended RSMs
+- [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  [`summary(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  [`print(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  : Describe posterior predictive residuals for ordinary and extended
+  RSMs
+- [`plot(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_diagnostics.md)
+  : Plot descriptive posterior predictive residual summaries
+- [`plot(`*`<mfrm_random_rater_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_random_rater_scores.md)
+  : Plot Person scores from a shared-rater model
+- [`confint(`*`<mfrm_random_rater>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_random_rater.md)
+  : Population-SD profiles and explicit shared-rater model intervals
+- [`predict(`*`<mfrm_random_rater>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_random_rater.md)
+  : Predict category probabilities for observed or replacement raters
+- [`plot(`*`<mfrm_random_rater>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_random_rater.md)
+  : Plot observed-rater severity under a shared-rater RSM
+- [`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
+  [`confint(`*`<mfrm_random_rater_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
+  [`summary(`*`<mfrm_random_rater_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
+  [`print(`*`<mfrm_random_rater_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
+  : Bootstrap prediction intervals for observed random raters
+- [`plot(`*`<mfrm_random_rater_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_random_rater_intervals.md)
+  : Compare bootstrap and ordinary random-rater intervals
+
+## Person-specific testlets
+
+Model local dependence within a Person and score conditionally on fitted
+calibration.
+
+- [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+  [`summary(`*`<mfrm_testlet>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+  [`print(`*`<mfrm_testlet>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+  : Fit a rating-scale model with dependence within Person-specific
+  testlets
+- [`confint(`*`<mfrm_testlet>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_testlet.md)
+  : Explicit normal-approximation intervals for testlet calibration
+- [`predict(`*`<mfrm_testlet>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_testlet.md)
+  [`summary(`*`<mfrm_testlet_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_testlet.md)
+  [`print(`*`<mfrm_testlet_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/predict.mfrm_testlet.md)
+  : Score Persons using a fixed testlet calibration
+- [`plot(`*`<mfrm_testlet>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_testlet.md)
+  : Plot testlet-model fixed-facet estimates
+- [`plot(`*`<mfrm_testlet_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_testlet_scores.md)
+  : Plot conditional Person scores from a testlet model
 
 ## Portable fixed calibration
 
@@ -256,6 +361,18 @@ scenarios.
 - [`evaluate_mfrm_signal_detection()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_signal_detection.md)
   : Evaluate DIF power and bias-screening behavior under known simulated
   signals
+- [`mfrm_screening_performance()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md)
+  [`summary(`*`<mfrm_screening_performance>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md)
+  [`print(`*`<mfrm_screening_performance>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md)
+  : Evaluate screening outcomes against a planned simulation roster
+- [`plot(`*`<mfrm_screening_performance>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_screening_performance.md)
+  : Plot screening performance and unresolved outcomes
+- [`mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_sensitivity.md)
+  [`summary(`*`<mfrm_screening_sensitivity>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_sensitivity.md)
+  [`print(`*`<mfrm_screening_sensitivity>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_sensitivity.md)
+  : Compare fit-screening thresholds against known simulation truth
+- [`plot(`*`<mfrm_screening_sensitivity>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_screening_sensitivity.md)
+  : Plot directional screening rates across threshold profiles
 - [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md)
   : Forecast population-level MFRM operating characteristics for one
   future design
@@ -509,7 +626,12 @@ and compatibility helpers.
   : Build a peer-review design review
 
 - [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+  [`summary(`*`<mfrm_extended_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+  [`print(`*`<mfrm_extended_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
   : Compare two or more fitted MFRM models
+
+- [`plot(`*`<mfrm_extended_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_extended_comparison.md)
+  : Plot matched facet effects or posterior predictions across MFRMs
 
 - [`compatibility_alias_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/compatibility_alias_table.md)
   : List retained compatibility aliases and preferred names

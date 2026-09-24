@@ -76,33 +76,42 @@ The intended workflow is:
 7.  Use `style = "apa"`, `"validation"`, `"reviewer"`, or `"technical"`
     only when that reporting question is needed.
 
-Report rows deliberately distinguish evidence from claims. The
-`first_screen` table is the compact entry point: it gives an overall row
-and one row per major evidence area with status, readiness, main issue,
-next action, and primary route. The `summary.mfrm_report` method
-summarizes that first screen into immediate actions, optional
-not-requested sections, claim-readiness counts, report gaps, and
-template-boundary rows without introducing a new pass/fail decision. The
-default print method follows the same short reading order and does not
-print every detailed evidence table. HTML output places the same reader
-guidance and report-summary tables before the full Markdown text so the
-browser view starts from the first-screen route. The `report_index`
-table is the detailed evidence-route index: it lists the major report
-areas, evidence status, readiness label, review-signal count, and the
-primary/template tables, evidence routes, template routes, plot routes,
-export route, and `mfrm_results(include = ...)` preset to inspect next.
-In ordinary use, open detailed tables through the `PrimaryTable` and
-`TemplateTable` columns rather than scanning every element of
-`report$tables`. The `template_index` table then stacks all fit,
-precision, bias, misfit, and linking wording templates into a single
-boundary/claim-strength index before users drill into the area-specific
-template tables. The `claim_readiness` table marks which report claims
-are ready, caveated, unavailable, or require additional requested
-sections. The `report_gaps` table turns those statuses into follow-up
-actions. The fit-specific tables keep multiple MnSq threshold profiles,
-observed fit-status counts, and engine-vs-FACETS-style ZSTD conventions
-visible, including the small-df/capping boundary used for FACETS-style
-ZSTD review. They summarize the stored `fit_measures` component from
+Report rows deliberately distinguish evidence from claims. The testlet
+and random-rater route is a smaller stored-result report: all styles
+retain numerical checks, data usage, interval meanings and supplied
+predictions/intervals. It does not supply ordinary residual diagnostics
+or fit/APA wording templates; `template_index` is empty. See the
+model-specific section in
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+for supported tables and plots.
+
+For ordinary models, the `first_screen` table is the compact entry
+point: it gives an overall row and one row per major evidence area with
+status, readiness, main issue, next action, and primary route. The
+`summary.mfrm_report` method summarizes that first screen into immediate
+actions, optional not-requested sections, claim-readiness counts, report
+gaps, and template-boundary rows without introducing a new pass/fail
+decision. The default print method follows the same short reading order
+and does not print every detailed evidence table. HTML output places the
+same reader guidance and report-summary tables before the full Markdown
+text so the browser view starts from the first-screen route. The
+`report_index` table is the detailed evidence-route index: it lists the
+major report areas, evidence status, readiness label, review-signal
+count, and the primary/template tables, evidence routes, template
+routes, plot routes, export route, and `mfrm_results(include = ...)`
+preset to inspect next. In ordinary use, open detailed tables through
+the `PrimaryTable` and `TemplateTable` columns rather than scanning
+every element of `report$tables`. The `template_index` table then stacks
+all fit, precision, bias, misfit, and linking wording templates into a
+single boundary/claim-strength index before users drill into the
+area-specific template tables. The `claim_readiness` table marks which
+report claims are ready, caveated, unavailable, or require additional
+requested sections. The `report_gaps` table turns those statuses into
+follow-up actions. The fit-specific tables keep multiple MnSq threshold
+profiles, observed fit-status counts, and engine-vs-FACETS-style ZSTD
+conventions visible, including the small-df/capping boundary used for
+FACETS-style ZSTD review. They summarize the stored `fit_measures`
+component from
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md);
 `mfrm_report()` itself does not recompute diagnostics. The
 `fit_reporting_templates` table turns those counts into cautious

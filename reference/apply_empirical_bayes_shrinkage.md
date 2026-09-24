@@ -129,15 +129,14 @@ applications. *Journal of the American Statistical Association,
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
+                method = "JML", maxit = 300)
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
 fit_eb$shrinkage_report
 #>       Facet NLevels NLevelsUsed       Tau2     MeanSE2 MeanShrinkage
-#> 1     Rater       4           4 0.06403506 0.009500135     0.1291914
-#> 2 Criterion       4           4 0.05259214 0.009500604     0.1530053
+#> 1     Rater       4           4 0.06402776 0.009499649     0.1291985
+#> 2 Criterion       4           4 0.05258949 0.009500118     0.1530052
 #>   EffectiveDF          Method PriorSource Note SupportsFormalInference
-#> 1    3.483234 empirical_bayes   empirical <NA>                   FALSE
+#> 1    3.483206 empirical_bayes   empirical <NA>                   FALSE
 #> 2    3.387979 empirical_bayes   empirical <NA>                   FALSE
 #>                                                                                                                                                             Interpretation
 #> 1 Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision.
@@ -153,12 +152,12 @@ fit_eb$shrinkage_report
 head(fit_eb$facets$others[, c("Facet", "Level", "Estimate",
                                "ShrunkEstimate", "ShrinkageFactor")])
 #>       Facet    Level   Estimate ShrunkEstimate ShrinkageFactor
-#> 1     Rater      R01 -0.1957561     -0.1705417       0.1288054
-#> 2     Rater      R02 -0.3287963     -0.2861443       0.1297216
-#> 3     Rater      R03  0.1910876      0.1665002       0.1286707
-#> 4     Rater      R04  0.3334649      0.2902585       0.1295680
-#> 5 Criterion Accuracy  0.2487261      0.2106946       0.1529051
-#> 6 Criterion  Content -0.4150580     -0.3508239       0.1547593
+#> 1     Rater      R01 -0.1957463     -0.1705317       0.1288124
+#> 2     Rater      R02 -0.3287812     -0.2861288       0.1297287
+#> 3     Rater      R03  0.1910898      0.1665008       0.1286778
+#> 4     Rater      R04  0.3334376      0.2902324       0.1295752
+#> 5 Criterion Accuracy  0.2487265      0.2106950       0.1529051
+#> 6 Criterion  Content -0.4150443     -0.3508124       0.1547591
 # Look for: rows where `ShrinkageFactor` is large (close to 1) had
 #   their estimates pulled most strongly toward the facet mean (0).
 # }

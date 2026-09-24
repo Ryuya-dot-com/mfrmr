@@ -24,7 +24,9 @@ summary(object, ...)
   A named list of at least two results from
   [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
   and/or
-  [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md),
+  [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
+  or
+  [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md),
   or a named list of results from
   [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md).
   Do not mix the two result types. Names must be unique and nonblank.
@@ -50,7 +52,8 @@ summary(object, ...)
 
 An `mfrm_cluster_comparison` object containing:
 
-- `analysis_summary`: method, linkage (unavailable for PAM), group
+- `analysis_summary`: method, distance, fitted space, scaling, retained
+  component count, linkage (unavailable for PAM and k-means), group
   count, selected feature count (`Features`), included/excluded entity
   counts, smallest/largest group sizes, and mean silhouette for each
   analysis and imputation. `Imputation` is `NA` for ordinary clustering

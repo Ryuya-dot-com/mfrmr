@@ -1,8 +1,8 @@
 # Compare exploratory groups across external-feature imputations
 
-Apply the same Gower clustering analysis to each completed data set from
-`mice`, retaining all analyses and the fraction of imputations in which
-each pair of entities belongs to the same group.
+Apply the same external-feature clustering analysis to each completed
+data set from `mice`, retaining all analyses and the fraction of
+imputations in which each pair of entities belongs to the same group.
 
 ## Usage
 
@@ -14,8 +14,14 @@ mfrm_cluster_imputed(
   k,
   weights = NULL,
   missing = c("error", "omit"),
-  method = c("pam", "hierarchical"),
-  linkage = NULL
+  method = c("pam", "hierarchical", "kmeans"),
+  linkage = NULL,
+  components = NULL,
+  scale = TRUE,
+  nstart = 25,
+  iter.max = 100,
+  seed = 1,
+  silhouette = TRUE
 )
 
 # S3 method for class 'mfrm_imputed_clusters'
@@ -65,15 +71,31 @@ summary(object, ...)
 
 - method:
 
-  `"pam"` (default) or `"hierarchical"`. The same method is used for
-  every completion. Hierarchical analyses retain separate trees.
+  `"pam"` (default), `"hierarchical"`, or `"kmeans"`. The same method is
+  used for every completion. Hierarchical analyses retain separate
+  trees.
 
 - linkage:
 
   For `method = "hierarchical"`, `"average"` (the default when `NULL`)
   or `"complete"`; see
   [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md).
-  Must be `NULL` for PAM, which has no linkage.
+  Must be `NULL` for PAM and k-means, which have no linkage.
+
+- components:
+
+  For k-means, `NULL` uses numeric features directly. An integer fits
+  PCA separately in each completion and uses that many leading
+  components. No whitening, pooled PCA basis or component-sign matching
+  is performed.
+
+- scale, nstart, iter.max, seed, silhouette:
+
+  For `method = "kmeans"`, as in
+  [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md).
+  These arguments must not be supplied for other methods. The same seed
+  and settings are used for every completion; sensitivity still includes
+  possible changes in local optima. Review alternative seeds separately.
 
 - ...:
 
@@ -128,9 +150,12 @@ completion or failed clustering stops the comparison with its imputation
 number; no failures are discarded. Remaining missingness, and thus the
 included sample, is the same across imputations. Gower numeric ranges
 are recalculated in each completed sample; differences may reflect
-changes in both feature values and scaling. Hierarchical trees belong to
-individual completions; no pooled tree, consensus hierarchy, or
-branch-support estimate is returned.
+changes in both feature values and scaling. Numeric k-means likewise
+recalculates centers, standard deviations and, when requested, the PCA
+basis in each completion. Only partitions are compared; component
+scores/loadings and group labels are not averaged or Rubin-pooled.
+Hierarchical trees belong to individual completions; no pooled tree,
+consensus hierarchy, or branch-support estimate is returned.
 
 Co-membership proportions are invariant to arbitrary group numbering.
 They describe sensitivity to the supplied imputations, conditional on

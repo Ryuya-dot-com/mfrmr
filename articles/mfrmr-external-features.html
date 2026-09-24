@@ -39,12 +39,18 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/mfrmr-external-features.html">Exploring person, rater, and task attributes</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-facet-intervals.html">Uncertainty in rater estimates and differences</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-facets-migration.html">Migrating from FACETS to mfrmr</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-gpcm-scope.html">GPCM scope and current limitations</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-linking-and-dff.html">mfrmr Linking and DFF</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-mml-and-marginal-fit.html">MML estimation and marginal-fit diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-portable-calibration.html">Portable calibration and fresh-session scoring</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-random-raters.html">Shared random raters: feedback and replacement raters</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-reporting-and-apa.html">mfrmr Reporting and APA</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-response-imputation.html">Missing scores on assigned ratings</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-screening-performance.html">How often does a rater screen give the right warning?</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlet-applications.html">Tasks, rubric criteria and testlet dependence</a></li>
+    <li><a class="dropdown-item" href="../articles/mfrmr-testlets.html">Dependent ratings within a person: testlet models</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-visual-diagnostics.html">mfrmr Visual Diagnostics</a></li>
     <li><a class="dropdown-item" href="../articles/mfrmr-workflow.html">mfrmr Workflow</a></li>
   </ul>
@@ -71,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Exploring person, rater, and task attributes</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/2230003f2caa1c0e615c2a1c96f99320db78ac71/vignettes/mfrmr-external-features.Rmd" class="external-link"><code>vignettes/mfrmr-external-features.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/1e6151df2efb61eb3147ca81e8eca60d1b1b9310/vignettes/mfrmr-external-features.Rmd" class="external-link"><code>vignettes/mfrmr-external-features.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-external-features.Rmd</code></div>
     </div>
 
@@ -287,7 +293,7 @@ nor used to predict other variables.</p>
 <span><span class="va">model</span><span class="op">$</span><span class="va">loggedEvents</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ExperienceYears"</span>, <span class="st">"AnnualRatings"</span><span class="op">)</span>, layout <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-external-features_files/figure-html/imputation-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="mfrmr-external-features_files/figure-html/imputation-1.png" class="r-plt" alt="Imputation-chain means and standard deviations across iterations for experience years and annual rating workload. These traces help review mixing; they do not establish that the imputation model is appropriate." width="700"></p>
 <p>Five imputations and five iterations keep this executable example
 short; they are not an adequacy recommendation. The plot shows the mean
 and standard deviation of imputed values along each chain for two
@@ -332,22 +338,38 @@ two things at once.</p>
 <span><span class="co">#&gt; 13 ExperienceWeighted    PAM    &lt;NA&gt;          3 3        5      120        0</span></span>
 <span><span class="co">#&gt; 14 ExperienceWeighted    PAM    &lt;NA&gt;          4 3        5      120        0</span></span>
 <span><span class="co">#&gt; 15 ExperienceWeighted    PAM    &lt;NA&gt;          5 3        5      120        0</span></span>
-<span><span class="co">#&gt;    MinGroupSize MaxGroupSize MeanSilhouette</span></span>
-<span><span class="co">#&gt; 1            51           69      0.2841483</span></span>
-<span><span class="co">#&gt; 2            52           68      0.2584725</span></span>
-<span><span class="co">#&gt; 3            56           64      0.2681527</span></span>
-<span><span class="co">#&gt; 4            47           73      0.2338481</span></span>
-<span><span class="co">#&gt; 5            57           63      0.2578823</span></span>
-<span><span class="co">#&gt; 6            37           43      0.2526199</span></span>
-<span><span class="co">#&gt; 7            37           42      0.2813456</span></span>
-<span><span class="co">#&gt; 8            37           42      0.2628245</span></span>
-<span><span class="co">#&gt; 9            36           44      0.2401655</span></span>
-<span><span class="co">#&gt; 10           39           42      0.2521256</span></span>
-<span><span class="co">#&gt; 11           32           47      0.1915956</span></span>
-<span><span class="co">#&gt; 12           36           45      0.1964619</span></span>
-<span><span class="co">#&gt; 13           34           47      0.2290490</span></span>
-<span><span class="co">#&gt; 14           36           46      0.2250179</span></span>
-<span><span class="co">#&gt; 15           36           47      0.2256632</span></span>
+<span><span class="co">#&gt;    MinGroupSize MaxGroupSize MeanSilhouette Distance          Space Scaling</span></span>
+<span><span class="co">#&gt; 1            51           69      0.2841483    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 2            52           68      0.2584725    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 3            56           64      0.2681527    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 4            47           73      0.2338481    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 5            57           63      0.2578823    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 6            37           43      0.2526199    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 7            37           42      0.2813456    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 8            37           42      0.2628245    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 9            36           44      0.2401655    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 10           39           42      0.2521256    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 11           32           47      0.1915956    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 12           36           45      0.1964619    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 13           34           47      0.2290490    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 14           36           46      0.2250179    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 15           36           47      0.2256632    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt;    Components</span></span>
+<span><span class="co">#&gt; 1          NA</span></span>
+<span><span class="co">#&gt; 2          NA</span></span>
+<span><span class="co">#&gt; 3          NA</span></span>
+<span><span class="co">#&gt; 4          NA</span></span>
+<span><span class="co">#&gt; 5          NA</span></span>
+<span><span class="co">#&gt; 6          NA</span></span>
+<span><span class="co">#&gt; 7          NA</span></span>
+<span><span class="co">#&gt; 8          NA</span></span>
+<span><span class="co">#&gt; 9          NA</span></span>
+<span><span class="co">#&gt; 10         NA</span></span>
+<span><span class="co">#&gt; 11         NA</span></span>
+<span><span class="co">#&gt; 12         NA</span></span>
+<span><span class="co">#&gt; 13         NA</span></span>
+<span><span class="co">#&gt; 14         NA</span></span>
+<span><span class="co">#&gt; 15         NA</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         First             Second Partitions Included Pairs MeanChangedFraction</span></span>
 <span><span class="co">#&gt; 1   TwoGroups        ThreeGroups          5      120  7140           0.3199160</span></span>
@@ -408,17 +430,28 @@ unselected feature.</p>
 <span><span class="co">#&gt; 8  WithoutWorkload    PAM    &lt;NA&gt;          3 3        4      120        0</span></span>
 <span><span class="co">#&gt; 9  WithoutWorkload    PAM    &lt;NA&gt;          4 3        4      120        0</span></span>
 <span><span class="co">#&gt; 10 WithoutWorkload    PAM    &lt;NA&gt;          5 3        4      120        0</span></span>
-<span><span class="co">#&gt;    MinGroupSize MaxGroupSize MeanSilhouette</span></span>
-<span><span class="co">#&gt; 1            37           43      0.2526199</span></span>
-<span><span class="co">#&gt; 2            37           42      0.2813456</span></span>
-<span><span class="co">#&gt; 3            37           42      0.2628245</span></span>
-<span><span class="co">#&gt; 4            36           44      0.2401655</span></span>
-<span><span class="co">#&gt; 5            39           42      0.2521256</span></span>
-<span><span class="co">#&gt; 6            38           42      0.3037361</span></span>
-<span><span class="co">#&gt; 7            38           42      0.2797405</span></span>
-<span><span class="co">#&gt; 8            35           49      0.2571784</span></span>
-<span><span class="co">#&gt; 9            36           44      0.2639301</span></span>
-<span><span class="co">#&gt; 10           37           42      0.2940627</span></span>
+<span><span class="co">#&gt;    MinGroupSize MaxGroupSize MeanSilhouette Distance          Space Scaling</span></span>
+<span><span class="co">#&gt; 1            37           43      0.2526199    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 2            37           42      0.2813456    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 3            37           42      0.2628245    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 4            36           44      0.2401655    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 5            39           42      0.2521256    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 6            38           42      0.3037361    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 7            38           42      0.2797405    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 8            35           49      0.2571784    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 9            36           44      0.2639301    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 10           37           42      0.2940627    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt;    Components</span></span>
+<span><span class="co">#&gt; 1          NA</span></span>
+<span><span class="co">#&gt; 2          NA</span></span>
+<span><span class="co">#&gt; 3          NA</span></span>
+<span><span class="co">#&gt; 4          NA</span></span>
+<span><span class="co">#&gt; 5          NA</span></span>
+<span><span class="co">#&gt; 6          NA</span></span>
+<span><span class="co">#&gt; 7          NA</span></span>
+<span><span class="co">#&gt; 8          NA</span></span>
+<span><span class="co">#&gt; 9          NA</span></span>
+<span><span class="co">#&gt; 10         NA</span></span>
 <span><span class="va">feature_comparison</span><span class="op">$</span><span class="va">weights</span></span>
 <span><span class="co">#&gt;          Analysis         Feature Weight</span></span>
 <span><span class="co">#&gt; 1    WithWorkload ExperienceYears      1</span></span>
@@ -523,7 +556,7 @@ excluded from clustering have no width; their IDs remain in the returned
 plot data.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">one_completion</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-external-features_files/figure-html/silhouette-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-external-features_files/figure-html/silhouette-1.png" class="r-plt" alt="Rater silhouette widths grouped by the descriptive partition in one completion. The dashed line is the overall mean; negative widths indicate profiles to inspect, not poor rater quality." width="672"></p>
 <p>Inspect one feature at a time so that its units and categories remain
 clear. Numeric profiles show means and medians in original units,
 without confidence intervals. Categorical profiles show proportions
@@ -531,10 +564,10 @@ within each group, preserving the order of training levels. These are
 descriptions of this completion only.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">one_completion</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"ExperienceYears"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-external-features_files/figure-html/profiles-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-external-features_files/figure-html/profiles-1.png" class="r-plt" alt="Experience in years summarized by descriptive rater group, with means and medians in the original units and no confidence intervals." width="672"></p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">one_completion</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"TrainingLevel"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-external-features_files/figure-html/profiles-2.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-external-features_files/figure-html/profiles-2.png" class="r-plt" alt="Proportions of ordered training levels within each descriptive rater group. These profiles describe one imputed table, not effects of training." width="672"></p>
 <p>The next heatmap asks which pairs remain together across imputations.
 For readability, this view explicitly selects the first 20 IDs in the
 input table; it does not recluster them, change the denominator, or
@@ -543,7 +576,7 @@ raters. By default, ID labels are hidden above 50 displayed entities;
 the data are never sampled automatically.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">analyses</span><span class="op">$</span><span class="va">ThreeGroups</span>, ids <span class="op">=</span> <span class="va">raters</span><span class="op">$</span><span class="va">Rater</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-external-features_files/figure-html/co-membership-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-external-features_files/figure-html/co-membership-1.png" class="r-plt" alt="Pairwise co-membership proportions across imputations for the first twenty rater IDs. The scale runs from zero to one; unavailable pairs are grey. These proportions are imputation sensitivity, not sampling stability." width="672"></p>
 <p>The colour scale always runs from zero to one. Grey denotes
 unavailable pairs involving excluded raters, not pairs that never share
 a group. Rows retain the requested ID order. The map does not infer a
@@ -597,22 +630,38 @@ method.</p>
 <span><span class="co">#&gt; 13 Complete Hierarchical complete          3 3        5      120        0</span></span>
 <span><span class="co">#&gt; 14 Complete Hierarchical complete          4 3        5      120        0</span></span>
 <span><span class="co">#&gt; 15 Complete Hierarchical complete          5 3        5      120        0</span></span>
-<span><span class="co">#&gt;    MinGroupSize MaxGroupSize MeanSilhouette</span></span>
-<span><span class="co">#&gt; 1            37           43      0.2526199</span></span>
-<span><span class="co">#&gt; 2            37           42      0.2813456</span></span>
-<span><span class="co">#&gt; 3            37           42      0.2628245</span></span>
-<span><span class="co">#&gt; 4            36           44      0.2401655</span></span>
-<span><span class="co">#&gt; 5            39           42      0.2521256</span></span>
-<span><span class="co">#&gt; 6            32           48      0.3452806</span></span>
-<span><span class="co">#&gt; 7            35           43      0.3409728</span></span>
-<span><span class="co">#&gt; 8            33           46      0.3469410</span></span>
-<span><span class="co">#&gt; 9            34           46      0.3398082</span></span>
-<span><span class="co">#&gt; 10           33           45      0.3389007</span></span>
-<span><span class="co">#&gt; 11           32           48      0.3452806</span></span>
-<span><span class="co">#&gt; 12           35           43      0.3409728</span></span>
-<span><span class="co">#&gt; 13           20           54      0.3053761</span></span>
-<span><span class="co">#&gt; 14           20           67      0.2888587</span></span>
-<span><span class="co">#&gt; 15           38           42      0.3861780</span></span>
+<span><span class="co">#&gt;    MinGroupSize MaxGroupSize MeanSilhouette Distance          Space Scaling</span></span>
+<span><span class="co">#&gt; 1            37           43      0.2526199    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 2            37           42      0.2813456    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 3            37           42      0.2628245    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 4            36           44      0.2401655    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 5            39           42      0.2521256    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 6            32           48      0.3452806    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 7            35           43      0.3409728    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 8            33           46      0.3469410    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 9            34           46      0.3398082    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 10           33           45      0.3389007    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 11           32           48      0.3452806    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 12           35           43      0.3409728    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 13           20           54      0.3053761    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 14           20           67      0.2888587    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt; 15           38           42      0.3861780    Gower Mixed features   Range</span></span>
+<span><span class="co">#&gt;    Components</span></span>
+<span><span class="co">#&gt; 1          NA</span></span>
+<span><span class="co">#&gt; 2          NA</span></span>
+<span><span class="co">#&gt; 3          NA</span></span>
+<span><span class="co">#&gt; 4          NA</span></span>
+<span><span class="co">#&gt; 5          NA</span></span>
+<span><span class="co">#&gt; 6          NA</span></span>
+<span><span class="co">#&gt; 7          NA</span></span>
+<span><span class="co">#&gt; 8          NA</span></span>
+<span><span class="co">#&gt; 9          NA</span></span>
+<span><span class="co">#&gt; 10         NA</span></span>
+<span><span class="co">#&gt; 11         NA</span></span>
+<span><span class="co">#&gt; 12         NA</span></span>
+<span><span class="co">#&gt; 13         NA</span></span>
+<span><span class="co">#&gt; 14         NA</span></span>
+<span><span class="co">#&gt; 15         NA</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">method_comparison</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     First   Second Partitions Included Pairs MeanChangedFraction</span></span>
 <span><span class="co">#&gt; 1     PAM  Average          5      120  7140           0.3474230</span></span>
@@ -630,7 +679,7 @@ small groups deserve inspection even when the overall pair agreement is
 high.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">average</span><span class="op">$</span><span class="va">analyses</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-external-features_files/figure-html/dendrogram-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="mfrmr-external-features_files/figure-html/dendrogram-1.png" class="r-plt" alt="Average-linkage hierarchy from Gower dissimilarities in one completed rater-feature table. Boxes mark three groups; all 120 raters are included. Heights are dissimilarities, not significance or branch support." width="672"></p>
 <p>This is the full tree for <strong>one completion</strong>, with boxes
 marking its three groups. The 120 raters are all included; ID labels are
 hidden by default above 50 entities. For a smaller cohort, labels appear
@@ -961,27 +1010,156 @@ explained-variance threshold alone is not evidence that a clustering
 structure was preserved. A two-component plot is a projection, not a
 test for the existence of clusters.</p>
 <p>Ordinary PCA and k-means should not receive arbitrary numeric codes
-for nominal categories such as specialty. The present mixed-feature API
-uses Gower distances with PAM or average/complete linkage; it does not
-implement PCA, k-means, or automatic feature selection. Base R provides
-<a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html" class="external-link"><code>prcomp()</code></a>
-and <a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html" class="external-link"><code>kmeans()</code></a>
-for separately specified numeric analyses. A future integrated route
-needs explicit scaling, retained dimensions, initialization, and
-uncertainty handling. Simply sending PC scores to the current Gower
-interface would range-scale them again and would not reproduce Euclidean
-k-means.</p>
+for nominal categories such as specialty. Keep Gower/PAM or
+average/complete linkage for mixed features. For selected numeric
+attributes, <code><a href="../reference/mfrm_pca.html">mfrm_pca()</a></code> and
+<code><a href="../reference/mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> use R’s <a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html" class="external-link"><code>prcomp()</code></a>
+and <a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html" class="external-link"><code>kmeans()</code></a>.
+They center features and, by default, divide by sample standard
+deviations. Positive feature weights apply to <strong>squared Euclidean
+distances</strong>. The fitted transformation, original units, entity
+IDs and missingness accounting remain available. No automatic feature,
+component or group-count selection is performed.</p>
+<p>Here the question is whether grouping experience, annual workload and
+workshop hours changes when those three attributes are represented by
+two components. The same already fitted imputation model supplies both
+analyses. Workshop hours remain a predictor in that model whether or not
+they are selected for clustering. These numeric selections answer a
+different question from the mixed-background groups above; specialty and
+training level are not numeric inputs to this PCA.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">numeric_names</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ExperienceYears"</span>, <span class="st">"AnnualRatings"</span>, <span class="st">"WorkshopHours"</span><span class="op">)</span></span>
+<span><span class="va">numeric_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">raters</span>, <span class="st">"Rater"</span>, <span class="va">numeric_names</span><span class="op">)</span></span>
+<span><span class="va">numeric_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_imputed.html">mfrm_cluster_imputed</a></span><span class="op">(</span><span class="va">numeric_review</span>, <span class="va">model</span>,</span>
+<span>  <span class="va">numeric_review</span><span class="op">$</span><span class="va">missing</span>, k <span class="op">=</span> <span class="fl">3</span>, method <span class="op">=</span> <span class="st">"kmeans"</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">numeric_reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_imputed.html">mfrm_cluster_imputed</a></span><span class="op">(</span><span class="va">numeric_review</span>, <span class="va">model</span>,</span>
+<span>  <span class="va">numeric_review</span><span class="op">$</span><span class="va">missing</span>, k <span class="op">=</span> <span class="fl">3</span>, method <span class="op">=</span> <span class="st">"kmeans"</span>, components <span class="op">=</span> <span class="fl">2</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">numeric_comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_compare.html">mfrm_cluster_compare</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  StandardizedFeatures <span class="op">=</span> <span class="va">numeric_direct</span>, TwoComponents <span class="op">=</span> <span class="va">numeric_reduced</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">numeric_comparison</span><span class="op">$</span><span class="va">analysis_summary</span></span>
+<span><span class="co">#&gt;                Analysis  Method Linkage Imputation K Features Included Excluded</span></span>
+<span><span class="co">#&gt; 1  StandardizedFeatures k-means    &lt;NA&gt;          1 3        3      120        0</span></span>
+<span><span class="co">#&gt; 2  StandardizedFeatures k-means    &lt;NA&gt;          2 3        3      120        0</span></span>
+<span><span class="co">#&gt; 3  StandardizedFeatures k-means    &lt;NA&gt;          3 3        3      120        0</span></span>
+<span><span class="co">#&gt; 4  StandardizedFeatures k-means    &lt;NA&gt;          4 3        3      120        0</span></span>
+<span><span class="co">#&gt; 5  StandardizedFeatures k-means    &lt;NA&gt;          5 3        3      120        0</span></span>
+<span><span class="co">#&gt; 6         TwoComponents k-means    &lt;NA&gt;          1 3        3      120        0</span></span>
+<span><span class="co">#&gt; 7         TwoComponents k-means    &lt;NA&gt;          2 3        3      120        0</span></span>
+<span><span class="co">#&gt; 8         TwoComponents k-means    &lt;NA&gt;          3 3        3      120        0</span></span>
+<span><span class="co">#&gt; 9         TwoComponents k-means    &lt;NA&gt;          4 3        3      120        0</span></span>
+<span><span class="co">#&gt; 10        TwoComponents k-means    &lt;NA&gt;          5 3        3      120        0</span></span>
+<span><span class="co">#&gt;    MinGroupSize MaxGroupSize MeanSilhouette  Distance                Space</span></span>
+<span><span class="co">#&gt; 1            23           55      0.2946332 Euclidean     Numeric features</span></span>
+<span><span class="co">#&gt; 2            31           49      0.2921438 Euclidean     Numeric features</span></span>
+<span><span class="co">#&gt; 3            30           47      0.2890823 Euclidean     Numeric features</span></span>
+<span><span class="co">#&gt; 4            21           51      0.2841480 Euclidean     Numeric features</span></span>
+<span><span class="co">#&gt; 5            23           53      0.2742463 Euclidean     Numeric features</span></span>
+<span><span class="co">#&gt; 6            27           51      0.4118746 Euclidean Principal components</span></span>
+<span><span class="co">#&gt; 7            29           50      0.4118474 Euclidean Principal components</span></span>
+<span><span class="co">#&gt; 8            27           52      0.3786295 Euclidean Principal components</span></span>
+<span><span class="co">#&gt; 9            34           44      0.3871943 Euclidean Principal components</span></span>
+<span><span class="co">#&gt; 10           28           51      0.3811840 Euclidean Principal components</span></span>
+<span><span class="co">#&gt;      Scaling Components</span></span>
+<span><span class="co">#&gt; 1  Sample SD         NA</span></span>
+<span><span class="co">#&gt; 2  Sample SD         NA</span></span>
+<span><span class="co">#&gt; 3  Sample SD         NA</span></span>
+<span><span class="co">#&gt; 4  Sample SD         NA</span></span>
+<span><span class="co">#&gt; 5  Sample SD         NA</span></span>
+<span><span class="co">#&gt; 6  Sample SD          2</span></span>
+<span><span class="co">#&gt; 7  Sample SD          2</span></span>
+<span><span class="co">#&gt; 8  Sample SD          2</span></span>
+<span><span class="co">#&gt; 9  Sample SD          2</span></span>
+<span><span class="co">#&gt; 10 Sample SD          2</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">numeric_comparison</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                  First        Second Partitions Included Pairs</span></span>
+<span><span class="co">#&gt; 1 StandardizedFeatures TwoComponents          5      120  7140</span></span>
+<span><span class="co">#&gt;   MeanChangedFraction MinChangedFraction MaxChangedFraction MeanAdjustedRand</span></span>
+<span><span class="co">#&gt; 1           0.1959384         0.02072829          0.3857143        0.5701576</span></span></code></pre></div>
+<p>Read <code>Space</code>, <code>Scaling</code> and
+<code>Components</code> before comparing the partitions.
+<code>ChangedFraction</code> measures changed together/apart pairs,
+allowing arbitrary renumbering of clusters. Different component counts
+change distances, so silhouette widths do not provide a common-scale
+test that one analysis is better. The default 25 random starts and fixed
+seed make this execution reproducible, but do not prove a global
+optimum. Assess another seed separately if initialization sensitivity
+matters.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">first_numeric</span> <span class="op">&lt;-</span> <span class="va">numeric_reduced</span><span class="op">$</span><span class="va">analyses</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Component  Variance Proportion Cumulative Retained</span></span>
+<span><span class="co">#&gt; 1       PC1 1.1248279  0.3749426  0.3749426     TRUE</span></span>
+<span><span class="co">#&gt; 2       PC2 0.9952593  0.3317531  0.7066957     TRUE</span></span>
+<span><span class="co">#&gt; 3       PC3 0.8799128  0.2933043  1.0000000    FALSE</span></span>
+<span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span><span class="op">$</span><span class="va">loadings</span></span>
+<span><span class="co">#&gt;                        PC1          PC2</span></span>
+<span><span class="co">#&gt; ExperienceYears -0.4657154  0.761955112</span></span>
+<span><span class="co">#&gt; AnnualRatings    0.5411158  0.647598960</span></span>
+<span><span class="co">#&gt; WorkshopHours   -0.7002163 -0.006324086</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span><span class="op">)</span>  <span class="co"># The full explained-variance table, including omitted PCs.</span></span></code></pre></div>
+<p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-1.png" class="r-plt" alt="Explained-variance scree plot for numeric rater features in one completion. Filled points identify retained components and open points identify omitted components." width="768"></p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scores"</span>, groups <span class="op">=</span> <span class="va">first_numeric</span>, labels <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-2.png" class="r-plt" alt="Scores on the first two principal components, with descriptive k-means groups distinguished by colour and point shape. This projection is not a latent ability or rater-quality scale." width="768"></p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"loadings"</span>, components <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-3.png" class="r-plt" alt="First-component loadings for the transformed numeric rater features. Their signs are arbitrary and the coefficients are not original-unit correlations." width="768"></p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"ExperienceYears"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-4.png" class="r-plt" alt="Experience in years summarized by the k-means groups fitted in the retained principal-component space. The original-unit profile describes this completion only." width="768"></p>
+<p>The first-completion score plot annotates a two-dimensional
+projection with that completion’s group labels. Colour and point shape
+distinguish groups; <code>preset = "monochrome"</code> retains the
+shapes. Shapes repeat after six groups, so inspect
+<code><a href="../reference/plot_data.html">plot_data()</a></code> for IDs and encodings in crowded views.
+Filled/open scree points distinguish retained/omitted components.
+Loadings are coefficients in the transformed feature space, not
+correlations in original units. Their signs are arbitrary. Inspect the
+original-unit profiles to explain what distinguishes the groups. No view
+establishes ability, severity, rater quality or an effect of
+training.</p>
+<p>Every completion retains its own centering, standard deviations and
+PCA basis. The comparison pairs the same completions, while allowing
+these transformations to change as imputed values change. It compares
+partitions; it does not average PCA scores, loadings or arbitrary group
+numbers, and it does not Rubin-pool inference. These functions impute no
+rating scores.</p>
+<p>For an already complete numeric table, use
+<code>mfrm_cluster_kmeans(review, k=3)</code> directly. To inspect and
+retain a specific reduction, fit
+<code>pca &lt;- mfrm_pca(review, components=2)</code> and then
+<code>mfrm_cluster_kmeans(pca, k=3)</code>. Passing a PCA object uses
+its scores exactly, without further standardization, range scaling or
+whitening. Save that PCA and its grouping together. <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
+and <code><a href="../reference/mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code> reuse saved results; changing
+features, component counts, weights or seeds requires the corresponding
+new analysis. <code>mfrmr_output_guide("features")</code> lists the
+dedicated output routes. Use <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for partition
+comparisons, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> or <code><a href="../reference/plot_data.html">plot_data()</a></code> for
+fitted PCA and grouping views. Automatic <code><a href="../reference/as_ggplot.html">as_ggplot()</a></code>
+conversion is unavailable, including when selecting a table component. A
+custom scores plot must explicitly retain both selected PC axes and its
+group labels; plotting the first numeric column alone does not reproduce
+that view.</p>
 </div>
 <div class="section level2">
 <h2 id="plan-for-the-size-of-the-analysis">Plan for the size of the analysis<a class="anchor" aria-label="anchor" href="#plan-for-the-size-of-the-analysis"></a>
 </h2>
+<p>K-means can explicitly omit silhouettes with
+<code>silhouette = FALSE</code>, avoiding their quadratic distance
+matrix. Those silhouettes are unavailable, not zero; profile plots and
+partition comparisons remain available. PCA itself uses a numeric matrix
+decomposition whose cost depends on both entity and feature counts.
+Neither option promises a universal capacity limit. The imputation
+co-membership matrix remains quadratic even with silhouettes
+disabled.</p>
 <p>Pairwise distances require memory that grows quadratically with the
-number of raters. Ordinary clustering permits up to 5,000 included
-entities; the imputation workflow permits up to 5,000 total entities
-because its comparison matrix includes excluded IDs. These are input
-limits, not a guarantee of low memory use or acceptable run time.
-Multiple imputations also retain every completed analysis. Save the
-fitted imputation model and clustering results;
+number of raters. Gower/PAM and hierarchical clustering permit up to
+5,000 included entities; the imputation workflow permits up to 5,000
+total entities because its comparison matrix includes excluded IDs.
+These are input limits, not a guarantee of low memory use or acceptable
+run time. Multiple imputations also retain every completed analysis.
+Save the fitted imputation model and clustering results;
 <code><a href="../reference/mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code> reuses them without repeating the
 fits.</p>
 <p>Plan for temporary distance and silhouette calculations as well as
