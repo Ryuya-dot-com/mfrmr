@@ -32,15 +32,12 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the `0.2.4` source in this checkout, including
-portable calibration, exploratory external-feature groups and multivariate
-G/D-studies. See [the roadmap](ROADMAP.md) for supported scope and future work.
-The version remains a release candidate pending the final release decision.
-The numeric PCA/k-means, assigned-score imputation, fixed-facet sandwich
-interval, screening-performance, shared random-rater and Person-specific
-testlet workflows are currently
-developed locally; the checked `main` snapshot
-does not yet include those additions.
+This README describes the expanded `0.2.4` release candidate, including
+portable calibration, exploratory external-feature groups, numeric PCA/k-means,
+assigned-score imputation, fixed-facet sandwich intervals, screening evaluation,
+multivariate G/D-studies, and shared random-rater and Person-specific testlet
+RSMs. See [the roadmap](ROADMAP.md) for supported scope and future work.
+The candidate is intended for evaluation and has not been released on CRAN.
 Functions and options shown here may differ from an installed release; retain
 the installed source tag or commit and use its matching help. Earlier candidates
 also report `0.2.4`, so `packageVersion("mfrmr")` alone cannot distinguish them.
@@ -53,7 +50,7 @@ Install the published CRAN release with:
 install.packages("mfrmr")
 ```
 
-To install the checked 0.2.4 baseline from GitHub's `main` branch:
+To install the expanded 0.2.4 candidate from its fixed GitHub tag:
 
 ```r
 if (!requireNamespace("remotes", quietly = TRUE)) {
@@ -62,17 +59,17 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 
 remotes::install_github(
   "Ryuya-dot-com/mfrmr",
-  ref = "main",
+  ref = "v0.2.4-rc.4",
   build_vignettes = TRUE
 )
 ```
 
-For a reproducible installation, replace `"main"` with a specific commit or
-published tag. The [release pages](https://github.com/Ryuya-dot-com/mfrmr/releases)
-provide versioned source archives and release notes. A local checkout
-can also be installed with `remotes::install_local("path/to/mfrmr")`; use the
-directory containing the updated `DESCRIPTION` and this README to try the
-local additions.
+The [release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.4)
+provides the source archive with prebuilt tutorials, its checksum and the
+applicable check results. Use `ref = "main"` only when you want the latest
+development source; it may change after this candidate. A local checkout can
+also be installed with `remotes::install_local("path/to/mfrmr")`, using the
+directory containing `DESCRIPTION` and this README.
 
 ## Quick start
 

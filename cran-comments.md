@@ -73,9 +73,31 @@ All fifteen executed articles and their 43 figures with alternative text are
 retained. Two updated scoring explanations are reflected in the article HTML;
 no numerical output was fabricated or recomputed for those prose changes.
 
-## Before submission or publication
+## Hosted CI and publication candidate, 2026-09-24
 
-Matching hosted five-environment CI, online repository/URL and current reverse-
-dependency checks, and Win-builder remain outstanding for this source. Earlier
-candidate CI does not qualify it. GitHub publication, CRAN submission and CRAN
-acceptance are separate external states; none was performed in this local pass.
+The expanded source at `4f5ed87c11a1d01ee27547fa3d3e5d0c14aa1b04` passes
+macOS release, Windows release, Ubuntu release, Ubuntu devel and Ubuntu oldrel-1:
+https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35948657009
+
+Each environment completes `R CMD check --no-manual` with zero errors, warnings
+and notes, and passes the international-input and moved-folder replay checks.
+The workflow uses the representative CRAN test tier, not the separately retained
+full numerical regression suite. Archive and check-log hashes are verified from
+each downloaded receipt against that commit and tree. These are hosted package
+checks, not a new complete `--as-cran` check or CRAN acceptance.
+
+The publication archive is `mfrmr_0.2.4.tar.gz`, SHA256
+`d1b7503790b275aefe02ab2d99ad4c9e79d35918ddda582c8f3c36a1e259b40b`.
+It differs from the selected local archive only in the README installation/status
+wording and automatic Packaged timestamp. All code, tests, Rd, data, saved
+examples and fifteen executed tutorials are byte-identical. The later publication
+commit updates repository-only status records as well; its distinct SHA is not
+represented as a second five-environment run. Applicable local and hosted checks
+are reused for unchanged content. Main/tag/asset/site verification remains open
+until the public endpoints have been checked.
+
+## Before CRAN submission
+
+Online incoming/URL and current reverse-dependency checks, and Win-builder remain
+outstanding. GitHub publication, CRAN submission and CRAN acceptance are separate
+external states. No CRAN submission or acceptance is claimed.

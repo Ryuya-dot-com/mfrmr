@@ -2385,3 +2385,47 @@ Its macOS light `R CMD check --no-manual` checkpoint reports Status OK,
 [five-platform/full-workflow verification](prerelease-verification-0.2.4.md)
 belongs to an earlier candidate. This reconciliation does not claim a new full
 suite, five-platform run, coverage experiment or release approval.
+
+
+#### September 24 expanded-candidate hosted checks and publication preparation
+
+M6 now has matching five-environment evidence for
+`4f5ed87c11a1d01ee27547fa3d3e5d0c14aa1b04`, tree
+`1db54edaa3c53ef85e6d1075dede261ebe674738`:
+[run 35948657009](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35948657009).
+All five macOS/Windows/Linux R-version cells complete `R CMD check --no-manual`
+with **zero errors, zero warnings and zero notes**, plus international-input,
+moved-folder replay and repository-consistency checks. Downloaded source and
+check-log hashes agree with every receipt and with the same candidate commit/tree.
+The matrix uses the representative CRAN tier, not a repeat of the full numerical
+regression or new coverage simulations. The macOS tier reports 3,027 passed
+expectations and three explicit CRAN skips; the formerly skipped fresh-process
+portable-API test now runs and passes. Existing statistical limits are unchanged.
+Runner action-runtime deprecation annotations are maintenance notices, not R
+package-check warnings or failed cells.
+
+The source-truth review initially rejected the word “preflight” in the public
+roadmap; reader-facing wording was repaired before the CI commit. No guard was
+weakened. All 634 staged packaged implementation/help/test/example inputs matched
+the M5 archive before publication preparation. The CI commit includes the prior
+expanded implementation commit `4819f79` and the M5 help/example repairs.
+
+The prepared publication archive has SHA256
+`d1b7503790b275aefe02ab2d99ad4c9e79d35918ddda582c8f3c36a1e259b40b`.
+Its complete member inventory matches the M5 archive. Only README installation
+and status prose, and the automatic DESCRIPTION Packaged timestamp differ.
+The initial comparison correctly exposed that timestamp in addition to README;
+the corrected comparison admits only that field, not arbitrary metadata changes.
+All numerical code, Rd, tests, data, saved results, executed article HTML/figures,
+article sources and index remain byte-identical. A further 664 existing checkout
+files agree with their publication archive members. The archive checksum and
+comparison receipt are retained in
+`validation-results/github-integration-20260924/publication/`; hosted receipts,
+run/job identities and the CI watch log are in its parent directory.
+
+The subsequent publication-preparation commit changes only README, the public
+roadmap, this record, the internal plan and `cran-comments.md`. The last four are
+excluded from the source archive. Their distinct commit identity is not claimed
+to have rerun the matrix. Do not rerun unchanged numerical tests merely to record
+CI results. Main integration, tag/asset re-download and site/help identity remain
+open until verified. This does not submit the package to CRAN.

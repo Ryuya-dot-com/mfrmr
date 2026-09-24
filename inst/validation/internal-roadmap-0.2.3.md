@@ -46,8 +46,11 @@ archive's ordinary/donttest examples and manual pass. Its test and article
 failures are repaired and checked separately; the final structural/dependency
 and all-article rebuild check has zero errors/warnings and two retained notes
 for unavailable time verification and `xcrun_db`. This is a reconciled result,
-not a clean repeat of every test. M6 remains open; no publication action was
-taken. Broader statistical claims remain excluded.
+not a clean repeat of every test. The expanded candidate now also passes
+[all five hosted package-check environments](claim-reconciliation-0.2.4.md#september-24-expanded-candidate-hosted-checks-and-publication-preparation).
+M6 is underway: publication preparation preserves the checked code/help and
+updates status/installation prose only. Main, release-download and site identity
+still require verification. Broader statistical claims remain excluded.
 
 The subsequent user-requested
 [beginner/API review](claim-reconciliation-0.2.4.md#september-24-pre-integration-beginner-and-api-review)
@@ -81,7 +84,7 @@ MML with JML, force convergence flags, or blanket-disable examples to meet time.
 | M3 | Complete both RSM model workflows with Person scoring, declared conditional uncertainty, observed/replacement-rater distinctions, same-data ordinary-MFRM comparison, response moments, descriptive Infit/Outfit, model-aware Wright/location, pathway and comparison plots. Validate probability/moment calculations, numerical approximation and retained statistical interpretations separately. | M2 decisions; A05/A07/A11/A12/A14. Fit cutoffs, formal DRF/LRT and general calibration-aware intervals are not silently added. |
 | M4 | Close examples, user help, NEWS, capability refusals, shared output, migration, dependencies and workload evidence across the included routes. Preserve the baseline shrinkage, variance-scale and portable-interaction corrections. One observed educational assessment anchors interpretation; reuse existing role-preserving examples to explain another domain without claiming new domain validation. Inspect actual plotted values and English labels, not only object classes. | M1/M3; A01–A04/A06–A09/A11. Maintain docs during work; this is final reconciliation, not the first documentation pass. |
 | M5 | Freeze one local source and archive; run the necessary integrated package check on that source, verify archive contents/installed help/examples and fresh-session replay, and retain hashes and a concise unresolved-issues disposition. No included outcome is pending or contradicted by a supported default. Deliver source/archive, matching local help, evidence and migration instructions. | M1–M4 closed. Local-development endpoint, not release/CRAN acceptance. A10 local package integration is requalified by the final source/archive receipt; later cross-platform/publication checks remain M6. |
-| M6 | After publication is authorized for the concrete source, run five-environment CI, integrate the checked content into main, verify final tag/asset/download and site/installed-help identity, and update candidate/version status consistently. Changes introduced during merge require matching verification. CRAN submission and acceptance are separately reported external states. | M5; no push or publication in the current local-development phase. No reuse of old CI as evidence for new source. |
+| M6 | After publication is authorized for the concrete source, run five-environment CI, integrate the checked content into main, verify final tag/asset/download and site/installed-help identity, and update candidate/version status consistently. Changes introduced during merge require matching verification. CRAN submission and acceptance are separately reported external states. | M5; the expanded source now passes its own five-environment CI. Verify main, tag/download and site identity to close M6; retain the statistical boundaries. No reuse of old CI as evidence for new source. |
 
 The user-requested ordinary-screen threshold audit is complete locally: nine
 prespecified conditions with 100 replications, plus reanalysis of 800 existing

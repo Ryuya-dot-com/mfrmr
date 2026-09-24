@@ -6,37 +6,34 @@ See [NEWS](NEWS.md) for changes and the [README](README.md) for use and examples
 
 ## Current releases
 
-mfrmr 0.2.4 is a release candidate. Its checked baseline consolidates the
-previously completed work from stages 1–3 on `main`. It has not been released
-on CRAN; the final
-release decision is separate from integrating the source. GitHub pre-releases
-provide fixed snapshots for evaluation and link to their applicable CI results.
-The published candidate
-[`v0.2.4-rc.3`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.3),
-passed its five-environment package checks. The expanded numeric-feature,
-assigned-score imputation, fixed-facet intervals, screening evaluation and
-shared random-rater and Person-specific testlet workflows described below
-have completed local integration within the stated scope and have not been
-published on main. Later main-branch changes retain
-their own checks; they do not change that tag or its archive.
-Use the source tag or commit and matching installed help to identify available
-functionality. Earlier candidates also report package version `0.2.4`.
+mfrmr 0.2.4 is a release candidate. It has not been released on CRAN;
+the final release decision is separate from integrating the source. The expanded
+candidate includes numeric-feature analysis, assigned-score imputation,
+fixed-facet intervals, screening evaluation, and shared random-rater and
+Person-specific testlet workflows alongside the existing calibration and
+G/D-study functions. Its implementation and help have passed
+[five-environment package checks](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35948657009).
 
-The local candidate now includes clearer help on function names, defaults and
-choosing an analysis. Seven extended-model examples use saved synthetic results
-so users can inspect summaries and figures quickly; complete recalculation
-instructions remain available. Examples, tutorials and the manual have been
-checked, and the problems found during those checks have been corrected.
-Verification combines existing results with checks of the affected changes.
-Matching cross-platform checks and publication are still required; local
-completion is not CRAN acceptance.
+The next fixed snapshot is `v0.2.4-rc.4`. Publication checks still need to confirm
+its main-branch integration, downloadable archive and matching website.
+Earlier candidates remain available as unchanged evaluation snapshots. Use the
+source tag or commit and matching installed help to identify functionality:
+earlier candidates also report package version `0.2.4`.
+
+This candidate includes clearer help on function names, defaults and choosing
+an analysis. Seven extended-model examples use saved synthetic results so users
+can inspect summaries and figures quickly; complete recalculation instructions
+remain available. Examples, tutorials and the manual have been checked, and
+problems found during those checks have been corrected. Cross-platform package
+checks do not establish statistical performance beyond the stated scope or
+constitute CRAN acceptance.
 
 | Workflow | Current position | Role in the planned 0.2.4 |
 | --- | --- | --- |
 | Portable calibration and new-Person scoring | Implemented for the stated fixed-normal RSM/PCM MML scope. | Preserve the supported workflow and corrections during integration. |
 | External-feature clustering and imputation sensitivity | Included in the candidate, including hierarchical trees, plots and setting comparisons. | Preserve descriptive interpretation and paired imputation comparisons. |
 | Multivariate observed-score G/D studies | Crossed/nested point projections and explicit normal-theory intervals for prespecified two-crossed-facet plan differences are included. | Preserve the supported designs, uncertainty assumptions and metric-specific availability. |
-| Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are included in the baseline. Shared-rater and testlet RSMs have completed local integration for their bounded conditional/descriptive scope; broader inference remains unqualified. | Retain the G/D-study and two RSM workflows specified below; public release still requires matching CI and publication. |
+| Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are included in the baseline. Shared-rater and testlet RSMs are included for their bounded conditional/descriptive scope; broader inference remains unqualified. | Retain the G/D-study and two RSM workflows specified below; publication verification follows the completed package checks. |
 
 ## Purpose and priorities
 
@@ -71,7 +68,7 @@ example; the same explicit roles can describe music, clinical assessment or
 judged performances without claiming validation in every domain.
 
 The following is the retained final scope. These public workflows have completed
-local integration; matching cross-platform checks and publication remain.
+local integration and cross-platform package checks; publication verification remains.
 Completion of the previously published candidate alone did not establish this
 expanded scope.
 
@@ -134,8 +131,8 @@ additional confirmation simulations or a final source freeze.
 | M2 — Statistical and model decisions | Complete literature-to-equation-to-code correspondence; resolve ability-population constraints, effect sharing, interval targets, comparison likelihoods and diagnostic probabilities. Fix the remaining validation conditions, practical tolerances and Monte Carlo precision before new outcomes. | Ability-variance extension, matched-data comparison and descriptive probability targets are specified. The fixed-facet working-model target is reconciled. A prespecified 800-dataset shared-rater comparison is complete; automatic individual-rater intervals are withdrawn, with explicit approximation access retained. All 53 saved Person-integration failures pass higher-order refits after independent numerical review; the original study decisions remain unchanged. A 480-dataset estimated-population testlet comparison is also complete. Fourteen numerical start-selection failures are repaired; post-repair bounded coverage evidence holds in the two larger balanced conditions, while small/sparse conditions and regular calibration-interval qualification remain inconclusive. Point-score accuracy does not uniformly improve. The paired MI comparison is complete: the declared MAR design meets its bounded criteria, while MNAR coverage falls to 26.0%. A twelve-roster independent posterior comparison now supports the tested 48 conditional Person scores, including endpoint checks using saved joint rater draws. An eight-roster comparison now supports local calibration-likelihood changes at 128 distinct parameter points under the stated numerical tolerance. The retained interval decision is implemented: points/approximate SEs by default, explicit normal calibration bounds, and a separate explicitly requested approximate rater-SD profile. No new variance interval or coverage guarantee is admitted. |
 | M3 — Qualified model workflows | Both extensions have matching scoring, comparisons to ordinary MFRM, declared uncertainty and descriptive diagnostics/figures. Independent numerical checks and bounded statistical comparisons support the retained outputs; adverse and unavailable results remain visible. | Completed locally within the stated scope; matched-event centered facet comparisons now connect both extensions to ordinary RSMs, plots and saved reports. Posterior predictive probabilities, full variances and descriptive residual summaries now share a definition with ordinary RSM MML, including matched-event paired/difference comparisons and saved reporting. Source-roster conditional Person comparisons and model-aware Wright/fit-pathway displays are now implemented locally, with matching saved reports. Estimated-population testlet scoring now has a complete bounded comparison and a verified numerical-selection repair, with explicit small-sample/sparse coverage and point-accuracy limitations. A bounded independent posterior comparison now supports all 48 selected shared-rater EAPs/SDs and 96 endpoints at the stated numerical tolerances. A separate eight-roster comparison also supports local calibration-likelihood changes under the stated tolerance. Neither numerical comparison establishes interval coverage or a full SD-profile qualification. The regular/profile output decision and final cross-workflow source/help/output reconciliation are complete locally. |
 | M4 — User and maintenance integration | Representative assessment examples, all changed help/NEWS, output compatibility, failure behavior, dependencies and measured resource use agree with the admitted scope. Saved results reproduce the displayed values in a fresh session. | Completed locally; extended-model estimates have interval, precision and cumulative-distribution views. A cross-workflow saved-output pass now covers numeric features/groups, assigned-score MI, complete/incomplete G/D planning, fixed-facet intervals, screening and both extensions. Generic conversion no longer discards dedicated axes or interval semantics; public output routes and PCA colour/shape distinctions are reconciled. The installed package now passes API/help identity checks, representative help examples, ordinary/portable baseline checks and fresh-process saved-result replay. Optional-dependency refusals and reuse paths are checked with simulated namespace absence. Two malformed MI help pages and misleading installation guidance for unsupported plots are corrected. Fifteen executed tutorials, 43 figures with alternative text, repaired namespace imports and final archive/API/help/replay checks now complete this local integration. |
-| M5 — Local completion | One frozen source, installable source archive and local documentation pass the applicable integrated package checks. Every included outcome has evidence and no unresolved defect invalidates a supported result. Remaining research is explicitly outside the agreed release scope. | Completed locally for the stated scope. Updated help, examples, tutorials and the manual accompany the installable package. Problems found in packaging, test guidance and article rebuilding are corrected and checked; unchanged calculations retain their earlier validation. Online checks and the five-environment CI remain before publication. |
-| M6 — Public release | The same source passes five-environment CI, is integrated into main, and has matching release assets, version/status metadata, installed help and published site. Publication is verified, not inferred from a successful upload. | Future publication step after local completion; previous candidate checks do not satisfy it. |
+| M5 — Local completion | One frozen source, installable source archive and local documentation pass the applicable integrated package checks. Every included outcome has evidence and no unresolved defect invalidates a supported result. Remaining research is explicitly outside the agreed release scope. | Completed locally for the stated scope. Updated help, examples, tutorials and the manual accompany the installable package. Problems found in packaging, test guidance and article rebuilding are corrected and checked; unchanged calculations retain their earlier validation. Five-environment package checks also pass; CRAN submission checks remain separate. |
+| M6 — Public release | The same source passes five-environment CI, is integrated into main, and has matching release assets, version/status metadata, installed help and published site. Publication is verified, not inferred from a successful upload. | Five-environment checks pass for the expanded implementation and help. Main integration, release-download and website verification remain; previous candidate publication does not satisfy them. |
 
 M1 workflow finishing and M2 read-only model/statistical decisions can progress
 together. M2 precedes new confirmation work; M3 and M4 precede M5. Corrections
