@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="logo.png" class="logo" alt=""><h1>mfrmr roadmap</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/f3750942e5c38551278ad521d08e583da68b730d/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a></small>
     </div>
 
 <div id="mfrmr-roadmap" class="section level1">
@@ -55,7 +55,7 @@
 <div class="section level2">
 <h2 id="current-releases">Current releases<a class="anchor" aria-label="anchor" href="#current-releases"></a></h2>
 <p>mfrmr 0.2.4 is a release candidate. It has not been released on CRAN; the final release decision is separate from integrating the source. The expanded candidate includes numeric-feature analysis, assigned-score imputation, fixed-facet intervals, screening evaluation, and shared random-rater and Person-specific testlet workflows alongside the existing calibration and G/D-study functions. Its implementation and help have passed <a href="https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35948657009" class="external-link">five-environment package checks</a>.</p>
-<p>The next fixed snapshot is <code>v0.2.4-rc.5</code>. The rc.4 publication check found missing figure descriptions in four older tutorials and computation-skipped versions of eight tutorials in its source archive. The corrected source adds the descriptions and includes all executed tutorials; its archive and website still require publication verification. Earlier candidates remain available as unchanged evaluation snapshots. Use the source tag or commit and matching installed help to identify functionality: earlier candidates also report package version <code>0.2.4</code>.</p>
+<p>The expanded candidate is integrated into <code>main</code> and published as <a href="https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5" class="external-link"><code>v0.2.4-rc.5</code></a>. Its downloadable archive and checksum have been verified after publication, and the <a href="https://ryuya-dot-com.github.io/mfrmr/">website</a> provides corresponding help and executed tutorials. This candidate corrects missing figure descriptions and computation-skipped tutorial output found during rc.4 publication review. All fifteen tutorials now have executed output in the archive, with 68 described figures. The release notes identify the checked implementation and the separately verified documentation updates. Earlier candidates remain available as unchanged evaluation snapshots. Use the source tag or commit and matching installed help to identify functionality: earlier candidates also report package version <code>0.2.4</code>.</p>
 <p>This candidate includes clearer help on function names, defaults and choosing an analysis. Seven extended-model examples use saved synthetic results so users can inspect summaries and figures quickly; complete recalculation instructions remain available. Examples, tutorials and the manual have been checked, and problems found during those checks have been corrected. Cross-platform package checks do not establish statistical performance beyond the stated scope or constitute CRAN acceptance.</p>
 <table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Workflow</th>
 <th>Current position</th>
@@ -71,7 +71,7 @@
 <td>Preserve the supported designs, uncertainty assumptions and metric-specific availability.</td>
 </tr><tr><td>Structural/model extensions</td>
 <td>Person-by-(Child-within-Parent) multivariate G/D-study point estimates are included in the baseline. Shared-rater and testlet RSMs are included for their bounded conditional/descriptive scope; broader inference remains unqualified.</td>
-<td>Retain the G/D-study and two RSM workflows specified below; publication verification follows the completed package checks.</td>
+<td>Retain the G/D-study and two RSM workflows specified below; the matching candidate, archive and help are published.</td>
 </tr></tbody></table></div>
 <div class="section level2">
 <h2 id="purpose-and-priorities">Purpose and priorities<a class="anchor" aria-label="anchor" href="#purpose-and-priorities"></a></h2>
@@ -86,7 +86,7 @@
 <div class="section level2">
 <h2 id="focus-for-024">Focus for 0.2.4<a class="anchor" aria-label="anchor" href="#focus-for-024"></a></h2>
 <p>The release outcome is an assessment workflow that connects rating-design review, estimation, qualified uncertainty, rater feedback, assessment planning and reproducible output. Educational performance assessment is the principal example; the same explicit roles can describe music, clinical assessment or judged performances without claiming validation in every domain.</p>
-<p>The following is the retained final scope. These public workflows have completed local integration and cross-platform package checks; publication verification remains. Completion of the previously published candidate alone did not establish this expanded scope.</p>
+<p>The following is the retained final scope. These public workflows have completed local integration, cross-platform package checks and GitHub publication verification. Completion of the previously published candidate alone did not establish this expanded scope.</p>
 <table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Included in 0.2.4</th>
 <th>Outcome required before release</th>
 <th>Explicit boundary</th>
@@ -143,8 +143,8 @@
 <td>One frozen source, installable source archive and local documentation pass the applicable integrated package checks. Every included outcome has evidence and no unresolved defect invalidates a supported result. Remaining research is explicitly outside the agreed release scope.</td>
 <td>Completed locally for the stated scope. Updated help, examples, tutorials and the manual accompany the installable package. Problems found in packaging, test guidance and article rebuilding are corrected and checked; unchanged calculations retain their earlier validation. Five-environment package checks also pass; CRAN submission checks remain separate.</td>
 </tr><tr><td>M6 — Public release</td>
-<td>The same source passes five-environment CI, is integrated into main, and has matching release assets, version/status metadata, installed help and published site. Publication is verified, not inferred from a successful upload.</td>
-<td>Five-environment checks pass for the expanded implementation and help. Main integration, release-download and website verification remain; previous candidate publication does not satisfy them.</td>
+<td>The published implementation passes five-environment CI; later documentation changes receive corresponding focused checks. Source is integrated into main with matching release assets, version/status metadata, installed help and published site. Publication is verified, not inferred from a successful upload.</td>
+<td>Completed for the agreed scope as GitHub pre-release v0.2.4-rc.5. The checked implementation is integrated into main; the release tag, downloaded source/checksum and published help/tutorials are verified. Documentation corrections have their own archive and publication checks. CRAN submission and acceptance remain separate.</td>
 </tr></tbody></table><p>M1 workflow finishing and M2 read-only model/statistical decisions can progress together. M2 precedes new confirmation work; M3 and M4 precede M5. Corrections to reproduced calculation or interpretation defects interrupt this order. Documentation is maintained during implementation, not postponed entirely to M4.</p>
 <p>Local completion supplies a reviewable release candidate; it is neither a GitHub final release nor CRAN acceptance. CRAN submission and the external review outcome are separate from M6. A current local-development instruction does not itself start publishing. The current scope cannot be declared done while an included model, diagnostic or statistical decision is unresolved.</p>
 <p>If evidence rejects a proposed method, repair it, restrict the affected inferential output to a justified scope, or propose an explicit scope change. Do not silently defer an entire required workflow, relabel a known failure as success, or keep adding simulations until a favorable result appears.</p>
