@@ -2486,3 +2486,41 @@ mice/covr/flextable; the corrected path reused the already installed dependencie
 No force-Suggests override or dependency installation was used. This is not a new
 full numerical suite or complete `--as-cran` run. The scope of the five-environment
 check at `4f5ed87` remains explicitly tied to the unchanged implementation.
+
+
+#### September 24 verified rc.5 publication
+
+**M6 is complete for the agreed GitHub candidate scope.** Main includes the
+expanded implementation checked at `4f5ed87`, the rc.4 publication preparation,
+and the documentation correction at `3cd50b89edaee6b949aa6cc02ab82b27c4be6e71`.
+GitHub pre-release [v0.2.4-rc.5](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5)
+fixes that source. Both attachments were re-downloaded and matched byte for byte.
+The archive SHA256 is
+`d988e5023f404895bca6ff184b037a7511680289634aeb4fcb31d2a20a7cb5c6`.
+The immutable rc.4 tag/assets remain; its notes correct the overstated tutorial
+execution claim and direct readers to rc.5.
+
+The hosted site build at `1e6151d` supplied the unchanged reference and expensive
+article outputs. pkgdown 2.2.1, matching the hosted version, rebuilt only the four
+changed ordinary-model articles and home/NEWS; Markdown copies and search were
+regenerated without rerunning articles. Home generation initially needed an
+online CRAN sidebar lookup and writable cache; a task-local R cache and normal
+network access resolved it. Source references now identify `3cd50b89`.
+388 reference/unchanged-article HTML pages retain identical output apart from
+those source-link updates. Generated session-information Markdown retains normal
+R column-padding whitespace; it is not a changed computation or failed R check.
+
+Pages deployed site `1f34357e9dea11de618d2701d2439d7dd9318065`. All 403 HTML pages
+were checked for exposed local/validation paths and fatal rendering messages;
+none was found. Fifteen live pages, including ROADMAP, and representative images
+match the deployed bytes. All 68 tutorial figures have nonempty descriptive
+alternatives. Matching reference/article source links are checked. This does not
+constitute an exhaustive user study or external-URL/CRAN incoming check.
+
+The final completion record changes repository-only documentation. The public
+ROADMAP page is refreshed separately to show the verified state; API/reference,
+tutorial and archive content remain fixed at rc.5. The five-environment run is
+not attributed to a new commit: implementation and Rd identity, unchanged Rmd
+analysis bodies and focused documentation checks are the stated reuse basis.
+No new full regression, coverage simulation, CRAN submission or CRAN acceptance
+is claimed. Receipts are under `validation-results/github-integration-20260924/rc5/`.

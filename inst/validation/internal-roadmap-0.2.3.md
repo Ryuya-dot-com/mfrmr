@@ -37,8 +37,8 @@ and evidence; do not create a parallel dashboard or another active task list.
 evidence remain applicable. M5 is requalified locally by the
 [successor archive check and targeted repairs](claim-reconciliation-0.2.4.md#follow-through-successor-archive-cran-check-and-targeted-repairs).
 The [previous archive disposition](claim-reconciliation-0.2.4.md#local-completion-decision-and-final-source)
-reconciles the full packaged regression with focused repairs, fifteen executed
-tutorials, installed help/API identity and fresh-session saved-output replay.
+reconciles the full packaged regression with focused repairs, fifteen prebuilt
+tutorials (evaluation completeness corrected below), installed help/API identity and fresh-session saved-output replay.
 Its clean example check covered ordinary examples. The subsequent preflight
 replaced repeated costly fitting in seven examples with coherent saved results,
 commented recomputation and a complete regeneration script. The successor
@@ -48,21 +48,20 @@ and all-article rebuild check has zero errors/warnings and two retained notes
 for unavailable time verification and `xcrun_db`. This is a reconciled result,
 not a clean repeat of every test. The expanded candidate now also passes
 [all five hosted package-check environments](claim-reconciliation-0.2.4.md#september-24-expanded-candidate-hosted-checks-and-publication-preparation).
-M6 is underway. The rc.4 live-site review exposed missing descriptions in 23
-older tutorial figures and eight computation-skipped article outputs in the
-source archive. The previous “fifteen executed” wording was too broad. Four Rmd
-files now add alternatives; eight inexpensive articles are evaluated, while seven
-costly articles retain their checked output. The rc.5 archive contains fifteen
-executed tutorials and 68 described figures. Numerical code and all tutorial analysis
-expressions are unchanged. Final archive/site publication remains to verify.
+[M6 is complete for rc.5](claim-reconciliation-0.2.4.md#september-24-verified-rc5-publication).
+The rc.4 review exposed 23 missing figure descriptions and eight computation-
+skipped article outputs. Both are corrected: rc.5 contains fifteen executed
+tutorials and 68 described figures. The previous “fifteen executed” description
+of the M5/rc.4 archive was too broad. Main, the rc.5 tag, re-downloaded assets and
+live help/tutorials now agree. Numerical implementation is unchanged from the
+five-environment candidate; the documentation changes have focused checks.
 Broader statistical claims remain excluded.
 
 The subsequent user-requested
 [beginner/API review](claim-reconciliation-0.2.4.md#september-24-pre-integration-beginner-and-api-review)
 clarifies purpose, scoring/prediction, imputation and clustering names without
 changing numerical methods or public signatures. Its focused checks pass;
-these revisions are in the successor archive. Published help still needs to
-match it. The previous M5 archive does not contain this later prose.
+these revisions are in the successor archive. Published help now matches it. The previous M5 archive does not contain this later prose.
 No student-participant usability study or new publication result is claimed.
 
 The local ConQuest connection is verified through the public binary item-only
@@ -73,8 +72,8 @@ from seven help examples without changing their data or numerical settings.
 Installed-package replay verifies full source-roster matching and the current
 default interval policy. The successor archive now includes these results and
 the revised help; its observed ordinary and donttest passes take 25 and 152
-seconds. The next release milestone is M6 on the concrete checked source,
-including matching hosted CI/main/assets/site identity. Online CRAN/repository
+seconds. M6 now verifies the concrete published source through
+hosted CI, focused documentation checks, main, release assets and the website. Online CRAN/repository
 checks and submission remain separate; the local check disabled incoming remote
 queries and could not access package indexes or verify the clock remotely.
 The failed 31-point shortcut is retained and is not adopted. Do not replace
@@ -89,7 +88,7 @@ MML with JML, force convergence flags, or blanket-disable examples to meet time.
 | M3 | Complete both RSM model workflows with Person scoring, declared conditional uncertainty, observed/replacement-rater distinctions, same-data ordinary-MFRM comparison, response moments, descriptive Infit/Outfit, model-aware Wright/location, pathway and comparison plots. Validate probability/moment calculations, numerical approximation and retained statistical interpretations separately. | M2 decisions; A05/A07/A11/A12/A14. Fit cutoffs, formal DRF/LRT and general calibration-aware intervals are not silently added. |
 | M4 | Close examples, user help, NEWS, capability refusals, shared output, migration, dependencies and workload evidence across the included routes. Preserve the baseline shrinkage, variance-scale and portable-interaction corrections. One observed educational assessment anchors interpretation; reuse existing role-preserving examples to explain another domain without claiming new domain validation. Inspect actual plotted values and English labels, not only object classes. | M1/M3; A01–A04/A06–A09/A11. Maintain docs during work; this is final reconciliation, not the first documentation pass. |
 | M5 | Freeze one local source and archive; run the necessary integrated package check on that source, verify archive contents/installed help/examples and fresh-session replay, and retain hashes and a concise unresolved-issues disposition. No included outcome is pending or contradicted by a supported default. Deliver source/archive, matching local help, evidence and migration instructions. | M1–M4 closed. Local-development endpoint, not release/CRAN acceptance. A10 local package integration is requalified by the final source/archive receipt; later cross-platform/publication checks remain M6. |
-| M6 | After publication is authorized for the concrete source, run five-environment CI, integrate the checked content into main, verify final tag/asset/download and site/installed-help identity, and update candidate/version status consistently. Changes introduced during merge require matching verification. CRAN submission and acceptance are separately reported external states. | M5; the expanded source now passes its own five-environment CI. Verify main, tag/download and site identity to close M6; retain the statistical boundaries. No reuse of old CI as evidence for new source. |
+| M6 | After publication is authorized for the concrete source, run five-environment CI, integrate the checked content into main, verify final tag/asset/download and site/installed-help identity, and update candidate/version status consistently. Changes introduced during merge require matching verification. CRAN submission and acceptance are separately reported external states. | Completed for rc.5: unchanged implementation passes its five-environment CI; documentation follow-ups, main, tag/download and website are verified. Statistical boundaries remain and CRAN submission is separate. |
 
 The user-requested ordinary-screen threshold audit is complete locally: nine
 prespecified conditions with 100 replications, plus reanalysis of 800 existing

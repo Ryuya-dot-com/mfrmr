@@ -96,8 +96,8 @@ wording and automatic Packaged timestamp. All code, tests, Rd, data, saved
 examples and fifteen prebuilt tutorials are byte-identical. The later publication
 commit updates repository-only status records as well; its distinct SHA is not
 represented as a second five-environment run. Applicable local and hosted checks
-are reused for unchanged content. Main/tag/asset/site verification remains open
-until the public endpoints have been checked.
+are reused for unchanged content. The rc.4 publication review found the documentation issues corrected below;
+rc.5 now completes the archive and public-site verification.
 
 ## Before CRAN submission
 
@@ -131,3 +131,13 @@ stopped on three unavailable Suggests; restoring that library path resolved the
 environment issue without installing packages or disabling dependency checks.
 Unchanged numerical and five-environment evidence is reused with that scope.
 Final publication verification is recorded in the maintained release ledger.
+
+
+The verified rc.5 tag points to `3cd50b89edaee6b949aa6cc02ab82b27c4be6e71`,
+which is integrated into main. Both release assets were re-downloaded and matched
+byte for byte. Fifteen live pages and representative images match the deployed
+site; all 68 tutorial images have descriptive alternatives. The original hosted
+site build is retained for unchanged content. Four changed articles, home/NEWS,
+Markdown copies and the search index were rebuilt separately with the same
+pkgdown version. The other 388 reference/article HTML pages preserve their
+output apart from source-link updates. No CRAN submission has been made.
