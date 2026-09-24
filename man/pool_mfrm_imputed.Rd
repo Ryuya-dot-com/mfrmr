@@ -53,8 +53,10 @@ Fixed targets retain their value and zero variance, but no inferential
 interval or degrees of freedom. No imputation is omitted.
 }
 \description{
-Combine estimates and their full model-based covariance for one non-person
-facet, or prespecified linear contrasts of its levels, using Rubin's rules.
+Combine results such as rater severity or a prespecified difference between
+raters across completed-data fits. Rubin's rules include uncertainty within
+each fit and variation between imputations. The calculation uses the full
+covariance for one non-Person facet; it does not pool Person ability scores.
 }
 \details{
 For a common target, \code{Qbar} is the mean completed-data estimate,

@@ -151,6 +151,12 @@ missing. `plot(testlet_fit, facet = "Criterion")` reviews criterion effects.
 
 ## Score persons and interpret their intervals
 
+For people already in the fit, use `score_mfrm_persons(testlet_fit)` to reuse
+the source ratings. This is the common entry for supported ordinary, shared-rater
+and testlet RSMs. The example below uses the testlet-specific `predict()` method
+to supply an explicit rating table. For a shared-rater model, `predict()` instead
+needs supplied abilities and returns response probabilities.
+
 ```{r scoring, fig.width=7, fig.height=5, fig.alt="Four Person EAP estimates with conditional equal-tail intervals under the testlet model. Fitted calibration, including ability and local variances, is held fixed."}
 first <- ratings[ratings$Person %in% unique(ratings$Person)[1:4], ]
 scores <- predict(testlet_fit, first)

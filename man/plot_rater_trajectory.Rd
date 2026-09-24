@@ -58,9 +58,9 @@ visualizes the supplied fits on their as-fit scales.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                  method = "JML", maxit = 30)
+                  method = "JML", maxit = 300)
 fit_b <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                  method = "JML", maxit = 30)
+                  method = "JML", maxit = 300)
 p <- plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b), draw = FALSE)
 head(p$data$data)
 # Look for: stable trajectories (small wave-to-wave shifts within

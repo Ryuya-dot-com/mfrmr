@@ -1,7 +1,10 @@
 #' Compare fit-screening thresholds against known simulation truth
 #'
-#' Apply declared mean-square bands to saved Infit/Outfit values without
-#' refitting models. Keep underfit, overfit and their union separate.
+#' See how detection and false-flag rates change when you change fit-screening
+#' thresholds in a simulation with known truth. Apply specified mean-square
+#' bands to saved Infit/Outfit values without refitting models. Keep underfit,
+#' overfit and their union separate. Here sensitivity analysis means comparing
+#' thresholds; the reported Sensitivity rate means detecting an affected target.
 #' @inheritParams mfrm_screening_performance
 #' @param measures Data frame with `Condition`, `Replicate`, `Target`, `Infit`
 #'   and `Outfit`. Include `InfitZSTD` and `OutfitZSTD` when requesting the

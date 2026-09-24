@@ -24,6 +24,129 @@
 #' `head(toy)` shows the input rows; `Study` and `Group` are extra labels unused
 #' by this model. `<-` saves an object and `$` selects a named part of it.
 #'
+#' @section From the first summary to diagnostics:
+#' A `FormalInference = "No"` entry in `results$decision` can mean that precision
+#' has not yet been reviewed. Read `Why` and `NextAction` to distinguish that
+#' state from a detected problem. Run `diagnostics <- diagnose_mfrm(fit)` and
+#' inspect `summary(diagnostics)$decision`. To reuse these checks in the fuller
+#' reporting object, call `res <- mfrm_results(fit, diagnostics = diagnostics)`.
+#' Here `results` is the basic summary and `res` is the comprehensive object
+#' accepted by [mfrm_report()] and [export_mfrm_results()].
+#'
+#' @section Understand the function names:
+#' Learn the operation first, then open its help page:
+#' - `fit_` estimates model parameters, for example [fit_mfrm()].
+#' - `score_` estimates Person abilities using a fitted calibration, for example
+#'   [score_mfrm_persons()] for people already in a supported fitted RSM.
+#' - `pool_` combines eligible analyses, for example [pool_mfrm_imputed()].
+#' - `export_` writes files, for example [export_mfrm_results()].
+#' - `summary(object)` and `plot(object)` select a method for the object you
+#'   supply. You normally do not call `plot.mfrm_testlet()` directly.
+#'
+#' The package name is **mfrmr**; **mfrm** in analysis functions refers to a
+#' many-facet Rasch model. Some help guides use the package prefix `mfrmr_`.
+#' The prefixes do not select different estimators. For a short ordinary-MFRM
+#' map, use `mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]`.
+#' The no-argument guide lists all specialist routes and is not a first lesson.
+#'
+#' Some names need extra care. [mfrm_response_imputations()] checks completed
+#' data supplied by you; it does not generate missing scores. Follow it with
+#' [fit_mfrm_imputed()] and then [pool_mfrm_imputed()].
+#' [mfrm_screening_performance()] evaluates a warning rule against known
+#' simulation truth. [mfrm_screening_sensitivity()] repeats that evaluation
+#' across specified thresholds; it does not establish accuracy from real
+#' ratings alone. [mfrm_pca()] summarizes numeric external attributes;
+#' [mfrm_cluster_kmeans()] forms groups. PCA is optional before k-means.
+#' [mfrm_cluster()] uses partitioning around medoids (PAM) for mixed attributes;
+#' it does not automatically choose a clustering algorithm. For a dendrogram,
+#' use [mfrm_cluster_hierarchical()].
+#' A G-study ([mfrm_multivariate_gstudy()]) estimates sources of variation in
+#' observed scores; a D-study ([mfrm_multivariate_d_study()]) uses them to
+#' compare future rater/task plans. Neither needs an MFRM fit.
+#'
+#' A **calibration** is the fitted set of model parameters, such as rater
+#' severity and category thresholds. A **conditional** ability interval holds
+#' them fixed; it excludes uncertainty from estimating the calibration.
+#' **EAP** is the mean of the conditional ability distribution. An **SE**
+#' describes uncertainty in an estimate; an **SD** describes spread. Check
+#' whether an SD refers to differences among persons or one Person's posterior.
+#'
+#' @section Check defaults before adapting an example:
+#' An omitted argument selects a convention, not the best choice for your
+#' assessment. Start with the choices that change the analysis:
+#'
+#' - **Model and population:** [fit_mfrm()] defaults to RSM and MML. RSM uses
+#'   shared category thresholds. With PCM, set `step_facet` explicitly instead
+#'   of relying on facet-name inference or the first-facet fallback. Ordinary
+#'   RSM/PCM MML with `population_formula = NULL` fixes
+#'   the ability distribution at N(0,1). Both extended RSMs instead estimate
+#'   ability variance by default (`person_sd = NULL`). Their model-comparison
+#'   tutorials show how to match population assumptions. Changing only the
+#'   fitting function can change more than the rater/dependence structure.
+#' - **Rating scale:** supply `rating_min`, `rating_max` and `keep_original`
+#'   from the rubric in both data review and ordinary fitting. Omitted bounds
+#'   use the observed range. The ordinary default `keep_original = FALSE` can
+#'   collapse unobserved internal categories, for example observed 1, 3, 5 to
+#'   1, 2, 3. This changes the fitted category structure, not just labels.
+#'   A warning and the stored score map identify the recoding.
+#'   Use `keep_original = TRUE` to preserve the declared ladder; an unsupported
+#'   internal category then stops fitting and needs substantive review.
+#' - **Missingness and assignment:** ordinary fitting excludes rows missing
+#'   a score or required ID (and nonpositive-weight rows); inspect
+#'   `fit$prep$row_retention`, `fit$prep$preparation_notes` and
+#'   `fit$prep$score_map`. Missing-code conversion is off unless requested.
+#'   In contrast, the extended models stop on missing assigned scores by
+#'   default, and feature/G-study routes also require an explicit omission
+#'   choice. Omission does not correct informative missingness. In
+#'   [mfrm_response_imputations()], `assigned = NULL` declares every supplied
+#'   row assigned: supply an assignment column if unassigned rows are present.
+#' - **Included effects:** both extensions default to no additional fixed
+#'   facets. For example, `testlet = "Task"` groups local dependence but does
+#'   not itself add fixed task difficulty; request that with `facets = "Task"`
+#'   when it is part of the intended model.
+#' - **Feature geometry:** PCA and direct k-means default to `scale = TRUE`
+#'   and equal feature weights. Thus years of experience and hours of training
+#'   contribute in SD units; `scale = FALSE` retains their measurement units.
+#'   PAM/hierarchies instead use Gower scaling, including numeric ranges.
+#'   Choose `k` explicitly. PCA retains all numerically nonzero components
+#'   unless `components` is specified; no automatic reduction is implied.
+#'   K-means on a PCA result reuses its fitted transformation.
+#' - **Planning:** multivariate G-studies default to complete balanced crossed
+#'   ANOVA. Incomplete or nested data need the documented explicit choices;
+#'   the function does not silently choose another estimator or design.
+#'   D-study `weights = NULL` reports the original scores separately, not an
+#'   equal-weight total. Supplied weights are not normalized: an average and
+#'   a sum have different score/SEM units. Specify `design_grid` for the plans
+#'   you want to compare.
+#' - **Uncertainty and flags:** [mfrm_facet_intervals()] defaults to
+#'   `method = "model"`; request `"sandwich"` explicitly, with the appropriate
+#'   independent clusters. The default confidence level is pointwise 0.95,
+#'   not simultaneous coverage across raters. Rubin pooling defaults to
+#'   `df_complete = Inf`, a large-sample complete-data approximation, not a
+#'   degrees-of-freedom estimate from the number of rating rows. Extended
+#'   calibration bounds
+#'   are omitted by default; conditional Person bounds describe a different
+#'   target. Misfit bands can also depend on session options: inspect
+#'   [mfrm_misfit_thresholds()] and the returned screening settings. With
+#'   [fit_measures_table()], specify `lower`, `upper` and `flag_basis` to record
+#'   a chosen rule. In a dashboard, numeric `misfit_warn` uses a reciprocal
+#'   lower bound; it is not just a replacement upper bound. None of these
+#'   conventions establishes a universal rater-quality threshold.
+#'
+#' Then choose the workload and display. The default `summary(fit)` is a
+#' lightweight fit summary; ordinary `mfrm_results(fit)` can compute missing
+#' diagnostics. Use saved diagnostics or `compute = "never"` for review
+#' without new diagnostics. Source-Person scoring requests everyone when
+#' `persons` is omitted. K-means defaults to 25 starts with `seed = 1`, and
+#' `silhouette = TRUE` adds pairwise distances; use `FALSE` when that optional
+#' calculation is not needed. A fixed seed provides reproducibility, not
+#' evidence that the partition is best. Plot styles, titles and labels affect
+#' presentation; changing the model, feature scaling or thresholds requires
+#' recomputing the affected analysis. Keep full result objects and their
+#' resolved settings with the script, not only the visible tables. For ordinary
+#' fits, start with `summary(fit)$settings_overview`; extended summaries also
+#' expose `settings` and `data_usage`.
+#'
 #' @section Use your own ratings:
 #' The "Use your own CSV" section of
 #' `vignette("mfrmr-workflow", package = "mfrmr")` covers CSV import,
@@ -49,15 +172,21 @@
 #'   levels. Its native diagnostics, Wright map and comprehensive reports use
 #'   the `mfrm_fit` result.
 #' - **Shared random raters:** [fit_mfrm_random_rater()] models one rater effect
-#'   shared across all Persons rated by that rater. `predict()` gives score
-#'   probabilities at supplied abilities for observed or replacement raters;
-#'   it does not estimate Person abilities. See
+#'   shared across all Persons rated by that rater. For abilities of source
+#'   Persons, use [score_mfrm_persons()]. `predict()` instead gives score
+#'   probabilities at supplied abilities for observed or replacement raters. See
 #'   `vignette("mfrmr-random-raters", package = "mfrmr")`.
 #' - **Person-specific testlets:** [fit_mfrm_testlet()] groups dependent ratings
-#'   within each Person. `predict()` estimates Person abilities conditional on
-#'   fitted calibration. A Rater column can specify both usual fixed severity
+#'   within each Person. Use [score_mfrm_persons()] for abilities of source
+#'   Persons; `predict()` also accepts a supplied rating table for scoring.
+#'   Both hold fitted calibration fixed. A Rater column can specify fixed severity
 #'   and local within-Person membership. See
 #'   `vignette("mfrmr-testlets", package = "mfrmr")`.
+#'
+#' Shared-rater ability scoring can be slow because each Person's calculation
+#' uses the complete rating table. Start with a few actual IDs in `persons`;
+#' this selects output rows without discarding other Persons' ratings. Omitting
+#' `persons` requests everyone.
 #'
 #' All three have `summary()`, `plot()`, [plot_data()] and ordinary RDS saving.
 #' Extended-model plots additionally support [as_ggplot()], preserving each
@@ -84,15 +213,6 @@
 #' during reporting. Numerical checks are not substitute model-fit diagnostics. Refit when
 #' changing the statistical model; editing a saved object's class is invalid.
 #' Replotting or exporting an existing table does not require refitting.
-#'
-#' @section From the first summary to diagnostics:
-#' A `FormalInference = "No"` entry in `results$decision` can mean that precision
-#' has not yet been reviewed. Read `Why` and `NextAction` to distinguish that
-#' state from a detected problem. Run `diagnostics <- diagnose_mfrm(fit)` and
-#' inspect `summary(diagnostics)$decision`. To reuse these checks in the fuller
-#' reporting object, call `res <- mfrm_results(fit, diagnostics = diagnostics)`.
-#' Here `results` is the basic summary and `res` is the comprehensive object
-#' accepted by [mfrm_report()] and [export_mfrm_results()].
 #'
 #' @section Assessment planning and external features:
 #' To compare tasks, raters or score weights using numeric observed scores,
@@ -282,7 +402,7 @@
 #' [fit_mfrm()] with `method = "MML"` ->
 #' `summary(fit, profile = "fit")` ->
 #' `review <- summary(fit, profile = "facets")` ->
-#' the required native `plot(fit, type = "wright", show_ci = TRUE)` ->
+#' optionally view targeting with `plot(fit, type = "wright", show_ci = TRUE)` ->
 #' reuse `review$results$diagnostics`; call [diagnose_mfrm()] again only when
 #' residual PCA or other custom settings are needed ->
 #' [reporting_checklist()] ->
@@ -386,8 +506,8 @@
 #' 2. Fit a model with [fit_mfrm()]. Choose `MML` or `JML` from the prespecified
 #'    estimand and assumptions; do not select `JML` merely to shorten runtime.
 #' 3. Read `summary(fit, profile = "fit")`, then request
-#'    `summary(fit, profile = "facets")` and draw the required native Wright
-#'    map with `plot(fit, type = "wright", show_ci = TRUE)`.
+#'    `summary(fit, profile = "facets")`. To inspect targeting and uncertainty,
+#'    draw `plot(fit, type = "wright", show_ci = TRUE)`.
 #' 4. (Optional) Use [run_mfrm_facets()] or [mfrmRFacets()] for a
 #'    legacy-compatible one-shot workflow wrapper.
 #' 5. For `RSM` / `PCM`, build diagnostics with [diagnose_mfrm()].
@@ -637,8 +757,10 @@
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
+#'   rating_min = 1, rating_max = 4, keep_original = TRUE,
 #'   method = "MML",
-#'   model = "RSM"
+#'   model = "RSM",
+#'   population_formula = NULL # Fixed N(0,1) ability distribution
 #' )
 #'
 #' # Plot the results (Wright map)

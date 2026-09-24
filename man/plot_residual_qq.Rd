@@ -35,7 +35,7 @@ misfit that mean-square summaries may miss.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "JML", maxit = 300)
 p <- plot_residual_qq(fit, draw = FALSE)
 head(p$data$data)
 # Look for: points hugging the y = x reference line. Heavy upper-

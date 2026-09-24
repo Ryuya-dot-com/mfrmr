@@ -16,6 +16,9 @@
 #' installed, [mfrmr_workflow_methods] and [describe_mfrm_data()] explain the
 #' input checks. Pass the reviewed rating data frame to `data`, not the object
 #' returned by `describe_mfrm_data()`.
+#' Before adapting the example, read "Check defaults before adapting an example"
+#' in [mfrmr_workflow_methods]. The score ladder, missing-row handling and
+#' population distribution are analysis choices even when arguments are omitted.
 #'
 #' @param data A data.frame in long format with one row per observed rating
 #'   event.
@@ -48,7 +51,10 @@
 #'   rows are consequently absent). `TRUE` preserves the declared scale so
 #'   unused intermediate categories remain visible in
 #'   [rating_scale_table()] and APA outputs, which is recommended for
-#'   publication reporting.
+#'   preserving the rubric. This changes which category steps are fitted, not
+#'   just their displayed labels. Fitting stops if a retained internal category
+#'   has no observations; reviewing or revising that ladder is a substantive
+#'   decision, not a formatting option.
 #' @param missing_codes Optional pre-processing step that converts sentinel
 #'   missing-code values to `NA` before any downstream logic. One of:
 #'   \itemize{
@@ -64,7 +70,7 @@
 #'   Replacement counts are recorded in `fit$prep$missing_recoding` and
 #'   surfaced by [build_mfrm_manifest()]. Equivalent to calling
 #'   [recode_missing_codes()] manually before the fit.
-#' @param model `"RSM"`, `"PCM"`, or bounded `"GPCM"`.
+#' @param model `"RSM"` (default), `"PCM"`, or bounded `"GPCM"`.
 #' @param method `"MML"` (default) or `"JML"`. `"JMLE"` is accepted as a
 #'   backward-compatible alias for the same joint-maximum-likelihood path.
 #' @param step_facet Facet whose levels receive separate step parameters in

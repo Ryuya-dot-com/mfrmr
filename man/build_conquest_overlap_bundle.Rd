@@ -66,9 +66,11 @@ one-row-per-person wide CSV, stores the corresponding person covariates, and
 records the \code{mfrmr} estimates that should be compared externally.
 It also records the actual \code{mfrmr} optimizer controls, MML engine, terminal
 gradient, convergence status and severity, and inference-readiness decision.
-A fit that is not inference-ready remains available for convergence review,
-but its estimates should not be used for inferential comparison with
-ConQuest until the convergence issue is resolved and the model is refit.
+A fit that is not inference-ready remains available for descriptive
+numerical review. Inspect the source fit's readiness checks and supported
+inferential scope: lack of readiness need not mean optimizer failure, and
+convergence alone does not establish readiness. The comparison does not
+validate standard errors or confidence intervals.
 The generated ConQuest benchmark template fixes its parameter-change
 criterion at \code{1e-8}, deviance-change criterion at \code{1e-10}, and iteration
 ceiling at \code{2000}; these controls are written into the command, summary, and
@@ -96,6 +98,26 @@ contain identifiers and person-level estimates. When files are written, the
 helper emits a warning and writes an artifact-level privacy notice. Apply the
 study's data-handling policy before sharing or moving any bundle file.
 }
+\section{Running ConQuest locally}{
+
+This function writes inputs; it does not launch or install ConQuest. Open
+the generated \code{.cqc} file in your local ConQuest installation and use its
+containing directory as the working directory, so the relative CSV paths
+resolve. A native command-line installation can also read that command file
+as standard input from the same directory. Check the ConQuest console for
+successful estimation and the requested exports before normalizing them.
+ConQuest is optional and is not needed for the package's examples or tests.
+
+ConQuest's EAP calculation uses Monte Carlo posterior integration with
+separate \code{p_nodes} and \code{seed} controls. The \code{estimate} command's quadrature
+node count does not set this posterior simulation budget. Record both
+controls when comparing Person scores; close calibration estimates do not
+imply identical EAPs. See the
+\href{https://conquestmanual.acer.org/s4-00.html}{ConQuest command reference},
+\code{set} and \code{show}. This template leaves those posterior controls at the
+local ConQuest defaults.
+}
+
 \section{Comparison targets}{
 
 \itemize{
@@ -136,7 +158,9 @@ and convergence state
 
 \examples{
 \donttest{
-bundle <- build_conquest_overlap_bundle(quad_points = 3, maxit = 30)
+bundle <- build_conquest_overlap_bundle(
+  quad_points = 31, maxit = 2000, reltol = 1e-10
+)
 bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
 summary(bundle)$mfrmr_fit_status
 summary(bundle)$conquest_command_scope

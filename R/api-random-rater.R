@@ -1,13 +1,18 @@
 # Shared-rater RSM: persons are integrated before the common rater effect.
 
-#' Fit an RSM with shared random rater severity
+#' Fit a rating-scale model with shared random rater severity
 #'
-#' Approximate marginal maximum likelihood for one rater effect shared across
-#' all persons rated by that rater, with optional additive fixed facets.
+#' Estimate rater severity when the raters are modeled as draws from a specified
+#' population. Each rater has one effect shared across everyone they rate.
+#' The rating-scale model (RSM) uses approximate marginal maximum likelihood,
+#' with optional additive fixed facets. For a local effect within one person's
+#' performance instead, see [fit_mfrm_testlet()].
 #'
 #' @param data Long-format data, one row per observed or assigned rating.
 #' @param person,rater,score Names of the person, rater and numeric score columns.
-#' @param facets Character vector of fixed-facet columns; default none.
+#' @param facets Character vector of fixed-facet columns; default none. Include
+#'   task or criterion columns explicitly when their difficulties are part of
+#'   the intended model; their presence in `data` alone does not include them.
 #' @param score_levels Required consecutive integer score categories, in order.
 #' @param rater_sd `NULL` estimates the population SD of rater severity.
 #'   A nonnegative number fixes it as known; zero removes rater heterogeneity.
@@ -162,17 +167,16 @@
 #'   [mfrm_response_diagnostics()] for descriptive posterior predictive residuals,
 #'   [confint.mfrm_random_rater()], [mfrm_random_rater_intervals()], [mfrm_results()]
 #' @examples
-#' \donttest{
-#' if (requireNamespace("RTMB", quietly = TRUE) &&
-#'     utils::packageVersion("RTMB") >= "2.0") {
-#'   ratings <- load_mfrmr_data("example_core")
-#'   fit <- fit_mfrm_random_rater(ratings, "Person", "Rater", "Score",
-#'                              facets = "Criterion", score_levels = 1:4,
-#'                              quad_points = 121)
-#'   summary(fit)
-#'   plot(fit)
-#' }
-#' }
+#' # Inspecting this saved synthetic fit does not require RTMB.
+#' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+#' fit <- example$random_rater$fit
+#' # To refit instead, install optional RTMB >= 2.0 and run:
+#' # ratings <- load_mfrmr_data("example_core")
+#' # fit <- fit_mfrm_random_rater(ratings, "Person", "Rater", "Score",
+#' #   facets = "Criterion", score_levels = 1:4, quad_points = 121)
+#' summary(fit)
+#' plot(fit)
+#' system.file("examples", "extended-models.R", package = "mfrmr")
 #' @export
 fit_mfrm_random_rater <- function(data, person, rater, score, facets = character(),
                                   score_levels, rater_sd = NULL, quad_points = 31L,

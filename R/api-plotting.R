@@ -1471,7 +1471,7 @@ plot_marginal_pairwise <- function(x,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
 #' if (interactive()) {
 #'   plot_unexpected(
@@ -1998,7 +1998,7 @@ plot_fair_average <- function(x,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
 #' if (interactive()) {
 #'   plot_displacement(
@@ -2489,7 +2489,7 @@ plot_interrater_agreement <- function(x,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' p <- plot_facets_chisq(fit, draw = FALSE)
 #' if (interactive()) {
 #'   plot_facets_chisq(

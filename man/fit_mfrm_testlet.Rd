@@ -4,7 +4,7 @@
 \alias{fit_mfrm_testlet}
 \alias{summary.mfrm_testlet}
 \alias{print.mfrm_testlet}
-\title{Fit an RSM with dependence within Person-specific testlets}
+\title{Fit a rating-scale model with dependence within Person-specific testlets}
 \usage{
 fit_mfrm_testlet(
   data,
@@ -32,7 +32,10 @@ fit_mfrm_testlet(
 \item{person, score, testlet}{Column names. \code{testlet} identifies a group within
 a Person and may also occur in \code{facets}, for example a fixed Rater effect.}
 
-\item{facets}{Fixed-facet column names; default none.}
+\item{facets}{Fixed-facet column names; default none. A column used as
+\code{testlet} is not automatically a fixed facet. For example,
+\code{testlet = "Task"} models local dependence; also specify \code{facets = "Task"}
+if the model should estimate fixed task difficulties.}
 
 \item{score_levels}{Consecutive integer categories in increasing order.}
 
@@ -75,8 +78,12 @@ table, checks, all optimization runs, input/omission accounting and settings.
 It contains no native pointers; use \code{saveRDS()} and \code{readRDS()}.
 }
 \description{
-Estimate fixed facets, normal ability variance and a common variance for
-local effects shared by ratings in the same Person/testlet group.
+Account for extra dependence among ratings of the same person, for example
+several rubric criteria from one performance. A testlet identifies the
+ratings sharing this local effect within that person. The rating-scale
+model (RSM) estimates fixed facets, normal ability variance and one common
+local variance. For a rater effect shared across people instead, see
+\code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}}.
 }
 \details{
 The adjacent-category logit is
@@ -187,13 +194,17 @@ scores together when changing the population assumption.
 }
 
 \examples{
-\donttest{
-ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
-  facets = c("Rater", "Criterion"), score_levels = 1:4, quad_points = 121)
+# Saved fit for the synthetic example_core ratings.
+example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+fit <- example$testlet$fit
+# To refit instead (this takes longer than inspecting the saved result):
+# ratings <- load_mfrmr_data("example_core")
+# fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
+#   facets = c("Rater", "Criterion"), score_levels = 1:4, quad_points = 121)
 fit$checks
 plot(fit, facet = "Rater")
-}
+# The complete regeneration recipe is included with the package:
+system.file("examples", "extended-models.R", package = "mfrmr")
 }
 \references{
 Wang, W.-C. and Wilson, M. (2005). The Rasch testlet model.

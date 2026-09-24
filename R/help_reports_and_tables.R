@@ -190,9 +190,10 @@ NULL
 #' Choose an mfrmr output helper by user goal
 #'
 #' @description
-#' `mfrmr_output_guide()` returns a compact table for choosing among the main
-#' table, report, review, bundle, export, and compatibility helpers. It is a
-#' user-facing map, not an analysis result.
+#' Find a function for the next question in your analysis. Start with
+#' `mfrmr_output_guide("beginner")` and read its `Question` and `MainFunction`
+#' columns. With no argument the function returns the full specialist catalogue,
+#' which includes tables, reports, reviews and exports. It does not analyze data.
 #'
 #' @param scope Which rows to return. `"all"` returns the full guide.
 #'   `"public"` returns the canonical six-step route for most users;
@@ -227,9 +228,9 @@ NULL
 #' Use `mfrmr_output_guide("public")` or
 #' `mfrmr_output_guide("beginner")` for the shortest top-level API map:
 #' an explicit [describe_mfrm_data()] check and [fit_mfrm()] MML fit, the lightweight fit summary, the
-#' comprehensive measurement review (whose historical profile name is
+#' fuller fit and precision review (whose profile name is
 #' `"facets"`; no FACETS software knowledge or installation is required), the native Wright map
-#' with SE/CI, optional FACETS-style Wright and person-inclusive Infit views,
+#' with uncertainty, optional FACETS-style Wright and person-inclusive Infit views,
 #' and finally report/export. Use `mfrmr_output_guide("entry")` when you
 #' specifically need alternative first-screen creation routes, including
 #' existing result objects, the optional viewer, or interactive console work.
@@ -243,9 +244,11 @@ NULL
 #' checked before manuscript use.
 #'
 #' @section How to use this guide:
-#' Treat `MainFunction` as the route to try next and `UseWhen` as the guardrail.
-#' The guide is not a replacement for the help pages of the listed functions;
-#' it is a namespace map for deciding which page to open.
+#' Read `Question` first, then open the help for a function in `MainFunction`.
+#' `UseWhen` describes its inputs and purpose; `NextStep` explains what to inspect.
+#' Cells containing `...` are outlines, not complete scripts to paste and run.
+#' Use [mfrmr_workflow_methods] for a runnable introduction and an explanation
+#' of function names. Inspect `DecisionBoundary` before interpreting a result.
 #' For bounded `GPCM`, use `scope = "gpcm"` to find both the support matrix
 #' and the table that explains how out-of-scope routes are handled.
 #'
@@ -405,12 +408,12 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   public_rows <- data.frame(
     Scope = rep("public", 6L),
     Question = c(
-      "1. Check score support and fit with explicit data roles",
-      "2. Check convergence and fitted-model settings",
-      "3. Build the comprehensive measurement review",
-      "4. Create the required native Wright map with SE or CI",
-      "5. Add optional FACETS-style and Infit pathway views",
-      "6. Review, report, and export the completed results"
+      "1. Check your rating data and fit the model",
+      "2. Read the fit summary and its recommended next step",
+      "3. Review estimates, fit and precision",
+      "4. Plot abilities and facet estimates with uncertainty",
+      "5. Add other maps when they answer your question",
+      "6. Read the report and save the reviewed results"
     ),
     OutputFamily = c("entry", "entry", "entry", "plot-data", "plot-data", "export"),
     MainFunction = c(
@@ -432,9 +435,9 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "You can name the person, facet, and ordered-score columns and confirm the intended rubric support in long-format data.",
       "The fit has completed and you need a fast check before computing diagnostic sections.",
       "The fitted model is ready for an organized first review of measures, fit, precision, and category steps.",
-      "You need the required shared-logit-scale figure before any optional follow-up plot.",
+      "You want to compare person abilities, rater severities and criterion difficulties on the fitted logit scale.",
       "FACETS-style reading, rubric-labelled transitions, or person-inclusive fit review will help answer a focused question.",
-      "The required Wright map and first-screen evidence have been inspected and you are ready to draft a controlled report or create an analysis archive for approved handling."
+      "You have reviewed the estimates, diagnostics and limitations and want a report or files to save."
     ),
     TypicalInput = c(
       "long-format data.frame, explicit column roles, and intended score support",
@@ -464,7 +467,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Use describe_mfrm_data() before an explicit fit_mfrm() call; do not rely on automatic data-frame role inference.",
       "This fit-only profile is intentionally lightweight and does not compute the comprehensive diagnostic sections.",
       "The historical profile name is facets, but no FACETS software knowledge or installation is required; mfrmr estimates the model.",
-      "The native map retains mfrmr's facet uncertainty display and is the required first fitted-scale figure.",
+      "The native map displays facet uncertainty. Choose figures for your question; plotting does not establish fit or precision.",
       "The closest FACETS-style renderer uses show_ci = FALSE; show_ci = TRUE is a deliberate hybrid that adds mfrmr uncertainty intervals. The Infit pathway adds persons only when explicitly requested.",
       "Reporting and export organize existing evidence; they do not improve model fit or create an automatic acceptance rule."
     ),
@@ -838,7 +841,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     Question = c(
       "1. Check score support, then open a FACETS-organized review from an explicit MML fit",
-      "2. Draw the required native Wright map with facet SE or CI",
+      "2. Inspect targeting with the native Wright map and facet SE or CI",
       "3. Add the FACETS-style ruler with rubric-labelled steps",
       "4. Review Infit by measure, adding persons explicitly when needed",
       "1. Fit the supported overlap model explicitly with MML in mfrmr",
@@ -886,7 +889,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "eligible latent-regression MML RSM/PCM fit with one numeric person covariate"
     ),
     NextStep = c(
-      "Create the native Wright map first, then use FACETS-style views only for familiar presentation and migration.",
+      "Use the native Wright map to inspect targeting and uncertainty when that answers your question; FACETS-style views offer a familiar presentation for migration.",
       "Inspect targeting, uncertainty, and every retained step before opening the FACETS-style renderer.",
       "Verify that each displayed transition uses the instrument's real category wording; do not infer numerical equivalence from the layout.",
       "Treat flagged or extreme person points as review prompts and document any substantive follow-up rule separately.",
@@ -899,7 +902,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     Notes = c(
       "The model is estimated by mfrmr. FACETS-style organization does not mean that FACETS software was run.",
-      "The native Wright map is the required first scale figure and retains the package's SE/CI advantage.",
+      "The native Wright map retains facet uncertainty. Choose figures for the analysis question; a particular figure is not an acceptance criterion.",
       "The closest FACETS-style renderer uses show_ci = FALSE and reproduces Table 6-style ruler grammar and labelled step lines, not optimizer-level numerical identity; show_ci = TRUE is an mfrmr uncertainty hybrid.",
       "Persons are opt-in because person identifiers and dense labels require deliberate privacy and readability choices.",
       "This call runs mfrmr only; it does not execute ConQuest, read a ConQuest command file, or parse raw ConQuest output.",
@@ -1072,13 +1075,13 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Model dependence among ratings within a Person"),
     OutputFamily = rep("entry", 3),
     MainFunction = c("fit_mfrm()", "fit_mfrm_random_rater()", "fit_mfrm_testlet()"),
-    UseWhen = c("The estimand concerns the specified fixed facet levels.",
+    UseWhen = c("You want to describe the particular raters or tasks included in the data.",
       "One random rater effect is shared across all Persons rated by that rater; population assumptions are justified.",
       "An explicit non-overlapping testlet groups ratings within each Person; fixed facets retain separate roles."),
     TypicalInput = rep("Long-format ratings with explicit column roles and score categories", 3),
     NextStep = c("summary(); diagnose_mfrm(); mfrm_results(); ordinary Wright maps and reports",
-      "score_mfrm_random_rater() for conditional Person scores; predict() for probabilities at supplied abilities; plot(); plot_data(); mfrm_results() -> mfrm_report() -> export_mfrm_results(); see vignette('mfrmr-random-raters').",
-      "summary(); predict() for conditional Person scores; plot(); plot_data(); as_ggplot(); mfrm_results() -> mfrm_report() -> export_mfrm_results(); see vignette('mfrmr-testlets') and vignette('mfrmr-testlet-applications') for task/criterion allocation and unequal-block examples."),
+      "score_mfrm_persons() for abilities of source Persons; predict() for probabilities at supplied abilities; plot(); plot_data(); mfrm_results() -> mfrm_report() -> export_mfrm_results(); see vignette('mfrmr-random-raters').",
+      "summary(); score_mfrm_persons() for abilities of source Persons; plot(); plot_data(); as_ggplot(); mfrm_results() -> mfrm_report() -> export_mfrm_results(); see vignette('mfrmr-testlets') and vignette('mfrmr-testlet-applications') for task/criterion allocation and unequal-block examples."),
     GPCMStatus = c("supported_with_caveat", "unavailable; RSM only", "unavailable; RSM only"),
     Notes = c("Native diagnostics and comprehensive reporting require matching mfrm_fit results and readiness checks.",
       "Distinct mfrm_random_rater class: reports accept matching saved Person scores, response predictions and bootstrap intervals. Person scoring uses joint conditional rater Laplace integration and excludes calibration uncertainty. Ordinary diagnostics, viewer, response-MI pooling and portable calibration are unavailable; few-rater accuracy remains unresolved.",

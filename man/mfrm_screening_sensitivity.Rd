@@ -65,8 +65,11 @@ and \code{measures}, \code{thresholds} and \code{settings}. Each result table id
 the meanings documented by \code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}}.
 }
 \description{
-Apply declared mean-square bands to saved Infit/Outfit values without
-refitting models. Keep underfit, overfit and their union separate.
+See how detection and false-flag rates change when you change fit-screening
+thresholds in a simulation with known truth. Apply specified mean-square
+bands to saved Infit/Outfit values without refitting models. Keep underfit,
+overfit and their union separate. Here sensitivity analysis means comparing
+thresholds; the reported Sensitivity rate means detecting an affected target.
 }
 \details{
 Mean-square boundaries are strict: equality is inside the band.

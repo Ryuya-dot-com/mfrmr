@@ -1,11 +1,18 @@
-#' Fit an RSM with dependence within Person-specific testlets
+#' Fit a rating-scale model with dependence within Person-specific testlets
 #'
-#' Estimate fixed facets, normal ability variance and a common variance for
-#' local effects shared by ratings in the same Person/testlet group.
+#' Account for extra dependence among ratings of the same person, for example
+#' several rubric criteria from one performance. A testlet identifies the
+#' ratings sharing this local effect within that person. The rating-scale
+#' model (RSM) estimates fixed facets, normal ability variance and one common
+#' local variance. For a rater effect shared across people instead, see
+#' [fit_mfrm_random_rater()].
 #' @param data Long-format ratings; each row is one assigned rating.
 #' @param person,score,testlet Column names. `testlet` identifies a group within
 #'   a Person and may also occur in `facets`, for example a fixed Rater effect.
-#' @param facets Fixed-facet column names; default none.
+#' @param facets Fixed-facet column names; default none. A column used as
+#'   `testlet` is not automatically a fixed facet. For example,
+#'   `testlet = "Task"` models local dependence; also specify `facets = "Task"`
+#'   if the model should estimate fixed task difficulties.
 #' @param score_levels Consecutive integer categories in increasing order.
 #' @param testlet_variance `NULL` estimates the common local variance. A
 #'   nonnegative number fixes it as known; zero removes local dependence.
@@ -133,13 +140,17 @@
 #' @seealso [predict.mfrm_testlet()], [plot.mfrm_testlet()], [mfrm_results()],
 #'   [mfrm_response_diagnostics()] for descriptive posterior predictive residuals.
 #' @examples
-#' \donttest{
-#' ratings <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
-#'   facets = c("Rater", "Criterion"), score_levels = 1:4, quad_points = 121)
+#' # Saved fit for the synthetic example_core ratings.
+#' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+#' fit <- example$testlet$fit
+#' # To refit instead (this takes longer than inspecting the saved result):
+#' # ratings <- load_mfrmr_data("example_core")
+#' # fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
+#' #   facets = c("Rater", "Criterion"), score_levels = 1:4, quad_points = 121)
 #' fit$checks
 #' plot(fit, facet = "Rater")
-#' }
+#' # The complete regeneration recipe is included with the package:
+#' system.file("examples", "extended-models.R", package = "mfrmr")
 #' @export
 fit_mfrm_testlet <- function(data, person, score, testlet, facets = character(),
     score_levels, testlet_variance = NULL, quad_points = 31L, maxit = 300L,

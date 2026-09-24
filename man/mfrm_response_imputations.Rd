@@ -70,8 +70,9 @@ table counting original observed and imputed scores by person/facet level,
 and \code{settings}. No imputations or failed analyses are silently discarded.
 }
 \description{
-Preserve a rating roster, its observed scores and its explicitly selected
-missing scores while importing completed data from an imputation model.
+Check several completed versions of a rating table before analyzing them.
+Supply these completed data from an imputation model; this function checks
+that observed scores, rating assignments and identifiers are preserved.
 No person-by-facet grid is constructed. This function validates supplied
 imputations; it does not choose or fit an imputation model.
 }

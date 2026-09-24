@@ -210,7 +210,7 @@ rater effects using many-facet Rasch measurement: Part II.
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 s_bias <- summary(bias)

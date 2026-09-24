@@ -88,7 +88,7 @@ They remain on the observed numeric score scale inherited from
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "JML", maxit = 300)
 if (requireNamespace("lme4", quietly = TRUE)) {
   gt <- mfrm_generalizability(fit)
   ds <- mfrm_d_study(gt, data.frame(Rater = c(2, 3, 4), Criterion = 4))

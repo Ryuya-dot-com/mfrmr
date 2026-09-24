@@ -57,8 +57,10 @@ cluster sizes and silhouettes, \code{centers} in the fitted space, per-cluster
 feature data, transformation and settings. K-means has no medoids.
 }
 \description{
-Minimize within-group squared Euclidean distances using numeric features
-or the retained scores of an explicitly fitted PCA.
+Divide people, raters or tasks into k groups with similar numeric attributes.
+The algorithm minimizes squared distances within groups, using the numeric
+features or retained principal components supplied by you. The groups are
+descriptive; they do not measure ability or rater quality.
 }
 \details{
 Uses \code{\link[stats:kmeans]{stats::kmeans()}} with Hartigan-Wong updates and the stated

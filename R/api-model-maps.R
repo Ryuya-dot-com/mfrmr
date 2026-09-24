@@ -62,16 +62,13 @@
 #' No fitting, scoring or integration is performed during plotting/export.
 #'
 #' @examples
-#' \donttest{
-#' ratings <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
-#'   c("Rater", "Criterion"), 1:4, quad_points = 121)
-#' scores <- score_mfrm_persons(fit, persons = unique(ratings$Person)[1:4])
-#' residuals <- mfrm_response_diagnostics(fit, group_by = c("Person", "Rater"))
-#' res <- mfrm_results(fit, scores = scores, response_diagnostics = residuals)
+#' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+#' res <- mfrm_results(example$testlet$fit,
+#'   scores = example$testlet$scores,
+#'   response_diagnostics = example$testlet$diagnostics, compute = "never")
 #' plot(res, type = "wright")
-#' as_ggplot(plot(res, type = "fit_pathway", facet = "Rater", draw = FALSE))
-#' }
+#' pathway <- plot(res, type = "fit_pathway", facet = "Rater", draw = FALSE)
+#' if (requireNamespace("ggplot2", quietly = TRUE)) as_ggplot(pathway)
 #' @name mfrmr_model_maps
 NULL
 

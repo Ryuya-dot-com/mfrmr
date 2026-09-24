@@ -1,11 +1,19 @@
-#' Score source Persons under ordinary or extended RSM calibration
+#' Estimate abilities for people already included in a fitted RSM
 #'
-#' Compute conditional EAPs, posterior SDs and continuous equal-tail intervals
-#' from a fitted model's complete source roster. Selection changes outputs,
-#' not the data conditioning shared effects. No calibration is re-estimated.
+#' Use the existing ratings and fitted model to estimate each person's ability.
+#' This is the common scoring entry for supported ordinary, shared-rater and
+#' testlet rating-scale models (RSMs). It reuses the fitted calibration, such
+#' as rater severity and category thresholds; it does not fit the model again.
+#'
+#' The estimate is the mean of the conditional ability distribution (EAP).
+#' Posterior SDs and continuous equal-tail intervals describe its uncertainty
+#' with calibration held fixed. Selecting persons changes the returned rows,
+#' not the ratings used to condition shared effects.
 #' @param fit A numerically ready ordinary RSM MML, testlet or shared-rater fit.
 #' @param persons Distinct source Person IDs; `NULL` returns all source Persons,
-#'   including Persons whose assigned scores are all missing.
+#'   including Persons whose assigned scores are all missing. For a shared-rater
+#'   fit, start with a few actual IDs: scoring everyone can be slow. Selecting
+#'   IDs changes output rows, not the data used to account for shared raters.
 #' @param level Conditional equal-tail interval probability, between zero and one.
 #' @param quad_points Extension quadrature order; `NULL` uses its fit's order.
 #'   Ordinary ability integration is continuous and does not use quadrature;
@@ -33,7 +41,9 @@
 #'   their existing scoring classes. Supply saved scores to [compare_mfrm()]
 #'   as `person_scores`; extension scores also support model-aware maps through
 #'   [mfrm_results()]. Saved plots/reports do not recompute scores.
-#' @seealso [plot.mfrm_testlet_scores()], [mfrm_response_diagnostics()]
+#' @seealso [score_mfrm_calibration()] for new people under an eligible saved
+#'   ordinary RSM/PCM calibration; [plot.mfrm_testlet_scores()],
+#'   [mfrm_response_diagnostics()]
 #' @examples
 #' \donttest{
 #' ratings <- load_mfrmr_data("example_core")

@@ -419,7 +419,7 @@ validate_shrinkage_output <- function(fit) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' fit_eb <- apply_empirical_bayes_shrinkage(fit)
 #' fit_eb$shrinkage_report
 #' # Look for:
@@ -691,7 +691,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30,
+#'                 method = "JML", maxit = 300,
 #'                 facet_shrinkage = "empirical_bayes")
 #' shrinkage_report(fit)
 #' }

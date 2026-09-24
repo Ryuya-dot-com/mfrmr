@@ -134,7 +134,7 @@ existing fit and matching diagnostics before summary, plotting or export.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", maxit = 30
+  method = "JML", maxit = 300
 )
 if (requireNamespace("igraph", quietly = TRUE)) {
   halo <- rater_halo_network_analysis(fit)

@@ -5,7 +5,7 @@
 \alias{summary.mfrm_person_scores}
 \alias{print.mfrm_person_scores}
 \alias{plot.mfrm_person_scores}
-\title{Score source Persons under ordinary or extended RSM calibration}
+\title{Estimate abilities for people already included in a fitted RSM}
 \usage{
 score_mfrm_persons(fit, persons = NULL, level = 0.95, quad_points = NULL)
 
@@ -19,7 +19,9 @@ score_mfrm_persons(fit, persons = NULL, level = 0.95, quad_points = NULL)
 \item{fit}{A numerically ready ordinary RSM MML, testlet or shared-rater fit.}
 
 \item{persons}{Distinct source Person IDs; \code{NULL} returns all source Persons,
-including Persons whose assigned scores are all missing.}
+including Persons whose assigned scores are all missing. For a shared-rater
+fit, start with a few actual IDs: scoring everyone can be slow. Selecting
+IDs changes output rows, not the data used to account for shared raters.}
 
 \item{level}{Conditional equal-tail interval probability, between zero and one.}
 
@@ -40,11 +42,17 @@ as \code{person_scores}; extension scores also support model-aware maps through
 \code{\link[=mfrm_results]{mfrm_results()}}. Saved plots/reports do not recompute scores.
 }
 \description{
-Compute conditional EAPs, posterior SDs and continuous equal-tail intervals
-from a fitted model's complete source roster. Selection changes outputs,
-not the data conditioning shared effects. No calibration is re-estimated.
+Use the existing ratings and fitted model to estimate each person's ability.
+This is the common scoring entry for supported ordinary, shared-rater and
+testlet rating-scale models (RSMs). It reuses the fitted calibration, such
+as rater severity and category thresholds; it does not fit the model again.
 }
 \details{
+The estimate is the mean of the conditional ability distribution (EAP).
+Posterior SDs and continuous equal-tail intervals describe its uncertainty
+with calibration held fixed. Selecting persons changes the returned rows,
+not the ratings used to condition shared effects.
+
 Ordinary fits use the bounded model/population specification of
 \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}}: additive unanchored severity facets and
 known N(0,1) or an estimated intercept-only normal population. Both the
@@ -74,5 +82,7 @@ plot(scores)
 }
 }
 \seealso{
-\code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}, \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}}
+\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} for new people under an eligible saved
+ordinary RSM/PCM calibration; \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}},
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}}
 }

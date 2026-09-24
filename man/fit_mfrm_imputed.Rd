@@ -34,8 +34,10 @@ fit's status, error and warnings, and common \code{settings}. Use
 \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}} for eligible non-person facet targets.
 }
 \description{
-Analyze the selected assigned-score imputations on a common identified
-scale. Failed fits and their messages are retained for review.
+Fit a separate MFRM to each completed version of the ratings reviewed by
+\code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}. All fits use the same model and measurement
+scale so eligible estimates can be combined with \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}.
+Failed fits and their messages are retained for review.
 }
 \details{
 Every fit uses the same original category ladder, facet levels,

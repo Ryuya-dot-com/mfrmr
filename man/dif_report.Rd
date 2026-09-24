@@ -89,7 +89,7 @@ Rasch measurement in language testing. \emph{Language Testing}, 29(4),
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", model = "RSM", maxit = 30
+  method = "JML", model = "RSM", maxit = 300
 )
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)

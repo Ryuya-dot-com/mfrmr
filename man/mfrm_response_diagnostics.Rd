@@ -103,15 +103,14 @@ have no summary. A fitted zero latent variance defines the corresponding
 submodel's predictions; it does not establish absence of heterogeneity.
 }
 \examples{
-\donttest{
-ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
-  c("Rater", "Criterion"), 1:4, quad_points = 121)
-residuals <- mfrm_response_diagnostics(fit, group_by = "Rater")
+example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+fit <- example$testlet$fit
+residuals <- example$testlet$diagnostics
+# To recompute the posterior predictive residuals:
+# residuals <- mfrm_response_diagnostics(fit, group_by = "Rater")
 residuals$measures
 plot(residuals)
-mfrm_results(fit, diagnostics = residuals)
-}
+mfrm_results(fit, response_diagnostics = residuals, compute = "never")
 }
 \references{
 Tierney, L., & Kadane, J. B. (1986). Accurate approximations

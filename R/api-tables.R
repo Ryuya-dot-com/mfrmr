@@ -284,7 +284,7 @@ interrater_agreement_table <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' chi <- facets_chisq_table(fit)
 #' summary(chi)
 #' p_chi <- plot(chi, draw = FALSE)
@@ -845,7 +845,7 @@ fair_average_table <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' disp <- displacement_table(fit, anchored_only = FALSE)
 #' summary(disp)
 #' p_disp <- plot(disp, draw = FALSE)
@@ -976,7 +976,7 @@ displacement_table <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' t5 <- measurable_summary_table(fit)
 #' summary(t5)
 #' p_t5 <- plot(t5, draw = FALSE)
@@ -1376,7 +1376,7 @@ rating_scale_table <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' t11 <- bias_count_table(bias)
@@ -1589,7 +1589,7 @@ bias_count_table <- function(bias_results,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
@@ -4975,7 +4975,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 #' summary(out)
 #' p_out <- plot(out, draw = FALSE)
@@ -5371,7 +5371,7 @@ mfrm_default_node_path <- function(path, format) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' path <- tempfile(fileext = ".csv")
 #' out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)
@@ -5462,7 +5462,7 @@ write_mfrm_residual_file <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' path <- tempfile(fileext = ".csv")
 #' out <- write_mfrm_subset_file(fit, diag, path, overwrite = TRUE)
@@ -6066,7 +6066,7 @@ infer_facet_names <- function(diagnostics) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both")
 #' pca <- analyze_residual_pca(diag, mode = "both")
 #' pca2 <- analyze_residual_pca(fit, mode = "both")
@@ -6849,7 +6849,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' s_bias <- summary(bias)
@@ -7042,7 +7042,7 @@ estimate_bias <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' fixed <- build_fixed_reports(bias)

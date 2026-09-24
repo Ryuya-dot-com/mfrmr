@@ -115,19 +115,15 @@ reference-precision limitations and interpretation.
 }
 
 \examples{
-\donttest{
-if (requireNamespace("RTMB", quietly = TRUE) &&
-    utils::packageVersion("RTMB") >= "2.0") {
-  ratings <- load_mfrmr_data("example_core")
-  fit <- fit_mfrm_random_rater(ratings, "Person", "Rater", "Score",
-    "Criterion", 1:4, quad_points = 121)
-  scores <- score_mfrm_random_rater(fit,
-    persons = as.character(unique(ratings$Person)[1:2]))
-  scores$table
-  plot(scores)
-  mfrm_results(fit, scores = scores)
-}
-}
+example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+fit <- example$random_rater$fit
+scores <- example$random_rater$scores
+# To recompute (requires RTMB >= 2.0 and can take several minutes):
+# scores <- score_mfrm_random_rater(fit, persons = c("P001", "P002"))
+# The complete source roster still informs both selected Persons.
+scores$table
+plot(scores)
+mfrm_results(fit, scores = scores, compute = "never")
 }
 \seealso{
 \code{\link[=predict.mfrm_random_rater]{predict.mfrm_random_rater()}}, \code{\link[=plot.mfrm_random_rater_scores]{plot.mfrm_random_rater_scores()}}

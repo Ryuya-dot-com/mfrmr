@@ -61,15 +61,15 @@
 #'   selects outputs while retaining the complete supplied scoring roster.
 #' @seealso [fit_mfrm_testlet()], [plot.mfrm_testlet_scores()], [mfrm_results()]
 #' @examples
-#' \donttest{
-#' ratings <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
-#'   c("Rater", "Criterion"), 1:4, quad_points = 121)
-#' first <- ratings[ratings$Person %in% unique(ratings$Person)[1:4], ]
-#' scores <- predict(fit, first)
+#' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+#' fit <- example$testlet$fit
+#' scores <- example$testlet$scores
+#' # To recompute these conditional scores:
+#' # ratings <- load_mfrmr_data("example_core")
+#' # scores <- predict(fit, persons = as.character(unique(ratings$Person)[1:4]))
+#' # Selecting outputs retains the complete source roster for model maps.
 #' scores$table
 #' plot(scores)
-#' }
 #' @export
 predict.mfrm_testlet <- function(object, newdata = NULL, level = .95,
     quad_points = object$settings$quad_points,

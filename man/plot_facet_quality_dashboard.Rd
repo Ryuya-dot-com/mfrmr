@@ -85,7 +85,7 @@ readiness. Restricted or older dashboards without readiness are labeled
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
 p$data$plot

@@ -113,7 +113,7 @@ retain the scope limitation in the report.
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 contract_review <- facets_output_contract_review(fit, diagnostics = diag, branch = "facets")
 summary(contract_review)

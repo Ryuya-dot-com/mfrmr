@@ -56,7 +56,7 @@ scale so an analyst can scan for diagonal blocks or hotspots.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
+                 method = "JML", maxit = 300)
 p <- plot_local_dependence_heatmap(fit, draw = FALSE)
 dim(p$data$matrix)
 # Inspect large absolute correlations alongside shared-person counts.

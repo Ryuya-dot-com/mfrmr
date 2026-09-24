@@ -54,9 +54,10 @@ A data.frame with one row per recommended route and columns:
 }
 }
 \description{
-\code{mfrmr_output_guide()} returns a compact table for choosing among the main
-table, report, review, bundle, export, and compatibility helpers. It is a
-user-facing map, not an analysis result.
+Find a function for the next question in your analysis. Start with
+\code{mfrmr_output_guide("beginner")} and read its \code{Question} and \code{MainFunction}
+columns. With no argument the function returns the full specialist catalogue,
+which includes tables, reports, reviews and exports. It does not analyze data.
 }
 \details{
 Naming convention used by the guide:
@@ -73,9 +74,9 @@ Naming convention used by the guide:
 Use \code{mfrmr_output_guide("public")} or
 \code{mfrmr_output_guide("beginner")} for the shortest top-level API map:
 an explicit \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} check and \code{\link[=fit_mfrm]{fit_mfrm()}} MML fit, the lightweight fit summary, the
-comprehensive measurement review (whose historical profile name is
+fuller fit and precision review (whose profile name is
 \code{"facets"}; no FACETS software knowledge or installation is required), the native Wright map
-with SE/CI, optional FACETS-style Wright and person-inclusive Infit views,
+with uncertainty, optional FACETS-style Wright and person-inclusive Infit views,
 and finally report/export. Use \code{mfrmr_output_guide("entry")} when you
 specifically need alternative first-screen creation routes, including
 existing result objects, the optional viewer, or interactive console work.
@@ -91,9 +92,11 @@ checked before manuscript use.
 
 \section{How to use this guide}{
 
-Treat \code{MainFunction} as the route to try next and \code{UseWhen} as the guardrail.
-The guide is not a replacement for the help pages of the listed functions;
-it is a namespace map for deciding which page to open.
+Read \code{Question} first, then open the help for a function in \code{MainFunction}.
+\code{UseWhen} describes its inputs and purpose; \code{NextStep} explains what to inspect.
+Cells containing \code{...} are outlines, not complete scripts to paste and run.
+Use \link{mfrmr_workflow_methods} for a runnable introduction and an explanation
+of function names. Inspect \code{DecisionBoundary} before interpreting a result.
 For bounded \code{GPCM}, use \code{scope = "gpcm"} to find both the support matrix
 and the table that explains how out-of-scope routes are handled.
 }

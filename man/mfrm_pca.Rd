@@ -50,8 +50,12 @@ and retained status), \code{transformation} (centers, divisors and weight factor
 original \code{feature_data} and \code{settings}. \code{summary()} returns \code{variance}.
 }
 \description{
-Summarize numeric person, rater, or task attributes in an explicit Euclidean
-space, preserving identifiers, omitted entities, and the fitted transformation.
+Express numeric attributes as principal components: new variables ordered by
+how much variation they describe. For example, summarize rater experience,
+training and workload together. Choose \code{components} when you want to retain
+fewer variables; the default retains all nonzero components. PCA does not
+estimate rater quality, ability or groups. Identifiers and omitted rows are
+retained.
 }
 \details{
 Uses \code{\link[stats:prcomp]{stats::prcomp()}} on centered, optionally standardized features,

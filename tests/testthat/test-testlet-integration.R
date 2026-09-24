@@ -76,7 +76,7 @@ test_that("the model guide distinguishes prediction targets and preserves the be
   guide <- mfrmr_output_guide("models")
   expect_identical(guide$MainFunction, c("fit_mfrm()", "fit_mfrm_random_rater()", "fit_mfrm_testlet()"))
   expect_match(guide$NextStep[2], "probabilities at supplied abilities")
-  expect_match(guide$NextStep[3], "conditional Person scores")
+  expect_match(guide$NextStep[3], "score_mfrm_persons()", fixed = TRUE)
   expect_match(guide$DecisionBoundary[3], "exclude calibration uncertainty")
   expect_identical(guide$Lifecycle, c("stable", "advanced", "advanced"))
   expect_equal(nrow(mfrmr_output_guide("beginner")), 6)

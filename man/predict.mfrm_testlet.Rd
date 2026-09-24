@@ -95,15 +95,15 @@ guarantee 95\% coverage for each fixed ability. Person contrasts and
 simultaneous decisions are not provided by this route.
 }
 \examples{
-\donttest{
-ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
-  c("Rater", "Criterion"), 1:4, quad_points = 121)
-first <- ratings[ratings$Person \%in\% unique(ratings$Person)[1:4], ]
-scores <- predict(fit, first)
+example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+fit <- example$testlet$fit
+scores <- example$testlet$scores
+# To recompute these conditional scores:
+# ratings <- load_mfrmr_data("example_core")
+# scores <- predict(fit, persons = as.character(unique(ratings$Person)[1:4]))
+# Selecting outputs retains the complete source roster for model maps.
 scores$table
 plot(scores)
-}
 }
 \seealso{
 \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}}, \code{\link[=plot.mfrm_testlet_scores]{plot.mfrm_testlet_scores()}}, \code{\link[=mfrm_results]{mfrm_results()}}

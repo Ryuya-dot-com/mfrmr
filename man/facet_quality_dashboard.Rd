@@ -32,8 +32,11 @@ of such outputs. Non-matching bundles are skipped quietly.}
 \item{severity_warn}{Absolute estimate cutoff used to flag severity
 outliers.}
 
-\item{misfit_warn}{Mean-square cutoff used to flag misfit. Values above
-this cutoff or below its reciprocal are flagged.}
+\item{misfit_warn}{\code{NULL} (default) uses both bounds returned by
+\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}, including any session options. A numeric value
+instead uses that upper cutoff and its reciprocal as the lower cutoff;
+it does not preserve the current lower bound. For example, \code{1.5} selects
+about 0.67--1.5, whereas the unmodified package defaults are 0.5--1.5.}
 
 \item{central_tendency_max}{Legacy opt-in absolute estimate cutoff for
 marking facet estimates near the fitted origin. The default \code{NULL}

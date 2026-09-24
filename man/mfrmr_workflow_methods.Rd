@@ -31,6 +31,138 @@ and score categories with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}
 by this model. \verb{<-} saves an object and \code{$} selects a named part of it.
 }
 
+\section{From the first summary to diagnostics}{
+
+A \code{FormalInference = "No"} entry in \code{results$decision} can mean that precision
+has not yet been reviewed. Read \code{Why} and \code{NextAction} to distinguish that
+state from a detected problem. Run \code{diagnostics <- diagnose_mfrm(fit)} and
+inspect \code{summary(diagnostics)$decision}. To reuse these checks in the fuller
+reporting object, call \code{res <- mfrm_results(fit, diagnostics = diagnostics)}.
+Here \code{results} is the basic summary and \code{res} is the comprehensive object
+accepted by \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}.
+}
+
+\section{Understand the function names}{
+
+Learn the operation first, then open its help page:
+\itemize{
+\item \code{fit_} estimates model parameters, for example \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\item \code{score_} estimates Person abilities using a fitted calibration, for example
+\code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for people already in a supported fitted RSM.
+\item \code{pool_} combines eligible analyses, for example \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}.
+\item \code{export_} writes files, for example \code{\link[=export_mfrm_results]{export_mfrm_results()}}.
+\item \code{summary(object)} and \code{plot(object)} select a method for the object you
+supply. You normally do not call \code{plot.mfrm_testlet()} directly.
+}
+
+The package name is \strong{mfrmr}; \strong{mfrm} in analysis functions refers to a
+many-facet Rasch model. Some help guides use the package prefix \code{mfrmr_}.
+The prefixes do not select different estimators. For a short ordinary-MFRM
+map, use \code{mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]}.
+The no-argument guide lists all specialist routes and is not a first lesson.
+
+Some names need extra care. \code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}} checks completed
+data supplied by you; it does not generate missing scores. Follow it with
+\code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}} and then \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}.
+\code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}} evaluates a warning rule against known
+simulation truth. \code{\link[=mfrm_screening_sensitivity]{mfrm_screening_sensitivity()}} repeats that evaluation
+across specified thresholds; it does not establish accuracy from real
+ratings alone. \code{\link[=mfrm_pca]{mfrm_pca()}} summarizes numeric external attributes;
+\code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} forms groups. PCA is optional before k-means.
+\code{\link[=mfrm_cluster]{mfrm_cluster()}} uses partitioning around medoids (PAM) for mixed attributes;
+it does not automatically choose a clustering algorithm. For a dendrogram,
+use \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}.
+A G-study (\code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}) estimates sources of variation in
+observed scores; a D-study (\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}) uses them to
+compare future rater/task plans. Neither needs an MFRM fit.
+
+A \strong{calibration} is the fitted set of model parameters, such as rater
+severity and category thresholds. A \strong{conditional} ability interval holds
+them fixed; it excludes uncertainty from estimating the calibration.
+\strong{EAP} is the mean of the conditional ability distribution. An \strong{SE}
+describes uncertainty in an estimate; an \strong{SD} describes spread. Check
+whether an SD refers to differences among persons or one Person's posterior.
+}
+
+\section{Check defaults before adapting an example}{
+
+An omitted argument selects a convention, not the best choice for your
+assessment. Start with the choices that change the analysis:
+\itemize{
+\item \strong{Model and population:} \code{\link[=fit_mfrm]{fit_mfrm()}} defaults to RSM and MML. RSM uses
+shared category thresholds. With PCM, set \code{step_facet} explicitly instead
+of relying on facet-name inference or the first-facet fallback. Ordinary
+RSM/PCM MML with \code{population_formula = NULL} fixes
+the ability distribution at N(0,1). Both extended RSMs instead estimate
+ability variance by default (\code{person_sd = NULL}). Their model-comparison
+tutorials show how to match population assumptions. Changing only the
+fitting function can change more than the rater/dependence structure.
+\item \strong{Rating scale:} supply \code{rating_min}, \code{rating_max} and \code{keep_original}
+from the rubric in both data review and ordinary fitting. Omitted bounds
+use the observed range. The ordinary default \code{keep_original = FALSE} can
+collapse unobserved internal categories, for example observed 1, 3, 5 to
+1, 2, 3. This changes the fitted category structure, not just labels.
+A warning and the stored score map identify the recoding.
+Use \code{keep_original = TRUE} to preserve the declared ladder; an unsupported
+internal category then stops fitting and needs substantive review.
+\item \strong{Missingness and assignment:} ordinary fitting excludes rows missing
+a score or required ID (and nonpositive-weight rows); inspect
+\code{fit$prep$row_retention}, \code{fit$prep$preparation_notes} and
+\code{fit$prep$score_map}. Missing-code conversion is off unless requested.
+In contrast, the extended models stop on missing assigned scores by
+default, and feature/G-study routes also require an explicit omission
+choice. Omission does not correct informative missingness. In
+\code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}, \code{assigned = NULL} declares every supplied
+row assigned: supply an assignment column if unassigned rows are present.
+\item \strong{Included effects:} both extensions default to no additional fixed
+facets. For example, \code{testlet = "Task"} groups local dependence but does
+not itself add fixed task difficulty; request that with \code{facets = "Task"}
+when it is part of the intended model.
+\item \strong{Feature geometry:} PCA and direct k-means default to \code{scale = TRUE}
+and equal feature weights. Thus years of experience and hours of training
+contribute in SD units; \code{scale = FALSE} retains their measurement units.
+PAM/hierarchies instead use Gower scaling, including numeric ranges.
+Choose \code{k} explicitly. PCA retains all numerically nonzero components
+unless \code{components} is specified; no automatic reduction is implied.
+K-means on a PCA result reuses its fitted transformation.
+\item \strong{Planning:} multivariate G-studies default to complete balanced crossed
+ANOVA. Incomplete or nested data need the documented explicit choices;
+the function does not silently choose another estimator or design.
+D-study \code{weights = NULL} reports the original scores separately, not an
+equal-weight total. Supplied weights are not normalized: an average and
+a sum have different score/SEM units. Specify \code{design_grid} for the plans
+you want to compare.
+\item \strong{Uncertainty and flags:} \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} defaults to
+\code{method = "model"}; request \code{"sandwich"} explicitly, with the appropriate
+independent clusters. The default confidence level is pointwise 0.95,
+not simultaneous coverage across raters. Rubin pooling defaults to
+\code{df_complete = Inf}, a large-sample complete-data approximation, not a
+degrees-of-freedom estimate from the number of rating rows. Extended
+calibration bounds
+are omitted by default; conditional Person bounds describe a different
+target. Misfit bands can also depend on session options: inspect
+\code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}} and the returned screening settings. With
+\code{\link[=fit_measures_table]{fit_measures_table()}}, specify \code{lower}, \code{upper} and \code{flag_basis} to record
+a chosen rule. In a dashboard, numeric \code{misfit_warn} uses a reciprocal
+lower bound; it is not just a replacement upper bound. None of these
+conventions establishes a universal rater-quality threshold.
+}
+
+Then choose the workload and display. The default \code{summary(fit)} is a
+lightweight fit summary; ordinary \code{mfrm_results(fit)} can compute missing
+diagnostics. Use saved diagnostics or \code{compute = "never"} for review
+without new diagnostics. Source-Person scoring requests everyone when
+\code{persons} is omitted. K-means defaults to 25 starts with \code{seed = 1}, and
+\code{silhouette = TRUE} adds pairwise distances; use \code{FALSE} when that optional
+calculation is not needed. A fixed seed provides reproducibility, not
+evidence that the partition is best. Plot styles, titles and labels affect
+presentation; changing the model, feature scaling or thresholds requires
+recomputing the affected analysis. Keep full result objects and their
+resolved settings with the script, not only the visible tables. For ordinary
+fits, start with \code{summary(fit)$settings_overview}; extended summaries also
+expose \code{settings} and \code{data_usage}.
+}
+
 \section{Use your own ratings}{
 
 The "Use your own CSV" section of
@@ -62,16 +194,22 @@ The routine fit/diagnose/results/report workflow on this page is for
 levels. Its native diagnostics, Wright map and comprehensive reports use
 the \code{mfrm_fit} result.
 \item \strong{Shared random raters:} \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} models one rater effect
-shared across all Persons rated by that rater. \code{predict()} gives score
-probabilities at supplied abilities for observed or replacement raters;
-it does not estimate Person abilities. See
+shared across all Persons rated by that rater. For abilities of source
+Persons, use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}}. \code{predict()} instead gives score
+probabilities at supplied abilities for observed or replacement raters. See
 \code{vignette("mfrmr-random-raters", package = "mfrmr")}.
 \item \strong{Person-specific testlets:} \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} groups dependent ratings
-within each Person. \code{predict()} estimates Person abilities conditional on
-fitted calibration. A Rater column can specify both usual fixed severity
+within each Person. Use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for abilities of source
+Persons; \code{predict()} also accepts a supplied rating table for scoring.
+Both hold fitted calibration fixed. A Rater column can specify fixed severity
 and local within-Person membership. See
 \code{vignette("mfrmr-testlets", package = "mfrmr")}.
 }
+
+Shared-rater ability scoring can be slow because each Person's calculation
+uses the complete rating table. Start with a few actual IDs in \code{persons};
+this selects output rows without discarding other Persons' ratings. Omitting
+\code{persons} requests everyone.
 
 All three have \code{summary()}, \code{plot()}, \code{\link[=plot_data]{plot_data()}} and ordinary RDS saving.
 Extended-model plots additionally support \code{\link[=as_ggplot]{as_ggplot()}}, preserving each
@@ -97,17 +235,6 @@ with \code{mfrm_results(fit, diagnostics = response_review)}; no integration run
 during reporting. Numerical checks are not substitute model-fit diagnostics. Refit when
 changing the statistical model; editing a saved object's class is invalid.
 Replotting or exporting an existing table does not require refitting.
-}
-
-\section{From the first summary to diagnostics}{
-
-A \code{FormalInference = "No"} entry in \code{results$decision} can mean that precision
-has not yet been reviewed. Read \code{Why} and \code{NextAction} to distinguish that
-state from a detected problem. Run \code{diagnostics <- diagnose_mfrm(fit)} and
-inspect \code{summary(diagnostics)$decision}. To reuse these checks in the fuller
-reporting object, call \code{res <- mfrm_results(fit, diagnostics = diagnostics)}.
-Here \code{results} is the basic summary and \code{res} is the comprehensive object
-accepted by \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}.
 }
 
 \section{Assessment planning and external features}{
@@ -306,7 +433,7 @@ For the clearest default route in \code{RSM} / \code{PCM}, use
 \code{\link[=fit_mfrm]{fit_mfrm()}} with \code{method = "MML"} ->
 \code{summary(fit, profile = "fit")} ->
 \code{review <- summary(fit, profile = "facets")} ->
-the required native \code{plot(fit, type = "wright", show_ci = TRUE)} ->
+optionally view targeting with \code{plot(fit, type = "wright", show_ci = TRUE)} ->
 reuse \code{review$results$diagnostics}; call \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} again only when
 residual PCA or other custom settings are needed ->
 \code{\link[=reporting_checklist]{reporting_checklist()}} ->
@@ -425,8 +552,8 @@ as not assessed; mfrmr does not assume a complete crossing.
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}. Choose \code{MML} or \code{JML} from the prespecified
 estimand and assumptions; do not select \code{JML} merely to shorten runtime.
 \item Read \code{summary(fit, profile = "fit")}, then request
-\code{summary(fit, profile = "facets")} and draw the required native Wright
-map with \code{plot(fit, type = "wright", show_ci = TRUE)}.
+\code{summary(fit, profile = "facets")}. To inspect targeting and uncertainty,
+draw \code{plot(fit, type = "wright", show_ci = TRUE)}.
 \item (Optional) Use \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} or \code{\link[=mfrmRFacets]{mfrmRFacets()}} for a
 legacy-compatible one-shot workflow wrapper.
 \item For \code{RSM} / \code{PCM}, build diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
@@ -686,8 +813,10 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, keep_original = TRUE,
   method = "MML",
-  model = "RSM"
+  model = "RSM",
+  population_formula = NULL # Fixed N(0,1) ability distribution
 )
 
 # Plot the results (Wright map)

@@ -138,7 +138,7 @@ routing design forecasting through its separate caveated capability row.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 manifest$summary[, c("Model", "Method", "Observations", "Facets")]

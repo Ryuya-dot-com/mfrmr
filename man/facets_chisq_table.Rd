@@ -80,7 +80,7 @@ heterogeneity beyond sampling variation.}
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 chi <- facets_chisq_table(fit)
 summary(chi)
 p_chi <- plot(chi, draw = FALSE)

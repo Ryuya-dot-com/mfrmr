@@ -11,8 +11,11 @@
 #'   of such outputs. Non-matching bundles are skipped quietly.
 #' @param severity_warn Absolute estimate cutoff used to flag severity
 #'   outliers.
-#' @param misfit_warn Mean-square cutoff used to flag misfit. Values above
-#'   this cutoff or below its reciprocal are flagged.
+#' @param misfit_warn `NULL` (default) uses both bounds returned by
+#'   [mfrm_misfit_thresholds()], including any session options. A numeric value
+#'   instead uses that upper cutoff and its reciprocal as the lower cutoff;
+#'   it does not preserve the current lower bound. For example, `1.5` selects
+#'   about 0.67--1.5, whereas the unmodified package defaults are 0.5--1.5.
 #' @param central_tendency_max Legacy opt-in absolute estimate cutoff for
 #'   marking facet estimates near the fitted origin. The default `NULL`
 #'   disables this flag because origin proximity is not evidence that a rater
@@ -634,7 +637,7 @@ dashboard_draw_plot <- function(tbl,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' summary(facet_quality_dashboard(fit, diagnostics = diag))
 #' }
@@ -739,7 +742,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
 #' p$data$plot

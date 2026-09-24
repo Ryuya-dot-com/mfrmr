@@ -49,8 +49,12 @@ intervals. A family with no relevant targets has zero planned trials and
 undefined rates. \code{CompleteScreens} counts fully observed families.
 }
 \description{
-Summarize known null and affected targets without treating unavailable
-screens as negative results or correlated raters as independent trials.
+In a simulation where the true problem status is known, summarize how often
+a warning rule detects affected raters or flags unaffected raters. Supply the
+planned trials and observed flags; this function does not generate or fit
+simulated ratings. Unknown truth in real ratings cannot supply these rates.
+Unavailable screens remain unavailable, and correlated raters are not counted
+as independent simulation trials.
 }
 \details{
 A target's rate is sensitivity when \code{Affected = TRUE} and a false

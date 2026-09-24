@@ -158,7 +158,7 @@ collapsing categories automatically.
 \donttest{
 toy <- load_mfrmr_data("study1")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", maxit = 30
+  method = "JML", maxit = 300
 )
 qc <- run_qc_pipeline(fit)
 qc

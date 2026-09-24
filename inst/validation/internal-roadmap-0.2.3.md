@@ -33,13 +33,44 @@ evidence for its baseline, not a completion certificate for new models.
 The historical eighteen-claim ledger is extended in place with current scope
 and evidence; do not create a parallel dashboard or another active task list.
 
-**Current position:** M0–M5 are complete locally for the retained release scope,
-following the [final source/archive disposition](claim-reconciliation-0.2.4.md#local-completion-decision-and-final-source).
-The full packaged regression is reconciled with focused repairs; fifteen executed
-tutorials, final installed help/API identity and fresh-session saved-output replay
-agree. The exact final structural/example check is clean. M6 remains open and no
-publication action was taken. This does not qualify broader coverage, model-ranking,
-formal extended diagnostics or arbitrary G-theory claims.
+**Current position:** the retained M0–M4 implementation and bounded statistical
+evidence remain applicable. M5 is requalified locally by the
+[successor archive check and targeted repairs](claim-reconciliation-0.2.4.md#follow-through-successor-archive-cran-check-and-targeted-repairs).
+The [previous archive disposition](claim-reconciliation-0.2.4.md#local-completion-decision-and-final-source)
+reconciles the full packaged regression with focused repairs, fifteen executed
+tutorials, installed help/API identity and fresh-session saved-output replay.
+Its clean example check covered ordinary examples. The subsequent preflight
+replaced repeated costly fitting in seven examples with coherent saved results,
+commented recomputation and a complete regeneration script. The successor
+archive's ordinary/donttest examples and manual pass. Its test and article
+failures are repaired and checked separately; the final structural/dependency
+and all-article rebuild check has zero errors/warnings and two retained notes
+for unavailable time verification and `xcrun_db`. This is a reconciled result,
+not a clean repeat of every test. M6 remains open; no publication action was
+taken. Broader statistical claims remain excluded.
+
+The subsequent user-requested
+[beginner/API review](claim-reconciliation-0.2.4.md#september-24-pre-integration-beginner-and-api-review)
+clarifies purpose, scoring/prediction, imputation and clustering names without
+changing numerical methods or public signatures. Its focused checks pass;
+these revisions are in the successor archive. Published help still needs to
+match it. The previous M5 archive does not contain this later prose.
+No student-participant usability study or new publication result is claimed.
+
+The local ConQuest connection is verified through the public binary item-only
+latent-regression bundle, native estimation and CSV normalization/review.
+This closes the requested connection check, not inference-readiness or general
+software-equivalence qualification. Repeated expensive fitting has been removed
+from seven help examples without changing their data or numerical settings.
+Installed-package replay verifies full source-roster matching and the current
+default interval policy. The successor archive now includes these results and
+the revised help; its observed ordinary and donttest passes take 25 and 152
+seconds. The next release milestone is M6 on the concrete checked source,
+including matching hosted CI/main/assets/site identity. Online CRAN/repository
+checks and submission remain separate; the local check disabled incoming remote
+queries and could not access package indexes or verify the clock remotely.
+The failed 31-point shortcut is retained and is not adopted. Do not replace
+MML with JML, force convergence flags, or blanket-disable examples to meet time.
 
 
 | Milestone | Work and acceptance evidence | Dependencies and original audit |

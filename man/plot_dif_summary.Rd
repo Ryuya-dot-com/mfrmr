@@ -64,7 +64,7 @@ intervals omit estimated-anchor uncertainty and cross-refit covariance.
 \donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 dff <- analyze_dff(fit, diagnostics = diag,
                    facet = "Rater", group = "Group", data = toy)

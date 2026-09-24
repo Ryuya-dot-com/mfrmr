@@ -63,11 +63,15 @@ observed category scores or ability estimates. Scores are absent for
 \code{method = "model"}.
 }
 \description{
+Describe uncertainty about a fixed facet estimate, such as rater severity,
+or a specified difference between two raters. Start from a supported fitted
+model; the point estimates stay the same when you change the interval method.
+}
+\details{
 Compare ordinary observed-information intervals with a sandwich covariance
 that treats a person's complete response vector, or an explicitly declared
 larger cluster, as the independent sampling unit. Estimates are not refitted.
-}
-\details{
+
 For cluster score \code{s_g} and observed negative-log-likelihood
 Hessian \code{H}, the unadjusted sandwich is
 \code{solve(H) \%*\% sum_g(s_g \%*\% t(s_g)) \%*\% solve(H)}.

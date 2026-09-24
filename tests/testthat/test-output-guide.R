@@ -59,12 +59,12 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_identical(
     public$Question,
     c(
-      "1. Check score support and fit with explicit data roles",
-      "2. Check convergence and fitted-model settings",
-      "3. Build the comprehensive measurement review",
-      "4. Create the required native Wright map with SE or CI",
-      "5. Add optional FACETS-style and Infit pathway views",
-      "6. Review, report, and export the completed results"
+      "1. Check your rating data and fit the model",
+      "2. Read the fit summary and its recommended next step",
+      "3. Review estimates, fit and precision",
+      "4. Plot abilities and facet estimates with uncertainty",
+      "5. Add other maps when they answer your question",
+      "6. Read the report and save the reviewed results"
     )
   )
   expect_match(public$MainFunction[1], "describe_mfrm_data", fixed = TRUE)

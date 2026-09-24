@@ -46,7 +46,7 @@ bar chart when the rater count exceeds ~6 pairs.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "JML", maxit = 300)
 p <- plot_rater_agreement_heatmap(fit, draw = FALSE)
 dim(p$data$matrix)
 # Look for (default `metric = "exact"`):

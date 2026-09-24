@@ -1,5 +1,10 @@
 #' Multivariate G-study for crossed or nested rating data
 #'
+#' Investigate how observed assessment scores vary across people, raters and
+#' tasks. With several score columns, such as fluency and accuracy, also study
+#' how their sources of variation relate. Use [mfrm_multivariate_d_study()] next
+#' to compare plans with different numbers of raters or tasks.
+#'
 #' Estimate observed-score variance-covariance components for fixed score
 #' components with one or two common random measurement facets, such as
 #' raters, tasks, or occasions. Use balanced ANOVA for a complete design or

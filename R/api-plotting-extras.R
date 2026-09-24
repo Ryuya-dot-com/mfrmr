@@ -784,7 +784,7 @@ plot_rater_severity_profile <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dff <- analyze_dff(fit, diagnostics = diag,
 #'                    facet = "Rater", group = "Group", data = toy)
@@ -1043,7 +1043,7 @@ plot_dif_summary <- function(x,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' p <- plot_apa_figure_one(fit, draw = FALSE)
 #' names(p$data)
 #' }

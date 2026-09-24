@@ -1737,7 +1737,7 @@ print.mfrm_dff <- function(x, ...) {
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 30)
+#'                  method = "JML", model = "RSM", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' int <- dif_interaction_table(fit, diag, facet = "Rater",
 #'                              group = "Group", data = toy, min_obs = 2)
@@ -2005,7 +2005,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", model = "RSM", maxit = 30)
+#'                  method = "JML", model = "RSM", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' int <- dif_interaction_table(fit, diag, facet = "Rater",
 #'                              group = "Group", data = toy, min_obs = 2)

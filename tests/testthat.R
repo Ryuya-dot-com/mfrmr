@@ -23,6 +23,7 @@ cran_light_tests <- c(
   "design-evaluation-denominators",
   "d-study-plots",
   "example-datasets",
+  "extended-example-replay",
   "facet-dashboard",
   "feature-clustering",
   "numeric-feature-workflows",

@@ -94,17 +94,17 @@ simulate a missingness mechanism or impute assigned scores. Rater contrasts,
 familywise intervals and simultaneous rater classification are not provided.
 }
 \examples{
-\donttest{
-if (requireNamespace("RTMB", quietly = TRUE) &&
-    utils::packageVersion("RTMB") >= "2.0") {
-  fit <- fit_mfrm_random_rater(load_mfrmr_data("example_core"),
-    "Person", "Rater", "Score", "Criterion", 1:4, quad_points = 121)
-  # A small run illustrates mechanics; use more draws for tail accuracy.
-  intervals <- mfrm_random_rater_intervals(fit, nsim = 19, seed = 923701)
-  summary(intervals)
-  confint(intervals, method = "error")
-}
-}
+example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+fit <- example$random_rater$fit
+intervals <- example$random_rater$intervals
+# To regenerate (requires RTMB >= 2.0 and repeated model fitting):
+# intervals <- mfrm_random_rater_intervals(fit, nsim = 19, seed = 923701)
+# These 19 saved trials illustrate mechanics, not accurate 2.5\% tails.
+# Every trial is retained; unresolved trials can give unbounded intervals.
+summary(intervals)
+confint(intervals, method = "error")
+# Changing the level reuses the same draws, with no further fitting:
+confint(intervals, level = .90)
 }
 \references{
 Chatterjee, S., Lahiri, P. and Li, H. (2008). Parametric bootstrap

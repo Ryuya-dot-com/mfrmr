@@ -42,7 +42,7 @@ observed-score variance-share view.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
+                 method = "JML", maxit = 300)
 p <- plot_reliability_snapshot(fit, draw = FALSE)
 p$data$table
 # Look for (default `metric = "reliability"`):

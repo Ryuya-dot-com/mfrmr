@@ -1,7 +1,11 @@
 #' Principal components of numeric external features
 #'
-#' Summarize numeric person, rater, or task attributes in an explicit Euclidean
-#' space, preserving identifiers, omitted entities, and the fitted transformation.
+#' Express numeric attributes as principal components: new variables ordered by
+#' how much variation they describe. For example, summarize rater experience,
+#' training and workload together. Choose `components` when you want to retain
+#' fewer variables; the default retains all nonzero components. PCA does not
+#' estimate rater quality, ability or groups. Identifiers and omitted rows are
+#' retained.
 #'
 #' @param x A table reviewed with [mfrm_features()]. For [mfrm_cluster_kmeans()],
 #'   a result from `mfrm_pca()` is also accepted.
@@ -105,8 +109,10 @@ summary.mfrm_pca <- function(object, ...) object$variance
 
 #' K-means groups from numeric features or retained principal components
 #'
-#' Minimize within-group squared Euclidean distances using numeric features
-#' or the retained scores of an explicitly fitted PCA.
+#' Divide people, raters or tasks into k groups with similar numeric attributes.
+#' The algorithm minimizes squared distances within groups, using the numeric
+#' features or retained principal components supplied by you. The groups are
+#' descriptive; they do not measure ability or rater quality.
 #'
 #' @inheritParams mfrm_pca
 #' @inheritParams mfrm_cluster

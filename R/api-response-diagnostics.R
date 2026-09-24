@@ -78,15 +78,14 @@
 #' @seealso [plot.mfrm_response_diagnostics()], [mfrm_results()],
 #'   [score_mfrm_random_rater()], [predict.mfrm_testlet()]
 #' @examples
-#' \donttest{
-#' ratings <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm_testlet(ratings, "Person", "Score", "Rater",
-#'   c("Rater", "Criterion"), 1:4, quad_points = 121)
-#' residuals <- mfrm_response_diagnostics(fit, group_by = "Rater")
+#' example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
+#' fit <- example$testlet$fit
+#' residuals <- example$testlet$diagnostics
+#' # To recompute the posterior predictive residuals:
+#' # residuals <- mfrm_response_diagnostics(fit, group_by = "Rater")
 #' residuals$measures
 #' plot(residuals)
-#' mfrm_results(fit, diagnostics = residuals)
-#' }
+#' mfrm_results(fit, response_diagnostics = residuals, compute = "never")
 #' @export
 mfrm_response_diagnostics <- function(fit, rows = NULL, group_by = NULL,
     quad_points = fit$settings$quad_points %||% fit$config$estimation_control$quad_points) {

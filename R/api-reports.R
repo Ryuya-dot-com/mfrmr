@@ -1362,7 +1362,7 @@ estimation_iteration_report <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' out <- subset_connectivity_report(fit)
 #' summary(out)
 #' p_sub <- plot(out, draw = FALSE)
@@ -1452,7 +1452,7 @@ subset_connectivity_report <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' if (requireNamespace("igraph", quietly = TRUE)) {
 #'   net <- mfrm_network_analysis(fit)
@@ -2415,7 +2415,7 @@ network_review_reporting_map <- function() {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' if (requireNamespace("igraph", quietly = TRUE)) {
 #'   review <- build_mfrm_network_review(fit)
@@ -2808,7 +2808,7 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' if (requireNamespace("igraph", quietly = TRUE)) {
 #'   rn <- rater_network_analysis(fit, mode = "severity_direction")
@@ -3514,7 +3514,7 @@ empty_halo_network_bundle <- function(settings, message = NULL) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' if (requireNamespace("igraph", quietly = TRUE)) {
 #'   halo <- rater_halo_network_analysis(fit)
@@ -4004,7 +4004,7 @@ rater_halo_network_analysis <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' out <- facet_statistics_report(fit)
 #' summary(out)
 #' p_fs <- plot(out, draw = FALSE)
@@ -4318,7 +4318,7 @@ precision_review_report <- function(fit, diagnostics = NULL) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' out <- category_structure_report(fit)
 #' summary(out)
 #' head(out$category_table[, c("Category", "Count", "Infit", "Outfit")])
@@ -4438,7 +4438,7 @@ category_structure_report <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' out <- category_curves_report(fit, theta_points = 101)
 #' summary(out)
 #' head(out$probabilities[, c("CurveGroup", "Theta", "Category", "Probability")])
@@ -4528,7 +4528,7 @@ category_curves_report <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 2)
 #' out <- bias_interaction_report(bias, top_n = 10)
@@ -4607,7 +4607,7 @@ bias_interaction_report <- function(x,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' out <- bias_iteration_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 #' summary(out)
@@ -4761,7 +4761,7 @@ bias_iteration_report <- function(x,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' out <- bias_pairwise_report(fit, diagnostics = diag, facet_a = "Rater", facet_b = "Criterion")
 #' s <- summary(out)
@@ -4945,7 +4945,7 @@ bias_pairwise_report <- function(x,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_bias")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' p <- plot_bias_interaction(
 #'   fit,
 #'   diagnostics = diagnose_mfrm(fit, residual_pca = "none"),
@@ -5438,7 +5438,7 @@ resolve_apa_output_checks <- function(object) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' apa <- build_apa_outputs(fit, diag)
 #' apa$report_text
@@ -5488,7 +5488,7 @@ print.mfrm_apa_text <- function(x, ...) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' apa <- build_apa_outputs(fit, diag)
 #' summary(apa)
@@ -7820,7 +7820,7 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' bundle <- build_summary_table_bundle(fit)
 #' bundle$table_index
@@ -8997,7 +8997,7 @@ summary_table_bundle_reporting_map <- function(bundle, catalog) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' bundle <- build_summary_table_bundle(fit)
 #' summary(bundle)
@@ -9337,7 +9337,7 @@ summary_table_bundle_filter_selection_tables <- function(tbl, appendix_preset) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' bundle <- build_summary_table_bundle(fit)
 #' plot(bundle, draw = FALSE)
@@ -10323,7 +10323,7 @@ as_flextable <- function(x, ...) UseMethod("as_flextable")
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' tbl <- apa_table(fit, which = "summary")
 #' summary(tbl)
 #' }
@@ -10434,7 +10434,7 @@ print.summary.apa_table <- function(x, ...) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' tbl <- apa_table(fit, which = "summary")
 #' p <- plot(tbl, draw = FALSE)
 #' p2 <- plot(tbl, type = "first_numeric", draw = FALSE)
@@ -12521,7 +12521,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' review <- facets_fit_review(fit)
 #' summary(review)
@@ -12730,7 +12730,7 @@ facets_fit_review <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' contract_review <- facets_output_contract_review(fit, diagnostics = diag, branch = "facets")
 #' summary(contract_review)
@@ -13068,7 +13068,7 @@ facets_output_contract_review <- function(fit,
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' review <- reference_case_review(fit, diagnostics = diag)
 #' summary(review)
@@ -13313,7 +13313,7 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' toy <- load_mfrmr_data("example_bias")
 #'
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", model = "RSM", maxit = 30
+#'   method = "JML", model = "RSM", maxit = 300
 #' )
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
@@ -13682,7 +13682,7 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' \donttest{
 #' toy <- load_mfrmr_data("study1")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
+#'   method = "JML", maxit = 300
 #' )
 #' qc <- run_qc_pipeline(fit)
 #' qc

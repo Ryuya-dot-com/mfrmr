@@ -6,6 +6,11 @@ reconciliation remains historical evidence. This is the successor assessment to 
 [September 9 inventory](public-claim-evidence-review-0.2.4.md), under the
 [public roadmap](../../ROADMAP.md). It does not broaden API support or replace
 the source identities, protocols, failures or results in earlier records.
+The subsequent [beginner/help review](#september-24-pre-integration-beginner-and-api-review)
+and CRAN preflight are reconciled on the
+[successor archive](#follow-through-successor-archive-cran-check-and-targeted-repairs).
+It includes the revised help; earlier archives and hosted CI do not qualify its
+publication. The failed initial checks and the targeted repairs remain explicit.
 
 Release-plan update, 2026-09-21: 0.2.4 now targets completion of existing
 development functions, statistical-support extensions, selected model
@@ -323,6 +328,348 @@ Every executable source, test, Rd topic, dataset, extracted tutorial script,
 rendered HTML and image is byte-identical. Existing checks are reused on that
 basis; no new full run is claimed. M6 still requires matching hosted results
 and verification of integration/publication.
+
+### September 24: pre-integration beginner and API review
+
+The user asked whether a beginning graduate student could follow the workflow
+and understand the API names before integration into main. This was a
+source/help walkthrough, not a usability study with student participants.
+The ordinary load/fit/summary/diagnostics route already had a runnable example.
+The principal gaps were choosing among extensions and recognizing what the
+less explicit names actually do.
+
+The README now maps practical questions to inputs, functions and outputs.
+The workflow help explains operation verbs, the package/model prefixes,
+conditional calibration, EAP and SE/SD, and puts the summary-to-diagnostics
+step before specialist routes. Fourteen help topics and two tutorial
+introductions were updated. The compact beginner guide uses direct questions
+and no longer makes a particular map mandatory. No aliases, public names,
+arguments, numerical methods or model scope were changed.
+
+The review addresses these specific misunderstandings:
+
+- `mfrm_response_imputations()` reviews supplied completions; it does not
+  generate them. Review, fitting and eligible pooling are separate operations.
+- `predict()` returns probabilities at supplied abilities for shared raters,
+  but scores Persons for testlets. The existing `score_mfrm_persons()` gives
+  the common source-Person route. Selected IDs reduce requested output without
+  removing the remaining conditioning data; shared-rater scoring can be slow.
+- `mfrm_cluster()` selects PAM, not an algorithm automatically. K-means and
+  hierarchical grouping have explicit entries. PCA is optional and retains
+  all numerically nonzero components unless fewer are requested.
+- Screening performance requires known simulation truth. Threshold
+  sensitivity analysis and the reported detection rate are distinct meanings.
+- G/D studies use observed scores and do not require fitting an MFRM first.
+
+Local receipts are in `validation-results/beginner-review-20260924/`.
+The four affected guidance/API/routing/documentation files pass **985
+expectations**, with no failure, error, warning or skip. The final prose
+refinement additionally reran the same 54 documentation expectations; these
+are not 54 new independent checks. All fourteen changed Rd topics are generated,
+parsed, checked and rendered, and the README renders. Numerical R expressions,
+NAMESPACE, public formals and the executable chunks of both edited tutorials
+are unchanged. The only executable difference is output-guide text.
+
+An optional duplicate numerical scoring comparison on saved fits was manually
+interrupted after the focused checks had passed: the shared-rater calculation
+was costly and its implementation had not changed. This attempt is not a
+successful numerical check. A separate passing dispatch check verifies that
+the common entry preserves the complete fit, requested IDs, interval level
+and quadrature when forwarding to each extension. Existing independent
+numerical evidence is reused; neither the full suite nor the numerical studies
+were repeated for these prose changes.
+
+The prior publication candidate `4819f79` and its archive above describe
+pre-review documentation. The bounded numerical qualification remains
+applicable, but a matching source archive, rendered tutorial prose and hosted
+checks must accompany the successor candidate before main/publication. No new
+archive, push, merge or publication is claimed here. M6 remains open. The
+review improves discoverability; it does not establish novice task-completion
+rates or remove the need to learn the relevant statistical assumptions.
+
+#### Follow-through: defaults and user intent
+
+The user then asked whether omitted arguments could select an unintended
+analysis. The review traced the main ordinary/extended fitting, source scoring,
+feature/PCA/clustering, response-MI, interval, screening, G/D and reporting
+entry points. It is not a claim that every display argument of every export
+has undergone a usability study. Existing protections include required group
+counts, selected imputation events and category rosters, default missing-data
+refusals in the new routes, and retained resolved settings.
+
+Important differences remain intentional but need visible choices:
+ordinary RSM/PCM MML fixes N(0,1), whereas the extensions estimate ability
+variance by default; ordinary preparation can compress gapped categories
+(with a warning and mapping) and omit incomplete rows; extensions require
+additional fixed facets explicitly; numeric features default to SD scaling;
+intervals default to model covariance; D-study weights do not create an
+automatic equal-weight total. Screening defaults can depend on session
+options, and a supplied dashboard `misfit_warn` sets a reciprocal lower
+bound as well as an upper bound. These defaults are not universally suitable
+choices or inferred user intentions.
+
+The maintained workflow help now explains those choices, the MI complete-data
+degrees-of-freedom approximation, calculation costs and display controls.
+The opening README/help example explicitly declares rubric bounds, preserved
+categories and the fixed ability population. The fitting and extension help
+exposes scale/effect choices; the dashboard argument help now correctly
+distinguishes `NULL` from numeric input. The guide treats the native Wright
+map as a purpose-specific view; existing export presets still retain their
+declared figures. NEWS records the changes. No defaults, signatures or
+statistical calculations were changed.
+
+Receipts are in `validation-results/default-review-20260924/`. Five small
+behavior checks reproduce category compression/preservation, missing-row
+identity, PCA scaling/rank, session-option thresholds, and unchanged input
+for the newly explicit opening example. The initial probe failed because
+`identical()` compared integer and double storage instead of category values;
+that failed receipt is retained. The corrected probe checks values and the
+expected recoding warning, and passes. There was no model refit. The two
+affected guide/documentation files pass 370 expectations without failure,
+error, warning or skip. They overlap the earlier 985 checks and are not added
+as independent evidence. Five changed Rd topics are generated and rendered,
+and the README renders. Source-expression comparison confirms unchanged
+numerical code/defaults, with only guidance strings changed. The new help
+remains local and requires the matching successor archive described above.
+
+#### Follow-through: CRAN examples and the local ConQuest connection
+
+The September 24 source-help preflight addresses the user's CRAN preparation
+and explicit request to run `/Applications/ConQuest/ConQuest` locally. Its
+receipts are under `validation-results/cran-preflight-20260924/`. No push,
+merge, release or CRAN submission was performed. The current M5 completion is
+reopened for the example workload and successor archive; the earlier clean
+ordinary-example check remains evidence for its own source and narrower run.
+
+**ConQuest connection.** The specified x86_64 executable ran locally via
+`/usr/bin/arch -x86_64`, outside the filesystem sandbox. Its transcript reports
+ConQuest 5.47.5 Standard Version, and its SHA256 is
+`61d0b87f379f1578466b789866366c5cc633d31a6c3501e872861d44ff02da48`.
+A data-free startup probe and the generated native command both exited zero;
+no licence or system policy was altered. The public bundle uses synthetic
+60-Person by six-item binary responses, one numeric covariate, Q31,
+maxit=2000 and reltol=1e-10. Native estimation terminated on deviance change
+at iteration 132. All requested CSVs and the review text were produced.
+The public normalizer and reviewer align all three population targets,
+six centered items and 60 Person EAPs, with no missing, duplicate or
+non-numeric attention items. Native input/output, console, command/executable
+hashes and version/edition/date are retained.
+
+The largest population-coordinate difference is 4.448e-6, the largest centered
+item difference is 4.638e-6, and the largest EAP difference is 0.008232. These
+are descriptive results from one case, not newly defined acceptance margins
+or evidence of general software equivalence. The native posterior simulation
+settings were not overridden. The [earlier ConQuest study](conquest-adaptive-recheck-0.2.4.md)
+and [official command reference](https://conquestmanual.acer.org/s4-00.html)
+explain the separate `p_nodes`/`seed` controls for posterior EAP calculation;
+that numerical experiment was not repeated here. The source fit reports
+numerical convergence but remains `MfrmrInferenceReady = FALSE`. Neither
+reading back complete files nor close coefficients upgrades this status.
+No SE, interval-coverage, sparse/multifacet or extended-model bridge is admitted.
+
+Help now explains local execution and relative paths, optional ConQuest use,
+posterior controls, and the difference between descriptive comparison and
+inferential qualification. The old bundle instruction wrongly treated all
+readiness restrictions as convergence failures; it is corrected in the help,
+generated README and status note. Review notes state the descriptive scope.
+The builder example now uses the same Q31/2000/1e-10 controls as the local
+run; its printed example executes in 4.949 seconds. The 28 existing ConQuest
+tests pass 365 expectations. The initial ad-hoc test reporter failed before
+running those tests because it lacked a file context; that harness log is
+retained, and the corrected runner uses `test_file()` on the selected existing
+test expressions. It is not a package failure or a clean initial test receipt.
+
+**Example execution.** The inventory contains 269 Rd pages, 238 with examples:
+163 include `donttest`, 72 are ordinary executable examples, two require
+external ConQuest output, and one is the interactive viewer. The preflight
+extracts the current Rd code and evaluates each page in a fresh R process,
+with `NOT_CRAN=false`, one numerical thread and a 90-second per-page ceiling.
+It reuses the checked installed numerical code, with current guide wording;
+source-expression comparisons confirm that estimation, defaults and public
+formals have not changed. This initial pass evaluates expressions without
+implicit printing of their return values. It is not an archive-level
+`R CMD check --as-cran` or a complete print/render check.
+
+Of the 235 executable pages, 233 finish and two reach the local limit:
+`mfrm_random_rater_intervals` and `score_mfrm_random_rater`. Those two are
+**not passes**, nor is a timeout evidence of incorrect estimates. The three
+guarded pages were not executed by this pass. Completed evaluations total
+443.809 seconds, with separate 90-second incomplete attempts; no actual CRAN
+check total is inferred. Four testlet workflows each take about 60–71 seconds,
+mostly repeating full calibration. The public ConQuest round trip separately
+exercises the two external-file operations. No new guard was added to hide
+long examples. `donttest` normally executes in the second `--as-cran` pass,
+as specified in [R Internals](https://cran.r-project.org/doc/manuals/r-release/R-ints.html#Tools).
+
+The pass also reveals iteration-limit warnings in 61 JML examples whose
+ceilings were set to 30. A common-data probe with a 300-iteration ceiling
+converges in 0.582 seconds with inference-ready status. The 61 affected
+examples now allow 300 iterations, preserving their data, estimator and
+model. All 61 regenerated/rendered help examples finish when rechecked with
+printing enabled: 61.719 seconds combined, maximum 2.398 seconds, no error or
+iteration-limit warning. The observed-data QC example retains its legitimate
+category-support warning; an added comment explains that convergence cannot
+remove that support restriction. Other original linking/category warnings
+remain in their raw logs and are not relabelled as a warning-free full pass.
+
+A separate attempt to reduce both extensions to Q31 on the unchanged
+`example_core` input fails their integration/readiness checks. It is retained
+as a rejected shortcut; Q121 examples, numerical thresholds and defaults were
+not changed. Contributor guidance no longer recommends switching estimators,
+small quadrature or a forced 30-iteration ceiling just to shorten checks; the
+corresponding source-policy assertion is removed. The final example-policy
+and terminology checks pass 329 and 54 expectations, respectively, with no
+failure, error, warning or skip. Earlier overlapping policy runs are not added
+as independent checks. No full package suite or new statistical study ran.
+
+**M5 disposition at this preflight.** Repeated costly fitting in post-fit
+examples and the two incomplete examples required resolution while retaining
+reproducible workflows and numerical checks. The follow-through below addresses
+those examples. Actual ordinary/donttest passes on the successor archive remain
+to be measured. Revised help, matching tutorial prose and archive identity must
+travel together.
+The source manifest and `git diff --check` are retained. This preflight does
+not establish a new complete `--as-cran`, PDF-manual or five-platform result.
+
+#### Follow-through: commented recomputation and executable saved examples
+
+The user's suggestion to comment out examples is applied to the measured costly
+calibration, scoring, diagnostics and bootstrap calls. Seven help pages now
+read packaged synthetic results and still execute summaries, interval-level
+changes and figures: both extension fitters, testlet prediction, shared-rater
+scoring, response diagnostics, model maps and shared-rater bootstrap intervals.
+Their outer `donttest` wrappers are removed. The package now has 156 rather
+than 163 pages containing `donttest`; commenting out a whole workflow or
+disabling its numerical regression checks is not the chosen policy.
+
+`inst/examples/extended-models.rds` contains two fits, matched conditional
+scores, testlet diagnostics and all 19 planned shared-rater bootstrap trials.
+It uses the unchanged 48-Person, four-rater, four-criterion `example_core`
+ratings, Q121 and estimated ability variance. The 19 trials demonstrate reuse
+and failure accounting, not stable tail quantiles. Studentized results retain
+two unresolved trials and unbounded limits; the unscaled method retains one
+unresolved trial. No failed trial is removed. The complete optional regeneration
+function is distributed as `inst/examples/extended-models.R`; sourcing it only
+defines the function. RTMB >= 2.0 is needed for recomputation, not replay.
+
+The existing workflow-output and population-study results are reused, not
+refitted or relabelled as new numerical evidence. Their exact source paths are
+in `validation-results/example-reuse-20260924/retained-sources.csv`. The first
+assembly check assumed that an older shared-rater fit had `assigned_data`;
+the corrected check uses its retained `input$data` when that field is absent
+and verifies all values against `example_core`. The first replay check also
+caught an unsuitable testlet score result based on a 64-row subset: the Wright
+map correctly refused it. The selected result now preserves the full 768-row
+source roster and selects four Person outputs. The regeneration recipe uses
+`persons =` accordingly. Both failed checks remain in the receipts.
+
+Older saved fits contained automatic bounds in their raw display tables.
+Their calibration/rater display tables are refreshed using the existing public
+`summary()` methods so the distributed example follows the current explicit
+interval policy. Estimates, calibration SEs, parameters, covariance, numerical
+checks, scoring results and bootstrap draws are retained. This is presentation
+migration, not recalibration or new interval qualification. The saved bootstrap
+source is matched to the refreshed fit. The distributed RDS is 66,660 bytes,
+SHA256 `3c1fef277148b4971d67b89269805eb9e2b0436753a2d34b2a9557762d4d8840`.
+It contains no native pointers, functions or session environments.
+
+The seven regenerated Rd pages pass syntax checks and render. After installing
+the current source in an isolated local library, all seven examples execute
+with printing and plots, without warnings or errors: 0.369 seconds combined,
+maximum 0.297 seconds. RTMB is not loaded during this replay. These timings
+exclude installation and do not predict a whole CRAN check. The new compatibility
+test passes 29 expectations, including source-roster identity, default missing
+bounds, preserved trials, plot-data agreement and refusal of accidental
+statistical recomputation. The existing example-policy and terminology tests
+pass 329 and 54 expectations; overlapping repeated checks are not counted as
+additional evidence. Source-expression comparisons verify unchanged statistical
+code, defaults and public signatures; earlier guidance-only edits are retained.
+
+Receipts, generated examples/HTML, installation logs, final example timings and
+artifact hashes are in `validation-results/example-reuse-20260924/`. No full
+suite, new numerical simulation, push or publication was performed. M5 remains
+open: build a successor archive containing these results and all intervening
+help revisions, then verify its actual ordinary/donttest workload and applicable
+package/manual checks. Direct installation from this source directory does not
+verify archive exclusions or establish an archive-level `--as-cran` result.
+
+#### Follow-through: successor archive CRAN check and targeted repairs
+
+**M5 is requalified locally; M6 remains open.** The selected successor is
+`validation-results/cran-candidate-20260924/final/mfrmr_0.2.4.tar.gz`, SHA256
+`27f9ca8697263e79d1f2c14b7c959aded97ef676fdd96c52c1430e99318ece54`.
+It contains the beginner/default/ConQuest/JML help revisions and the saved
+extended-model examples. This is a frozen local working-tree snapshot, not a
+new commit, hosted CI result, main integration, publication or CRAN submission.
+
+The first archive (`7d0d244f03e438cb27fb007aa1dc9b00847331d09985d8201edc946a65dd3146`)
+was checked using `R CMD check --as-cran --timings`, `NOT_CRAN=false` and one
+numerical thread. Incoming remote queries were explicitly disabled. Package
+index access and remote clock verification were unavailable. The result was
+**two errors, one warning and three notes**, not a clean pass. The receipts are
+in `validation-results/cran-candidate-20260924/`.
+
+| Finding | Repair and actual verification |
+| --- | --- |
+| Missing prebuilt vignette index after reusing articles with `--no-build-vignettes` | Retain the index from the previously executed build; verify all fifteen source, output, extracted-R and title entries against the current articles. Final incoming/build-directory checks pass. Contributor guidance now documents this requirement. |
+| Test code uses `withr` without declaring it directly | Add `withr` to Suggests; existing calls and statistical code are unchanged. The tools dependency audit and final archive's test-dependency check pass. |
+| One guide test requires the superseded phrase “conditional Person scores” | Assert the documented `score_mfrm_persons()` route while retaining the separate calibration-uncertainty boundary assertion. All 41 expectations in the affected integration file pass without warning or skip. |
+| External-feature article inline expressions run despite disabled analysis chunks | Apply the existing `!is_cran_check && available` condition to both expressions. The article renders in CRAN mode; both executed-value branches agree with their former expressions, and all unavailable/disabled branches avoid absent objects. The final archive rebuilds all fifteen articles successfully. |
+
+The initial ordinary examples pass in 25 seconds and the pass including
+`donttest` completes in 152 seconds. The test tier takes 113 seconds and reports
+3,014 passed expectations, one failed wording expectation and four skips.
+Three skips are explicit CRAN GPCM exclusions; the fourth is an installed-library
+path condition in the portable-API subprocess check. Their unchanged numerical
+paths retain the earlier GPCM and installed/fresh-process evidence. The focused
+repair resolves the one failed assertion; its 41 passing expectations overlap
+the initial run and are not added as independent tests. No full numerical
+regression suite or statistical simulation was repeated.
+
+The final archive is checked with
+`R CMD check --as-cran --no-examples --no-tests --no-manual --timings`.
+It returns zero errors, zero warnings and **two notes**, for unavailable remote
+time verification and the `xcrun_db` temporary file. Declared test/vignette
+dependencies, installed help, the restored index and all article rebuilding
+(11 seconds) pass. This final pass skips examples, tests and manual compilation;
+it is not represented as a fresh complete `--as-cran` run. The final source also
+compiles separately to a 591-page PDF manual. The initial archive passed PDF
+and HTML manual checks. Raw TeX destination warnings for external-package
+references are retained; exhaustive PDF layout or online-link validation is
+not claimed.
+
+The package-controlled timing components sum to approximately 301 seconds
+(25 + 152 + 113 + 11), using the repaired article-rebuild time. This includes
+the initial failed test run, not a new clean full-run measurement, and is not a
+platform-independent time guarantee. Initial/final check elapsed times are
+447.280 and 132.484 seconds, including compilation and check infrastructure.
+Maximum per-child-process RSS is recorded as 1,698,365,440 and 755,187,712 bytes
+using macOS `RUSAGE_CHILDREN`; it is neither summed concurrent memory nor a
+general capacity limit.
+
+Archive member comparison admits exactly five changed paths after the initial
+check: DESCRIPTION, `build/vignette.rds`, the affected test, and the external-
+feature Rmd in `vignettes` and `inst/doc`. All R/native code, Rd, data, saved
+examples, executed article HTML/figures and extracted tutorial R are unchanged.
+The current working tree matches all 630 packaged code/help/test/article/example
+inputs byte for byte. The archive audit also checks internal-record exclusions,
+all fifteen article assets and alternative text on all 43 figures.
+
+Earlier executed article output is preserved. The two scoring-explanation prose
+updates are rendered into their HTML after checking identical R chunks and
+output/figure blocks. The external-feature inline-guard repair leaves the fully
+executed HTML applicable when computation is enabled. The original staging
+checks that encountered generated files and an already-documented trailing-space
+change are retained; a first standalone dependency-audit assertion misread the
+tools result structure and is likewise retained separately from its corrected
+pass. These are validation-script failures, not unreported package passes.
+
+Current source/manifest, archive hashes, member comparison, article provenance,
+initial failure logs, focused repairs, final check and final manual logs are
+retained together. The remaining release work is matching hosted CI and public
+source/help/asset identity, plus the separately reported online CRAN/repository
+checks. Neither earlier hosted CI nor this local result authorizes a broader
+inferential claim or establishes CRAN acceptance.
 
 ## Earlier candidate and claim-reconciliation evidence
 

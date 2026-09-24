@@ -46,7 +46,7 @@ under-prediction, negative cells over-prediction.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
+                 method = "JML", maxit = 300)
 p <- plot_residual_matrix(fit, top_n_persons = 12, draw = FALSE)
 dim(p$data$matrix)
 # Look for: |residual| > 2 or > 3 crosses conventional two- or

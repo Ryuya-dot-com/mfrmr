@@ -1,7 +1,9 @@
 #' Fit the same MFRM to every completed rating data set
 #'
-#' Analyze the selected assigned-score imputations on a common identified
-#' scale. Failed fits and their messages are retained for review.
+#' Fit a separate MFRM to each completed version of the ratings reviewed by
+#' [mfrm_response_imputations()]. All fits use the same model and measurement
+#' scale so eligible estimates can be combined with [pool_mfrm_imputed()].
+#' Failed fits and their messages are retained for review.
 #'
 #' @param x An [mfrm_response_imputations()] object.
 #' @param model `"RSM"` or `"PCM"`.
@@ -105,8 +107,10 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 
 #' Pool common facet targets across imputed rating analyses
 #'
-#' Combine estimates and their full model-based covariance for one non-person
-#' facet, or prespecified linear contrasts of its levels, using Rubin's rules.
+#' Combine results such as rater severity or a prespecified difference between
+#' raters across completed-data fits. Rubin's rules include uncertainty within
+#' each fit and variation between imputations. The calculation uses the full
+#' covariance for one non-Person facet; it does not pool Person ability scores.
 #'
 #' @param x Output from [fit_mfrm_imputed()]. All completions must have
 #'   inference-ready RSM/PCM MML fits and unregularized observed information.

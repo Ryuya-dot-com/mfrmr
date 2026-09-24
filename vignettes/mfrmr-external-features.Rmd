@@ -197,7 +197,7 @@ the weights.
 
 In this fictional example, keeping three groups and raising the experience
 weight from one to three changes the together/apart status of
-`r if (available) sprintf("%.1f%%", 100 * weight_effect$MeanChangedFraction) else "the fraction shown in the table"`
+`r if (!is_cran_check && available) sprintf("%.1f%%", 100 * weight_effect$MeanChangedFraction) else "the fraction shown in the table"`
 of rater pairs on average across imputations. Thus, the selected weights
 materially affect this particular description; presenting a single partition
 would conceal that dependence. This percentage concerns pairs, not the
@@ -229,7 +229,7 @@ summary(feature_comparison)
 ```
 
 Here, removing workload changes the together/apart status of
-`r if (available) sprintf("%.1f%%", 100 * feature_comparison$comparison_summary$MeanChangedFraction) else "the fraction shown in the table"`
+`r if (!is_cran_check && available) sprintf("%.1f%%", 100 * feature_comparison$comparison_summary$MeanChangedFraction) else "the fraction shown in the table"`
 of rater pairs on average across the five imputations. This measures the
 description's dependence on including workload, not whether workload should
 be excluded. The `Features` column records each analysis's feature count;

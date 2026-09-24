@@ -55,6 +55,7 @@ Suggests:
     cluster,
     mice,
     testthat (>= 3.0.0),
+    withr,
     covr,
     knitr,
     rmarkdown,

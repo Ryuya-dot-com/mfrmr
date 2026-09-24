@@ -568,8 +568,11 @@ populations, informative assignment and missingness remain unqualified.
 
 ## Score Persons without treating raters as known
 
-`score_mfrm_random_rater()` estimates abilities from responses. This is a
-different question from `predict()`, which calculates response probabilities
+For people already in `random_fit`, `score_mfrm_persons(random_fit)` is the
+common scoring entry shared with supported ordinary and testlet RSMs. It uses
+the full source rating table. The model-specific `score_mfrm_random_rater()`
+below also allows a different complete scoring table. Both estimate abilities
+from responses. `predict()` answers a different question: response probabilities
 at ability values you supply.
 
 ```{r person-scoring}

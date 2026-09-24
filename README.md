@@ -100,8 +100,10 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, keep_original = TRUE,
   method = "MML",
-  model = "RSM"
+  model = "RSM",
+  population_formula = NULL # Fixed N(0,1) ability distribution
 )
 
 # Plot the results (Wright map)
@@ -120,6 +122,16 @@ results$decision
 holds the model, and `results` holds its summary. `$` selects a named part:
 `results$person_overview` displays just that table. Enter `results` to print
 the full summary.
+
+These settings describe this example, not every assessment. The bounds 1 and 4
+come from its rubric; change them for your own data. `keep_original = TRUE`
+preserves that category ladder. The ordinary default is `FALSE`, which can
+collapse unused internal categories and change the model's steps. Preserving
+an unsupported internal category instead stops fitting for review.
+`population_formula = NULL` fixes the ordinary RSM/PCM ability distribution
+at N(0,1); it does not estimate the population variance. Both extended RSMs
+estimate that variance by default, so copying defaults across models does not
+necessarily provide a matched comparison.
 
 The Wright map displays the estimates in logits, the model's measurement units,
 rather than the original 1-to-4 scores. With this example's default orientation,
@@ -168,6 +180,77 @@ For a guide to the next steps, open
 `help("mfrmr_visual_diagnostics", package = "mfrmr")` when choosing a figure
 and `help("mfrmr_reporting_and_apa", package = "mfrmr")` when moving from a
 reviewed fit to tables and manuscript-draft output.
+
+### Choose a function by your question
+
+You do not need to learn every function before starting. Continue with the
+question you have and open the named function's help, for example
+`help("mfrm_response_imputations", package = "mfrmr")`.
+
+| Your question | Start with | What you receive |
+| --- | --- | --- |
+| Are my rating rows and categories usable? | `describe_mfrm_data()` | A data review; correct problems in the rating table before fitting. |
+| How severe are these raters, allowing for person ability and criterion difficulty? | `fit_mfrm()` | A fitted model; use `summary()` and `diagnose_mfrm()` to review it. |
+| What are the abilities of people already in my fitted RSM? | `score_mfrm_persons()` | Conditional ability scores under a supported ordinary, shared-rater or testlet RSM. |
+| Do raters with similar backgrounds form descriptive groups? | `mfrm_features()`, then `mfrm_cluster()` or `mfrm_cluster_kmeans()` | Groups based on external attributes, not rater quality. `mfrm_pca()` optionally summarizes numeric attributes first. |
+| How do I analyze several completed versions of missing assigned scores? | `mfrm_response_imputations()`, then `fit_mfrm_imputed()` and `pool_mfrm_imputed()` | A review, separate fits and pooled eligible facet estimates. Supply the completed data; the first function does not generate replacements. |
+| Would more raters or tasks make scores more dependable? | `mfrm_multivariate_gstudy()`, then `mfrm_multivariate_d_study()` | Sources of variation in observed scores, then projections for the plans you specify. |
+| How often does my warning rule miss a simulated problem or raise a false flag? | `mfrm_screening_performance()`; `mfrm_screening_sensitivity()` to compare thresholds | Simulation summaries with known truth, not an accuracy estimate from real ratings alone. |
+
+`mfrm_cluster()` uses partitioning around medoids (PAM), which represents each
+group by an actual member and accepts mixed numeric/categorical attributes.
+`mfrm_cluster_kmeans()` uses numeric group means. For a tree of nested groups
+and a dendrogram, choose `mfrm_cluster_hierarchical()`. These are different
+algorithms; the shorter name does not choose among them automatically.
+
+The verbs help identify the operation: `fit_` estimates a model, `score_`
+estimates person abilities using a fitted calibration, `pool_` combines eligible
+analyses, and `export_` writes files. The package is named **mfrmr**; **mfrm**
+in function names refers to a many-facet Rasch model. Some help guides use the
+package prefix `mfrmr_`. These prefixes do not select different estimators.
+Use `summary(object)` and `plot(object)` rather than calling class-specific
+names such as `plot.mfrm_testlet` directly.
+
+Two distinctions matter when choosing an extension:
+
+- `fit_mfrm_random_rater()` models one rater effect shared across everyone that
+  rater evaluates. `fit_mfrm_testlet()` models an extra local effect shared by
+  a group of ratings **within one person**, such as criteria from one performance.
+  Choose this structure from the assessment design, not the function name alone.
+- For people already included in a supported fitted RSM,
+  `score_mfrm_persons(fit)` provides a common scoring entry. `predict()` has
+  model-specific meanings: shared-rater prediction needs supplied abilities and
+  returns response probabilities, while testlet prediction estimates abilities
+  from ratings. For new people with ordinary RSM/PCM calibration, see
+  `help("score_mfrm_calibration")`.
+
+Shared-rater ability scoring can be slow: each selected person's calculation
+uses the complete rating table to account for uncertainty about shared raters.
+Start with a few existing IDs using `persons`, for example
+`score_mfrm_persons(fit, persons = c("P01", "P02"))` when those IDs occur in
+your fit. This selects the output rows; it does not discard the other people's
+ratings. Omitting `persons` requests everyone.
+
+A **calibration** is the fitted set of model parameters, such as rater severity,
+criterion difficulty and category thresholds. A **conditional** ability interval
+holds that calibration fixed; it does not include uncertainty from estimating
+those parameters. **EAP** means the mean of the conditional ability distribution.
+An **SE** describes uncertainty in an estimate; an **SD** describes spread, such
+as the variation among persons. Check which quantity a table's SD represents.
+
+`mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]` gives a compact
+ordinary-MFRM route. The full `mfrmr_output_guide()` is a specialist reference;
+use `"models"`, `"features"`, `"imputation"` or `"gtheory"` for a focused guide.
+See `help("mfrmr_workflow_methods")` for the supported inputs and next steps.
+
+Before adapting an example, read **Check defaults before adapting an example**
+in that help page. It explains different missing-value policies, fixed facets
+versus testlet membership, feature scaling and weights, G/D-study plans,
+interval methods and screening bands. For example, calling
+`mfrm_facet_intervals()` without `method` requests model-based intervals;
+request `method = "sandwich"` explicitly for that alternative. PCA and direct
+k-means standardize features by default. These are analysis choices, not just
+display preferences. Check the settings stored with each result.
 
 ### Give feedback to raters
 
@@ -865,7 +948,7 @@ review; dependent sections are then marked as not computed.
 Person identifiers are omitted from the brief console view. Request detailed
 person output only when the analysis purpose and data-handling plan require it.
 
-### 5. Draw the required native Wright map
+### 5. Inspect targeting with the native Wright map
 
 The native renderer is the primary targeting figure because it keeps
 uncertainty visible:

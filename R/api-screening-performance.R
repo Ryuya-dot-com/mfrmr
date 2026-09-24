@@ -1,7 +1,11 @@
 #' Evaluate screening outcomes against a planned simulation roster
 #'
-#' Summarize known null and affected targets without treating unavailable
-#' screens as negative results or correlated raters as independent trials.
+#' In a simulation where the true problem status is known, summarize how often
+#' a warning rule detects affected raters or flags unaffected raters. Supply the
+#' planned trials and observed flags; this function does not generate or fit
+#' simulated ratings. Unknown truth in real ratings cannot supply these rates.
+#' Unavailable screens remain unavailable, and correlated raters are not counted
+#' as independent simulation trials.
 #'
 #' @param roster Data frame with `Condition`, `Replicate`, `Target` identifiers
 #'   and logical `Affected`: `TRUE` denotes the prespecified departure that the

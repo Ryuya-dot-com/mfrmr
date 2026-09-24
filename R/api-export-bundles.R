@@ -505,7 +505,7 @@ validate_bias_results_input <- function(bias_results,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' manifest <- build_mfrm_manifest(fit, diagnostics = diag)
 #' manifest$summary[, c("Model", "Method", "Observations", "Facets")]
@@ -1952,8 +1952,9 @@ conquest_overlap_mfrmr_fit_status <- function(fit) {
     } else {
       paste(
         "The mfrmr fit is not inference-ready.",
-        "Resolve the reported convergence issue and refit before using its",
-        "estimates for inferential comparison with ConQuest."
+        "Review the source fit's readiness checks and supported inferential scope.",
+        "Numerical convergence alone does not establish inference readiness;",
+        "these estimates remain available for descriptive numerical review."
       )
     }
   )
@@ -2283,7 +2284,7 @@ build_conquest_overlap_readme <- function(summary_tbl,
       output_contract$DataHandling
     ),
     "",
-    "After the ConQuest run (once the mfrmr fit is inference-ready):",
+    "After running the command file in your local ConQuest installation:",
     "Use normalize_conquest_overlap_exports() with the parameter, regression, covariance, and case-EAP CSV files,",
     "then pass the returned object to review_conquest_overlap(). Retain the history CSV for the separate objective/free-dimension verification.",
     "",
@@ -2298,6 +2299,8 @@ build_conquest_overlap_readme <- function(summary_tbl,
     "Caution:",
     "This bundle is not a claim of ConQuest numerical equivalence.",
     "Use it only where model family, dimensionality, response coding, and covariate coding match exactly.",
+    "Numerical review does not establish inference readiness or standard-error accuracy.",
+    "ConQuest EAP calculations use separate posterior simulation controls (p_nodes and seed); record these when comparing Person scores.",
     "",
     "Summary:",
     paste(utils::capture.output(print(summary_tbl, row.names = FALSE)), collapse = "\n")
@@ -2386,9 +2389,11 @@ conquest_overlap_component_sensitivity <- function(component) {
 #' records the `mfrmr` estimates that should be compared externally.
 #' It also records the actual `mfrmr` optimizer controls, MML engine, terminal
 #' gradient, convergence status and severity, and inference-readiness decision.
-#' A fit that is not inference-ready remains available for convergence review,
-#' but its estimates should not be used for inferential comparison with
-#' ConQuest until the convergence issue is resolved and the model is refit.
+#' A fit that is not inference-ready remains available for descriptive
+#' numerical review. Inspect the source fit's readiness checks and supported
+#' inferential scope: lack of readiness need not mean optimizer failure, and
+#' convergence alone does not establish readiness. The comparison does not
+#' validate standard errors or confidence intervals.
 #' The generated ConQuest benchmark template fixes its parameter-change
 #' criterion at `1e-8`, deviance-change criterion at `1e-10`, and iteration
 #' ceiling at `2000`; these controls are written into the command, summary, and
@@ -2408,6 +2413,26 @@ conquest_overlap_component_sensitivity <- function(component) {
 #' custom tables. Then use [review_conquest_overlap()] only after the matching
 #' ConQuest run has been executed externally. The bundle and command template
 #' alone are not external validation evidence.
+#'
+#' @section Running ConQuest locally:
+#' This function writes inputs; it does not launch or install ConQuest. Open
+#' the generated `.cqc` file in your local ConQuest installation and use its
+#' containing directory as the working directory, so the relative CSV paths
+#' resolve. A native command-line installation can also read that command file
+#' as standard input from the same directory. Check the ConQuest console for
+#' successful estimation and the requested exports before normalizing them.
+#' ConQuest is optional and is not needed for the package's examples or tests.
+#'
+#' ConQuest's EAP calculation uses Monte Carlo posterior integration with
+#' separate `p_nodes` and `seed` controls. The `estimate` command's quadrature
+#' node count does not set this posterior simulation budget. Record both
+#' controls when comparing Person scores; close calibration estimates do not
+#' imply identical EAPs. See the
+#' [ConQuest command reference](https://conquestmanual.acer.org/s4-00.html),
+#' `set` and `show`. This template leaves those posterior controls at the
+#' local ConQuest defaults.
+#'
+#' @details
 #'
 #' This is a controlled analysis bundle, not a deidentified or automatically
 #' shareable export. Response files contain person identifiers and responses;
@@ -2453,7 +2478,9 @@ conquest_overlap_component_sensitivity <- function(component) {
 #'   [export_mfrm_bundle()]
 #' @examples
 #' \donttest{
-#' bundle <- build_conquest_overlap_bundle(quad_points = 3, maxit = 30)
+#' bundle <- build_conquest_overlap_bundle(
+#'   quad_points = 31, maxit = 2000, reltol = 1e-10
+#' )
 #' bundle$summary[, c("Case", "Facet", "Covariate", "Persons", "Items")]
 #' summary(bundle)$mfrmr_fit_status
 #' summary(bundle)$conquest_command_scope
@@ -3990,6 +4017,7 @@ review_conquest_overlap <- function(bundle,
 
   notes <- c(
     "This review compares normalized ConQuest tables against the mfrmr bundle within the documented comparison scope.",
+    "This is a descriptive numerical comparison; it does not establish inference readiness, standard-error accuracy or software equivalence.",
     "No raw ConQuest text parsing is assumed here; normalize external tables before review.",
     "Population slopes and sigma2 are intended for direct comparison, whereas item estimates are compared after centering.",
     "Non-numeric external estimate cells are treated as attention items rather than silently as ordinary missing rows."
@@ -4098,7 +4126,7 @@ review_conquest_overlap <- function(bundle,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' appendix <- export_summary_appendix(
 #'   list(fit = fit, diagnostics = diag),
@@ -4676,7 +4704,7 @@ export_summary_appendix <- function(x,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#'                 method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' bundle <- export_mfrm_bundle(
 #'   fit,

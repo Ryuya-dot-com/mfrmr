@@ -85,13 +85,18 @@ potential cells and observed cell fraction), and \code{data}
 (the retained selected input columns).
 }
 \description{
+Investigate how observed assessment scores vary across people, raters and
+tasks. With several score columns, such as fluency and accuracy, also study
+how their sources of variation relate. Use \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} next
+to compare plans with different numbers of raters or tasks.
+}
+\details{
 Estimate observed-score variance-covariance components for fixed score
 components with one or two common random measurement facets, such as
 raters, tasks, or occasions. Use balanced ANOVA for a complete design or
 explicitly select MINQUE(0) for incomplete or unequal observed designs. Conditions
 have common identities across persons and scores. This is not an MFRM fit.
-}
-\details{
+
 Every retained cell must have every selected score. Duplicate
 cells are not supported. The same identifier (parent/child pair for a
 nested child) must denote the same condition across persons and scores.

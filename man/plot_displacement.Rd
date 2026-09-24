@@ -115,7 +115,7 @@ For a plot-selection guide and a longer walkthrough, see
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
 if (interactive()) {
   plot_displacement(

@@ -58,7 +58,7 @@
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "JML", maxit = 300)
 #' p <- plot_local_dependence_heatmap(fit, draw = FALSE)
 #' dim(p$data$matrix)
 #' # Inspect large absolute correlations alongside shared-person counts.
@@ -235,7 +235,7 @@ plot_local_dependence_heatmap <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "JML", maxit = 300)
 #' p <- plot_reliability_snapshot(fit, draw = FALSE)
 #' p$data$table
 #' # Look for (default `metric = "reliability"`):
@@ -372,7 +372,7 @@ plot_reliability_snapshot <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "JML", maxit = 300)
 #' p <- plot_residual_matrix(fit, top_n_persons = 12, draw = FALSE)
 #' dim(p$data$matrix)
 #' # Look for: |residual| > 2 or > 3 crosses conventional two- or
@@ -516,7 +516,7 @@ plot_residual_matrix <- function(fit,
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
+#'                  method = "JML", maxit = 300)
 #' fit_eb <- apply_empirical_bayes_shrinkage(fit)
 #' p <- plot_shrinkage_funnel(fit_eb, draw = FALSE)
 #' head(p$data$table)

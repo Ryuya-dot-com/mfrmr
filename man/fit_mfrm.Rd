@@ -87,7 +87,10 @@ records the mapping in \code{fit$prep$score_map} (the downstream Count = 0
 rows are consequently absent). \code{TRUE} preserves the declared scale so
 unused intermediate categories remain visible in
 \code{\link[=rating_scale_table]{rating_scale_table()}} and APA outputs, which is recommended for
-publication reporting.}
+preserving the rubric. This changes which category steps are fitted, not
+just their displayed labels. Fitting stops if a retained internal category
+has no observations; reviewing or revising that ladder is a substantive
+decision, not a formatting option.}
 
 \item{missing_codes}{Optional pre-processing step that converts sentinel
 missing-code values to \code{NA} before any downstream logic. One of:
@@ -105,7 +108,7 @@ Replacement counts are recorded in \code{fit$prep$missing_recoding} and
 surfaced by \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}. Equivalent to calling
 \code{\link[=recode_missing_codes]{recode_missing_codes()}} manually before the fit.}
 
-\item{model}{\code{"RSM"}, \code{"PCM"}, or bounded \code{"GPCM"}.}
+\item{model}{\code{"RSM"} (default), \code{"PCM"}, or bounded \code{"GPCM"}.}
 
 \item{method}{\code{"MML"} (default) or \code{"JML"}. \code{"JMLE"} is accepted as a
 backward-compatible alias for the same joint-maximum-likelihood path.}
@@ -451,6 +454,9 @@ For your own CSV, see the "Use your own CSV" section of
 installed, \link{mfrmr_workflow_methods} and \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} explain the
 input checks. Pass the reviewed rating data frame to \code{data}, not the object
 returned by \code{describe_mfrm_data()}.
+Before adapting the example, read "Check defaults before adapting an example"
+in \link{mfrmr_workflow_methods}. The score ladder, missing-row handling and
+population distribution are analysis choices even when arguments are omitted.
 }
 \details{
 Data must be in \strong{long format} (one row per observed rating event).

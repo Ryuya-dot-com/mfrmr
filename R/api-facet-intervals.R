@@ -1,5 +1,9 @@
 #' Pointwise intervals for fixed facet estimates and contrasts
 #'
+#' Describe uncertainty about a fixed facet estimate, such as rater severity,
+#' or a specified difference between two raters. Start from a supported fitted
+#' model; the point estimates stay the same when you change the interval method.
+#'
 #' Compare ordinary observed-information intervals with a sandwich covariance
 #' that treats a person's complete response vector, or an explicitly declared
 #' larger cluster, as the independent sampling unit. Estimates are not refitted.

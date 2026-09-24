@@ -53,8 +53,10 @@ justifies deleting raters or collapsing categories without further review.
 \examples{
 \donttest{
 toy <- load_mfrmr_data("study1")
+# These observed data trigger a category-support warning: the QC plot
+# displays that review requirement; convergence does not remove it.
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "JML", maxit = 300)
 qc <- run_qc_pipeline(fit)
 plot_qc_pipeline(qc, draw = FALSE)
 }

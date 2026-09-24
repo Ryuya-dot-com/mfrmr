@@ -139,7 +139,7 @@ appropriate cut-off? \emph{Journal of Educational Measurement, 62}(2),
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+                method = "JML", maxit = 300)
 q3 <- q3_statistic(fit)
 q3$summary
 # Look for: use MaxAbsQ3 and the pair table to rank follow-up. The default

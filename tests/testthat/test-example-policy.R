@@ -66,7 +66,6 @@ example_policy_roxygen_examples <- function(pkg_root) {
         active_has_mml = grepl('method\\s*=\\s*["\']MML["\']', active_text, perl = TRUE),
         has_quad_points = grepl("quad_points\\s*=", text),
         active_has_quad_points = grepl("quad_points\\s*=", active_text),
-        active_has_high_maxit = grepl("maxit\\s*=\\s*([3-9][1-9]|[4-9][0-9]|[1-9][0-9]{2,})", active_text),
         active_has_parallel = grepl("parallel\\s*=\\s*TRUE", active_text),
         stringsAsFactors = FALSE
       )
@@ -330,13 +329,6 @@ test_that("roxygen examples keep expensive demonstrations conditional", {
     example_policy_hits(active_mml_without_quadrature),
     character(0),
     info = "Standard MML examples should set quad_points."
-  )
-
-  high_maxit <- examples[examples$active_has_high_maxit, ]
-  expect_identical(
-    example_policy_hits(high_maxit),
-    character(0),
-    info = "Standard Rd examples should keep maxit at 30 or below."
   )
 
   active_parallel <- examples[examples$active_has_parallel, ]

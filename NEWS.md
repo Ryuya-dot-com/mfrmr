@@ -4,6 +4,37 @@ Unreleased release candidate. This version combines reusable calibration and
 new-Person scoring, external-feature clustering and multivariate G/D-studies,
 with corrections to uncertainty, subgroup comparisons and design planning.
 
+## Getting started
+
+* Extended-model help examples now reuse packaged synthetic fits, scores,
+  diagnostics and bootstrap results. Summaries, figures and interval-level
+  changes run immediately; expensive recomputation calls remain visible as
+  comments, with a complete regeneration script. Data, quadrature settings
+  and numerical checks are preserved. The 19 bootstrap trials illustrate
+  the workflow, not accurate tail quantiles or a coverage guarantee.
+* JML help examples that previously stopped after 30 iterations now allow
+  sufficient iterations for their example data to converge. Their estimator,
+  data and model specification are unchanged; convergence warnings are not
+  suppressed.
+* ConQuest export help now explains the local command-file workflow and the
+  separate controls used for posterior EAP calculations. Bundle guidance no
+  longer treats every inference-readiness restriction as optimizer failure;
+  numerical comparison remains distinct from validation of standard errors.
+* The workflow guide now distinguishes defaults that change the statistical
+  analysis from calculation and display controls. The opening example declares
+  its rubric bounds, preserved categories and fixed ability population.
+  Help clarifies that testlet membership does not automatically add fixed
+  difficulty effects, and that an explicit dashboard `misfit_warn` replaces
+  both review bounds. Existing defaults are unchanged.
+* The workflow guide and README now explain function names and show how to
+  choose an analysis from a concrete question. Extended-model scoring guidance
+  points to `score_mfrm_persons()` for people already in the fitted model and
+  distinguishes the model-specific meanings of `predict()`.
+* Help introductions clarify which functions review supplied imputations,
+  evaluate simulations, summarize attributes or plan G/D studies. API names,
+  arguments and numerical methods are unchanged. The beginner output guide
+  uses plainer questions and no longer describes a particular plot as mandatory.
+
 ## Design decisions and saved output
 
 * Plot conversion now refuses unsupported PCA, clustering, pooled-MI,
