@@ -57,7 +57,7 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 Use `subset_connectivity_report()` before interpreting subgroup or cross-form
 contrasts.
 
-```{r connectivity}
+```{r connectivity, fig.alt = "Observed rating connections across design subsets. Disconnected blocks indicate where a common measurement scale needs additional linking evidence."}
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 
 sc$summary[, c("Subset", "Observations", "ObservationPercent")]
@@ -141,7 +141,7 @@ positive/negative classifications. For compatibility, its former SE and test
 columns contain `NA`. Recompute older residual results with `analyze_dff()`
 using the existing fit and original data; no model refit is needed.
 
-```{r dff-residual}
+```{r dff-residual, fig.alt = "Criterion contrasts between observed groups based on residual summaries. This is a descriptive differential-functioning screen, not a causal or fairness conclusion."}
 dff_resid <- analyze_dff(
   fit,
   diag,

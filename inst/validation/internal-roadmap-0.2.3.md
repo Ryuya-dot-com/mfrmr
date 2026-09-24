@@ -48,9 +48,14 @@ and all-article rebuild check has zero errors/warnings and two retained notes
 for unavailable time verification and `xcrun_db`. This is a reconciled result,
 not a clean repeat of every test. The expanded candidate now also passes
 [all five hosted package-check environments](claim-reconciliation-0.2.4.md#september-24-expanded-candidate-hosted-checks-and-publication-preparation).
-M6 is underway: publication preparation preserves the checked code/help and
-updates status/installation prose only. Main, release-download and site identity
-still require verification. Broader statistical claims remain excluded.
+M6 is underway. The rc.4 live-site review exposed missing descriptions in 23
+older tutorial figures and eight computation-skipped article outputs in the
+source archive. The previous “fifteen executed” wording was too broad. Four Rmd
+files now add alternatives; eight inexpensive articles are evaluated, while seven
+costly articles retain their checked output. The rc.5 archive contains fifteen
+executed tutorials and 68 described figures. Numerical code and all tutorial analysis
+expressions are unchanged. Final archive/site publication remains to verify.
+Broader statistical claims remain excluded.
 
 The subsequent user-requested
 [beginner/API review](claim-reconciliation-0.2.4.md#september-24-pre-integration-beginner-and-api-review)

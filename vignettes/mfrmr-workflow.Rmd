@@ -53,7 +53,7 @@ are case-sensitive; `Study` and `Group` are extra labels unused by this model.
 `MML` selects marginal maximum likelihood; `RSM` selects a rating-scale model
 with shared category thresholds (the transitions between adjacent scores).
 
-```{r quick-start}
+```{r quick-start, fig.alt = "Wright map of fitted person abilities, rater severities, criterion difficulties and shared category steps for the synthetic ratings. All locations use the same logit scale."}
 # Load the package
 library(mfrmr)
 
@@ -290,7 +290,7 @@ attention. Diagnostic plots can help investigate it. Even a supported precision
 decision does not establish the validity of the assessment or answer the
 study's substantive question.
 
-```{r csv-results}
+```{r csv-results, fig.alt = "Wright map for the ratings read from the example CSV. Compare person, facet and step locations on the fitted scale; the display does not establish that model assumptions hold."}
 plot(csv_fit)
 csv_estimates <- as.data.frame(csv_fit)
 head(subset(csv_estimates, Facet == "Person"))
@@ -428,7 +428,7 @@ vignette_artifact("workflow_fit_overview.csv")
 
 ### 2. Read precision and model fit before interpreting differences
 
-```{r precision-and-fit}
+```{r precision-and-fit, fig.alt = "Fitted person, facet and step locations with the requested uncertainty display. Interpret precision using the accompanying table and its stated interval basis."}
 diagnostic_summary_toy <- summary(diag_toy)
 diagnostic_summary_toy$decision
 diagnostic_summary_toy$overall_fit
@@ -464,7 +464,7 @@ vignette_artifact("workflow_diagnostic_overview.csv")
 **Are the rating categories working as intended?** Examine category use and
 the transitions between scores on the declared rubric:
 
-```{r category-review}
+```{r category-review, fig.alt = "Category-use and threshold summaries for the fitted rubric. Sparse categories and transition ordering should be reviewed together with the rating design."}
 scale_toy <- rating_scale_table(fit_toy, diagnostics = diag_toy)
 scale_toy$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
 scale_toy$threshold_table
@@ -480,7 +480,7 @@ merge categories.
 **Which ratings differ most from model expectations?** This example uses an
 explicit exploratory rule and shows up to ten cases:
 
-```{r diagnostics-reporting}
+```{r diagnostics-reporting, fig.alt = "Unusual rating observations selected by the stated residual and probability thresholds. Flags support review of the underlying records, not automatic removal."}
 unexpected_toy <- unexpected_response_table(
   fit_toy,
   diagnostics = diag_toy,
@@ -504,7 +504,7 @@ The default diagnostics retain the residual/EAP path and the latent-integrated
 marginal screening path. The latter includes category and pairwise agreement
 gaps. Keep their bases separate when reporting:
 
-```{r diagnostic-bases}
+```{r diagnostic-bases, fig.alt = "Marginal fit display based on posterior-averaged response probabilities. Its probability basis differs from conditional residual diagnostics."}
 diagnostic_summary_toy$diagnostic_basis[, c("DiagnosticPath", "Status", "ReportingUse")]
 plot_marginal_fit(fit_toy, diagnostics = diag_toy)
 ```

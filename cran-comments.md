@@ -69,8 +69,11 @@ Earlier full-regression evidence, targeted integration repairs and fresh-session
 replay remain applicable to unchanged statistical code. Seven fast help examples
 now read coherent packaged synthetic fits, scores, diagnostics and bootstrap
 results; expensive recomputation is shown as comments with a complete recipe.
-All fifteen executed articles and their 43 figures with alternative text are
-retained. Two updated scoring explanations are reflected in the article HTML;
+The archive retains fifteen prebuilt articles and 43 figures with alternative
+text. A later publication review established that seven articles were fully
+evaluated and eight followed their CRAN-safe computation guard; the earlier
+description of all fifteen as executed was incorrect. The rc.5 follow-through
+below supplies the missing executed outputs. Two updated scoring explanations are reflected in the article HTML;
 no numerical output was fabricated or recomputed for those prose changes.
 
 ## Hosted CI and publication candidate, 2026-09-24
@@ -90,7 +93,7 @@ The publication archive is `mfrmr_0.2.4.tar.gz`, SHA256
 `d1b7503790b275aefe02ab2d99ad4c9e79d35918ddda582c8f3c36a1e259b40b`.
 It differs from the selected local archive only in the README installation/status
 wording and automatic Packaged timestamp. All code, tests, Rd, data, saved
-examples and fifteen executed tutorials are byte-identical. The later publication
+examples and fifteen prebuilt tutorials are byte-identical. The later publication
 commit updates repository-only status records as well; its distinct SHA is not
 represented as a second five-environment run. Applicable local and hosted checks
 are reused for unchanged content. Main/tag/asset/site verification remains open
@@ -101,3 +104,30 @@ until the public endpoints have been checked.
 Online incoming/URL and current reverse-dependency checks, and Win-builder remain
 outstanding. GitHub publication, CRAN submission and CRAN acceptance are separate
 external states. No CRAN submission or acceptance is claimed.
+
+
+## Documentation correction after rc.4 publication review
+
+The live-site review found empty alternative text for 23 figures in four older
+tutorials. The earlier source archive also held computation-skipped versions of
+eight older tutorials. Four Rmd files now add figure descriptions (including a
+conditional residual-PCA plot); all R chunk bodies are unchanged. Re-extracting the eight older
+sources with evaluation enabled gives the same parsed expressions as their new
+tutorial scripts; the older stored scripts had commented out guarded chunks.
+The other seven extraction scripts are retained byte for byte. The eight older articles were
+rendered with computation enabled in about 30 seconds. Seven costly extended
+workflow articles retain their previously executed output.
+
+The rc.5 archive SHA256 is
+`d988e5023f404895bca6ff184b037a7511680289634aeb4fcb31d2a20a7cb5c6`.
+It contains fifteen executed tutorials and 68 figures with nonempty alternative
+text. Its member comparison against rc.4 admits only README/NEWS, the four Rmd
+sources and embedded copies, eight article HTML outputs, their corresponding executable extraction scripts and automatic packaging time. R/native implementation, Rd help, tests,
+data, example fits and public interfaces remain byte-identical. A focused
+`R CMD check --no-manual --no-examples --no-tests --timings` passes with zero
+errors, warnings and notes, including rebuilding all article sources under their
+CRAN guards. Its first attempt omitted the existing user-library directory and
+stopped on three unavailable Suggests; restoring that library path resolved the
+environment issue without installing packages or disabling dependency checks.
+Unchanged numerical and five-environment evidence is reused with that scope.
+Final publication verification is recorded in the maintained release ledger.

@@ -217,7 +217,7 @@ overall average does not resolve local warnings.
 
 ## 3. Show estimates, uncertainty, and the answer
 
-```{r rater-estimates}
+```{r rater-estimates, fig.alt = "Person abilities, facet locations and shared category steps on a common logit scale. Facet whiskers show 95% normal intervals from the fitted MML model; they do not test pairwise rater differences."}
 measurements <- fit_measures_table(fit, diagnostics = diag, ci_level = 0.95)
 rater_table <- subset(
   measurements$table, Facet == "Rater",
@@ -326,7 +326,7 @@ opportunity count and overlap pattern, not just a percentage. These are
 observed-score summaries; keep them separate from the marginal diagnostic
 screens above. Use `agreement$pairs` when differences among rater pairs matter.
 
-```{r categories}
+```{r categories, fig.alt = "Category-use and threshold summaries for the synthetic four-category rubric. Review ordering and sparse use together rather than treating a single display as validation of the scale."}
 scale <- rating_scale_table(fit, diagnostics = diag)
 scale$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
 scale$threshold_table

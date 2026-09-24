@@ -2429,3 +2429,60 @@ excluded from the source archive. Their distinct commit identity is not claimed
 to have rerun the matrix. Do not rerun unchanged numerical tests merely to record
 CI results. Main integration, tag/asset re-download and site/help identity remain
 open until verified. This does not submit the package to CRAN.
+
+
+#### September 24 live-site accessibility and article-completeness correction
+
+The rc.4 site build succeeded in 36m11s and Pages deployed source `1e6151d` as
+`32a803abec965b1a63fc66341e03cd938452df6e`. Fourteen live pages matched their
+published bytes and source links before the comprehensive image check exposed
+**23 empty alternatives** in four older articles. The new-workflow figures had
+alternatives; the defect was in linking/DFF, reporting/APA, visual diagnostics
+and the workflow introduction. An additional residual-PCA figure is conditional
+on available diagnostics and now has an alternative too. This failed audit was
+not relabeled a pass. The build's single `@examplesIf interactive() is FALSE`
+warning records the intended refusal to launch an interactive viewer.
+
+This review also corrects the earlier M4/M5 claim of “fifteen executed tutorials.”
+The rc.4 archive contained fifteen prebuilt articles, but only the seven newly
+added workflows were fully evaluated; the eight older articles retained their
+CRAN-safe computation guards. Its 43-figure count and archive hashes were correct,
+but completeness of evaluation was overstated. Eight older articles are now
+rendered with NOT_CRAN=true against the matching installed M5 implementation;
+they take 29.574 seconds in total. Their sources add no new analysis. The seven
+costly executed articles are retained, avoiding another shared-rater computation
+(the hosted article alone took about 17m25s).
+
+Four Rmd files add figure alternatives, with all R chunk bodies unchanged.
+The eight regenerated R scripts match their original Rmd sources extracted
+with evaluation enabled. The other seven scripts remain byte-identical to rc.4.
+The earlier stored scripts comment out guarded chunks; therefore an attempted
+comparison of all fifteen parsed scripts across execution modes failed. The
+corrected comparison uses matching extraction modes for the eight changed scripts
+and byte identity for the seven unchanged scripts, without claiming they all
+execute automatically. The rc.5
+source archive contains fifteen executed articles and 68 described images;
+source/Rmd pairs, internal-path exclusions and archive membership are checked.
+R/native code, Rd, tests, data, packaged example results and interfaces are
+byte-identical to rc.4 and the five-environment implementation. Only documentary
+inputs, eight executed HTML outputs, corresponding extraction scripts and build time change.
+The rc.5 archive SHA256 is
+`d988e5023f404895bca6ff184b037a7511680289634aeb4fcb31d2a20a7cb5c6`.
+
+The initial live HTTP check hit Python's local missing-issuer configuration;
+standard macOS curl, with certificate verification intact, retrieved the public
+pages. No TLS verification was disabled. The subsequent alternative-text failure
+and all corrective checks are retained under
+`validation-results/github-integration-20260924/`. The existing rc.4 tag is
+preserved. The corrected candidate will use rc.5; focused archive checks and
+source-matched site/article rebuilding precede its final publication verification.
+
+
+The rc.5 focused archive check (`--no-manual --no-examples --no-tests --timings`)
+returns **Status: OK**, zero errors/warnings/notes, including package installation,
+help, vignette dependencies and article rebuilding under the CRAN guards. The
+first attempt omitted the existing user R-library path and stopped on unavailable
+mice/covr/flextable; the corrected path reused the already installed dependencies.
+No force-Suggests override or dependency installation was used. This is not a new
+full numerical suite or complete `--as-cran` run. The scope of the five-environment
+check at `4f5ed87` remains explicitly tied to the unchanged implementation.

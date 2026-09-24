@@ -63,7 +63,7 @@ subset(
 Use the Wright map first when you want one shared logit view of persons,
 facet levels, and step thresholds.
 
-```{r wright}
+```{r wright, fig.alt = "Wright map of person abilities, facet levels and category steps on the fitted logit scale, with requested uncertainty intervals. Higher facet locations indicate stricter scoring or greater difficulty."}
 plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
 ```
 
@@ -85,7 +85,7 @@ displaced for collision avoidance, with leader lines back to the fitted
 points. Step thresholds form one vertical ladder and their labels include the
 fitted transition logits.
 
-```{r wright-facets-style}
+```{r wright-facets-style, fig.alt = "Text-style Wright display with rubric labels Beginning, Developing, Secure and Advanced. Locations share a fitted logit scale; labels describe ordered categories rather than equal observed-score intervals."}
 plot(
   fit,
   type = "wright",
@@ -109,7 +109,7 @@ rebuilding the display with ggplot2 or another graphics system.
 Next, use the pathway map when you want to see how expected scores progress
 across theta.
 
-```{r pathway}
+```{r pathway, fig.alt = "Pathway display of fitted response probabilities across ability, separated by display layer. It shows model predictions rather than tests of rater bias."}
 plot(fit, type = "pathway", preset = "publication")
 ```
 
@@ -122,7 +122,7 @@ Interpretation:
 The expected-score pathway is not a fit pathway. To review measure against
 Infit, place Infit on the horizontal axis and include person rows explicitly:
 
-```{r fit-pathway}
+```{r fit-pathway, fig.alt = "Infit mean squares against fitted locations for persons and facet levels, with requested location intervals. Mean-square bands are descriptive review thresholds, not automatic decisions."}
 plot(
   fit,
   type = "fit_pathway",
@@ -146,7 +146,7 @@ Interpretation:
 
 Unexpected-response screening is useful for case-level review.
 
-```{r unexpected}
+```{r unexpected, fig.alt = "Observed ratings screened by standardized residual size and fitted response probability. Highlighted observations merit contextual review rather than automatic deletion."}
 plot_unexpected(
   fit,
   diagnostics = diag,
@@ -164,7 +164,7 @@ Interpretation:
 
 Displacement focuses on level movement rather than individual responses.
 
-```{r displacement}
+```{r displacement, fig.alt = "Level-specific displacement summaries for the fitted facets, including unanchored levels. The displayed shifts are diagnostic summaries, not evidence that a level changed over time."}
 plot_displacement(
   fit,
   diagnostics = diag,
@@ -187,7 +187,7 @@ visible side by side. The chunk below uses compact quadrature for a shorter
 runtime; final reporting should be based on a refit with the package default or
 a higher quadrature setting.
 
-```{r strict-marginal}
+```{r strict-marginal, fig.alt = "Marginal fit summaries using posterior-averaged response probabilities. These diagnostics have a different probability basis from conditional residual screens."}
 fit_strict <- fit_mfrm(
   toy,
   person = "Person",
@@ -231,7 +231,7 @@ Interpretation:
 When the design may be incomplete or spread across subsets, inspect the
 coverage matrix before interpreting cross-subset contrasts.
 
-```{r linking}
+```{r linking, fig.alt = "Observed connections across rating-design subsets. Separate blocks identify a need to examine linking before comparing locations across subsets."}
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 plot(sc, type = "design_matrix", preset = "publication")
 ```
@@ -260,7 +260,7 @@ plot_anchor_drift(drift, type = "heatmap", preset = "publication")
 
 Residual PCA is a follow-up layer after the main fit screen.
 
-```{r residual-pca}
+```{r residual-pca, fig.alt = "Scree display of residual principal components when the requested decomposition is available. Residual components are diagnostic summaries, not automatically substantive dimensions."}
 diag_pca <- diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)
 pca <- analyze_residual_pca(diag_pca, mode = "both")
 summary(pca)
@@ -284,7 +284,7 @@ Interpretation:
 
 For interaction screening, use the packaged bias example.
 
-```{r bias}
+```{r bias, fig.alt = "Rater-by-criterion interaction profiles from the fitted bias analysis. Differences identify combinations for review and do not establish a causal explanation."}
 bias_df <- load_mfrmr_data("example_bias")
 
 fit_bias <- fit_mfrm(
@@ -320,7 +320,7 @@ needs grayscale output. For journal figures, teaching material, dashboards, or
 lab-specific styles, use `draw = FALSE` and the plot-data accessors instead of
 editing screenshots.
 
-```{r custom-plot-data}
+```{r custom-plot-data, fig.alt = "Monochrome Wright map of person, facet and step locations on the common logit scale. The accompanying code extracts the plotted locations for custom displays."}
 plot(fit, type = "wright", preset = "monochrome")
 
 wright_payload <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
@@ -435,7 +435,7 @@ the MFRM likelihood. Rapid and slow response-time flags are descriptive
 quality-control prompts; they do not change measures and should not be treated
 as proof of disengagement, cheating, or speededness.
 
-```{r response-time-review}
+```{r response-time-review, fig.alt = c("Distribution of synthetic response times with selected lower and upper quantile screens. These thresholds describe this example and do not diagnose careless responding.", "Person-level summaries of synthetic response times. Compare flagged patterns with their rating counts and context before drawing substantive conclusions.")}
 toy_rt <- toy
 toy_rt$ResponseTime <- 12 + (seq_len(nrow(toy_rt)) %% 7) +
   as.numeric(toy_rt$Score)
@@ -470,7 +470,7 @@ severity estimate can be a noisy estimate rather than a stable facet signal.
 The shrinkage funnel shows how far empirical-Bayes pooling moved each level
 toward the facet mean and whether the uncertainty remains wide after pooling.
 
-```{r shrinkage-funnel}
+```{r shrinkage-funnel, fig.alt = "Raw and empirically shrunken facet estimates with their displayed uncertainty. Movement toward a facet center reflects shrinkage, not a change in observed ratings."}
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
 
 shrink <- plot_shrinkage_funnel(

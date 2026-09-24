@@ -59,12 +59,12 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 
 remotes::install_github(
   "Ryuya-dot-com/mfrmr",
-  ref = "v0.2.4-rc.4",
+  ref = "v0.2.4-rc.5",
   build_vignettes = TRUE
 )
 ```
 
-The [release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.4)
+The [release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5)
 provides the source archive with prebuilt tutorials, its checksum and the
 applicable check results. Use `ref = "main"` only when you want the latest
 development source; it may change after this candidate. A local checkout can
