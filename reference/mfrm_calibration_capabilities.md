@@ -23,13 +23,13 @@ combination. `PortableCalibration` is either `"available"` or
 
 ``` r
 mfrm_calibration_capabilities()
-#>          Model Estimator                              ScoringBasis
-#> 1          RSM       MML                     fixed standard normal
-#> 2          PCM       MML                     fixed standard normal
-#> 3      RSM/PCM       MML estimated population or latent regression
-#> 4 bounded GPCM       MML             fixed or estimated population
-#> 5      RSM/PCM       JML                    post-hoc scoring prior
-#> 6 bounded GPCM       JML                    post-hoc scoring prior
+#>     Model Estimator                              ScoringBasis
+#> 1     RSM       MML                     fixed standard normal
+#> 2     PCM       MML                     fixed standard normal
+#> 3 RSM/PCM       MML estimated population or latent regression
+#> 4    GPCM       MML             fixed or estimated population
+#> 5 RSM/PCM       JML                    post-hoc scoring prior
+#> 6    GPCM       JML                    post-hoc scoring prior
 #>   PortableCalibration                          AnchorSupport
 #> 1           available  stored direct and group facet anchors
 #> 2           available  stored direct and group facet anchors
@@ -44,13 +44,13 @@ mfrm_calibration_capabilities()
 #> 4 not available for portable calibration
 #> 5 not available for portable calibration
 #> 6 not available for portable calibration
-#>                                                      ExistingAlternative
-#> 1                             portable artifact or fitted-object scoring
-#> 2                             portable artifact or fitted-object scoring
-#> 3             use fitted-object scoring with the fitted population model
-#> 4                                 use fitted-object bounded-GPCM scoring
-#> 5              use fitted-object scoring with an explicit post-hoc prior
-#> 6 use fitted-object bounded-GPCM scoring with an explicit post-hoc prior
+#>                                              ExistingAlternative
+#> 1                     portable artifact or fitted-object scoring
+#> 2                     portable artifact or fitted-object scoring
+#> 3     use fitted-object scoring with the fitted population model
+#> 4                                 use fitted-object GPCM scoring
+#> 5      use fitted-object scoring with an explicit post-hoc prior
+#> 6 use fitted-object GPCM scoring with an explicit post-hoc prior
 #>                                                                                                        Limitation
 #> 1 one observed score scale, one latent dimension, known facet levels, and an explicit same-data quadrature review
 #> 2 one observed score scale, one latent dimension, known facet levels, and an explicit same-data quadrature review

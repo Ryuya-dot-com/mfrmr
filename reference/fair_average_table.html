@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an adjusted-score reference table bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>fair_average_table.Rd</code></div>
     </div>
 
@@ -130,7 +130,7 @@ correct JML bias.</p></dd>
 
 
 <dt id="arg-fair-se">fair_se<a class="anchor" aria-label="anchor" href="#arg-fair-se"></a></dt>
-<dd><p>Logical. When <code>TRUE</code> and <code>fit</code> is an MML bounded-<code>GPCM</code>
+<dd><p>Logical. When <code>TRUE</code> and <code>fit</code> is an MML <code>GPCM</code>
 fit, add structural delta-method standard errors and confidence limits
 for <code>Fair(M)</code> / <code>AdjustedAverage</code> and <code>Fair(Z)</code> /
 <code>StandardizedAdjustedAverage</code>. Person rows remain <code>NA</code> because MML
@@ -180,7 +180,7 @@ unavailable on replaced rows because the original SE does not describe the
 display adjustment. Fair-score calculations do not use the replacement.
 Recompute older diagnostics and recreate saved tables from the existing
 fit before summarizing or plotting them; no model refit is needed.</p>
-<p>Bounded <code>GPCM</code> fits are supported under a slope-aware
+<p><code>GPCM</code> fits are supported under a slope-aware
 element-conditional construction. For each slope-facet element
 \(j^\star\) the per-row fair-average is the GPCM expected score
 $$\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})$$
@@ -191,12 +191,12 @@ identification convention, so those rows remain continuous with
 the standard PCM Linacre fair-average and reduce to it exactly
 when all slopes equal one.
 This is an identification-based reporting convention for the package's
-bounded <code>GPCM</code> route, not a unique free-discrimination score-side analogue
+<code>GPCM</code> route, not a unique free-discrimination score-side analogue
 to FACETS fair averages. Do not report it as FACETS score-side equivalence
 or as an operational scoring rule unless that convention is substantively
 justified.</p>
 <p>Standard errors on the fair-average value itself are opt-in for MML
-bounded <code>GPCM</code> fits via <code>fair_se = TRUE</code>. The
+<code>GPCM</code> fits via <code>fair_se = TRUE</code>. The
 <code>Model S.E.</code>, <code>ModelBasedSE</code>, <code>Real S.E.</code>, and <code>FitAdjustedSE</code> columns
 retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
 uncertainty is reported under distinct columns such as <code>Fair(M) S.E.</code>,
@@ -311,7 +311,7 @@ MESA Press.</p></li>
 Winsteps.com.
 (FACETS Table 12 corresponds to the fair-average
 construction implemented here for <code>RSM</code> / <code>PCM</code> fits; the
-slope-aware element-conditional construction for bounded <code>GPCM</code>
+slope-aware element-conditional construction for <code>GPCM</code>
 is documented in this help page.)</p></li>
 <li><p>Andrich, D. (1978). A rating formulation for ordered response
 categories. <em>Psychometrika, 43</em>(4), 561-573.
@@ -320,7 +320,7 @@ categories. <em>Psychometrika, 43</em>(4), 561-573.
 <em>Psychometrika, 47</em>(2), 149-174. <a href="https://doi.org/10.1007/BF02296272" class="external-link">doi:10.1007/BF02296272</a></p></li>
 <li><p>Muraki, E. (1992). A generalized partial credit model:
 Application of an EM algorithm. <em>Applied Psychological
-Measurement, 16</em>(2), 159-176. (Cited for the bounded <code>GPCM</code>
+Measurement, 16</em>(2), 159-176. (Cited for the <code>GPCM</code>
 slope-aware extension.)</p></li>
 </ul></div>
     <div class="section level2">

@@ -48,7 +48,7 @@ per-facet-level contribution curves from compute_information()."><meta property=
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot design-weighted precision curves</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>plot_information.Rd</code></div>
     </div>
 
@@ -109,7 +109,7 @@ reusable <code>mfrm_plot_data</code> invisibly.</p></dd>
 <li><p><code>"se"</code> / <code>"sem"</code> / <code>"csem"</code>: conditional SEM across theta.</p></li>
 <li><p><code>"both"</code>: precision and conditional SEM together, useful for presentations.</p></li>
 <li><p><code>"iif"</code>: facet-level contribution curves for one selected facet in a
-supported <code>RSM</code>, <code>PCM</code>, or bounded <code>GPCM</code> fit.</p></li>
+supported <code>RSM</code>, <code>PCM</code>, or <code>GPCM</code> fit.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="which-type-should-i-use-">Which type should I use?<a class="anchor" aria-label="anchor" href="#which-type-should-i-use-"></a></h2>
@@ -130,7 +130,7 @@ precision curve.</p></li>
 <li><p>Conditional SEM is derived as <code>1 / sqrt(precision)</code>; lower is better.</p></li>
 <li><p>Facet-level curves show which facet levels contribute most to that
 realized precision at each theta.</p></li>
-<li><p>For bounded <code>GPCM</code>, those contributions include the squared
+<li><p>For <code>GPCM</code>, those contributions include the squared
 discrimination scaling implied by the fitted <code>slope_facet</code>.</p></li>
 <li><p>If the precision peak sits far from the bulk of person measures, the
 realized design may be poorly targeted.</p></li>

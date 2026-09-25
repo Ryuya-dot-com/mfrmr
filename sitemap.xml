@@ -42,6 +42,7 @@
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/bias_interaction_report.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/bias_iteration_report.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/bias_pairwise_report.html</loc></url>
+<url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/build_conquest_overlap_bundle.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/build_equating_chain.html</loc></url>
@@ -67,6 +68,7 @@
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/compute_facet_icc.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/compute_person_fit_indices.html</loc></url>
+<url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_random_rater.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_testlet.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/data_quality_report.html</loc></url>
@@ -132,6 +134,7 @@
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.html</loc></url>
+<url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_dff_methods.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.html</loc></url>
@@ -194,6 +197,7 @@
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_screening_performance.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_screening_sensitivity.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_signal_detection.html</loc></url>
+<url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_slope_intervals.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_summary_table_bundle.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_testlet.html</loc></url>
 <url><loc>https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_testlet_scores.html</loc></url>

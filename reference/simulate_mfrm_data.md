@@ -110,7 +110,7 @@ simulate_mfrm_data(
 - model:
 
   Measurement model recorded in the simulation setup. The current public
-  generator supports `RSM`, `PCM`, and bounded `GPCM`.
+  generator supports `RSM`, `PCM`, and `GPCM`.
 
 - step_facet:
 
@@ -119,8 +119,8 @@ simulate_mfrm_data(
 
 - slope_facet:
 
-  Slope facet used when `model = "GPCM"`. The current bounded `GPCM`
-  branch requires `slope_facet == step_facet`.
+  Slope facet used when `model = "GPCM"`. The current `GPCM` branch
+  requires `slope_facet == step_facet`.
 
 - thresholds:
 
@@ -188,8 +188,7 @@ column is also included.
 ## Details
 
 This function generates synthetic ordered many-facet data under `RSM`,
-`PCM`, or the package's bounded `GPCM` branch. The data-generating
-process is:
+`PCM`, or the package's `GPCM` branch. The data-generating process is:
 
 1.  Draw person abilities: \\\theta_n \sim N(0, \texttt{theta\\sd}^2)\\
 
@@ -205,7 +204,7 @@ process is:
     N(0, \texttt{noise\\sd}^2)\\ (optional)
 
 6.  Compute category probabilities under the recorded measurement model
-    (`RSM`, `PCM`, or bounded `GPCM`) and sample the response
+    (`RSM`, `PCM`, or `GPCM`) and sample the response
 
 Latent-value generation is explicit:
 
@@ -242,7 +241,7 @@ Threshold handling is intentionally explicit:
   threshold values may vary by `StepFacet` (currently `Criterion` or
   `Rater`)
 
-For bounded `GPCM`, the generator requires an explicit slope contract in
+For `GPCM`, the generator requires an explicit slope contract in
 parallel with the threshold table. The supported route keeps
 `slope_facet == step_facet`, normalizes supplied slopes to the same
 geometric-mean-one log-slope identification used by
@@ -296,8 +295,7 @@ Returned data include attributes:
 
 - `mfrm_truth$signals`: injected DIF and interaction signal tables
 
-- `mfrm_truth$slope_table`: simulated discrimination table for bounded
-  `GPCM`
+- `mfrm_truth$slope_table`: simulated discrimination table for `GPCM`
 
 - `mfrm_population_data`: generated one-row-per-person background data
   when the simulation specification stores an active latent-regression

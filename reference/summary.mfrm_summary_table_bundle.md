@@ -142,7 +142,7 @@ summary(bundle)
 #>    extreme_person_low      1        10        20
 #>   extreme_person_high      1        10        20
 #>  extreme_facet_levels      1         8         3
-#>   estimation_settings      1         1        29
+#>   estimation_settings      1         1        31
 #>    category_structure      1         1         5
 #>      analysis_caveats      1         0         8
 #> 
@@ -154,7 +154,7 @@ summary(bundle)
 #>       facet_overview    2    7   facet_distribution
 #>      person_overview    1   10  person_distribution
 #>        step_overview    1    5   category_structure
-#>    settings_overview    1   29  estimation_settings
+#>    settings_overview    1   31  estimation_settings
 #>        reporting_map    6    3        reporting_map
 #>              caveats    0    8     analysis_caveats
 #>       facet_extremes    8    3 extreme_facet_levels
@@ -234,7 +234,7 @@ summary(bundle)
 #>        reporting_map    6    3              0             0
 #>       facet_overview    2    7              6             0
 #>             overview    1   88             40            14
-#>    settings_overview    1   29              5             5
+#>    settings_overview    1   31              5             5
 #>  population_overview    1   16              5             5
 #>                  Role
 #>   extreme_person_high

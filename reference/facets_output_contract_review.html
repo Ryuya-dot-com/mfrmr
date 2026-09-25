@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a FACETS output-contract review</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>facets_output_contract_review.Rd</code></div>
     </div>
 
@@ -128,14 +128,14 @@ establish external validity or software equivalence beyond the specific
 schema/metric contract encoded in the contract file.</p>
     </div>
     <div class="section level2">
-    <h2 id="bounded-gpcm-boundary">Bounded GPCM boundary<a class="anchor" aria-label="anchor" href="#bounded-gpcm-boundary"></a></h2>
+    <h2 id="gpcm-boundary">GPCM boundary<a class="anchor" aria-label="anchor" href="#gpcm-boundary"></a></h2>
 
 
-<p>This helper is unavailable for bounded <code>GPCM</code> fits because the FACETS
+<p>This helper is unavailable for <code>GPCM</code> fits because the FACETS
 output contract includes score-side rows whose measure-to-score and
 uncertainty semantics are supported for the Rasch-family route, not
-for free-discrimination bounded <code>GPCM</code>. Use <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> before
-routing a bounded <code>GPCM</code> fit into score-side compatibility-output helpers.</p>
+for free-discrimination <code>GPCM</code>. Use <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> before
+routing a <code>GPCM</code> fit into score-side compatibility-output helpers.</p>
 <p>Coverage interpretation in <code>overall</code>:</p><ul><li><p><code>MeanColumnCoverage</code> and <code>MinColumnCoverage</code> are computed across all
 contract rows (unavailable rows count as 0 coverage).</p></li>
 <li><p><code>MeanColumnCoverageAvailable</code> and <code>MinColumnCoverageAvailable</code> summarize

@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-workflow.Rmd</code></div>
     </div>
 
@@ -108,7 +108,10 @@ names in <code><a href="../reference/fit_mfrm.html">fit_mfrm()</a></code> are ca
 and <code>Group</code> are extra labels unused by this model.
 <code>MML</code> selects marginal maximum likelihood; <code>RSM</code>
 selects a rating-scale model with shared category thresholds (the
-transitions between adjacent scores).</p>
+transitions between adjacent scores). The rubric uses scores 1 through
+4. <code>category_policy = "preserve"</code> keeps that category ladder;
+it prevents an unobserved intermediate category from being silently
+collapsed into a different scale.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load the package</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
@@ -130,6 +133,8 @@ transitions between adjacent scores).</p>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
 <span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
 <span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
+<span>  rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"RSM"</span></span>
 <span><span class="op">)</span></span>
@@ -381,8 +386,8 @@ inspect <code>ratings$Rating</code> instead of
 <p>Set the minimum and maximum from the <strong>rubric</strong>, not the
 observed minimum and maximum in this sample. The code below describes a
 1-to-4 rubric. Keep the same values in the data review and the fit.
-<code>keep_original = TRUE</code> preserves the intended category
-structure, including categories with no observations.</p>
+<code>category_policy = "preserve"</code> preserves the intended
+category structure, including categories with no observations.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/describe_mfrm_data.html">describe_mfrm_data</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">ratings</span>,</span>
@@ -391,7 +396,7 @@ structure, including categories with no observations.</p>
 <span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
 <span>  rating_min <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  rating_max <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  keep_original <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">data_review</span><span class="op">$</span><span class="va">row_retention</span></span>
 <span><span class="co">#&gt;                             Stage Rows DroppedRows</span></span>
@@ -442,9 +447,9 @@ unexpected.</li>
 <code>score_distribution</code>: <code>RawN</code> counts the
 retained ratings in each category. A zero count in an internal category,
 such as 3 on a 1-to-4 scale, prevents fitting with
-<code>keep_original = TRUE</code>. Review the data and rubric before
-changing categories; increasing optimizer iterations cannot supply
-missing category information.</li>
+<code>category_policy = "preserve"</code>. Review the data and rubric
+before changing categories; increasing optimizer iterations cannot
+supply missing category information.</li>
 <li>
 <code>design_connectivity</code>: <code>Components = 1</code> means
 a facet’s levels are connected through shared persons. More than one
@@ -476,7 +481,7 @@ evidence for the interpretation decision.</p>
 <span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
 <span>  rating_min <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  rating_max <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  keep_original <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"RSM"</span></span>
 <span><span class="op">)</span></span>
@@ -625,7 +630,7 @@ scores, reshape the criterion columns into rating rows:</p>
 <span>  Content <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span>
 <span>  Style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">ratings_long</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/tidyr/man/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
+<span><span class="va">ratings_long</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span></span>
 <span>  <span class="va">wide</span>,</span>
 <span>  cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Style"</span><span class="op">)</span>,</span>
 <span>  names_to <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
@@ -672,7 +677,7 @@ helper calls and review your own assignment roster if one exists.</p>
 <span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
 <span>  rating_min <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  rating_max <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  keep_original <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span>,</span>
 <span>  expected_design <span class="op">=</span> <span class="va">mfrmr_example_operational_design</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">data_summary_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">data_review_toy</span><span class="op">)</span></span>
@@ -1054,11 +1059,16 @@ raters. Read <code>MissingMetrics</code> before interpreting flags: zero
 observed flags is not a complete pass when diagnostics are unavailable.
 A <code>REVIEW ONLY</code> label retains the fit’s restrictions; the
 plot does not override them.</p>
-<p>In this synthetic example, none of the six raters has a severity or
-misfit flag under the displayed settings. The earlier response-level
-screen still selected 141 ratings: the two screens assess different
-units and use different rules. Neither result establishes that every
-rating is appropriate.</p>
+<p>With the unmodified package defaults (absolute severity at least 1
+logit, Infit or Outfit at or beyond 0.5 and 1.5), none of the six raters
+is flagged in this synthetic example. Session options can change the
+misfit band: check <code>rater_review$settings</code> before comparing
+your output. A numeric <code>misfit_warn = 1.5</code> instead selects a
+lower bound of about 0.67; it does not preserve the default 0.5. These
+bands prompt review, not a verdict on quality. The earlier
+response-level screen still selected 141 ratings: the two screens assess
+different units and use different rules. Neither result establishes that
+every rating is appropriate.</p>
 <p>Use the selected unexpected ratings to discuss the rubric and scoring
 context, not to automatically exclude a rater. Limited overlap may call
 for more shared ratings before comparing raters. A change after training
@@ -1223,11 +1233,23 @@ from real analyses. Review the files before sharing them. The table
 previews six filenames; <code>export_toy$written_files</code> retains
 the full list, and its <code>Path</code> column locates the generated
 files. Temporary files are for practice; choose a study directory for an
-archive you will keep. With a precomputed fit as input, this archive’s
-replay code assumes that <code>fit</code> and <code>diagnostics</code>
-already exist. Keep your original data-to-fit script. For a fit replay
-including its input CSV, and for saving a manuscript table, figure, and
-their notes, follow Section 5 of
+archive you will keep. To reopen the saved analysis without fitting or
+computing diagnostics, locate the RDS in that file list:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">results_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">export_toy</span><span class="op">$</span><span class="va">written_files</span>, <span class="va">Component</span> <span class="op">==</span> <span class="st">"results_rds"</span><span class="op">)</span><span class="op">$</span><span class="va">Path</span></span>
+<span><span class="va">restored_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">results_file</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">restored_results</span><span class="op">)</span><span class="op">$</span><span class="va">decision</span></span>
+<span><span class="co">#&gt;               Interpretation FormalInference FitReadiness</span></span>
+<span><span class="co">#&gt; 1 Ready for formal inference             Yes        ready</span></span>
+<span><span class="co">#&gt;                                           Why                        NextAction</span></span>
+<span><span class="co">#&gt; 1 All stored fit-readiness components passed. Read the compact results summary.</span></span></code></pre></div>
+<p>This restores the collected results and diagnostics. The separate
+dashboard object <code>rater_review</code> still needs its own
+<code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code> call as described above. With a precomputed fit
+as input, this archive’s replay code assumes that <code>fit</code> and
+<code>diagnostics</code> already exist. Keep your original data-to-fit
+script. For a fit replay including its input CSV, and for saving a
+manuscript table, figure, and their notes, follow Section 5 of
 <code><a href="../articles/mfrmr-reporting-and-apa.html">vignette("mfrmr-reporting-and-apa", package = "mfrmr")</a></code>.</p>
 </div>
 <div class="section level3">
@@ -1244,13 +1266,22 @@ their notes, follow Section 5 of
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td>How uncertain is a specified difference between two raters?</td>
+<td>
+<code><a href="../reference/mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> uses their covariance; choose
+the model-based or sandwich method for the sampling assumptions. Attach
+the result with <code>mfrm_results(fit, intervals = ...)</code>. See
+<code>mfrmr-facet-intervals</code>; an ordinary Wright map does not
+switch to sandwich intervals.</td>
+</tr>
+<tr class="even">
 <td>Do category thresholds need to differ by criterion?</td>
 <td>
 <code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> and
 <code><a href="../reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code>; fit candidates to the same
 observations and review numerical sensitivity.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Do specific rater-by-criterion or group contrasts depart from the
 model?</td>
 <td>
@@ -1258,7 +1289,7 @@ model?</td>
 the contrasts, screening rules, and multiplicity plan. See the reporting
 vignette and <code>mfrmr-linking-and-dff</code>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>How often does a declared rater-warning rule detect a specified
 departure or falsely flag an unaffected rater?</td>
 <td>
@@ -1267,12 +1298,41 @@ truth and all planned trials. See
 <code>mfrmr-screening-performance</code> for individual/family rates,
 unavailable results and Monte Carlo uncertainty.</td>
 </tr>
-<tr class="even">
-<td>Would the conclusions change under a bounded GPCM?</td>
+<tr class="odd">
+<td>Would the conclusions change under a GPCM?</td>
 <td>
 <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> and
 <code>mfrmr-gpcm-scope</code>; explain what discrimination reweighting
 means for the score interpretation.</td>
+</tr>
+<tr class="even">
+<td>Are scores missing from assigned rating events?</td>
+<td>Start with the assignment roster, then
+<code><a href="../reference/mfrm_response_imputations.html">review_mfrm_imputations()</a></code>, <code><a href="../reference/fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code>
+and <code><a href="../reference/pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code>. See
+<code>mfrmr-response-imputation</code> for an explicit imputation model;
+the review function does not generate scores. Do not fill unassigned
+combinations.</td>
+</tr>
+<tr class="odd">
+<td>Do external attributes describe different groups of persons, raters
+or tasks?</td>
+<td>
+<code><a href="../reference/mfrm_features.html">mfrm_features()</a></code> with PCA/k-means for numeric features,
+or PAM/hierarchical clustering for mixed features. See
+<code>mfrmr-external-features</code> for missing attributes, group
+stability and links back to rating events. Groups are not ability
+classes or judgments of rater quality.</td>
+</tr>
+<tr class="even">
+<td>Would more raters or tasks improve observed-score
+dependability?</td>
+<td>
+<code><a href="../reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy()</a></code> followed by
+<code><a href="../reference/mfrm_multivariate_d_study.html">mfrm_multivariate_d_study()</a></code>; declare the observed-score
+design, candidate plans and any composite weights. Their help explains
+G/Phi and SEM. These coefficients describe observed scores, not MFRM
+latent abilities.</td>
 </tr>
 <tr class="odd">
 <td>Are forms or waves on a comparable scale?</td>
@@ -1299,6 +1359,17 @@ calibration and report the conditioning assumptions.</td>
 </tr>
 </tbody>
 </table>
+<p>Missing <strong>attributes</strong> and missing <strong>rating
+scores</strong> need different models and workflows. Neither clustering
+nor response-score imputation is a prerequisite for ordinary MFRM
+analysis. G/D-studies start from observed scores and their design; do
+not substitute MFRM estimates or testlet variances for their input. For
+these branches, <code>mfrmr_output_guide("features")</code>,
+<code>mfrmr_output_guide("imputation")</code> and
+<code>mfrmr_output_guide("gtheory")</code> identify the supported
+summaries and plots. Save their full objects with
+<code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code>; they have dedicated output routes and are not
+<code><a href="../reference/mfrm_results.html">mfrm_results()</a></code> inputs.</p>
 <p>Simulation examples with one or two repetitions test the
 computational setup; they do not estimate operating characteristics
 adequately for a paper. A simulation’s assumptions and results also do
@@ -1328,7 +1399,7 @@ represent.</p>
 not run when building this vignette. Display aliases replace source
 identifiers in the example’s tables; aliases do not make a rating
 archive anonymous.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"data.ratings1"</span>, package <span class="op">=</span> <span class="st">"sirt"</span><span class="op">)</span></span>
 <span><span class="va">wide</span> <span class="op">&lt;-</span> <span class="va">data.ratings1</span></span>

@@ -1,8 +1,8 @@
-# Bounded GPCM Score-Side Availability
+# GPCM Score-Side Availability
 
-Show which bounded-`GPCM` score-side quantities are available, the
-limits on their interpretation, and the alternative route when a
-quantity is not available.
+Show which `GPCM` score-side quantities are available, the limits on
+their interpretation, and the alternative route when a quantity is not
+available.
 
 ## Usage
 
@@ -59,15 +59,15 @@ gpcm_score_side_contract()
 #> 8       Full FACETS score-side review           unavailable
 #> 9            Reporting interpretation available_with_caveat
 #>                                                                                                                                                                                       Limitation
-#> 1                                                    Expected-score and residual quantities are package-native bounded-GPCM outputs, not Rasch measure-to-score or FACETS-equivalent quantities.
+#> 1                                                            Expected-score and residual quantities are package-native GPCM outputs, not Rasch measure-to-score or FACETS-equivalent quantities.
 #> 2                                                                               Expected-score fields use the fitted slope structure and therefore depend on the declared step and slope facets.
 #> 3                                                                       Uncertainty fields require the relevant MML diagnostics; otherwise the scorefile reports an explicit unavailable status.
 #> 4                                                                                             No FACETS-compatible free-discrimination score-side uncertainty definition is currently available.
 #> 5 Structural fair-average SEs condition on Person EAP/reference means and remain diagnostic-only (FairCIEligible = FALSE); full-refit coverage and FACETS score-side equivalence are unverified.
 #> 6                                                           Unit-slope agreement with PCM is an interpretation reference, not evidence that every free-slope score quantity is Rasch-equivalent.
-#> 7                                                                                                       The exported scorefile is package-native and must retain its bounded-GPCM caveat fields.
-#> 8                                                                                                   The full FACETS-style score-side review is unavailable for free-discrimination bounded GPCM.
-#> 9                                                                                         Bounded-GPCM score-side output is sensitivity evidence, not an automatic operational scoring decision.
+#> 7                                                                                                               The exported scorefile is package-native and must retain its GPCM caveat fields.
+#> 8                                                                                                           The full FACETS-style score-side review is unavailable for free-discrimination GPCM.
+#> 9                                                                                                 GPCM score-side output is sensitivity evidence, not an automatic operational scoring decision.
 #>                                                                                                                              Alternative
 #> 1                                  Use `facets_output_file_bundle(include = "score")` and report the package-native estimand explicitly.
 #> 2                                 Inspect the fitted step and slope summaries before interpreting exported expected scores or residuals.
@@ -77,14 +77,14 @@ gpcm_score_side_contract()
 #> 6                                           Fit a `PCM` reference when equal-discrimination score semantics are required for comparison.
 #> 7                                           Use `facets_output_file_bundle(include = "score")` and retain all status and caveat columns.
 #> 8                                                          Keep full `facets_output_contract_review()` work on the `RSM` or `PCM` route.
-#> 9                                        Report bounded GPCM as a slope-aware sensitivity analysis and keep operational claims separate.
+#> 9                                                Report GPCM as a slope-aware sensitivity analysis and keep operational claims separate.
 gpcm_score_side_contract("unavailable")
 #>                            Capability      Status
 #> 1 FACETS-compatible score uncertainty unavailable
 #> 2       Full FACETS score-side review unavailable
 #>                                                                                           Limitation
 #> 1 No FACETS-compatible free-discrimination score-side uncertainty definition is currently available.
-#> 2       The full FACETS-style score-side review is unavailable for free-discrimination bounded GPCM.
+#> 2               The full FACETS-style score-side review is unavailable for free-discrimination GPCM.
 #>                                                                                                                  Alternative
 #> 1 Use the package-native scorefile with caveats; use an `RSM` or `PCM` fit when a full FACETS score-side review is required.
 #> 2                                              Keep full `facets_output_contract_review()` work on the `RSM` or `PCM` route.

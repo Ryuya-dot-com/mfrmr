@@ -21,7 +21,8 @@ review_mfrm_anchors(
   min_obs_per_element = 30,
   min_obs_per_category = 10,
   noncenter_facet = "Person",
-  dummy_facets = NULL
+  dummy_facets = NULL,
+  category_policy = NULL
 )
 ```
 
@@ -67,7 +68,8 @@ review_mfrm_anchors(
 
 - keep_original:
 
-  Keep original category values.
+  Keep original category values. New code can instead use
+  `category_policy = "preserve"`.
 
 - missing_codes:
 
@@ -100,6 +102,19 @@ review_mfrm_anchors(
 - dummy_facets:
 
   Facets to fix at zero.
+
+- category_policy:
+
+  Optional explicit category choice: `"collapse"` maps gaps in the
+  observed categories to consecutive scores; `"preserve"` keeps the
+  intended ladder, declared with `rating_min` and `rating_max`. This
+  changes the fitted category steps, not just labels. `NULL` (default)
+  uses `keep_original`, whose default is `FALSE` (`"collapse"`).
+  Supplying both choices is allowed only when they agree. Preservation
+  does not estimate unsupported steps: fitting stops if a retained
+  internal category has no observations. Use the same policy in
+  [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+  and `review_mfrm_anchors()`.
 
 ## Value
 

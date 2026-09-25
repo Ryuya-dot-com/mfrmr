@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute diagnostics for an <code>mfrm_fit</code> object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>diagnose_mfrm.Rd</code></div>
     </div>
 
@@ -141,10 +141,12 @@ reporting fits because it enables <code><a href="plot_marginal_fit.html">plot_ma
 recommended use</p></li>
 <li><p><code>precision_review</code>: package-native checks for SE, CI, and reliability</p></li>
 <li><p><code>parameter_uncertainty</code>: MML observed-information uncertainty for
-structural parameters when available (<code>steps</code>, and bounded-<code>GPCM</code>
+structural parameters when available (<code>steps</code>, and <code>GPCM</code>
 <code>slopes</code> on both log and positive scales), plus covariance status metadata.
 Step <code>CIEligible</code> and <code>CIUse</code> retain the source fit's restrictions;
-non-unit observation-weight bands are diagnostic only.</p></li>
+non-unit observation-weight bands are diagnostic only. GPCM MML relative
+slopes use the separate <code><a href="confint.mfrm_fit.html">confint.mfrm_fit()</a></code> checks and pointwise log-Wald
+approximation; inspect <code>CIEligible</code>, <code>CIUse</code> and <code>InferenceReview</code>.</p></li>
 <li><p><code>facet_precision</code>: facet-level precision summary by distribution basis and
 SE mode</p></li>
 <li><p><code>facets_chisq</code>: fixed/random facet variability summary</p></li>
@@ -153,14 +155,15 @@ SE mode</p></li>
 agreement and rater-severity spread indices</p></li>
 <li><p><code>unexpected</code>: unexpected-response bundle</p></li>
 <li><p><code>fair_average</code>: adjusted-score reference bundle (reported as unavailable
-for bounded <code>GPCM</code>)</p></li>
+for <code>GPCM</code>)</p></li>
 <li><p><code>displacement</code>: displacement diagnostics bundle</p></li>
 <li><p><code>approximation_notes</code>: method notes for SE/CI/reliability summaries</p></li>
 <li><p><code>diagnostic_basis</code>: guide to the statistical target of each diagnostic path</p></li>
 <li><p><code>fit_standardization</code>: guide to the df convention behind fit ZSTD values</p></li>
 <li><p><code>fit_readiness</code>, <code>fit_readiness_components</code>, and
 <code>fit_readiness_parameters</code>: the source fit's versioned readiness decision;
-diagnostic computation does not override a blocked or review-only fit</p></li>
+diagnostic computation does not override global fit readiness. GPCM slope
+parameter rows additionally retain the output-specific interval decision</p></li>
 <li><p><code>marginal_fit</code>: optional strict marginal-fit companion based on
 posterior-expected first-order category counts, with classification coverage</p></li>
 <li><p><code>residual_pca_overall</code>: optional overall PCA object</p></li>
@@ -205,8 +208,8 @@ the priority.</p></li>
 without the extra legacy bundle.</p></li>
 <li><p><code>"both"</code>: recommended when you want continuity with the legacy residual
 stack while making the strict marginal path explicit for <code>RSM</code>, <code>PCM</code>,
-and bounded <code>GPCM</code> fits.</p></li>
-</ul><p>For bounded <code>GPCM</code>, the same generalized partial credit kernel now
+and <code>GPCM</code> fits.</p></li>
+</ul><p>For <code>GPCM</code>, the same generalized partial credit kernel now
 drives both the residual/probability tables and the strict marginal
 category-fit companion. Residual-based MnSq summaries should still be read
 as exploratory screening tools rather than strict Rasch-style invariance
@@ -282,7 +285,7 @@ uses model-based <code>ModelSE</code> values where available; <code>JML</code> k
 quantities as exploratory approximations.</p></li>
 <li><p><code>fit</code>: element-level misfit scan (<code>Infit</code>, <code>Outfit</code>, <code>ZSTD</code>).</p></li>
 <li><p><code>unexpected</code>, <code>fair_average</code>, <code>displacement</code>: targeted QC bundles.
-For bounded <code>GPCM</code>, <code>fair_average</code> is retained with an unavailable
+For <code>GPCM</code>, <code>fair_average</code> is retained with an unavailable
 status because that compatibility calculation is outside the documented
 generalized-model contract.</p></li>
 <li><p><code>approximation_notes</code>: method notes for SE/CI/reliability summaries.</p></li>

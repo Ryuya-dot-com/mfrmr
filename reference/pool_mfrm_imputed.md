@@ -77,6 +77,9 @@ the pooled point estimate, `sqrt(B / m)`; it is not its inferential SE.
 `MissingVarianceFraction` is `(1 + 1/m) B / T`, not the raw
 missing-rate. Fixed targets retain their value and zero variance, but no
 inferential interval or degrees of freedom. No imputation is omitted.
+`information_review` retains any numerical-refinement review at each
+imputation's list position. `cautions` identifies affected imputations;
+when present, `InferenceCaution` also accompanies the pooled table.
 
 ## Details
 
@@ -94,7 +97,11 @@ interactions and identification. Known anchors are fixed and their
 uncertainty is excluded. Singular or regularized free-parameter
 information and any failed/ineligible completion prevent pooling. A
 target fixed by a constraint is labelled `"fixed"`; it is not evidence
-of perfect precision.
+of perfect precision. A verified unregularized inverse of
+ill-conditioned information can be used with a warning identifying the
+affected imputations. Rubin pooling does not repair unreliable
+complete-data approximations. Review interval widths, boundary proximity
+and quadrature sensitivity before interpreting the pool.
 
 The intervals are pointwise model-based multiple-imputation intervals,
 conditional on adequate proper imputations and complete-data inference.
@@ -156,5 +163,5 @@ multiple imputation under uncongeniality and misspecification.
 ## See also
 
 [`mice::pool.scalar()`](https://amices.org/mice/reference/pool.scalar.html),
-[`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md),
+[`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md),
 [`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md)

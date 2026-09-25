@@ -1,6 +1,6 @@
 # Unavailable GPCM Routes and Alternatives
 
-List bounded-`GPCM` routes that are not currently available and show the
+List `GPCM` routes that are not currently available and show the
 supported alternative for each route.
 
 ## Usage
@@ -26,8 +26,8 @@ A data.frame with columns:
 ## Details
 
 A `blocked` row names a helper that intentionally stops instead of
-returning an unsupported bounded-`GPCM` result. A `deferred` row has no
-public helper. In either case, read `Boundary` for the reason and
+returning an unsupported `GPCM` result. A `deferred` row has no public
+helper. In either case, read `Boundary` for the reason and
 `RecommendedRoute` for a currently available analysis route.
 
 ## See also
@@ -48,7 +48,7 @@ gpcm_runtime_guard_coverage()
 #> 2 deferred
 #>                                                                                                                                                                                                                                                               Boundary
 #> 1 Limited to direct scorefile export rather than the full FACETS-style output-contract review. Direct scorefile export is available with caveats, but contract-wide coverage and metric claims still require a broader free-discrimination score-side review contract.
-#> 2                                                                                                                                                                    mfrmr does not currently provide posterior-predictive checks or MCMC estimation for bounded GPCM.
+#> 2                                                                                                                                                                            mfrmr does not currently provide posterior-predictive checks or MCMC estimation for GPCM.
 #>                                                                                                                                                                                             RecommendedRoute
 #> 1 Use direct fair-average tables and graph-only compatibility outputs; use package-native scorefile export with its stated caveats, and keep full FACETS output-contract reviews on the `RSM` / `PCM` route.
 #> 2                                                             Use the current MML fitting and fitted-object posterior scoring routes, or use external Bayesian software when posterior sampling is required.

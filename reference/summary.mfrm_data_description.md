@@ -94,7 +94,10 @@ Recommended read order:
 
 - `overview`: retained ratings (`Observations`), persons, facets, and
   categories. Compare input and retained `Rows` in `row_retention` and
-  investigate unexpected `DroppedRows`.
+  investigate unexpected `DroppedRows`. `CategoryPolicy` and
+  `ScoreRecoded` distinguish the selected policy from actual changes to
+  score values. Older results without the policy record report
+  `"not_recorded"`; an absent map gives `NA` for recoding.
 
 - `missing`: input `NA` counts by column. This table is named
   `missing_by_column` in the original `data_review` object. Declared
@@ -156,7 +159,7 @@ data_review <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE
+  category_policy = "preserve"
 )
 review <- summary(data_review)
 review$row_retention # 282 input rows, 280 retained rows
@@ -175,8 +178,8 @@ review$missing       # Score has 2 missing input values
 review$overview      # Counts describe the retained ratings
 #>   Observations TotalWeight Persons Facets Categories RatingMin RatingMax
 #> 1          280         280      48      2          4         1         4
-#>   RatingRangeSource RatingMinSource RatingMaxSource
-#> 1          declared        declared        declared
+#>   RatingRangeSource RatingMinSource RatingMaxSource CategoryPolicy ScoreRecoded
+#> 1          declared        declared        declared       preserve        FALSE
 review$notes         # Explanations to read before fitting
 #> [1] "Missing values were detected in one or more input columns."                                                                                                                                               
 #> [2] "Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned."                                             

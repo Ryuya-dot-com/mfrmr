@@ -102,7 +102,7 @@ with:
 
 - `group_fits`: (refit method) per-group facet estimates.
 
-- `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
+- `gpcm_boundary`: for `GPCM` fits, a capability-boundary table.
 
 - `config`: list with facet, group, method, min_obs, p_adjust settings.
 
@@ -222,16 +222,16 @@ parameter stability, or sample-size adequacy.
 - `$group_fits`: (refit method only) list of per-group facet estimates
   and subgroup linking diagnostics.
 
-- `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
-  marking the DFF/DIF output as caveated screening evidence.
+- `$gpcm_boundary`: for `GPCM` fits, a capability-boundary table marking
+  the DFF/DIF output as caveated screening evidence.
 
 ## GPCM boundary
 
-For bounded `GPCM`, DFF/DIF rows are available as slope-aware screening
-evidence over the fitted expected-score and residual scale. Keep
-residual-method contrasts and interaction cells in screening language.
-Refit contrasts require explicit subgroup linking and precision support
-for conditional screening, but remain in screening language.
+For `GPCM`, DFF/DIF rows are available as slope-aware screening evidence
+over the fitted expected-score and residual scale. Keep residual-method
+contrasts and interaction cells in screening language. Refit contrasts
+require explicit subgroup linking and precision support for conditional
+screening, but remain in screening language.
 
 ## Saved results
 

@@ -22,7 +22,7 @@ summary(object, ...)
 - analyses:
 
   A named list of at least two results from
-  [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+  [`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
   and/or
   [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
   or
@@ -118,7 +118,7 @@ Classification, 2, 193–218.
 ## See also
 
 [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md),
-[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
 [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md),
 [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
 
@@ -132,9 +132,9 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     Specialty = rep(c("Language", "Science"), 4))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
   fits <- list(
-    TwoGroups = mfrm_cluster(features, k = 2),
-    ThreeGroups = mfrm_cluster(features, k = 3),
-    ExperienceWeighted = mfrm_cluster(features, k = 2,
+    TwoGroups = mfrm_cluster_pam(features, k = 2),
+    ThreeGroups = mfrm_cluster_pam(features, k = 3),
+    ExperienceWeighted = mfrm_cluster_pam(features, k = 2,
       weights = c(ExperienceYears = 3, Specialty = 1)))
   comparison <- mfrm_cluster_compare(fits)
   summary(comparison)
@@ -144,7 +144,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   experience <- mfrm_features(raters, "Rater", "ExperienceYears")
   feature_comparison <- mfrm_cluster_compare(list(
     BothFeatures = fits$TwoGroups,
-    ExperienceOnly = mfrm_cluster(experience, k = 2)))
+    ExperienceOnly = mfrm_cluster_pam(experience, k = 2)))
   feature_comparison$analysis_summary
   feature_comparison$weights
 }

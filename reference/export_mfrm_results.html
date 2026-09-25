@@ -52,7 +52,7 @@ validation step. The folder is not deidentified or automatically shareable."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Export an mfrm_results analysis archive</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>export_mfrm_results.Rd</code></div>
     </div>
 
@@ -154,10 +154,12 @@ evidence-summary, and reporting-template CSVs plus Markdown and HTML;</p></li>
 <li><p>a lightweight HTML report equivalent to <code>mfrm_results(x, output = "html")</code>
 for the already-created object;</p></li>
 <li><p>an <code>.rds</code> copy of the <code>mfrm_results</code> object;</p></li>
-<li><p>a replay <code>.R</code> script from <code>x$input$reproducible_code</code>;</p></li>
+<li><p>a replay <code>.R</code> script, reloading the saved result when additional inference
+or posterior diagnostics are attached;</p></li>
 <li><p>a written-files manifest and compact export summary.</p></li>
 </ul><p>For testlet, random-rater and ordinary results with saved posterior response
-diagnostics, replay reloads the exported RDS without
+diagnostics, GPCM inference or RSM/PCM fixed-facet intervals, replay reloads
+the exported RDS without
 refitting, rescoring or resampling. Requesting <code>"replay"</code> also includes
 <code>"rds"</code>. Run the script from the exported folder. Stored prediction settings,
 unavailable rows, numerical checks and interval meanings travel with the

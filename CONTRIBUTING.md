@@ -11,6 +11,7 @@ Thanks for helping improve `mfrmr`.
 ## Development setup
 
 ``` r
+
 # from package root
 install.packages(c("devtools", "roxygen2", "testthat"))
 devtools::document()
@@ -36,9 +37,7 @@ devtools::check(args = c("--no-manual"), document = FALSE)
 ## Documentation expectations
 
 - Update roxygen comments when function arguments/returns change.
-- Run
-  [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
-  before committing.
+- Run `devtools::document()` before committing.
 - If workflow changes, update README and/or vignette accordingly.
 
 ## Examples and timing policy

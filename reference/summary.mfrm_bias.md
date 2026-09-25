@@ -70,9 +70,8 @@ This method returns a compact interaction-bias summary:
 
 - `final_iteration`: end-of-loop status from the bias routine.
 
-- `top_rows`: strongest bias contrasts by `|t|`; bounded `GPCM`
-  summaries also retain the profile-likelihood review columns when
-  present.
+- `top_rows`: strongest bias contrasts by `|t|`; `GPCM` summaries also
+  retain the profile-likelihood review columns when present.
 
 ## Typical workflow
 

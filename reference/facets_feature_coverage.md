@@ -577,11 +577,11 @@ facets_feature_coverage()
 #> 48                                    Native mfrmr portable RSM/PCM MML calibration artifacts can be loaded and scored through the documented fixed-standard-normal route.
 #> 49                                                               No current public route accepts general threshold or step anchors or a threshold starting-value contract.
 #> 50                                                                                       Each fit uses one observed score scale and one homogeneous response-model family.
-#> 51                                                                                The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.
+#> 51                                                                                        The current RSM, PCM, and GPCM routes model ordered category probabilities only.
 #> 52                                                            Binary ordered scores are available as the two-category special case of the current ordered-response kernel.
 #> 53 A positive numeric observation weight multiplies that row's conditional ordered-category likelihood contribution and can represent a defensible row-replication weight.
 #> 54                                                                                                       The current public estimator and score routes are unidimensional.
-#> 55                                                                                  The current public GPCM route is bounded and requires slope_facet to equal step_facet.
+#> 55                                                                                                 The current public GPCM route requires slope_facet to equal step_facet.
 #> 56                                                  FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.
 #>                                                                                                                                                                                                                                                                                                                                                        Limitation
 #> 1                                                                                                                                                                                                                                                                                                                        Not an exact FACETS line-printer layout.
@@ -618,7 +618,7 @@ facets_feature_coverage()
 #> 32                                                                                                                                                                                                                                                                                                     Command-level FACETS graph options are not fully mirrored.
 #> 33                                                                                                                                                                                                                                                                                                          Full FACETS report-file emulation is not implemented.
 #> 34                                                                                                                                                                                                                                                                     Uses package-native residual columns rather than exact FACETS fixed-field residual syntax.
-#> 35                                                                                                                                                                                                                                                                                           Bounded GPCM score-side equivalence is outside the documented scope.
+#> 35                                                                                                                                                                                                                                                                                                   GPCM score-side equivalence is outside the documented scope.
 #> 36                                                                                                                                                                                                                                                                                                                        Not a FACETS simulated-data file clone.
 #> 37                                                                                                                                                                                                                                          The standalone subset writer exports connectivity review tables, not a full FACETS UI-compatible subset command file.
 #> 38                                                                                                                                                                                                                                                                                                             Would require a separate Winsteps output contract.
@@ -638,8 +638,8 @@ facets_feature_coverage()
 #> 52                                                                                                                                                                                  Grouped binomial trials, Poisson counts, negative-binomial counts, and other count likelihoods are not implemented; integer scores are interpreted as ordered category codes.
 #> 53 It is not a general collapsed-person frequency table: for MML, powering responses inside one Person pattern is not equivalent to replicating a complete Person pattern after marginalization. It also does not create a count-response family, model within-cell dependence, or make non-unit-weight fits eligible for the common information-criterion panel.
 #> 54                                                                                                                                                                                                                                     Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.
-#> 55                                                                                                                                                                                                                                                                      Bounded GPCM support does not establish an unrestricted free-discrimination model family.
-#> 56                                                                                                                                                                                 FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.
+#> 55                                                                                                                                                                                                                                                                              GPCM support does not establish an unrestricted free-discrimination model family.
+#> 56                                                                                                                                                                                         FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated GPCM slope from mfrmr.
 #>                                                                                                                                                                                                          Alternative
 #> 1                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
 #> 2                                                                                                    Use the documented mfrmr route; use FACETS externally only when its exact layout or option surface is required.
@@ -695,7 +695,7 @@ facets_feature_coverage()
 #> 52                                                  Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.
 #> 53                                                        Retain one distinguishable event per row when possible; preserve distinct Person response patterns, and report the exact likelihood-weight interpretation.
 #> 54                                                                                  Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.
-#> 55                                                                                                 Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.
+#> 55                                                                                                         Use gpcm_capability_matrix() and the documented GPCM route; retain unrestricted GPCM for a later release.
 #> 56 Use FACETS for the matched PCM/JML comparison or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.
 facets_feature_coverage("partial")
 #>                FACETSArea                                      FACETSFeature
@@ -819,7 +819,7 @@ facets_feature_coverage("partial")
 #> 27                                                                               No general FACETS histogram menu clone.
 #> 30                                                                   Does not write a FACETS command specification file.
 #> 33                                                                 Full FACETS report-file emulation is not implemented.
-#> 35                                                  Bounded GPCM score-side equivalence is outside the documented scope.
+#> 35                                                          GPCM score-side equivalence is outside the documented scope.
 #> 36                                                                               Not a FACETS simulated-data file clone.
 #> 37 The standalone subset writer exports connectivity review tables, not a full FACETS UI-compatible subset command file.
 #> 44                                               FACETS conditional-probability menu semantics are not mirrored exactly.
@@ -972,10 +972,10 @@ facets_feature_coverage("not_implemented")
 #> 48 Native mfrmr portable RSM/PCM MML calibration artifacts can be loaded and scored through the documented fixed-standard-normal route.
 #> 49                            No current public route accepts general threshold or step anchors or a threshold starting-value contract.
 #> 50                                                    Each fit uses one observed score scale and one homogeneous response-model family.
-#> 51                                             The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.
+#> 51                                                     The current RSM, PCM, and GPCM routes model ordered category probabilities only.
 #> 52                         Binary ordered scores are available as the two-category special case of the current ordered-response kernel.
 #> 54                                                                    The current public estimator and score routes are unidimensional.
-#> 55                                               The current public GPCM route is bounded and requires slope_facet to equal step_facet.
+#> 55                                                              The current public GPCM route requires slope_facet to equal step_facet.
 #> 56               FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.
 #>                                                                                                                                                                                                Limitation
 #> 38                                                                                                                                                     Would require a separate Winsteps output contract.
@@ -985,8 +985,8 @@ facets_feature_coverage("not_implemented")
 #> 51                                        A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.
 #> 52                          Grouped binomial trials, Poisson counts, negative-binomial counts, and other count likelihoods are not implemented; integer scores are interpreted as ordered category codes.
 #> 54                                                                             Residual PCA is exploratory dimensionality evidence, not native multidimensional estimation or dimension-specific scoring.
-#> 55                                                                                                              Bounded GPCM support does not establish an unrestricted free-discrimination model family.
-#> 56                         FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.
+#> 55                                                                                                                      GPCM support does not establish an unrestricted free-discrimination model family.
+#> 56                                 FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated GPCM slope from mfrmr.
 #>                                                                                                                                                                                                          Alternative
 #> 38                                                                             Use package-native R output where suitable, or run the relevant external program for its program-specific file, interface, or report.
 #> 48                                                        Use the native mfrmr calibration workflow for eligible fits; use a separately validated external workflow when third-party calibration import is required.
@@ -995,6 +995,6 @@ facets_feature_coverage("not_implemented")
 #> 51                                                                                      Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined.
 #> 52                                                  Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model.
 #> 54                                                                                  Use exploratory dimensionality diagnostics and external multidimensional software when a multidimensional estimator is required.
-#> 55                                                                                                 Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.
+#> 55                                                                                                         Use gpcm_capability_matrix() and the documented GPCM route; retain unrestricted GPCM for a later release.
 #> 56 Use FACETS for the matched PCM/JML comparison or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.
 ```

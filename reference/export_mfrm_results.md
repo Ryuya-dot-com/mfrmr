@@ -108,17 +108,19 @@ The helper writes:
 
 - an `.rds` copy of the `mfrm_results` object;
 
-- a replay `.R` script from `x$input$reproducible_code`;
+- a replay `.R` script, reloading the saved result when additional
+  inference or posterior diagnostics are attached;
 
 - a written-files manifest and compact export summary.
 
 For testlet, random-rater and ordinary results with saved posterior
-response diagnostics, replay reloads the exported RDS without refitting,
-rescoring or resampling. Requesting `"replay"` also includes `"rds"`.
-Run the script from the exported folder. Stored prediction settings,
-unavailable rows, numerical checks and interval meanings travel with the
-result. A bootstrap interval may have infinite endpoints; exports retain
-them instead of substituting finite ordinary intervals.
+response diagnostics, GPCM inference or RSM/PCM fixed-facet intervals,
+replay reloads the exported RDS without refitting, rescoring or
+resampling. Requesting `"replay"` also includes `"rds"`. Run the script
+from the exported folder. Stored prediction settings, unavailable rows,
+numerical checks and interval meanings travel with the result. A
+bootstrap interval may have infinite endpoints; exports retain them
+instead of substituting finite ordinary intervals.
 
 All presets, including `"starter"`, are analysis archives. In
 particular, the default `.rds` file retains the complete result object,

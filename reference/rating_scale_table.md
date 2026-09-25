@@ -237,7 +237,7 @@ The `threshold_table` data.frame contains:
   [doi:10.1177/00131644221116292](https://doi.org/10.1177/00131644221116292)
   (Recent simulation evidence on PCM- and GPCM-based rating-scale
   diagnostics; useful for interpreting the `summary(t8)$summary` flags
-  in the bounded `GPCM` route.)
+  in the `GPCM` route.)
 
 ## See also
 

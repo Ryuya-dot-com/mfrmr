@@ -1,6 +1,6 @@
-# Build a model-choice review across RSM, PCM, and bounded GPCM fits
+# Build a model-choice review across RSM, PCM, and GPCM fits
 
-Build a model-choice review across RSM, PCM, and bounded GPCM fits
+Build a model-choice review across RSM, PCM, and GPCM fits
 
 ## Usage
 
@@ -32,7 +32,7 @@ build_model_choice_review(
 - run_weighting_review:
 
   Logical. If `TRUE` and the supplied fits include at least one
-  `RSM`/`PCM` reference plus one bounded `GPCM` fit, also run
+  `RSM`/`PCM` reference plus one `GPCM` fit, also run
   [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
   for the first such pair.
 
@@ -64,7 +64,7 @@ not estimate new models. It bundles:
   and retained in `comparison_warnings` for printing and appendix
   export;
 
-- model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
+- model-role guidance for `RSM`, `PCM`, and `GPCM`;
 
 - reported step/slope coordinate counts, identified free-parameter
   counts, and the stored fit-readiness decision for every supplied
@@ -74,15 +74,15 @@ not estimate new models. It bundles:
   linking, recovery, fair averages, bias screening, and summary-appendix
   handoff;
 
-- report wording templates that avoid treating better bounded-`GPCM` fit
-  as an automatic operational-scoring decision;
+- report wording templates that avoid treating better `GPCM` fit as an
+  automatic operational-scoring decision;
 
 - [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-  when bounded `GPCM` is present;
+  when `GPCM` is present;
 
 - optionally,
   [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
-  for the first Rasch-family reference versus bounded-`GPCM` pair.
+  for the first Rasch-family reference versus `GPCM` pair.
 
 The word "bounded" describes the documented model and workflow scope:
 the package does not implement every possible generalized partial-credit
@@ -170,15 +170,15 @@ summary(review)
 #> Weighting Review Status
 #>  Requested Available
 #>      FALSE     FALSE
-#>                                                                                           Message
-#>  Not requested; set `run_weighting_review = TRUE` for the first RSM/PCM versus bounded GPCM pair.
+#>                                                                                   Message
+#>  Not requested; set `run_weighting_review = TRUE` for the first RSM/PCM versus GPCM pair.
 #> 
 #> Notes
 #>  - This review is a decision aid; it does not refit models or choose an
 #>    operational model automatically.
 #>  - Observation weights and GPCM discrimination-based reweighting are separate
 #>    concepts.
-#>  - Use bounded GPCM wording only for the current constrained implementation,
-#>    not for an unrestricted GPCM family claim.
+#>  - Use GPCM wording only for the current constrained implementation, not for an
+#>    unrestricted GPCM family claim.
 # }
 ```

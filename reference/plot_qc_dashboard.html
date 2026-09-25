@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot a base-R QC dashboard</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
       <div class="d-none name"><code>plot_qc_dashboard.Rd</code></div>
     </div>
 
@@ -143,7 +143,7 @@
     <p>The dashboard draws nine QC panels in a 3\(\times\)3 grid:</p><table class="table table"><tr><td>Panel</td><td>What it shows</td><td>Key reference lines</td></tr><tr><td>1. Category counts</td><td>Observed (bars) vs model-expected counts (line)</td><td>–</td></tr><tr><td>2. Infit vs Outfit</td><td>Scatter of element MnSq values</td><td>heuristic 0.5, 1.0, 1.5 bands</td></tr><tr><td>3. |ZSTD| histogram</td><td>Distribution of absolute standardised residuals</td><td>|ZSTD| = 2</td></tr><tr><td>4. Unexpected responses</td><td>Standardised residual vs \(-\log_{10} P_{\mathrm{obs}}\)</td><td><code>abs_z_min</code>, <code>prob_max</code></td></tr><tr><td>5. Fair-average gaps</td><td>Boxplots of (Observed - FairM) per facet</td><td>zero line</td></tr><tr><td>6. Displacement</td><td>Top absolute displacement values</td><td>\(\pm 0.5\) logits</td></tr><tr><td>7. Inter-rater agreement</td><td>Exact agreement with expected overlay per pair</td><td><code>interrater_exact_warn</code></td></tr><tr><td>8. Fixed chi-square</td><td>Fixed-effect \(\chi^2\) per facet</td><td><code>fixed_p_max</code></td></tr><tr><td>9. Separation &amp; Reliability</td><td>Bar chart of separation index per facet</td><td>–</td></tr></table><p><code>threshold_profile</code> controls warning overlays.  Three built-in profiles
 are available: <code>"strict"</code>, <code>"standard"</code> (default), and <code>"lenient"</code>.
 Use <code>thresholds</code> to override any profile value with named entries.</p>
-<p>For bounded <code>GPCM</code>, the dashboard now reuses the residual-based
+<p>For <code>GPCM</code>, the dashboard now reuses the residual-based
 diagnostics stack and marks the fair-average panel unavailable rather
 than silently reusing the Rasch-only compatibility calculation.</p>
     </div>

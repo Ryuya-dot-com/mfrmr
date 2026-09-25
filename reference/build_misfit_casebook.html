@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a case-level misfit review bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_misfit_casebook.Rd</code></div>
     </div>
 
@@ -138,7 +138,7 @@ yourself when you want custom thresholds before synthesizing the casebook.</p></
     <h2 id="gpcm-boundary">GPCM boundary<a class="anchor" aria-label="anchor" href="#gpcm-boundary"></a></h2>
 
 
-<p>For bounded <code>GPCM</code>, the helper is available with caveat. The casebook inherits
+<p>For <code>GPCM</code>, the helper is available with caveat. The casebook inherits
 exploratory screening semantics from the underlying residual and strict
 marginal sources; it should not be read as a formal inferential case test.</p>
     </div>
@@ -172,7 +172,7 @@ marginal sources; it should not be read as a formal inferential case test.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Item           Value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Overall status review_required</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Model             RSM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Bounded GPCM        deferred</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            GPCM        deferred</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key Warnings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Strict pairwise screening contributed 1 flagged pair rows.</span>
@@ -401,12 +401,12 @@ marginal sources; it should not be read as a formal inferential case test.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  plot_unexpected(unexpected, draw = FALSE)     supported</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Support Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Scope    Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     RSM / PCM supported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  bounded GPCM  deferred</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Scope    Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  RSM / PCM supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       GPCM  deferred</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   Note</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Supported as a synthesis layer over package-native screening outputs.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Deferred unless a bounded GPCM source fit is supplied.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Deferred unless a GPCM source fit is supplied.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Misfit casebook rows are operational review units, not formal case</span>

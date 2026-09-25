@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Dependent ratings within a person: testlet models</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/vignettes/mfrmr-testlets.Rmd" class="external-link"><code>vignettes/mfrmr-testlets.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-testlets.Rmd" class="external-link"><code>vignettes/mfrmr-testlets.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-testlets.Rmd</code></div>
     </div>
 
@@ -150,10 +150,10 @@ does not infer membership or support overlapping groups.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">testlet_fit</span><span class="op">$</span><span class="va">checks</span></span>
 <span><span class="co">#&gt; $LogLikDifference</span></span>
-<span><span class="co">#&gt; [1] 4.69413e-10</span></span>
+<span><span class="co">#&gt; [1] 4.695266e-10</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $GradientDifference</span></span>
-<span><span class="co">#&gt; [1] 2.796458e-08</span></span>
+<span><span class="co">#&gt; [1] 2.796459e-08</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $MomentDifference</span></span>
 <span><span class="co">#&gt; [1] 2.454624e-09</span></span>
@@ -316,10 +316,10 @@ abilities and returns response probabilities.</p>
 <span><span class="co">#&gt; 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399</span></span>
 <span><span class="co">#&gt; 4   P004       16        4 0.7909065     0.3236000  0.166906739 1.436372</span></span>
 <span><span class="co">#&gt;                  Status IntegrationDifference Reason</span></span>
-<span><span class="co">#&gt; 1 available_conditional          7.993606e-15       </span></span>
-<span><span class="co">#&gt; 2 available_conditional          3.552714e-15       </span></span>
-<span><span class="co">#&gt; 3 available_conditional          2.053913e-15       </span></span>
-<span><span class="co">#&gt; 4 available_conditional          3.552714e-15</span></span>
+<span><span class="co">#&gt; 1 available_conditional          2.664535e-15       </span></span>
+<span><span class="co">#&gt; 2 available_conditional          2.664535e-15       </span></span>
+<span><span class="co">#&gt; 3 available_conditional          4.996004e-15       </span></span>
+<span><span class="co">#&gt; 4 available_conditional          5.107026e-15</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-testlets_files/figure-html/scoring-1.png" class="r-plt" alt="Four Person EAP estimates with conditional equal-tail intervals under the testlet model. Fitted calibration, including ability and local variances, is held fixed." width="672"></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -451,9 +451,9 @@ scores or correcting informative nonresponse.</p>
 <span><span class="co">#&gt; 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399</span></span>
 <span><span class="co">#&gt; 4   P004        0        0 0.0000000     0.9823014 -1.925275381 1.925275</span></span>
 <span><span class="co">#&gt;                  Status IntegrationDifference Reason</span></span>
-<span><span class="co">#&gt; 1 available_conditional          3.330669e-15       </span></span>
-<span><span class="co">#&gt; 2 available_conditional          3.552714e-15       </span></span>
-<span><span class="co">#&gt; 3 available_conditional          2.053913e-15       </span></span>
+<span><span class="co">#&gt; 1 available_conditional          4.440892e-15       </span></span>
+<span><span class="co">#&gt; 2 available_conditional          2.664535e-15       </span></span>
+<span><span class="co">#&gt; 3 available_conditional          4.996004e-15       </span></span>
 <span><span class="co">#&gt; 4            prior_only          0.000000e+00</span></span>
 <span><span class="va">review</span><span class="op">$</span><span class="va">data_usage</span></span>
 <span><span class="co">#&gt;    Input Observed  Omitted </span></span>
@@ -503,10 +503,10 @@ memberships. Do not duplicate the old rows when assembling it.</p>
 <span><span class="co">#&gt; 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399</span></span>
 <span><span class="co">#&gt; 4   P004       16        4 0.7909065     0.3236000  0.166906739 1.436372</span></span>
 <span><span class="co">#&gt;                  Status IntegrationDifference Reason</span></span>
-<span><span class="co">#&gt; 1 available_conditional          7.993606e-15       </span></span>
-<span><span class="co">#&gt; 2 available_conditional          3.552714e-15       </span></span>
-<span><span class="co">#&gt; 3 available_conditional          2.053913e-15       </span></span>
-<span><span class="co">#&gt; 4 available_conditional          3.552714e-15</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 available_conditional          2.664535e-15       </span></span>
+<span><span class="co">#&gt; 2 available_conditional          2.664535e-15       </span></span>
+<span><span class="co">#&gt; 3 available_conditional          4.996004e-15       </span></span>
+<span><span class="co">#&gt; 4 available_conditional          5.107026e-15</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="connect-to-the-common-graphics-and-table-workflow">Connect to the common graphics and table workflow<a class="anchor" aria-label="anchor" href="#connect-to-the-common-graphics-and-table-workflow"></a>
@@ -691,15 +691,15 @@ preferred model.</p>
 <span><span class="co">#&gt; 2 Criterion      Content     -0.38809689      -0.39556320    0.000000e+00</span></span>
 <span><span class="co">#&gt; 3 Criterion     Language      0.09102647       0.09277729    0.000000e+00</span></span>
 <span><span class="co">#&gt; 4 Criterion Organization      0.06456257       0.06580338    0.000000e+00</span></span>
-<span><span class="co">#&gt; 5     Rater          R01     -0.18292092      -0.18556593   -6.938894e-18</span></span>
-<span><span class="co">#&gt; 6     Rater          R02     -0.30735556      -0.31285402   -6.938894e-18</span></span>
-<span><span class="co">#&gt; 7     Rater          R03      0.17863651       0.18223377   -6.938894e-18</span></span>
-<span><span class="co">#&gt; 8     Rater          R04      0.31163997       0.31618617   -6.938894e-18</span></span>
+<span><span class="co">#&gt; 5     Rater          R01     -0.18292092      -0.18556593    6.938894e-18</span></span>
+<span><span class="co">#&gt; 6     Rater          R02     -0.30735556      -0.31285402    6.938894e-18</span></span>
+<span><span class="co">#&gt; 7     Rater          R03      0.17863651       0.18223377    6.938894e-18</span></span>
+<span><span class="co">#&gt; 8     Rater          R04      0.31163997       0.31618617    6.938894e-18</span></span>
 <span><span class="co">#&gt;   CenterComparison   Reference  Comparison        Mean   Difference</span></span>
-<span><span class="co">#&gt; 1     1.040834e-17  0.23250785  0.23698253  0.23474519  0.004474682</span></span>
-<span><span class="co">#&gt; 2     1.040834e-17 -0.38809689 -0.39556320 -0.39183004 -0.007466312</span></span>
-<span><span class="co">#&gt; 3     1.040834e-17  0.09102647  0.09277729  0.09190188  0.001750824</span></span>
-<span><span class="co">#&gt; 4     1.040834e-17  0.06456257  0.06580338  0.06518297  0.001240805</span></span>
+<span><span class="co">#&gt; 1     1.734723e-17  0.23250785  0.23698253  0.23474519  0.004474682</span></span>
+<span><span class="co">#&gt; 2     1.734723e-17 -0.38809689 -0.39556320 -0.39183004 -0.007466312</span></span>
+<span><span class="co">#&gt; 3     1.734723e-17  0.09102647  0.09277729  0.09190188  0.001750824</span></span>
+<span><span class="co">#&gt; 4     1.734723e-17  0.06456257  0.06580338  0.06518297  0.001240805</span></span>
 <span><span class="co">#&gt; 5     1.387779e-17 -0.18292092 -0.18556593 -0.18424342 -0.002645009</span></span>
 <span><span class="co">#&gt; 6     1.387779e-17 -0.30735556 -0.31285402 -0.31010479 -0.005498464</span></span>
 <span><span class="co">#&gt; 7     1.387779e-17  0.17863651  0.18223377  0.18043514  0.003597266</span></span>

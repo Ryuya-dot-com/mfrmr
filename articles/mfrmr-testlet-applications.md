@@ -45,6 +45,7 @@ scores; it does not duplicate observed scores or fill unassigned
 combinations.
 
 ``` r
+
 set.seed(92327001)
 ratings <- expand.grid(
   Criterion = paste0("C", 1:5), Task = paste0("T", 1:3),
@@ -69,6 +70,7 @@ variance. They need not estimate identical ability distributions or
 category steps.
 
 ``` r
+
 testlet_fit <- fit_mfrm_testlet(
   ratings, "Person", "Score", "Task", score_levels = 0:2,
   quad_points = 61
@@ -132,6 +134,7 @@ The short calculation functions are shown in the appendix. They are
 example code, not a new exported design-optimization API.
 
 ``` r
+
 plans <- list(
   "1 task x 4 criteria" = rep("T1", 4),
   "2 tasks x 2 criteria" = rep(c("T1", "T2"), each = 2),
@@ -187,6 +190,7 @@ profile; we do not append responses to a cached score or duplicate any
 evidence.
 
 ``` r
+
 base <- data.frame(
   Task = c(rep("T1", 5), rep("T2", 2)), Score = rep(1L, 7),
   Criterion = c(paste0("C", 1:5), paste0("C", 1:2))
@@ -229,6 +233,7 @@ differences in task difficulty or rubric content need to be modeled and
 examined rather than attributed to row count.
 
 ``` r
+
 plot(unequal_scores$Testlet, sort = "estimate", palette = "mono",
      title = "Where an additional point occurs matters",
      reference = NULL)
@@ -307,6 +312,7 @@ are not estimates of task-specific local variance.
 ## Save the actual inputs, assumptions and scores
 
 ``` r
+
 archive <- list(fits = fits, plans = plans, plan_results = plan_results,
                 profiles = profiles, unequal_scores = unequal_scores)
 path <- tempfile("testlet-planning-", fileext = ".rds")
@@ -339,6 +345,7 @@ unavailable pattern is dropped. Run these definitions before the
 plan-comparison chunk when copying code into an R script.
 
 ``` r
+
 normal_rule <- function(n) {
   jacobi <- matrix(0, n, n)
   jacobi[cbind(1:(n - 1), 2:n)] <- sqrt(1:(n - 1))

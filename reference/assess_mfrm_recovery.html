@@ -4,13 +4,13 @@ reviewer-facing adequacy checklist. The goal is not to impose one universal
 pass/fail rule; it is to make the main user questions explicit: Did the runs
 finish? Did the fitted models converge? Are uncertainty summaries available?
 Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
-limits are supplied, which parameter groups need follow-up? For bounded
+limits are supplied, which parameter groups need follow-up? For
 GPCM, which slope-regime generator condition frames the recovery evidence?"><meta property="og:description" content="Converts the numerical output from evaluate_mfrm_recovery() into a
 reviewer-facing adequacy checklist. The goal is not to impose one universal
 pass/fail rule; it is to make the main user questions explicit: Did the runs
 finish? Did the fitted models converge? Are uncertainty summaries available?
 Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
-limits are supplied, which parameter groups need follow-up? For bounded
+limits are supplied, which parameter groups need follow-up? For
 GPCM, which slope-regime generator condition frames the recovery evidence?"><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
@@ -58,7 +58,7 @@ GPCM, which slope-regime generator condition frames the recovery evidence?"><met
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Assess whether recovery-simulation results are ready to use</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>assess_mfrm_recovery.Rd</code></div>
     </div>
 
@@ -68,7 +68,7 @@ reviewer-facing adequacy checklist. The goal is not to impose one universal
 pass/fail rule; it is to make the main user questions explicit: Did the runs
 finish? Did the fitted models converge? Are uncertainty summaries available?
 Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
-limits are supplied, which parameter groups need follow-up? For bounded
+limits are supplied, which parameter groups need follow-up? For
 <code>GPCM</code>, which slope-regime generator condition frames the recovery evidence?</p>
     </div>
 
@@ -191,7 +191,7 @@ its status.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>mfrm_recovery_assessment</code> with:</p><ul><li><p><code>overview</code>: compact run-level status.</p></li>
 <li><p><code>checklist</code>: reviewer-facing adequacy checks.</p></li>
-<li><p><code>condition_review</code>: generator-condition metadata, including bounded
+<li><p><code>condition_review</code>: generator-condition metadata, including
 <code>GPCM</code> slope-regime interpretation and generated score-category support
 when available.</p></li>
 <li><p><code>condition_reporting_notes</code>: reporter-facing generator-condition caveats
@@ -215,7 +215,7 @@ the function does not mark them as failed unless the user supplies
 marked <code>not_assessed</code> and the next action asks the user to set practical
 thresholds when a decision depends on the metric.</p>
 <p>The <code>condition_review</code> table is generator metadata for interpreting the
-recovery run. For bounded <code>GPCM</code>, <code>GPCMSlopeRegime</code>, <code>StressLevel</code>, and
+recovery run. For <code>GPCM</code>, <code>GPCMSlopeRegime</code>, <code>StressLevel</code>, and
 generated score-category support describe the data-generating condition;
 they are not model-fit tests and they are not literature-derived adequacy
 cut points. <code>condition_reporting_notes</code> turns those generator conditions
@@ -294,7 +294,7 @@ user-facing plot tables such as <code>section_status</code> for status plots and
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Run completion     Simulation and refit success           ok</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Run completion             Reported convergence      concern</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Recovery content  Recoverable truth-estimate rows           ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Generator conditions        Bounded-GPCM slope regime not_assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Generator conditions                GPCM slope regime not_assessed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Generator conditions Generated score-category support       review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Uncertainty      Standard-error availability      concern</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Uncertainty                         Coverage       review</span>
@@ -306,7 +306,7 @@ user-facing plot tables such as <code>section_status</code> for status plots and
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                       1/1 successful run(s); rate = 1.000.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                        0/1 converged run(s); rate = 0.000.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                       19 row-level recovery comparison(s).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                 Model RSM does not use bounded-GPCM slope-regime metadata.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                         Model RSM does not use GPCM slope-regime metadata.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1 replication(s) retained score support; minimum category count = 2; minimum category proportion = 0.042; maximum omitted categories = 0.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                 Group statuses: concern=4.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                           Group statuses: not_available=4.</span>
@@ -333,8 +333,8 @@ user-facing plot tables such as <code>section_status</code> for status plots and
 <span class="r-out co"><span class="r-pr">#&gt;</span>              2              0.042                  0             review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Status</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  not_assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                              Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  The fitted generator is not bounded GPCM, so slope-regime metadata is not part of this recovery condition.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                      Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  The fitted generator is not GPCM, so slope-regime metadata is not part of this recovery condition.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Condition reporting notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ConditionArea ReportingAttention                      ConditionFinding</span>
@@ -384,7 +384,7 @@ user-facing plot tables such as <code>section_status</code> for status plots and
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - RMSE Monte Carlo error: Review Monte Carlo precision with plots and row-level output before using it for a decision.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - RMSE threshold: Do not use RMSE as adequacy evidence until the design, fit settings, or replication count are revisited.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Read the bounded-GPCM generator condition separately from recovery adequacy.</span></span></span>
+<span class="r-in"><span><span class="co"># Read the GPCM generator condition separately from recovery adequacy.</span></span></span>
 <span class="r-in"><span><span class="va">gpcm_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_person <span class="op">=</span> <span class="fl">14</span>,</span></span>
 <span class="r-in"><span>  n_rater <span class="op">=</span> <span class="fl">2</span>,</span></span>

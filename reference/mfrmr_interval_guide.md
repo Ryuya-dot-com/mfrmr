@@ -110,6 +110,9 @@ mfrmr_interval_guide()
 #> 22                   Testlet conditional Person scores
 #> 23       Shared-rater fixed-facet and step calibration
 #> 24              Shared-rater conditional Person scores
+#> 25                       GPCM relative-slope intervals
+#> 26                              GPCM curve uncertainty
+#> 27                      GPCM bootstrap slope intervals
 #>                                  Scope
 #> 1                  table,fit,reporting
 #> 2                 visual,fit,reporting
@@ -135,6 +138,9 @@ mfrmr_interval_guide()
 #> 22          table,visual,fit,reporting
 #> 23                 table,fit,reporting
 #> 24          table,visual,fit,reporting
+#> 25     gpcm,visual,table,fit,reporting
+#> 26         gpcm,visual,table,reporting
+#> 27         gpcm,visual,table,reporting
 #>                                                                                                                  PrimaryHelper
 #> 1                                                                                          fit_measures_table(ci_level = 0.95)
 #> 2                                                          fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)
@@ -160,31 +166,37 @@ mfrmr_interval_guide()
 #> 22                                                                                               predict(testlet_fit, newdata)
 #> 23                                                                            confint(fit, parm = 'calibration', level = 0.95)
 #> 24                                                                                 score_mfrm_random_rater(fit, persons = ids)
-#>                                                                                                                                                                DisplayRoute
-#> 1                                                                                                                                   Use the returned table or facets_table.
-#> 2                                                                                         Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.
-#> 3                                                                                                        Use plot(..., draw = FALSE)$data$locations or draw the base-R map.
-#> 4                                                                                              Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.
-#> 5                                                                                                      Use draw = FALSE to reuse the ranked severity table and band labels.
-#> 6                                                                                                Use draw = FALSE to reuse wright, severity, threshold, and summary panels.
-#> 7                                                                               Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.
-#> 8                                                                                      Use ranked or scatter views; heatmap and profile views intentionally omit intervals.
-#> 9                                                                                                     Use plot_type = "lollipop" with draw = FALSE for interval-ready data.
-#> 10                                                                                                                     Use draw = FALSE when rebuilding the summary figure.
-#> 11                                                                             Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.
-#> 12                                                                                                         Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.
-#> 13                                                                                                     Use linked-wave fit lists only; the helper does not perform linking.
-#> 14                                                                 Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.
-#> 15                                                                                                       Use ICC tables for interval values; plots expose them when finite.
-#> 16                                                                                                    Use summary(result) or plot(result, comparison = TRUE, draw = FALSE).
-#> 17                                                                                                                       Use summary(result) or plot(result, draw = FALSE).
-#> 18                                                                                   Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.
-#> 19                                                                                                      Use plot(result, draw = FALSE), summary(result) or confint(result).
-#> 20                                                                                                                          Inspect the interval and its profile attribute.
-#> 21                              Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.
-#> 22                                                                                      Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).
-#> 23 Use summary(fit, calibration_intervals = 'normal', level = 0.95) or mfrm_results(fit, calibration_intervals = 'normal', calibration_level = 0.95). Defaults omit bounds.
-#> 24                                                    Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).
+#> 25                                                                                 confint(fit, parm = "slopes", level = 0.95)
+#> 26                                                                                             mfrm_curve_intervals(fit, grid)
+#> 27                                                                               confint(bootstrap_mfrm_gpcm(fit, seed = 123))
+#>                                                                                                                                                                       DisplayRoute
+#> 1                                                                                                                                          Use the returned table or facets_table.
+#> 2                                                                                                Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.
+#> 3                                                                                                               Use plot(..., draw = FALSE)$data$locations or draw the base-R map.
+#> 4                                                                                                     Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.
+#> 5                                                                                                             Use draw = FALSE to reuse the ranked severity table and band labels.
+#> 6                                                                                                       Use draw = FALSE to reuse wright, severity, threshold, and summary panels.
+#> 7                                                                                      Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.
+#> 8                                                                                             Use ranked or scatter views; heatmap and profile views intentionally omit intervals.
+#> 9                                                                                                            Use plot_type = "lollipop" with draw = FALSE for interval-ready data.
+#> 10                                                                                                                            Use draw = FALSE when rebuilding the summary figure.
+#> 11                                                                                    Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.
+#> 12                                                                                                                Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.
+#> 13                                                                                                            Use linked-wave fit lists only; the helper does not perform linking.
+#> 14                                                                        Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.
+#> 15                                                                                                              Use ICC tables for interval values; plots expose them when finite.
+#> 16                              Use plot(result), as_ggplot(result), apa_table(result), or attach it with mfrm_results(fit, intervals = list(raters = result), compute = "never").
+#> 17                                                                                                                              Use summary(result) or plot(result, draw = FALSE).
+#> 18                                                                                          Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.
+#> 19                                                                                                             Use plot(result, draw = FALSE), summary(result) or confint(result).
+#> 20                                                                                                                                 Inspect the interval and its profile attribute.
+#> 21                                     Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.
+#> 22                                                                                             Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).
+#> 23        Use summary(fit, calibration_intervals = 'normal', level = 0.95) or mfrm_results(fit, calibration_intervals = 'normal', calibration_level = 0.95). Defaults omit bounds.
+#> 24                                                           Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).
+#> 25 plot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(slopes = result)). diagnose_mfrm() retains default relative/model intervals.
+#> 26                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).
+#> 27                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).
 #>    DefaultLevel
 #> 1          0.95
 #> 2          0.95
@@ -210,6 +222,9 @@ mfrmr_interval_guide()
 #> 22         0.95
 #> 23         0.95
 #> 24         0.95
+#> 25         0.95
+#> 26         0.95
+#> 27         0.95
 #>                                                                                                                                                                   IntervalColumns
 #> 1                                                                                                                                                    CI_Lower, CI_Upper, CI_Level
 #> 2                                                                                                                                                    CI_Lower, CI_Upper, CI_Level
@@ -235,6 +250,9 @@ mfrmr_interval_guide()
 #> 22                                                                                                                                    Lower, Upper, ConditionalSD, Status, Reason
 #> 23                                                                                                                                                               Lower, Upper, SE
 #> 24                                                                                                                                    Lower, Upper, ConditionalSD, Status, Reason
+#> 25                                                                                                                Lower, Upper; CIEligible, CIUse, InferenceReview in diagnostics
+#> 26                                                                                                                                      Lower, Upper, CIEligible, InferenceReview
+#> 27                                                                                                                         Matrix bounds; diagnostics and availability attributes
 #>                                                                                                                                                                                               Basis
 #> 1                                                                                                                                  Approximate Wald interval on facet measure: estimate +/- z * SE.
 #> 2                                                                                                                 Approximate Wald interval on facet measure recomputed for the requested ci_level.
@@ -243,7 +261,7 @@ mfrmr_interval_guide()
 #> 5                                                                                                                           Approximate Wald interval around centered facet severity using ModelSE.
 #> 6                                                                                                                        Composite overview; interval evidence comes from the rater severity panel.
 #> 7  RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.
-#> 8                                                                                              Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.
+#> 8                                                                                                      Profile-likelihood limits for GPCM bias rows when available, otherwise per-cell SE fallback.
 #> 9                                                                                                                               Approximate Wald interval around displacement using DisplacementSE.
 #> 10                                                    Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.
 #> 11                                                                                                   Joint MML covariance for pair differences and deviations from the equally weighted facet mean.
@@ -260,6 +278,9 @@ mfrmr_interval_guide()
 #> 22                                                                       Continuous equal-tail posterior intervals conditional on calibration and the fitted or specified normal Person population.
 #> 23                                                                                           Explicit observed-information normal approximation for fixed facets and steps in the shared-rater RSM.
 #> 24                                                                                       Continuous marginal posterior with joint conditional rater Laplace integration and calibration held fixed.
+#> 25                                                                       Pointwise log-Wald intervals from the inverse full joint MML observed information, with sum-zero log-slope transformation.
+#> 26                                                                                       Full calibration covariance at fixed native-scale ability and rating context; logit or log transformation.
+#> 27                                                                                                    Fitted-model basic bootstrap errors; unresolved refits enclose all possible empirical limits.
 #>                                                                                                         UseFor
 #> 1                                                           Report facet estimates with uncertainty in tables.
 #> 2                           Show which facet levels have wide measure uncertainty before discussing fit flags.
@@ -285,6 +306,9 @@ mfrmr_interval_guide()
 #> 22                          Score all supplied ratings jointly for a Person without re-estimating calibration.
 #> 23                     Describe calibration effects separately from realized rater effects and population SDs.
 #> 24           Score requested Persons while retaining the complete scoring roster and shared-rater uncertainty.
+#> 25                                   Sampling uncertainty in relative discriminations with geometric mean one.
+#> 26                                            Uncertainty in category probabilities or information per rating.
+#> 27                          Approximate slope uncertainty under the fitted population and analyzed assignment.
 #>                                                                                                                                                                                     InterpretationBoundary
 #> 1                                                                                                                                                CI width is precision evidence, not a fit pass/fail rule.
 #> 2                                                                                                                        Fit status still comes from MnSq/ZSTD review; the CI plot is a precision display.
@@ -310,6 +334,9 @@ mfrmr_interval_guide()
 #> 22            Excludes calibration/population estimation uncertainty, Person-contrast inference and simultaneous decisions. Missing Persons return the prior only; zero ability variance withholds scores.
 #> 23                                                                            Finite-sample coverage is not established. Numerical/information failures and estimated variance boundaries withhold bounds.
 #> 24                                                     Excludes calibration/population estimation uncertainty, Person contrasts and coverage guarantees. Numerical checks do not certify Laplace accuracy.
+#> 25          Default relative/model target; explicit options select standardized slopes, contrasts, sandwich or Bonferroni intervals. These are not rater-quality intervals or general coverage guarantees.
+#> 26                                                                                                                                Not Person-score intervals or a continuous simultaneous confidence band.
+#> 27                                                                          Not an exact small-sample method; failed refits can leave infinite bounds. Null-model LRT draws cannot supply slope intervals.
 #>                                                                  GPCMStatus
 #> 1                                                     supported_with_caveat
 #> 2                                                     supported_with_caveat
@@ -335,6 +362,9 @@ mfrmr_interval_guide()
 #> 22                            unavailable; Person-specific testlet RSM only
 #> 23                                       unavailable; shared-rater RSM only
 #> 24                                       unavailable; shared-rater RSM only
+#> 25                     supported_with_caveat; eligible native GPCM MML only
+#> 26                     supported_with_caveat; eligible native GPCM MML only
+#> 27                     supported_with_caveat; eligible native GPCM MML only
 #>                                                                                                                                                                                                                    Notes
 #> 1                                                                                                                                                  The helper already adds CI columns to the returned fit-measure table.
 #> 2                                                                                                                                                       Use this when reviewers ask for a forest-style estimate display.
@@ -342,7 +372,7 @@ mfrmr_interval_guide()
 #> 4                                                                                                                                                             This explicit helper is useful for publication-style maps.
 #> 5                                                                                                                                                                         Use facet = ... for non-Rater severity facets.
 #> 6                                                                                                                                Designed for RSM/PCM manuscript routes; inspect returned panel data before publication.
-#> 7                              The table fair_se option provides bounded GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.
+#> 7                                      The table fair_se option provides GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.
 #> 8                                                                                                                                                            Heatmaps remain pattern displays and do not draw intervals.
 #> 9                                                                                                                                                           Best used after reviewing the underlying displacement table.
 #> 10                                                                                                                                                              Use together with dif_report() for narrative boundaries.
@@ -360,6 +390,9 @@ mfrmr_interval_guide()
 #> 22 Unavailable rows retain reasons; new fixed-facet levels are refused. Supply the complete rating set for each Person. Small calibration samples can reduce marginal interval coverage; see vignette('mfrmr-testlets').
 #> 23                                                                 Uses saved estimates and SEs without refitting. Rebuild output from older fits to apply the default; older result bundles retain their stored tables.
 #> 24                                                                                               persons selects outputs, not data. newdata replaces the entire roster. Prior-only and unavailable rows remain explicit.
+#> 25                 Requires current likelihood metadata, adequate convergence/categories, unit weights, q>=31 and positive unregularized information. Ordinary Wright/Pathway maps do not display these slope intervals.
+#> 26                                                                                                           Default model covariance and pointwise intervals; sandwich and finite-grid Bonferroni are explicit options.
+#> 27                                               Default relative 95% pointwise intervals; select scale, level and contrasts explicitly. Generating the bootstrap can be costly; displaying saved output does not refit.
 mfrmr_interval_guide("visual")[, c("Route", "DisplayRoute", "Basis")]
 #>                                                  Route
 #> 2                              Fit-measure forest plot
@@ -383,28 +416,34 @@ mfrmr_interval_guide("visual")[, c("Route", "DisplayRoute", "Basis")]
 #> 21                     Testlet fixed-facet calibration
 #> 22                   Testlet conditional Person scores
 #> 24              Shared-rater conditional Person scores
-#>                                                                                                                                   DisplayRoute
-#> 2                                                            Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.
-#> 3                                                                           Use plot(..., draw = FALSE)$data$locations or draw the base-R map.
-#> 4                                                                 Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.
-#> 5                                                                         Use draw = FALSE to reuse the ranked severity table and band labels.
-#> 6                                                                   Use draw = FALSE to reuse wright, severity, threshold, and summary panels.
-#> 7                                                  Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.
-#> 8                                                         Use ranked or scatter views; heatmap and profile views intentionally omit intervals.
-#> 9                                                                        Use plot_type = "lollipop" with draw = FALSE for interval-ready data.
-#> 10                                                                                        Use draw = FALSE when rebuilding the summary figure.
-#> 11                                                Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.
-#> 12                                                                            Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.
-#> 13                                                                        Use linked-wave fit lists only; the helper does not perform linking.
-#> 14                                    Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.
-#> 15                                                                          Use ICC tables for interval values; plots expose them when finite.
-#> 16                                                                       Use summary(result) or plot(result, comparison = TRUE, draw = FALSE).
-#> 17                                                                                          Use summary(result) or plot(result, draw = FALSE).
-#> 18                                                      Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.
-#> 19                                                                         Use plot(result, draw = FALSE), summary(result) or confint(result).
-#> 21 Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.
-#> 22                                                         Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).
-#> 24                       Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).
+#> 25                       GPCM relative-slope intervals
+#> 26                              GPCM curve uncertainty
+#> 27                      GPCM bootstrap slope intervals
+#>                                                                                                                                                                       DisplayRoute
+#> 2                                                                                                Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.
+#> 3                                                                                                               Use plot(..., draw = FALSE)$data$locations or draw the base-R map.
+#> 4                                                                                                     Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.
+#> 5                                                                                                             Use draw = FALSE to reuse the ranked severity table and band labels.
+#> 6                                                                                                       Use draw = FALSE to reuse wright, severity, threshold, and summary panels.
+#> 7                                                                                      Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.
+#> 8                                                                                             Use ranked or scatter views; heatmap and profile views intentionally omit intervals.
+#> 9                                                                                                            Use plot_type = "lollipop" with draw = FALSE for interval-ready data.
+#> 10                                                                                                                            Use draw = FALSE when rebuilding the summary figure.
+#> 11                                                                                    Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.
+#> 12                                                                                                                Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.
+#> 13                                                                                                            Use linked-wave fit lists only; the helper does not perform linking.
+#> 14                                                                        Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.
+#> 15                                                                                                              Use ICC tables for interval values; plots expose them when finite.
+#> 16                              Use plot(result), as_ggplot(result), apa_table(result), or attach it with mfrm_results(fit, intervals = list(raters = result), compute = "never").
+#> 17                                                                                                                              Use summary(result) or plot(result, draw = FALSE).
+#> 18                                                                                          Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.
+#> 19                                                                                                             Use plot(result, draw = FALSE), summary(result) or confint(result).
+#> 21                                     Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.
+#> 22                                                                                             Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).
+#> 24                                                           Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).
+#> 25 plot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(slopes = result)). diagnose_mfrm() retains default relative/model intervals.
+#> 26                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).
+#> 27                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).
 #>                                                                                                                                                                                               Basis
 #> 2                                                                                                                 Approximate Wald interval on facet measure recomputed for the requested ci_level.
 #> 3                                                                                                                                     Approximate facet-level SE overlay on the shared logit scale.
@@ -412,7 +451,7 @@ mfrmr_interval_guide("visual")[, c("Route", "DisplayRoute", "Basis")]
 #> 5                                                                                                                           Approximate Wald interval around centered facet severity using ModelSE.
 #> 6                                                                                                                        Composite overview; interval evidence comes from the rater severity panel.
 #> 7  RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.
-#> 8                                                                                              Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.
+#> 8                                                                                                      Profile-likelihood limits for GPCM bias rows when available, otherwise per-cell SE fallback.
 #> 9                                                                                                                               Approximate Wald interval around displacement using DisplacementSE.
 #> 10                                                    Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.
 #> 11                                                                                                   Joint MML covariance for pair differences and deviations from the equally weighted facet mean.
@@ -427,6 +466,9 @@ mfrmr_interval_guide("visual")[, c("Route", "DisplayRoute", "Basis")]
 #> 21                                                                                Explicit observed-information normal approximation for fixed facets and steps in the Person-specific testlet RSM.
 #> 22                                                                       Continuous equal-tail posterior intervals conditional on calibration and the fitted or specified normal Person population.
 #> 24                                                                                       Continuous marginal posterior with joint conditional rater Laplace integration and calibration held fixed.
+#> 25                                                                       Pointwise log-Wald intervals from the inverse full joint MML observed information, with sum-zero log-slope transformation.
+#> 26                                                                                       Full calibration covariance at fixed native-scale ability and rating context; logit or log transformation.
+#> 27                                                                                                    Fitted-model basic bootstrap errors; unresolved refits enclose all possible empirical limits.
 mfrmr_interval_guide("gpcm")[, c("Route", "GPCMStatus", "InterpretationBoundary")]
 #>                                Route
 #> 7   Fair-average diagnostic interval
@@ -434,16 +476,25 @@ mfrmr_interval_guide("gpcm")[, c("Route", "GPCMStatus", "InterpretationBoundary"
 #> 10            Group contrast summary
 #> 12          Anchor drift forest plot
 #> 13             Rater trajectory plot
+#> 25     GPCM relative-slope intervals
+#> 26            GPCM curve uncertainty
+#> 27    GPCM bootstrap slope intervals
 #>                                                       GPCMStatus
 #> 7                                          supported_with_caveat
 #> 8                                          supported_with_caveat
 #> 10                                         supported_with_caveat
 #> 12 exploratory_for_gpcm; linking synthesis supported_with_caveat
 #> 13 exploratory_for_gpcm; linking synthesis supported_with_caveat
+#> 25          supported_with_caveat; eligible native GPCM MML only
+#> 26          supported_with_caveat; eligible native GPCM MML only
+#> 27          supported_with_caveat; eligible native GPCM MML only
 #>                                                                                                                                                                                     InterpretationBoundary
 #> 7                          Diagnostic-only: CI_Eligible / FairCIEligible remain FALSE; finite or regularized covariance does not establish full-refit coverage. Gap whiskers hold the observed mean fixed.
 #> 8                                                                                                  Bias intervals remain screening evidence unless the study design supports stronger inferential wording.
 #> 10 Both routes remain screening-only; adequate linking does not make refit uncertainty formally eligible. Inspect ContrastDirection because residual and severity contrasts use different units and signs.
 #> 12                                                                                                                                           Drift claims require explicit multi-fit wave or form designs.
 #> 13                                                                                                                Trajectory movement is interpretable only after the supplied fits are on a common scale.
+#> 25          Default relative/model target; explicit options select standardized slopes, contrasts, sandwich or Bonferroni intervals. These are not rater-quality intervals or general coverage guarantees.
+#> 26                                                                                                                                Not Person-score intervals or a continuous simultaneous confidence band.
+#> 27                                                                          Not an exact small-sample method; failed refits can leave infinite bounds. Null-model LRT draws cannot supply slope intervals.
 ```

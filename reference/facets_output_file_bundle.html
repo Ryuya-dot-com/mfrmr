@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a legacy-compatible output-file bundle (<code>GRAPH=</code> / <code>SCORE=</code>)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>facets_output_file_bundle.Rd</code></div>
     </div>
 
@@ -102,7 +102,7 @@
 
 
 <dt id="arg-score-se-method">score_se_method<a class="anchor" aria-label="anchor" href="#arg-score-se-method"></a></dt>
-<dd><p>For bounded <code>GPCM</code> scorefile exports, which
+<dd><p>For <code>GPCM</code> scorefile exports, which
 observation-level score uncertainty columns to compute. <code>"both"</code>
 (default) includes native structural expected-score SEs and score-side
 delta-method SEs; <code>"native"</code> includes only the structural expected-score
@@ -175,17 +175,17 @@ CSV/fixed-width text files to disk.</p>
 scorefile contract is required.</p>
     </div>
     <div class="section level2">
-    <h2 id="bounded-gpcm-boundary">Bounded GPCM boundary<a class="anchor" aria-label="anchor" href="#bounded-gpcm-boundary"></a></h2>
+    <h2 id="gpcm-boundary">GPCM boundary<a class="anchor" aria-label="anchor" href="#gpcm-boundary"></a></h2>
 
 
-<p>For bounded <code>GPCM</code>, graph output and package-native scorefile output are
+<p>For <code>GPCM</code>, graph output and package-native scorefile output are
 available with caveats. <code>include = "score"</code> returns observation-level fitted
 expected score, residual, standardized residual, observed-category
 probability, GPCM slope fields, and native structural delta-method
 expected-score uncertainty and/or score-side delta-method SEs when the
 required MML diagnostics are available. Use <code>score_se_method</code> to choose
 <code>"both"</code> (default), <code>"native"</code>, <code>"score_side"</code>, or <code>"none"</code>.
-The score-side route transforms a logit-side standard error with the bounded
+The score-side route transforms a logit-side standard error with the
 GPCM expected-score derivative
 \(dE[X]/d\eta = \alpha Var(X)\), where <code>ScoreSlope</code> is \(\alpha\).
 <code>ScoreSideLogitSE</code> remains on the logit side; <code>ScoreSideSE</code> and its interval

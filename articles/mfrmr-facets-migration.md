@@ -4,8 +4,8 @@ This vignette walks FACETS users through the closest `mfrmr` workflow:
 preparing data, fitting an `RSM`/`PCM` many-facet Rasch-family model
 with FACETS-oriented settings, generating related diagnostic and
 reporting tables, and reviewing the output-contract boundary between the
-two systems. Bounded `GPCM` can be fit in `mfrmr`, but its slope-aware
-score semantics are intentionally outside the score-side FACETS
+two systems. `GPCM` can be fit in `mfrmr`, but its slope-aware score
+semantics are intentionally outside the score-side FACETS
 output-contract route.
 
 The software reference target for this migration boundary is FACETS
@@ -23,6 +23,7 @@ Before treating a legacy workflow as covered, inspect the public
 coverage boundary:
 
 ``` r
+
 facets_feature_coverage()
 facets_feature_coverage("not_implemented")
 ```
@@ -37,7 +38,7 @@ freedom, or numerical contract.
 | Input | Specification file plus data file | `data.frame` in long format |
 | Estimation | JMLE by default | `MML` by default; `JML` is the closest estimation route for a JMLE-oriented comparison |
 | Fit-statistic basis | Residuals at JMLE estimates | Residuals at EAP person measures under `MML` (shrunken toward the mean); refit with `method = "JML"` for a JMLE-style residual basis |
-| Models | Multiple model statements, rating scales, partial credit, and other response families can coexist | One response-model family per fit: `RSM`, `PCM`, or bounded `GPCM` |
+| Models | Multiple model statements, rating scales, partial credit, and other response families can coexist | One response-model family per fit: `RSM`, `PCM`, or `GPCM` |
 | Output | Tables 0-30 plus graphic files | Returned R objects with [`summary()`](https://rdrr.io/r/base/summary.html) and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods |
 | Anchoring | Element/group anchors, rating-scale calibration, and reusable starting values | Element and group anchors; no general threshold/scale anchors or fixed-calibration starting-value bundle |
 | Repeated cells | Multiple observations may be represented within a design cell | Exact Person-by-facet duplicates are retained but force Data review; distinguish legitimate repeats with an event/occasion facet |
@@ -55,6 +56,7 @@ plumbing, use
 [`mfrmRFacets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)):
 
 ``` r
+
 library(mfrmr)
 data("mfrmr_example_operational", package = "mfrmr")
 
@@ -80,6 +82,7 @@ objects that a step-by-step pipeline produces, plus the iteration log,
 fair-average table, and rating-scale table:
 
 ``` r
+
 jml_status <- summary(run$fit, profile = "fit", detail = "brief")
 jml_status$overview[, c(
   "Model", "Method", "Converged", "InferenceReady",
@@ -322,8 +325,8 @@ head(run$fair_average)
 #> 11       0.72      -0.19        0.69       -0.40         NA                P034
 #> 12       1.72       1.07        1.75        1.26         NA                P021
 #> 13       1.04       0.32        1.05        0.29         NA                P001
-#> 14       0.34      -1.01        0.34       -1.39         NA                P035
-#> 15       0.69      -0.25        0.68       -0.42         NA                P031
+#> 14       0.69      -0.25        0.68       -0.42         NA                P031
+#> 15       0.34      -1.01        0.34       -1.39         NA                P035
 #> 16       1.13       0.41        1.09        0.35         NA                P004
 #> 17       1.95       1.20        1.93        1.37         NA                P024
 #> 18       1.01       0.26        1.01        0.20         NA                P038
@@ -352,8 +355,8 @@ head(run$fair_average)
 #> 41       0.59      -0.19        0.64       -0.53         NA                P041
 #> 42       1.08       0.40        0.91        0.04         NA                P014
 #> 43       3.53       1.94        3.31        2.74         NA                P016
-#> 44       0.79       0.17        0.88       -0.03         NA                P040
-#> 45       0.70       0.07        0.68       -0.42         NA                P037
+#> 44       0.70       0.07        0.68       -0.42         NA                P037
+#> 45       0.79       0.17        0.88       -0.03         NA                P040
 #> 46       0.73       0.11        0.73       -0.32         NA                P029
 #> 47       0.57      -0.08        0.52       -0.81         NA                P033
 #> 48       1.03         NA        1.23        0.56         NA                P032
@@ -716,8 +719,8 @@ head(run$fair_average)
 #> 11 Fitted estimate                 0       0.51      0.51       0.72      -0.19
 #> 12 Fitted estimate                 0       0.51      0.67       1.72       1.07
 #> 13 Fitted estimate                 0       0.57      0.59       1.04       0.32
-#> 14 Fitted estimate                 0       0.51      0.51       0.34      -1.01
-#> 15 Fitted estimate                 0       0.51      0.51       0.69      -0.25
+#> 14 Fitted estimate                 0       0.51      0.51       0.69      -0.25
+#> 15 Fitted estimate                 0       0.51      0.51       0.34      -1.01
 #> 16 Fitted estimate                 0       0.53      0.56       1.13       0.41
 #> 17 Fitted estimate                 0       0.56      0.78       1.95       1.20
 #> 18 Fitted estimate                 0       0.51      0.52       1.01       0.26
@@ -746,8 +749,8 @@ head(run$fair_average)
 #> 41 Fitted estimate                 0       0.68      0.68       0.59      -0.19
 #> 42 Fitted estimate                 0       0.68      0.71       1.08       0.40
 #> 43 Fitted estimate                 0       0.68      1.28       3.53       1.94
-#> 44 Fitted estimate                 0       0.79      0.79       0.79       0.17
-#> 45 Fitted estimate                 0       0.79      0.79       0.70       0.07
+#> 44 Fitted estimate                 0       0.79      0.79       0.70       0.07
+#> 45 Fitted estimate                 0       0.79      0.79       0.79       0.17
 #> 46 Fitted estimate                 0       0.79      0.79       0.73       0.11
 #> 47 Fitted estimate                 0       0.79      0.79       0.57      -0.08
 #> 48 Fitted estimate                 0       1.06      1.08       1.03         NA
@@ -774,8 +777,8 @@ head(run$fair_average)
 #> 11        0.69       -0.40         NA                     P034            2.83
 #> 12        1.75        1.26         NA                     P021            2.67
 #> 13        1.05        0.29         NA                     P001            3.00
-#> 14        0.34       -1.39         NA                     P035            2.67
-#> 15        0.68       -0.42         NA                     P031            2.67
+#> 14        0.68       -0.42         NA                     P031            2.67
+#> 15        0.34       -1.39         NA                     P035            2.67
 #> 16        1.09        0.35         NA                     P004            3.00
 #> 17        1.93        1.37         NA                     P024            2.40
 #> 18        1.01        0.20         NA                     P038            2.50
@@ -804,8 +807,8 @@ head(run$fair_average)
 #> 41        0.64       -0.53         NA                     P041            1.50
 #> 42        0.91        0.04         NA                     P014            1.50
 #> 43        3.31        2.74         NA                     P016            1.50
-#> 44        0.88       -0.03         NA                     P040            1.33
-#> 45        0.68       -0.42         NA                     P037            1.33
+#> 44        0.68       -0.42         NA                     P037            1.33
+#> 45        0.88       -0.03         NA                     P040            1.33
 #> 46        0.73       -0.32         NA                     P029            1.33
 #> 47        0.52       -0.81         NA                     P033            1.33
 #> 48        1.23        0.56         NA                     P032            1.17
@@ -965,6 +968,7 @@ The mapping below covers the most common FACETS specification keywords.
 translates to:
 
 ``` r
+
 fit_mfrm(
   data = examinee_long,
   person = "Examinee",
@@ -999,6 +1003,7 @@ A FACETS `D = 2, A =` block:
 becomes an `anchors` data frame:
 
 ``` r
+
 anchors <- data.frame(
   facet = "Rater",
   level = c("R1", "R2"),
@@ -1021,6 +1026,7 @@ For FACETS Table 14 bias output between Rater and Criterion, the closest
 mfrmr screening route is:
 
 ``` r
+
 diag <- diagnose_mfrm(fit)
 bias <- estimate_bias(fit, diag,
                       facet_a = "Rater", facet_b = "Criterion")
@@ -1037,6 +1043,7 @@ thresholds, first create the FACETS-organized summary and retain its
 result object:
 
 ``` r
+
 review <- summary(fit, profile = "facets", detail = "brief")
 review$decision
 res <- review$results
@@ -1060,6 +1067,7 @@ and horizontal, rubric-labelled category transitions, define one label
 for every retained original score:
 
 ``` r
+
 rubric_labels <- setNames(
   your_rubric_labels,
   fit$prep$score_map$OriginalScore
@@ -1079,6 +1087,7 @@ Infit on the horizontal axis and the measure on the vertical axis.
 Person rows remain opt-in:
 
 ``` r
+
 plot(res, type = "fit_pathway", fit_stat = "Infit",
      include_person = TRUE, top_n_person = 12,
      person_labels = "none", facet_labels = "flagged")
@@ -1096,6 +1105,7 @@ columns to explain how the same MnSq values were standardized. The
 direct review path is:
 
 ``` r
+
 diag <- diagnose_mfrm(fit, residual_pca = "none", fit_df_method = "both")
 fm <- fit_measures_table(fit, diagnostics = diag,
                          facet = "Rater", fit_df_method = "both")
@@ -1121,6 +1131,7 @@ functioning translate to the `group_anchors` argument and the
 follow-up:
 
 ``` r
+
 group_anchors <- data.frame(
   facet = "Criterion",
   level = "Content",
@@ -1146,6 +1157,7 @@ checks whether the package-generated report components satisfy the
 FACETS-style output contract encoded in the package:
 
 ``` r
+
 contract_review <- facets_output_contract_review(
   fit,
   diagnostics = diag,
@@ -1176,6 +1188,7 @@ run the fit review. This does not run FACETS; it consumes an exported or
 otherwise harmonized table.
 
 ``` r
+
 facets_fit <- read_facets_fit_table(
   "score.2.txt",
   facet_map = c("1" = "Person", "2" = "Rater", "3" = "Criterion")
@@ -1208,6 +1221,7 @@ For traceability or downstream tools that expect FACETS output files,
 writes a parallel set of fixed-width or CSV exports:
 
 ``` r
+
 files <- facets_output_file_bundle(
   fit,
   diagnostics = diag,
@@ -1216,8 +1230,8 @@ files <- facets_output_file_bundle(
 )
 ```
 
-For RSM and PCM the score-side helpers are available. Under bounded
-`GPCM` the score-side bundle is intentionally restricted; see
+For RSM and PCM the score-side helpers are available. Under `GPCM` the
+score-side bundle is intentionally restricted; see
 [`?gpcm_capability_matrix`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 and the `mfrmr-gpcm-scope` vignette for the documented limitation.
 

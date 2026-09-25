@@ -84,15 +84,14 @@ a claim that the fitted object perfectly recovers the true
 data-generating mechanism. Users should review and, if necessary, edit
 the returned specification before using it for design planning.
 
-Bounded `GPCM` fits are supported here for direct data generation and
+`GPCM` fits are supported here for direct data generation and
 parameter-recovery checks, provided that the returned simulation
 specification stores both a threshold table and a parallel slope table.
 The same fit-derived specification can feed caveated role-based design
 evaluation, population forecasting, and fit-based report/export bundles.
 Diagnostic and signal-detection design screening is available with
 explicit caveats. Full FACETS score-side contract review, posterior
-predictive checks, and MCMC estimation are not available for bounded
-`GPCM`.
+predictive checks, and MCMC estimation are not available for `GPCM`.
 
 If you want to carry person-level group labels into a fit-derived
 observed response skeleton, provide the original `source_data` together

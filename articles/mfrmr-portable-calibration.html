@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Portable calibration and fresh-session scoring</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/vignettes/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/mfrmr-portable-calibration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/mfrmr-portable-calibration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-portable-calibration.Rmd</code></div>
     </div>
 
@@ -92,7 +92,7 @@ scoring. It supports one observed score scale and one latent dimension
 for <code>RSM</code> or <code>PCM</code> fitted by <code>MML</code>
 under the fixed standard-normal scoring basis. It does not currently
 create portable artifacts for estimated-population or latent- regression
-fits, <code>JML</code>, or bounded <code>GPCM</code>.</p>
+fits, <code>JML</code>, or <code>GPCM</code>.</p>
 <p>Supported direct and group facet anchors and two-way facet
 interactions are retained in the calibration. New responses must use its
 recorded non-Person facet levels. Preserving an interaction for scoring
@@ -104,13 +104,13 @@ suitability for another population.</p>
 <span><span class="fu"><a href="../reference/mfrm_calibration_capabilities.html">mfrm_calibration_capabilities</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Model"</span>, <span class="st">"Estimator"</span>, <span class="st">"ScoringBasis"</span>, <span class="st">"PortableCalibration"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;          Model Estimator                              ScoringBasis</span></span>
-<span><span class="co">#&gt; 1          RSM       MML                     fixed standard normal</span></span>
-<span><span class="co">#&gt; 2          PCM       MML                     fixed standard normal</span></span>
-<span><span class="co">#&gt; 3      RSM/PCM       MML estimated population or latent regression</span></span>
-<span><span class="co">#&gt; 4 bounded GPCM       MML             fixed or estimated population</span></span>
-<span><span class="co">#&gt; 5      RSM/PCM       JML                    post-hoc scoring prior</span></span>
-<span><span class="co">#&gt; 6 bounded GPCM       JML                    post-hoc scoring prior</span></span>
+<span><span class="co">#&gt;     Model Estimator                              ScoringBasis</span></span>
+<span><span class="co">#&gt; 1     RSM       MML                     fixed standard normal</span></span>
+<span><span class="co">#&gt; 2     PCM       MML                     fixed standard normal</span></span>
+<span><span class="co">#&gt; 3 RSM/PCM       MML estimated population or latent regression</span></span>
+<span><span class="co">#&gt; 4    GPCM       MML             fixed or estimated population</span></span>
+<span><span class="co">#&gt; 5 RSM/PCM       JML                    post-hoc scoring prior</span></span>
+<span><span class="co">#&gt; 6    GPCM       JML                    post-hoc scoring prior</span></span>
 <span><span class="co">#&gt;   PortableCalibration</span></span>
 <span><span class="co">#&gt; 1           available</span></span>
 <span><span class="co">#&gt; 2           available</span></span>
@@ -170,12 +170,18 @@ that count.</p>
 <span><span class="co">#&gt;  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange</span></span>
 <span><span class="co">#&gt;                0.00000                          0.00000                NA</span></span>
 <span><span class="co">#&gt;                0.09056                          0.06055                NA</span></span>
-<span><span class="co">#&gt;  RawSlopeSEMaxAbsChange PopulationSDAbsChange RawPopulationSDSEAbsChange</span></span>
-<span><span class="co">#&gt;                      NA                     0                         NA</span></span>
-<span><span class="co">#&gt;                      NA                     0                         NA</span></span>
-<span><span class="co">#&gt;  ProbabilityMaxAbsChange EAPMaxAbsChange PosteriorSDMaxAbsChange</span></span>
-<span><span class="co">#&gt;                  0.00000         0.00000                 0.00000</span></span>
-<span><span class="co">#&gt;                  0.01598         0.47415                 0.29125</span></span>
+<span><span class="co">#&gt;  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange</span></span>
+<span><span class="co">#&gt;                      NA                        NA</span></span>
+<span><span class="co">#&gt;                      NA                        NA</span></span>
+<span><span class="co">#&gt;  SlopeIntervalEligibilityChanged PopulationSDAbsChange</span></span>
+<span><span class="co">#&gt;                               NA                     0</span></span>
+<span><span class="co">#&gt;                               NA                     0</span></span>
+<span><span class="co">#&gt;  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange</span></span>
+<span><span class="co">#&gt;                          NA                 0.00000         0.00000</span></span>
+<span><span class="co">#&gt;                          NA                 0.01598         0.47415</span></span>
+<span><span class="co">#&gt;  PosteriorSDMaxAbsChange</span></span>
+<span><span class="co">#&gt;                  0.00000</span></span>
+<span><span class="co">#&gt;                  0.29125</span></span>
 <span><span class="co">#&gt; No automatic stability classification or readiness change is applied.</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">quadrature_review</span><span class="op">$</span><span class="va">fits</span><span class="op">$</span><span class="va">q7</span></span>
 <span></span>
@@ -332,9 +338,9 @@ the calibration parameters and prior fixed.</p>
 <span><span class="co">#&gt; 4 NEW_PERSON_2            61 -1.563277e-05       1.99646e-05</span></span>
 <span><span class="co">#&gt;   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status</span></span>
 <span><span class="co">#&gt; 1                            NA                           NA computed</span></span>
-<span><span class="co">#&gt; 2                  4.440892e-16                 5.551115e-17 computed</span></span>
+<span><span class="co">#&gt; 2                 -1.332268e-15                -2.220446e-16 computed</span></span>
 <span><span class="co">#&gt; 3                            NA                           NA computed</span></span>
-<span><span class="co">#&gt; 4                  7.549517e-15                 1.004752e-13 computed</span></span></code></pre></div>
+<span><span class="co">#&gt; 4                  7.105427e-15                 1.005862e-13 computed</span></span></code></pre></div>
 <p>Check fixed-versus-adaptive differences and changes between adaptive
 orders, including log-marginal likelihood contributions in the full
 table. Observation weights, when supplied, enter the likelihood as in

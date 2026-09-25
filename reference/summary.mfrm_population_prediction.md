@@ -47,7 +47,7 @@ An object of class `summary.mfrm_population_prediction` with:
 
 - `planning_schema`: structured planning metadata
 
-- `gpcm_boundary`: bounded-`GPCM` caveat row when present
+- `gpcm_boundary`: `GPCM` caveat row when present
 
 - `structural_design_review`: deterministic structural review of the
   named-facet design grid; it is not a forecast-uncertainty result
@@ -83,7 +83,7 @@ s$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
-#> 1       1            1              1             1           1.04
+#> 1       1            1              1             1           1.09
 s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
 #> # A tibble: 3 × 3
 #>   Facet     MeanSeparation McseSeparation

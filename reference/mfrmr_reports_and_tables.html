@@ -50,7 +50,7 @@ which bundle, table, or reporting helper to call."><meta property="og:image" con
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Reports and Tables Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
       <div class="d-none name"><code>mfrmr_reports_and_tables.Rd</code></div>
     </div>
 
@@ -82,7 +82,7 @@ Use <code><a href="subset_connectivity_report.html">subset_connectivity_report()
 <li><p>"What should go into the manuscript text and tables?"
 For <code>RSM</code> / <code>PCM</code>, use <code><a href="reporting_checklist.html">reporting_checklist()</a></code>, <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>,
 and <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> or <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code>. For
-bounded <code>GPCM</code>, use the same route only where
+<code>GPCM</code>, use the same route only where
 <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> marks it as <code>supported_with_caveat</code>: direct
 table/plot helpers, summary-table appendix export, caveated
 <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>, and caveated <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code> are available
@@ -109,7 +109,7 @@ describe spread, linkage, and measurability.</p></li>
 <li><p>For <code>RSM</code> / <code>PCM</code>, finish with <code><a href="reporting_checklist.html">reporting_checklist()</a></code> and
 <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code> for manuscript-oriented output, then
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> for reusable handoff tables or
-<code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> for direct appendix export. For bounded
+<code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> for direct appendix export. For
 <code>GPCM</code>, the same report/export route is available only as a caveated
 sensitivity-reporting layer with <code>gpcm_boundary</code>; keep FACETS-style
 score-side review and design forecasting on their separate capability
@@ -239,7 +239,7 @@ still needs missing diagnostics or clearer caveats.</p></li>
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> -&gt; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> / <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> -&gt; <code><a href="apa_table.html">apa_table()</a></code>
 or <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> /
 <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code>(include = "summary_tables").</p></li>
-<li><p>Bounded <code>GPCM</code> handoff:
+<li><p><code>GPCM</code> handoff:
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code> -&gt; direct summaries/plots -&gt;
 <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code> or <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> -&gt;
 <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code> or caveated <code><a href="export_mfrm_bundle.html">export_mfrm_bundle()</a></code>, with
@@ -291,10 +291,9 @@ or <code><a href="export_summary_appendix.html">export_summary_appendix()</a></c
 <span class="r-out co"><span class="r-pr">#&gt;</span>  fit, diagnostics, tables, precision, reporting, categories, plots</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Decision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Interpretation: Fit-readiness requirements satisfied; formal precision</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    review required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Formal inference: No</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Why: Formal precision support has not been evaluated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Interpretation: Ready for formal inference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Formal inference: Yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - Why: All stored fit-readiness components passed.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Next: Read the compact results summary.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> First screen</span>

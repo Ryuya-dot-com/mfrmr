@@ -85,10 +85,10 @@ case families:
   and confirms the package-side workflow without claiming that ConQuest
   itself was executed.
 
-- `synthetic_gpcm`: checks whether the bounded `GPCM` branch recovers
-  known criterion-specific slopes, row-centered step parameters, and
-  criterion ordering from a synthetic overlap case. This case currently
-  requires `model = "GPCM"` and is intended for `method = "MML"`.
+- `synthetic_gpcm`: checks whether the `GPCM` branch recovers known
+  criterion-specific slopes, row-centered step parameters, and criterion
+  ordering from a synthetic overlap case. This case currently requires
+  `model = "GPCM"` and is intended for `method = "MML"`.
 
 - `synthetic_bias_contract`: checks whether package bias tables and
   pairwise local comparisons satisfy the identities documented in the

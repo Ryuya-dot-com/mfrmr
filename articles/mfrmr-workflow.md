@@ -25,9 +25,13 @@ per rating and scores from 1 to 4.
 are case-sensitive; `Study` and `Group` are extra labels unused by this
 model. `MML` selects marginal maximum likelihood; `RSM` selects a
 rating-scale model with shared category thresholds (the transitions
-between adjacent scores).
+between adjacent scores). The rubric uses scores 1 through 4.
+`category_policy = "preserve"` keeps that category ladder; it prevents
+an unobserved intermediate category from being silently collapsed into a
+different scale.
 
 ``` r
+
 # Load the package
 library(mfrmr)
 
@@ -48,6 +52,8 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4,
+  category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -62,6 +68,7 @@ locations use the same logit
 scale.](mfrmr-workflow_files/figure-html/quick-start-1.png)
 
 ``` r
+
 
 # Save the summary, then display its tables
 results <- summary(fit)
@@ -110,6 +117,7 @@ show differences among levels.
 ### Inspect individual estimates
 
 ``` r
+
 estimates <- as.data.frame(fit)
 head(subset(estimates, Facet == "Person")) # First six persons
 #>    Facet Level    Estimate Extreme
@@ -146,6 +154,7 @@ not necessarily mean that fitting failed. The default summary does not
 compute diagnostics.
 
 ``` r
+
 diagnostics <- diagnose_mfrm(fit)
 diagnostic_summary <- summary(diagnostics)
 diagnostic_summary$decision
@@ -193,6 +202,7 @@ You can practice the full workflow without supplying a file. This block
 writes the packaged synthetic ratings to a new temporary CSV:
 
 ``` r
+
 library(mfrmr)
 csv_path <- tempfile(fileext = ".csv")
 write.csv(load_mfrmr_data("example_operational"), csv_path,
@@ -204,6 +214,7 @@ column names in the first row. Skip the practice block above and select
 your file instead:
 
 ``` r
+
 library(mfrmr)
 csv_path <- file.choose()
 ```
@@ -215,6 +226,7 @@ path such as `"data/ratings.csv"`, relative to the folder shown by
 same import and analysis code:
 
 ``` r
+
 ratings <- read.csv(
   csv_path,
   colClasses = "character",
@@ -272,10 +284,11 @@ practice file’s `Study` and `Group` are unused by this model.
 Set the minimum and maximum from the **rubric**, not the observed
 minimum and maximum in this sample. The code below describes a 1-to-4
 rubric. Keep the same values in the data review and the fit.
-`keep_original = TRUE` preserves the intended category structure,
-including categories with no observations.
+`category_policy = "preserve"` preserves the intended category
+structure, including categories with no observations.
 
 ``` r
+
 data_review <- describe_mfrm_data(
   data = ratings,
   person = "Person",
@@ -283,7 +296,7 @@ data_review <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE
+  category_policy = "preserve"
 )
 data_review$row_retention
 #>                             Stage Rows DroppedRows
@@ -331,9 +344,9 @@ Read these four tables in order:
   `data_review$preparation_notes` when the retained count is unexpected.
 - `score_distribution`: `RawN` counts the retained ratings in each
   category. A zero count in an internal category, such as 3 on a 1-to-4
-  scale, prevents fitting with `keep_original = TRUE`. Review the data
-  and rubric before changing categories; increasing optimizer iterations
-  cannot supply missing category information.
+  scale, prevents fitting with `category_policy = "preserve"`. Review
+  the data and rubric before changing categories; increasing optimizer
+  iterations cannot supply missing category information.
 - `design_connectivity`: `Components = 1` means a facet’s levels are
   connected through shared persons. More than one component needs design
   review before comparing levels across components. Connectivity alone
@@ -358,6 +371,7 @@ the choice should reflect the scoring design. Diagnostics then supply
 evidence for the interpretation decision.
 
 ``` r
+
 csv_fit <- fit_mfrm(
   data = ratings,
   person = "Person",
@@ -365,7 +379,7 @@ csv_fit <- fit_mfrm(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE,
+  category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -387,6 +401,7 @@ it. Even a supported precision decision does not establish the validity
 of the assessment or answer the study’s substantive question.
 
 ``` r
+
 plot(csv_fit)
 ```
 
@@ -396,6 +411,7 @@ establish that model assumptions
 hold.](mfrmr-workflow_files/figure-html/csv-results-1.png)
 
 ``` r
+
 csv_estimates <- as.data.frame(csv_fit)
 head(subset(csv_estimates, Facet == "Person"))
 #>    Facet Level    Estimate Extreme
@@ -454,6 +470,7 @@ recode only that column before step 2. This preserves an ID such as
 `99`:
 
 ``` r
+
 ratings <- recode_missing_codes(
   ratings, columns = "Score", codes = c("99", ".")
 )
@@ -470,6 +487,7 @@ For a sheet with one row per person-rater pair and separate criterion
 scores, reshape the criterion columns into rating rows:
 
 ``` r
+
 wide <- data.frame(
   Person = c("001", "001"),
   Rater = c("R1", "R2"),
@@ -509,6 +527,7 @@ helper calls and review your own assignment roster if one exists.
 ### 1. Check the data and estimation record
 
 ``` r
+
 fit_toy <- fit
 diag_toy <- diagnostics
 
@@ -521,7 +540,7 @@ data_review_toy <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE,
+  category_policy = "preserve",
   expected_design = mfrmr_example_operational_design
 )
 data_summary_toy <- summary(data_review_toy)
@@ -590,6 +609,7 @@ appropriate, not as a faster substitute for MML.
 ### 2. Read precision and model fit before interpreting differences
 
 ``` r
+
 diagnostic_summary_toy <- summary(diag_toy)
 diagnostic_summary_toy$decision
 #>               Interpretation FormalInference FitReadiness
@@ -659,6 +679,7 @@ significance test.
 and the transitions between scores on the declared rubric:
 
 ``` r
+
 scale_toy <- rating_scale_table(fit_toy, diagnostics = diag_toy)
 scale_toy$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
 #>   Category Count AvgPersonMeasure     Infit    Outfit
@@ -692,6 +713,7 @@ not an automatic instruction to merge categories.
 an explicit exploratory rule and shows up to ten cases:
 
 ``` r
+
 unexpected_toy <- unexpected_response_table(
   fit_toy,
   diagnostics = diag_toy,
@@ -739,6 +761,7 @@ latent-integrated marginal screening path. The latter includes category
 and pairwise agreement gaps. Keep their bases separate when reporting:
 
 ``` r
+
 diagnostic_summary_toy$diagnostic_basis[, c("DiagnosticPath", "Status", "ReportingUse")]
 #> # A tibble: 4 × 3
 #>   DiagnosticPath                   Status        ReportingUse               
@@ -770,6 +793,7 @@ category checks above, then view severity and its uncertainty alongside
 the screening results. Reuse the same fit and diagnostics:
 
 ``` r
+
 plot_rater_severity_profile(
   fit_toy, diagnostics = diag_toy, facet = "Rater", show_bands = FALSE
 )
@@ -781,6 +805,7 @@ fitted
 reference.](mfrmr-workflow_files/figure-html/rater-feedback-1.png)
 
 ``` r
+
 rater_review <- facet_quality_dashboard(
   fit_toy, diagnostics = diag_toy, facet = "Rater"
 )
@@ -799,9 +824,10 @@ knitr::kable(
 | R05   |  44 |    0.184 | 0.234 | 0.648 |  0.640 |
 | R06   |  38 |    0.412 | 0.249 | 0.820 |  0.798 |
 
-Rater estimates and fit
+Rater estimates and fit {.table}
 
 ``` r
+
 knitr::kable(
   rater_review$detail[, c("Level", "MissingMetrics", "SeverityFlag", "MisfitFlag")],
   row.names = FALSE, caption = "Availability and screening flags"
@@ -817,9 +843,10 @@ knitr::kable(
 | R05   |                | FALSE        | FALSE      |
 | R06   |                | FALSE        | FALSE      |
 
-Availability and screening flags
+Availability and screening flags {.table}
 
 ``` r
+
 rater_review$settings
 #>                                   Setting Value
 #> facet                               facet Rater
@@ -858,11 +885,16 @@ flags is not a complete pass when diagnostics are unavailable. A
 `REVIEW ONLY` label retains the fit’s restrictions; the plot does not
 override them.
 
-In this synthetic example, none of the six raters has a severity or
-misfit flag under the displayed settings. The earlier response-level
-screen still selected 141 ratings: the two screens assess different
-units and use different rules. Neither result establishes that every
-rating is appropriate.
+With the unmodified package defaults (absolute severity at least 1
+logit, Infit or Outfit at or beyond 0.5 and 1.5), none of the six raters
+is flagged in this synthetic example. Session options can change the
+misfit band: check `rater_review$settings` before comparing your output.
+A numeric `misfit_warn = 1.5` instead selects a lower bound of about
+0.67; it does not preserve the default 0.5. These bands prompt review,
+not a verdict on quality. The earlier response-level screen still
+selected 141 ratings: the two screens assess different units and use
+different rules. Neither result establishes that every rating is
+appropriate.
 
 Use the selected unexpected ratings to discuss the rubric and scoring
 context, not to automatically exclude a rater. Limited overlap may call
@@ -880,6 +912,7 @@ for that export route.
 ### 4. Assemble the evidence for a report
 
 ``` r
+
 res_toy <- mfrm_results(fit_toy, diagnostics = diag_toy, include = "publication")
 report_toy <- mfrm_report(res_toy, style = "apa")
 report_toy$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
@@ -943,6 +976,7 @@ interpretations, and a worked question-to-result explanation.
 ### 5. Display a table and save the analysis
 
 ``` r
+
 measurements_toy <- fit_measures_table(fit_toy, diagnostics = diag_toy)
 rater_table_toy <- subset(
   measurements_toy$table, Facet == "Rater",
@@ -969,6 +1003,7 @@ sentence answering the study’s question instead of repeating every cell
 of the table.
 
 ``` r
+
 # A new temporary directory keeps this synthetic example repeatable
 export_dir <- tempfile("mfrmr-workflow-export-")
 export_toy <- export_mfrm_results(
@@ -992,7 +1027,7 @@ knitr::kable(export_preview, row.names = FALSE,
 | summary_fit_readiness_components | csv | mfrmr_results_summary_fit_readiness_components.csv |
 | summary_fit_readiness_parameters | csv | mfrmr_results_summary_fit_readiness_parameters.csv |
 
-First six exported files (filenames only)
+First six exported files (filenames only) {.table}
 
 This archive retains the collected results.
 `acknowledge_sensitive = TRUE` is used because the example contains
@@ -1000,24 +1035,58 @@ synthetic data; it does not remove identifiers or local paths from real
 analyses. Review the files before sharing them. The table previews six
 filenames; `export_toy$written_files` retains the full list, and its
 `Path` column locates the generated files. Temporary files are for
-practice; choose a study directory for an archive you will keep. With a
-precomputed fit as input, this archive’s replay code assumes that `fit`
-and `diagnostics` already exist. Keep your original data-to-fit script.
-For a fit replay including its input CSV, and for saving a manuscript
-table, figure, and their notes, follow Section 5 of
+practice; choose a study directory for an archive you will keep. To
+reopen the saved analysis without fitting or computing diagnostics,
+locate the RDS in that file list:
+
+``` r
+
+results_file <- subset(export_toy$written_files, Component == "results_rds")$Path
+restored_results <- readRDS(results_file)
+summary(restored_results)$decision
+#>               Interpretation FormalInference FitReadiness
+#> 1 Ready for formal inference             Yes        ready
+#>                                           Why                        NextAction
+#> 1 All stored fit-readiness components passed. Read the compact results summary.
+```
+
+This restores the collected results and diagnostics. The separate
+dashboard object `rater_review` still needs its own
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html) call as described
+above. With a precomputed fit as input, this archive’s replay code
+assumes that `fit` and `diagnostics` already exist. Keep your original
+data-to-fit script. For a fit replay including its input CSV, and for
+saving a manuscript table, figure, and their notes, follow Section 5 of
 [`vignette("mfrmr-reporting-and-apa", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-reporting-and-apa.md).
 
 ### Further analyses should answer a stated question
 
 | Question | Follow-up |
 |----|----|
+| How uncertain is a specified difference between two raters? | [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md) uses their covariance; choose the model-based or sandwich method for the sampling assumptions. Attach the result with `mfrm_results(fit, intervals = ...)`. See `mfrmr-facet-intervals`; an ordinary Wright map does not switch to sandwich intervals. |
 | Do category thresholds need to differ by criterion? | [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md) and [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md); fit candidates to the same observations and review numerical sensitivity. |
 | Do specific rater-by-criterion or group contrasts depart from the model? | [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md) or [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md); specify the contrasts, screening rules, and multiplicity plan. See the reporting vignette and `mfrmr-linking-and-dff`. |
 | How often does a declared rater-warning rule detect a specified departure or falsely flag an unaffected rater? | [`mfrm_screening_performance()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_screening_performance.md) with known simulation truth and all planned trials. See `mfrmr-screening-performance` for individual/family rates, unavailable results and Monte Carlo uncertainty. |
-| Would the conclusions change under a bounded GPCM? | [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md) and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
+| Would the conclusions change under a GPCM? | [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md) and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
+| Are scores missing from assigned rating events? | Start with the assignment roster, then [`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md), [`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md) and [`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md). See `mfrmr-response-imputation` for an explicit imputation model; the review function does not generate scores. Do not fill unassigned combinations. |
+| Do external attributes describe different groups of persons, raters or tasks? | [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md) with PCA/k-means for numeric features, or PAM/hierarchical clustering for mixed features. See `mfrmr-external-features` for missing attributes, group stability and links back to rating events. Groups are not ability classes or judgments of rater quality. |
+| Would more raters or tasks improve observed-score dependability? | [`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md) followed by [`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md); declare the observed-score design, candidate plans and any composite weights. Their help explains G/Phi and SEM. These coefficients describe observed scores, not MFRM latent abilities. |
 | Are forms or waves on a comparable scale? | `mfrmr-linking-and-dff` and `mfrmr-portable-calibration`; common labels alone do not establish linking. |
 | How does a proposed rating design perform under stated assumptions? | [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md), [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md), and [`assess_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/assess_mfrm_recovery.md); report generating conditions, repetitions, failures, and Monte Carlo uncertainty. |
 | How should new persons be scored under an existing calibration? | [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md) and [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md); reuse an eligible fitted calibration and report the conditioning assumptions. |
+
+Missing **attributes** and missing **rating scores** need different
+models and workflows. Neither clustering nor response-score imputation
+is a prerequisite for ordinary MFRM analysis. G/D-studies start from
+observed scores and their design; do not substitute MFRM estimates or
+testlet variances for their input. For these branches,
+`mfrmr_output_guide("features")`, `mfrmr_output_guide("imputation")` and
+`mfrmr_output_guide("gtheory")` identify the supported summaries and
+plots. Save their full objects with
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html); they have dedicated
+output routes and are not
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+inputs.
 
 Simulation examples with one or two repetitions test the computational
 setup; they do not estimate operating characteristics adequately for a
@@ -1048,6 +1117,7 @@ building this vignette. Display aliases replace source identifiers in
 the example’s tables; aliases do not make a rating archive anonymous.
 
 ``` r
+
 library(mfrmr)
 data("data.ratings1", package = "sirt")
 wide <- data.ratings1

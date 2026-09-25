@@ -32,6 +32,7 @@ summaries, plots and point predictions do not require a live optimizer.
 The examples below run when RTMB is available.
 
 ``` r
+
 ratings <- load_mfrmr_data("example_core")
 random_fit <- fit_mfrm_random_rater(
   ratings, person = "Person", rater = "Rater", score = "Score",
@@ -39,15 +40,15 @@ random_fit <- fit_mfrm_random_rater(
 )
 random_fit$checks
 #>   OptimizerCode  MaxGradient ZeroVarianceScore EstimatedVarianceBoundary
-#> 1             0 6.771594e-10          1463.155                     FALSE
+#> 1             0 6.771424e-10          1463.155                     FALSE
 #>   HigherOrderZeroVarianceScore EstimatedPersonVarianceBoundary
 #> 1                     1463.155                           FALSE
 #>   PersonVarianceUpperBoundary PersonZeroVarianceScore PersonZeroScoreDifference
-#> 1                       FALSE                1954.208               0.001859873
+#> 1                       FALSE                1954.208               0.001859894
 #>   HigherOrderPersonZeroVarianceScore HigherOrderPersonZeroScoreDifference
-#> 1                           1954.208                          0.001859889
+#> 1                           1954.208                          0.001859869
 #>   QuadraturePoints CheckPoints LogLikDifference GradientDifference
-#> 1              121         243     5.894663e-09       1.949821e-07
+#> 1              121         243     5.894435e-09       1.949821e-07
 #>   PersonQuadratureStable NumericalReady InformationPositive
 #> 1                   TRUE           TRUE                TRUE
 summary(random_fit)$data_usage
@@ -75,6 +76,7 @@ The default `person_sd = NULL` estimates the ability population’s SD. It
 is reported separately from rater population variation:
 
 ``` r
+
 random_fit$calibration[c("person_sd", "person_variance", "rater_sd")]
 #> $person_sd
 #> [1] 0.9686796
@@ -101,6 +103,7 @@ SEs, but bounds are omitted by default. To inspect a pointwise normal
 approximation explicitly, use:
 
 ``` r
+
 confint(random_fit, parm = "calibration", level = .95)
 #>                                            Lower      Upper
 #> Fixed facet: Criterion: Accuracy      0.07045120  0.3925020
@@ -182,6 +185,7 @@ keep that fit and try 121 points with the same model and population
 settings:
 
 ``` r
+
 refined <- fit_mfrm_random_rater(
   ratings, "Person", "Rater", "Score", facets = "Criterion",
   score_levels = 1:4, person_sd = NULL, quad_points = 121
@@ -239,6 +243,7 @@ intervals have the separate meanings below.
 ## Give feedback about the observed raters
 
 ``` r
+
 random_fit$raters
 #>   Rater Persons   Estimate ConditionalSD PredictionSE Lower Upper
 #> 1   R01      48 -0.1603837     0.1228652    0.1492869    NA    NA
@@ -266,6 +271,7 @@ established. If an approximate interval is useful for investigating the
 calculation, request it explicitly from the saved fit:
 
 ``` r
+
 normal_approximation <- confint(random_fit, parm = "raters")
 normal_approximation
 #>           Lower      Upper
@@ -308,6 +314,7 @@ is not an estimate of the latent rater population. Four raters make a
 small descriptive example.
 
 ``` r
+
 plot(random_fit, style = "precision", intervals = "normal", point_size = 3,
      title = "Rater severity and approximate interval width")
 ```
@@ -318,6 +325,7 @@ and bounds; nominal coverage is not
 established.](mfrmr-random-raters_files/figure-html/severity-precision-1.png)
 
 ``` r
+
 plot(random_fit, style = "distribution", reference = NULL,
      title = "Distribution of the observed rater estimates")
 ```
@@ -340,6 +348,7 @@ finite intervals. Every omitted row and reason remains in
 For a publication with its own caption, suppress the built-in text:
 
 ``` r
+
 figure <- plot(random_fit, draw = FALSE, sort = "estimate", palette = "mono",
                show_title = FALSE, show_notes = FALSE, text_scale = 1.15)
 if (requireNamespace("ggplot2", quietly = TRUE)) print(as_ggplot(figure))
@@ -351,6 +360,7 @@ follow the
 figure.](mfrmr-random-raters_files/figure-html/severity-custom-1.png)
 
 ``` r
+
 # Text alternatives and the full table can accompany the exported image:
 plot_data(figure)$alt_text
 #> [1] "Shared-rater severity (interval view). 4 of 4 estimates displayed; 0 prior only; 0 omitted from this view. Point estimates only; individual-rater interval coverage is not established "
@@ -390,6 +400,7 @@ reference with the same common normal population assumption.
 default instead fixes N(0,1).
 
 ``` r
+
 ordinary_fit <- fit_mfrm(
   ratings, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
   model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
@@ -399,6 +410,7 @@ ordinary_fit <- fit_mfrm(
 ```
 
 ``` r
+
 model_comparison <- compare_mfrm(
   ordinary_fit, random_fit, labels = c("Fixed raters", "Shared random raters")
 )
@@ -442,10 +454,10 @@ model_comparison$models
 #> 2 MML: Person quadrature and shared-rater Laplace
 subset(model_comparison$effects, Facet == "Rater")
 #>   Facet Level SourceReference SourceComparison CenterReference CenterComparison
-#> 5 Rater   R01      -0.1829209       -0.1603837   -6.938894e-18     8.491322e-06
-#> 6 Rater   R02      -0.3073556       -0.2692241   -6.938894e-18     8.491322e-06
-#> 7 Rater   R03       0.1786365        0.1566219   -6.938894e-18     8.491322e-06
-#> 8 Rater   R04       0.3116400        0.2730199   -6.938894e-18     8.491322e-06
+#> 5 Rater   R01      -0.1829209       -0.1603837    6.938894e-18     8.491322e-06
+#> 6 Rater   R02      -0.3073556       -0.2692241    6.938894e-18     8.491322e-06
+#> 7 Rater   R03       0.1786365        0.1566219    6.938894e-18     8.491322e-06
+#> 8 Rater   R04       0.3116400        0.2730199    6.938894e-18     8.491322e-06
 #>    Reference Comparison       Mean  Difference        ReferenceKind
 #> 5 -0.1829209 -0.1603922 -0.1716566  0.02252873 Fixed facet estimate
 #> 6 -0.3073556 -0.2692326 -0.2882941  0.03812293 Fixed facet estimate
@@ -600,6 +612,7 @@ its intervals.
 ## Estimate population variation, including zero
 
 ``` r
+
 sd_interval <- confint(random_fit, parm = "rater_sd")
 sd_interval[, c("Lower", "Upper"), drop = FALSE]
 #>              Lower     Upper
@@ -613,12 +626,12 @@ head(attr(sd_interval, "profile"))
 #> 8 0.1165953 907.1101 0.9468232                           FALSE             0
 #> 6 0.1184987 907.0329 0.9472890                           FALSE             0
 #>    MaxGradient LogLikDifference GradientDifference NumericalReady
-#> 1 3.957592e-05     2.736556e-09       1.008696e-07           TRUE
-#> 4 6.391417e-05     1.584908e-09       6.101185e-08           TRUE
-#> 7 1.029436e-08     1.099920e-09       4.437638e-08           TRUE
-#> 9 1.953513e-05     1.098329e-09       4.432941e-08           TRUE
-#> 8 1.926025e-05     1.098101e-09       4.432375e-08           TRUE
-#> 6 2.900490e-05     1.034778e-09       4.215306e-08           TRUE
+#> 1 3.960160e-05     2.736897e-09       1.008696e-07           TRUE
+#> 4 6.396327e-05     1.584795e-09       6.101183e-08           TRUE
+#> 7 1.029431e-08     1.099352e-09       4.437634e-08           TRUE
+#> 9 1.951926e-05     1.098783e-09       4.432943e-08           TRUE
+#> 8 1.925783e-05     1.098101e-09       4.432375e-08           TRUE
+#> 6 2.900998e-05     1.035460e-09       4.215297e-08           TRUE
 ```
 
 This interval concerns the **SD across the assumed rater population**,
@@ -675,6 +688,7 @@ their Gaussian linear-model accuracy result does not establish accuracy
 for this ordinal crossed-rater model.
 
 ``` r
+
 # A small run checks the workflow; 19 draws cannot stabilize 2.5% tails.
 bootstrap_intervals <- mfrm_random_rater_intervals(
   random_fit, nsim = 19, seed = 923701
@@ -730,6 +744,7 @@ Dropping those draws or simulating until a chosen number succeeds would
 change the reference sample.
 
 ``` r
+
 plot(bootstrap_intervals)
 ```
 
@@ -739,6 +754,7 @@ planned refits remain in the adjacent trial
 table.](mfrmr-random-raters_files/figure-html/bootstrap-plot-1.png)
 
 ``` r
+
 bootstrap_intervals$trials[
   !bootstrap_intervals$trials$FitReady |
     bootstrap_intervals$trials$EstimatedBoundary, ]
@@ -746,8 +762,8 @@ bootstrap_intervals$trials[
 #> 12 1457296021     TRUE              TRUE 0.0000000 0.9208276
 #> 13 1325607976    FALSE             FALSE 0.1441794 1.2522326
 #>    EstimatedPersonVarianceBoundary  MaxGradient Error
-#> 12                           FALSE 7.324916e-05      
-#> 13                           FALSE 5.191759e-05      
+#> 12                           FALSE 7.323867e-05      
+#> 13                           FALSE 5.215741e-05      
 #>                                                                                                                                                                                                   Warnings
 #> 12                                                                                                                                                                                                        
 #> 13 Numerical or information checks require review; regular intervals are unavailable. Inspect $checks. Person quadrature is not stable. Refit with a larger `quad_points` (up to 241) and recheck $checks.
@@ -833,6 +849,7 @@ abilities from responses.
 question: response probabilities at ability values you supply.
 
 ``` r
+
 # Keep the complete source roster; request only these output rows.
 selected_persons <- as.character(unique(ratings$Person)[1:2])
 person_scores <- score_mfrm_random_rater(random_fit, persons = selected_persons)
@@ -841,8 +858,8 @@ person_scores$table
 #> 1   P001       16      4 0.5958331     0.3131346 -0.01012548 1.218317
 #> 2   P002       16      4 1.4094431     0.3543710  0.73648730 2.126691
 #>                  Status IntegrationDifference InterpolationDifference Reason
-#> 1 available_conditional          4.137064e-09            9.924554e-08       
-#> 2 available_conditional          4.415369e-09            3.024754e-09
+#> 1 available_conditional          4.136837e-09            9.924554e-08       
+#> 2 available_conditional          4.415369e-09            3.025057e-09
 summary(person_scores)$data_usage
 #>            Input         Observed          Omitted    RosterPersons 
 #>              768              768                0               48 
@@ -867,6 +884,7 @@ Selecting output Persons keeps all of their peers’ responses in the
 calculation.
 
 ``` r
+
 plot(person_scores)
 ```
 
@@ -943,6 +961,7 @@ one). An ability of one is one logit, not one population SD. This API
 does not estimate abilities from new response data.
 
 ``` r
+
 observed <- data.frame(
   Rater = "R01", Criterion = "Content", Ability = c(-1, 0, 1)
 )
@@ -1015,6 +1034,7 @@ rater summaries describe **only those selected rows**, not the raters’
 full workloads. Omit `rows` to summarize all assigned ratings.
 
 ``` r
+
 selected_rows <- which(ratings$Person == ratings$Person[1])
 response_review <- mfrm_response_diagnostics(random_fit,
   rows = selected_rows, group_by = "Rater")
@@ -1071,6 +1091,7 @@ plug-in indices returned by
 have a different definition and cannot replace this step.
 
 ``` r
+
 ordinary_response_review <- mfrm_response_diagnostics(ordinary_fit,
   rows = selected_rows, group_by = "Rater")
 model_comparison <- compare_mfrm(ordinary_fit, random_fit,
@@ -1109,6 +1130,7 @@ Person’s ratings alone contribute to these group summaries, while all
 observed Persons inform the shared-rater posterior.
 
 ``` r
+
 as_ggplot(model_comparison, metric = "probability", show_labels = FALSE,
   palette = "mono", show_title = FALSE, show_notes = FALSE)
 ```
@@ -1145,6 +1167,7 @@ responses. The ordinary model’s scoring retains its fitted normal mean
 and variance.
 
 ``` r
+
 source_scores <- person_scores # Already scored from the complete roster
 ordinary_person_scores <- score_mfrm_persons(ordinary_fit,
   persons = source_scores$table$Person)
@@ -1184,6 +1207,7 @@ test between Persons. Prior-only and unavailable differences remain
 withheld.
 
 ``` r
+
 map_results <- mfrm_results(random_fit, scores = source_scores,
   response_diagnostics = response_review, comparison = model_comparison)
 plot(map_results, type = "wright", show_labels = TRUE)
@@ -1212,6 +1236,7 @@ is drawn. The separate calibration/rater plots retain their original
 uncertainty targets.
 
 ``` r
+
 as_ggplot(plot(map_results, type = "fit_pathway", facet = "Rater",
   palette = "mono", show_title = FALSE, draw = FALSE))
 ```
@@ -1248,6 +1273,7 @@ existing predictions and bootstrap intervals explicitly; reporting does
 not run them automatically.
 
 ``` r
+
 res <- mfrm_results(random_fit, predictions = p_new, scores = person_scores,
                     intervals = bootstrap_intervals, comparison = model_comparison,
                     diagnostics = response_review)
@@ -1275,8 +1301,8 @@ res$tables$person_scores
 #> 1   P001       16      4 0.5958331     0.3131346 -0.01012548 1.218317
 #> 2   P002       16      4 1.4094431     0.3543710  0.73648730 2.126691
 #>                  Status IntegrationDifference InterpolationDifference Reason
-#> 1 available_conditional          4.137064e-09            9.924554e-08       
-#> 2 available_conditional          4.415369e-09            3.024754e-09
+#> 1 available_conditional          4.136837e-09            9.924554e-08       
+#> 2 available_conditional          4.415369e-09            3.025057e-09
 res$tables$bootstrap_availability
 #>     Rater Planned Known Unresolved Finite
 #> R01   R01      19    17          2  FALSE
@@ -1289,15 +1315,15 @@ res$tables$comparison_effects
 #> 2 Criterion      Content     -0.38809689      -0.38637724    0.000000e+00
 #> 3 Criterion     Language      0.09102647       0.09062342    0.000000e+00
 #> 4 Criterion Organization      0.06456257       0.06427724    0.000000e+00
-#> 5     Rater          R01     -0.18292092      -0.16038370   -6.938894e-18
-#> 6     Rater          R02     -0.30735556      -0.26922414   -6.938894e-18
-#> 7     Rater          R03      0.17863651       0.15662192   -6.938894e-18
-#> 8     Rater          R04      0.31163997       0.27301987   -6.938894e-18
+#> 5     Rater          R01     -0.18292092      -0.16038370    6.938894e-18
+#> 6     Rater          R02     -0.30735556      -0.26922414    6.938894e-18
+#> 7     Rater          R03      0.17863651       0.15662192    6.938894e-18
+#> 8     Rater          R04      0.31163997       0.27301987    6.938894e-18
 #>   CenterComparison   Reference  Comparison        Mean    Difference
-#> 1     2.428613e-17  0.23250785  0.23147658  0.23199221 -0.0010312678
-#> 2     2.428613e-17 -0.38809689 -0.38637724 -0.38723706  0.0017196487
-#> 3     2.428613e-17  0.09102647  0.09062342  0.09082494 -0.0004030507
-#> 4     2.428613e-17  0.06456257  0.06427724  0.06441991 -0.0002853303
+#> 1     1.387779e-17  0.23250785  0.23147658  0.23199221 -0.0010312678
+#> 2     1.387779e-17 -0.38809689 -0.38637724 -0.38723706  0.0017196487
+#> 3     1.387779e-17  0.09102647  0.09062342  0.09082494 -0.0004030507
+#> 4     1.387779e-17  0.06456257  0.06427724  0.06441991 -0.0002853303
 #> 5     8.491322e-06 -0.18292092 -0.16039219 -0.17165655  0.0225287294
 #> 6     8.491322e-06 -0.30735556 -0.26923263 -0.28829409  0.0381229291
 #> 7     8.491322e-06  0.17863651  0.15661343  0.16762497 -0.0220230734
@@ -1395,6 +1421,7 @@ in the complete saved analysis; it is not the observed-rater `intervals`
 argument.
 
 ``` r
+
 path <- tempfile(fileext = ".rds")
 saveRDS(list(ratings = ratings, fit = random_fit, population_interval = sd_interval,
              person_scores = person_scores, rater_intervals = bootstrap_intervals,

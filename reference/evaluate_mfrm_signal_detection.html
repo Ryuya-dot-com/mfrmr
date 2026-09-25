@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Evaluate DIF power and bias-screening behavior under known simulated signals</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>evaluate_mfrm_signal_detection.Rd</code></div>
     </div>
 
@@ -206,7 +206,7 @@ criterion level in each design.</p></dd>
 
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
-<dd><p>Measurement model passed to <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. Bounded <code>GPCM</code> is
+<dd><p>Measurement model passed to <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. <code>GPCM</code> is
 supported with caveats as slope-aware signal-detection sensitivity
 evidence.</p></dd>
 
@@ -224,7 +224,7 @@ When left <code>NULL</code>, the function inherits the generator step facet from
 
 
 <dt id="arg-slopes">slopes<a class="anchor" aria-label="anchor" href="#arg-slopes"></a></dt>
-<dd><p>Optional bounded-<code>GPCM</code> slope specification used by direct
+<dd><p>Optional <code>GPCM</code> slope specification used by direct
 simulation calls when <code>sim_spec = NULL</code>.</p></dd>
 
 
@@ -307,7 +307,7 @@ summaries and plots</p></li>
 mutable under the current simulation specification</p></li>
 <li><p><code>planning_schema</code>: structured planning metadata bundling the role
 descriptor, scope boundary, and current mutability map</p></li>
-<li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> caveat row when a <code>GPCM</code> screening route
+<li><p><code>gpcm_boundary</code>: <code>GPCM</code> caveat row when a <code>GPCM</code> screening route
 is used</p></li>
 <li><p><code>settings</code>: signal-analysis settings</p></li>
 <li><p><code>ademp</code>: simulation-study metadata (aims, DGM, estimands, methods, performance measures)</p></li>
@@ -327,7 +327,7 @@ effect (<code>bias_effect</code> logits)</p></li>
 <li><p>Fits and diagnoses the MFRM</p></li>
 <li><p>Runs <code><a href="analyze_dff.html">analyze_dff()</a></code> and <code><a href="estimate_bias.html">estimate_bias()</a></code></p></li>
 <li><p>Records whether the injected signals were detected or screen-positive</p></li>
-</ol><p>Bounded-<code>GPCM</code> runs preserve the current package constraint
+</ol><p><code>GPCM</code> runs preserve the current package constraint
 <code>slope_facet == step_facet</code> within the generator and fitted model. The
 resulting DIF and bias rates are slope-aware screening summaries, not
 formal inferential power, alpha calibration, operational scoring, or
@@ -436,7 +436,7 @@ reporting</em>. Psychological Methods.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1            1              1             0          0.918</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1            1              1             0          0.943</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

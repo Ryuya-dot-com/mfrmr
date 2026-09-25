@@ -9,8 +9,7 @@ The portable workflow is deliberately narrower than fitted-object
 scoring. It supports one observed score scale and one latent dimension
 for `RSM` or `PCM` fitted by `MML` under the fixed standard-normal
 scoring basis. It does not currently create portable artifacts for
-estimated-population or latent- regression fits, `JML`, or bounded
-`GPCM`.
+estimated-population or latent- regression fits, `JML`, or `GPCM`.
 
 Supported direct and group facet anchors and two-way facet interactions
 are retained in the calibration. New responses must use its recorded
@@ -19,18 +18,19 @@ establish its statistical significance or the model’s suitability for
 another population.
 
 ``` r
+
 library(mfrmr)
 
 mfrm_calibration_capabilities()[, c(
   "Model", "Estimator", "ScoringBasis", "PortableCalibration"
 )]
-#>          Model Estimator                              ScoringBasis
-#> 1          RSM       MML                     fixed standard normal
-#> 2          PCM       MML                     fixed standard normal
-#> 3      RSM/PCM       MML estimated population or latent regression
-#> 4 bounded GPCM       MML             fixed or estimated population
-#> 5      RSM/PCM       JML                    post-hoc scoring prior
-#> 6 bounded GPCM       JML                    post-hoc scoring prior
+#>     Model Estimator                              ScoringBasis
+#> 1     RSM       MML                     fixed standard normal
+#> 2     PCM       MML                     fixed standard normal
+#> 3 RSM/PCM       MML estimated population or latent regression
+#> 4    GPCM       MML             fixed or estimated population
+#> 5 RSM/PCM       JML                    post-hoc scoring prior
+#> 6    GPCM       JML                    post-hoc scoring prior
 #>   PortableCalibration
 #> 1           available
 #> 2           available
@@ -47,6 +47,7 @@ Persons to keep vignette runtime modest; a substantive analysis should
 use its planned sample and design rather than copying that count.
 
 ``` r
+
 synthetic <- load_mfrmr_data("example_core")
 person_ids <- unique(as.character(synthetic$Person))
 training_ids <- person_ids[seq_len(18L)]
@@ -91,12 +92,18 @@ summary(quadrature_review)
 #>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
 #>                0.00000                          0.00000                NA
 #>                0.09056                          0.06055                NA
-#>  RawSlopeSEMaxAbsChange PopulationSDAbsChange RawPopulationSDSEAbsChange
-#>                      NA                     0                         NA
-#>                      NA                     0                         NA
-#>  ProbabilityMaxAbsChange EAPMaxAbsChange PosteriorSDMaxAbsChange
-#>                  0.00000         0.00000                 0.00000
-#>                  0.01598         0.47415                 0.29125
+#>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
+#>                      NA                        NA
+#>                      NA                        NA
+#>  SlopeIntervalEligibilityChanged PopulationSDAbsChange
+#>                               NA                     0
+#>                               NA                     0
+#>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
+#>                          NA                 0.00000         0.00000
+#>                          NA                 0.01598         0.47415
+#>  PosteriorSDMaxAbsChange
+#>                  0.00000
+#>                  0.29125
 #> No automatic stability classification or readiness change is applied.
 fit <- quadrature_review$fits$q7
 
@@ -143,6 +150,7 @@ validation object, and training data before loading the artifact, so
 none can influence the score.
 
 ``` r
+
 new_rows <- synthetic[
   as.character(synthetic$Person) %in% person_ids[19:20],
   c("Person", "Rater", "Criterion", "Score"),
@@ -209,6 +217,7 @@ origin.](mfrmr-portable-calibration_files/figure-html/score-from-artifact-1.png)
 
 ``` r
 
+
 unlink(artifact_file)
 ```
 
@@ -228,6 +237,7 @@ Two focused follow-up views use the same score object without consulting
 the source fit:
 
 ``` r
+
 # Valid response rows versus posterior SD.
 plot(scores, type = "precision", preset = "publication")
 
@@ -250,6 +260,7 @@ scaling their spacing to its local width. It holds the calibration
 parameters and prior fixed.
 
 ``` r
+
 summary(scores)$quadrature_overview
 #>   FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
 #> 1         31            31       2           0             0.002445619
@@ -269,9 +280,9 @@ head(scores$quadrature_review[c(
 #> 4 NEW_PERSON_2            61 -1.563277e-05       1.99646e-05
 #>   AdaptiveEAPChangeFromPrevious AdaptiveSDChangeFromPrevious   Status
 #> 1                            NA                           NA computed
-#> 2                  4.440892e-16                 5.551115e-17 computed
+#> 2                 -1.332268e-15                -2.220446e-16 computed
 #> 3                            NA                           NA computed
-#> 4                  7.549517e-15                 1.004752e-13 computed
+#> 4                  7.105427e-15                 1.005862e-13 computed
 ```
 
 Check fixed-versus-adaptive differences and changes between adaptive
@@ -362,6 +373,7 @@ populations.
 For a separate scoring script, the essential code is:
 
 ``` r
+
 library(mfrmr)
 
 calibration <- load_mfrm_calibration("reviewed-calibration.rds")

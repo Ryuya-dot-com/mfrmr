@@ -173,7 +173,7 @@ depends on fixed constraints.
 4.  If you need files on disk, pass the same objects to
     [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md).
 
-For bounded `GPCM` fits, the manifest is available with an explicit
+For `GPCM` fits, the manifest is available with an explicit
 `gpcm_boundary` table. It records supported direct diagnostics/reporting
 surfaces while keeping full FACETS score-side contract review blocked
 and routing design forecasting through its separate caveated capability

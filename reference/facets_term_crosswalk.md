@@ -65,7 +65,7 @@ facets_term_crosswalk()
 #> 3                                           Compare MnSq before standardized fit and document residual basis.
 #> 4                                           Compare MnSq before standardized fit and document residual basis.
 #> 5                                   df and Wilson-Hilferty conventions can change ZSTD without changing MnSq.
-#> 6                The package exposes documented RSM/PCM and bounded-GPCM routes, not a FACETS command parser.
+#> 6                        The package exposes documented RSM/PCM and GPCM routes, not a FACETS command parser.
 #> 7                FACETS-style rendering reproduces the ruler grammar, not optimizer-level numerical identity.
 #> 8                                    CSV/TSV handoff is package-native rather than fixed-field FACETS syntax.
 #> 9                         The table is an R-native anchor contract, not a complete FACETS specification file.

@@ -50,7 +50,7 @@ and DIF/bias into a single pass/warn/fail report."><meta property="og:image" con
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Run automated quality control pipeline</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>run_qc_pipeline.Rd</code></div>
     </div>
 
@@ -151,7 +151,7 @@ threshold comparison, so its category screen evaluates counts only.
 These checks do not establish category adequacy or justify automatic merging.</p>
 <p>Three threshold presets are available via <code>threshold_profile</code>:</p><table class="table table"><tr><td>Aspect</td><td>strict</td><td>standard</td><td>lenient</td></tr><tr><td>Global fit warn</td><td>1.3</td><td>1.5</td><td>1.7</td></tr><tr><td>Global fit fail</td><td>1.5</td><td>2.0</td><td>2.5</td></tr><tr><td>Reliability pass</td><td>0.90</td><td>0.80</td><td>0.70</td></tr><tr><td>Separation pass</td><td>3.0</td><td>2.0</td><td>1.5</td></tr><tr><td>Misfit warn (pct)</td><td>3</td><td>5</td><td>10</td></tr><tr><td>Unexpected fail</td><td>3</td><td>5</td><td>10</td></tr><tr><td>Min cat count</td><td>15</td><td>10</td><td>5</td></tr><tr><td>Agreement pass</td><td>60</td><td>50</td><td>40</td></tr><tr><td>Bias fail (pct)</td><td>5</td><td>10</td><td>15</td></tr></table><p>Individual thresholds can be overridden via the <code>thresholds</code> argument
 (a named list using entries such as <code>global_fit_warn</code> or <code>reliability_pass</code>).</p>
-<p>For bounded <code>GPCM</code>, this pipeline is available as caveated operational
+<p>For <code>GPCM</code>, this pipeline is available as caveated operational
 triage over supported diagnostics. Its pass/warn/fail labels remain package
 QC policy overlays; they are not FACETS score-side equivalence, operational
 scoring decisions, design-forecasting evidence, or automatic fairness /

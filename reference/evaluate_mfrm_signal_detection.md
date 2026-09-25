@@ -158,8 +158,8 @@ evaluate_mfrm_signal_detection(
 
   Measurement model passed to
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
-  Bounded `GPCM` is supported with caveats as slope-aware
-  signal-detection sensitivity evidence.
+  `GPCM` is supported with caveats as slope-aware signal-detection
+  sensitivity evidence.
 
 - step_facet:
 
@@ -177,8 +177,8 @@ evaluate_mfrm_signal_detection(
 
 - slopes:
 
-  Optional bounded-`GPCM` slope specification used by direct simulation
-  calls when `sim_spec = NULL`.
+  Optional `GPCM` slope specification used by direct simulation calls
+  when `sim_spec = NULL`.
 
 - maxit:
 
@@ -278,8 +278,8 @@ An object of class `mfrm_signal_detection` with:
 - `planning_schema`: structured planning metadata bundling the role
   descriptor, scope boundary, and current mutability map
 
-- `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` screening
-  route is used
+- `gpcm_boundary`: `GPCM` caveat row when a `GPCM` screening route is
+  used
 
 - `settings`: signal-analysis settings
 
@@ -319,7 +319,7 @@ For each design condition (combination of `n_person`, `n_rater`,
 6.  Records whether the injected signals were detected or
     screen-positive
 
-Bounded-`GPCM` runs preserve the current package constraint
+`GPCM` runs preserve the current package constraint
 `slope_facet == step_facet` within the generator and fitted model. The
 resulting DIF and bias rates are slope-aware screening summaries, not
 formal inferential power, alpha calibration, operational scoring, or
@@ -451,6 +451,6 @@ s_sig$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <int>        <int>          <int>         <int>          <dbl>
-#> 1       1            1              1             0          0.918
+#> 1       1            1              1             0          0.943
 # }
 ```

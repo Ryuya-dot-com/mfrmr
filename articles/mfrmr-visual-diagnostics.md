@@ -19,6 +19,7 @@ mirror the public plotting family shown here.
 ## Minimal setup
 
 ``` r
+
 library(mfrmr)
 
 toy <- load_mfrmr_data("example_operational")
@@ -67,6 +68,7 @@ Use the Wright map first when you want one shared logit view of persons,
 facet levels, and step thresholds.
 
 ``` r
+
 plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
 ```
 
@@ -95,6 +97,7 @@ fitted points. Step thresholds form one vertical ladder and their labels
 include the fitted transition logits.
 
 ``` r
+
 plot(
   fit,
   type = "wright",
@@ -125,6 +128,7 @@ Next, use the pathway map when you want to see how expected scores
 progress across theta.
 
 ``` r
+
 plot(fit, type = "pathway", preset = "publication")
 ```
 
@@ -145,6 +149,7 @@ against Infit, place Infit on the horizontal axis and include person
 rows explicitly:
 
 ``` r
+
 plot(
   fit,
   type = "fit_pathway",
@@ -178,6 +183,7 @@ Interpretation:
 Unexpected-response screening is useful for case-level review.
 
 ``` r
+
 plot_unexpected(
   fit,
   diagnostics = diag,
@@ -203,6 +209,7 @@ Interpretation:
 Displacement focuses on level movement rather than individual responses.
 
 ``` r
+
 plot_displacement(
   fit,
   diagnostics = diag,
@@ -233,6 +240,7 @@ quadrature for a shorter runtime; final reporting should be based on a
 refit with the package default or a higher quadrature setting.
 
 ``` r
+
 fit_strict <- fit_mfrm(
   toy,
   person = "Person",
@@ -291,6 +299,7 @@ When the design may be incomplete or spread across subsets, inspect the
 coverage matrix before interpreting cross-subset contrasts.
 
 ``` r
+
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 plot(sc, type = "design_matrix", preset = "publication")
 ```
@@ -321,6 +330,7 @@ If you are working across administrations, follow up with anchor-drift
 plots:
 
 ``` r
+
 drift <- detect_anchor_drift(current_fit, baseline = baseline_anchors)
 plot_anchor_drift(drift, type = "heatmap", preset = "publication")
 ```
@@ -330,6 +340,7 @@ plot_anchor_drift(drift, type = "heatmap", preset = "publication")
 Residual PCA is a follow-up layer after the main fit screen.
 
 ``` r
+
 diag_pca <- diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)
 pca <- analyze_residual_pca(diag_pca, mode = "both")
 summary(pca)
@@ -370,6 +381,7 @@ Interpretation:
 For interaction screening, use the packaged bias example.
 
 ``` r
+
 bias_df <- load_mfrmr_data("example_bias")
 
 fit_bias <- fit_mfrm(
@@ -413,6 +425,7 @@ dashboards, or lab-specific styles, use `draw = FALSE` and the plot-data
 accessors instead of editing screenshots.
 
 ``` r
+
 plot(fit, type = "wright", preset = "monochrome")
 ```
 
@@ -422,6 +435,7 @@ for custom
 displays.](mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png)
 
 ``` r
+
 
 wright_payload <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
 plot_data_components(wright_payload)
@@ -593,6 +607,7 @@ When you build a custom figure, keep the helper’s guidance tables with
 the plot data:
 
 ``` r
+
 names(wright_payload$data)
 #>  [1] "wright_style"          "renderer"              "visual_contract"      
 #>  [4] "person"                "person_exclusions"     "person_hist"          
@@ -625,6 +640,7 @@ scale, not a z-score. Observed-minus-fair gaps also reflect assignment
 and person mix, so they do not by themselves establish rater bias.
 
 ``` r
+
 p_fair <- plot_fair_average(
   fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
   plot_type = "measure", show_ci = TRUE, preset = "monochrome",
@@ -707,6 +723,7 @@ should not be treated as proof of disengagement, cheating, or
 speededness.
 
 ``` r
+
 toy_rt <- toy
 toy_rt$ResponseTime <- 12 + (seq_len(nrow(toy_rt)) %% 7) +
   as.numeric(toy_rt$Score)
@@ -768,6 +785,7 @@ diagnose careless
 responding.](mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png)
 
 ``` r
+
 plot_response_time_review(rt, type = "person", preset = "publication")
 ```
 
@@ -793,6 +811,7 @@ each level toward the facet mean and whether the uncertainty remains
 wide after pooling.
 
 ``` r
+
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
 
 shrink <- plot_shrinkage_funnel(
@@ -853,6 +872,7 @@ is not a fitted-model diagnostic object. Review it through its own
 methods:
 
 ``` r
+
 summary(scores)
 plot(scores, type = "interval", preset = "publication")
 plot(scores, type = "precision", preset = "publication")

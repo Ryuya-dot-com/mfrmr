@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build comprehensive first-screen MFRM results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>mfrm_results.Rd</code></div>
     </div>
 
@@ -156,7 +156,12 @@ before attachment; the fit itself does not need to be re-estimated.</p></dd>
 
 <dt id="arg-intervals">intervals<a class="anchor" aria-label="anchor" href="#arg-intervals"></a></dt>
 <dd><p>Optional saved <code><a href="mfrm_random_rater_intervals.html">mfrm_random_rater_intervals()</a></code> result from
-the exact supplied random-rater fit. No bootstrap is run by this function.</p></dd>
+the exact supplied random-rater fit. For a native GPCM fit, accepts saved
+slope intervals, curve intervals, a GPCM bootstrap result, or a named list
+of these. All must match the exact fitted data, parameters, population and
+integration settings. For native RSM/PCM fits, accepts a saved
+<code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> result or a named list of them. No bootstrap
+or interval calculation is run by this function.</p></dd>
 
 
 <dt id="arg-scores">scores<a class="anchor" aria-label="anchor" href="#arg-scores"></a></dt>
@@ -253,7 +258,7 @@ fitted forms or waves</p></li>
 <li><p><code>"network"</code>: standard sections plus network/connectivity review</p></li>
 <li><p><code>"response_time"</code>: descriptive response-time QC review when timing
 metadata are supplied through <code>response_time</code> / <code>response_time_data</code></p></li>
-<li><p><code>"gpcm_review"</code>: standard sections with bounded-<code>GPCM</code> caveats retained
+<li><p><code>"gpcm_review"</code>: standard sections with <code>GPCM</code> caveats retained
 in the collected summaries and reports</p></li>
 <li><p><code>"all"</code>: standard sections plus FACETS-fit, network, APA, and
 response-time sections</p></li>
@@ -275,7 +280,10 @@ only the measurement columns needed for estimation.</p>
 
 <p>Start with <code>summary(res)</code>. The most useful fields are:</p><ul><li><p><code>overview</code>: input mode, model, method, table count, and plot-route count</p></li>
 <li><p><code>decision</code>: plain-language interpretation, formal-inference, reason, and
-next-action text derived from the source-fit readiness record</p></li>
+next-action text derived from source-fit readiness and the saved diagnostic
+precision profile. Missing precision remains unreviewed; a positive
+precision assessment cannot override source-fit restrictions. Reading this
+summary does not compute new diagnostics or establish sampling coverage.</p></li>
 <li><p><code>readiness</code>: separate analysis and plot-interpretation checks</p></li>
 <li><p><code>fit_readiness</code>, <code>fit_readiness_components</code>, and
 <code>fit_readiness_parameters</code>: the exact source-fit readiness record retained
@@ -347,6 +355,51 @@ interactive session.</p></li>
 <code>summary(res)$next_actions</code> for report-specific follow-up.</p></li>
 </ol></div>
     <div class="section level2">
+    <h2 id="reproduce-attached-inference">Reproduce attached inference<a class="anchor" aria-label="anchor" href="#reproduce-attached-inference"></a></h2>
+
+
+<p>When additional inference or posterior diagnostics are attached, the code
+shown by <code>summary(res)</code> and in HTML saves and reloads the complete <code>res</code>
+object. Choose the file path before running it. This preserves attached
+methods, levels and unavailable results without fitting or recalculating.
+Exported replay scripts only reload the RDS already written by the export.
+The starter export index links the saved RSM/PCM and GPCM inference figures
+alongside the ordinary maps, whose uncertainty and fit meanings are separate.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="saved-rsm-pcm-fixed-facet-intervals">Saved RSM/PCM fixed-facet intervals<a class="anchor" aria-label="anchor" href="#saved-rsm-pcm-fixed-facet-intervals"></a></h2>
+
+
+<p>Use <code>intervals = list(raters = ci)</code> with output from <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code>.
+The fit must match the saved data, parameters, constraints, population and
+integration settings. Named results give <code>facet_</code> plot routes, for example
+<code>plot(res, type = "facet_raters")</code>; a single result gives <code>facet_inference</code>.
+Include <code>"plots"</code> to enable those routes. <code><a href="as_ggplot.html">as_ggplot()</a></code> supports customization.
+Tables, reports and exports preserve the selected method, confidence level,
+contrasts, cluster mapping and fixed/unavailable targets. Export replay
+reloads saved results without refitting or changing the selected intervals.
+These are pointwise fixed-facet intervals, not simultaneous rater decisions
+or uncertainty for replacement raters. Ordinary map and fit displays keep
+their own meanings and are not recalculated with the attached covariance.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="saved-gpcm-inference">Saved GPCM inference<a class="anchor" aria-label="anchor" href="#saved-gpcm-inference"></a></h2>
+
+
+<p>Attach explicitly selected results, for example
+<code>intervals = list(slopes = confint(fit, scale = "standardized"))</code>.
+Tables retain the target, method, confidence level and multiplicity choice;
+<code><a href="mfrm_report.html">mfrm_report()</a></code> and <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> preserve them. Names become
+lowercase plot routes, e.g. <code>plot(res, type = "gpcm_slopes")</code>, when <code>"plots"</code>
+is included. A single result uses <code>"gpcm_inference"</code>. Passing a raw slope
+bootstrap object selects its default relative 95% pointwise intervals;
+pass <code>confint(bootstrap, ...)</code> to select a different target or level.
+Replay reloads saved results, without refitting or changing interval methods.
+Older intervals lacking source metadata must be recomputed from the saved fit.
+These results supplement ordinary location and fit displays; discrimination
+is not rater quality and does not select scoring weights.</p>
+    </div>
+    <div class="section level2">
     <h2 id="testlet-and-random-rater-results">Testlet and random-rater results<a class="anchor" aria-label="anchor" href="#testlet-and-random-rater-results"></a></h2>
 
 
@@ -405,12 +458,10 @@ evidence and boundaries; they do not add ordinary-model reporting templates.</p>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">mfrm_results</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">decision</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Fit-readiness requirements satisfied; formal precision review required</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   FormalInference FitReadiness                                              Why</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              No        ready Formal precision support has not been evaluated.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                          NextAction</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Read the compact results summary.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Interpretation FormalInference FitReadiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Ready for formal inference             Yes        ready</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           Why                        NextAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 All stored fit-readiness components passed. Read the compact results summary.</span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">next_actions</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Priority               Area</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        1           Overview</span>

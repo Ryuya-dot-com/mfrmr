@@ -101,7 +101,7 @@ evaluate_mfrm_recovery(
 - model:
 
   Measurement model recorded in the simulation setup. The current public
-  generator supports `RSM`, `PCM`, and bounded `GPCM`.
+  generator supports `RSM`, `PCM`, and `GPCM`.
 
 - step_facet:
 
@@ -110,8 +110,8 @@ evaluate_mfrm_recovery(
 
 - slope_facet:
 
-  Slope facet used when `model = "GPCM"`. The current bounded `GPCM`
-  branch requires `slope_facet == step_facet`.
+  Slope facet used when `model = "GPCM"`. The current `GPCM` branch
+  requires `slope_facet == step_facet`.
 
 - thresholds:
 
@@ -240,7 +240,7 @@ adding a common constant to one location block should not be counted as
 recovery failure. Raw, unaligned errors are retained in `recovery` and
 summarized as `RawBias` / `RawRMSE`.
 
-For bounded `GPCM`, supplied generator slopes are treated as relative
+For `GPCM`, supplied generator slopes are treated as relative
 discriminations and normalized to the same geometric-mean-one log-slope
 identification used by the fitter. Slope recovery is therefore
 summarized on the identified log-slope scale without an additional
@@ -295,8 +295,8 @@ summary(rec)$recovery_summary[, c("ParameterType", "Facet", "RMSE", "Bias")]
 #>   ParameterType Facet        RMSE      Bias
 #>   <chr>         <chr>       <dbl>     <dbl>
 #> 1 facet         Criterion  0.0130 -1.73e-18
-#> 2 facet         Rater      0.222   1.39e-17
-#> 3 person        Person    11.2    -2.96e-16
+#> 2 facet         Rater      0.222  -2.78e-17
+#> 3 person        Person    11.2    -1.48e-16
 #> 4 step          Common    13.7    -5.92e-16
 # }
 ```

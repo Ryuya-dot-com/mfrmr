@@ -80,9 +80,9 @@ Frequently used fields include:
 Output text includes residual-PCA screening commentary if PCA
 diagnostics are available in `diagnostics`.
 
-For bounded `GPCM`, this helper returns a caveated partial reporting
-bundle over supported diagnostics, direct tables, and plots. It also
-includes a `gpcm_boundary` table. Treat the output as slope-aware
+For `GPCM`, this helper returns a caveated partial reporting bundle over
+supported diagnostics, direct tables, and plots. It also includes a
+`gpcm_boundary` table. Treat the output as slope-aware
 sensitivity-reporting text, not FACETS score-side equivalence, automatic
 operational scoring, or design-forecasting evidence.
 
@@ -273,7 +273,7 @@ cat(apa$report_text)
 #> 
 #> Facet measures.
 #> Person measures ranged from -1.72 to 1.51 logits (M = -0.16, SD = 0.82). Rater measures
-#> ranged from -0.61 to 0.41 logits (M = -0.00, SD = 0.40). Criterion measures ranged from
+#> ranged from -0.61 to 0.41 logits (M = 0.00, SD = 0.40). Criterion measures ranged from
 #> -0.34 to 0.22 logits (M = 0.00, SD = 0.30).
 #> 
 #> Fit and precision.

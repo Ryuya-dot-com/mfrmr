@@ -13,7 +13,7 @@ mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
     "calibration", "simulation", "linking", "network", "response_time", "facets",
-    "conquest", "r", "models", "features", "imputation", "gtheory")
+    "conquest", "r", "models", "features", "imputation", "gtheory", "feedback")
 )
 ```
 
@@ -28,14 +28,16 @@ mfrmr_output_guide(
   first-screen routes. `"viewer"` returns local-viewer routes built
   around `mfrm_results(include = ...)`. `"binary"` returns the
   two-category person-item Rasch route and checks. Other values filter
-  to one output family or to bounded-`GPCM`-relevant routes. `"linking"`
-  returns anchor, drift, and equating route rows. `"calibration"`
-  returns the portable fixed-calibration lifecycle and artifact-only
-  scoring route. `"simulation"` and `"network"` return advanced
-  design-review rows. `"response_time"` returns descriptive
-  response-time QC rows. `"models"` compares fixed-facet, shared-rater
-  and Person-specific testlet workflows, including their distinct
-  prediction and reporting boundaries. `"features"`, `"imputation"` and
+  to one output family or to `GPCM`-relevant routes. `"linking"` returns
+  anchor, drift, and equating route rows. `"calibration"` returns the
+  portable fixed-calibration lifecycle and artifact-only scoring route.
+  `"simulation"` and `"network"` return advanced design-review rows.
+  `"response_time"` returns descriptive response-time QC rows.
+  `"models"` compares fixed-facet, shared-rater and Person-specific
+  testlet workflows, including their distinct prediction and reporting
+  boundaries. `"feedback"` distinguishes fixed-rater uncertainty,
+  unexpected rating patterns, shared-rater uncertainty and screening
+  accuracy with known truth. `"features"`, `"imputation"` and
   `"gtheory"` show exploratory attributes, assigned-score multiple
   imputation and observed-score G/D-study workflows, including their own
   table, plot and saving routes. `"facets"`, `"conquest"`, and `"r"`
@@ -108,9 +110,13 @@ purpose-specific specialist helper. Use `mfrmr_output_guide("viewer")`
 when the next step is the optional local Shiny reader; it shows which
 `include` preset to use before calling
 [`launch_mfrmr_viewer()`](https://ryuya-dot-com.github.io/mfrmr/reference/launch_mfrmr_viewer.md).
-Use `mfrmr_output_guide("psychometric")` for the technical table,
-review, and reporting routes whose interpretation boundaries should be
-checked before manuscript use.
+Use `mfrmr_output_guide("feedback")` when preparing rater feedback.
+Start with the question and the fitted model: severity, response misfit
+and the accuracy of a warning rule are different quantities. A severe
+rater need not misfit, and an observed flag does not establish poor
+rater quality. Use `mfrmr_output_guide("psychometric")` for the
+technical table, review, and reporting routes whose interpretation
+boundaries should be checked before manuscript use.
 
 ## How to use this guide
 
@@ -120,9 +126,9 @@ explains what to inspect. Cells containing `...` are outlines, not
 complete scripts to paste and run. Use
 [mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
 for a runnable introduction and an explanation of function names.
-Inspect `DecisionBoundary` before interpreting a result. For bounded
-`GPCM`, use `scope = "gpcm"` to find both the support matrix and the
-table that explains how out-of-scope routes are handled.
+Inspect `DecisionBoundary` before interpreting a result. For `GPCM`, use
+`scope = "gpcm"` to find both the support matrix and the table that
+explains how out-of-scope routes are handled.
 
 ## Examples
 
@@ -169,4 +175,25 @@ linking[, c("Question", "MainFunction", "UseWhen")]
 #> 41 You are preparing fixed anchors or group anchors and need to catch overlap, duplicate, missing, sparse, or unsupported anchor rows before estimation.
 #> 42                                           You have two or more independently fitted waves and need common-element drift and thin-link support checks.
 #> 43          You have an ordered sequence of forms or administrations and need screened adjacent-link offsets before operational score-scale maintenance.
+
+feedback <- mfrmr_output_guide("feedback")
+feedback[, c("Question", "MainFunction", "DecisionBoundary")]
+#>                                                                                Question
+#> 82                How uncertain are fixed-rater severities or prespecified differences?
+#> 83 Which ordinary-model rating patterns need review, and do flags depend on the cutoff?
+#> 84             Which rating patterns need review under a shared-rater or testlet model?
+#> 85               How uncertain is an observed rater's severity in a shared-rater model?
+#> 86             How often does a warning rule flag unaffected or detect affected raters?
+#>                                                  MainFunction
+#> 82                                     mfrm_facet_intervals()
+#> 83                                       fit_measures_table()
+#> 84                                mfrm_response_diagnostics()
+#> 85                   confint(); mfrm_random_rater_intervals()
+#> 86 mfrm_screening_performance(); mfrm_screening_sensitivity()
+#>                                                                                                                                                                                                                                                                        DecisionBoundary
+#> 82                                              Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.
+#> 83                            Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.
+#> 84                                                                                       Posterior predictive Infit/Outfit are descriptive and differ from ordinary plug-in indices. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.
+#> 85 Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.
+#> 86                         Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.
 ```

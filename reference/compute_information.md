@@ -1,10 +1,9 @@
 # Compute design-weighted precision curves for ordered many-facet fits
 
 Calculates design-weighted score-variance curves across the latent trait
-(theta) for a fitted ordered-category `RSM`, `PCM`, or bounded `GPCM`
-model. Returns both an overall precision curve (`$tif`) and
-per-facet-level contribution curves (`$iif`) based on the realized
-observation pattern.
+(theta) for a fitted ordered-category `RSM`, `PCM`, or `GPCM` model.
+Returns both an overall precision curve (`$tif`) and per-facet-level
+contribution curves (`$iif`) based on the realized observation pattern.
 
 ## Usage
 
@@ -62,25 +61,25 @@ information identity rather than a separate approximation. For binary
 data it reduces to the familiar \\p(\theta)\\1 - p(\theta)\\\\ form. For
 `PCM`, the package evaluates each observed design cell using the
 threshold vector associated with that cell's realized `step_facet`
-level. For bounded `GPCM`, the same design-weighted score variance is
-scaled by the squared discrimination attached to the realized
-`slope_facet` level, which is the \\a_j^2 \cdot \mathrm{Var}(T \mid
-\theta)\\ item-information identity that Muraki (1993, Equation 10)
-derives by applying Samejima's (1974) polytomous information formula to
-the GPCM kernel of Muraki (1992).
+level. For `GPCM`, the same design-weighted score variance is scaled by
+the squared discrimination attached to the realized `slope_facet` level,
+which is the \\a_j^2 \cdot \mathrm{Var}(T \mid \theta)\\
+item-information identity that Muraki (1993, Equation 10) derives by
+applying Samejima's (1974) polytomous information formula to the GPCM
+kernel of Muraki (1992).
 
 ## What `tif` and `iif` mean here
 
 In `mfrmr`, this helper supports ordered-category `RSM`, `PCM`, and the
-current bounded `GPCM` fit. The total curve (`$tif`) is the sum of
+current `GPCM` fit. The total curve (`$tif`) is the sum of
 design-weighted cell contributions across all non-person facet levels in
 the fitted model. The facet-level contribution curves (`$iif`) keep
 those weighted contributions separated, so you can see which observed
 rater levels, criteria, or other facet levels are driving precision at
 different parts of the scale. For `PCM`, step-facet-specific thresholds
-are respected when each observed design cell is evaluated. For bounded
-`GPCM`, those same cell-level variances are additionally scaled by the
-squared discrimination associated with the realized `slope_facet` level.
+are respected when each observed design cell is evaluated. For `GPCM`,
+those same cell-level variances are additionally scaled by the squared
+discrimination associated with the realized `slope_facet` level.
 
 ## What this quantity does not justify
 
@@ -91,14 +90,14 @@ squared discrimination associated with the realized `slope_facet` level.
   form's precision independent of the realized observation pattern.
 
 - It does not currently extend beyond the ordered-category `RSM` / `PCM`
-  / bounded `GPCM` family implemented by
+  / `GPCM` family implemented by
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 ## When to use this
 
 Use `compute_information()` when you want a design-weighted precision
-screen for an `RSM`, `PCM`, or bounded `GPCM` fit along the latent
-continuum. In practice:
+screen for an `RSM`, `PCM`, or `GPCM` fit along the latent continuum. In
+practice:
 
 - start with the total precision curve for overall targeting across the
   realized observation pattern
@@ -120,16 +119,16 @@ smoother grid for reporting or custom graphics.
 ## References
 
 The ordered-category probability structures come from Andrich's `RSM`
-formulation and Masters' `PCM`. The bounded `GPCM` information identity
-\\a_j^2 \cdot \mathrm{Var}(T \mid \theta)\\ is derived in Muraki (1993,
-Equation 10) by applying Samejima's (1974) general polytomous
-information formula \\I_j(\theta) = \sum_k P\_{jk}(\theta) \[-\partial^2
-\ln P\_{jk} / \partial \theta^2\]\\ to the GPCM probability kernel of
-Muraki (1992). For the integer scoring function \\T_k = k\\ used by
-`mfrmr`, this reduces to \\a_j^2 \cdot \mathrm{Var}(K \mid \theta)\\. In
-`mfrmr`, those formulas are applied to the realized many-facet
-observation design, so the output should be read as a design-weighted
-precision summary rather than as a design-free abstract test function.
+formulation and Masters' `PCM`. The `GPCM` information identity \\a_j^2
+\cdot \mathrm{Var}(T \mid \theta)\\ is derived in Muraki (1993, Equation
+10) by applying Samejima's (1974) general polytomous information formula
+\\I_j(\theta) = \sum_k P\_{jk}(\theta) \[-\partial^2 \ln P\_{jk} /
+\partial \theta^2\]\\ to the GPCM probability kernel of Muraki (1992).
+For the integer scoring function \\T_k = k\\ used by `mfrmr`, this
+reduces to \\a_j^2 \cdot \mathrm{Var}(K \mid \theta)\\. In `mfrmr`,
+those formulas are applied to the realized many-facet observation
+design, so the output should be read as a design-weighted precision
+summary rather than as a design-free abstract test function.
 
 - Andrich, D. (1978). *A rating formulation for ordered response
   categories*. Psychometrika, 43(4), 561-573.
@@ -151,7 +150,7 @@ precision summary rather than as a design-free abstract test function.
   \\I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)\\, by applying
   Samejima's (1974) polytomous information formula to the GPCM kernel;
   this is the canonical reference for `compute_information()` under
-  bounded `GPCM`.)
+  `GPCM`.)
 
 - Samejima, F. (1974). *Normal ogive model on the continuous response
   level in the multidimensional latent space*. Psychometrika, 39,

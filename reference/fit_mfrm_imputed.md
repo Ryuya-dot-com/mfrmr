@@ -1,7 +1,7 @@
 # Fit the same MFRM to every completed rating data set
 
 Fit a separate MFRM to each completed version of the ratings reviewed by
-[`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md).
+[`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md).
 All fits use the same model and measurement scale so eligible estimates
 can be combined with
 [`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md).
@@ -24,7 +24,7 @@ summary(object, ...)
 - x:
 
   An
-  [`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+  [`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
   object.
 
 - model:
@@ -74,5 +74,5 @@ estimates and standard errors for Rubin pooling.
 
 ## See also
 
-[`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md),
+[`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md),
 [`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md)

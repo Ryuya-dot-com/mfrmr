@@ -53,7 +53,7 @@ facets_output_file_bundle(
 
 - score_se_method:
 
-  For bounded `GPCM` scorefile exports, which observation-level score
+  For `GPCM` scorefile exports, which observation-level score
   uncertainty columns to compute. `"both"` (default) includes native
   structural expected-score SEs and score-side delta-method SEs;
   `"native"` includes only the structural expected-score route;
@@ -143,9 +143,9 @@ for scale outputs, then use
 for file handoff. Use `facets_output_file_bundle()` only when a
 legacy-compatible graphfile or scorefile contract is required.
 
-## Bounded GPCM boundary
+## GPCM boundary
 
-For bounded `GPCM`, graph output and package-native scorefile output are
+For `GPCM`, graph output and package-native scorefile output are
 available with caveats. `include = "score"` returns observation-level
 fitted expected score, residual, standardized residual,
 observed-category probability, GPCM slope fields, and native structural
@@ -153,11 +153,11 @@ delta-method expected-score uncertainty and/or score-side delta-method
 SEs when the required MML diagnostics are available. Use
 `score_se_method` to choose `"both"` (default), `"native"`,
 `"score_side"`, or `"none"`. The score-side route transforms a
-logit-side standard error with the bounded GPCM expected-score
-derivative \\dE\[X\]/d\eta = \alpha Var(X)\\, where `ScoreSlope` is
-\\\alpha\\. `ScoreSideLogitSE` remains on the logit side; `ScoreSideSE`
-and its interval columns are on the expected-score scale. The scorefile
-also carries explicit score-side caveat columns. It is not a FACETS
+logit-side standard error with the GPCM expected-score derivative
+\\dE\[X\]/d\eta = \alpha Var(X)\\, where `ScoreSlope` is \\\alpha\\.
+`ScoreSideLogitSE` remains on the logit side; `ScoreSideSE` and its
+interval columns are on the expected-score scale. The scorefile also
+carries explicit score-side caveat columns. It is not a FACETS
 score-side equivalence file, does not export FACETS-equivalent
 score-side standard errors, and does not establish an operational
 score-scale decision. Use

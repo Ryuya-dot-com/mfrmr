@@ -52,7 +52,7 @@ predict_mfrm_units()."><meta property="og:image" content="https://ryuya-dot-com.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Portable fixed-calibration capabilities</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-calibration.R" class="external-link"><code>R/api-calibration.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-calibration.R" class="external-link"><code>R/api-calibration.R</code></a></small>
       <div class="d-none name"><code>mfrm_calibration_capabilities.Rd</code></div>
     </div>
 
@@ -78,13 +78,13 @@ combination. <code>PortableCalibration</code> is either <code>"available"</code>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">mfrm_calibration_capabilities</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Model Estimator                              ScoringBasis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          RSM       MML                     fixed standard normal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          PCM       MML                     fixed standard normal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      RSM/PCM       MML estimated population or latent regression</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 bounded GPCM       MML             fixed or estimated population</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      RSM/PCM       JML                    post-hoc scoring prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 bounded GPCM       JML                    post-hoc scoring prior</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Model Estimator                              ScoringBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     RSM       MML                     fixed standard normal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     PCM       MML                     fixed standard normal</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 RSM/PCM       MML estimated population or latent regression</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    GPCM       MML             fixed or estimated population</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 RSM/PCM       JML                    post-hoc scoring prior</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    GPCM       JML                    post-hoc scoring prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PortableCalibration                          AnchorSupport</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1           available  stored direct and group facet anchors</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2           available  stored direct and group facet anchors</span>
@@ -99,13 +99,13 @@ combination. <code>PortableCalibration</code> is either <code>"available"</code>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 not available for portable calibration</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 not available for portable calibration</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 not available for portable calibration</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      ExistingAlternative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                             portable artifact or fitted-object scoring</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                             portable artifact or fitted-object scoring</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3             use fitted-object scoring with the fitted population model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                 use fitted-object bounded-GPCM scoring</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              use fitted-object scoring with an explicit post-hoc prior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 use fitted-object bounded-GPCM scoring with an explicit post-hoc prior</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                              ExistingAlternative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                     portable artifact or fitted-object scoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                     portable artifact or fitted-object scoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     use fitted-object scoring with the fitted population model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                 use fitted-object GPCM scoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      use fitted-object scoring with an explicit post-hoc prior</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 use fitted-object GPCM scoring with an explicit post-hoc prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                        Limitation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 one observed score scale, one latent dimension, known facet levels, and an explicit same-data quadrature review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 one observed score scale, one latent dimension, known facet levels, and an explicit same-data quadrature review</span>

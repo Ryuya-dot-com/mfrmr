@@ -93,9 +93,9 @@ Use existing package-native outputs in this order:
 ## GPCM boundary
 
 This helper is currently intended for the documented `RSM` / `PCM`
-linking workflow. If the supplied drift/chain sources resolve to bounded
-`GPCM`, the helper stops with a package-level message rather than
-silently implying support.
+linking workflow. If the supplied drift/chain sources resolve to `GPCM`,
+the helper stops with a package-level message rather than silently
+implying support.
 
 ## See also
 

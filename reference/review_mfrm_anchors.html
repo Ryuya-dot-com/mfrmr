@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review and normalize anchor/group-anchor tables</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>review_mfrm_anchors.Rd</code></div>
     </div>
 
@@ -72,7 +72,8 @@
 <span>  min_obs_per_element <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  min_obs_per_category <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  noncenter_facet <span class="op">=</span> <span class="st">"Person"</span>,</span>
-<span>  dummy_facets <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  dummy_facets <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  category_policy <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -119,7 +120,8 @@ values are fixed during estimation.</p></dd>
 
 
 <dt id="arg-keep-original">keep_original<a class="anchor" aria-label="anchor" href="#arg-keep-original"></a></dt>
-<dd><p>Keep original category values.</p></dd>
+<dd><p>Keep original category values.
+New code can instead use <code>category_policy = "preserve"</code>.</p></dd>
 
 
 <dt id="arg-missing-codes">missing_codes<a class="anchor" aria-label="anchor" href="#arg-missing-codes"></a></dt>
@@ -152,6 +154,18 @@ used in recommendations (default <code>10</code>).</p></dd>
 
 <dt id="arg-dummy-facets">dummy_facets<a class="anchor" aria-label="anchor" href="#arg-dummy-facets"></a></dt>
 <dd><p>Facets to fix at zero.</p></dd>
+
+
+<dt id="arg-category-policy">category_policy<a class="anchor" aria-label="anchor" href="#arg-category-policy"></a></dt>
+<dd><p>Optional explicit category choice: <code>"collapse"</code>
+maps gaps in the observed categories to consecutive scores;
+<code>"preserve"</code> keeps the intended ladder, declared with <code>rating_min</code> and
+<code>rating_max</code>. This changes the fitted category steps, not just labels.
+<code>NULL</code> (default) uses <code>keep_original</code>, whose default is <code>FALSE</code>
+(<code>"collapse"</code>). Supplying both choices is allowed only when they agree.
+Preservation does not estimate unsupported steps: fitting stops if a
+retained internal category has no observations. Use the same policy in
+<code><a href="describe_mfrm_data.html">describe_mfrm_data()</a></code> and <code>review_mfrm_anchors()</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

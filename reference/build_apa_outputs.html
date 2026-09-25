@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build APA text outputs from model results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>build_apa_outputs.Rd</code></div>
     </div>
 
@@ -111,7 +111,7 @@ Frequently used fields include:</p><ul><li><p><code>assessment</code>, <code>set
 <li><p><code>line_width</code> (optional text wrapping width for <code>report_text</code>; default = 92)</p></li>
 </ul><p>Output text includes residual-PCA screening commentary if PCA diagnostics are
 available in <code>diagnostics</code>.</p>
-<p>For bounded <code>GPCM</code>, this helper returns a caveated partial reporting bundle
+<p>For <code>GPCM</code>, this helper returns a caveated partial reporting bundle
 over supported diagnostics, direct tables, and plots. It also includes a
 <code>gpcm_boundary</code> table. Treat the output as slope-aware sensitivity-reporting
 text, not FACETS score-side equivalence, automatic operational scoring, or
@@ -279,7 +279,7 @@ package-native bias helper that provides a table component.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Facet measures.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Person measures ranged from -1.72 to 1.51 logits (M = -0.16, SD = 0.82). Rater measures</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ranged from -0.61 to 0.41 logits (M = -0.00, SD = 0.40). Criterion measures ranged from</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ranged from -0.61 to 0.41 logits (M = 0.00, SD = 0.40). Criterion measures ranged from</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -0.34 to 0.22 logits (M = 0.00, SD = 0.30).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fit and precision.</span>

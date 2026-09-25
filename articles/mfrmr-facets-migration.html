@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Migrating from FACETS to mfrmr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-facets-migration.Rmd</code></div>
     </div>
 
@@ -88,8 +88,8 @@
 <code>RSM</code>/<code>PCM</code> many-facet Rasch-family model with
 FACETS-oriented settings, generating related diagnostic and reporting
 tables, and reviewing the output-contract boundary between the two
-systems. Bounded <code>GPCM</code> can be fit in <code>mfrmr</code>, but
-its slope-aware score semantics are intentionally outside the score-side
+systems. <code>GPCM</code> can be fit in <code>mfrmr</code>, but its
+slope-aware score semantics are intentionally outside the score-side
 FACETS output-contract route.</p>
 <p>The software reference target for this migration boundary is FACETS
 64-bit 4.5.1 (July 2026). A cited manual may retain its published 4.5.0
@@ -147,7 +147,7 @@ JMLE-style residual basis</td>
 <td>Multiple model statements, rating scales, partial credit, and other
 response families can coexist</td>
 <td>One response-model family per fit: <code>RSM</code>,
-<code>PCM</code>, or bounded <code>GPCM</code>
+<code>PCM</code>, or <code>GPCM</code>
 </td>
 </tr>
 <tr class="odd">
@@ -471,8 +471,8 @@ table:</p>
 <span><span class="co">#&gt; 11       0.72      -0.19        0.69       -0.40         NA                P034</span></span>
 <span><span class="co">#&gt; 12       1.72       1.07        1.75        1.26         NA                P021</span></span>
 <span><span class="co">#&gt; 13       1.04       0.32        1.05        0.29         NA                P001</span></span>
-<span><span class="co">#&gt; 14       0.34      -1.01        0.34       -1.39         NA                P035</span></span>
-<span><span class="co">#&gt; 15       0.69      -0.25        0.68       -0.42         NA                P031</span></span>
+<span><span class="co">#&gt; 14       0.69      -0.25        0.68       -0.42         NA                P031</span></span>
+<span><span class="co">#&gt; 15       0.34      -1.01        0.34       -1.39         NA                P035</span></span>
 <span><span class="co">#&gt; 16       1.13       0.41        1.09        0.35         NA                P004</span></span>
 <span><span class="co">#&gt; 17       1.95       1.20        1.93        1.37         NA                P024</span></span>
 <span><span class="co">#&gt; 18       1.01       0.26        1.01        0.20         NA                P038</span></span>
@@ -501,8 +501,8 @@ table:</p>
 <span><span class="co">#&gt; 41       0.59      -0.19        0.64       -0.53         NA                P041</span></span>
 <span><span class="co">#&gt; 42       1.08       0.40        0.91        0.04         NA                P014</span></span>
 <span><span class="co">#&gt; 43       3.53       1.94        3.31        2.74         NA                P016</span></span>
-<span><span class="co">#&gt; 44       0.79       0.17        0.88       -0.03         NA                P040</span></span>
-<span><span class="co">#&gt; 45       0.70       0.07        0.68       -0.42         NA                P037</span></span>
+<span><span class="co">#&gt; 44       0.70       0.07        0.68       -0.42         NA                P037</span></span>
+<span><span class="co">#&gt; 45       0.79       0.17        0.88       -0.03         NA                P040</span></span>
 <span><span class="co">#&gt; 46       0.73       0.11        0.73       -0.32         NA                P029</span></span>
 <span><span class="co">#&gt; 47       0.57      -0.08        0.52       -0.81         NA                P033</span></span>
 <span><span class="co">#&gt; 48       1.03         NA        1.23        0.56         NA                P032</span></span>
@@ -865,8 +865,8 @@ table:</p>
 <span><span class="co">#&gt; 11 Fitted estimate                 0       0.51      0.51       0.72      -0.19</span></span>
 <span><span class="co">#&gt; 12 Fitted estimate                 0       0.51      0.67       1.72       1.07</span></span>
 <span><span class="co">#&gt; 13 Fitted estimate                 0       0.57      0.59       1.04       0.32</span></span>
-<span><span class="co">#&gt; 14 Fitted estimate                 0       0.51      0.51       0.34      -1.01</span></span>
-<span><span class="co">#&gt; 15 Fitted estimate                 0       0.51      0.51       0.69      -0.25</span></span>
+<span><span class="co">#&gt; 14 Fitted estimate                 0       0.51      0.51       0.69      -0.25</span></span>
+<span><span class="co">#&gt; 15 Fitted estimate                 0       0.51      0.51       0.34      -1.01</span></span>
 <span><span class="co">#&gt; 16 Fitted estimate                 0       0.53      0.56       1.13       0.41</span></span>
 <span><span class="co">#&gt; 17 Fitted estimate                 0       0.56      0.78       1.95       1.20</span></span>
 <span><span class="co">#&gt; 18 Fitted estimate                 0       0.51      0.52       1.01       0.26</span></span>
@@ -895,8 +895,8 @@ table:</p>
 <span><span class="co">#&gt; 41 Fitted estimate                 0       0.68      0.68       0.59      -0.19</span></span>
 <span><span class="co">#&gt; 42 Fitted estimate                 0       0.68      0.71       1.08       0.40</span></span>
 <span><span class="co">#&gt; 43 Fitted estimate                 0       0.68      1.28       3.53       1.94</span></span>
-<span><span class="co">#&gt; 44 Fitted estimate                 0       0.79      0.79       0.79       0.17</span></span>
-<span><span class="co">#&gt; 45 Fitted estimate                 0       0.79      0.79       0.70       0.07</span></span>
+<span><span class="co">#&gt; 44 Fitted estimate                 0       0.79      0.79       0.70       0.07</span></span>
+<span><span class="co">#&gt; 45 Fitted estimate                 0       0.79      0.79       0.79       0.17</span></span>
 <span><span class="co">#&gt; 46 Fitted estimate                 0       0.79      0.79       0.73       0.11</span></span>
 <span><span class="co">#&gt; 47 Fitted estimate                 0       0.79      0.79       0.57      -0.08</span></span>
 <span><span class="co">#&gt; 48 Fitted estimate                 0       1.06      1.08       1.03         NA</span></span>
@@ -923,8 +923,8 @@ table:</p>
 <span><span class="co">#&gt; 11        0.69       -0.40         NA                     P034            2.83</span></span>
 <span><span class="co">#&gt; 12        1.75        1.26         NA                     P021            2.67</span></span>
 <span><span class="co">#&gt; 13        1.05        0.29         NA                     P001            3.00</span></span>
-<span><span class="co">#&gt; 14        0.34       -1.39         NA                     P035            2.67</span></span>
-<span><span class="co">#&gt; 15        0.68       -0.42         NA                     P031            2.67</span></span>
+<span><span class="co">#&gt; 14        0.68       -0.42         NA                     P031            2.67</span></span>
+<span><span class="co">#&gt; 15        0.34       -1.39         NA                     P035            2.67</span></span>
 <span><span class="co">#&gt; 16        1.09        0.35         NA                     P004            3.00</span></span>
 <span><span class="co">#&gt; 17        1.93        1.37         NA                     P024            2.40</span></span>
 <span><span class="co">#&gt; 18        1.01        0.20         NA                     P038            2.50</span></span>
@@ -953,8 +953,8 @@ table:</p>
 <span><span class="co">#&gt; 41        0.64       -0.53         NA                     P041            1.50</span></span>
 <span><span class="co">#&gt; 42        0.91        0.04         NA                     P014            1.50</span></span>
 <span><span class="co">#&gt; 43        3.31        2.74         NA                     P016            1.50</span></span>
-<span><span class="co">#&gt; 44        0.88       -0.03         NA                     P040            1.33</span></span>
-<span><span class="co">#&gt; 45        0.68       -0.42         NA                     P037            1.33</span></span>
+<span><span class="co">#&gt; 44        0.68       -0.42         NA                     P037            1.33</span></span>
+<span><span class="co">#&gt; 45        0.88       -0.03         NA                     P040            1.33</span></span>
 <span><span class="co">#&gt; 46        0.73       -0.32         NA                     P029            1.33</span></span>
 <span><span class="co">#&gt; 47        0.52       -0.81         NA                     P033            1.33</span></span>
 <span><span class="co">#&gt; 48        1.23        0.56         NA                     P032            1.17</span></span>
@@ -1334,7 +1334,7 @@ fixed-width or CSV exports:</p>
 <span>  out_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  include <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"graph"</span>, <span class="st">"score"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>For RSM and PCM the score-side helpers are available. Under bounded
+<p>For RSM and PCM the score-side helpers are available. Under
 <code>GPCM</code> the score-side bundle is intentionally restricted; see
 <code><a href="../reference/gpcm_capability_matrix.html">?gpcm_capability_matrix</a></code> and the
 <code>mfrmr-gpcm-scope</code> vignette for the documented

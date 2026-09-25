@@ -25,7 +25,8 @@ describe_mfrm_data(
   context_facets = NULL,
   agreement_top_n = NULL,
   expected_design = NULL,
-  min_linking_persons = 2L
+  min_linking_persons = 2L,
+  category_policy = NULL
 )
 ```
 
@@ -65,7 +66,8 @@ describe_mfrm_data(
 
   Keep original category values. Use this with `rating_min` /
   `rating_max` when the intended scale has unused intermediate
-  categories such as `1, 2, 4, 5` on a 1-5 scale.
+  categories such as `1, 2, 4, 5` on a 1-5 scale. New code can instead
+  use `category_policy = "preserve"`.
 
 - missing_codes:
 
@@ -120,11 +122,28 @@ describe_mfrm_data(
   `linkage_summary$SparseLevels`. This is a review threshold, not a
   model-acceptance rule.
 
+- category_policy:
+
+  Optional explicit category choice: `"collapse"` maps gaps in the
+  observed categories to consecutive scores; `"preserve"` keeps the
+  intended ladder, declared with `rating_min` and `rating_max`. This
+  changes the fitted category steps, not just labels. `NULL` (default)
+  uses `keep_original`, whose default is `FALSE` (`"collapse"`).
+  Supplying both choices is allowed only when they agree. Preservation
+  does not estimate unsupported steps: fitting stops if a retained
+  internal category has no observations. Use the same policy in
+  `describe_mfrm_data()` and
+  [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md).
+
 ## Value
 
 A list of class `mfrm_data_description` with:
 
-- `overview`: one-row run-level summary
+- `overview`: one-row run-level summary including `CategoryPolicy` and
+  `ScoreRecoded`. The former records the selected category handling; the
+  latter indicates whether original score values actually changed. A
+  `"collapse"` policy can leave a contiguous scale unchanged. Inspect
+  `score_support$score_map` for the mapping.
 
 - `missing_by_column`: missing counts in selected input columns
 
@@ -318,7 +337,7 @@ data_review <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE
+  category_policy = "preserve"
 )
 data_review$row_retention       # Input and retained rows; check DroppedRows
 #>                             Stage Rows DroppedRows
@@ -360,8 +379,8 @@ review <- summary(data_review)
 review$overview
 #>   Observations TotalWeight Persons Facets Categories RatingMin RatingMax
 #> 1          282         282      48      2          4         1         4
-#>   RatingRangeSource RatingMinSource RatingMaxSource
-#> 1          declared        declared        declared
+#>   RatingRangeSource RatingMinSource RatingMaxSource CategoryPolicy ScoreRecoded
+#> 1          declared        declared        declared       preserve        FALSE
 review$notes
 #> [1] "No missing values were detected in selected input columns."                                                                                                  
 #> [2] "Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned."

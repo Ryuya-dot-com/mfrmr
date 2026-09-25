@@ -32,7 +32,7 @@ gpcm_mml_quadrature_sensitivity(
 
 - fit:
 
-  An RSM, PCM, or bounded GPCM MML `mfrm_fit` returned by
+  An RSM, PCM, or GPCM MML `mfrm_fit` returned by
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
   `gpcm_mml_quadrature_sensitivity()` accepts only GPCM fits.
 
@@ -85,7 +85,10 @@ An object of class `mfrm_quadrature_sensitivity` containing:
 - `runs`: likelihood, gradient, curvature, population-scale, and
   readiness details for each fit;
 
-- `slopes`: relative-slope estimates and raw diagnostic SEs;
+- `slopes`: relative-slope estimates, raw diagnostic SEs and freshly
+  checked 95% model intervals. The summary reports endpoint changes
+  among jointly eligible levels and counts changes in interval
+  availability;
 
 - `conditions`: warnings and messages emitted by the explicit refits;
 
@@ -118,6 +121,10 @@ two-way facet interactions and, for GPCM, the complete-predictor slope
 action. Same-Person EAP and posterior-SD changes use each fit's
 corresponding quadrature count. A one-point grid has no public scoring
 route, so those two changes are `NA` when it is the reference.
+
+Explicit intercept-only and covariate population models reuse the
+retained person table, factor coding and formula, with design equality
+checked by Person. Older fits without that data cannot be replayed.
 
 Raw slope and population-SD standard errors are computed from each local
 observed-information Hessian for diagnostic comparison only. The public
@@ -160,12 +167,18 @@ summary(sensitivity)
 #>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
 #>                0.00000                          0.00000                NA
 #>                0.00039                          0.00215                NA
-#>  RawSlopeSEMaxAbsChange PopulationSDAbsChange RawPopulationSDSEAbsChange
-#>                      NA                     0                         NA
-#>                      NA                     0                         NA
-#>  ProbabilityMaxAbsChange EAPMaxAbsChange PosteriorSDMaxAbsChange
-#>                  0.00000         0.00000                 0.00000
-#>                  0.00072         0.00756                 0.01155
+#>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
+#>                      NA                        NA
+#>                      NA                        NA
+#>  SlopeIntervalEligibilityChanged PopulationSDAbsChange
+#>                               NA                     0
+#>                               NA                     0
+#>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
+#>                          NA                 0.00000         0.00000
+#>                          NA                 0.00072         0.00756
+#>  PosteriorSDMaxAbsChange
+#>                  0.00000
+#>                  0.01155
 #> 
 #> Fixed-parameter integration review (adaptive minus fixed)
 #>  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
@@ -188,11 +201,17 @@ apa_table(sensitivity, digits = 5)
 #>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
 #>                0.00000                          0.00000                NA
 #>                0.00039                          0.00215                NA
-#>  RawSlopeSEMaxAbsChange PopulationSDAbsChange RawPopulationSDSEAbsChange
-#>                      NA                     0                         NA
-#>                      NA                     0                         NA
-#>  ProbabilityMaxAbsChange EAPMaxAbsChange PosteriorSDMaxAbsChange
-#>                  0.00000         0.00000                 0.00000
-#>                  0.00072         0.00756                 0.01155
+#>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
+#>                      NA                        NA
+#>                      NA                        NA
+#>  SlopeIntervalEligibilityChanged PopulationSDAbsChange
+#>                               NA                     0
+#>                               NA                     0
+#>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
+#>                          NA                 0.00000         0.00000
+#>                          NA                 0.00072         0.00756
+#>  PosteriorSDMaxAbsChange
+#>                  0.00000
+#>                  0.01155
 # }
 ```

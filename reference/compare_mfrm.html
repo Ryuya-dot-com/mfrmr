@@ -58,7 +58,7 @@ a likelihood-ratio test is included."><meta property="og:image" content="https:/
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compare two or more fitted MFRM models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-extended-comparison.R" class="external-link"><code>R/api-extended-comparison.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-extended-comparison.R" class="external-link"><code>R/api-extended-comparison.R</code></a></small>
       <div class="d-none name"><code>compare_mfrm.Rd</code></div>
     </div>
 
@@ -161,11 +161,27 @@ silently absent.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Models should be fit to the <strong>same data</strong> (same rows, same person/facet
+    <p>GPCM MML and RSM/PCM MML with an estimated normal population use a separate
+local-solution check for information criteria, without refitting. It checks
+the retained likelihood, terminal gradient and positive unregularized
+observed information. <code>ICFitEligible</code>, <code>ICFitBasis</code> and <code>ICFitReview</code> record
+that decision; <code>ICComparable</code> also requires the common data/likelihood and
+integration checks. This can allow IC comparison while <code>InferenceReady</code>
+remains false for intervals or tests. It shares the joint-information
+calculation and workspace budget with <code><a href="confint.mfrm_fit.html">confint.mfrm_fit()</a></code>. Unknown, unstable or unavailable results
+remain ineligible with a reason. A local check does not prove a global
+maximum or negligible integration error; examine starting-value and
+<code><a href="mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code> results when the decision is close.
+Positive but ill-conditioned information may pass with a caution after
+numerical refinement, unregularized inversion and curvature-scaled gradient
+checks. A warning is emitted and retained in <code>ICFitCaution</code>, <code>ICFitReview</code>
+and the requested LRT's interpretation; it does not establish
+finite-sample accuracy for model ranking or tests.</p>
+<p>Models should be fit to the <strong>same data</strong> (same rows, same person/facet
 columns) for the comparison to be meaningful. The function checks that
 observation counts match and warns otherwise.</p>
 <p>Information-criterion ranking is reported only when all candidates are
-inference-ready fits from the package's current <code>MML</code> contract, use the same
+eligible solutions under the package's current <code>MML</code> contract, use the same
 prepared observations, score coding, constraints, formula contract, and
 integration-evaluation identity, are eligible under the weighting policy,
 and have a selectable integration tier. For fixed-facet MML,
@@ -195,9 +211,12 @@ usual sense, and their information criteria do not share the common MML
 contract. Do not use either the LRT or IC ranking as a direct cross-method
 comparison.</p>
 <p>In the <strong>current <code>mfrmr</code> model space</strong>, the automatic nesting review is
-intentionally conservative. It currently supports two fixed-effect
+intentionally conservative. It currently supports the following
 restrictions under shared data and shared constraints:</p><ul><li><p><code>RSM</code> nested inside <code>PCM</code> when the <code>PCM</code> fit has an explicit
 <code>step_facet</code>;</p></li>
+<li><p><code>PCM</code> nested inside <code>GPCM</code> with the same step/slope facet, population
+design, other facet/step constraints and interactions. The only additional
+parameters must be G-1 relative log-slope contrasts for G slope levels;</p></li>
 <li><p>same-family additive-vs-interaction comparisons when the smaller fit's
 <code>facet_interactions</code> set is a subset of the larger fit's set.</p></li>
 </ul><p>Cross-method comparisons, comparisons that change anchors/dummying/centering,
@@ -209,7 +228,9 @@ estimated-normal design, with the same declared columns and design values
 aligned by Person. Coefficient and variance estimates may differ. Row and
 column permutations are aligned; other recodings, changed designs, and
 unavailable design metadata require separate review. Passing this check
-does not grant inference readiness to an estimated-population fit.</p>
+does not grant inference readiness to an estimated-population fit. For a
+matched PCM/GPCM pair, the local-solution checks described above supply
+the numerical requirement independently of slope-interval availability.</p>
 <p>The <strong>likelihood-ratio test (LRT)</strong> is reported only when exactly two
 models are supplied, <code>nested = TRUE</code>, the structural nesting review passes, and the
 difference in the number of parameters is positive:</p>
@@ -342,13 +363,16 @@ all other structural settings match and the smaller model's
 <code>facet_interactions</code> set is a subset of the larger model's set.</p></li>
 <li><p>Do not assume that <code>nested = TRUE</code> overrides the package's conservative
 nesting boundary; unsupported relations remain unsupported.</p></li>
-<li><p>PCM is the unit-slope response-kernel reduction of the bounded GPCM when
-both use the same explicit step owner. Nevertheless, the current automatic
-nesting review does not authorize a PCM-versus-GPCM chi-square LRT. Use
-<code><a href="build_weighting_review.html">build_weighting_review()</a></code> for descriptive score and weighting comparisons.
-Free-slope GPCM fits currently lack the inference checks required for IC
-ranking, even under MML. Raw criteria, when available, are diagnostic only;
-<code>PCM_in_GPCM_ic_only</code> records a structural relation, not permission to rank.</p></li>
+<li><p>PCM is the unit-slope reduction of an aligned GPCM. <code>nested = TRUE</code> tests
+equal relative slopes only after population, constraint, free-dimension
+and numerical checks pass. The relation is recorded as <code>PCM_in_GPCM</code>.
+Default PCM uses a fixed standard-normal population, whereas default GPCM
+estimates its mean and variance: changing only <code>model</code> does not isolate
+slope differences. Supply <code>population_formula = ~1</code> and the same
+<code>person_data</code> to both fits for an estimated-normal comparison.
+Unit slopes are interior positive values; the reference is ordinary
+asymptotic chi-square with G-1 degrees of freedom, not a boundary mixture.
+IC eligibility alone does not establish nesting or qualify slope intervals.</p></li>
 <li><p>Do not compare models fit to different datasets, different score codings,
 or materially different constraint systems as if they were commensurate.</p></li>
 <li><p>At large Person counts, a small systematic likelihood gain can dominate an
@@ -401,14 +425,14 @@ using IC or LRT results in reporting.</p>
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
 
 
-<ol><li><p>Fit two models with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> (e.g., PCM and bounded GPCM) on the
+<ol><li><p>Fit two models with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> (e.g., PCM and GPCM) on the
 same prepared rows, explicit step owner, constraints, and MML quadrature
 setting. Use at least 31 common quadrature points for selectable ICs.</p></li>
 <li><p>Compare with <code>compare_mfrm(fit_pcm, fit_gpcm)</code> and start by checking
 <code>comparison$table$ICComparable</code>.</p></li>
 <li><p>Inspect <code>summary(comparison)</code> for AIC/BIC/SABIC diagnostics and the reasons
-for withholding ranking or tests. Free-slope GPCM rankings and
-PCM-versus-GPCM LRTs are currently withheld.</p></li>
+for withholding ranking or tests. GPCM IC ranking has separate solution
+checks; request the matched PCM/GPCM test with <code>nested = TRUE</code>.</p></li>
 <li><p>Use <code>build_weighting_review(fit_pcm, fit_gpcm)</code> to inspect which selected
 facet levels and information shares were reweighted by the slopes.</p></li>
 </ol></div>
@@ -479,6 +503,8 @@ problems in multivariate analysis. <em>Psychometrika, 52</em>(3), 333-343.</p></
 <span class="r-in"><span><span class="co"># Delta is the difference from the lowest value of that criterion</span></span></span>
 <span class="r-in"><span><span class="co"># For close or consequential comparisons, check a denser shared grid with</span></span></span>
 <span class="r-in"><span><span class="co"># mml_quadrature_sensitivity() before choosing a model</span></span></span>
+<span class="r-in"><span><span class="co"># For a PCM/GPCM equal-slope test, see the matched-population example in</span></span></span>
+<span class="r-in"><span><span class="co"># vignette("mfrmr-gpcm-scope"); request compare_mfrm(..., nested = TRUE).</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

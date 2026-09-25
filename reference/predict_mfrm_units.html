@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Score future or partially observed units under the fitted scoring basis</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>predict_mfrm_units.Rd</code></div>
     </div>
 
@@ -215,7 +215,7 @@ estimates from the fitting step.</p>
 <p>When the fitted population model is intercept-only (<code>population_formula = ~ 1</code>), <code>predict_mfrm_units()</code> still uses the fitted population-model basis,
 but it can reconstruct the minimal scored-person table internally because no
 background covariates are needed beyond the person IDs in <code>new_data</code>.</p>
-<p>The current bounded <code>GPCM</code> branch is included in this scoring layer,
+<p>The current <code>GPCM</code> branch is included in this scoring layer,
 so fitted <code>GPCM</code> objects can be used for the same fitted-object
 posterior summaries. This does not imply that every downstream diagnostic or
 reporting helper has already been generalized to <code>GPCM</code>.</p>

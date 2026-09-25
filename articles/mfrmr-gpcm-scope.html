@@ -77,27 +77,965 @@
       <img src="../logo.png" class="logo" alt=""><h1>GPCM scope and current limitations</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-gpcm-scope.Rmd</code></div>
     </div>
 
     
     
-<p><code>mfrmr</code> includes a scope-bounded implementation of the
-Generalized Partial Credit Model (GPCM; Muraki 1992). The estimator is
-available under the documented constraints, while several downstream
+<p><code>mfrmr</code> includes a Generalized Partial Credit Model (GPCM;
+Muraki 1992) in which one selected facet supplies both level-specific
+discriminations and category steps. Fitting is available under the
+documented constraints. MML information criteria can be compared when
+the likelihood and local-solution checks pass.
+<code>confint(fit, parm = "slopes")</code> provides approximate
+relative-slope intervals when its MML checks pass. Explicit options add
+standardized slopes, specified comparisons, independent-cluster
+covariance and finite-family adjustment. Separate functions provide
+fitted-model bootstrap inference and curve intervals. Several downstream
 reporting helpers remain restricted because score-side semantics under
 free discrimination differ from the Rasch-family case. This vignette
 documents which helpers are available, which are not, and what to use as
 a substitute when a helper is restricted.</p>
-<p>In this guide, <em>bounded</em> describes the supported model and
-workflow boundary; it does not mean finite lower and upper parameter
-bounds. The JML route uses an unpenalized identified joint likelihood. A
-non-representable slope proposal can be rejected during line search for
-numerical safety, but that is not a statistical penalty. If the
-likelihood has a certified recession direction, the finite optimizer
-iterate is retained only as a numerical trace and the primary result
-carries an extended-real or typed boundary status.</p>
+<p>We call this model <strong>GPCM</strong> and state its structural
+choices and output availability separately. Unidimensionality is not a
+reason to give GPCM a special restrictive name. The JML route uses an
+unpenalized identified joint likelihood. A non-representable slope
+proposal can be rejected during line search for numerical safety, but
+that is not a statistical penalty. If the likelihood has a certified
+recession direction, the finite optimizer iterate is retained only as a
+numerical trace and the primary result carries an extended-real or typed
+boundary status.</p>
+<div class="section level2">
+<h2 id="what-can-i-report">What can I report?<a class="anchor" aria-label="anchor" href="#what-can-i-report"></a>
+</h2>
+<p>The following distinctions apply to the current free-slope model
+under MML. They describe mfrmr’s available output, not a general
+impossibility of GPCM inference.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Output</th>
+<th>Current use</th>
+<th>What the number does not establish</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Relative slopes and fitted curves</td>
+<td>Inspect <code>OptimizerEstimate</code> and numerical diagnostics for
+descriptive sensitivity analysis. <code>Estimate</code> retains the same
+numerical slope for compatibility.</td>
+<td>A finite optimizer result is not a qualified primary slope
+estimate.</td>
+</tr>
+<tr class="even">
+<td>Slope SEs and intervals</td>
+<td>
+<code>confint(fit, parm = "slopes")</code> or
+<code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> returns pointwise relative log-Wald
+intervals by default. Explicit <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> options add
+standardized slopes, contrasts, sandwich covariance and Bonferroni
+adjustment.</td>
+<td>Inspect <code>CIEligible</code> and <code>InferenceReview</code>.
+Each option changes the target or approximation; none supplies universal
+coverage.</td>
+</tr>
+<tr class="odd">
+<td>Facet and step SEs</td>
+<td>Some local SEs remain available for review; read fit readiness and
+the accompanying precision/interval eligibility.</td>
+<td>A finite band does not override the source fit’s inference
+restriction.</td>
+</tr>
+<tr class="even">
+<td>Person posterior summaries</td>
+<td>Conditional scoring may be available; inspect source readiness and
+calibration stability.</td>
+<td>Posterior SDs do not include uncertainty from estimating the
+calibration.</td>
+</tr>
+<tr class="odd">
+<td>AIC/BIC/SABIC</td>
+<td>
+<code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> returns ranking, deltas and weights when
+its MML comparison checks pass.</td>
+<td>
+<code>ICSelectable</code> covers likelihood/integration,
+<code>ICFitEligible</code> covers the numerical solution, and
+<code>ICComparable</code> is the final comparison decision. This does
+not grant interval or LRT eligibility.</td>
+</tr>
+<tr class="even">
+<td>PCM/GPCM likelihood-ratio test</td>
+<td>
+<code>compare_mfrm(..., nested = TRUE)</code> returns an asymptotic
+chi-square test for eligible matched MML fits.</td>
+<td>A significant difference does not decide the scoring policy; small
+or sparse samples can invalidate the approximation.</td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="which-uncertainty-claims-are-supported">Which uncertainty claims are supported?<a class="anchor" aria-label="anchor" href="#which-uncertainty-claims-are-supported"></a>
+</h3>
+<p>All the inferential routes below are approximations. A numerical
+eligibility check establishes whether a calculation can be returned
+under its stated rules; it does not certify the nominal confidence level
+for your assessment. The available studies support different claims for
+different targets:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Question and API</th>
+<th>Evidence and reporting limit</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Relative or population-standardized discrimination:
+<code>confint(fit)</code>
+</td>
+<td>Joint-information and independent-cluster sandwich calculations have
+numerical checks and simulation evidence for specified designs.
+Historical studies do not establish current-estimator coverage for every
+changed numerical branch.</td>
+</tr>
+<tr class="even">
+<td>A specified ratio or difference:
+<code>confint(fit, contrasts = ...)</code>
+</td>
+<td>Use the declared scale and full covariance. Evidence for relative
+contrasts does not transfer automatically to standardized differences;
+the latter have a separate saved-fit evaluation below.</td>
+</tr>
+<tr class="odd">
+<td>Category probability at fixed ability:
+<code><a href="../reference/mfrm_curve_intervals.html">mfrm_curve_intervals()</a></code>
+</td>
+<td>Numerical transformations are checked, but nominal coverage failed
+in some small incomplete designs, including Bonferroni families. Report
+these as approximate calibration-uncertainty intervals, not validated
+95% bands.</td>
+</tr>
+<tr class="even">
+<td>Information per rating:
+<code>mfrm_curve_intervals(..., type = "information")</code>
+</td>
+<td>Its own saved-fit evaluation is available below. This is neither
+total test information nor uncertainty in an estimated Person
+score.</td>
+</tr>
+<tr class="odd">
+<td>Matched-model selection or equal slopes:
+<code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code>
+</td>
+<td>AIC/BIC ranking and the asymptotic PCM/GPCM test require their
+separate likelihood, nesting and numerical checks. The historical null
+study does not establish performance for arbitrary sparse designs.</td>
+</tr>
+<tr class="even">
+<td>Bootstrap slopes or a PCM-null test:
+<code><a href="../reference/bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm()</a></code>
+</td>
+<td>Quantile calculations and accounting for unresolved trials are
+checked. The one-dataset example does not establish repeated-dataset
+coverage or Type I error, or fix the probability-interval
+shortfall.</td>
+</tr>
+</tbody>
+</table>
+<p>For all routes, keep unavailable or unbounded outcomes and saved
+cautions in your report. Bonferroni concerns the finite family requested
+in one call; sandwich covariance requires the declared independent
+clusters. Neither option removes model bias or guarantees small-sample
+calibration. The APIs remain available with these limits; no
+data-dependent widening or arbitrary sample-size cutoff is used to
+conceal the adverse findings.</p>
+</div>
+<div class="section level3">
+<h3 id="how-uncertain-is-a-relative-slope">How uncertain is a relative slope?<a class="anchor" aria-label="anchor" href="#how-uncertain-is-a-relative-slope"></a>
+</h3>
+<p>Suppose three rubric criteria have relative slopes 0.8, 1.0 and 1.25.
+Their geometric mean is one. The last criterion has the steepest
+response curve on this model’s common ability scale. An interval
+describes sampling uncertainty in that relative discrimination; it does
+not say that the criterion should receive more scoring weight or that
+its raters agree more closely.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># After fitting a native GPCM with method = "MML":</span></span>
+<span><span class="co"># slope_ci &lt;- confint(fit, parm = "slopes", level = 0.95)</span></span>
+<span><span class="co"># slope_ci</span></span>
+<span><span class="co"># attr(slope_ci, "diagnostics")[, c("SlopeFacet", "Estimate",</span></span>
+<span><span class="co">#   "CIEligible", "InferenceReview")]</span></span></code></pre></div>
+<p>The calculation inverts the full joint observed information,
+including estimated population parameters. It then maps its free
+log-slope covariance to all slope levels using the sum-zero constraint.
+The interval for slope
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>a</mi><mi>g</mi></msub><annotation encoding="application/x-tex">a_g</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">[</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>±</mo><mi>z</mi><mi>S</mi><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\exp[\log(a_g) \pm z SE(\log(a_g))]</annotation></semantics></math>.
+Working on the log scale keeps bounds positive and accounts for the
+dependent slope coordinates. Inverting only the slope block of the
+information matrix would ignore estimation of the other parameters and
+generally understate uncertainty.</p>
+<p>The current likelihood and gradient must match a numerically adequate
+fit, and the information must be positive without regularization. Unit
+weights, supported score categories and at least 31 quadrature points
+are required. Missing bounds retain a reason; increasing iterations
+cannot repair every failure. Examine different starts and a denser grid
+for consequential results.
+<code>diagnose_mfrm(fit)$parameter_uncertainty$slopes</code> supplies
+the same 95% intervals; <code>attach_diagnostics = TRUE</code> also
+makes them available in the fitted slope table and subsequent weighting
+reviews. Ordinary Wright/Pathway maps display ability, facet location or
+fit, not these discriminations. Existing information plots remain
+plug-in curves; <code><a href="../reference/mfrm_curve_intervals.html">mfrm_curve_intervals()</a></code> adds calibration
+intervals.</p>
+<p>These defaults are <strong>pointwise model-based
+approximations</strong>. The optional methods below explicitly change
+the target, covariance or multiplicity rule. An interval for
+<code>PopulationSD * Estimate</code> needs the variance and covariance
+of the estimated population SD. A slope interval containing one is not a
+test that all slopes are equal; use the matched PCM/GPCM test for that
+question.</p>
+<p>The following targeted check used saved fits from an earlier
+implementation. Later numerical repairs can change fitted solutions or
+interval availability; these percentages are not an evaluation of
+refitting every dataset with the current estimator. The check used 100
+independent datasets per condition, with three criteria, three raters
+and three score categories. It crossed the slope owner (Criterion or
+Rater), equal versus unequal slopes (approximately 0.67, 1 and 1.49),
+and two designs. With 100 Persons rated by all three raters, intervals
+were available in every dataset; pointwise coverage across levels was
+92–98%. With 40 Persons each rated by two of the three raters,
+equal-slope availability was 100% and coverage was 95–97%. Unequal-slope
+availability fell to 96–97%, with coverage among available intervals
+from 90.6% to 97.9%; the lowest covered-and-returned fraction over all
+planned datasets was 87%. Some intervals were extremely wide. Four
+datasets were withheld for regularized information and three for
+category-support review. These results support an approximate procedure
+with explicit limits, not a general 95% coverage claim. Each coverage
+estimate has only 96–100 independent repetitions; the three intervals
+within a dataset are dependent. Sample size and incomplete assignment
+changed together, so their effects cannot be isolated from this
+check.</p>
+</div>
+<div class="section level3">
+<h3 id="choosing-the-interval-for-the-question">Choosing the interval for the question<a class="anchor" aria-label="anchor" href="#choosing-the-interval-for-the-question"></a>
+</h3>
+<p>For rubric criteria, a comparison of two slopes asks whether their
+response curves differ in steepness, conditional on this model. It is
+not a comparison of rater agreement or a reason to change scoring
+weights. Prespecify the comparison before looking at which estimates
+differ most.</p>
+<p>The following fictional rubric data give a reproducible example. The
+simulated model is correctly specified; this illustrates the API, not
+field performance.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mfrm_data.html">simulate_mfrm_data</a></span><span class="op">(</span></span>
+<span>  n_person <span class="op">=</span> <span class="fl">80</span>, n_rater <span class="op">=</span> <span class="fl">3</span>, n_criterion <span class="op">=</span> <span class="fl">3</span>, score_levels <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"GPCM"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  slopes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>C01 <span class="op">=</span> <span class="fl">0.8</span>, C02 <span class="op">=</span> <span class="fl">1</span>, C03 <span class="op">=</span> <span class="fl">1.25</span><span class="op">)</span>, seed <span class="op">=</span> <span class="fl">924090</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"GPCM"</span>, method <span class="op">=</span> <span class="st">"MML"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>, quad_points <span class="op">=</span> <span class="fl">31</span>, maxit <span class="op">=</span> <span class="fl">400</span>, reltol <span class="op">=</span> <span class="fl">1e-10</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span>, scale <span class="op">=</span> <span class="st">"standardized"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Approximate 95% intervals: standardized GPCM slopes</span></span>
+<span><span class="co">#&gt;  Level Estimate  Lower Upper</span></span>
+<span><span class="co">#&gt;    C01   0.8156 0.5422 1.227</span></span>
+<span><span class="co">#&gt;    C02   1.2677 0.8928 1.800</span></span>
+<span><span class="co">#&gt;    C03   1.2044 0.8418 1.723</span></span>
+<span><span class="co">#&gt; Joint-information log-Wald approximation </span></span>
+<span><span class="co">#&gt; Pointwise intervals.</span></span>
+<span><span class="va">slope_levels</span> <span class="op">&lt;-</span> <span class="va">fit</span><span class="op">$</span><span class="va">slopes</span><span class="op">$</span><span class="va">SlopeFacet</span></span>
+<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">slope_levels</span><span class="op">)</span>,</span>
+<span>                     dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"first versus second"</span>, <span class="va">slope_levels</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">comparison</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">ratio</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span>, contrasts <span class="op">=</span> <span class="va">comparison</span><span class="op">)</span></span>
+<span><span class="va">difference</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span>, contrasts <span class="op">=</span> <span class="va">comparison</span>,</span>
+<span>                      contrast_scale <span class="op">=</span> <span class="st">"difference"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">ratio</span>, <span class="st">"diagnostics"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Estimate"</span>, <span class="st">"CI_Lower"</span>, <span class="st">"CI_Upper"</span>, <span class="st">"PValue"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;                      Estimate  CI_Lower CI_Upper    PValue</span></span>
+<span><span class="co">#&gt; first versus second 0.6433412 0.3856266 1.073287 0.0911965</span></span></code></pre></div>
+<p>The ratio null is one; the difference null is zero. More rows specify
+a finite family. <code>simultaneous = "bonferroni"</code> adjusts both
+intervals and the corresponding Wald p-values for all requested rows,
+not for other analyses or data-selected comparisons. Standardized slopes
+multiply the relative slope by estimated population SD, propagating its
+uncertainty and cross-covariances. With latent regression this is the
+<strong>residual</strong> population SD, not the marginal spread across
+different covariate groups. Ratios cancel a common scale; differences do
+not. JML inference is outside these MML methods.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span>, method <span class="op">=</span> <span class="st">"sandwich"</span>, simultaneous <span class="op">=</span> <span class="st">"bonferroni"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Approximate 95% intervals: relative GPCM slopes</span></span>
+<span><span class="co">#&gt;  Level Estimate  Lower Upper</span></span>
+<span><span class="co">#&gt;    C01   0.7581 0.5201 1.105</span></span>
+<span><span class="co">#&gt;    C02   1.1783 0.7823 1.775</span></span>
+<span><span class="co">#&gt;    C03   1.1195 0.8035 1.560</span></span>
+<span><span class="co">#&gt; Cluster-sandwich log-Wald approximation </span></span>
+<span><span class="co">#&gt; Bonferroni family: all targets requested in this call.</span></span>
+<span><span class="co"># If Persons belong to independent schools, supply a complete Person/Cluster</span></span>
+<span><span class="co"># mapping and use clusters = schools. Do not cluster separate rows of one Person.</span></span></code></pre></div>
+<p>Sandwich covariance uses the marginal-likelihood score vector for
+each Person, or sums those vectors within a supplied cluster. It needs
+many independent clusters with enough score-vector rank. Its target is
+the fitted working-model parameter. It does not repair bias from a wrong
+population model, informative assignment or dependence between clusters.
+The optional <code>adjust = TRUE</code> only multiplies the covariance
+by G/(G-1); it is not a small-sample correction with guaranteed
+coverage. The earlier 800-dataset relative-interval study does not
+qualify these additional procedures by itself. An earlier reanalysis
+recalculated intervals on all 800 saved fits, without new simulations or
+optimizer runs, and found 90.7–99% pointwise coverage for standardized
+model intervals and 90.7–100% for standardized sandwich intervals. The
+minimum was 88/97 available intervals in a small incomplete,
+unequal-rater-slope condition (Monte Carlo 95% interval 83.1–95.7%;
+88/100 covered-and-returned). For three standardized slopes, Bonferroni
+<strong>family</strong> coverage ranged from 91.7–98% with model
+covariance and 90–97% with sandwich covariance. Each cell has only 100
+independent datasets. These correctly specified normal-population
+results show that neither sandwich covariance nor multiplicity
+adjustment guarantees nominal coverage in small samples; they do not
+test robustness under misspecification.</p>
+</div>
+<div class="section level3">
+<h3 id="a-fitted-model-bootstrap-alternative">A fitted-model bootstrap alternative<a class="anchor" aria-label="anchor" href="#a-fitted-model-bootstrap-alternative"></a>
+</h3>
+<p>The parametric bootstrap asks what variation occurs if independent
+Persons and scores follow the fitted model on the same observed rating
+assignment. It preserves covariates and facet labels, and reestimates
+the free population parameters. Unassigned ratings stay unassigned. It
+does not test whether the assignment mechanism or the normal population
+assumption is correct.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm</a></span><span class="op">(</span><span class="va">fit</span>, nsim <span class="op">=</span> <span class="fl">499</span>, seed <span class="op">=</span> <span class="fl">92401</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot</span>, scale <span class="op">=</span> <span class="st">"standardized"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot</span>, contrasts <span class="op">=</span> <span class="va">comparison</span>, simultaneous <span class="op">=</span> <span class="st">"bonferroni"</span><span class="op">)</span></span>
+<span><span class="va">boot</span><span class="op">$</span><span class="va">trials</span>  <span class="co"># Includes every planned trial, its last stage and any reason/warning.</span></span>
+<span><span class="fu"><a href="../reference/apa_table.html">apa_table</a></span><span class="op">(</span><span class="va">boot</span>, which <span class="op">=</span> <span class="st">"checks"</span><span class="op">)</span>  <span class="co"># Returned fits: categories, convergence and information.</span></span>
+<span><span class="co"># boot$refit_draws retains returned parameters for diagnosis, not interval calculation.</span></span>
+<span><span class="co"># For an eligible matched PCM fit with the same population model:</span></span>
+<span><span class="va">lr_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm</a></span><span class="op">(</span><span class="va">fit</span>, null_fit <span class="op">=</span> <span class="va">pcm_fit</span>,</span>
+<span>                              nsim <span class="op">=</span> <span class="fl">499</span>, seed <span class="op">=</span> <span class="fl">92402</span><span class="op">)</span></span>
+<span><span class="va">lr_boot</span><span class="op">$</span><span class="va">test</span></span></code></pre></div>
+<p>The interval uses basic bootstrap error quantiles, on a log scale for
+positive slopes/ratios and on the original scale for differences. Failed
+refits and returned estimates rejected by eligibility checks are
+retained as unknown outcomes. The reported limits enclose all
+completions, possibly reaching zero or infinity; deleting failures could
+instead conceal the least stable cases. The LRT reports Monte Carlo
+precision and p-value bounds when any refit is unresolved. Its
+null-model draws cannot supply slope intervals around the alternative
+fit. Saved results support new confidence levels without refitting. More
+repetitions improve tail resolution, not model validity; inspect
+<code>attr(confint(boot), "expected_tail_draws")</code>, especially with
+many simultaneous comparisons. This is an approximate bootstrap method,
+not a profile-likelihood implementation or an exact small-sample
+test.</p>
+<p>For basic slope bootstrapping, a category observed once is now a
+warning rather than an automatic exclusion. The source fit and each
+refit must still pass model-identity and numerical checks, including
+unregularized joint information. The exception requires a fresh audit
+confirming that every category is observed in each step scope and no
+step coordinate or category contrast is unsupported. It does not change
+the fit’s saved readiness or permission for Wald intervals, IC
+comparisons or LRTs. <code>checks$BootstrapEligible</code> and
+<code>checks$WaldEligible</code> distinguish these decisions. Source
+decisions are in <code>source_checks</code>. Accepted singleton warnings
+remain in the interval diagnostics, printed output, default plot
+subtitle and reports, even when limits are finite. A supplied subtitle,
+including <code>NULL</code>, overrides the default plot text.</p>
+<p>The basic interval formula itself does not require a variance
+estimate in every replicate; variance estimates are required for
+studentized intervals, as explained in the <a href="https://stat.ethz.ch/R-manual/R-devel/library/boot/html/boot.ci.html" class="external-link">R
+boot documentation</a>. Separating those formulas does not establish
+that an unstable estimate is suitable for basic-bootstrap inference. Use
+<code>trials$Stage</code>, <code>trials$AlternativeReturned</code> and
+<code>checks</code> to distinguish the reasons. Missing check fields
+mean that the quantity was not recorded. Older saved results may have
+only a combined reason and no rejected parameter vectors.</p>
+<p>A small-sample example illustrates why unresolved replicates matter.
+Its original 499-replicate run accepted 408 estimates. Rechecking 62
+category-support cases under a revised acceptance rule produced an
+assembled result with 470 accepted and 29 unresolved estimates.
+<strong>That assembled result is a comparison of procedures, not a
+complete bootstrap run under the current estimator.</strong> All three
+standardized 95% intervals still extended from zero to infinity. This is
+one dataset, not evidence of repeated-dataset coverage or a failure rate
+for other designs.</p>
+<p>Preserve an original bootstrap when changing estimation or acceptance
+rules. A complete new run is needed to evaluate the changed procedure;
+replacing selected failed draws cannot establish its performance. Saved
+reanalysis history, when present, follows printing, slope intervals and
+reporting tables. Missing history does not establish that an older
+result used the current procedure. Neither more replicates nor selective
+replacement automatically resolves poor identification or validates
+interval coverage.</p>
+</div>
+<div class="section level3">
+<h3 id="why-an-information-warning-needs-a-parameter-specific-review">Why an information warning needs a parameter-specific review<a class="anchor" aria-label="anchor" href="#why-an-information-warning-needs-a-parameter-specific-review"></a>
+</h3>
+<p>Inspect <code>boot$checks</code> (or
+<code>apa_table(boot, which = "checks")</code>) for
+<code>PopulationSD</code>, <code>MinimumStandardizedSlope</code> and
+<code>MaximumStandardizedSlope</code>. These describe the returned
+optimizer estimates, including rejected refits. For an estimated
+population, standardized slopes multiply relative slopes by the residual
+population SD; for a fixed standard-normal population that SD is one.
+Missing entries indicate missing retained estimates. These fields are
+diagnostics, not thresholds for judging raters or permission to use a
+CI. APA check tables use significant digits for these values and the
+gradient/ information diagnostics, preserving small positive values in
+table conversion. The original <code>boot$checks</code> columns remain
+unrounded numeric values.</p>
+<p>The 29 unresolved trials illustrate different reasons for withholding
+inference. Independent likelihood and derivative calculations helped
+separate finite numerical stopping points from evidence for boundary
+approaches. These checks diagnose the selected examples; they do not
+certify global maxima or repeated-sample interval accuracy.</p>
+<table class="table">
+<colgroup>
+<col width="30%">
+<col width="40%">
+<col width="30%">
+</colgroup>
+<thead><tr class="header">
+<th>Main finding in this one-dataset audit</th>
+<th align="right">Cases</th>
+<th>Consequence</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>An unused top category in an unanchored step scope gives a monotone
+likelihood direction as its intercept cost increases</td>
+<td align="right">15</td>
+<td>A threshold has no finite maximizer. In one checked example the
+slope estimates remained stable across starts; that does not validate
+all slope intervals.</td>
+</tr>
+<tr class="even">
+<td>Restarts and fixed-slope profiles support approach to zero
+standardized discrimination; the direction persists at 61 and 101
+quadrature nodes</td>
+<td align="right">11</td>
+<td>Evidence for a boundary limit, not just a large standard error.
+These numerical checks do not certify a global maximum.</td>
+</tr>
+<tr class="odd">
+<td>Reparameterized optimization finds a better solution with a positive
+standardized slope and positive local curvature</td>
+<td align="right">2</td>
+<td>The original numerical stopping point needs improvement. A warning
+attached to that original point is insufficient. The current optimizer
+and information refinement recover eligible finite solutions in these
+two selected examples; this does not replace a complete bootstrap
+evaluation.</td>
+</tr>
+<tr class="even">
+<td>A very steep standardized slope is highly sensitive to
+quadrature</td>
+<td align="right">1</td>
+<td>At the same saved parameters, changing 61 to 101 nodes changes
+negative log-likelihood from about 185 to 858. Neither grid is thereby
+validated.</td>
+</tr>
+</tbody>
+</table>
+<p>These are primary findings; numerical and boundary problems can
+overlap. An unused category in a replicate is a sampling outcome, not
+evidence that the scoring category should be removed. A near-zero
+standardized slope can coexist with other finite standardized slopes.
+Keeping the geometric mean of <em>relative</em> slopes at one can then
+make relative slopes and location coordinates extreme. Conversely, a
+stable discrimination estimate does not establish a finite threshold.
+The assembled example retains all 29 unresolved trials. The two improved
+finite solutions are separate numerical evidence; they have not been
+inserted into its draws or counted as a current-procedure bootstrap
+result.</p>
+<p>For small fixed-grid GPCM MML fits (up to 64 free parameters, with
+<code>reltol &lt;= 1e-9</code>), the direct optimizer now reviews
+numerical curvature even after a small raw gradient. Negative curvature
+triggers up to three BFGS restarts in rescaled search coordinates. Each
+uses the requested iteration ceiling. Only a non-worsening, numerically
+converged candidate without detected negative curvature can replace the
+selected point. Otherwise the estimate is retained with a numerical
+warning. Inspect <code>fit$opt$optimizer_polish$Stages</code>:
+<code>StageLabel == "curvature_rescale"</code> identifies these
+attempts, and <code>SmallestCurvature</code>,
+<code>CurvatureScale</code> and <code>CurvatureReviewError</code>
+explain the curvature review. Missing curvature entries mean it was not
+evaluated. The search rescaling does not provide a regularized
+covariance estimate. An improved optimizer result still needs separate
+information and integration checks; positive numerical curvature alone
+is insufficient.</p>
+<p>Poor conditioning does not by itself mean that an information matrix
+must be regularized or discarded. It can reflect parameter units, weak
+information, or numerical differentiation error. The shared MML
+calculation now compares two refined Hessians, checks their
+unregularized inverse and reviews the gradient in the curvature metric.
+If these checks pass, intervals can be returned with a saved caution.
+Otherwise they remain unavailable. The information workspace budget
+covers the additional calculation too.</p>
+<p>In the remaining finite-solution example, the standardized log-slope
+SE changed from about 30 with the default numerical differentiation to
+about 27 after refinement, agreeing with the reference parameterization.
+Nevertheless, the weakest discrimination’s 95% log-Wald interval spans
+roughly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>25</mn></mrow></msup><annotation encoding="application/x-tex">10^{-25}</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>21</mn></msup><annotation encoding="application/x-tex">10^{21}</annotation></semantics></math>.
+Returning that interval makes the lack of precision visible; it does not
+make the approximation trustworthy near zero. Examine
+<code>attr(intervals, "cautions")</code> and
+<code>InferenceReview</code>, which also appear in printing, default
+plot subtitles and reports. This numerical review does not establish
+sampling coverage or turn a boundary limit into a finite estimate.</p>
+<p>Further requirements include integration and parameter-specific
+boundary estimates and inference. The examples support different
+treatment of different targets; they do not validate ordinary Wald
+intervals or demonstrate repeated-dataset coverage.</p>
+</div>
+<div class="section level3">
+<h3 id="uncertainty-in-probability-and-information-curves">Uncertainty in probability and information curves<a class="anchor" aria-label="anchor" href="#uncertainty-in-probability-and-information-curves"></a>
+</h3>
+<p>For example, examine a single rater/criterion context across known
+ability values. The existing probability and information plots still
+describe fitted points. This API propagates the full calibration
+covariance into each curve point, using logit intervals for
+probabilities and log intervals for information.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>Theta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span>, length.out <span class="op">=</span> <span class="fl">41</span><span class="op">)</span>,</span>
+<span>                    Rater <span class="op">=</span> <span class="st">"R01"</span>, Criterion <span class="op">=</span> <span class="st">"C01"</span><span class="op">)</span></span>
+<span><span class="va">curves</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_curve_intervals.html">mfrm_curve_intervals</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">grid</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">curves</span>, title <span class="op">=</span> <span class="cn">NULL</span>, subtitle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-gpcm-scope_files/figure-html/gpcm-probability-intervals-1.png" class="r-plt" alt="Three fitted category probability curves for one rater and criterion, with pointwise calibration-uncertainty ribbons at fixed ability values. Colors and line types distinguish categories; these are not Person-score intervals." width="672"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">information</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_curve_intervals.html">mfrm_curve_intervals</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">grid</span>, type <span class="op">=</span> <span class="st">"information"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">information</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-gpcm-scope_files/figure-html/gpcm-information-intervals-1.png" class="r-plt" alt="Fitted information per rating for the same rater and criterion across ability values, with a pointwise calibration-uncertainty ribbon. The curve is not total information across all ratings." width="672"></p>
+<p>Crosses identify fitted points whose intervals are unavailable. The
+caption counts these points; a missing ribbon does not mean negligible
+uncertainty. Ribbons stop at unavailable grid points. Inspect
+<code>plot_data(curves, "table")</code> for the saved
+<code>InferenceReview</code> reasons. Use <code>caption = NULL</code> to
+hide the caption; the crosses and saved reasons remain. Long default
+warnings wrap within the figure.</p>
+<p>For slope or ratio intervals spanning many orders of magnitude, a
+logarithmic axis can make the estimates easier to compare:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># When estimates and finite interval bounds are strictly positive:</span></span>
+<span><span class="co"># as_ggplot(ci) + ggplot2::scale_x_log10()</span></span></code></pre></div>
+<p>Keep a linear axis for signed differences. A logarithmic display does
+not reduce uncertainty or establish interval accuracy.</p>
+<p>Replace these labels with levels in the fitted model and include
+every non-Person facet. Information is <strong>per rating</strong>:
+slope squared times the conditional category variance. It is not total
+information summed over the observed exposures. <code>Theta</code> is
+fixed on the fitted native ability scale; uncertainty in a Person score
+is not included. Lines and ribbons retain their numerical table, use
+color plus line type, and accept custom palettes and omitted titles.
+Sandwich covariance is optional. Bonferroni adjustment is applied over
+the finite output grid, including all categories; connecting points does
+not produce a simultaneous confidence band for every value between
+them.</p>
+</div>
+<div class="section level3">
+<h3 id="what-the-additional-interval-checks-found">What the additional interval checks found<a class="anchor" aria-label="anchor" href="#what-the-additional-interval-checks-found"></a>
+</h3>
+<p>Do the slope-interval results also describe uncertainty in
+differences and curves? To examine that question, a further reanalysis
+used <strong>all 800 saved fits</strong>, with the current interval
+calculations and their availability checks. It did not generate new
+datasets or refit the historical estimates. Numerical repairs to
+estimation can change those estimates, so this is evidence about the
+saved-fit analysis, not an independent evaluation of the current
+estimator.</p>
+<p>The generating facet effects were saved for every dataset. They were
+centered to the fitted reference before comparing curves at native
+ability values <code>Theta = -2, 0, 2</code>. Each slope-owner level was
+evaluated with the other facet at its second level. This gives nine
+rating contexts, 27 category probabilities and nine information values.
+Standardized differences compare the first with the second slope and the
+second with the third; they include population-SD uncertainty. Model and
+independent-Person sandwich covariance used the same fits. The
+confidence level was 95%, without a small-cluster adjustment.</p>
+<p>The table gives ranges across the eight original conditions and the
+specified targets. Pointwise coverage concerns one target at a time.
+Family coverage requires <strong>every</strong> interval in the
+specified call to cover its truth; a family contains two differences, 27
+probabilities or nine information values.</p>
+<table class="table">
+<colgroup>
+<col width="15%">
+<col width="21%">
+<col width="21%">
+<col width="21%">
+<col width="21%">
+</colgroup>
+<thead><tr class="header">
+<th>Target</th>
+<th align="right">Pointwise: model</th>
+<th align="right">Pointwise: sandwich</th>
+<th align="right">Bonferroni family: model</th>
+<th align="right">Bonferroni family: sandwich</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Standardized slope differences</td>
+<td align="right">91.0–98.0%</td>
+<td align="right">91.0–99.0%</td>
+<td align="right">92.9–98.0%</td>
+<td align="right">93.9–98.0%</td>
+</tr>
+<tr class="even">
+<td>Category probabilities</td>
+<td align="right">88.0–100.0%</td>
+<td align="right">85.6–99.0%</td>
+<td align="right">84.7–96.0%</td>
+<td align="right">83.7–97.0%</td>
+</tr>
+<tr class="odd">
+<td>Information per rating</td>
+<td align="right">90.7–100.0%</td>
+<td align="right">89.8–99.0%</td>
+<td align="right">95.0–100.0%</td>
+<td align="right">92.0–98.0%</td>
+</tr>
+</tbody>
+</table>
+<p>These percentages condition on available intervals or complete
+available families. Each condition has 100 independent datasets, not one
+independent replication per curve point. Depending on the target and
+condition, 96–100 pointwise intervals were available. In the small
+incomplete unequal-rater-slope condition, the sandwich probability
+family covered in 82 of 98 available datasets: 83.7%, with a Monte Carlo
+95% interval of 74.8–90.4%. It was covered and returned in 82 of all 100
+planned datasets. That Monte Carlo interval describes this cell, not
+simultaneous uncertainty for the minimum across cells.</p>
+<p><strong>Bonferroni does not fix an inaccurate marginal
+approximation.</strong> The curve results show a limitation even under
+the generating model’s assumptions; sandwich covariance is not an
+automatic solution. Read a returned interval as an asymptotic
+approximation, especially in small incomplete designs. Do not interpret
+numerical eligibility as demonstrated 95% coverage, turn curve
+differences into rater-quality verdicts, or assume that the bootstrap
+has resolved this limitation without its own repeated-dataset evidence.
+The two source designs also change sample size and assignment together,
+so the results cannot isolate an effect of sparsity. They do not
+establish performance for other grids, misspecified models or the latest
+refitted solutions.</p>
+</div>
+<div class="section level3">
+<h3 id="checking-the-updated-estimator-on-the-affected-design">Checking the updated estimator on the affected design<a class="anchor" aria-label="anchor" href="#checking-the-updated-estimator-on-the-affected-design"></a>
+</h3>
+<p>The entire small incomplete, unequal-rater-slope condition was then
+refitted: all 100 datasets, including cases whose intervals missed the
+truth or were unavailable. The updated numerical implementation used
+ordinary initialization and the same model, 61-point quadrature,
+iteration ceiling and convergence tolerance. All fitted parameters,
+objective values, probability estimates and interval endpoints were
+identical to the earlier results. Model and sandwich Bonferroni families
+still covered 83/98 and 82/98 available datasets, respectively. Updating
+the optimizer therefore did not resolve this shortfall in the selected
+condition.</p>
+<p>These are the same 100 datasets already included in the 800-fit
+study, not another 100 independent replications or an independent
+confirmation after selecting a condition. Analytic probability
+derivatives and full-covariance delta intervals were also checked on two
+prespecified refits. The largest endpoint discrepancy from the API was
+below <code>2e-9</code>. This checks the probability transformation; it
+does not establish global optimization, quadrature accuracy or
+finite-sample coverage, nor identify approximation error as the only
+cause.</p>
+<p>For a small incomplete assessment, use these bands as approximate
+descriptions of calibration uncertainty. Do not rely on their nominal
+95% label alone to claim that an entire curve is covered or that two
+curves clearly differ. Such a conclusion needs an uncertainty method
+justified for the study’s design and model. A larger sample, a simpler
+model or bootstrap may be worth assessing, but none is an automatic
+correction established by this check. Printing and default figure
+subtitles now identify the intervals as approximate;
+<code>CIEligible</code> continues to describe numerical
+availability.</p>
+</div>
+<div class="section level3">
+<h3 id="carry-the-selected-inference-into-reports-and-figures">Carry the selected inference into reports and figures<a class="anchor" aria-label="anchor" href="#carry-the-selected-inference-into-reports-and-figures"></a>
+</h3>
+<p>A rater’s severity, discrimination and residual fit answer different
+questions. Wright maps locate fitted abilities and facet effects;
+Pathway maps relate location to fit statistics. A slope interval instead
+describes discrimination under its stated scale and covariance method.
+Adding a slope interval must not replace severity intervals,
+Infit/Outfit, or a feedback decision with a different target. In
+particular, a larger slope does not automatically mean a better rater or
+a larger recommended scoring weight.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span>, scale <span class="op">=</span> <span class="st">"standardized"</span><span class="op">)</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_results.html">mfrm_results</a></span><span class="op">(</span><span class="va">fit</span>, intervals <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>slopes <span class="op">=</span> <span class="va">ci</span>, curves <span class="op">=</span> <span class="va">curves</span><span class="op">)</span>,</span>
+<span>                        include <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fit"</span>, <span class="st">"plots"</span><span class="op">)</span>, compute <span class="op">=</span> <span class="st">"never"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span>, type <span class="op">=</span> <span class="st">"gpcm_slopes"</span>, title <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-gpcm-scope_files/figure-html/gpcm-saved-inference-1.png" class="r-plt" alt="Population-SD-standardized discrimination estimates with explicitly selected model-based pointwise 95 percent intervals. The plot concerns discrimination, not rater severity or quality." width="672"></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/apa_table.html">apa_table</a></span><span class="op">(</span><span class="va">ci</span><span class="op">)</span></span>
+<span><span class="co">#&gt; GPCM inference</span></span>
+<span><span class="co">#&gt;  SlopeFacet Estimate   SE LogSE CI_Lower CI_Upper NullValue PValue CIEligible</span></span>
+<span><span class="co">#&gt;         C01     0.82 0.17  0.21     0.54     1.23         1   0.33       TRUE</span></span>
+<span><span class="co">#&gt;         C02     1.27 0.23  0.18     0.89     1.80         1   0.18       TRUE</span></span>
+<span><span class="co">#&gt;         C03     1.20 0.22  0.18     0.84     1.72         1   0.31       TRUE</span></span>
+<span><span class="co">#&gt;                                                                                                       InferenceReview</span></span>
+<span><span class="co">#&gt;  Approximate inference for standardized GPCM slopes with model covariance; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt;  Approximate inference for standardized GPCM slopes with model covariance; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt;  Approximate inference for standardized GPCM slopes with model covariance; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt;                    Target                                   Method</span></span>
+<span><span class="co">#&gt;  standardized GPCM slopes Joint-information log-Wald approximation</span></span>
+<span><span class="co">#&gt;  standardized GPCM slopes Joint-information log-Wald approximation</span></span>
+<span><span class="co">#&gt;  standardized GPCM slopes Joint-information log-Wald approximation</span></span>
+<span><span class="co">#&gt;  ConfidenceLevel Adjustment</span></span>
+<span><span class="co">#&gt;              95%  Pointwise</span></span>
+<span><span class="co">#&gt;              95%  Pointwise</span></span>
+<span><span class="co">#&gt;              95%  Pointwise</span></span>
+<span><span class="co">#&gt; Note. Approximate inference under the stated target and method; unavailable outcomes remain present. No rater-quality or scoring-weight decision is implied.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">results</span>, type <span class="op">=</span> <span class="st">"gpcm_curves"</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Theta Rater Criterion InputRow Category   Estimate          SE       Lower</span></span>
+<span><span class="co">#&gt; 1 -3.00   R01       C01        1        1 0.60325691 0.066981814 0.467678416</span></span>
+<span><span class="co">#&gt; 2 -3.00   R01       C01        1        2 0.38214029 0.061204608 0.271200772</span></span>
+<span><span class="co">#&gt; 3 -3.00   R01       C01        1        3 0.01460280 0.007433955 0.005354808</span></span>
+<span><span class="co">#&gt; 4 -2.85   R01       C01        2        1 0.57466763 0.065516836 0.444124935</span></span>
+<span><span class="co">#&gt; 5 -2.85   R01       C01        2        2 0.40786940 0.059305024 0.298581102</span></span>
+<span><span class="co">#&gt; 6 -2.85   R01       C01        2        3 0.01746298 0.008336183 0.006811562</span></span>
+<span><span class="co">#&gt;        Upper CIEligible</span></span>
+<span><span class="co">#&gt; 1 0.72463594       TRUE</span></span>
+<span><span class="co">#&gt; 2 0.50689748       TRUE</span></span>
+<span><span class="co">#&gt; 3 0.03919313       TRUE</span></span>
+<span><span class="co">#&gt; 4 0.69556768       TRUE</span></span>
+<span><span class="co">#&gt; 5 0.52709923       TRUE</span></span>
+<span><span class="co">#&gt; 6 0.04403185       TRUE</span></span>
+<span><span class="co">#&gt;                                                                                                       InferenceReview</span></span>
+<span><span class="co">#&gt; 1 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt; 2 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt; 3 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt; 4 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt; 5 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt; 6 Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed. </span></span>
+<span><span class="co">#&gt;                        Context Series                    IntervalGroup</span></span>
+<span><span class="co">#&gt; 1 Rater = R01, Criterion = C01      1 Rater = R01, Criterion = C01.1.0</span></span>
+<span><span class="co">#&gt; 2 Rater = R01, Criterion = C01      2 Rater = R01, Criterion = C01.2.0</span></span>
+<span><span class="co">#&gt; 3 Rater = R01, Criterion = C01      3 Rater = R01, Criterion = C01.3.0</span></span>
+<span><span class="co">#&gt; 4 Rater = R01, Criterion = C01      1 Rater = R01, Criterion = C01.1.0</span></span>
+<span><span class="co">#&gt; 5 Rater = R01, Criterion = C01      2 Rater = R01, Criterion = C01.2.0</span></span>
+<span><span class="co">#&gt; 6 Rater = R01, Criterion = C01      3 Rater = R01, Criterion = C01.3.0</span></span></code></pre></div>
+<p>The reproduction code in
+<code>summary(results)$reproducible_code</code> saves and reloads the
+complete result, preserving attached inference. In that code,
+<code>res</code> denotes your result object
+(<code>res &lt;- results</code> here); choose the file path before
+saving. The starter export index also links the saved GPCM inference
+figures alongside the ordinary maps, with separate interpretation
+guidance.</p>
+<p>The same stored values are available through
+<code>mfrm_report(results)</code> and
+<code>export_mfrm_results(results, ...)</code>. Named results define
+lowercase plot routes. Use
+<code>as_ggplot(results, type = "gpcm_curves")</code> for further ggplot
+customization; <code>title = NULL</code> or <code>subtitle = NULL</code>
+removes the corresponding annotation. Plots distinguish unavailable
+intervals by crosses and unbounded intervals by open circles, retaining
+their full limits and reasons in the tables. Color and line type
+distinguish probability curves. No reference cutoff is chosen for a
+slope plot; <code>reference</code> is an explicit optional plotting
+choice.</p>
+<p>Source matching checks fitted data, parameters, population and
+integration settings before attachment. Reusing a saved bundle does not
+change the selected method, recompute intervals or rerun a bootstrap.
+For bootstrap slopes, pass
+<code>confint(boot, scale = "standardized", level = .90)</code> to
+preserve that choice; passing the raw <code>boot</code> object selects
+its default relative 95% pointwise intervals. The export replay reloads
+the saved RDS. The full archive contains the fitted data and
+identifiers, so review it before sharing.</p>
+</div>
+<div class="section level3">
+<h3 id="check-that-the-integration-grid-does-not-change-the-decision">Check that the integration grid does not change the decision<a class="anchor" aria-label="anchor" href="#check-that-the-integration-grid-does-not-change-the-decision"></a>
+</h3>
+<p><code>mml_quadrature_sensitivity(fit, data, quad_points = c(41, 61))</code>
+preserves explicit population formulas, covariates and factor coding.
+Its slope table contains both interval endpoints and eligibility; the
+summary reports their changes. For a PCM/GPCM comparison, apply the
+helper to each model and rerun <code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> on their fits
+at each <strong>common</strong> grid. Compare the IC/LRT decisions as
+well as estimates; increasing the GPCM grid alone changes the comparison
+basis. A small observed change is evidence for that fit and grid, not a
+universal integration certificate.</p>
+<p>Information criteria and parameter intervals need different evidence.
+The <a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/AIC.html" class="external-link">R
+documentation for AIC</a> requires maximized likelihoods on comparable
+data. Computing an AIC number does not require a slope confidence
+interval. In mfrmr, the comparison uses the declared parameter count,
+numerical solution and integration settings. Users should assess
+competing starts and integration sensitivity, particularly when a
+model-choice decision is close. An interval procedure also needs a
+justified covariance or other uncertainty method, the correct
+constrained-parameter transformation, and evidence about its
+repeated-sampling behavior. Neither decision requires a theorem covering
+every conceivable GPCM likelihood path.</p>
+<p>An unavailable slope interval does not automatically invalidate a
+separately eligible IC comparison or matched PCM/GPCM test. Older saved
+fits must not gain intervals from stored flags alone; rerun
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> or <code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> to check the
+retained solution and refresh its uncertainty tables.</p>
+</div>
+<div class="section level3">
+<h3 id="why-intervals-information-criteria-and-tests-need-separate-checks">Why intervals, information criteria and tests need separate
+checks<a class="anchor" aria-label="anchor" href="#why-intervals-information-criteria-and-tests-need-separate-checks"></a>
+</h3>
+<p><strong>Slope confidence intervals.</strong> The package uses the
+joint covariance in free coordinates, maps it to sum-zero log slopes and
+exponentiates the log-Wald limits. Its separate qualification checks
+preserve missing results for singular, regularized or unstable
+information. The result is an asymptotic approximation, not exact
+coverage for every possible dataset. The <a href="https://philchalmers.github.io/mirt/reference/mirt.html" class="external-link">mirt
+documentation</a> also provides GPCM fitting and information-matrix SE
+methods; that establishes a methodological precedent, not numerical
+validation of mfrmr.</p>
+<p><strong>Information-criterion comparison.</strong> The package
+already calculates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo>=</mo><mi>−</mi><mn>2</mn><mover><mi>ℓ</mi><mo accent="true">̂</mo></mover><mo>+</mo><mn>2</mn><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{AIC}=-2\widehat\ell+2p</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">B</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo>=</mo><mi>−</mi><mn>2</mn><mover><mi>ℓ</mi><mo accent="true">̂</mo></mover><mo>+</mo><mi>p</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">\mathrm{BIC}=-2\widehat\ell+p\log N</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+equal to the number of Persons for the ordinary MML route and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
+the free-parameter count. For GPCM, the comparison reevaluates the
+retained likelihood, gradient and observed information without rerunning
+the optimizer. It checks agreement with the stored objective, the
+existing gradient tolerance (at most
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup><annotation encoding="application/x-tex">10^{-4}</annotation></semantics></math>),
+and positive unregularized information using the same relative
+eigenvalue tolerance as covariance inversion. IC/LRT and slope intervals
+share the full joint information calculation. The old IC/LRT-specific
+80-coordinate cutoff is replaced by a dense-matrix workspace budget,
+configurable with
+<code>options(mfrmr.max_information_bytes = 256 * 1024^2)</code>. This
+estimates eight double-precision square matrices; it excludes data,
+integration arrays and other process memory. An unavailable check
+returns its reason. This local check is separate from
+<code>InferenceReady</code> and does not qualify a slope interval.
+Same-data/likelihood, free-parameter-count, unit-weight and integration
+checks still apply. There is no requirement that the candidates be
+nested. Local curvature does not prove global optimality, and sorting
+candidate IC values is not a test that the winning model is true.</p>
+<p><strong>PCM/GPCM likelihood-ratio test.</strong> For the current
+relative-slope parameterization, let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>g</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>α</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">\lambda_g=\log\alpha_g</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>g</mi></msub><msub><mi>λ</mi><mi>g</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\sum_g\lambda_g=0</annotation></semantics></math>.
+The PCM null is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>1</mn></msub><mo>=</mo><mi>⋯</mi><mo>=</mo><msub><mi>λ</mi><mi>G</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda_1=\cdots=\lambda_G=0</annotation></semantics></math>.
+It imposes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">G-1</annotation></semantics></math>
+independent restrictions when the population model, steps, other facets
+and constraints are identical. The null value
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha_g=1</annotation></semantics></math>
+is inside the positive slope space; it is not a zero-variance boundary.
+Under the usual identified, interior and regular MML conditions, the
+candidate reference is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>ℓ</mi><mo accent="true">̂</mo></mover><mrow><mi>G</mi><mi>P</mi><mi>C</mi><mi>M</mi></mrow></msub><mo>−</mo><msub><mover><mi>ℓ</mi><mo accent="true">̂</mo></mover><mrow><mi>P</mi><mi>C</mi><mi>M</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>∼</mo><msubsup><mi>χ</mi><mrow><mi>G</mi><mo>−</mo><mn>1</mn></mrow><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">2(\widehat\ell_{GPCM}-\widehat\ell_{PCM})\sim\chi^2_{G-1}</annotation></semantics></math>
+asymptotically. The implemented test verifies the matched
+null/alternative population model, step and facet constraints, fixed
+interactions and free dimensions. It reuses the likelihood, gradient and
+unregularized-information checks described above. A negative likelihood
+gain is a numerical failure and does not become p = 1. The reference
+assumes independent Persons and correctly specified response and
+population models, with regular interior solutions. It is an asymptotic
+approximation, especially uncertain in small or weakly linked designs.
+Default calls can differ in population assumptions, so changing only
+<code>model = "PCM"</code> to <code>model = "GPCM"</code> does not
+necessarily test slopes alone. The <a href="https://philchalmers.github.io/mirt/reference/anova-method.html" class="external-link">mirt
+model-comparison documentation</a> distinguishes ordinary
+likelihood-ratio comparisons from boundary-null tests. That distinction
+does not require a mixture chi-square test merely because GPCM slopes
+are positive.</p>
+<p>A simulation illustration examined the approximation under a true
+PCM, using three raters, three criteria, three score categories and
+normally distributed Person abilities. In the crossed design, each of
+100 Persons was rated by all three raters on all three criteria. In the
+rotating design, each of 40 Persons was rated by two of the three raters
+on all three criteria. The latter changes both sample size and
+assignment density, so it does not isolate the effect of sparsity. Rater
+and criterion locations varied across replications; the slope null was
+always true. Both fitted models estimated the population mean and
+variance on the same 61-point integration grid.</p>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="21%">
+<col width="21%">
+<col width="28%">
+<col width="28%">
+</colgroup>
+<thead><tr class="header">
+<th>Slope facet</th>
+<th>Rating design</th>
+<th align="right">Rejections at 5%, out of 100</th>
+<th align="right">95% Monte Carlo interval</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Criterion</td>
+<td>Crossed, 100 Persons</td>
+<td align="right">5</td>
+<td align="right">1.6%–11.3%</td>
+</tr>
+<tr class="even">
+<td>Rater</td>
+<td>Crossed, 100 Persons</td>
+<td align="right">7</td>
+<td align="right">2.9%–13.9%</td>
+</tr>
+<tr class="odd">
+<td>Criterion</td>
+<td>Rotating, 40 Persons</td>
+<td align="right">6</td>
+<td align="right">2.2%–12.6%</td>
+</tr>
+<tr class="even">
+<td>Rater</td>
+<td>Rotating, 40 Persons</td>
+<td align="right">7</td>
+<td align="right">2.9%–13.9%</td>
+</tr>
+</tbody>
+</table>
+<p>All 400 pairs supplied a test in these conditions. The intervals
+above are exact binomial intervals describing uncertainty in the
+simulated rejection rates, not parameter confidence intervals. The point
+estimates do not show a large departure from 5%, but 100 replications
+per condition give limited precision. They do not guarantee calibration
+under other sample sizes, category support, dependence, assignment or
+population distributions. In the first replication of each condition,
+increasing both fits to 121 integration points changed the
+likelihood-ratio statistic by less than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup><annotation encoding="application/x-tex">10^{-6}</annotation></semantics></math>;
+this illustrates a sensitivity check, not a universal integration-error
+bound.</p>
+<p>These explanations separate missing mfrmr functionality from failures
+of a particular fit. They do not imply that every model needs every
+downstream workflow, or that JML inherits the MML reference
+distribution.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="relationship-to-generalized-many-facet-models">Relationship to generalized many-facet models<a class="anchor" aria-label="anchor" href="#relationship-to-generalized-many-facet-models"></a>
 </h2>
@@ -129,8 +1067,8 @@ current mfrmr GPCM requires one facet to own both the slope and step
 blocks: <code>slope_facet == step_facet</code>. It does not jointly
 estimate task and rater slopes, decouple the slope owner from the step
 owner, or introduce a multidimensional ability vector. The
-implementation is therefore described as an <strong>aligned single-owner
-relative-slope GPCM</strong>.</p>
+implementation therefore estimates <strong>relative discriminations and
+category steps for the same selected facet</strong>.</p>
 <p>A rater-owned fit is close to a restricted Uto–Ueno form after
 suppressing the task-slope block, provided the remaining step and
 identification contracts are also aligned. A criterion-owned fit instead
@@ -171,7 +1109,7 @@ to one.</p>
 </td>
 <td>Each criterion has its own relative discrimination and
 criterion-specific steps.</td>
-<td>Supported bounded route.</td>
+<td>Supported; inference availability is listed above.</td>
 </tr>
 <tr class="even">
 <td>
@@ -272,8 +1210,7 @@ after conditioning on the modeled facets.</td>
 levels are more discriminating.</td>
 </tr>
 <tr class="odd">
-<td>bounded <code>GPCM</code>
-</td>
+<td><code>GPCM</code></td>
 <td>The analysis explicitly allows discrimination-based reweighting and
 treats slopes as part of the substantive sensitivity question.</td>
 <td>Better statistical fit can be mistaken for a better operational
@@ -283,10 +1220,10 @@ scoring rule.</td>
 </table>
 <p>This ordering matters for reporting. <code>RSM</code> and
 <code>PCM</code> are the package’s equal-weighting reference route;
-bounded <code>GPCM</code> is a slope-aware extension. If equal
-contribution of items, criteria, or raters is part of the validity
-argument, a better-fitting bounded <code>GPCM</code> should be reported
-as sensitivity evidence rather than as an automatic replacement.</p>
+<code>GPCM</code> is a slope-aware extension. If equal contribution of
+items, criteria, or raters is part of the validity argument, a
+better-fitting <code>GPCM</code> should be reported as sensitivity
+evidence rather than as an automatic replacement.</p>
 <p>Category avoidance is a separate decision. For example, a rater who
 uses only 3–8 on a declared 1–10 scale shows local restriction of range
 if the omitted categories are used elsewhere. Start with
@@ -299,17 +1236,17 @@ may expose owner-specific threshold or slope support problems, but it
 changes the model being estimated and does not by itself explain or
 repair the scoring practice.</p>
 <div class="section level3">
-<h3 id="comparing-pcm-and-bounded-gpcm">Comparing PCM and bounded GPCM<a class="anchor" aria-label="anchor" href="#comparing-pcm-and-bounded-gpcm"></a>
+<h3 id="comparing-pcm-and-gpcm">Comparing PCM and GPCM<a class="anchor" aria-label="anchor" href="#comparing-pcm-and-gpcm"></a>
 </h3>
 <p>The package provides three complementary comparison layers:</p>
 <ol style="list-style-type: decimal">
 <li>
-<code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> displays same-data log likelihood, AIC,
-Person-based BIC, SABIC, deltas, and candidate-set weights. Automatic
-ranking requires inference-ready MML fits, identical prepared rows and
-constraints, a common quadrature identity, and at least 31 quadrature
-points. Always inspect <code>comparison$table$ICComparable</code>
-first.</li>
+<code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> returns AIC, Person-based BIC and SABIC
+comparisons when <code>comparison$table$ICComparable</code> is true. Its
+local-solution check is independent of slope-interval availability. Add
+<code>nested = TRUE</code> to test equal relative slopes under the
+matched PCM/GPCM specifications below; inspect <code>$lrt</code> and
+<code>$comparison_basis$lrt_reason</code>.</li>
 <li>
 <code><a href="../reference/build_weighting_review.html">build_weighting_review()</a></code> shows what the GPCM slopes
 changed: the slope profile, facet-measure shifts, and redistribution of
@@ -319,26 +1256,37 @@ information across levels.</li>
 bundles the statistical comparison, operational model roles, support
 boundaries, and the weighting review.</li>
 </ol>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_pcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<p>For example, <code>dat</code> is a long-format rating table with
+<code>Person</code>, <code>Rater</code>, <code>Criterion</code> and
+<code>Score</code> columns. Fit the same estimated-normal population in
+both models; <code>~1</code> estimates its mean and variance without
+covariates.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">persons</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit_pcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">dat</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"PCM"</span>,</span>
-<span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, quad_points <span class="op">=</span> <span class="fl">31</span></span>
+<span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, quad_points <span class="op">=</span> <span class="fl">61</span>,</span>
+<span>  population_formula <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>, person_data <span class="op">=</span> <span class="va">persons</span>, person_id <span class="op">=</span> <span class="st">"Person"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_gpcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">dat</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"GPCM"</span>,</span>
 <span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
-<span>  quad_points <span class="op">=</span> <span class="fl">31</span></span>
+<span>  quad_points <span class="op">=</span> <span class="fl">61</span>,</span>
+<span>  population_formula <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>, person_data <span class="op">=</span> <span class="va">persons</span>, person_id <span class="op">=</span> <span class="st">"Person"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span>PCM <span class="op">=</span> <span class="va">fit_pcm</span>, GPCM <span class="op">=</span> <span class="va">fit_gpcm</span><span class="op">)</span></span>
+<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span><span class="va">fit_pcm</span>, <span class="va">fit_gpcm</span>,</span>
+<span>                           labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PCM"</span>, <span class="st">"GPCM"</span><span class="op">)</span>, nested <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">comparison</span><span class="op">$</span><span class="va">lrt</span></span>
+<span><span class="va">comparison</span><span class="op">$</span><span class="va">comparison_basis</span><span class="op">$</span><span class="va">lrt_reason</span></span>
 <span><span class="va">comparison</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Label"</span>, <span class="st">"LogLik"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"SABIC"</span>, <span class="st">"ICComparable"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">weighting</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_weighting_review.html">build_weighting_review</a></span><span class="op">(</span><span class="va">fit_pcm</span>, <span class="va">fit_gpcm</span><span class="op">)</span></span>
+<span><span class="va">weighting</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_weighting_review.html">build_weighting_review</a></span><span class="op">(</span><span class="va">fit_pcm</span>, <span class="va">fit_gpcm</span>, nested <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">weighting</span><span class="op">)</span></span>
 <span><span class="va">weighting</span><span class="op">$</span><span class="va">comparison_contract</span></span>
 <span></span>
@@ -362,8 +1310,9 @@ step coordinates but optimize 8 free step parameters because each
 three-step ladder is sum-zero. GPCM additionally displays four relative
 slopes but optimizes three free log slopes because their geometric mean
 is one.</p>
-<p>The <code>comparison_contract</code> keeps four situations
-separate:</p>
+<p>The <code>comparison_contract</code> describes the evidence available
+from the two fits. Its <code>FormalModelSelectionAvailable</code> field
+follows the verified IC comparison, not numerical convergence alone:</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -375,27 +1324,46 @@ separate:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>same_basis_mml_information_criteria</code></td>
-<td>AIC, Person-BIC, and SABIC may be read as candidate-set evidence,
-together with slope stability and a denser common-grid check.</td>
+<td><code>mml_information_criterion_comparison</code></td>
+<td>The IC and solution checks pass. Compare candidate AIC/BIC and their
+differences; choose an operational weighting policy on separate
+substantive grounds. Use <code>confint(fit, parm = "slopes")</code> for
+separately checked relative-slope intervals and
+<code>nested = TRUE</code> for the equal-slope test.</td>
 </tr>
 <tr class="even">
-<td>
-<code>mml_screening_or_review_grid_only</code> or other
-non-comparable MML tier</td>
-<td>Raw fit values are descriptive; repair integration selectability,
-readiness, or comparison identity first.</td>
+<td><code>mml_descriptive_not_inference_ready</code></td>
+<td>Both fits passed numerical checks, but inferential qualification is
+incomplete. Available raw fit values and weighting changes remain
+descriptive. More quadrature points alone do not qualify GPCM
+selection.</td>
 </tr>
 <tr class="odd">
+<td>
+<code>mml_screening_or_review_grid_only</code> or
+<code>mml_noncomparable_descriptive_only</code>
+</td>
+<td>Other MML comparison restrictions remain; neither tier enables
+automatic model selection.</td>
+</tr>
+<tr class="even">
 <td><code>jml_descriptive_reweighting_only</code></td>
 <td>The fitted slopes, measure shifts, and information redistribution
 may be reviewed, but the unpenalized JML likelihood gain does not select
 GPCM.</td>
 </tr>
+<tr class="odd">
+<td>
+<code>mml_numerical_review_only</code> or
+<code>jml_numerical_review_only</code>
+</td>
+<td>At least one fit still needs numerical review. A difference between
+retained optimizer traces is not inferential model evidence.</td>
+</tr>
 <tr class="even">
-<td><code>jml_optimizer_trace_only_not_inference_ready</code></td>
-<td>Even the likelihood difference is only a comparison of retained
-optimizer traces; it is not inferential model evidence.</td>
+<td><code>cross_method_or_data_not_comparable</code></td>
+<td>The methods or prepared data do not supply the matched comparison
+required here.</td>
 </tr>
 </tbody>
 </table>
@@ -410,14 +1378,13 @@ recovered. FACETS can support the aligned PCM/JML side of this review,
 but its Table 7 discrimination remains a post-fit diagnostic and not a
 free-slope GPCM fit.</p>
 <p>PCM is obtained from the aligned GPCM response kernel by setting all
-slopes to one. Nevertheless, the current conservative nesting contract
-does not compute a PCM-versus-GPCM chi-square likelihood-ratio test.
-Calling <code>compare_mfrm(..., nested = TRUE)</code> records the
-relation <code>PCM_in_GPCM_ic_only</code> and withholds the LRT. This
-keeps an attractive information-criterion result from being overstated
-when GPCM parameter or boundary readiness remains unresolved. When the
-IC comparison is suppressed, the raw fit values and weighting review
-remain descriptive evidence rather than an automatic selection rule.</p>
+slopes to one. Calling <code>compare_mfrm(..., nested = TRUE)</code>
+records <code>PCM_in_GPCM</code> when the structural restrictions are
+verified. The result in <code>$lrt</code> is returned only when the
+numerical and likelihood checks also pass; otherwise read
+<code>$comparison_basis$lrt_reason</code>. Older saved comparisons must
+be rebuilt to obtain the new decision. Weighting consequences still need
+substantive review.</p>
 </div>
 </div>
 <div class="section level2">
@@ -442,7 +1409,7 @@ frequencies is essential:</p>
 </tr>
 <tr class="even">
 <td>Ordered polytomous response</td>
-<td>Supported through RSM, PCM, or bounded GPCM.</td>
+<td>Supported through RSM, PCM, or GPCM.</td>
 </tr>
 <tr class="odd">
 <td>Unordered nominal/multinomial response</td>
@@ -524,13 +1491,14 @@ treating category thresholds as common across the step facet.”</li>
 <code>PCM</code>: “We fit a many-facet partial-credit Rasch model,
 allowing thresholds to vary by the designated step facet while retaining
 equal discrimination.”</li>
-<li>bounded <code>GPCM</code>: “We fit a bounded generalized
-partial-credit many-facet model as a slope-aware sensitivity analysis;
-interpretation focused on whether discrimination-based reweighting
-changed the substantive conclusions.”</li>
+<li>
+<code>GPCM</code>: “We fit a generalized partial-credit many-facet
+model as a slope-aware sensitivity analysis; interpretation focused on
+whether discrimination-based reweighting changed the substantive
+conclusions.”</li>
 </ul>
-<p>Avoid wording that says bounded <code>GPCM</code> “improves the
-score” solely because it improves log-likelihood, <code>AIC</code>, or
+<p>Avoid wording that says <code>GPCM</code> “improves the score” solely
+because it improves log-likelihood, <code>AIC</code>, or
 <code>BIC</code>. The model can fit better while changing the scoring
 contract.</p>
 </div>
@@ -545,10 +1513,12 @@ drawn from <code>supported</code>, <code>supported_with_caveat</code>,
 <code>RecommendedRoute</code> for the route to use next. The default
 print is deliberately compact; subset by status to inspect a focused set
 of rows.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
+<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     Status Routes</span></span>
 <span><span class="co">#&gt;  supported      2</span></span>
@@ -560,9 +1530,11 @@ of rows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported_with_caveat"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
+<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                 Status Routes</span></span>
 <span><span class="co">#&gt;  supported_with_caveat     15</span></span>
@@ -582,9 +1554,11 @@ of rows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"blocked"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
+<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Status Routes</span></span>
 <span><span class="co">#&gt;  blocked      1</span></span>
@@ -595,9 +1569,11 @@ of rows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"deferred"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"Boundary"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
+<span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
+<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    Status Routes</span></span>
 <span><span class="co">#&gt;  deferred      1</span></span>
@@ -636,23 +1612,24 @@ is equally limited to that family. Under MML, Persons are integrated
 out, so neither conditional JML result is reused as marginal-likelihood
 evidence. The MML branch records a separate sufficient-path check for
 the fitted finite-quadrature objective, but that check is not a complete
-analysis of the continuous marginal likelihood. Whether it finds a path
-or not, free MML slopes remain <code>not_evaluated</code> until the
-applicable parameter-level readiness conditions are established. Use
-[gpcm_mml_quadrature_sensitivity()] to inspect movement across
-quadrature grids; grid stability is numerical evidence, not proof that a
-finite global maximum exists or that slope uncertainty is inferentially
-eligible.</p>
-<p>The same distinction applies to uncertainty.
-<code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> can retain the local covariance calculation
-as <code>Optimizer*SE</code> and <code>Optimizer*CI</code> fields for
-numerical review. Free slopes currently have
-<code>SEEligible = FALSE</code> and <code>CIEligible = FALSE</code>;
-ordinary slope <code>SE</code> and confidence-limit fields remain
-unavailable. Convergence or quadrature stability does not change this
-status. This avoids presenting a local Hessian around a finite stopping
-point as uncertainty for a parameter whose applicable global boundary
-status has not been established.</p>
+analysis of the continuous marginal likelihood. That global boundary
+question is separate from the local MML approximation.
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> or <code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> qualifies the
+relative slopes using the current likelihood, gradient, unregularized
+information and the other checks described above. Qualified diagnostic
+tables use <code>ParameterStatus = "finite_local_solution"</code> and
+<code>PrimaryEstimateBasis = "verified_local_mml_solution"</code>; this
+does not claim a global maximum. The unmodified fit may still carry its
+original unevaluated parameter audit. Attaching diagnostics synchronizes
+its slope parameter rows, while the global fit-readiness record remains
+unchanged.</p>
+<p>Local <code>Optimizer*SE</code> and <code>Optimizer*CI</code>
+calculations remain available for numerical review where possible, even
+if ordinary intervals are withheld. <code>SEEligible</code>,
+<code>CIEligible</code>, <code>CIUse</code> and
+<code>InferenceReview</code> identify the separate uncertainty decision.
+A positive information matrix alone is insufficient, and a regularized
+inverse cannot qualify ordinary intervals.</p>
 </div>
 <div class="section level2">
 <h2 id="what-can-and-cannot-be-compared-across-programs">What can and cannot be compared across programs<a class="anchor" aria-label="anchor" href="#what-can-and-cannot-be-compared-across-programs"></a>
@@ -666,15 +1643,87 @@ estimated free slope in <code>mfrmr</code>. FACETS remains useful for
 unit- or explicitly fixed-discrimination reductions, category/threshold
 and facet-measure comparisons within a common Rasch specification, and
 as a deliberately different-model diagnostic benchmark.</p>
-<p>TAM’s MML 2PL/GPCM route does estimate slopes, including grouped or
-designed slopes, but TAM documents that slopes are not estimated by its
-many-facet fitting function. A TAM comparison must therefore use a
-provably equivalent non-faceted or re-expressed design and must match
-the latent variance, threshold convention, slope grouping, category map,
-and retained observations before computing differences.
-<code>sirt::rm.facets()</code> provides a useful second MML reference:
-it estimates item and/or rater slopes under product-one centering and an
-estimated normal trait spread. Its item-only GPCM and
+<div class="section level3">
+<h3 id="model-structure-which-effect-does-discrimination-change">Model structure: which effect does discrimination change?<a class="anchor" aria-label="anchor" href="#model-structure-which-effect-does-discrimination-change"></a>
+</h3>
+<p>TAM and ConQuest both support more flexible slope designs than the
+current mfrmr interface. That does not make every many-facet GPCM in
+these programs the same model.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Route</th>
+<th>Where slopes are assigned</th>
+<th>Relationship to current mfrmr</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>mfrmr::fit_mfrm(model = "GPCM")</code></td>
+<td>One selected facet supplies positive relative slopes and steps.</td>
+<td>Each slope multiplies the complete adjacent-category predictor.</td>
+</tr>
+<tr class="even">
+<td>TAM <code>tam.mml.2pl()</code>
+</td>
+<td>Item slopes, shared slope groups or a design <code>E</code>; Example
+14c combines this with a facet intercept design <code>A</code>.</td>
+<td>The example has slopes on ability and separately additive facet
+intercepts. <code>tam.mml.mfr()</code> alone does not estimate
+slopes.</td>
+</tr>
+<tr class="odd">
+<td>ConQuest <code>scoresfree</code>
+</td>
+<td>By default, one slope for each generalized item, meaning a
+combination of facets; a <code>C</code> design can constrain
+sharing.</td>
+<td>Sharing slopes by criterion still does not impose their products
+with estimated rater effects in the intercept design.</td>
+</tr>
+</tbody>
+</table>
+<p>The TAM construction is documented in <a href="https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html" class="external-link">Example
+14, Model 14c</a>. ConQuest’s <a href="https://www.acer.org/files/Note_8--The_ConQuest_4_Model.pdf" class="external-link">Note
+8, pages 1–5</a> describes its scoring design, population model and
+identification. It updates the earlier ConQuest 3 note; limitations
+described only in that older note should not be assigned to current
+ConQuest.</p>
+<p>For a rubric criterion
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>,
+rater
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>
+and category transition
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>,
+compare these adjacent log odds, using minus signs for difficulty and
+severity:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mtext mathvariant="normal">Current mfrmr:</mtext><mspace width="1.0em"></mspace></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><msub><mi>α</mi><mi>c</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>p</mi></msub><mo>−</mo><msub><mi>d</mi><mi>c</mi></msub><mo>−</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo>−</mo><msub><mi>τ</mi><mrow><mi>c</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mtext mathvariant="normal">Additive-intercept design:</mtext><mspace width="1.0em"></mspace></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><msub><mi>a</mi><mi>c</mi></msub><msub><mi>z</mi><mi>p</mi></msub><mo>−</mo><msub><mi>b</mi><mi>c</mi></msub><mo>−</mo><msub><mi>u</mi><mi>r</mi></msub><mo>−</mo><msub><mi>v</mi><mrow><mi>c</mi><mi>k</mi></mrow></msub><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\text{Current mfrmr:}\quad &amp;\alpha_c(\theta_p-d_c-\rho_r-\tau_{ck}),\\
+\text{Additive-intercept design:}\quad &amp;a_c z_p-b_c-u_r-v_{ck}.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>The second expression represents the TAM example and a ConQuest
+design with criterion-shared scores and additive rater intercepts. It is
+not every model those programs can fit. The comparison is an algebraic
+consequence of their documented designs: the first expression contains
+the product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mi>c</mi></msub><msub><mi>ρ</mi><mi>r</mi></msub></mrow><annotation encoding="application/x-tex">\alpha_c\rho_r</annotation></semantics></math>;
+independent linear intercept and slope designs do not impose that
+product of two estimated parameters.</p>
+<p>For example, on the mfrmr scale, two raters differing by 0.5 severity
+units produce an absolute log-odds difference of 0.4 for a criterion
+with slope 0.8 and 0.625 for one with slope 1.25. In the
+additive-intercept model, the shared rater contrast has the same
+log-odds effect at every criterion. These are different assumptions
+about how rater severity acts. Changing which facet supplies slopes and
+steps does not by itself change this assumption.</p>
+<p><code>sirt::rm.facets()</code> provides a useful second MML
+reference: it estimates item and/or rater slopes under product-one
+centering and an estimated normal trait spread. Its item-only GPCM and
 equal-discrimination many-facet reductions are candidate matched
 comparisons after category, threshold, quadrature, and centering
 conventions are aligned. Its general free-slope rater kernel is not the
@@ -687,21 +1736,39 @@ sensitivity evidence, not automatic numerical validation.
 hierarchical rater model, not a direct free-GPCM many-facet match. Its
 role is consequently a unit-slope reduction or alternative-model
 sensitivity analysis rather than free-slope numerical validation.</p>
-<p>TAM also documents a multifacet slope construction that sends a
-facet-model intercept design <code>A</code> and a slope-group design
-<code>E</code> to <code>tam.mml.2pl()</code>. That is not automatically
-the current mfrmr kernel. In the TAM construction the slope weights the
-latent-trait term while shared Rater and step effects remain linear
-intercepts; in mfrmr the selected slope weights the complete
-adjacent-category predictor, including Rater severity and steps.
-Matching the latter would require products such as an estimated
-Criterion slope times an estimated Rater severity, which the two
-independent linear designs do not impose. A q=31
-<code>example_core</code> re-expression was therefore retained as
-different-model sensitivity evidence, not as an exact full-model
-comparison. This algebraic screen makes a second quadrature run
-unnecessary.</p>
-<p>A bounded validation comparison exercises the exact item-only TAM
+</div>
+<div class="section level3">
+<h3 id="exact-overlap-and-what-has-been-checked">Exact overlap and what has been checked<a class="anchor" aria-label="anchor" href="#exact-overlap-and-what-has-been-checked"></a>
+</h3>
+<p>With items only, free item-specific steps can absorb the slope
+multiplication. For an estimated normal ability population, write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><mi>μ</mi><mo>+</mo><mi>X</mi><mi>β</mi><mo>+</mo><mi>σ</mi><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">\theta=\mu+X\beta+\sigma\epsilon</annotation></semantics></math>,
+with standard-normal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∏</mo><mi>i</mi></msub><msub><mi>α</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\prod_i\alpha_i=1</annotation></semantics></math>.
+Set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>−</mo><mi>μ</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">z=(\theta-\mu)/\sigma</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>i</mi></msub><mo>=</mo><mi>σ</mi><msub><mi>α</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">a_i=\sigma\alpha_i</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>i</mi></msub><mo>=</mo><msub><mi>α</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mi>i</mi></msub><mo>−</mo><mi>μ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">b_i=\alpha_i(d_i-\mu)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>=</mo><msub><mi>α</mi><mi>i</mi></msub><msub><mi>τ</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">v_{ik}=\alpha_i\tau_{ik}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mi>z</mi></msub><mo>=</mo><mi>β</mi><mi>/</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">\beta_z=\beta/\sigma</annotation></semantics></math>.
+Then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>−</mo><msub><mi>d</mi><mi>i</mi></msub><mo>−</mo><msub><mi>τ</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>a</mi><mi>i</mi></msub><mi>z</mi><mo>−</mo><msub><mi>b</mi><mi>i</mi></msub><mo>−</mo><msub><mi>v</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\alpha_i(\theta-d_i-\tau_{ik})=a_i z-b_i-v_{ik}</annotation></semantics></math>.
+Here
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+is the residual population SD given any covariates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>;
+without covariates it is the population SD. This derives an identical
+response model on a unit residual-variance scale; the intercept/step
+signs and centering must still match each program. Fixing both
+population variance and the geometric mean of slopes to one instead
+imposes an additional restriction, so it is not the same conversion. The
+overlap is for positive slopes; ConQuest also exposes a
+<code>positivescores</code> setting, so the permitted parameter space
+must be checked.</p>
+<p>A retained validation comparison exercises the exact item-only TAM
 overlap on TAM’s <code>data.gpcm</code> fixture at q=31 and q=41. TAM
 fixes the latent variance and estimates absolute slopes; mfrmr fixes the
 geometric mean of its relative slopes and estimates the latent variance.
@@ -713,19 +1780,79 @@ The transformed TAM probability formula itself agreed to binary64
 precision. This is external evidence for the item-only GPCM kernel,
 coordinate map, and continuous MML target; it is not a comparison of the
 rater-plus-slope model, a cross-engine SE validation, or permission to
-override mfrmr readiness. The distinction follows TAM’s documented
-separation between <a href="https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html" class="external-link"><code>tam.mml.2pl()</code>
-and <code>tam.mml.mfr()</code></a>.</p>
-<p>The same coordinate discipline prevents a direct SE comparison. TAM
-4.3-25 retains marginal slope and intercept SEs, but not the joint slope
-covariance or slope–intercept cross-covariance required by the nonlinear
-transformation to mfrmr’s relative slopes, thresholds, and free
-population scale. Two positive- definite covariance matrices can
-preserve exactly those reported marginal SEs while producing different
-transformed SEs. This non-identification means the comparison must be
-withheld rather than completed by assuming zero covariance. TAM’s
-documented <code>tam.se()</code> route also ignores parameter
-covariances, so it does not close this gap.</p>
+override mfrmr readiness. These results use TAM 4.3-25. A separate q=31
+many-facet re-expression was retained as a different-model comparison
+after the algebraic distinction above was found.</p>
+<p>An earlier local ConQuest 5.47.5 MML run checked the item-only
+overlap with one population covariate, 120 Persons, five items and four
+categories. The deviances differed by about <code>1.3e-5</code> after
+matched identification. Its exact coordinate transformation reproduces
+probabilities within <code>1e-14</code>. This is historical,
+version-specific evidence for that model and mapping, not a fresh check
+of the current source, interval coverage or a multifacet slope model.
+The public ConQuest overlap bundle does not automate this GPCM
+comparison.</p>
+</div>
+<div class="section level3">
+<h3 id="inference-same-estimates-do-not-imply-the-same-intervals">Inference: same estimates do not imply the same intervals<a class="anchor" aria-label="anchor" href="#inference-same-estimates-do-not-imply-the-same-intervals"></a>
+</h3>
+<p>The saved TAM 4.3-25 fits retain marginal slope and intercept SEs,
+but not the joint slope covariance or slope–intercept cross-covariance
+required by the nonlinear transformation to mfrmr’s relative slopes,
+thresholds, and free population scale. Two positive- definite covariance
+matrices can preserve exactly those reported marginal SEs while
+producing different transformed SEs. This non-identification means the
+comparison must be withheld rather than completed by assuming zero
+covariance. TAM’s documented <a href="https://alexanderrobitzsch.github.io/TAM/reference/tam.se.html" class="external-link"><code>tam.se()</code></a>
+also omits parameter covariances and labels loading SEs for
+<code>GPCM.design</code> experimental. This describes that route and the
+saved objects; it does not rule out obtaining a joint matrix through
+additional methods.</p>
+<p>ConQuest’s <a href="https://conquestmanual.acer.org/s4-00.html" class="external-link">command reference</a>
+provides <code>estimatecovariances</code> with
+<code>stderr=empirical</code> and <code>matrixout</code>, and
+<code>show</code> table 10 reports parameter-estimate error covariances.
+In contrast, <code>export covariance</code> exports the
+<strong>latent-population</strong> covariance. It is not the sampling
+covariance needed for transformed calibration SEs. Parameter ordering,
+constraints and the inclusion of free score parameters must be checked
+in the actual exported matrix before using it. No such current-source
+joint-covariance comparison is claimed here. ConQuest’s estimated-score
+route is an MML comparator; its JML route does not estimate free
+scores.</p>
+<p>For example, let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">s=\log\sigma</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ℓ</mi><mi>i</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>α</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\ell_i=\log\alpha_i</annotation></semantics></math>.
+A population-SD-standardized slope has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>a</mi><mi>i</mi></msub><mo>=</mo><mi>s</mi><mo>+</mo><msub><mi>ℓ</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\log a_i=s+\ell_i</annotation></semantics></math>,
+so its delta-method variance requires</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>ℓ</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>2</mn><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><msub><mi>ℓ</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}(\log a_i)=\operatorname{Var}(s)+
+\operatorname{Var}(\ell_i)+2\operatorname{Cov}(s,\ell_i).
+</annotation></semantics></math></p>
+<p>Multiplying the current relative-slope interval endpoints by the
+estimated
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+omits two of these terms. Use
+<code>confint(fit, parm = "slopes", scale = "standardized")</code> to
+include all three; the default still reports relative slopes.
+Conversely, converting absolute slopes to geometric-mean-one slopes
+requires their joint covariance.</p>
+<p>TAM’s <a href="https://alexanderrobitzsch.github.io/TAM/reference/anova.tam.html" class="external-link"><code>anova()</code>
+method</a> reports information criteria and likelihood-ratio
+comparisons. These methods and mfrmr’s current IC/LRT operations still
+require comparable likelihoods. Replicating another program’s fit
+requires the same model. IC selection can instead compare different,
+nonnested models when their likelihoods refer to the same observed data
+with compatible likelihood definitions and constants. Verify category
+coding, population specification, each model’s free-parameter count and
+integration accuracy. An LRT additionally requires a nested null;
+different many-facet slope actions are not automatically nested. The
+simple PCM/GPCM null with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">G-1</annotation></semantics></math>
+relative-slope restrictions does not establish a reference distribution
+for arbitrary cross-program design changes.</p>
 <p>These distinctions also govern diagnostics. FACETS’ discrimination,
 <code>mfrmr</code> residual PCA or bias screens, and hierarchical-rater
 variance components answer different questions. Agreement among them can
@@ -784,11 +1911,12 @@ materially changing likelihoods. These small fixed counts clarify
 optimizer, curvature, and design contributions; they do not calibrate a
 universal selection, standard-error, or readiness rule.</p>
 </div>
+</div>
 <div class="section level2">
 <h2 id="source-grounded-recovery-interpretation">Source-grounded recovery interpretation<a class="anchor" aria-label="anchor" href="#source-grounded-recovery-interpretation"></a>
 </h2>
-<p>The bounded <code>GPCM</code> route follows Muraki’s generalized
-partial credit model and its information-function extension. The
+<p>The <code>GPCM</code> route follows Muraki’s generalized partial
+credit model and its information-function extension. The
 package-specific <code>slope_regime</code> labels are narrower than that
 model theory: they summarize the centered log-slope spread of the
 simulation generator so recovery evidence can be read against a declared
@@ -817,8 +1945,8 @@ then
 <div class="section level2">
 <h2 id="supported-routes-and-verification-evidence">Supported routes and verification evidence<a class="anchor" aria-label="anchor" href="#supported-routes-and-verification-evidence"></a>
 </h2>
-<p>The following bounded-<code>GPCM</code> routes are documented and
-verified within the stated constraints:</p>
+<p>The following <code>GPCM</code> routes are documented and verified
+within the stated constraints:</p>
 <ul>
 <li>
 <strong>Fitting and core summaries</strong> via
@@ -843,7 +1971,7 @@ default keeps <code>slope_facet == step_facet</code>, with the direct
 <li>
 <strong>Direct recovery checks</strong> via
 <code><a href="../reference/evaluate_mfrm_recovery.html">evaluate_mfrm_recovery()</a></code> and
-<code><a href="../reference/assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code>, including fitted bounded-GPCM slope
+<code><a href="../reference/assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code>, including fitted GPCM slope
 recovery on the log-slope scale.</li>
 </ul>
 </div>
@@ -873,13 +2001,12 @@ caveated sensitivity-reporting output with explicit
 <code><a href="../reference/build_misfit_casebook.html">build_misfit_casebook()</a></code> inherits the exploratory
 screening framing of its underlying sources.</li>
 <li>
-<code><a href="../reference/estimate_bias.html">estimate_bias()</a></code> now provides bounded-GPCM conditional
-screening rows with slope-aware information and profile-likelihood
-columns. Treat these rows as screening evidence for follow-up, not as
-standalone confirmatory fairness tests.
-<code><a href="../reference/unexpected_after_bias_table.html">unexpected_after_bias_table()</a></code> provides a descriptive
-in-sample before/after flag comparison; a lower flag count does not show
-that bias has been removed.</li>
+<code><a href="../reference/estimate_bias.html">estimate_bias()</a></code> now provides GPCM conditional screening
+rows with slope-aware information and profile-likelihood columns. Treat
+these rows as screening evidence for follow-up, not as standalone
+confirmatory fairness tests. <code><a href="../reference/unexpected_after_bias_table.html">unexpected_after_bias_table()</a></code>
+provides a descriptive in-sample before/after flag comparison; a lower
+flag count does not show that bias has been removed.</li>
 <li>
 <code><a href="../reference/estimation_iteration_report.html">estimation_iteration_report()</a></code> provides a slope-aware
 reconstructed optimization trajectory. It is a diagnostic replay, not
@@ -888,21 +2015,21 @@ the exact optimizer history or an additional convergence test.</li>
 <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code>, <code><a href="../reference/analyze_dff.html">analyze_dif()</a></code>,
 <code><a href="../reference/dif_interaction_table.html">dif_interaction_table()</a></code>, <code><a href="../reference/dif_report.html">dif_report()</a></code>,
 <code><a href="../reference/plot_dif_heatmap.html">plot_dif_heatmap()</a></code>, and <code><a href="../reference/plot_dif_summary.html">plot_dif_summary()</a></code>
-provide bounded-GPCM DFF/DIF screening and reporting surfaces with
-explicit <code>gpcm_boundary</code> rows.</li>
+provide GPCM DFF/DIF screening and reporting surfaces with explicit
+<code>gpcm_boundary</code> rows.</li>
 <li>
 <code><a href="../reference/build_apa_outputs.html">build_apa_outputs()</a></code>,
 <code><a href="../reference/build_visual_summaries.html">build_visual_summaries()</a></code>, <code><a href="../reference/run_qc_pipeline.html">run_qc_pipeline()</a></code>,
 <code><a href="../reference/build_mfrm_manifest.html">build_mfrm_manifest()</a></code>,
 <code><a href="../reference/build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code>,
 <code><a href="../reference/export_mfrm_bundle.html">export_mfrm_bundle()</a></code>, package-native scorefile export, and
-<code><a href="../reference/build_linking_review.html">build_linking_review()</a></code> return caveated
-bounded-<code>GPCM</code> reporting or exploratory-review objects with
-explicit <code>gpcm_boundary</code> rows. The package-native scorefile
-can include native structural delta-method expected-score SEs and
-score-side delta SEs selected by <code>score_se_method</code> when the
-required MML diagnostics are available, but those SEs are not
-FACETS-equivalent score-side uncertainty.</li>
+<code><a href="../reference/build_linking_review.html">build_linking_review()</a></code> return caveated <code>GPCM</code>
+reporting or exploratory-review objects with explicit
+<code>gpcm_boundary</code> rows. The package-native scorefile can
+include native structural delta-method expected-score SEs and score-side
+delta SEs selected by <code>score_se_method</code> when the required MML
+diagnostics are available, but those SEs are not FACETS-equivalent
+score-side uncertainty.</li>
 <li>
 <code><a href="../reference/evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>,
 <code><a href="../reference/predict_mfrm_population.html">predict_mfrm_population()</a></code>,
@@ -956,9 +2083,12 @@ the practical paths are:</p>
 <ul>
 <li>Refit with <code>model = "PCM"</code> if the discrimination-free
 assumption is defensible for the data and a full FACETS score-side
-review is required; <code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> quantifies the loss in
-fit only after every candidate uses the same selectable q&gt;=31 grid;
-close decisions require a denser common-grid sensitivity check.</li>
+review is required; <code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> can describe available
+likelihood differences for matched data and model specifications. A
+shared quadrature grid and a denser-grid sensitivity check address
+numerical comparability. The PCM/GPCM test also requires matching
+population and constraint settings. Relative-slope intervals and IC
+comparison have their own solution and likelihood checks.</li>
 <li>Keep the report on the <code>GPCM</code> fit itself but draft the
 manuscript section manually around the supported tables:
 <code>summary(fit)</code> for parameters, <code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code>
@@ -969,25 +2099,25 @@ precision evidence.</li>
 optionally generate a second manifest from a parallel <code>RSM</code>
 or <code>PCM</code> fit. The two fits can be reported side by side, with
 the <code>GPCM</code> fit identified as the discrimination-aware
-counterpart. This is not required to use the caveated
-bounded-<code>GPCM</code> manifest/replay/export route.</li>
+counterpart. This is not required to use the caveated <code>GPCM</code>
+manifest/replay/export route.</li>
 </ul>
 <p>Restricted helpers use the capability matrix at runtime. An
-unsupported bounded-<code>GPCM</code> call stops with the relevant
-limitation and a supported alternative instead of producing a partial
-score-side or backend result. Use <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code>
-or <code>mfrmr_output_guide("gpcm")</code> before choosing a downstream
+unsupported <code>GPCM</code> call stops with the relevant limitation
+and a supported alternative instead of producing a partial score-side or
+backend result. Use <code><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> or
+<code>mfrmr_output_guide("gpcm")</code> before choosing a downstream
 route.</p>
 </div>
 <div class="section level2">
 <h2 id="a-worked-example">A worked example<a class="anchor" aria-label="anchor" href="#a-worked-example"></a>
 </h2>
 <p>The <code>example_core</code> dataset includes a small synthetic
-block that supports a bounded <code>GPCM</code> fit. This example uses
-compact quadrature and iteration settings for a shorter runtime; for
-substantive analysis, rerun with the package default or a higher
-quadrature setting and a larger recovery design.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+block that supports a <code>GPCM</code> fit. This example uses compact
+quadrature and iteration settings for a shorter runtime; for substantive
+analysis, rerun with the package default or a higher quadrature setting
+and a larger recovery design.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span>
 <span></span>

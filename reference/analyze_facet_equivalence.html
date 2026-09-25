@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Analyze practical equivalence within a facet</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
       <div class="d-none name"><code>analyze_facet_equivalence.Rd</code></div>
     </div>
 
@@ -118,7 +118,12 @@ with an error. Levels with fixed or unavailable contrasts are not silently
 dropped. Known anchors are treated as fixed; their uncertainty is excluded.
 Non-unit observation weights are inference-ineligible, including weights
 normalized to mean one. Older bundles must retain the current readiness
-contract as well as the covariance basis before they can be displayed.</p>
+contract as well as the covariance basis before they can be displayed.
+A numerically verified inverse of ill-conditioned information is retained
+with a warning, not silently treated as strong evidence. When applicable,
+<code>cautions</code>, <code>information_review</code> and table column <code>InferenceCaution</code> preserve
+that warning through summaries and plots. Numerical verification does not
+establish the accuracy of the normal or chi-square approximations.</p>
 <p>The heterogeneity table uses a joint Wald chi-square test of equality of
 the facet levels. Non-significant heterogeneity is neither necessary nor
 sufficient for practical equivalence. <code>FixedChiSq</code>, <code>FixedDF</code>, and

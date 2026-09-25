@@ -99,10 +99,14 @@ An object of class `mfrm_diagnostics` including:
 - `precision_review`: package-native checks for SE, CI, and reliability
 
 - `parameter_uncertainty`: MML observed-information uncertainty for
-  structural parameters when available (`steps`, and bounded-`GPCM`
-  `slopes` on both log and positive scales), plus covariance status
-  metadata. Step `CIEligible` and `CIUse` retain the source fit's
-  restrictions; non-unit observation-weight bands are diagnostic only.
+  structural parameters when available (`steps`, and `GPCM` `slopes` on
+  both log and positive scales), plus covariance status metadata. Step
+  `CIEligible` and `CIUse` retain the source fit's restrictions;
+  non-unit observation-weight bands are diagnostic only. GPCM MML
+  relative slopes use the separate
+  [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
+  checks and pointwise log-Wald approximation; inspect `CIEligible`,
+  `CIUse` and `InferenceReview`.
 
 - `facet_precision`: facet-level precision summary by distribution basis
   and SE mode
@@ -117,7 +121,7 @@ An object of class `mfrm_diagnostics` including:
 - `unexpected`: unexpected-response bundle
 
 - `fair_average`: adjusted-score reference bundle (reported as
-  unavailable for bounded `GPCM`)
+  unavailable for `GPCM`)
 
 - `displacement`: displacement diagnostics bundle
 
@@ -131,8 +135,9 @@ An object of class `mfrm_diagnostics` including:
 
 - `fit_readiness`, `fit_readiness_components`, and
   `fit_readiness_parameters`: the source fit's versioned readiness
-  decision; diagnostic computation does not override a blocked or
-  review-only fit
+  decision; diagnostic computation does not override global fit
+  readiness. GPCM slope parameter rows additionally retain the
+  output-specific interval decision
 
 - `marginal_fit`: optional strict marginal-fit companion based on
   posterior-expected first-order category counts, with classification
@@ -192,15 +197,15 @@ Choosing `diagnostic_mode`:
 
 - `"both"`: recommended when you want continuity with the legacy
   residual stack while making the strict marginal path explicit for
-  `RSM`, `PCM`, and bounded `GPCM` fits.
+  `RSM`, `PCM`, and `GPCM` fits.
 
-For bounded `GPCM`, the same generalized partial credit kernel now
-drives both the residual/probability tables and the strict marginal
-category-fit companion. Residual-based MnSq summaries should still be
-read as exploratory screening tools rather than strict Rasch-style
-invariance tests because discrimination is free, and the strict marginal
-companion should likewise be treated as a slope-aware screen rather than
-a finalized inferential test family.
+For `GPCM`, the same generalized partial credit kernel now drives both
+the residual/probability tables and the strict marginal category-fit
+companion. Residual-based MnSq summaries should still be read as
+exploratory screening tools rather than strict Rasch-style invariance
+tests because discrimination is free, and the strict marginal companion
+should likewise be treated as a slope-aware screen rather than a
+finalized inferential test family.
 
 **Key fit statistics computed for each element:**
 
@@ -301,8 +306,8 @@ Practical interpretation often starts with:
 - `fit`: element-level misfit scan (`Infit`, `Outfit`, `ZSTD`).
 
 - `unexpected`, `fair_average`, `displacement`: targeted QC bundles. For
-  bounded `GPCM`, `fair_average` is retained with an unavailable status
-  because that compatibility calculation is outside the documented
+  `GPCM`, `fair_average` is retained with an unavailable status because
+  that compatibility calculation is outside the documented
   generalized-model contract.
 
 - `approximation_notes`: method notes for SE/CI/reliability summaries.

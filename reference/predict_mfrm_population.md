@@ -141,8 +141,8 @@ An object of class `mfrm_population_prediction` with components:
 - `planning_schema`: structured planning metadata carrying the role
   table, supported boundary, mutability map, and facet manifest
 
-- `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` forecast
-  route is used
+- `gpcm_boundary`: `GPCM` caveat row when a `GPCM` forecast route is
+  used
 
 - `settings`: forecasting settings
 
@@ -185,8 +185,8 @@ behavior. This is distinct from the fitted-model posterior scoring
 provided by
 [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
 
-Bounded `GPCM` forecasts are available with caveats through the same
-repeated simulation/refit design route used by
+`GPCM` forecasts are available with caveats through the same repeated
+simulation/refit design route used by
 [`evaluate_mfrm_design()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_design.md).
 They summarize design-level operating characteristics under the supplied
 or fit-derived slope-aware specification; they do not validate

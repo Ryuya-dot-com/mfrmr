@@ -185,10 +185,9 @@ summary(report, view = "reader")
 #>  fit, diagnostics, tables, precision, reporting, categories, plots
 #> 
 #> Decision
-#>  - Interpretation: Fit-readiness requirements satisfied; formal precision
-#>    review required
-#>  - Formal inference: No
-#>  - Why: Formal precision support has not been evaluated.
+#>  - Interpretation: Ready for formal inference
+#>  - Formal inference: Yes
+#>  - Why: All stored fit-readiness components passed.
 #>  - Next: Read the compact results summary.
 #> 
 #> First screen

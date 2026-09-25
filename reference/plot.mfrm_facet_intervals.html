@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot fixed-facet interval methods</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-plotting-facet-intervals.R" class="external-link"><code>R/api-plotting-facet-intervals.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-plotting-facet-intervals.R" class="external-link"><code>R/api-plotting-facet-intervals.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_facet_intervals.Rd</code></div>
     </div>
 
@@ -57,7 +57,22 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'mfrm_facet_intervals'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, comparison <span class="op">=</span> <span class="cn">TRUE</span>, draw <span class="op">=</span> <span class="cn">TRUE</span>, preset <span class="op">=</span> <span class="st">"standard"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  comparison <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  preset <span class="op">=</span> <span class="st">"standard"</span>,</span>
+<span>  title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">facet</span>, <span class="st">"estimates and contrasts"</span><span class="op">)</span>,</span>
+<span>  subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="va">x</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">level</span>, trim <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    <span class="st">"% pointwise normal intervals | "</span>, <span class="kw">if</span> <span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">method</span> <span class="op">==</span> <span class="st">"sandwich"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Sandwich | "</span>, <span class="va">x</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">clusters</span>, <span class="st">" independent clusters assumed"</span><span class="op">)</span> <span class="kw">else</span></span>
+<span>    <span class="st">"Observed information"</span><span class="op">)</span>,</span>
+<span>  caption <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">table</span><span class="op">$</span><span class="va">Status</span> <span class="op">!=</span> <span class="st">"available"</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="st">"Open diamonds: fixed targets | Crosses: unavailable selected intervals"</span> <span class="kw">else</span> <span class="cn">NULL</span>,</span>
+<span>  reference <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  show_legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -81,6 +96,20 @@ model-based interval. Both intervals use the same point estimate.</p></dd>
 <dd><p>A package plot preset, for example <code>"standard"</code> or <code>"monochrome"</code>.</p></dd>
 
 
+<dt id="arg-title-subtitle-caption">title, subtitle, caption<a class="anchor" aria-label="anchor" href="#arg-title-subtitle-caption"></a></dt>
+<dd><p>Optional text; <code>NULL</code> omits it. Defaults show
+the facet, exact confidence level, method and fixed/unavailable symbols.</p></dd>
+
+
+<dt id="arg-reference">reference<a class="anchor" aria-label="anchor" href="#arg-reference"></a></dt>
+<dd><p>Optional finite vertical reference; default zero. Use
+<code>NULL</code> to omit it. This is not a rater-quality threshold.</p></dd>
+
+
+<dt id="arg-show-legend">show_legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
+<dd><p>Logical; show the method legend (default <code>TRUE</code>).</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Unused.</p></dd>
 
@@ -89,7 +118,7 @@ model-based interval. Both intervals use the same point estimate.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisibly, an <code>mfrm_plot_data</code> object retaining the <code>table</code>, contrast
 coefficients, settings and labels. Use <code><a href="plot_data.html">plot_data()</a></code> for custom graphics;
-automatic <code><a href="as_ggplot.html">as_ggplot()</a></code> conversion is unavailable.</p>
+<code><a href="as_ggplot.html">as_ggplot()</a></code> returns a customizable ggplot with the same saved values.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -97,7 +126,9 @@ automatic <code><a href="as_ggplot.html">as_ggplot()</a></code> conversion is un
 Unavailable selected intervals use crosses; an ordinary comparison interval
 does not substitute for a missing sandwich interval. The zero line is a
 reference, not a threshold of practical importance or a rater-quality rule.
-No fit or covariance is recalculated. Target order is preserved.</p>
+No fit or covariance is recalculated. Target order is preserved.
+Weak-information cautions remain in the returned data and appear in the
+default subtitle. Custom or omitted subtitles change display only.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

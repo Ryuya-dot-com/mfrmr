@@ -7,7 +7,7 @@ universal pass/fail rule; it is to make the main user questions
 explicit: Did the runs finish? Did the fitted models converge? Are
 uncertainty summaries available? Are coverage and Monte Carlo precision
 plausible? If practical RMSE or bias limits are supplied, which
-parameter groups need follow-up? For bounded `GPCM`, which slope-regime
+parameter groups need follow-up? For `GPCM`, which slope-regime
 generator condition frames the recovery evidence?
 
 ## Usage
@@ -132,9 +132,9 @@ An object of class `mfrm_recovery_assessment` with:
 
 - `checklist`: reviewer-facing adequacy checks.
 
-- `condition_review`: generator-condition metadata, including bounded
-  `GPCM` slope-regime interpretation and generated score-category
-  support when available.
+- `condition_review`: generator-condition metadata, including `GPCM`
+  slope-regime interpretation and generated score-category support when
+  available.
 
 - `condition_reporting_notes`: reporter-facing generator-condition
   caveats separated from parameter-recovery conclusions.
@@ -168,7 +168,7 @@ the user to set practical thresholds when a decision depends on the
 metric.
 
 The `condition_review` table is generator metadata for interpreting the
-recovery run. For bounded `GPCM`, `GPCMSlopeRegime`, `StressLevel`, and
+recovery run. For `GPCM`, `GPCMSlopeRegime`, `StressLevel`, and
 generated score-category support describe the data-generating condition;
 they are not model-fit tests and they are not literature-derived
 adequacy cut points. `condition_reporting_notes` turns those generator
@@ -252,7 +252,7 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>         Run completion     Simulation and refit success           ok
 #>         Run completion             Reported convergence      concern
 #>       Recovery content  Recoverable truth-estimate rows           ok
-#>   Generator conditions        Bounded-GPCM slope regime not_assessed
+#>   Generator conditions                GPCM slope regime not_assessed
 #>   Generator conditions Generated score-category support       review
 #>            Uncertainty      Standard-error availability      concern
 #>            Uncertainty                         Coverage       review
@@ -264,7 +264,7 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>                                                                                                       1/1 successful run(s); rate = 1.000.
 #>                                                                                                        0/1 converged run(s); rate = 0.000.
 #>                                                                                                       19 row-level recovery comparison(s).
-#>                                                                                 Model RSM does not use bounded-GPCM slope-regime metadata.
+#>                                                                                         Model RSM does not use GPCM slope-regime metadata.
 #>  1 replication(s) retained score support; minimum category count = 2; minimum category proportion = 0.042; maximum omitted categories = 0.
 #>                                                                                                                 Group statuses: concern=4.
 #>                                                                                                           Group statuses: not_available=4.
@@ -291,8 +291,8 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>              2              0.042                  0             review
 #>        Status
 #>  not_assessed
-#>                                                                                              Interpretation
-#>  The fitted generator is not bounded GPCM, so slope-regime metadata is not part of this recovery condition.
+#>                                                                                      Interpretation
+#>  The fitted generator is not GPCM, so slope-regime metadata is not part of this recovery condition.
 #> 
 #> Condition reporting notes
 #>  ConditionArea ReportingAttention                      ConditionFinding
@@ -342,7 +342,7 @@ assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #>  - RMSE Monte Carlo error: Review Monte Carlo precision with plots and row-level output before using it for a decision.
 #>  - RMSE threshold: Do not use RMSE as adequacy evidence until the design, fit settings, or replication count are revisited.
 
-# Read the bounded-GPCM generator condition separately from recovery adequacy.
+# Read the GPCM generator condition separately from recovery adequacy.
 gpcm_spec <- build_mfrm_sim_spec(
   n_person = 14,
   n_rater = 2,

@@ -2,8 +2,14 @@
 
 `mfrmr` provides estimation, diagnostics, and reporting utilities for
 many-facet ordered-response measurement models: the Rasch-family `RSM` /
-`PCM` route and the package's bounded `GPCM` extension where explicitly
-documented.
+`PCM` route and a `GPCM` extension in which one selected facet supplies
+level-specific discriminations and category steps.
+[`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
+supplies approximate relative-slope intervals for eligible MML fits;
+model ranking and matched PCM/GPCM tests use separate checks in
+[`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
+[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+explains the supported uses.
 
 ## Details
 
@@ -60,7 +66,7 @@ categories with
   for linking and differential facet functioning.
 
 - [gpcm_capability_matrix](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-  for the bounded `GPCM` extension.
+  for the `GPCM` extension.
 
 - [`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
   for the broader purpose-to-function map.
@@ -80,8 +86,8 @@ to review, validate, freeze, save, load, and score the artifact. Review
 the returned batch with
 [mfrm_calibration_score_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
 before using its estimates. Estimated- population or latent-regression
-MML, JML, and bounded `GPCM` remain fitted-object-only scoring routes in
-0.2.4. Artifact score uncertainty is conditional on the frozen point
+MML, JML, and `GPCM` remain fitted-object-only scoring routes in 0.2.4.
+Artifact score uncertainty is conditional on the frozen point
 calibration and its recorded prior; loading validates consistency but
 does not authenticate an untrusted file.
 
@@ -95,16 +101,15 @@ After the basic route above:
   through
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
 
-- bounded `GPCM` support is summarized by
+- `GPCM` support is summarized by
   [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 
-- bounded `GPCM` supports the core fit/summary/scoring/information path,
-  direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
+- `GPCM` supports the core fit/summary/scoring/information path, direct
+  Wright/pathway/CCC plots, residual-PCA follow-up, and the
   residual-based diagnostics tables/plots as exploratory tools
 
 - posterior-predictive checks and `MCMC` estimation are not available
-  for bounded `GPCM`; use external Bayesian software when they are
-  required
+  for `GPCM`; use external Bayesian software when they are required
 
 - direct `GPCM` data generation through
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
@@ -117,7 +122,7 @@ After the basic route above:
   [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
   and
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-  are available for bounded `GPCM` with explicit caveats;
+  are available for `GPCM` with explicit caveats;
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
   [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
   [`run_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_qc_pipeline.md),
@@ -143,19 +148,19 @@ After the basic route above:
   local-dependence, and rater-drift diagnostics as screening layers
   rather than as mixture-model substitutes
 
-## Equal weighting versus bounded GPCM
+## Equal weighting versus GPCM
 
 The package's operational reference route is the Rasch-family `RSM` /
 `PCM` branch. That route enforces fixed discrimination and therefore
 preserves an equal-weighting scoring interpretation across observed
 ratings.
 
-Bounded `GPCM` is supported because some users want a slope-aware model-
+`GPCM` is supported because some users want a slope-aware model-
 comparison or sensitivity layer inside the same many-facet workflow.
-However, the package does not treat bounded `GPCM` as a universal
-replacement for the Rasch-family route. A better fit under `GPCM` should
-be read as evidence about discrimination-based reweighting, not as an
-automatic reason to discard the equal-weighting model.
+However, the package does not treat `GPCM` as a universal replacement
+for the Rasch-family route. A better fit under `GPCM` should be read as
+evidence about discrimination-based reweighting, not as an automatic
+reason to discard the equal-weighting model.
 
 Observation weights are a different concept again. Optional `Weight`
 columns change how observed rating events enter estimation and
@@ -220,20 +225,20 @@ Function families:
   population model when scored units also provide one-row-per-person
   background data, and `JML` fits through a post hoc reference-prior EAP
   layer; fit-derived simulation specifications also support direct
-  bounded `GPCM` data generation, recovery checks, role-based design
-  evaluation, population forecasting, diagnostic-screening, and
-  signal-detection helpers with documented caveats; curve reports,
-  graph-only exports, fair-average tables, and bias screening are also
-  available for bounded `GPCM` with documented caveats)
+  `GPCM` data generation, recovery checks, role-based design evaluation,
+  population forecasting, diagnostic-screening, and signal-detection
+  helpers with documented caveats; curve reports, graph-only exports,
+  fair-average tables, and bias screening are also available for `GPCM`
+  with documented caveats)
 
 - Reporting:
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
   [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
   [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-  for the full `RSM` / `PCM` route; bounded `GPCM` uses these as
-  caveated partial surfaces and retains direct table, plot, checklist,
-  and summary-appendix routes
+  for the full `RSM` / `PCM` route; `GPCM` uses these as caveated
+  partial surfaces and retains direct table, plot, checklist, and
+  summary-appendix routes
 
 - Weighting review:
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
@@ -269,9 +274,8 @@ Function families:
   [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md),
   [`review_conquest_overlap()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_conquest_overlap.md),
   [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
-  for the diagnostics-compatible Rasch-family route; bounded `GPCM`
-  supports caveated partial manifest, replay, and bundle output as well
-  as
+  for the diagnostics-compatible Rasch-family route; `GPCM` supports
+  caveated partial manifest, replay, and bundle output as well as
   [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
 
 - Equivalence:
@@ -375,8 +379,7 @@ Core object classes are:
     [`analyze_dff()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_dff.md)
     or
     [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-    when fairness or interaction questions matter; bounded `GPCM` also
-    supports
+    when fairness or interaction questions matter; `GPCM` also supports
     [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
     as a conditional screening review.
 
@@ -392,7 +395,7 @@ Core object classes are:
     [`mfrm_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_d_study.md),
     and
     [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md).
-    Bounded `GPCM` also supports direct simulation via
+    `GPCM` also supports direct simulation via
     [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
     /
     [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
@@ -423,7 +426,7 @@ Core object classes are:
     or
     [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md).
 
-8.  For bounded `GPCM`, use
+8.  For `GPCM`, use
     [`summary.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_fit.md),
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
     [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md),
@@ -444,7 +447,7 @@ Core object classes are:
     role-based design evaluation, population forecasting,
     diagnostic-screening, and signal-detection helpers are available,
     while full score-side FACETS review, posterior-predictive checks,
-    and `MCMC` estimation are not available for bounded `GPCM`. Use
+    and `MCMC` estimation are not available for `GPCM`. Use
     [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
     as the formal boundary statement.
 
@@ -489,37 +492,36 @@ scale. In the current implementation, threshold locations may vary by
 step-facet level, but the fitted score range is defined by one global
 category set taken from the observed data.
 
-**Bounded Generalized Partial Credit Model (GPCM)**
+**Generalized Partial Credit Model (GPCM)**
 
-Under bounded `GPCM` (Muraki, 1992), the same adjacent-category
-partial-credit kernel is multiplied by a positive slope \\\alpha_g\\ for
-the designated slope-facet level \\g\\:
+Under `GPCM` (Muraki, 1992), the same adjacent-category partial-credit
+kernel is multiplied by a positive slope \\\alpha_g\\ for the designated
+slope-facet level \\g\\:
 
 \$\$\ln\frac{P(X\_{nij} = k)}{P(X\_{nij} = k-1)} = \alpha_g(\theta_n -
 \delta_j - \beta_i - \tau\_{gk}).\$\$
 
 The current implementation requires `slope_facet == step_facet` and
 identifies slopes on the log scale with geometric mean 1. This makes
-bounded `GPCM` a slope-aware sensitivity/extension route, not a
-replacement for the equal-weighting `RSM`/`PCM` interpretation. It is an
-aligned single-owner many-facet GPCM rather than the broader Uto–Ueno
-generalized MFRM: it does not jointly estimate multiplicative task and
-rater slope blocks or allow a distinct step owner. Unit slopes reduce to
-the equal-discrimination PCM kernel. Under default MML, an
-intercept-only person distribution \\N(\beta_0,\sigma^2)\\ is estimated.
-The geometric-mean-one slopes are relative discriminations and
-\\\sigma\alpha_g\\ are their equivalent fixed-latent-standard-deviation
-values, so the conventional common discrimination degree of freedom is
-retained. The legacy `gpcm_mml_identification = "fixed_standard_normal"`
-mode fixes both \\\sigma=1\\ and the slope geometric mean to one and is
-therefore a narrower relative-discrimination model. Under JML,
-geometric-mean-one is required to resolve the scale of jointly estimated
-person coordinates. "Bounded" refers to this deliberately limited
-model/workflow scope, not to finite optimizer box constraints. The GPCM
-JML objective is unpenalized. Certified extreme-person or facet
-recession is reported through typed primary boundary results; a finite
-optimizer iterate is retained only as a numerical trace and is not a
-finite JML maximum.
+`GPCM` a slope-aware sensitivity/extension route, not a replacement for
+the equal-weighting `RSM`/`PCM` interpretation. It assigns slopes and
+steps to the same facet. It does not jointly estimate the multiplicative
+task and rater slopes of the broader Uto–Ueno generalized MFRM or allow
+a distinct step owner. Unit slopes reduce to the equal-discrimination
+PCM kernel. Under default MML, an intercept-only person distribution
+\\N(\beta_0,\sigma^2)\\ is estimated. The geometric-mean-one slopes are
+relative discriminations and \\\sigma\alpha_g\\ are their equivalent
+fixed-latent-standard-deviation values, so the conventional common
+discrimination degree of freedom is retained. The legacy
+`gpcm_mml_identification = "fixed_standard_normal"` mode fixes both
+\\\sigma=1\\ and the slope geometric mean to one and is therefore a
+narrower relative-discrimination model. Under JML, geometric-mean-one is
+required to resolve the scale of jointly estimated person coordinates.
+"Bounded" refers to this deliberately limited model/workflow scope, not
+to finite optimizer box constraints. The GPCM JML objective is
+unpenalized. Certified extreme-person or facet recession is reported
+through typed primary boundary results; a finite optimizer iterate is
+retained only as a numerical trace and is not a finite JML maximum.
 
 **Ordered-response scope**
 
@@ -527,7 +529,7 @@ The implemented response-model scope is ordered categorical only. Binary
 responses are the \\K = 1\\ special case of the same formulation, so
 they are handled through the ordinary ordered-score interface. This
 means `mfrmr` supports ordered binary and ordered polytomous data under
-`RSM` and `PCM`, plus a narrow bounded `GPCM` branch with one designated
+`RSM` and `PCM`, plus a narrow `GPCM` branch with one designated
 `slope_facet` that currently must equal `step_facet`. Unordered
 nominal/multinomial response models are outside the documented model
 scope, as are Poisson, negative-binomial, and grouped binomial-trial
@@ -792,7 +794,7 @@ approximation limits as the separation index.
   Samejima's (1974) polytomous information formula. This is the
   canonical reference for
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
-  under bounded `GPCM`.)
+  under `GPCM`.)
 
 - Samejima, F. (1974). Normal ogive model on the continuous response
   level in the multidimensional latent space. *Psychometrika*, 39,
@@ -976,8 +978,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
-#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
+#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
+#> 2 Rater          6            0      0.399      -0.606       0.412 1.02 
 
 # Check the interpretation status and recommended next step
 results$decision

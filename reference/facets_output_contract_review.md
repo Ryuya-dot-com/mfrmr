@@ -92,14 +92,14 @@ package-native counterpart and which remain unavailable. It does not
 establish external validity or software equivalence beyond the specific
 schema/metric contract encoded in the contract file.
 
-## Bounded GPCM boundary
+## GPCM boundary
 
-This helper is unavailable for bounded `GPCM` fits because the FACETS
-output contract includes score-side rows whose measure-to-score and
-uncertainty semantics are supported for the Rasch-family route, not for
-free-discrimination bounded `GPCM`. Use
+This helper is unavailable for `GPCM` fits because the FACETS output
+contract includes score-side rows whose measure-to-score and uncertainty
+semantics are supported for the Rasch-family route, not for
+free-discrimination `GPCM`. Use
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
-before routing a bounded `GPCM` fit into score-side compatibility-output
+before routing a `GPCM` fit into score-side compatibility-output
 helpers.
 
 Coverage interpretation in `overall`:

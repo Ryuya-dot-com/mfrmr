@@ -83,6 +83,7 @@ available option is to refit using adaptive integration and check its
 order sensitivity too:
 
 ``` r
+
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
 fit_adaptive <- fit_mfrm(
@@ -111,12 +112,18 @@ summary(quadrature_review)
 #>  NLLAbsChangePerPerson MeasurementParameterMaxAbsChange SlopeMaxAbsChange
 #>                      0                                0                NA
 #>                      0                                0                NA
-#>  RawSlopeSEMaxAbsChange PopulationSDAbsChange RawPopulationSDSEAbsChange
-#>                      NA                     0                         NA
-#>                      NA                     0                         NA
-#>  ProbabilityMaxAbsChange EAPMaxAbsChange PosteriorSDMaxAbsChange
-#>                        0               0                       0
-#>                        0               0                       0
+#>  RawSlopeSEMaxAbsChange SlopeIntervalMaxAbsChange
+#>                      NA                        NA
+#>                      NA                        NA
+#>  SlopeIntervalEligibilityChanged PopulationSDAbsChange
+#>                               NA                     0
+#>                               NA                     0
+#>  RawPopulationSDSEAbsChange ProbabilityMaxAbsChange EAPMaxAbsChange
+#>                          NA                       0               0
+#>                          NA                       0               0
+#>  PosteriorSDMaxAbsChange
+#>                        0
+#>                        0
 #> No automatic stability classification or readiness change is applied.
 ```
 
@@ -330,31 +337,33 @@ rather than delta-method SEs of the fair-average value;
 `fair_average_table(fair_se = TRUE)` adds distinct structural
 delta-method fair-average SEs for non-person rows when the MML
 observed-information Hessian is available. Bias SE / `t` / `Prob.`
-columns are conditional plug-in screening quantities, and bounded-GPCM
-rows also carry profile-likelihood follow-up columns. Summary-table
-appendix export is available for supported direct outputs. The APA
-writer, fit-based report/export bundles, package-native scorefile
-export, QC pass/fail pipelines, linking synthesis, role-based design
-forecasting, and diagnostic/signal-detection design screening are
-available only as caveated bounded-`GPCM` surfaces with explicit
-boundary output. Full FACETS-style score-side contract review, posterior
-predictive checks, and MCMC estimation are not available for bounded
-`GPCM`. See
+columns are conditional plug-in screening quantities, and GPCM rows also
+carry profile-likelihood follow-up columns. Summary-table appendix
+export is available for supported direct outputs. The APA writer,
+fit-based report/export bundles, package-native scorefile export, QC
+pass/fail pipelines, linking synthesis, role-based design forecasting,
+and diagnostic/signal-detection design screening are available only as
+caveated `GPCM` surfaces with explicit boundary output. Full
+FACETS-style score-side contract review, posterior predictive checks,
+and MCMC estimation are not available for `GPCM`. See
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 for the status and recommended alternative for each helper group.
 
-## Why bounded GPCM is the current limit
+## GPCM model and inference limits
 
-`GPCM` is the current upper supported scope for three reasons.
+One selected facet supplies both positive relative discriminations and
+category steps: `slope_facet == step_facet`. It does not mean that task
+and rater discriminations are jointly estimated.
 
-1.  The bounded slope model uses the documented `MML` probability
-    framework under the stated restriction.
-2.  Direct verification checks are available for that model.
-3.  Score-side and reporting helpers that rely on Rasch-family semantics
-    remain unavailable or carry explicit caveats.
-
-This is a narrower but more defensible claim than saying the whole
-package is uniformly generalized to free-discrimination many-facet work.
+Numerical fitting and descriptive sensitivity analysis are available.
+`confint(fit, parm = "slopes")` separately checks approximate pointwise
+MML relative-slope intervals. MML IC ranking uses separate checks of the
+retained likelihood, gradient and positive unregularized information,
+alongside the common comparison requirements. Score-side and reporting
+helpers that rely on Rasch-family semantics also retain their documented
+limits. See
+[`vignette("mfrmr-gpcm-scope")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md)
+for the output-specific distinctions.
 
 ## Equal weighting as a model-choice principle
 
@@ -370,12 +379,12 @@ arguments that are often conflated in applied many-facet work.
 If the intended score interpretation requires equal contributions of
 items and raters, then the Rasch-family route remains substantively
 attractive even when a slope-aware model fits better. `mfrmr` therefore
-treats `RSM` / `PCM` as the equal-weighting reference models and bounded
-`GPCM` as a supported alternative for users who explicitly want to
-inspect or allow discrimination-based reweighting.
+treats `RSM` / `PCM` as the equal-weighting reference models and `GPCM`
+as a supported alternative for users who explicitly want to inspect or
+allow discrimination-based reweighting.
 
 This is also why full FACETS output-contract score-side review is not
-provided for bounded `GPCM`: its published form is a Rasch-family score
+provided for `GPCM`: its published form is a Rasch-family score
 transformation, and the slope-aware analogue that would replace it in a
 free-discrimination context requires careful score-side uncertainty
 handling. Package-native scorefile export, manuscript-draft APA text,
@@ -385,7 +394,7 @@ score transformations.
 [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
 and
 [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-themselves are now available under bounded `GPCM` via the slope-aware
+themselves are now available under `GPCM` via the slope-aware
 element-conditional kernel. For fair averages,
 `fair_average_table(fair_se = TRUE)` adds structural delta-method SEs
 for non-person rows when the MML Hessian is available; the historical
@@ -401,8 +410,8 @@ above.
 
 ## Practical Reading Order
 
-For users deciding among `RSM`, `PCM`, and bounded `GPCM`, use this
-reading order:
+For users deciding among `RSM`, `PCM`, and `GPCM`, use this reading
+order:
 
 1.  Start with the score claim. If category thresholds should be common,
     begin with `RSM`; if thresholds may vary by a designated step facet,
@@ -410,10 +419,10 @@ reading order:
 2.  Fit the Rasch-family reference model with `method = "MML"` and read
     `summary(fit)` plus
     `summary(diagnose_mfrm(fit, diagnostic_mode = "both"))`.
-3.  Fit bounded `GPCM` only when discrimination-based reweighting is a
+3.  Fit `GPCM` only when discrimination-based reweighting is a
     meaningful sensitivity question, not as a routine replacement for
     the equal-weighting model.
-4.  If bounded `GPCM` fits better, report what changed: slopes,
+4.  For the descriptive `GPCM` comparison, report what changed: slopes,
     information redistribution, bias-screening rows, fair averages, or
     conclusions. Do not let fit improvement alone decide the operational
     model.
@@ -422,20 +431,22 @@ After fitting candidates,
 [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
 places the reported step/slope coordinate counts, identified
 free-parameter counts, and each fit’s stored readiness decision in
-`review$model_roles`. Read those fields before the information criteria:
-a more flexible fit that is not inference-ready cannot become the
-selected operational model through AIC or BIC alone.
+`review$model_roles`. IC comparison has a separate `ICFitEligible`
+solution check and final `ICComparable` decision. Passing them does not
+authorize slope intervals; a PCM/GPCM LRT additionally needs verified
+nesting and an explicit `nested = TRUE` request. A preferred IC
+candidate does not by itself determine an operational scoring policy.
 
 This sequence keeps the interpretation aligned with the validation
 boundary: `RSM`/`PCM` support the full manuscript/reporting route, while
-bounded `GPCM` supports the documented direct and caveated routes.
+`GPCM` supports the documented direct and caveated routes.
 
 ## Analyses not provided by mfrmr
 
 Posterior-predictive checks and `MCMC` estimation are not provided by
 mfrmr. Use external Bayesian software when those analyses are required.
 They are not needed for the quadrature-based `MML` route or for the
-bounded `GPCM` workflows described here.
+`GPCM` workflows described here.
 
 ## Recommended Expert Reading Of Package Output
 

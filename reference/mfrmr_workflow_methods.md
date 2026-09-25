@@ -64,6 +64,10 @@ Learn the operation first, then open its help page:
 - `pool_` combines eligible analyses, for example
   [`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md).
 
+- `review_` checks supplied data or analysis choices, for example
+  [`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md);
+  it does not generate missing scores.
+
 - `export_` writes files, for example
   [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md).
 
@@ -78,9 +82,16 @@ a many-facet Rasch model. Some help guides use the package prefix
 ordinary-MFRM map, use
 `mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]`. The
 no-argument guide lists all specialist routes and is not a first lesson.
+For rater feedback, use `mfrmr_output_guide("feedback")`: it
+distinguishes uncertainty in severity from unexpected rating patterns
+and the accuracy of a warning rule.
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+concerns specified fixed raters; shared-rater intervals have a different
+target and retain their separate limitations. Ordinary and
+extended-model residuals also use different definitions. The guide names
+the matching summary, plot and saving routes.
 
-Some names need extra care.
-[`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+[`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
 checks completed data supplied by you; it does not generate missing
 scores. Follow it with
 [`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md)
@@ -95,7 +106,7 @@ establish accuracy from real ratings alone.
 summarizes numeric external attributes;
 [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
 forms groups. PCA is optional before k-means.
-[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
 uses partitioning around medoids (PAM) for mixed attributes; it does not
 automatically choose a clustering algorithm. For a dendrogram, use
 [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md).
@@ -104,6 +115,25 @@ A G-study
 estimates sources of variation in observed scores; a D-study
 ([`mfrm_multivariate_d_study()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md))
 uses them to compare future rater/task plans. Neither needs an MFRM fit.
+
+## Updating earlier scripts
+
+|  |  |  |
+|----|----|----|
+| Earlier call | Recommended call | Meaning retained |
+| `mfrm_cluster(x, k)` | `mfrm_cluster_pam(x, k)` | Same Gower/PAM partition and result class. |
+| `mfrm_response_imputations(..., impute = ids)` | `review_mfrm_imputations(..., impute_ids = ids)` | Same checks of supplied completed ratings; no imputation model is fitted. |
+| `keep_original = TRUE` | `category_policy = "preserve"` | Same category ladder in fitting, data review and anchor review. |
+| `keep_original = FALSE` | `category_policy = "collapse"` | Same collapsing of gaps; still the default when no policy is supplied. |
+
+The old calls remain supported, including positional arguments. Saved
+objects retain their classes and
+[`summary()`](https://rdrr.io/r/base/summary.html)/[`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+methods. Do not pass conflicting old/new category choices. See
+[`compatibility_alias_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/compatibility_alias_table.md)
+for the complete migration map. This does not change what
+[`predict()`](https://rdrr.io/r/stats/predict.html) returns: use the
+ability-scoring or response-prediction route named for your model.
 
 A **calibration** is the fitted set of model parameters, such as rater
 severity and category thresholds. A **conditional** ability interval
@@ -130,14 +160,19 @@ assessment. Start with the choices that change the analysis:
   change more than the rater/dependence structure.
 
 - **Rating scale:** supply `rating_min`, `rating_max` and
-  `keep_original` from the rubric in both data review and ordinary
+  `category_policy` from the rubric in both data review and ordinary
   fitting. Omitted bounds use the observed range. The ordinary default
-  `keep_original = FALSE` can collapse unobserved internal categories,
-  for example observed 1, 3, 5 to 1, 2, 3. This changes the fitted
-  category structure, not just labels. A warning and the stored score
-  map identify the recoding. Use `keep_original = TRUE` to preserve the
-  declared ladder; an unsupported internal category then stops fitting
-  and needs substantive review.
+  `category_policy = NULL` retains `keep_original = FALSE` and can
+  collapse unobserved internal categories, for example observed 1, 3, 5
+  to 1, 2, 3. This changes the fitted category structure, not just
+  labels. A warning and the stored score map identify the recoding.
+  Inspect `CategoryPolicy` and `ScoreRecoded` in `data_review$overview`
+  or `summary(fit)$settings_overview` to distinguish the chosen rule
+  from an actual change to score values. With a complete contiguous
+  scale, `"collapse"` can still have `ScoreRecoded = FALSE`. Use
+  `category_policy = "preserve"` to preserve the declared ladder; an
+  unsupported internal category then stops fitting and needs substantive
+  review.
 
 - **Missingness and assignment:** ordinary fitting excludes rows missing
   a score or required ID (and nonpositive-weight rows); inspect
@@ -146,7 +181,7 @@ assessment. Start with the choices that change the analysis:
   In contrast, the extended models stop on missing assigned scores by
   default, and feature/G-study routes also require an explicit omission
   choice. Omission does not correct informative missingness. In
-  [`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md),
+  [`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md),
   `assigned = NULL` declares every supplied row assigned: supply an
   assignment column if unassigned rows are present.
 
@@ -226,7 +261,7 @@ without an installed vignette:
   their compact summary tables.
 
 Set the score bounds from your rubric and use the same columns, bounds,
-and `keep_original` setting for the review and the fit. Reviewing data
+and `category_policy` setting for the review and the fit. Reviewing data
 does not change the original ratings. After correcting or recoding them,
 repeat the review and pass the corrected data frame to
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
@@ -329,7 +364,7 @@ declared G-study design.
 To group persons, raters or tasks by external attributes, use
 [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
 followed by
-[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
 or
 [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
 for mixed attributes.
@@ -361,7 +396,7 @@ clustering instead use their base plots or explicit custom graphics from
 
 ## Missing scores on assigned ratings
 
-[`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+[`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
 reviews supplied ordinal completions;
 [`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md)
 fits each dataset and retains failures. Inspect every completion before
@@ -637,7 +672,7 @@ rollups and `summary(review)$plot_routes` for the next plot helper -\>
 [`plot_anchor_drift()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_anchor_drift.md)
 or `plot(anchor_review, ...)` for the specific flagged evidence family.
 
-For bounded `GPCM`, use
+For `GPCM`, use
 [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
 as a caveated exploratory synthesis over direct anchor, drift, and chain
 evidence. It is not an operational `GPCM` linking decision or evidence
@@ -664,9 +699,9 @@ according to `casebook$plot_map` -\>
 when the flagged cases need appendix-style reporting support.
 
 [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md)
-can still be used for bounded `GPCM`, but it should be read as an
-operational exploratory screen rather than as a strict Rasch-style
-invariance report.
+can still be used for `GPCM`, but it should be read as an operational
+exploratory screen rather than as a strict Rasch-style invariance
+report.
 
 ## Latent-regression route
 
@@ -707,10 +742,10 @@ This preserves the declaration in the data-support review. A zero-count
 boundary is review evidence for the separate element-boundary contract;
 it is not by itself an unsupported free-step contrast. If an
 intermediate category is unobserved (for example 1, 2, 4, 5 with no 3),
-also set `keep_original = TRUE` if the zero-count category should remain
-in the fitted support. `summary(describe_mfrm_data(...))` reports
-retained zero-count categories in `Notes`, printed `Caveats`, and
-`$caveats`; `summary(fit)` carries full structured rows into printed
+also set `category_policy = "preserve"` if the zero-count category
+should remain in the fitted support. `summary(describe_mfrm_data(...))`
+reports retained zero-count categories in `Notes`, printed `Caveats`,
+and `$caveats`; `summary(fit)` carries full structured rows into printed
 `Caveats` and `$caveats`, with `Key warnings` as a short triage subset.
 Summary-table exports route those rows through `score_category_caveats`
 or `analysis_caveats`. In a polytomous fitted ladder, a retained
@@ -752,7 +787,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
     For final reporting, prefer `diagnostic_mode = "both"` so the legacy
     residual path and the strict marginal screen remain visible side by
-    side. For bounded `GPCM`, diagnostics are now available through
+    side. For `GPCM`, diagnostics are now available through
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
     together with
     [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md),
@@ -771,10 +806,10 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     directly when you need the supported slope-aware element-conditional
     fair averages. Treat those residual-based summaries as exploratory
     screens because the discrimination parameter is free. Full
-    FACETS-style score-side contract review remains blocked for bounded
-    `GPCM`; package-native scorefile export, fit-based reporting
-    bundles, direct fair-average tables, and bias-screening tables carry
-    their own caveats. Posterior scoring with
+    FACETS-style score-side contract review remains blocked for `GPCM`;
+    package-native scorefile export, fit-based reporting bundles, direct
+    fair-average tables, and bias-screening tables carry their own
+    caveats. Posterior scoring with
     [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
     /
     [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md),
@@ -816,19 +851,19 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     See
     [`vignette("mfrmr-screening-performance", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-screening-performance.md).
 
-6.  (Optional, `RSM` / `PCM`; bounded `GPCM` with caveat) Estimate
-    interaction bias with
+6.  (Optional, `RSM` / `PCM`; `GPCM` with caveat) Estimate interaction
+    bias with
     [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md).
 
 7.  Choose a downstream branch:
     [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
     for direct report preparation, or
     [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
-    for Rasch-versus-bounded-`GPCM` weighting review, or
+    for Rasch-versus-`GPCM` weighting review, or
     [`build_misfit_casebook()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_misfit_casebook.md)
     /
     [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
-    for operational case review. For bounded `GPCM`, use
+    for operational case review. For `GPCM`, use
     [`build_linking_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_linking_review.md)
     only as an exploratory index over direct anchor/drift/chain
     evidence.
@@ -839,11 +874,10 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md),
     [`build_fixed_reports()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_fixed_reports.md),
     [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md).
-    For bounded `GPCM`, use the APA, visual, QC, and fit-based export
-    bundles as caveated sensitivity-reporting surfaces; full score-side
-    FACETS review stays blocked, while diagnostic/signal-detection
-    design screening has its own caveated operating-characteristic
-    route.
+    For `GPCM`, use the APA, visual, QC, and fit-based export bundles as
+    caveated sensitivity-reporting surfaces; full score-side FACETS
+    review stays blocked, while diagnostic/signal-detection design
+    screening has its own caveated operating-characteristic route.
 
 9.  (Optional, `RSM` / `PCM`) Review report completeness with
     [`reference_case_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_review.md).
@@ -884,12 +918,12 @@ marked as not assessed; mfrmr does not assume a complete crossing.
     Current fit-derived simulation specs include direct `GPCM` data
     generation and recovery checks. Design-evaluation,
     population-forecasting, diagnostic- screening, and signal-detection
-    helpers also support bounded `GPCM` as caveated role-based
-    simulation/refit evidence; inspect `gpcm_boundary` before using
-    those results in design claims. Unit scoring can use an ordinary
-    `MML` fit directly, a latent-regression `MML` fit when you also
-    supply one-row-per-person background data for the scored units, or a
-    `JML` fit when a post hoc reference-prior EAP layer is acceptable.
+    helpers also support `GPCM` as caveated role-based simulation/refit
+    evidence; inspect `gpcm_boundary` before using those results in
+    design claims. Unit scoring can use an ordinary `MML` fit directly,
+    a latent-regression `MML` fit when you also supply
+    one-row-per-person background data for the scored units, or a `JML`
+    fit when a post hoc reference-prior EAP layer is acceptable.
     Estimated-population fits require explicit
     `readiness_policy = "review"`; this does not remove their
     interpretation limits. Intercept-only latent-regression fits
@@ -916,7 +950,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
   -\>
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-  when you want the package to route the next figures. bounded `GPCM`:
+  when you want the package to route the next figures. `GPCM`:
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   -\>
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
@@ -938,8 +972,8 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
   /
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
-  when those screening tables answer the question. For bounded `GPCM`,
-  the fit-based export family
+  when those screening tables answer the question. For `GPCM`, the
+  fit-based export family
   ([`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md),
   [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md),
   [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md))
@@ -961,7 +995,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
   or
   [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
-  bounded `GPCM`:
+  `GPCM`:
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
   -\> direct table/plot helpers -\>
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
@@ -979,13 +1013,29 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
   /
   [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
-  when you want to inspect whether bounded `GPCM` is introducing
-  substantively acceptable discrimination-based reweighting relative to
-  the Rasch-family reference. Eligible MML comparisons require a common
-  grid of at least 31 points and a denser common-grid sensitivity check
-  when close or consequential. Free-slope GPCM ranking and the
-  PCM-versus-GPCM chi-square LRT remain unavailable; grid refinement
-  alone does not change those restrictions.
+  when you want to inspect whether `GPCM` is introducing substantively
+  acceptable discrimination-based reweighting relative to the
+  Rasch-family reference. Eligible MML comparisons require a common grid
+  of at least 31 points and a denser common-grid sensitivity check when
+  close or consequential. GPCM MML ranking requires the separate
+  likelihood and solution checks; `nested = TRUE` additionally checks
+  the PCM/GPCM equal-slope test;
+  [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
+  separately checks approximate slope intervals, with explicit
+  standardized-scale, contrast, sandwich and Bonferroni options.
+  [`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+  supplies a fitted-model bootstrap alternative;
+  [`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
+  adds uncertainty to probabilities and per-rating information.
+  [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+  preserves explicit population covariates and reports interval changes
+  across grids. Attach the explicitly selected intervals with
+  `mfrm_results(fit, intervals = list(slopes = ci))`; plot via
+  `type = "gpcm_slopes"` or use
+  [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+  and
+  [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+  Saved reports/exports retain methods and targets without refitting.
 
 - Design planning and forecasting:
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
@@ -1012,7 +1062,7 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   /
   [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md)
   are the scoring layer. Prediction export requires actual prediction
-  objects. Bounded `GPCM` supports direct data generation via
+  objects. `GPCM` supports direct data generation via
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
   [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
   and
@@ -1192,7 +1242,7 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1, rating_max = 4, keep_original = TRUE,
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM",
   population_formula = NULL # Fixed N(0,1) ability distribution
@@ -1215,8 +1265,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
-#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
+#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
+#> 2 Rater          6            0      0.399      -0.606       0.412 1.02 
 
 # Check the interpretation status and recommended next step
 results$decision

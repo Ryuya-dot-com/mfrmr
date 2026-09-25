@@ -15,6 +15,7 @@ about a real assessment or population. For loading your own CSV, see
 ## 1. Fit once and retain the analysis record
 
 ``` r
+
 # Load the package and synthetic ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -59,6 +60,7 @@ different estimator, constraints, anchors, weights, interactions, or
 score orientation.
 
 ``` r
+
 results$overview[, c("Model", "Method", "N", "Persons", "Converged")]
 #> # A tibble: 1 × 5
 #>   Model Method     N Persons Converged
@@ -116,6 +118,7 @@ changes.
 ### Show what was planned, observed, and excluded
 
 ``` r
+
 data("mfrmr_example_operational_design", package = "mfrmr")
 data_review <- describe_mfrm_data(
   data = toy,
@@ -213,6 +216,7 @@ a rater or criterion SE.
 ## 2. Check uncertainty and fit before writing the answer
 
 ``` r
+
 prec <- precision_review_report(fit, diagnostics = diag)
 prec$profile[, c(
   "PrecisionTier", "SupportsFormalInference", "PersonSEBasis", "NonPersonSEBasis"
@@ -278,6 +282,7 @@ absolute standardized- residual cutoffs. The following shows those
 descriptive counts for the current EAP-residual path:
 
 ``` r
+
 z <- diag$obs$StdResidual
 residual_counts <- data.frame(
   AbsoluteZCutoff = c(2, 3),
@@ -304,6 +309,7 @@ not the same as counting only `abs(StdResidual) >= 2`.
 Keep the marginal screening results visible alongside those counts:
 
 ``` r
+
 diag_summary$marginal_fit[, c(
   "OverallRMSD", "StepGroupsFlagged", "FacetLevelsFlagged",
   "PairwiseFlaggedLevelPairs", "ReportingUse"
@@ -356,6 +362,7 @@ resolve local warnings.
 ## 3. Show estimates, uncertainty, and the answer
 
 ``` r
+
 measurements <- fit_measures_table(fit, diagnostics = diag, ci_level = 0.95)
 rater_table <- subset(
   measurements$table, Facet == "Rater",
@@ -433,6 +440,7 @@ normal approximations are not posterior quantile intervals.
 ### Keep separation, agreement, and category functioning distinct
 
 ``` r
+
 apa_table(
   diag_summary$reliability[, c("Facet", "Levels", "Separation", "Strata", "Reliability", "RealReliability")],
   digits = 3,
@@ -471,6 +479,7 @@ unavailable. `Separation` is `sqrt(max(V - E, 0) / E)` when defined, and
 observed groups. The underlying quantities are available directly:
 
 ``` r
+
 diag$reliability[, c("Facet", "Levels", "ObservedVariance", "ModelErrorVariance", "Reliability")]
 #> # A tibble: 3 × 5
 #>   Facet     Levels ObservedVariance ModelErrorVariance Reliability
@@ -499,6 +508,7 @@ the marginal diagnostic screens above. Use `agreement$pairs` when
 differences among rater pairs matter.
 
 ``` r
+
 scale <- rating_scale_table(fit, diagnostics = diag)
 scale$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
 #>   Category Count AvgPersonMeasure     Infit    Outfit
@@ -527,6 +537,7 @@ For a threshold table with uncertainty, use the diagnostics already
 computed:
 
 ``` r
+
 steps <- diag$parameter_uncertainty$steps
 steps[, c("Step", "Estimate", "SE", "CI_Lower", "CI_Upper", "CI_Level")]
 #> # A tibble: 3 × 6
@@ -571,6 +582,7 @@ reference when using a similar presentation. Here the reference is zero
 for the other facets:
 
 ``` r
+
 fair <- fair_average_table(fit, diagnostics = diag, reference = "zero")
 person_scores <- fair$raw_by_facet$Person
 person_scores <- person_scores[order(person_scores$Level), ]
@@ -669,6 +681,7 @@ assumptions from the synthetic example.
 ## 4. Review gaps and generate draft text
 
 ``` r
+
 chk <- reporting_checklist(fit, diagnostics = diag, include_references = TRUE)
 chk$section_summary
 #>                       Section Items Available DraftReady ReadyForAPA Missing
@@ -740,6 +753,7 @@ if it answers a study question; an unrequested optional analysis is not
 necessarily a reporting omission.
 
 ``` r
+
 apa <- build_apa_outputs(
   fit,
   diagnostics = diag,
@@ -879,6 +893,7 @@ APA, & NCME, 2014, Chapters 2 and 7).
 ## 5. Save the analysis and complete the references
 
 ``` r
+
 # A new temporary folder makes this example repeatable.
 # For your study, choose a new permanent project folder instead.
 output_dir <- tempfile("mfrmr-report-")
@@ -918,6 +933,7 @@ Save the selected manuscript table, its caption and note, the threshold
 uncertainty table, and the draft carrying your supplied context:
 
 ``` r
+
 # Keep full precision in CSV; the displayed table is rounded to three decimals
 write.csv(rater_table, file.path(output_dir, "Table1-raters.csv"), row.names = FALSE)
 writeLines(capture.output(print(rater_apa)), file.path(output_dir, "Table1-raters.txt"))
@@ -973,6 +989,7 @@ data. Inspect its text as well as its tables, and use a new directory
 for a new analysis.
 
 ``` r
+
 # Get the citation for the package version actually used, and for R
 citation("mfrmr")
 #> To cite mfrmr in publications, use:
@@ -1038,18 +1055,21 @@ chk$references
 # Retain the computing environment with the analysis record
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
-#> Platform: aarch64-apple-darwin23
-#> Running under: macOS Tahoe 26.6.2
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
-#> BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
-#> LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
 #> 
 #> locale:
-#> [1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
 #> 
-#> time zone: Asia/Tokyo
-#> tzcode source: internal
+#> time zone: UTC
+#> tzcode source: system (glibc)
 #> 
 #> attached base packages:
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
@@ -1058,19 +1078,18 @@ sessionInfo()
 #> [1] mfrmr_0.2.4
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] Matrix_1.7-6      jsonlite_2.0.0    dplyr_1.2.1       compiler_4.6.1   
+#>  [1] Matrix_1.7-5      jsonlite_2.0.0    dplyr_1.2.1       compiler_4.6.1   
 #>  [5] tidyselect_1.2.1  psych_2.6.5       stringr_1.6.0     parallel_4.6.1   
 #>  [9] tidyr_1.3.2       jquerylib_0.1.4   systemfonts_1.3.2 textshaping_1.0.5
-#> [13] yaml_2.3.12       fastmap_1.2.0     lattice_0.23-1    R6_2.6.1         
-#> [17] generics_0.1.4    knitr_1.52        htmlwidgets_1.6.4 tibble_3.3.1     
-#> [21] desc_1.4.3        bslib_0.12.0      pillar_1.11.1     rlang_1.3.0      
-#> [25] utf8_1.2.6        stringi_1.8.9     cachem_1.1.0      xfun_0.61        
-#> [29] fs_2.1.0          sass_0.4.10       otel_0.2.0        cli_3.6.6        
-#> [33] withr_3.0.3       pkgdown_2.2.1     magrittr_2.0.5    digest_0.6.39    
-#> [37] grid_4.6.1        lifecycle_1.0.5   nlme_3.1-171      vctrs_0.7.3      
-#> [41] mnormt_2.1.2      evaluate_1.0.5    glue_1.8.1        ragg_1.5.2       
-#> [45] rmarkdown_2.32    purrr_1.2.2       tools_4.6.1       pkgconfig_2.0.3  
-#> [49] htmltools_0.5.9
+#> [13] yaml_2.3.12       fastmap_1.2.0     lattice_0.22-9    R6_2.6.1         
+#> [17] generics_0.1.4    knitr_1.52        tibble_3.3.1      desc_1.4.3       
+#> [21] bslib_0.12.0      pillar_1.11.1     rlang_1.3.0       utf8_1.2.6       
+#> [25] stringi_1.8.9     cachem_1.1.0      xfun_0.61         fs_2.1.0         
+#> [29] sass_0.4.10       otel_0.2.0        cli_3.6.6         withr_3.0.3      
+#> [33] pkgdown_2.2.1     magrittr_2.0.5    digest_0.6.39     grid_4.6.1       
+#> [37] lifecycle_1.0.5   nlme_3.1-169      vctrs_0.7.3       mnormt_2.1.2     
+#> [41] evaluate_1.0.5    glue_1.8.1        ragg_1.5.2        rmarkdown_2.32   
+#> [45] purrr_1.2.2       tools_4.6.1       pkgconfig_2.0.3   htmltools_0.5.9
 ```
 
 `chk$references` contains abbreviated citations and topics. Obtain and

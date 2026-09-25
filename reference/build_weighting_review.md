@@ -1,7 +1,6 @@
-# Build a weighting-policy review between Rasch-family and bounded GPCM fits
+# Build a weighting-policy review between Rasch-family and GPCM fits
 
-Build a weighting-policy review between Rasch-family and bounded GPCM
-fits
+Build a weighting-policy review between Rasch-family and GPCM fits
 
 ## Usage
 
@@ -11,7 +10,8 @@ build_weighting_review(
   gpcm_fit,
   theta_range = c(-6, 6),
   theta_points = 101L,
-  top_n = 10L
+  top_n = 10L,
+  nested = FALSE
 )
 ```
 
@@ -27,7 +27,7 @@ build_weighting_review(
 
   Output from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-  using bounded `model = "GPCM"`.
+  using `model = "GPCM"`.
 
 - theta_range:
 
@@ -44,6 +44,12 @@ build_weighting_review(
 
   Maximum number of rows to keep in compact summary outputs.
 
+- nested:
+
+  Request the PCM/GPCM equal-slope likelihood-ratio test. Default
+  `FALSE`. Requires matched MML fits and the checks in
+  [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
+
 ## Value
 
 An object of class `mfrm_weighting_review`.
@@ -54,7 +60,7 @@ An object of class `mfrm_weighting_review`.
 It is designed for the common question:
 
 - what changes when a Rasch-family equal-weighting model is replaced
-  with a bounded `GPCM` that allows discrimination-based reweighting?
+  with a `GPCM` that allows discrimination-based reweighting?
 
 The helper does not estimate a new model. Instead, it synthesizes four
 package-native evidence sources:
@@ -64,7 +70,7 @@ package-native evidence sources:
 
 - the non-person facet measures from each fit
 
-- the bounded `GPCM` slope table
+- the `GPCM` slope table
 
 - [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
   for design-weighted information redistribution
@@ -77,23 +83,25 @@ designated facet, not one common slope and not simultaneous
 criterion-by-rater slope blocks. The overview records the slope owner,
 step owner, level count, free relative slope contrasts, and whether the
 supplied reference is the exact unit-slope PCM response-kernel
-reduction. A formal PCM-versus-GPCM chi-square LRT is unavailable.
-Free-slope GPCM also lacks the inference checks required for
-information-criterion ranking, even under MML. The returned
-`comparison_contract` records the applicable comparison restrictions;
-observed changes in fit, scores and information remain descriptive. A
-JML log-likelihood increase is not promoted to automatic PCM-versus-GPCM
-model selection because it is unpenalized and the GPCM contains
-additional slope parameters. FACETS may serve as a direct comparator for
-the PCM/JML side only; its post-fit discrimination statistic is not a
-jointly estimated free-slope GPCM counterpart.
+reduction. MML information-criterion ranking requires the likelihood and
+local-solution checks in
+[`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
+With `nested = TRUE`, a PCM/GPCM asymptotic chi-square LRT additionally
+requires matching population, step and facet settings and G-1 free slope
+contrasts. The returned `comparison_contract` records the comparison and
+test status; observed changes in scores and information need substantive
+interpretation. A JML log-likelihood increase is not promoted to
+automatic PCM-versus-GPCM model selection because it is unpenalized and
+the GPCM contains additional slope parameters. FACETS may serve as a
+direct comparator for the PCM/JML side only; its post-fit discrimination
+statistic is not a jointly estimated free-slope GPCM counterpart.
 
 ## Recommended input route
 
 1.  Fit an equal-weighting reference model with `model = "RSM"` or
     `"PCM"`.
 
-2.  Fit a bounded `GPCM` on the same prepared response data.
+2.  Fit a `GPCM` on the same prepared response data.
 
 3.  Run `build_weighting_review(rasch_fit, gpcm_fit)`.
 
@@ -104,33 +112,32 @@ jointly estimated free-slope GPCM counterpart.
 
 - `model_comparison`: same-data model-comparison bundle from
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
-  AIC/Person-BIC/SABIC ranking is unavailable for the current free-slope
-  GPCM fits. PCM-versus-GPCM LRT also remains unavailable even though
-  PCM is the aligned GPCM's unit-slope reduction.
+  AIC/Person-BIC/SABIC ranking is available only when `ICComparable` is
+  true. Inspect `$lrt` and `$comparison_basis$lrt_reason` for a
+  requested test.
 
 - `comparison_contract`: one-row evidence-tier table stating whether
   formal model selection is available, how any observed log-likelihood
   difference may be read, and the bounded role of FACETS in a JML
   review.
 
-- `facet_shift`: how non-person facet estimates move under bounded
-  `GPCM`.
+- `facet_shift`: how non-person facet estimates move under `GPCM`.
 
 - `slope_profile`: which `slope_facet` levels are upweighted or
   downweighted.
 
 - `information_redistribution`: within-facet information-share changes
-  between the Rasch-family fit and bounded `GPCM`.
+  between the Rasch-family fit and `GPCM`.
 
 - `top_reweighted_levels`: compact triage table for the strongest
   slope-facet-level redistribution signals.
 
 ## GPCM boundary
 
-This helper is available only for the current bounded `GPCM` branch. It
-requires the package's existing `slope_facet == step_facet` contract and
-should be read as an operational weighting-policy review, not as a
-formal validity adjudication.
+This helper is available only for the current `GPCM` branch. It requires
+the package's existing `slope_facet == step_facet` contract and should
+be read as an operational weighting-policy review, not as a formal
+validity adjudication.
 
 ## See also
 
@@ -178,15 +185,15 @@ summary(review)
 #>   assessed separately.
 #>   Log-likelihood difference: 8.593 
 #>   Inspect changes in facet measures, relative slopes and information shares.
-#>   Free-slope GPCM information-criterion ranking and the PCM-versus-GPCM
-#>   chi-square LRT are unavailable; a larger likelihood does not select a scoring
-#>   model.
+#>   The supplied fits do not satisfy the information-criterion comparison checks.
+#>   An equal-slope PCM/GPCM test requires two MML fits with the same step facet
+#>   and population model.
 #> 
 #> Key Warnings
 #>  - Model-comparison weights are descriptive only because the two fits do not
 #>    share a fully comparable formal MML basis.
-#>  - Largest bounded GPCM slope deviation is at Criterion = Organization
-#>    (Estimate = 1.148).
+#>  - Largest GPCM slope deviation is at Criterion = Organization (Estimate =
+#>    1.148).
 #>  - Largest within-facet information-share shift is -0.026 for Criterion =
 #>    Organization.
 #>  - Largest facet-measure shift is -0.020 for Criterion = Organization.
@@ -194,14 +201,14 @@ summary(review)
 #> Next Actions
 #>  - Read summary(model_comparison) before interpreting any fit advantage as a
 #>    scoring recommendation.
-#>  - Use likelihood and weighting differences descriptively; GPCM ranking remains
-#>    unavailable even after numerical convergence.
+#>  - Use IC ranking only when ICComparable is true; weighting consequences
+#>    require a separate substantive decision.
 #>  - Use slope_profile and top_reweighted_levels to inspect whether Criterion
 #>    levels are being upweighted or downweighted in substantively acceptable
 #>    ways.
 #>  - Use plot_information(compute_information(rasch_fit), type = "iif", facet =
-#>    "Criterion", draw = FALSE) and the bounded GPCM analogue to inspect
-#>    precision redistribution visually.
+#>    "Criterion", draw = FALSE) and the GPCM analogue to inspect precision
+#>    redistribution visually.
 #> 
 #> Top Measure Shifts
 #>      Facet        Level ReferenceEstimate ReferenceRank ComparisonEstimate
@@ -213,15 +220,15 @@ summary(review)
 #>      Rater          R02            -0.317             1             -0.309
 #>      Rater          R01            -0.189             2             -0.183
 #>      Rater          R04             0.321             4              0.320
-#>  ComparisonRank DeltaEstimate AbsDeltaEstimate RankShift              Direction
-#>               2        -0.020            0.020         0  Lower in bounded GPCM
-#>               3         0.019            0.019         0 Higher in bounded GPCM
-#>               4         0.017            0.017         0 Higher in bounded GPCM
-#>               1        -0.017            0.017         0  Lower in bounded GPCM
-#>               3        -0.013            0.013         0  Lower in bounded GPCM
-#>               1         0.008            0.008         0 Higher in bounded GPCM
-#>               2         0.006            0.006         0 Higher in bounded GPCM
-#>               4        -0.002            0.002         0  Lower in bounded GPCM
+#>  ComparisonRank DeltaEstimate AbsDeltaEstimate RankShift      Direction
+#>               2        -0.020            0.020         0  Lower in GPCM
+#>               3         0.019            0.019         0 Higher in GPCM
+#>               4         0.017            0.017         0 Higher in GPCM
+#>               1        -0.017            0.017         0  Lower in GPCM
+#>               3        -0.013            0.013         0  Lower in GPCM
+#>               1         0.008            0.008         0 Higher in GPCM
+#>               2         0.006            0.006         0 Higher in GPCM
+#>               4        -0.002            0.002         0  Lower in GPCM
 #> 
 #> Top Reweighted Levels
 #>      Facet        Level ReferenceIntegratedInfo ReferenceExposure
@@ -256,14 +263,12 @@ summary(review)
 #>  - The fitted slopes vary across levels of `Criterion`; other facets have no
 #>    separate slope block.
 #>  - Criterion-owned and rater-owned GPCM fits are separate restricted models;
-#>    both blocks cannot be estimated together by the current bounded-GPCM
-#>    interface.
+#>    both blocks cannot be estimated together by the current GPCM interface.
 #>  - FACETS is a direct JML comparator only for the aligned equal-discrimination
 #>    PCM side; its reported discrimination is a post-fit diagnostic, not the
 #>    fitted free-slope GPCM parameter.
 #>  - The review is intended to make reweighting visible; it does not decide by
-#>    itself whether bounded GPCM should replace the Rasch-family operational
-#>    model.
+#>    itself whether GPCM should replace the Rasch-family operational model.
 #>  - Information-share changes are computed within each facet because the same
 #>    total information is partitioned separately by facet.
 review$top_reweighted_levels

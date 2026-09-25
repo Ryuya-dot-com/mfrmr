@@ -50,7 +50,7 @@ the tables you need with $, as in the example."><meta property="og:image" conten
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize a data-description object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_data_description.Rd</code></div>
     </div>
 
@@ -128,7 +128,10 @@ the complete tables.</p>
 
 <p>Recommended read order:</p><ul><li><p><code>overview</code>: retained ratings (<code>Observations</code>), persons, facets, and
 categories. Compare input and retained <code>Rows</code> in <code>row_retention</code> and
-investigate unexpected <code>DroppedRows</code>.</p></li>
+investigate unexpected <code>DroppedRows</code>.
+<code>CategoryPolicy</code> and <code>ScoreRecoded</code> distinguish the selected policy from
+actual changes to score values. Older results without the policy record
+report <code>"not_recorded"</code>; an absent map gives <code>NA</code> for recoding.</p></li>
 <li><p><code>missing</code>: input <code>NA</code> counts by column. This table is named
 <code>missing_by_column</code> in the original <code>data_review</code> object. Declared
 missing-code replacements and invalid score text can cause additional
@@ -175,7 +178,7 @@ rating data to <code><a href="fit_mfrm.html">fit_mfrm()</a></code> with the same
 <span class="r-in"><span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  rating_min <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>  rating_max <span class="op">=</span> <span class="fl">4</span>,</span></span>
-<span class="r-in"><span>  keep_original <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>  category_policy <span class="op">=</span> <span class="st">"preserve"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">data_review</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">row_retention</span> <span class="co"># 282 input rows, 280 retained rows</span></span></span>
@@ -194,8 +197,8 @@ rating data to <code><a href="fit_mfrm.html">fit_mfrm()</a></code> with the same
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">overview</span>      <span class="co"># Counts describe the retained ratings</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Observations TotalWeight Persons Facets Categories RatingMin RatingMax</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          280         280      48      2          4         1         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   RatingRangeSource RatingMinSource RatingMaxSource</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          declared        declared        declared</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RatingRangeSource RatingMinSource RatingMaxSource CategoryPolicy ScoreRecoded</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          declared        declared        declared       preserve        FALSE</span>
 <span class="r-in"><span><span class="va">review</span><span class="op">$</span><span class="va">notes</span>         <span class="co"># Explanations to read before fitting</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Missing values were detected in one or more input columns."                                                                                                                                               </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Structural missingness was not assessed because `expected_design` was not supplied. Absent rows cannot be distinguished from cells that were never assigned."                                             </span>

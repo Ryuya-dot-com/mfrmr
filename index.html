@@ -16,8 +16,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Estimation and Diagnostics for Many-Facet Measurement Models">
-<meta name="description" content="Native R implementation of many-facet ordered-response measurement models with arbitrary facet counts, rating-scale and partial-credit parameterizations, a bounded generalized partial-credit extension, and both marginal and joint maximum likelihood estimation. The package provides a fit / diagnose / report pipeline covering anchoring, linking, bias and differential-functioning screening, and publication-oriented reporting summaries, with reproducibility manifests for replay. See Andrich (1978) &lt;doi:10.1007/BF02293814&gt;, Masters (1982) &lt;doi:10.1007/BF02296272&gt;, and Muraki (1992) &lt;doi:10.1177/014662169201600206&gt; for the underlying ordered-response models.">
-<meta property="og:description" content="Native R implementation of many-facet ordered-response measurement models with arbitrary facet counts, rating-scale and partial-credit parameterizations, a bounded generalized partial-credit extension, and both marginal and joint maximum likelihood estimation. The package provides a fit / diagnose / report pipeline covering anchoring, linking, bias and differential-functioning screening, and publication-oriented reporting summaries, with reproducibility manifests for replay. See Andrich (1978) &lt;doi:10.1007/BF02293814&gt;, Masters (1982) &lt;doi:10.1007/BF02296272&gt;, and Muraki (1992) &lt;doi:10.1177/014662169201600206&gt; for the underlying ordered-response models.">
+<meta name="description" content="Native R implementation of many-facet ordered-response measurement models with arbitrary facet counts, rating-scale and partial-credit parameterizations, a generalized partial-credit extension with discrimination and category steps varying across levels of one selected facet, and both marginal and joint maximum likelihood estimation. The package provides a fit / diagnose / report pipeline covering anchoring, linking, bias and differential-functioning screening, and publication-oriented reporting summaries, with reproducibility manifests for replay. See Andrich (1978) &lt;doi:10.1007/BF02293814&gt;, Masters (1982) &lt;doi:10.1007/BF02296272&gt;, and Muraki (1992) &lt;doi:10.1177/014662169201600206&gt; for the underlying ordered-response models.">
+<meta property="og:description" content="Native R implementation of many-facet ordered-response measurement models with arbitrary facet counts, rating-scale and partial-credit parameterizations, a generalized partial-credit extension with discrimination and category steps varying across levels of one selected facet, and both marginal and joint maximum likelihood estimation. The package provides a fit / diagnose / report pipeline covering anchoring, linking, bias and differential-functioning screening, and publication-oriented reporting summaries, with reproducibility manifests for replay. See Andrich (1978) &lt;doi:10.1007/BF02293814&gt;, Masters (1982) &lt;doi:10.1007/BF02296272&gt;, and Muraki (1992) &lt;doi:10.1177/014662169201600206&gt; for the underlying ordered-response models.">
 <meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png">
 </head>
 <body>
@@ -78,7 +78,7 @@
 </h1>
 </div>
 <p><a href="https://github.com/Ryuya-dot-com/mfrmr" class="external-link"><img src="https://img.shields.io/badge/GitHub-mfrmr-181717?logo=github" alt="GitHub"></a> <a href="https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
-<p><code>mfrmr</code> fits unidimensional many-facet ordered-response models in R. It supports rating-scale (<code>RSM</code>) and partial-credit (<code>PCM</code>) models, together with a documented bounded <code>GPCM</code> extension. A facet can represent a rater, item, task, criterion, form, occasion, or another observed role that affects an ordered score.</p>
+<p><code>mfrmr</code> fits unidimensional many-facet ordered-response models in R. It supports rating-scale (<code>RSM</code>) and partial-credit (<code>PCM</code>) models, together with a <code>GPCM</code> extension in which one selected facet supplies level-specific discriminations and category steps. GPCM MML information-criterion comparison uses explicit likelihood and solution checks; <code>confint(fit, parm = "slopes")</code> checks approximate pointwise relative-slope intervals separately. Matched PCM/GPCM MML fits can be tested with <code>compare_mfrm(..., nested = TRUE)</code>. A facet can represent a rater, item, task, criterion, form, occasion, or another observed role that affects an ordered score.</p>
 <p>Educational performance assessment is a recurring example, but the column names and facet roles are configurable. The same analysis questions can arise when judges rate musical performances, clinicians rate observed performance, or observers apply a psychological rating rubric. Define the unit being rated, the ordered categories and the modeled construct for each application. A competition total or a continuous clinical measurement is not automatically an ordered-category response.</p>
 <p>Start with the quick start below: load data, fit a model, draw a plot, and inspect the summary. The complete workflow then covers data checks, diagnostics, and reporting.</p>
 <p>Package website: <a href="https://ryuya-dot-com.github.io/mfrmr/" class="uri">https://ryuya-dot-com.github.io/mfrmr/</a></p>
@@ -87,29 +87,32 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>This README describes the expanded <code>0.2.4</code> release candidate, including portable calibration, exploratory external-feature groups, numeric PCA/k-means, assigned-score imputation, fixed-facet sandwich intervals, screening evaluation, multivariate G/D-studies, and shared random-rater and Person-specific testlet RSMs. See <a href="ROADMAP.html">the roadmap</a> for supported scope and future work. The candidate is intended for evaluation and has not been released on CRAN. Functions and options shown here may differ from an installed release; retain the installed source tag or commit and use its matching help. Earlier candidates also report <code>0.2.4</code>, so <code>packageVersion("mfrmr")</code> alone cannot distinguish them. For an existing analysis, read <a href="#updating-saved-analyses">Updating saved analyses</a> before reusing saved diagnostics, scores or reports.</p>
+<p>This README describes the current <code>0.2.4</code> source, including portable calibration, exploratory external-feature groups, numeric PCA/k-means, assigned-score imputation, fixed-facet sandwich intervals, screening evaluation, multivariate G/D-studies, and shared random-rater and Person-specific testlet RSMs. See <a href="https://ryuya-dot-com.github.io/mfrmr/ROADMAP.html">the roadmap</a> for supported scope and future work. The candidate is intended for evaluation and has not been released on CRAN. Functions and options shown here may differ from an installed release; retain the installed source tag or commit and use its matching help. Earlier candidates also report <code>0.2.4</code>, so <code>packageVersion("mfrmr")</code> alone cannot distinguish them. For an existing analysis, read <a href="#updating-saved-analyses">Updating saved analyses</a> before reusing saved diagnostics, scores or reports.</p>
 <p>Install the published CRAN release with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mfrmr"</span><span class="op">)</span></span></code></pre></div>
-<p>To install the expanded 0.2.4 candidate from its fixed GitHub tag:</p>
+<p>To use the examples below with this source archive, install the downloaded file (replace the path with its location on your computer):</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"path/to/mfrmr_0.2.4.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<p>The latest published GitHub candidate is <code>rc.5</code>. It predates <code><a href="reference/mfrm_cluster.html">mfrm_cluster_pam()</a></code>, <code><a href="reference/mfrm_response_imputations.html">review_mfrm_imputations()</a></code> and <code>category_policy</code>; their older equivalents are <code><a href="reference/mfrm_cluster.html">mfrm_cluster()</a></code>, <code><a href="reference/mfrm_response_imputations.html">mfrm_response_imputations()</a></code> and <code>keep_original</code>. The <code>"feedback"</code> output-guide scope also requires the current source. Use the current source archive or checkout for these additions. To install that earlier published candidate reproducibly:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"remotes"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span></span>
 <span>  <span class="st">"Ryuya-dot-com/mfrmr"</span>,</span>
 <span>  ref <span class="op">=</span> <span class="st">"v0.2.4-rc.5"</span>,</span>
 <span>  build_vignettes <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The <a href="https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5" class="external-link">release page</a> provides the source archive with prebuilt tutorials, its checksum and the applicable check results. Use <code>ref = "main"</code> only when you want the latest development source; it may change after this candidate. A local checkout can also be installed with <code>remotes::install_local("path/to/mfrmr")</code>, using the directory containing <code>DESCRIPTION</code> and this README.</p>
+<p>The <a href="https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5" class="external-link">release page</a> provides the rc.5 source archive with prebuilt tutorials, its checksum and the applicable check results. Check which revision contains a new API before using <code>ref = "main"</code>; that branch changes over time. A local checkout can also be installed with <code>remotes::install_local("path/to/mfrmr")</code>, using the directory containing <code>DESCRIPTION</code> and this README.</p>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <p>This example estimates person abilities while accounting for rater severity and criterion difficulty. A <em>facet</em> is a source of variation in scores; here, <code>Rater</code> and <code>Criterion</code> are facets, and individual raters and criteria are their <em>levels</em>. The data are synthetic, with one row per rating and scores from 1 to 4.</p>
 <p><code>head(toy)</code> shows the first six rows. The quoted column names in <code><a href="reference/fit_mfrm.html">fit_mfrm()</a></code> are case-sensitive; <code>Study</code> and <code>Group</code> are extra labels unused by this model. <code>MML</code> selects marginal maximum likelihood; <code>RSM</code> selects a rating-scale model with shared category thresholds (the transitions between adjacent scores).</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load the package</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
@@ -123,7 +126,7 @@
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
 <span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
 <span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
-<span>  rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>, keep_original <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  rating_min <span class="op">=</span> <span class="fl">1</span>, rating_max <span class="op">=</span> <span class="fl">4</span>, category_policy <span class="op">=</span> <span class="st">"preserve"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"RSM"</span>,</span>
 <span>  population_formula <span class="op">=</span> <span class="cn">NULL</span> <span class="co"># Fixed N(0,1) ability distribution</span></span>
@@ -146,7 +149,7 @@
 <div class="section level3">
 <h3 id="inspect-individual-estimates">Inspect individual estimates<a class="anchor" aria-label="anchor" href="#inspect-individual-estimates"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Person"</span><span class="op">)</span><span class="op">)</span> <span class="co"># First six persons</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Rater"</span><span class="op">)</span>       <span class="co"># All raters</span></span>
@@ -157,7 +160,7 @@
 <h3 id="check-what-needs-review">Check what needs review<a class="anchor" aria-label="anchor" href="#check-what-needs-review"></a>
 </h3>
 <p>Read <code>results$decision</code>, especially <code>Why</code> and <code>NextAction</code>, before interpreting or reporting estimates. <code>FormalInference = "No"</code> in this first summary can mean that precision has not yet been reviewed; it does not necessarily mean that fitting failed. The default summary does not compute diagnostics.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="va">diagnostic_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diagnostics</span><span class="op">)</span></span>
 <span><span class="va">diagnostic_summary</span><span class="op">$</span><span class="va">decision</span></span></code></pre></div>
@@ -167,7 +170,8 @@
 <div class="section level3">
 <h3 id="choose-a-function-by-your-question">Choose a function by your question<a class="anchor" aria-label="anchor" href="#choose-a-function-by-your-question"></a>
 </h3>
-<p>You do not need to learn every function before starting. Continue with the question you have and open the named function’s help, for example <code><a href="reference/mfrm_response_imputations.html">help("mfrm_response_imputations", package = "mfrmr")</a></code>.</p>
+<p>You do not need to learn every function before starting. Continue with the question you have and open the named function’s help, for example <code><a href="reference/mfrm_response_imputations.html">help("review_mfrm_imputations", package = "mfrmr")</a></code>.</p>
+<p>Earlier scripts using <code><a href="reference/mfrm_cluster.html">mfrm_cluster()</a></code> or <code><a href="reference/mfrm_response_imputations.html">mfrm_response_imputations()</a></code> remain valid. For new scripts, the names below make the clustering method and the imputation-review step explicit. In imputation review, <code>impute_ids</code> contains rating-event IDs to check, not a switch that starts an imputation model. <code><a href="reference/compatibility_alias_table.html">compatibility_alias_table()</a></code> maps old calls to their recommended names.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -191,6 +195,11 @@
 <td>A fitted model; use <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> to review it.</td>
 </tr>
 <tr>
+<td>How uncertain is a specified fixed-rater difference?</td>
+<td><code><a href="reference/mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code></td>
+<td>Pointwise intervals for an eligible ordinary RSM/PCM fit, using model-based or explicitly selected sandwich covariance.</td>
+</tr>
+<tr>
 <td>What are the abilities of people already in my fitted RSM?</td>
 <td><code><a href="reference/score_mfrm_persons.html">score_mfrm_persons()</a></code></td>
 <td>Conditional ability scores under a supported ordinary, shared-rater or testlet RSM.</td>
@@ -198,14 +207,14 @@
 <tr>
 <td>Do raters with similar backgrounds form descriptive groups?</td>
 <td>
-<code><a href="reference/mfrm_features.html">mfrm_features()</a></code>, then <code><a href="reference/mfrm_cluster.html">mfrm_cluster()</a></code> or <code><a href="reference/mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code>
+<code><a href="reference/mfrm_features.html">mfrm_features()</a></code>, then <code><a href="reference/mfrm_cluster.html">mfrm_cluster_pam()</a></code> or <code><a href="reference/mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code>
 </td>
 <td>Groups based on external attributes, not rater quality. <code><a href="reference/mfrm_pca.html">mfrm_pca()</a></code> optionally summarizes numeric attributes first.</td>
 </tr>
 <tr>
 <td>How do I analyze several completed versions of missing assigned scores?</td>
 <td>
-<code><a href="reference/mfrm_response_imputations.html">mfrm_response_imputations()</a></code>, then <code><a href="reference/fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code> and <code><a href="reference/pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code>
+<code><a href="reference/mfrm_response_imputations.html">review_mfrm_imputations()</a></code>, then <code><a href="reference/fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code> and <code><a href="reference/pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code>
 </td>
 <td>A review, separate fits and pooled eligible facet estimates. Supply the completed data; the first function does not generate replacements.</td>
 </tr>
@@ -224,7 +233,8 @@
 </tr>
 </tbody>
 </table>
-<p><code><a href="reference/mfrm_cluster.html">mfrm_cluster()</a></code> uses partitioning around medoids (PAM), which represents each group by an actual member and accepts mixed numeric/categorical attributes. <code><a href="reference/mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> uses numeric group means. For a tree of nested groups and a dendrogram, choose <code><a href="reference/mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical()</a></code>. These are different algorithms; the shorter name does not choose among them automatically.</p>
+<p>For feedback to raters, <code>mfrmr_output_guide("feedback")</code> connects these questions to the appropriate model, tables, plots and saved results. A severe rater need not misfit. Changing a cutoff shows how flags change in your data; it does not estimate the rule’s false-flag rate without known truth. Shared-rater severity intervals and fixed-rater coefficient intervals have different targets.</p>
+<p><code><a href="reference/mfrm_cluster.html">mfrm_cluster_pam()</a></code> uses partitioning around medoids (PAM), which represents each group by an actual member and accepts mixed numeric/categorical attributes. <code><a href="reference/mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> uses numeric group means. For a tree of nested groups and a dendrogram, choose <code><a href="reference/mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical()</a></code>. These are different algorithms; the shorter name does not choose among them automatically.</p>
 <p>The verbs help identify the operation: <code>fit_</code> estimates a model, <code>score_</code> estimates person abilities using a fitted calibration, <code>pool_</code> combines eligible analyses, and <code>export_</code> writes files. The package is named <strong>mfrmr</strong>; <strong>mfrm</strong> in function names refers to a many-facet Rasch model. Some help guides use the package prefix <code>mfrmr_</code>. These prefixes do not select different estimators. Use <code>summary(object)</code> and <code>plot(object)</code> rather than calling class-specific names such as <code>plot.mfrm_testlet</code> directly.</p>
 <p>Two distinctions matter when choosing an extension:</p>
 <ul>
@@ -241,7 +251,7 @@
 <h3 id="give-feedback-to-raters">Give feedback to raters<a class="anchor" aria-label="anchor" href="#give-feedback-to-raters"></a>
 </h3>
 <p>Use the fitted model and diagnostics above to ask which rating patterns need discussion with a rater. First read <code>diagnostic_summary$decision</code>; a plot does not override its restrictions. Then inspect signed severity estimates and their uncertainty, followed by the detailed screening results:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Review severity on the fitted scale without heuristic guide bands</span></span>
 <span><span class="va">severity</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/plot_rater_severity_profile.html">plot_rater_severity_profile</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diagnostics</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>,</span>
@@ -273,7 +283,7 @@
 <h3 id="compare-uncertainty-for-a-rater-difference">Compare uncertainty for a rater difference<a class="anchor" aria-label="anchor" href="#compare-uncertainty-for-a-rater-difference"></a>
 </h3>
 <p><code><a href="reference/mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> compares ordinary observed-information intervals with a sandwich covariance for eligible fixed-standard-normal RSM/PCM MML fits. By default, each person’s full response vector is one independent unit. For a rater difference, specify named contrast coefficients so the calculation includes covariance between rater estimates:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rater_levels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>, <span class="va">Facet</span> <span class="op">==</span> <span class="st">"Rater"</span><span class="op">)</span><span class="op">$</span><span class="va">Level</span><span class="op">)</span></span>
 <span><span class="va">contrast</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, nrow <span class="op">=</span> <span class="fl">1</span>, ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">rater_levels</span><span class="op">)</span>,</span>
 <span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"R01 minus R02"</span>, <span class="va">rater_levels</span><span class="op">)</span><span class="op">)</span></span>
@@ -291,7 +301,7 @@
 <h3 id="model-a-population-of-raters">Model a population of raters<a class="anchor" aria-label="anchor" href="#model-a-population-of-raters"></a>
 </h3>
 <p><code><a href="reference/fit_mfrm_random_rater.html">fit_mfrm_random_rater()</a></code> fits an RSM in which the same random severity enters all ratings from a given rater. It uses frequentist approximate marginal maximum likelihood with Person quadrature and a joint rater Laplace integral. It requires optional <code>RTMB</code> version 2.0 or later, an independent normal rater population and a connected assignment. Normal Person variance is estimated by default, with mean zero and Rasch slope one; use <code>person_sd = 1</code> only for an explicitly known N(0,1) population. Profiles and bootstrap refits retain the same estimated or known population specification.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">random_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mfrm_random_rater.html">fit_mfrm_random_rater</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span>, <span class="st">"Person"</span>, <span class="st">"Rater"</span>, <span class="st">"Score"</span>,</span>
 <span>  facets <span class="op">=</span> <span class="st">"Criterion"</span>, score_levels <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, quad_points <span class="op">=</span> <span class="fl">121</span></span>
@@ -309,7 +319,7 @@
 <h2 id="dependence-within-a-persons-ratings">Dependence within a person’s ratings<a class="anchor" aria-label="anchor" href="#dependence-within-a-persons-ratings"></a>
 </h2>
 <p><code><a href="reference/fit_mfrm_testlet.html">fit_mfrm_testlet()</a></code> models an extra effect shared by ratings in the same Person/testlet group. For example, one examiner’s impression of a performance may influence several criterion scores. A fixed <code>Rater</code> effect can describe usual severity while <code>testlet = "Rater"</code> groups those criteria within each person. Reusing that rater label for another person creates an independent local effect.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span>
 <span><span class="va">testlet_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mfrm_testlet.html">fit_mfrm_testlet</a></span><span class="op">(</span></span>
 <span>  <span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="st">"Score"</span>, <span class="st">"Rater"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
@@ -323,13 +333,13 @@
 <p>This is frequentist MML for an RSM with mean-zero normal abilities and one common normal local variance. Ability variance is estimated by default; use <code>person_sd = 1</code> for a known standard-normal population. Numerical and information checks must pass before scoring. Unequal blocks and sparse assignments are allowed, subject to design requirements; missing assigned scores require explicit omission. The Person intervals are conditional on fitted calibration and exclude its estimation uncertainty. Entirely missing persons are labeled <code>prior_only</code>. Use <code>mfrmr_output_guide("models")</code> to compare the three model routes and <code><a href="reference/mfrmr_workflow_methods.html">help("mfrmr_workflow_methods")</a></code> to find their supported outputs. The testlet class supports <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="reference/plot_data.html">plot_data()</a></code>, <code><a href="reference/plot_data_components.html">plot_data_components()</a></code> and save/load. <code>as_ggplot(scores)</code> and <code>as_ggplot(testlet_fit, facet = "Rater")</code> preserve interval meanings, unavailable rows and prior-only symbols. Existing saved results need no refit for these displays. For a report, use <code>res &lt;- mfrm_results(testlet_fit, predictions = scores)</code>, then <code>mfrm_report(res)</code> or <code>export_mfrm_results(res, output_dir = "testlet-results", preset = "starter")</code>. The random-rater route also accepts separately computed <code>intervals</code> from <code><a href="reference/mfrm_random_rater_intervals.html">mfrm_random_rater_intervals()</a></code>. These routes collect saved results without fitting, scoring or resampling; older predictions require regeneration from the saved fit to add source metadata. Ordinary-model diagnostics, the Shiny viewer, response-MI pooling and portable calibration remain unavailable. See <code><a href="articles/mfrmr-testlets.html">vignette("mfrmr-testlets", package = "mfrmr")</a></code> for membership, missingness, variance boundaries and reuse. Broader coverage and calibration-aware Person intervals remain unfinished.</p>
 <p><code><a href="articles/mfrmr-testlet-applications.html">vignette("mfrmr-testlet-applications", package = "mfrmr")</a></code> connects this model to assessment decisions: allocating four ratings across tasks, comparing one-point changes in five- versus two-criterion tasks, reviewing possible halo, and recognizing the limits of a common local variance. The executed planning example averages all 81 possible score patterns under a fixed fitted model; its marginal EAP reliability is neither a G/Phi coefficient nor a coverage guarantee. Large local variance does not diagnose halo or show that criteria should be merged. Task-specific variances and enforced equal task weighting are not supplied by the current API.</p>
 <p>Use <code>mfrm_response_diagnostics(fit, group_by = "Rater")</code> with an ordinary RSM MML fit or either extension for category probabilities, predictive means/variances and <strong>descriptive</strong> Infit/Outfit. These integrate latent uncertainty given the same observed responses and fitted calibration. They have no established expectation of one or reference cutoffs, and cannot be directly compared with ordinary plug-in fit indices. Shared-rater computation uses a joint Laplace approximation; its numerical checks do not certify accuracy.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">residuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_response_diagnostics.html">mfrm_response_diagnostics</a></span><span class="op">(</span><span class="va">testlet_fit</span>, group_by <span class="op">=</span> <span class="st">"Rater"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">residuals</span>, style <span class="op">=</span> <span class="st">"paired"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">residuals</span>, style <span class="op">=</span> <span class="st">"scatter"</span>, show_title <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_results.html">mfrm_results</a></span><span class="op">(</span><span class="va">testlet_fit</span>, predictions <span class="op">=</span> <span class="va">scores</span>, diagnostics <span class="op">=</span> <span class="va">residuals</span><span class="op">)</span></span></code></pre></div>
 <p>For a comparison on the same definition, compute the ordinary RSM’s posterior predictions once and attach both saved results:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ordinary_residuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_response_diagnostics.html">mfrm_response_diagnostics</a></span><span class="op">(</span><span class="va">ordinary_fit</span>, group_by <span class="op">=</span> <span class="st">"Rater"</span><span class="op">)</span></span>
 <span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span><span class="va">ordinary_fit</span>, <span class="va">testlet_fit</span>,</span>
 <span>  response_diagnostics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">ordinary_residuals</span>, <span class="va">residuals</span><span class="op">)</span><span class="op">)</span></span>
@@ -385,7 +395,7 @@
 <h2 id="use-your-own-csv">Use your own CSV<a class="anchor" aria-label="anchor" href="#use-your-own-csv"></a>
 </h2>
 <p>Export the rating sheet as <strong>CSV UTF-8</strong>, with column names in the first row. For the four-column layout above, run:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Select your CSV file in the file dialog</span></span>
@@ -407,7 +417,7 @@
 <div class="section level3">
 <h3 id="check-the-data-before-fitting">Check the data before fitting<a class="anchor" aria-label="anchor" href="#check-the-data-before-fitting"></a>
 </h3>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/describe_mfrm_data.html">describe_mfrm_data</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">ratings</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -428,7 +438,7 @@
 <h3 id="fit-and-read-the-results">Fit and read the results<a class="anchor" aria-label="anchor" href="#fit-and-read-the-results"></a>
 </h3>
 <p>After resolving the data-review findings, use the same columns and score scale:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">csv_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">ratings</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -459,12 +469,12 @@
 <div class="section level3">
 <h3 id="response-type-and-frequencies">Response type and frequencies<a class="anchor" aria-label="anchor" href="#response-type-and-frequencies"></a>
 </h3>
-<p>The current response likelihood is ordered categorical. Binary scores are the two-category special case, and RSM, PCM, and bounded GPCM cover ordered polytomous scores. Although their category probabilities form a vector that sums to one, they are not unordered nominal-response or multinomial-logit models. Poisson, negative-binomial, and grouped binomial-trial count responses are also outside the current <code><a href="reference/fit_mfrm.html">fit_mfrm()</a></code> scope. Integer counts supplied as <code>Score</code> are interpreted as ordered category codes, not as Poisson or related counts.</p>
+<p>The current response likelihood is ordered categorical. Binary scores are the two-category special case, and RSM, PCM, and GPCM cover ordered polytomous scores. Although their category probabilities form a vector that sums to one, they are not unordered nominal-response or multinomial-logit models. Poisson, negative-binomial, and grouped binomial-trial count responses are also outside the current <code><a href="reference/fit_mfrm.html">fit_mfrm()</a></code> scope. Integer counts supplied as <code>Score</code> are interpreted as ordered category codes, not as Poisson or related counts.</p>
 <p>A positive numeric <code>weight</code> weights one row’s conditional ordered-category likelihood and can represent a defensible row-replication weight. It is not a general collapsed-person frequency table. Under MML, powering responses within one Person’s conditional pattern is not equivalent to replicating a complete Person response pattern after marginalization. It also does not change the response family or model dependence among repeated ratings. Non-unit observation-weight fits are excluded from the common MML information-criterion panel and remain review-only for ordinary inference: their SEs and intervals have not been qualified for the weighted objective. FACETS has separate <code>Bn</code> binomial-trial and <code>P</code> Poisson response models; those are not reproduced by mfrmr’s binary ordered-score route.</p>
 <p>Each row should represent a distinguishable rating event. Exact duplicate Person-by-facet combinations are retained but trigger a warning and a Data review state because the package does not model within-cell dependence. For a legitimate re-rating or replicated scoring study, include an event or occasion facet that distinguishes the observations before fitting.</p>
 <p>For conventional score sentinels such as <code>99</code>, <code>-1</code>, <code>N</code>, or <code>.</code>, set <code>missing_codes = TRUE</code>. This convenience policy recodes the score column only; it preserves person and facet identifiers because short labels such as <code>N</code> can be legitimate IDs. Supplying an explicit character vector instead applies that user-declared code set across the selected model columns, so inspect the returned <code>missing_recoding</code> record before fitting or reporting exclusions.</p>
 <p>The main workflow below uses a compact synthetic dataset with a connected two-rater assignment, moderately unequal rater workloads, and six planned criterion-level omissions represented by absent long-format rows, not <code>NA</code> or sentinel scores. Its groups contain 24 persons each; three omissions per group leave 141 observed rows in Group A and 141 in Group B:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span>
@@ -482,7 +492,7 @@
 <h3 id="id_1-check-the-data-and-intended-score-scale">1. Check the data and intended score scale<a class="anchor" aria-label="anchor" href="#id_1-check-the-data-and-intended-score-scale"></a>
 </h3>
 <p>Before fitting, state the complete rubric support and inspect retained, missing, and zero-count categories:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/describe_mfrm_data.html">describe_mfrm_data</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -502,7 +512,7 @@
 <h3 id="id_2-fit-the-model">2. Fit the model<a class="anchor" aria-label="anchor" href="#id_2-fit-the-model"></a>
 </h3>
 <p>For a new analysis, start with marginal maximum likelihood:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -515,7 +525,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p><code>MML</code> integrates over the person distribution and returns posterior person summaries. The default uses 31 quadrature points. Record that setting and examine same-data quadrature sensitivity before portable calibration and whenever numerical movement could affect a consequential result. Eligible fits below 15 points retain raw AIC/BIC/SABIC for screening, and fits at 15–30 points retain them for review, but automatic deltas, criterion weights, preferred-model labels, evidence ratios, and LRT are disabled below 31 points. Use 31–60 points as a comparison starting grid and 61 or more as a denser sensitivity grid. A close or consequential comparison still requires a prespecified common-grid sensitivity check; q&gt;=31 alone is not evidence that integration error is negligible.</p>
 <p>For the fitted MML model and the same data, request the comparison explicitly. <code><a href="reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code> reuses the supplied fit at its stored grid and refits the other requested grids; <code>summary(q_review)</code> only summarizes the returned review:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">q_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
@@ -523,7 +533,7 @@
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">q_review</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/apa_table.html">apa_table</a></span><span class="op">(</span><span class="va">q_review</span><span class="op">)</span></span></code></pre></div>
-<p>The review works for RSM, PCM, and bounded GPCM. It reports changes in marginal likelihood per Person, measurement coordinates, probabilities, EAP, posterior SD, and, when present, relative slopes, raw local-curvature SEs, and population SD. The GPCM-specific <code><a href="reference/mml_quadrature_sensitivity.html">gpcm_mml_quadrature_sensitivity()</a></code> name remains available. Neither route assigns a universal stable/unstable cutoff, makes raw slope SEs inferentially eligible, or changes the fit-readiness decision.</p>
+<p>The review works for RSM, PCM, and GPCM. It reports changes in marginal likelihood per Person, measurement coordinates, probabilities, EAP, posterior SD, and, when present, relative slopes, raw local-curvature SEs, and population SD. Explicit population formulas, person covariates and their coding are preserved. GPCM tables also show interval endpoints, eligibility and their changes across grids. The GPCM-specific <code><a href="reference/mml_quadrature_sensitivity.html">gpcm_mml_quadrature_sensitivity()</a></code> name remains available. Neither route assigns a universal stable/unstable cutoff, makes raw slope SEs inferentially eligible, or changes the fit-readiness decision.</p>
 <p>A fit marked <code>ready</code> has passed its recorded checks at the chosen grid; that status does not establish that a denser grid would give the same answer. Review changes in rater estimates and SEs separately from changes in person scores, using tolerances appropriate to the intended interpretation. If the first comparison shows meaningful movement, compare against a further denser grid. Numerical agreement does not establish repeated-sampling interval coverage.</p>
 <p>Use <code>model = "PCM", step_facet = "Criterion"</code> when category steps differ across that facet. Choose the model from the scoring design and measurement rationale, not from a single fit statistic.</p>
 </div>
@@ -531,7 +541,7 @@
 <h3 id="id_3-read-the-fit-only-summary">3. Read the fit-only summary<a class="anchor" aria-label="anchor" href="#id_3-read-the-fit-only-summary"></a>
 </h3>
 <p>The default summary is deliberately lightweight:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  profile <span class="op">=</span> <span class="st">"fit"</span>,</span>
@@ -548,7 +558,7 @@
 <span><span class="va">fit_summary</span><span class="op">$</span><span class="va">person_overview</span></span>
 <span><span class="va">fit_summary</span><span class="op">$</span><span class="va">step_overview</span></span></code></pre></div>
 <p>Read <code>fit_summary$decision</code> first: have estimation checks passed, has precision been assessed, what limits interpretation, and what should be done next? A fit-only summary returns <code>FormalInference = "No"</code> even when estimation checks pass. Convergence and estimability do not by themselves validate standard errors, confidence intervals or reliability. Review precision with matching diagnostics:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="co"># Equivalent precision-aware decision:</span></span>
@@ -562,7 +572,7 @@
 <h3 id="id_4-request-the-comprehensive-measurement-summary">4. Request the comprehensive measurement summary<a class="anchor" aria-label="anchor" href="#id_4-request-the-comprehensive-measurement-summary"></a>
 </h3>
 <p>Use the <code>facets</code> profile for the main review:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">facets_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  profile <span class="op">=</span> <span class="st">"facets"</span>,</span>
@@ -594,7 +604,7 @@
 <h3 id="id_5-inspect-targeting-with-the-native-wright-map">5. Inspect targeting with the native Wright map<a class="anchor" aria-label="anchor" href="#id_5-inspect-targeting-with-the-native-wright-map"></a>
 </h3>
 <p>The native renderer is the primary targeting figure because it keeps uncertainty visible:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">res</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"wright"</span>,</span>
@@ -620,7 +630,7 @@
 <h3 id="id_6-add-the-optional-facets-style-wright-map">6. Add the optional FACETS-style Wright map<a class="anchor" aria-label="anchor" href="#id_6-add-the-optional-facets-style-wright-map"></a>
 </h3>
 <p>Use study-specific rubric labels rather than anonymous category numbers:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rubric_labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"1"</span> <span class="op">=</span> <span class="st">"Beginning"</span>,</span>
 <span>  <span class="st">"2"</span> <span class="op">=</span> <span class="st">"Developing"</span>,</span>
@@ -706,7 +716,7 @@
 <h3 id="id_7-review-the-infit-pathway-including-persons">7. Review the Infit pathway, including persons<a class="anchor" aria-label="anchor" href="#id_7-review-the-infit-pathway-including-persons"></a>
 </h3>
 <p>The fit pathway uses Infit on the horizontal axis and measure on the vertical axis:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">res</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"fit_pathway"</span>,</span>
@@ -728,7 +738,7 @@
 <h3 id="fair-scores-and-figures-without-embedded-notes">Fair Scores and figures without embedded notes<a class="anchor" aria-label="anchor" href="#fair-scores-and-figures-without-embedded-notes"></a>
 </h3>
 <p><code><a href="reference/plot_fair_average.html">plot_fair_average()</a></code> offers observed-versus-fair (<code>"scatter"</code>), observed-minus-fair (<code>"difference"</code>), and measure-to-score (<code>"measure"</code>) views. FairM uses mean reference measures; FairZ uses zero reference measures. <strong>FairZ is an expected score, not a z-score.</strong> These transformations do not average predictions over the observed assignment distribution, and gaps also reflect person mix and assignment; they do not by themselves establish bias.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_fair</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/plot_fair_average.html">plot_fair_average</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, metric <span class="op">=</span> <span class="st">"FairZ"</span>,</span>
 <span>  plot_type <span class="op">=</span> <span class="st">"measure"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span>,</span>
@@ -771,14 +781,14 @@
 <h3 id="id_8-build-a-report-and-export-the-results">8. Build a report and export the results<a class="anchor" aria-label="anchor" href="#id_8-build-a-report-and-export-the-results"></a>
 </h3>
 <p>Start with the brief result summary:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span>, view <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span>
 <span><span class="va">results_summary</span><span class="op">$</span><span class="va">overview</span></span>
 <span><span class="va">results_summary</span><span class="op">$</span><span class="va">triage</span></span>
 <span><span class="va">results_summary</span><span class="op">$</span><span class="va">next_actions</span></span>
 <span><span class="va">results_summary</span><span class="op">$</span><span class="va">plot_map</span></span></code></pre></div>
 <p>Build a report-oriented object from the same fitted results:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">res</span>,</span>
 <span>  style <span class="op">=</span> <span class="st">"qc"</span></span>
@@ -789,7 +799,7 @@
 <span><span class="va">report</span><span class="op">$</span><span class="va">report_index</span></span></code></pre></div>
 <p><code><a href="reference/mfrm_report.html">mfrm_report()</a></code> organizes existing evidence. It does not refit the model or turn diagnostic thresholds into a validity decision.</p>
 <p>Export a reader-oriented, controlled analysis archive:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">exported</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/export_mfrm_results.html">export_mfrm_results</a></span><span class="op">(</span></span>
 <span>  <span class="va">res</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="st">"mfrmr-results"</span>,</span>
@@ -908,7 +918,7 @@
 </ul>
 <p>Within that scope, comparison targets include the population regression slope, residual variance, centered item estimates, and case-level EAP estimates.</p>
 <p>The handoff is explicit: mfrmr prepares the analysis files, the user runs ConQuest separately, and mfrmr then normalizes the requested exports.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># fit_lr must satisfy the documented overlap conditions.</span></span>
 <span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_conquest_overlap_bundle.html">build_conquest_overlap_bundle</a></span><span class="op">(</span></span>
 <span>  fit <span class="op">=</span> <span class="va">fit_lr</span>,</span>
@@ -937,20 +947,20 @@
 <span><span class="va">conquest_review</span><span class="op">$</span><span class="va">attention_items</span></span></code></pre></div>
 <p><code>mfrmr</code> does not execute or control ConQuest, and it does not parse arbitrary raw ConQuest reports. The user runs ConQuest separately; mfrmr can normalize the native comparison CSV exports requested by its generated command. The review reports coordinate-level differences; it does not declare general software equivalence from a single dataset or tolerance.</p>
 <p>The generated ConQuest command uses the fitted mfrmr quadrature-point count; the bundle records both values. Record the actual ConQuest version, edition, and run date during normalization so the external comparison remains reproducible.</p>
-<p>This public bundle route does not cover multidimensional models, arbitrary imported design matrices, bounded <code>GPCM</code> latent regression, JML latent regression, or the full ConQuest plausible-values workflow. Separately, the item-only bounded-GPCM parameterization can be compared only after the response kernel, slope grouping, threshold coordinates, latent-scale identification, retained rows, and category map have been matched. A result in that restricted overlap does not extend automatically to a multifacet ConQuest generalized-item design.</p>
+<p>This public bundle route does not cover multidimensional models, arbitrary imported design matrices, <code>GPCM</code> latent regression, JML latent regression, or the full ConQuest plausible-values workflow. Separately, the item-only GPCM parameterization can be compared only after the response kernel, slope grouping, threshold coordinates, latent-scale identification, retained rows, and category map have been matched. A result in that restricted overlap does not extend automatically to a multifacet ConQuest generalized-item design.</p>
 <p>The ConQuest overlap bundle is also a controlled analysis bundle. Its long and wide response files contain person identifiers and responses; the person-data file contains identifiers and the covariate; and both mfrmr and ConQuest case-EAP files contain identifiers and person-level estimates. The helper warns when writing these files and creates <code>*_privacy_notice.csv</code>. Store the bundle in an approved restricted location and pseudonymize or redact it as required before sharing.</p>
 </div>
 <div class="section level2">
 <h2 id="external-features-and-exploratory-groups">External features and exploratory groups<a class="anchor" aria-label="anchor" href="#external-features-and-exploratory-groups"></a>
 </h2>
 <p>The <a href="#documentation">external-feature tutorial</a> follows 120 fictional raters from experience, workload, specialty, training, and certification attributes through missingness review, multiple imputation, group profiles, and sensitivity to feature selection, group count, weights, and clustering method. It also groups persons and tasks separately and joins their classifications to planned and observed ratings by ID. It distinguishes unrecorded values from inapplicable mentoring histories and keeps auxiliary imputation predictors separate from clustering features.</p>
-<p>In version 0.2.4, <code><a href="reference/mfrm_features.html">mfrm_features()</a></code> reviews a table with one row per person, rater, or task and explicitly selected external attributes, such as experience or specialization. <code><a href="reference/mfrm_cluster.html">mfrm_cluster()</a></code> groups those profiles using Gower distances and PAM; install the optional <code>cluster</code> package to use it.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<p>In version 0.2.4, <code><a href="reference/mfrm_features.html">mfrm_features()</a></code> reviews a table with one row per person, rater, or task and explicitly selected external attributes, such as experience or specialization. <code><a href="reference/mfrm_cluster.html">mfrm_cluster_pam()</a></code> groups those profiles using Gower distances and PAM; install the optional <code>cluster</code> package to use it.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">rater_attributes</span>, id <span class="op">=</span> <span class="st">"Rater"</span>,</span>
 <span>                         features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ExperienceYears"</span>, <span class="st">"Specialty"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">features</span><span class="op">)</span></span>
 <span><span class="va">features</span><span class="op">$</span><span class="va">missing</span></span>
-<span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_cluster.html">mfrm_cluster</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_cluster.html">mfrm_cluster_pam</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">groups</span><span class="op">$</span><span class="va">membership</span></span>
 <span><span class="va">groups</span><span class="op">$</span><span class="va">profiles</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">groups</span><span class="op">)</span></span>
@@ -958,13 +968,13 @@
 <p>Here <code>rater_attributes</code> is your entity-level table, with <code>ExperienceYears</code> measured in completed years. Group count and feature selection are substantive choices. Missing features stop clustering by default; <code>missing = "omit"</code> explicitly selects complete cases and retains excluded IDs with missing group membership. Optional missingness reasons are documented in <code><a href="reference/mfrm_features.html">?mfrm_features</a></code>. No value is imputed. Silhouette widths describe separation in this sample; stability, inferential comparisons, and measurement uncertainty are not assessed. The groups do not establish ability levels or rater quality.</p>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> also displays categorical feature proportions and, for an imputed clustering result, a co-membership heatmap. All views reuse stored results; <code>draw = FALSE</code> returns the values for custom graphics. See <code><a href="reference/plot.mfrm_clusters.html">?plot.mfrm_clusters</a></code> and the tutorial for examples. PAM is nonhierarchical and has no dendrogram.</p>
 <p>For a hierarchy, fit a separate Gower-based analysis using average linkage (default) or complete linkage:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hierarchy</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">3</span>, linkage <span class="op">=</span> <span class="st">"average"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">hierarchy</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="reference/mfrm_cluster_compare.html">mfrm_cluster_compare</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>PAM <span class="op">=</span> <span class="va">groups</span>, Average <span class="op">=</span> <span class="va">hierarchy</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The dendrogram uses the stored tree; boxes mark the chosen groups. Heights are linkage dissimilarities, not branch support. With missing features, use an explicit omission policy or the imputation workflow below. Set <code>method = "hierarchical", linkage = "average"</code> in <code><a href="reference/mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code> to retain a tree for each completion. No pooled tree is estimated.</p>
 <p>For meaningful numeric features, the local <code><a href="reference/mfrm_pca.html">mfrm_pca()</a></code> and <code><a href="reference/mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> additions provide a Euclidean workflow. PCA summarizes variation; k-means forms groups. Both retain the chosen scaling, weights, missingness and IDs. A fitted PCA can be passed directly to k-means without whitening or rescaling its retained scores:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">numeric_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">rater_attributes</span>, <span class="st">"Rater"</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ExperienceYears"</span>, <span class="st">"AnnualRatings"</span>, <span class="st">"WorkshopHours"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_pca.html">mfrm_pca</a></span><span class="op">(</span><span class="va">numeric_features</span>, components <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
@@ -977,11 +987,11 @@
 <p>For incomplete external attributes, <code><a href="reference/mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code> accepts a model fitted with the optional <code>mice</code> package. Select eligible missing cells explicitly after reviewing their reasons; structurally undefined attributes should remain missing. The imputation model may include auxiliary variables that are not clustering features. Choose and review its methods, predictors, and diagnostics in <code>mice</code>; see <code><a href="reference/mfrm_cluster_imputed.html">?mfrm_cluster_imputed</a></code> for a runnable example.</p>
 <p>The result retains every imputation’s groups, original missingness reasons, and the fitted imputation model. Its <code>co_membership</code> matrix reports how often each pair belongs to the same group across all supplied imputations, independent of group numbering. A failed analysis stops the comparison. These proportions describe sensitivity to the imputations, conditional on the chosen model and clustering settings; they are not membership probabilities or sampling stability. This feature-imputation workflow does not impute rating responses. For missing assigned scores, use the separate workflow below.</p>
 <p>To review sensitivity to selected features, group count, weights, or clustering method, fit the settings you want to compare and pass the named results to <code><a href="reference/mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code>. The comparison reuses these results without refitting:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">alternatives</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  TwoGroups <span class="op">=</span> <span class="fu"><a href="reference/mfrm_cluster.html">mfrm_cluster</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  TwoGroups <span class="op">=</span> <span class="fu"><a href="reference/mfrm_cluster.html">mfrm_cluster_pam</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  ThreeGroups <span class="op">=</span> <span class="va">groups</span>,</span>
-<span>  ExperienceWeighted <span class="op">=</span> <span class="fu"><a href="reference/mfrm_cluster.html">mfrm_cluster</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  ExperienceWeighted <span class="op">=</span> <span class="fu"><a href="reference/mfrm_cluster.html">mfrm_cluster_pam</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>    weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>ExperienceYears <span class="op">=</span> <span class="fl">3</span>, Specialty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_cluster_compare.html">mfrm_cluster_compare</a></span><span class="op">(</span><span class="va">alternatives</span><span class="op">)</span></span>
@@ -997,10 +1007,10 @@
 </h2>
 <p>The assigned-score workflow preserves the original roster and distinguishes unassigned combinations from assigned ratings with missing scores. Start with <code><a href="articles/mfrmr-response-imputation.html">vignette("mfrmr-response-imputation", package = "mfrmr")</a></code>: its complete example fits and reviews an ordinal imputation model, returns each completion to the original event IDs, and estimates a rater difference.</p>
 <p>The following outline assumes that <code>ratings</code>, <code>completed</code>, <code>impute_ids</code> and <code>model</code> have been constructed as in that tutorial:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_response_imputations.html">mfrm_response_imputations</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_response_imputations.html">review_mfrm_imputations</a></span><span class="op">(</span></span>
 <span>  <span class="va">ratings</span>, <span class="va">completed</span>, person <span class="op">=</span> <span class="st">"Person"</span>, facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
-<span>  score <span class="op">=</span> <span class="st">"Score"</span>, event_id <span class="op">=</span> <span class="st">"Event"</span>, impute <span class="op">=</span> <span class="va">impute_ids</span>, categories <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span>
+<span>  score <span class="op">=</span> <span class="st">"Score"</span>, event_id <span class="op">=</span> <span class="st">"Event"</span>, impute_ids <span class="op">=</span> <span class="va">impute_ids</span>, categories <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>,</span>
 <span>  assigned <span class="op">=</span> <span class="st">"Assigned"</span>, imputation_model <span class="op">=</span> <span class="va">model</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span>                  <span class="co"># Original observed and imputed support</span></span>
@@ -1071,7 +1081,7 @@
 </tbody>
 </table>
 <p>In <code>facets</code>, values select data columns and names label the analysis. Do not combine it with <code>rater</code>/<code>task</code>. Labels carry through component matrices, count tables, and plots. For example, with <code>repeat_ratings</code> containing <code>Person</code>, <code>Assessor</code>, <code>Session</code>, <code>Content</code>, and <code>Organization</code>:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g_repeat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy</a></span><span class="op">(</span><span class="va">repeat_ratings</span>,</span>
 <span>  scores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span>,</span>
 <span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Rater <span class="op">=</span> <span class="st">"Assessor"</span>, Occasion <span class="op">=</span> <span class="st">"Session"</span><span class="op">)</span><span class="op">)</span></span>
@@ -1086,7 +1096,7 @@
 </h3>
 <p>An oral assessment uses an interview, a presentation and a discussion. Its question is: <strong>would using more raters improve the dependability of the weighted score on these same three tasks?</strong> The task set and weights define the score; they are not a sample of tasks to be replaced. Put each fixed task in its own score column, with one row per Person/Rater. The same rater must denote the same individual across all three columns and persons. Different rater teams for each task do not satisfy this representation.</p>
 <p>The following fictional continuous scores illustrate the arrangement. They are not ordinal MFRM estimates or evidence about a real assessment.</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">923</span><span class="op">)</span></span>
 <span><span class="va">fixed_tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"P"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">)</span>, Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"R"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>,</span>
 <span>                           stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -1111,7 +1121,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">d_fixed</span>, x_var <span class="op">=</span> <span class="st">"Raters"</span>, type <span class="op">=</span> <span class="st">"sem"</span><span class="op">)</span></span></code></pre></div>
 <p>Each planned rater scores all three fixed tasks. Two raters therefore require six task ratings per person, and four require twelve; the number of tasks does not change. G describes relative ranking and Phi absolute-score dependability, with SEMs in weighted-score units. These are point projections, not confidence intervals or demonstrated improvements from a new study. Inspect component and metric status even when coefficients are available.</p>
 <p>The Person covariance includes stable differences among persons on the fixed tasks. For weights <code>w</code>, universe variance is <code>w' P w</code>, relative-error variance is <code>w' E w / n_r</code>, and absolute-error variance is <code>w' (R + E) w / n_r</code>. Task-specific rater behavior and residual covariances enter through the component matrices. Do not average the three separate G coefficients or divide their errors by three again. A direct weighted-score analysis gives the same composite result:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fixed_tasks</span><span class="op">$</span><span class="va">WeightedScore</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">fixed_tasks</span><span class="op">[</span><span class="va">task_names</span><span class="op">]</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">w</span><span class="op">)</span></span>
 <span><span class="va">g_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy</a></span><span class="op">(</span><span class="va">fixed_tasks</span>, <span class="st">"WeightedScore"</span>, task <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="va">d_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_d_study.html">mfrm_multivariate_d_study</a></span><span class="op">(</span><span class="va">g_direct</span>, <span class="va">rater_plans</span><span class="op">)</span></span>
@@ -1128,7 +1138,7 @@
 </h3>
 <p>Suppose each task has its own raters, and each team rates the same examinees on Content and Organization. Specify <code>nesting = c(Rater = "Task")</code> to estimate five components: Person, Task, Rater(Task), Person:Task, and the combined Person-by-Rater-within-Task/residual component. A local label R1 on Task 1 identifies a different rater from R1 on Task 2. If the same physical rater works on both tasks, this independent nested-rater model does not describe that arrangement; relabeling the rater cannot make it so.</p>
 <p>With <code>nested_ratings</code> containing one row per observed Person/Task/Rater and both score columns:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g_nested</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy</a></span><span class="op">(</span><span class="va">nested_ratings</span>,</span>
 <span>  scores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span>, nesting <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Rater <span class="op">=</span> <span class="st">"Task"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">g_nested</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">child_counts</span> <span class="co"># Raters within each observed task.</span></span>
@@ -1146,7 +1156,7 @@
 <h3 id="common-tasks-and-crossed-facets">Common tasks and crossed facets<a class="anchor" aria-label="anchor" href="#common-tasks-and-crossed-facets"></a>
 </h3>
 <p>For a design without a rater facet, set <code>rater = NULL</code> explicitly. This example uses the published synthetic data from Brennan’s <em>Manual for mGENOVA</em>, Table 12: ten persons, six common items (named <code>Task</code> here), and scores V and W.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"mgenova-table12.csv"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">g_task</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy</a></span><span class="op">(</span><span class="va">tasks</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="st">"W"</span><span class="op">)</span>, rater <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="va">d_task</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_d_study.html">mfrm_multivariate_d_study</a></span><span class="op">(</span><span class="va">g_task</span>,</span>
@@ -1163,7 +1173,7 @@
 <p>At six tasks the difference W minus V has G = 0.30000 and Phi = 0.24116, matching the manual’s Appendix E. Person, Task, and the combined Person-by-Task/residual covariance matrices are estimated from the scores. The D-study varies task counts; it cannot project new raters from this model. No scores are averaged automatically when omitting the rater facet.</p>
 <p>The planning question is whether adding common tasks would improve the dependability of the difference score. Under the estimated components, doubling tasks from six to twelve raises G from 0.300 to 0.462. This is a projection, not evidence from twelve observed tasks. G concerns relative ordering; Phi also includes shifts in absolute score levels. Larger values mean greater dependability under the model. SEM expresses error in score units, where smaller is better; it is not a confidence interval for G or Phi. Neither coefficient gives pass/fail classification accuracy, and no universal acceptable threshold or optimal design is selected.</p>
 <p>With <code>ratings</code> containing <code>Person</code>, <code>Rater</code>, <code>Task</code>, <code>Content</code>, and <code>Organization</code> columns:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy</a></span><span class="op">(</span><span class="va">ratings</span>, scores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Content"</span>, <span class="st">"Organization"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">g</span><span class="op">$</span><span class="va">component_diagnostics</span></span>
 <span><span class="va">g</span><span class="op">$</span><span class="va">components</span><span class="op">$</span><span class="va">Person</span></span>
@@ -1180,7 +1190,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">d_grid</span>, x_var <span class="op">=</span> <span class="st">"Tasks"</span><span class="op">)</span> <span class="co"># Each line holds the rater count constant.</span></span></code></pre></div>
 <p>Plots select a sole composite by default, or the first score when no weights are supplied; <code>score = "Content"</code> selects an original score. Points show requested scenarios and lines only guide comparisons. Inspect exact values with <code>summary(d_grid)</code> or <code>plot_data(plot(d_grid, draw = FALSE))</code>. Unavailable estimates are explained and retained in the plot payload rather than shown as zero. See <code><a href="reference/mfrm_multivariate_d_study.html">?mfrm_multivariate_d_study</a></code> and <code><a href="reference/plot.mfrm_multivariate_d_study.html">?plot.mfrm_multivariate_d_study</a></code> for the complete workflow and how to read it.</p>
 <p>To compare feasible plans with twelve ratings per person, reuse the same G-study and score weights:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plans</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Raters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>, Tasks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">4</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">d_plans</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_d_study.html">mfrm_multivariate_d_study</a></span><span class="op">(</span><span class="va">g</span>, <span class="va">plans</span>,</span>
 <span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Content <span class="op">=</span> <span class="fl">0.6</span>, Organization <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span><span class="op">)</span></span>
@@ -1189,7 +1199,7 @@
 <span><span class="va">plan_results</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Raters"</span>, <span class="st">"Tasks"</span>, <span class="st">"RatingsPerPerson"</span>, <span class="st">"G"</span>, <span class="st">"Phi"</span>, <span class="st">"GStatus"</span>, <span class="st">"PhiStatus"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <p>Twelve ratings do not mean equal examinee burden: six tasks scored by two raters require twice as many performances as three tasks scored by four raters. Consider task duration, rater workload and other costs separately. Choose the metric from the intended decision, then compare the size of the projected differences. The largest point estimate does not establish a reliably better plan, and a rank change can have a small practical effect. Component-estimation uncertainty is not included in these comparisons; SEM is measurement error, not uncertainty in the comparison itself. If a candidate’s metric is unavailable, selecting among the remaining values does not settle the comparison of all plans.</p>
 <p>For plans specified before inspecting their estimates, the two-crossed-facet workflow also provides approximate intervals for their differences. Use this method only when independent normal random effects are a defensible model for the persons and both facets; the function does not test that assumption:</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_multivariate_d_compare.html">mfrm_multivariate_d_compare</a></span><span class="op">(</span><span class="va">d_plans</span>, reference <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  assumption <span class="op">=</span> <span class="st">"normal"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span> <span class="co"># Every plan minus row 1: two raters and six tasks.</span></span>
@@ -1198,7 +1208,7 @@
 <span><span class="fu"><a href="reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">table</span> <span class="co"># Exact points and intervals.</span></span></code></pre></div>
 <p>The calculation preserves dependence between plans estimated from the same data. <code>SE</code> describes sampling uncertainty in the difference; it is not SEM. An interval containing zero does not establish equivalence. Intervals are pointwise, not simultaneous guarantees for all plans or a plan selected after examining the results. This approximation is sensitive to nonnormal effects, small facet pools and uneven assignments; it is not a robust missing-data correction. One-facet and nested-design intervals are not yet provided. A point can remain available when its interval is unavailable; inspect <code>Status</code>. See <code><a href="reference/mfrm_multivariate_d_compare.html">?mfrm_multivariate_d_compare</a></code> for assumptions and a complete example.</p>
 <p>To compare several ways of combining the scores, give <code>weights</code> a matrix: rows name the original scores and columns name the choices. For example, compare an equally weighted total, a content-focused total, and the difference between Content and Organization under the same planned assessment designs:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">weight_choices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
 <span>  Equal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Content <span class="op">=</span> <span class="fl">0.5</span>, Organization <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>  ContentFocus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Content <span class="op">=</span> <span class="fl">0.8</span>, Organization <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span>,</span>
@@ -1216,7 +1226,7 @@
 <p>With both rater and task facets, the G-study includes Person-by-Rater, Person-by-Task, and Rater-by-Task components. The three-way interaction and within-cell error remain combined because each cell has one observation. The D-study projects mean scores over the specified raters and tasks. It uses the full covariance matrices to report relative G, absolute Phi, and their corresponding error SEMs; it does not average separate reliability coefficients. Weights are used as supplied. Omitting <code>weights</code> reports the score components without creating a composite. See <code><a href="reference/mfrm_multivariate_gstudy.html">?mfrm_multivariate_gstudy</a></code> for a runnable fictional continuous-score example.</p>
 <p>Signed weights also allow difference scores. For example, <code>mfrm_multivariate_d_study(g, weights = c(Content = 1, Organization = -1))</code> projects the dependability of Content minus Organization. Subtraction must be meaningful on the supplied score scales. The same weights define the universe-score target and its observed mean-score estimate; distinct target and estimation weights are not supported.</p>
 <p>For incomplete crossed data, explicitly select <code>method = "minque0"</code>. It estimates covariance components from observed overlaps, without constructing the full assignment grid. The identity-working-covariance MINQUE method uses a common mean per score and common covariance components across the sample (<a href="https://doi.org/10.1016/0047-259X(71)90001-7" class="external-link">Rao, 1971</a>). It does not fit a selection model or covariate-dependent means.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Thin the example to illustrate an incomplete assignment roster.</span></span>
 <span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="va">tasks</span><span class="op">[</span><span class="op">(</span><span class="va">tasks</span><span class="op">$</span><span class="va">Person</span> <span class="op">+</span> <span class="va">tasks</span><span class="op">$</span><span class="va">Task</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">3</span> <span class="op">!=</span> <span class="fl">0</span>, <span class="op">]</span></span>
 <span><span class="va">sparse</span><span class="op">$</span><span class="va">V</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA_real_</span> <span class="co"># Additionally, one assigned score was not recorded.</span></span>
@@ -1298,7 +1308,7 @@
 <div class="section level2">
 <h2 id="model-scope">Model scope<a class="anchor" aria-label="anchor" href="#model-scope"></a>
 </h2>
-<p>For GPCM, <em>bounded</em> refers to the documented model and workflow scope; it does not mean finite parameter box constraints. Unsupported combinations and inference states are reported explicitly rather than silently treated as ordinary estimates.</p>
+<p>GPCM uses one substantive ability dimension and assigns relative discriminations and category steps to the same selected facet. Its model structure and the availability of intervals, comparisons and downstream workflows are described separately. Unsupported combinations and inference states are reported explicitly.</p>
 <p>The package extends Rasch-family RSM/PCM work with MML, modern diagnostics, reproducibility, network review, and reporting support. It is not a general FACETS replacement: each <code><a href="reference/fit_mfrm.html">fit_mfrm()</a></code> call uses one response-model family and one observed score scale, and the current public API does not provide mixed response families, multiple independent rating scales, general threshold anchoring, or online calibration updates. Portable fixed-calibration artifacts are available only for one-scale <code>RSM</code>/<code>PCM</code> <code>MML</code> fits under the fixed standard-normal scoring basis. Posterior scoring from an existing fitted object is a separate, wider analysis route.</p>
 </div>
 <div class="section level2">
@@ -1306,7 +1316,7 @@
 </h2>
 <p>An eligible <code>RSM</code> or <code>PCM</code> <code>MML</code> fit can be converted into a versioned calibration artifact, validated, frozen, saved, and applied to new Persons without retaining the source fit or training responses:</p>
 <p>The following template assumes an eligible <code>fit</code>, its original <code>training_data</code>, and <code>new_responses</code> with matching facet labels and score coding. The portable calibration vignette below supplies a complete example defining these objects.</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">q_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>, <span class="va">training_data</span>, quad_points <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">31</span>, <span class="fl">61</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -1327,7 +1337,7 @@
 <span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span><span class="va">calibration</span>, <span class="va">new_responses</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"interval"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
-<p>Use <code><a href="reference/mfrm_calibration_capabilities.html">mfrm_calibration_capabilities()</a></code> for the exact portable support envelope, and see <code><a href="articles/mfrmr-portable-calibration.html">vignette("mfrmr-portable-calibration")</a></code> for a complete synthetic example. See <code><a href="reference/mfrm_calibration_methods.html">help("mfrm_calibration_methods", package = "mfrmr")</a></code> for the artifact summaries and <code><a href="reference/mfrm_calibration_score_methods.html">help("mfrm_calibration_score_methods", package = "mfrmr")</a></code> for score summaries and plots. Estimated-population and latent-regression MML, JML, and bounded GPCM remain fitted-object-only routes; they do not create portable calibration artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the frozen point calibration and recorded prior. Their intervals exclude calibration-parameter uncertainty, and loading validates consistency rather than authenticating files from untrusted sources. Review every <code>scored_review</code> or <code>not_scored</code> disposition before using estimates. The score plot is a batch-review display, not evidence that the source calibration fits or transports to a new population.</p>
+<p>Use <code><a href="reference/mfrm_calibration_capabilities.html">mfrm_calibration_capabilities()</a></code> for the exact portable support envelope, and see <code><a href="articles/mfrmr-portable-calibration.html">vignette("mfrmr-portable-calibration")</a></code> for a complete synthetic example. See <code><a href="reference/mfrm_calibration_methods.html">help("mfrm_calibration_methods", package = "mfrmr")</a></code> for the artifact summaries and <code><a href="reference/mfrm_calibration_score_methods.html">help("mfrm_calibration_score_methods", package = "mfrmr")</a></code> for score summaries and plots. Estimated-population and latent-regression MML, JML, and GPCM remain fitted-object-only routes; they do not create portable calibration artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the frozen point calibration and recorded prior. Their intervals exclude calibration-parameter uncertainty, and loading validates consistency rather than authenticating files from untrusted sources. Review every <code>scored_review</code> or <code>not_scored</code> disposition before using estimates. The score plot is a batch-review display, not evidence that the source calibration fits or transports to a new population.</p>
 <p>Score tables and summaries retain the scoring algorithm and requested interval level for CSV export. Printed scores and interval plots identify saved grid-based intervals, whose posterior mass may differ from the requested level.</p>
 </div>
 <div class="section level2">
@@ -1367,8 +1377,7 @@
 <td>Specify the step facet explicitly when the default is not intended</td>
 </tr>
 <tr>
-<td>Bounded <code>GPCM</code>
-</td>
+<td><code>GPCM</code></td>
 <td>Documented slope-aware core with <code>slope_facet == step_facet</code>; MML estimates the common scale by default</td>
 <td>Not an unrestricted many-facet GPCM implementation</td>
 </tr>
@@ -1418,14 +1427,15 @@
 </tbody>
 </table>
 <p>Fitted-object Person scoring is separate from calibration estimation. It returns posterior EAP under a stated normal prior, including a standard-normal reference prior when the calibration was fitted by JML. Scores, posterior SDs and intervals hold calibration and prior parameters fixed. Estimated-population scoring requires <code>readiness_policy = "review"</code>; posterior draws alone do not justify downstream regression or group inference without a compatible conditioning model and sampling design. See <code><a href="reference/predict_mfrm_units.html">?predict_mfrm_units</a></code> and <code><a href="reference/sample_mfrm_plausible_values.html">?sample_mfrm_plausible_values</a></code>.</p>
-<p>For bounded <code>GPCM</code>, inspect the capability table before choosing a downstream helper:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<p>For <code>GPCM</code>, inspect the capability table before choosing a downstream helper:</p>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"mfrmr-gpcm-scope"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span></span></code></pre></div>
-<p>Free-slope GPCM fits can be estimation-converged while parameter-level inference remains review-only. Read <code>print(fit)</code>, <code>summary(fit)$decision</code>, and the slope table’s <code>ParameterStatus</code> and <code>PrimaryEstimate</code> before interpreting the finite optimizer trace in <code>OptimizerEstimate</code>. <code>Optimizer*SE</code> and <code>Optimizer*CI</code> are diagnostic quantities; ordinary slope SEs and confidence intervals are currently unavailable for free slopes (<code>SEEligible = FALSE</code>, <code>CIEligible = FALSE</code>). Convergence or quadrature stability does not change that eligibility. The GPCM scope vignette explains each status and the appropriate next action.</p>
+<p>GPCM output has separate eligibility checks. Use <code>confint(fit, parm = "slopes")</code> for approximate pointwise MML relative-slope intervals. The same 95% calculation is in <code>diagnose_mfrm(fit)$parameter_uncertainty$slopes</code>; read <code>CIEligible</code> and <code>InferenceReview</code>. It uses the inverse joint observed information and log-slope transformation after checking the current solution. Singular, regularized, nonconverged, coarse-grid or non-unit-weight fits do not receive ordinary bounds. Global <code>InferenceReady</code> is not promoted: slope intervals do not establish a global maximum or authorize other parameter families. These intervals are model-based approximations, not universal coverage guarantees.</p>
+<p>Use <code>scale = "standardized"</code> to include uncertainty in population-SD times slope; with covariates this is the residual population SD. Named <code>contrasts</code> compare slopes by ratio or difference. Request <code>method = "sandwich"</code> for Person-level or specified independent-cluster covariance, and <code>simultaneous = "bonferroni"</code> for the finite family in that call. Sandwich covariance does not correct biased estimates or dependence between clusters. <code>bootstrap_mfrm_gpcm(fit, nsim = 499, seed = 92401)</code> supplies a fitted-model bootstrap alternative, with failed refits retained. Supplying <code>null_fit</code> instead performs a matched PCM/GPCM bootstrap LRT. <code><a href="reference/mfrm_curve_intervals.html">mfrm_curve_intervals()</a></code> adds intervals and customizable plots to category probabilities or per-rating information at known ability values. See the GPCM tutorial for worked choices; these methods have different targets and assumptions. Probability-curve intervals showed undercoverage in a small incomplete-design check, including Bonferroni-adjusted families. Numerical availability is not a coverage certification, and neither sandwich covariance nor a bootstrap option automatically resolves that limitation.</p>
 <p>For MML, the default <code>gpcm_mml_identification = "free_population"</code> estimates an intercept-only population distribution while relative slopes satisfy a geometric-mean-one constraint. The corresponding fixed-latent-SD optimizer coordinate is retained in <code>FixedLatentSDOptimizerEstimate</code>. Use <code>gpcm_mml_identification = "fixed_standard_normal"</code> only when a deliberately matched legacy or external comparison requires that identification.</p>
-<p>The bounded GPCM is an <strong>aligned single-owner relative-slope GPCM</strong>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi>log</mi><mo>⁡</mo></mrow><mfrac><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>o</mi></msub><mo>=</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>o</mi></msub><mo>=</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>=</mo><msub><mi>α</mi><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>o</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo stretchy="false" form="prefix">{</mo><msub><mi>η</mi><mi>o</mi></msub><mo>−</mo><msub><mi>τ</mi><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>o</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><munder><mo>∏</mo><mi>g</mi></munder><msub><mi>α</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<p>The GPCM estimates <strong>relative discriminations and category steps for the same selected facet</strong>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>o</mi></msub><mo>=</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>o</mi></msub><mo>=</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>=</mo><msub><mi>α</mi><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>o</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo stretchy="false" form="prefix">{</mo><msub><mi>η</mi><mi>o</mi></msub><mo>−</mo><msub><mi>τ</mi><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>o</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><munder><mo>∏</mo><mi>g</mi></munder><msub><mi>α</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \log\frac{P(Y_o=k)}{P(Y_o=k-1)}
  = \alpha_{g(o)}\{\eta_o-\tau_{g(o),k}\},
 \qquad \prod_g\alpha_g=1.
@@ -1436,19 +1446,20 @@
 <p><code>fit_mfrm(method = "JML")</code> uses the observed scores without extreme-score adjustment or finite-item bias correction. Freely estimated Persons with all-minimum or all-maximum responses have primary estimates of <code>-Inf</code> or <code>Inf</code>; their finite optimizer values are computational traces. Fixed anchors retain their supplied values, while coupled constraints require separate review. JML SEs and normal bands remain exploratory.</p>
 <p><code>fair_average_table(..., xtreme = 0.25)</code> can produce a finite displayed <code>Measure</code> without refitting. Its <code>PrimaryMeasure</code> retains the original fitted value, and <code>MeasureBasis</code> and <code>ExtremeAdjustment</code> identify the replacement. The original SE does not describe that replacement, so measure SEs are unavailable on adjusted rows. Fair-score calculations do not use this replacement. When a JML Person measure is infinite, non-Person FairM is unavailable because its mean Person reference is unbounded. FairZ uses a zero reference; <code>FairMReference</code> records the distinction. This display option and endpoint placement on a Wright map do not correct JML bias. In comparisons across software, specify score adjustments and post-fit corrections separately; a shared “JML” label is insufficient.</p>
 <p>The same principle applies to any GPCM slope whose boundary status has not been resolved: a finite optimizer iterate is not automatically a finite maximum suitable for ordinary inference.</p>
-<p>PCM and bounded GPCM can be reviewed on the same data with <code>compare_mfrm(fit_pcm, fit_gpcm)</code>, <code>build_weighting_review(fit_pcm, fit_gpcm)</code>, or <code>build_model_choice_review(..., run_weighting_review = TRUE)</code>. Selectable information-criterion ranking requires comparable MML fits with adequate support for inference on a common quadrature grid with at least 31 points. Free-slope GPCM fits currently do not satisfy these inference requirements, so their criteria, when available, are descriptive only. PCM is the all-unit-slope reduction of the aligned GPCM kernel, but a PCM-versus-GPCM chi-square LRT is unavailable. The recorded <code>PCM_in_GPCM_ic_only</code> relation does not authorize automatic ranking.</p>
+<p>PCM and GPCM can be reviewed on the same data with <code>compare_mfrm(fit_pcm, fit_gpcm)</code>, <code>build_weighting_review(fit_pcm, fit_gpcm)</code>, or <code>build_model_choice_review(..., run_weighting_review = TRUE)</code>. Selectable information-criterion ranking requires comparable MML fits with adequate support for comparison on a common quadrature grid with at least 31 points. For GPCM, <code>ICFitEligible</code> checks the reevaluated likelihood, gradient and positive unregularized local information independently of slope-interval eligibility. <code>ICComparable</code> records the final comparison decision. PCM is the all-unit-slope reduction of the aligned GPCM kernel. <code>nested = TRUE</code> requests an asymptotic chi-square test with G-1 degrees of freedom, after verifying that only the relative slopes differ. Match the population model explicitly (for example, <code>population_formula = ~1</code> and the same person data in both fits); the defaults differ. IC ranking and LRT eligibility are separate.</p>
 <p>The practical comparison is available without reconstructing the model matrices manually. After fitting the same data as <code>fit_pcm</code> and <code>fit_gpcm</code> (see the GPCM scope vignette), use:</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">choice</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_model_choice_review.html">build_model_choice_review</a></span><span class="op">(</span>PCM <span class="op">=</span> <span class="va">fit_pcm</span>, GPCM <span class="op">=</span> <span class="va">fit_gpcm</span><span class="op">)</span></span>
 <span><span class="va">choice</span><span class="op">$</span><span class="va">model_roles</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Model"</span>, <span class="st">"StepCoordinates"</span>, <span class="st">"FreeStepParameters"</span>,</span>
 <span>  <span class="st">"SlopeCoordinates"</span>, <span class="st">"FreeSlopeParameters"</span>,</span>
 <span>  <span class="st">"FitReadiness"</span>, <span class="st">"FormalInference"</span>, <span class="st">"Interpretation"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<p>The coordinate columns count reported values; the free-parameter columns also apply the fitted constraints. <code><a href="reference/build_weighting_review.html">build_weighting_review()</a></code> describes changes in measures and information under discrimination-based weighting. Free-slope GPCM ranking remains unavailable under MML, and an unpenalized JML likelihood difference does not justify an automatic PCM-versus-GPCM choice.</p>
-<p>Cross-software slope values are not automatically matched estimands. FACETS does not jointly fit Muraki’s free-slope polytomous GPCM. FACETS’ reported element discrimination is a post-fit diagnostic computed after the Rasch measures and does not feed back into the other estimates; it must not be treated as a free-GPCM slope estimate from <code>mfrmr</code>. TAM can estimate GPCM slopes through its 2PL/GPCM MML route, but its many-facet fitting route does not estimate those slopes. The current <code>immer</code> estimation routes provide PCM- design and hierarchical-rater references rather than a matched free-GPCM fit. Consequently, FACETS and <code>immer</code> are appropriate only for documented equal-discrimination overlaps or deliberately different-model sensitivity checks. A TAM GPCM comparison is numerical only after the response kernel, slope grouping, threshold parameterization, latent-scale identification, retained rows, category map, and covariance information have been matched.</p>
+<p>The coordinate columns count reported values; the free-parameter columns also apply the fitted constraints. <code><a href="reference/build_weighting_review.html">build_weighting_review()</a></code> describes changes in measures and information under discrimination-based weighting. GPCM MML ranking is returned only for an eligible comparison; an unpenalized JML likelihood difference does not justify an automatic PCM-versus-GPCM choice.</p>
+<p>Cross-software slope values are not automatically matched estimands. FACETS does not jointly fit Muraki’s free-slope polytomous GPCM. FACETS’ reported element discrimination is a post-fit diagnostic computed after the Rasch measures and does not feed back into the other estimates; it must not be treated as a free-GPCM slope estimate from <code>mfrmr</code>. TAM’s documented Example 14c combines a facet intercept design with grouped slopes through <code>tam.mml.2pl(irtmodel = "GPCM.design")</code>; <code>tam.mml.mfr()</code> alone does not estimate slopes. ConQuest’s <code>scoresfree</code> route assigns slopes to generalized items (facet combinations), with further sharing specified through a scoring design. These constructions do not automatically match mfrmr’s slope multiplying ability, rater severity and steps together. The current <code>immer</code> estimation routes provide PCM- design and hierarchical-rater references rather than a matched free-GPCM fit. Consequently, FACETS and <code>immer</code> are appropriate only for documented equal-discrimination overlaps or deliberately different-model sensitivity checks. Replicating GPCM point estimates with ConQuest or TAM requires matching the response kernel, slope grouping, threshold parameterization, latent-scale identification, retained rows and category map.</p>
+<p>For the matched item-only model, mfrmr’s relative slopes become population-SD-standardized slopes after multiplying by the fitted population SD (conditional on any population covariates). Transforming intervals also requires the SD’s uncertainty and its covariance with the slopes; multiplying interval endpoints is insufficient. The <a href="vignettes/mfrmr-gpcm-scope.Rmd#what-can-and-cannot-be-compared-across-programs">GPCM tutorial</a> links the official ConQuest/TAM specifications and distinguishes existing numerical comparisons from unverified uncertainty comparisons. Its scope is separate from the public ConQuest overlap-bundle and external-import APIs.</p>
 <p>For strict MML diagnostics, keep the two evidence bases distinct:</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diag_both</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  residual_pca <span class="op">=</span> <span class="st">"none"</span>,</span>
@@ -1536,7 +1547,7 @@
 </tr>
 </tbody>
 </table>
-<p>The complete instructions, including function names and exceptions, are in “Updating saved analyses for 0.2.4” under <code><a href="reference/mfrmr_workflow_methods.html">help("mfrmr_workflow_methods", package = "mfrmr")</a></code>. <a href="NEWS.html">NEWS</a> explains the individual changes. Re-exporting an old derived object does not update its calculations, and updating an object does not broaden its statistical use.</p>
+<p>The complete instructions, including function names and exceptions, are in “Updating saved analyses for 0.2.4” under <code><a href="reference/mfrmr_workflow_methods.html">help("mfrmr_workflow_methods", package = "mfrmr")</a></code>. <a href="https://ryuya-dot-com.github.io/mfrmr/news/index.html">NEWS</a> explains the individual changes. Re-exporting an old derived object does not update its calculations, and updating an object does not broaden its statistical use.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
@@ -1605,7 +1616,7 @@
 <td><code><a href="articles/mfrmr-linking-and-dff.html">vignette("mfrmr-linking-and-dff", package = "mfrmr")</a></code></td>
 </tr>
 <tr>
-<td>Bounded GPCM scope</td>
+<td>GPCM scope</td>
 <td><code><a href="articles/mfrmr-gpcm-scope.html">vignette("mfrmr-gpcm-scope", package = "mfrmr")</a></code></td>
 </tr>
 </tbody>
@@ -1616,7 +1627,7 @@
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>Use the package citation supplied with the installed version:</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"mfrmr"</span><span class="op">)</span></span></code></pre></div>
 <p>The underlying ordered-response models are described by Andrich (1978), Masters (1982), and Muraki (1992). See the package help and vignettes for the references relevant to each model and diagnostic route.</p>
 </div>

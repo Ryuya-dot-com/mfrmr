@@ -50,7 +50,7 @@ machine-readable planning metadata."><meta property="og:image" content="https://
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an explicit simulation specification for MFRM design studies</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-simulation-spec.R" class="external-link"><code>R/api-simulation-spec.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-simulation-spec.R" class="external-link"><code>R/api-simulation-spec.R</code></a></small>
       <div class="d-none name"><code>build_mfrm_sim_spec.Rd</code></div>
     </div>
 
@@ -177,7 +177,7 @@ vary across levels.</p></dd>
 
 <dt id="arg-slope-facet">slope_facet<a class="anchor" aria-label="anchor" href="#arg-slope-facet"></a></dt>
 <dd><p>Slope facet used when <code>model = "GPCM"</code>. The current
-bounded <code>GPCM</code> branch requires <code>slope_facet == step_facet</code>.</p></dd>
+<code>GPCM</code> branch requires <code>slope_facet == step_facet</code>.</p></dd>
 
 
 <dt id="arg-slopes">slopes<a class="anchor" aria-label="anchor" href="#arg-slopes"></a></dt>
@@ -319,7 +319,7 @@ relying only on ad hoc scalar arguments.</p>
 <li><p>latent spread assumptions (<code>theta_sd</code>, <code>rater_sd</code>, <code>criterion_sd</code>)</p></li>
 <li><p>optional empirical latent support values for semi-parametric simulation</p></li>
 <li><p>threshold structure (<code>threshold_table</code>)</p></li>
-<li><p>optional discrimination structure for bounded <code>GPCM</code> (<code>slope_table</code>) and
+<li><p>optional discrimination structure for <code>GPCM</code> (<code>slope_table</code>) and
 its identified log-slope spread label (<code>slope_regime</code>)</p></li>
 <li><p>assignment design (<code>assignment</code>)</p></li>
 <li><p>optional sparse linked-design controls (<code>sparse_controls</code>) when

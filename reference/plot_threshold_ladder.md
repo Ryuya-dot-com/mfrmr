@@ -4,7 +4,7 @@ Renders the Rasch-Andrich threshold structure as a vertical ladder per
 step-facet level. Each tick is a `tau_k`; lines connecting adjacent
 thresholds are coloured to make disordered crossings
 (`tau_{k+1} < tau_k`) visually obvious. For RSM there is one ladder; for
-PCM (and bounded GPCM) there is one ladder per `step_facet` level.
+PCM (and GPCM) there is one ladder per `step_facet` level.
 
 ## Usage
 

@@ -270,12 +270,12 @@ predictions are not flattened into
 simulation specification files carry the replay-relevant settings
 instead.
 
-For bounded `GPCM`, this exporter is available as a caveated partial
-bundle over supported diagnostics, report text, visual summaries,
-manifests, and replay scripts. The returned object and manifest include
-`gpcm_boundary`. Package-native bounded-`GPCM` scorefile export is
-available with caveats, while full FACETS-style score-side contract
-review and design forecasting remain outside this bundle contract.
+For `GPCM`, this exporter is available as a caveated partial bundle over
+supported diagnostics, report text, visual summaries, manifests, and
+replay scripts. The returned object and manifest include
+`gpcm_boundary`. Package-native `GPCM` scorefile export is available
+with caveats, while full FACETS-style score-side contract review and
+design forecasting remain outside this bundle contract.
 
 ## Interpreting output
 

@@ -5,7 +5,7 @@ manuscript-draft text, tables, notes, and revision checklists in
 `mfrmr`.
 
 This guide currently applies fully to diagnostics-based `RSM` / `PCM`
-workflows. Bounded `GPCM` fits support
+workflows. `GPCM` fits support
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md),
 [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md),
 direct curve/graph and residual table helpers, and caveated
@@ -13,7 +13,7 @@ APA/QC/export bundles. Use
 [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
 when you need the formal boundary for the current `GPCM` reporting path.
 
-In particular, bounded `GPCM`
+In particular, `GPCM`
 [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md),
 [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md),
 [`run_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_qc_pipeline.md),
@@ -92,7 +92,7 @@ as automatic operational-scoring evidence.
 
 6.  Create manuscript-draft prose and metadata with
     [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md).
-    For bounded `GPCM`, treat the APA/QC/export stack as caveated
+    For `GPCM`, treat the APA/QC/export stack as caveated
     sensitivity-reporting output and keep its `gpcm_boundary` visible.
 
 7.  Convert summary outputs to reusable table bundles with
@@ -112,8 +112,8 @@ as automatic operational-scoring evidence.
     [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
     -\>
     [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md).
-    Treat bounded `GPCM` as a slope-aware sensitivity route unless the
-    study design explicitly justifies discrimination-based operational
+    Treat `GPCM` as a slope-aware sensitivity route unless the study
+    design explicitly justifies discrimination-based operational
     scoring.
 
 ## Keep each fit with its own diagnostics
@@ -150,11 +150,11 @@ output. Convert that review with
 when a manuscript appendix, coauthor handoff, or HTML export needs
 stable table names.
 
-A conservative bounded-`GPCM` reporting sequence is:
+A conservative `GPCM` reporting sequence is:
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
 for the equal-weighting `RSM` / `PCM` reference,
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-for the bounded `GPCM` sensitivity fit,
+for the `GPCM` sensitivity fit,
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md),
 [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md),
 [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
@@ -214,8 +214,7 @@ and the quantitative Journal Article Reporting Standards (JARS-Quant;
 Appelbaum et al., 2018). The MFRM-specific prompts also draw on the
 model and diagnostic sources returned by
 `reporting_checklist(..., include_references = TRUE)`, including Eckes,
-Myford and Wolfe, Linacre, Wright and Masters, and Muraki for bounded
-`GPCM`.
+Myford and Wolfe, Linacre, Wright and Masters, and Muraki for `GPCM`.
 
 The package only knows the fitted measurement objects and context
 supplied by the analyst. It therefore cannot certify research-level JARS
@@ -342,7 +341,7 @@ Communications Board task force report. *American Psychologist, 73*(1),
 - Rebuild APA outputs after major model changes instead of editing old
   text by hand.
 
-- For bounded `GPCM`, use APA/QC/export helpers only as caveated
+- For `GPCM`, use APA/QC/export helpers only as caveated
   sensitivity-reporting surfaces and keep full FACETS-style score-side
   review outside this route.
 
@@ -388,9 +387,9 @@ every file under the study's data-handling policy before any handoff.
   [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)(include
   = c("summary_tables", "html")). For `RSM` / `PCM` final reports,
   prefer `method = "MML"` and `diagnostic_mode = "both"` in the
-  diagnostics step. For bounded `GPCM`, use the same fit-based
-  reporting/export family only as caveated sensitivity-reporting output
-  and inspect its `gpcm_boundary` rows before writing claims.
+  diagnostics step. For `GPCM`, use the same fit-based reporting/export
+  family only as caveated sensitivity-reporting output and inspect its
+  `gpcm_boundary` rows before writing claims.
 
 - Appendix-first route:
   [`facet_statistics_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/facet_statistics_report.md)
@@ -410,7 +409,7 @@ every file under the study's data-handling policy before any handoff.
   -\>
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md).
 
-- bounded `GPCM` route:
+- `GPCM` route:
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   -\>
   [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md)
@@ -447,7 +446,7 @@ every file under the study's data-handling policy before any handoff.
 - For visual follow-up, see
   [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md).
 
-- For the bounded `GPCM` support statement, see
+- For the `GPCM` support statement, see
   [gpcm_capability_matrix](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md).
 
 - For a longer walkthrough, see

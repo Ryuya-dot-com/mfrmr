@@ -235,8 +235,8 @@ manuscript-facing subset before plotting or export.
 
 - model-choice-review summaries expose `comparison_table`,
   `comparison_warnings`, `model_roles`, `downstream_routes`, and
-  `report_templates` so RSM/PCM versus bounded `GPCM` comparisons remain
-  tied to their same-basis limits, equal-weighting, sensitivity, and
+  `report_templates` so RSM/PCM versus `GPCM` comparisons remain tied to
+  their same-basis limits, equal-weighting, sensitivity, and
   reporting-boundary roles.
 
 ## Typical workflow
@@ -260,8 +260,8 @@ manuscript-facing subset before plotting or export.
     retained diagnostics, read `diagnostic_reporting_notes` before the
     raw `diagnostic_review` or `diagnostic_oc_summary`. Read
     `condition_reporting_notes` before `condition_review` or
-    `condition_summary` when bounded `GPCM` generator stress is part of
-    the plan.
+    `condition_summary` when `GPCM` generator stress is part of the
+    plan.
 
 ## See also
 
@@ -290,7 +290,7 @@ bundle$table_index
 #> 6       facet_overview    2    7   facet_distribution
 #> 7      person_overview    1   10  person_distribution
 #> 8        step_overview    1    5   category_structure
-#> 10   settings_overview    1   29  estimation_settings
+#> 10   settings_overview    1   31  estimation_settings
 #> 11       reporting_map    6    3        reporting_map
 #> 12             caveats    0    8     analysis_caveats
 #> 13      facet_extremes    8    3 extreme_facet_levels
@@ -320,7 +320,7 @@ summary(bundle)$role_summary
 #> 6    extreme_person_low      1        10        20
 #> 5   extreme_person_high      1        10        20
 #> 4  extreme_facet_levels      1         8         3
-#> 3   estimation_settings      1         1        29
+#> 3   estimation_settings      1         1        31
 #> 2    category_structure      1         1         5
 #> 1      analysis_caveats      1         0         8
 # }

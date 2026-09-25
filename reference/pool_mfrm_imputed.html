@@ -52,7 +52,7 @@ covariance for one non-Person facet; it does not pool Person ability scores."><m
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Pool common facet targets across imputed rating analyses</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-imputed-estimation.R" class="external-link"><code>R/api-imputed-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-imputed-estimation.R" class="external-link"><code>R/api-imputed-estimation.R</code></a></small>
       <div class="d-none name"><code>pool_mfrm_imputed.Rd</code></div>
     </div>
 
@@ -130,7 +130,10 @@ and source <code>analyses</code>. <code>MonteCarloSE</code> is the estimated Mon
 the pooled point estimate, <code>sqrt(B / m)</code>; it is not its inferential SE.
 <code>MissingVarianceFraction</code> is <code>(1 + 1/m) B / T</code>, not the raw missing-rate.
 Fixed targets retain their value and zero variance, but no inferential
-interval or degrees of freedom. No imputation is omitted.</p>
+interval or degrees of freedom. No imputation is omitted.
+<code>information_review</code> retains any numerical-refinement review at each
+imputation's list position. <code>cautions</code> identifies affected imputations;
+when present, <code>InferenceCaution</code> also accompanies the pooled table.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -146,7 +149,11 @@ rater differences include covariance between the two estimates.</p>
 and identification. Known anchors are fixed and their uncertainty is
 excluded. Singular or regularized free-parameter information and any
 failed/ineligible completion prevent pooling. A target fixed by a constraint
-is labelled <code>"fixed"</code>; it is not evidence of perfect precision.</p>
+is labelled <code>"fixed"</code>; it is not evidence of perfect precision.
+A verified unregularized inverse of ill-conditioned information can be used
+with a warning identifying the affected imputations. Rubin pooling does not
+repair unreliable complete-data approximations. Review interval widths,
+boundary proximity and quadrature sensitivity before interpreting the pool.</p>
 <p>The intervals are pointwise model-based multiple-imputation intervals,
 conditional on adequate proper imputations and complete-data inference.
 They are not robust intervals, simultaneous rater decisions or general
@@ -203,7 +210,7 @@ imputation under uncongeniality and misspecification.
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="https://amices.org/mice/reference/pool.scalar.html" class="external-link">mice::pool.scalar()</a></code>, <code><a href="mfrm_response_imputations.html">mfrm_response_imputations()</a></code>, <code><a href="fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="https://amices.org/mice/reference/pool.scalar.html" class="external-link">mice::pool.scalar()</a></code>, <code><a href="mfrm_response_imputations.html">review_mfrm_imputations()</a></code>, <code><a href="fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

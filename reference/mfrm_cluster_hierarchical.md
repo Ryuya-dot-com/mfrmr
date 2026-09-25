@@ -109,7 +109,7 @@ Uses [`stats::hclust()`](https://rdrr.io/r/stats/hclust.html) followed
 by [`stats::cutree()`](https://rdrr.io/r/stats/cutree.html) at the
 requested `k`. Feature types, scaling, weights, missingness handling,
 silhouette definition, and the 5,000-included-entity limit follow
-[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md).
+[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md).
 No distance transformation or automatic sampling is performed. This
 limit is not a memory or speed guarantee.
 
@@ -160,7 +160,7 @@ of Classification, 31, 274–295.
 
 ## See also
 
-[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
 [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md),
 [`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
 
@@ -178,7 +178,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   plot(hierarchy, type = "silhouette")
   plot(hierarchy, type = "profile", feature = "ExperienceYears")
   comparison <- mfrm_cluster_compare(list(
-    PAM = mfrm_cluster(features, k = 2, missing = "omit"),
+    PAM = mfrm_cluster_pam(features, k = 2, missing = "omit"),
     Average = hierarchy,
     Complete = mfrm_cluster_hierarchical(features, k = 2,
       linkage = "complete", missing = "omit")))

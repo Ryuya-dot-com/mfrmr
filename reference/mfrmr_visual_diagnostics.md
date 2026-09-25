@@ -161,7 +161,7 @@ diagnostics or establish calibration fit.
 
 - "I need one compact triage screen first." Use
   [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md)
-  for `RSM` / `PCM`. The bounded `GPCM` branch can also call
+  for `RSM` / `PCM`. The `GPCM` branch can also call
   [`plot_qc_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_dashboard.md),
   but its fair-average panel reports an explicit unavailability
   indicator because that panel's score-metric semantics are limited to

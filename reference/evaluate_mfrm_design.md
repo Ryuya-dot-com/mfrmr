@@ -104,7 +104,7 @@ evaluate_mfrm_design(
   Measurement model passed to
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
   `RSM` and `PCM` use the documented Rasch-family design-planning layer.
-  Bounded `GPCM` is available as a caveated simulation/refit
+  `GPCM` is available as a caveated simulation/refit
   operating-characteristic route.
 
 - step_facet:
@@ -124,8 +124,7 @@ evaluate_mfrm_design(
 
 - slopes:
 
-  Optional bounded-`GPCM` generator slopes used when `sim_spec = NULL`.
-  See
+  Optional `GPCM` generator slopes used when `sim_spec = NULL`. See
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
   for accepted formats.
 
@@ -239,8 +238,7 @@ An object of class `mfrm_design_evaluation` with components:
 - `planning_schema`: structured planning metadata bundling the role
   descriptor, scope boundary, and current mutability map
 
-- `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` design route
-  is used
+- `gpcm_boundary`: `GPCM` caveat row when a `GPCM` design route is used
 
 - `notes`: short interpretation notes
 
@@ -319,13 +317,13 @@ one-row-per-person background data and refits the MML population-model
 branch. This remains a scenario study under explicit assumptions; it is
 not a closed-form predictive distribution for one future administration.
 
-Bounded `GPCM` design evaluation is available with caveats. It
-repeatedly generates data from the supplied or fit-derived slope-aware
-specification, refits bounded `GPCM`, and summarizes facet-level
-operating characteristics. The route remains a role-based person x
-rater-like x criterion-like planner: it does not validate
-diagnostic-screening or signal-detection rules, does not provide a fully
-arbitrary-facet planner, and does not replace
+`GPCM` design evaluation is available with caveats. It repeatedly
+generates data from the supplied or fit-derived slope-aware
+specification, refits `GPCM`, and summarizes facet-level operating
+characteristics. The route remains a role-based person x rater-like x
+criterion-like planner: it does not validate diagnostic-screening or
+signal-detection rules, does not provide a fully arbitrary-facet
+planner, and does not replace
 [`evaluate_mfrm_recovery()`](https://ryuya-dot-com.github.io/mfrmr/reference/evaluate_mfrm_recovery.md)
 for slope-recovery adequacy review.
 

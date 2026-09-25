@@ -16,9 +16,11 @@ correcting biased estimates. The example uses fictional ratings.
 ## Fit the model and identify the comparison
 
 ``` r
+
 library(mfrmr)
 ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                model = "RSM", method = "MML")
 ordinary <- mfrm_facet_intervals(fit, "Rater")
 summary(ordinary)
 #>   Target   Estimate         SE       Lower       Upper    ModelSE  ModelLower
@@ -48,6 +50,7 @@ Looking for overlap between their separate intervals does not calculate
 an interval for that difference.
 
 ``` r
+
 contrast <- matrix(c(1, -1, 0, 0), nrow = 1,
   dimnames = list("R01 minus R02", c("R01", "R02", "R03", "R04")))
 difference <- mfrm_facet_intervals(fit, "Rater", contrasts = contrast,
@@ -72,6 +75,7 @@ protection for a set of comparisons. Choosing whichever method gives a
 preferred conclusion is not a valid analysis strategy.
 
 ``` r
+
 plot(difference)
 ```
 
@@ -85,6 +89,110 @@ the same horizontal coordinate. The zero line denotes no difference; it
 is not a threshold of practical importance or a rater-quality rule. Use
 the size of the difference, interval, rubric and shared rating examples
 together when giving feedback.
+
+## Carry the same intervals into figures and reports
+
+Suppose the assessment team has chosen a rater difference and its
+interval method. The figure, table and report should describe that same
+choice. Attach the saved result instead of calculating a new interval
+during reporting:
+
+``` r
+
+results <- mfrm_results(fit, intervals = list(difference = difference),
+                        include = c("fit", "plots"), compute = "never")
+apa_table(difference)
+#> Fixed-facet uncertainty
+#>         Target Estimate   SE Lower Upper ModelSE ModelLower ModelUpper
+#>  R01 minus R02     0.13 0.12  -0.1  0.35    0.13      -0.14       0.39
+#>     Status Facet   Method ConfidenceLevel Adjustment
+#>  available Rater sandwich             95%  Pointwise
+#> Note. Pointwise normal intervals conditional on the observed facet levels; changing covariance does not correct biased estimates. Fixed and unavailable targets remain present. No rater-quality decision is implied.
+plot_data(results, type = "facet_difference", component = "table")
+#>          Target  Estimate        SE      Lower     Upper   ModelSE ModelLower
+#> 1 R01 minus R02 0.1250325 0.1157806 -0.1018933 0.3519583 0.1337755 -0.1371626
+#>   ModelUpper    Status
+#> 1  0.3872276 available
+report <- mfrm_report(results)
+report$tables$facet_difference_intervals
+#>          Target  Estimate        SE      Lower     Upper   ModelSE ModelLower
+#> 1 R01 minus R02 0.1250325 0.1157806 -0.1018933 0.3519583 0.1337755 -0.1371626
+#>   ModelUpper    Status Facet   Method ConfidenceLevel Adjustment
+#> 1  0.3872276 available Rater sandwich             95%  Pointwise
+```
+
+The name `difference` becomes the plot route `facet_difference`. A
+single unnamed result, `intervals = difference`, uses `facet_inference`.
+Several named results can retain different facets, confidence levels or
+prespecified contrasts. They must all come from the same fitted
+analysis. A mismatch in data, fitted parameters, constraints, population
+or integration settings is rejected. An ordinary comparison interval
+remains separate from the selected sandwich interval, including when the
+latter is unavailable.
+
+``` r
+
+as_ggplot(results, type = "facet_difference", title = NULL, subtitle = NULL,
+          preset = "monochrome")
+```
+
+![A saved rater-severity difference displayed with model-based and
+sandwich pointwise normal intervals. Vertical offsets and different line
+types distinguish the methods without relying only on color. The title
+and subtitle have been explicitly
+omitted.](mfrmr-facet-intervals_files/figure-html/saved-interval-plot-1.png)
+
+`plot(results, type = "facet_difference")` uses base graphics;
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+supports further ggplot customization. Both use the saved values.
+`title = NULL`, `subtitle = NULL`, `caption = NULL`, `reference = NULL`
+and `show_legend = FALSE` omit the corresponding display parts without
+changing the stored interval method, level or status. Keep those details
+in the figure legend or accompanying text when publishing a minimal
+figure. Shape cues retain unavailable and fixed targets.
+
+`summary(results)$reproducible_code` shows how to save the complete
+result and reload it later. In that code, `res` denotes your result
+object: use `res <- results` for this example and choose the file path
+before saving. Reloading preserves the attached intervals;
+reconstructing results from `fit` alone would omit them.
+
+`export_mfrm_results(results, ...)` includes the selected tables and
+figures. With `preset = "starter"`, its `index.html` also links the
+saved interval figures and describes their methods and confidence
+levels. When replay is requested, it also saves the RDS and a script
+that reloads it; replay does not refit the model or recalculate
+covariance. The settings, contrast coefficients and cluster mapping are
+retained alongside the interval table. These saved objects contain
+fitted data and participant identifiers; follow the export function’s
+data-handling guidance before sharing them.
+
+This route also works for PCM, whose step structure is declared when
+fitting:
+
+``` r
+
+fit_pcm <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+                    model = "PCM", step_facet = "Criterion", method = "MML")
+pcm_difference <- mfrm_facet_intervals(fit_pcm, "Rater", contrasts = contrast,
+                                      method = "sandwich", level = 0.90)
+pcm_results <- mfrm_results(fit_pcm, intervals = list(difference = pcm_difference),
+                            include = c("fit", "plots"), compute = "never")
+apa_table(pcm_difference)
+#> Fixed-facet uncertainty
+#>         Target Estimate   SE Lower Upper ModelSE ModelLower ModelUpper
+#>  R01 minus R02     0.13 0.12 -0.07  0.32    0.13      -0.09       0.35
+#>     Status Facet   Method ConfidenceLevel Adjustment
+#>  available Rater sandwich             90%  Pointwise
+#> Note. Pointwise normal intervals conditional on the observed facet levels; changing covariance does not correct biased estimates. Fixed and unavailable targets remain present. No rater-quality decision is implied.
+```
+
+RSM and PCM estimate facet locations while holding discrimination fixed;
+GPCM slope intervals concern a different target. Attaching a fixed-facet
+interval does not replace the uncertainty in an ordinary Wright map,
+alter Infit/Outfit, or provide uncertainty for individual Person scores.
+Use the `facet_` route when you want to display the attached covariance
+method.
 
 ## Declare what can be treated as independent
 
@@ -102,6 +210,7 @@ demonstrates the syntax: it is not evidence that the example contains
 actual schools.
 
 ``` r
+
 persons <- sort(unique(ratings$Person))
 schools <- data.frame(Person = persons,
   Cluster = rep(sprintf("School%02d", 1:16), each = 3))
@@ -146,6 +255,7 @@ and no inferential interval; its uncertainty is outside this
 calculation.
 
 ``` r
+
 two_groups <- schools
 two_groups$Cluster <- rep(c("A", "B"), each = 24)
 unavailable <- mfrm_facet_intervals(
@@ -235,6 +345,7 @@ assignment and nonresponse were not evaluated by this simulation.
 ## Save the analysis and use the plotted data
 
 ``` r
+
 saved <- tempfile(fileext = ".rds")
 saveRDS(difference, saved)
 restored <- readRDS(saved)

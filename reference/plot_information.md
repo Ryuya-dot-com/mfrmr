@@ -58,7 +58,7 @@ Invisibly, an `mfrm_plot_data` object.
   presentations.
 
 - `"iif"`: facet-level contribution curves for one selected facet in a
-  supported `RSM`, `PCM`, or bounded `GPCM` fit.
+  supported `RSM`, `PCM`, or `GPCM` fit.
 
 ## Which type should I use?
 
@@ -81,8 +81,8 @@ Invisibly, an `mfrm_plot_data` object.
 - Facet-level curves show which facet levels contribute most to that
   realized precision at each theta.
 
-- For bounded `GPCM`, those contributions include the squared
-  discrimination scaling implied by the fitted `slope_facet`.
+- For `GPCM`, those contributions include the squared discrimination
+  scaling implied by the fitted `slope_facet`.
 
 - If the precision peak sits far from the bulk of person measures, the
   realized design may be poorly targeted.

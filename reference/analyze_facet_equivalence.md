@@ -70,7 +70,13 @@ unavailable contrasts are not silently dropped. Known anchors are
 treated as fixed; their uncertainty is excluded. Non-unit observation
 weights are inference-ineligible, including weights normalized to mean
 one. Older bundles must retain the current readiness contract as well as
-the covariance basis before they can be displayed.
+the covariance basis before they can be displayed. A numerically
+verified inverse of ill-conditioned information is retained with a
+warning, not silently treated as strong evidence. When applicable,
+`cautions`, `information_review` and table column `InferenceCaution`
+preserve that warning through summaries and plots. Numerical
+verification does not establish the accuracy of the normal or chi-square
+approximations.
 
 The heterogeneity table uses a joint Wald chi-square test of equality of
 the facet levels. Non-significant heterogeneity is neither necessary nor

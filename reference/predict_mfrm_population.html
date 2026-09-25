@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Forecast population-level MFRM operating characteristics for one future design</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>predict_mfrm_population.Rd</code></div>
     </div>
 
@@ -170,7 +170,7 @@ including a <code>facet_manifest</code></p></li>
 <li><p><code>planning_constraints</code>: explicit record of mutable/locked design variables</p></li>
 <li><p><code>planning_schema</code>: structured planning metadata carrying the role
 table, supported boundary, mutability map, and facet manifest</p></li>
-<li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> caveat row when a <code>GPCM</code> forecast route is
+<li><p><code>gpcm_boundary</code>: <code>GPCM</code> caveat row when a <code>GPCM</code> forecast route is
 used</p></li>
 <li><p><code>settings</code>: forecasting settings</p></li>
 <li><p><code>ademp</code>: simulation-study metadata</p></li>
@@ -196,7 +196,7 @@ the <strong>design / operating-characteristic</strong> level. It repeatedly simu
 person-level covariates and responses, refits the MML population-model
 branch, and summarizes the resulting facet-level behavior. This is distinct
 from the fitted-model posterior scoring provided by <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>.</p>
-<p>Bounded <code>GPCM</code> forecasts are available with caveats through the same
+<p><code>GPCM</code> forecasts are available with caveats through the same
 repeated simulation/refit design route used by <code><a href="evaluate_mfrm_design.html">evaluate_mfrm_design()</a></code>.
 They summarize design-level operating characteristics under the supplied or
 fit-derived slope-aware specification; they do not validate operational

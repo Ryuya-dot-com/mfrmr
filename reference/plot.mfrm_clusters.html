@@ -48,7 +48,7 @@ co-membership across imputations using existing clustering results."><meta prope
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot exploratory groups and imputation sensitivity</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-plotting-clusters.R" class="external-link"><code>R/api-plotting-clusters.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-plotting-clusters.R" class="external-link"><code>R/api-plotting-clusters.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_clusters.Rd</code></div>
     </div>
 
@@ -79,7 +79,7 @@ co-membership across imputations using existing clustering results.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>An object returned by <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code>, <code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> or
+<dd><p>An object returned by <code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code>, <code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> or
 <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code>, as appropriate.</p></dd>
 
 
@@ -148,7 +148,7 @@ hierarchical analysis and its dendrogram.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="mfrm_cluster.html">mfrm_cluster()</a></code>, <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code>, <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code>, <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code>, <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -157,7 +157,7 @@ hierarchical analysis and its dendrogram.</p>
 <span class="r-in"><span>  <span class="va">raters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"R"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    ExperienceYears <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">12</span>, <span class="fl">13</span>, <span class="fl">14</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    Specialty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Language"</span>, <span class="st">"Science"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_cluster.html">mfrm_cluster</a></span><span class="op">(</span><span class="fu"><a href="mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">raters</span>, <span class="st">"Rater"</span>,</span></span>
+<span class="r-in"><span>  <span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_cluster.html">mfrm_cluster_pam</a></span><span class="op">(</span><span class="fu"><a href="mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">raters</span>, <span class="st">"Rater"</span>,</span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ExperienceYears"</span>, <span class="st">"Specialty"</span><span class="op">)</span><span class="op">)</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">groups</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">groups</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"ExperienceYears"</span><span class="op">)</span></span></span>

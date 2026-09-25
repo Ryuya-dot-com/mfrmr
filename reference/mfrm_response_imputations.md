@@ -5,11 +5,31 @@ them. Supply these completed data from an imputation model; this
 function checks that observed scores, rating assignments and identifiers
 are preserved. No person-by-facet grid is constructed. This function
 validates supplied imputations; it does not choose or fit an imputation
-model.
+model. Start with `review_mfrm_imputations()`, then use
+[`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md)
+and
+[`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md)
+for eligible fixed-facet analyses. The older name
+`mfrm_response_imputations()` is retained with its original `impute`
+argument.
 
 ## Usage
 
 ``` r
+review_mfrm_imputations(
+  data,
+  completed,
+  person,
+  facets,
+  score,
+  event_id,
+  impute_ids,
+  categories,
+  assigned = NULL,
+  imputation_model = NULL,
+  missing = c("error", "omit")
+)
+
 mfrm_response_imputations(
   data,
   completed,
@@ -54,10 +74,12 @@ summary(object, ...)
 
   Nonempty character vector of facet column names.
 
-- impute:
+- impute_ids:
 
   Character vector of event IDs explicitly selecting missing scores on
-  assigned ratings. Observed scores cannot be selected.
+  assigned ratings. Observed scores cannot be selected. These are values
+  from the `event_id` column, not a column name or a logical switch. For
+  example, `c("E2", "E7")` selects those two rating events.
 
 - categories:
 
@@ -80,14 +102,21 @@ summary(object, ...)
 
 - missing:
 
-  How to handle assigned missing scores not selected by `impute`:
+  How to handle assigned missing scores not selected by `impute_ids`:
   `"error"` (default) or explicit `"omit"`. Omitted events remain in the
   roster and every completion, with missing scores, and are excluded
   from each analysis. This choice is not a correction for nonresponse.
 
+- impute:
+
+  Compatibility name for `impute_ids`, used only by
+  `mfrm_response_imputations()`. Supply one selection, not both argument
+  names.
+
 - x, object:
 
-  An object returned by `mfrm_response_imputations()`.
+  An object returned by `review_mfrm_imputations()` or its compatibility
+  wrapper `mfrm_response_imputations()`.
 
 - ...:
 
@@ -145,3 +174,30 @@ completing scores. MI does not create additional observed information.
 [`fit_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_imputed.md),
 [`pool_mfrm_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/pool_mfrm_imputed.md),
 [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md)
+
+## Examples
+
+``` r
+# Small supplied completions to illustrate input checks, not a fitted imputer.
+ratings <- data.frame(Event = paste0("E", 1:4), Person = c("P1", "P1", "P2", "P2"),
+  Rater = c("A", "B", "A", "B"), Score = c(0, NA, 1, 2))
+first <- second <- ratings
+first$Score[2] <- 1
+second$Score[2] <- 2
+reviewed <- review_mfrm_imputations(ratings, list(first, second),
+  person = "Person", facets = "Rater", score = "Score", event_id = "Event",
+  impute_ids = "E2", categories = 0:2,
+  imputation_model = list(method = "Illustrative supplied completions"))
+reviewed$events  # Only E2 is imputed; the three observed scores are retained.
+#>   ID Assigned Observed Imputed Omitted
+#> 1 E1     TRUE     TRUE   FALSE   FALSE
+#> 2 E2     TRUE    FALSE    TRUE   FALSE
+#> 3 E3     TRUE     TRUE   FALSE   FALSE
+#> 4 E4     TRUE     TRUE   FALSE   FALSE
+summary(reviewed)  # Original observed support and imputation counts per level.
+#>    Facet Level Assigned Observed Imputed Omitted
+#> 1 Person    P1        2        1       1       0
+#> 2 Person    P2        2        2       0       0
+#> 3  Rater     A        2        2       0       0
+#> 4  Rater     B        2        1       1       0
+```

@@ -167,8 +167,7 @@ a compact `quadrature_overview`.
 The portable 0.2.4 workflow supports one observed score scale, one
 latent dimension, known non-Person facet levels, and stored two-way
 facet interactions. Estimated-population or latent-regression MML, JML,
-and bounded `GPCM` remain available only through their fitted-object
-routes; see
+and `GPCM` remain available only through their fitted-object routes; see
 [`mfrm_calibration_capabilities()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md).
 
 Before extraction, run

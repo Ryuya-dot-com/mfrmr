@@ -36,6 +36,7 @@ the question before examining which choices produce attractive groups.
 | `MentoringYears` | Years in a formal mentoring role; undefined without that role | Reviewed, then excluded from the all-rater feature set |
 
 ``` r
+
 library(mfrmr)
 set.seed(20260921)
 n <- 120L
@@ -98,6 +99,7 @@ apply. It is not a duration waiting to be estimated. A duration of zero
 would instead mean an applicable mentoring role with no completed years.
 
 ``` r
+
 all_features <- c(feature_names, "MentoringYears")
 initial <- mfrm_features(raters, "Rater", all_features)
 reasons <- initial$missing
@@ -125,6 +127,7 @@ review. A separate analysis confined to mentors would address a
 different population.
 
 ``` r
+
 selected_reasons <- subset(review$missing, Feature %in% feature_names)
 features <- mfrm_features(raters, "Rater", feature_names, selected_reasons)
 features$feature_summary
@@ -140,7 +143,7 @@ table(features$row_summary$Complete)
 #>    48    72
 ```
 
-`mfrm_cluster(features, k = 3)` would stop on the remaining missing
+`mfrm_cluster_pam(features, k = 3)` would stop on the remaining missing
 values. Explicit `missing = "omit"` is available, but selects complete
 raters and changes the population being described. It does not correct
 missing-data bias.
@@ -161,6 +164,7 @@ feature. The identifier is neither imputed nor used to predict other
 variables.
 
 ``` r
+
 eligible <- subset(features$missing, Reason == "Not recorded")
 imputation_data <- raters[c("Rater", feature_names, "WorkshopHours")]
 where <- matrix(FALSE, nrow(imputation_data), ncol(imputation_data),
@@ -203,6 +207,7 @@ Reuse the **same fitted imputation model** for every setting. Changing
 the imputations as well as the weights would change two things at once.
 
 ``` r
+
 experience_weights <- setNames(rep(1, length(feature_names)), feature_names)
 experience_weights["ExperienceYears"] <- 3
 analyses <- list(
@@ -304,6 +309,7 @@ the raters, group count, method, and imputation model fixed, and remove
 eligible cells rather than passing cells for an unselected feature.
 
 ``` r
+
 background_names <- setdiff(feature_names, "AnnualRatings")
 background_features <- mfrm_features(raters, "Rater", background_names,
   subset(selected_reasons, Feature %in% background_names))
@@ -391,6 +397,7 @@ Inspect the actual profiles before attaching interpretations to the
 groups:
 
 ``` r
+
 one_completion <- analyses$ThreeGroups$analyses[[1]]
 one_completion$profiles$numeric
 #>   Cluster         Feature  N      Mean Median         SD
@@ -454,6 +461,7 @@ excluded from clustering have no width; their IDs remain in the returned
 plot data.
 
 ``` r
+
 plot(one_completion)
 ```
 
@@ -469,6 +477,7 @@ within each group, preserving the order of training levels. These are
 descriptions of this completion only.
 
 ``` r
+
 plot(one_completion, type = "profile", feature = "ExperienceYears")
 ```
 
@@ -477,6 +486,7 @@ and medians in the original units and no confidence
 intervals.](mfrmr-external-features_files/figure-html/profiles-1.png)
 
 ``` r
+
 plot(one_completion, type = "profile", feature = "TrainingLevel")
 ```
 
@@ -492,6 +502,7 @@ default, ID labels are hidden above 50 displayed entities; the data are
 never sampled automatically.
 
 ``` r
+
 plot(analyses$ThreeGroups, ids = raters$Rater[1:20])
 ```
 
@@ -510,6 +521,7 @@ For a custom figure, extract the same values without drawing or
 refitting:
 
 ``` r
+
 view <- plot(analyses$ThreeGroups, ids = raters$Rater[1:5], draw = FALSE)
 plot_data(view)$matrix
 #>      R001 R002 R003 R004 R005
@@ -535,6 +547,7 @@ This holds the completed tables fixed while changing the grouping
 method.
 
 ``` r
+
 average <- mfrm_cluster_imputed(features, model, eligible, k = 3,
   method = "hierarchical", linkage = "average")
 complete <- mfrm_cluster_imputed(features, model, eligible, k = 3,
@@ -609,6 +622,7 @@ small groups deserve inspection even when the overall pair agreement is
 high.
 
 ``` r
+
 plot(average$analyses[[1]])
 ```
 
@@ -686,6 +700,7 @@ attributes. The group counts are illustrative choices, not estimated
 numbers of types.
 
 ``` r
+
 set.seed(7241)
 persons <- data.frame(
   Person = sprintf("P%03d", 1:240),
@@ -698,9 +713,9 @@ tasks <- data.frame(
   TimeLimitMinutes = sample(c(10, 20, 30), 12, replace = TRUE),
   WordLimit = sample(c(100, 200, 400), 12, replace = TRUE),
   ResponseFormat = factor(rep(c("Summary", "Argument", "Explanation"), 4)))
-person_groups <- mfrm_cluster(mfrm_features(persons, "Person",
+person_groups <- mfrm_cluster_pam(mfrm_features(persons, "Person",
   c("LanguageStudyYears", "PreparationHours", "InstructionMode")), k = 3)
-task_groups <- mfrm_cluster(mfrm_features(tasks, "Task",
+task_groups <- mfrm_cluster_pam(mfrm_features(tasks, "Task",
   c("TimeLimitMinutes", "WordLimit", "ResponseFormat")), k = 3)
 ```
 
@@ -712,6 +727,7 @@ demonstrating coverage; they provide no evidence about achievement,
 rater effects, or model fit.
 
 ``` r
+
 assignments <- do.call(rbind, lapply(persons$Person, function(id) {
   do.call(rbind, lapply(sample(tasks$Task, 3), function(task) {
     data.frame(Person = id, Rater = sample(raters$Rater, 2), Task = task)
@@ -766,6 +782,7 @@ omitted entities, report their unclassified ratings separately rather
 than silently dropping them.
 
 ``` r
+
 rating_key <- c("Person", "Rater", "Task")
 stopifnot(!anyDuplicated(assignments[rating_key]),
           !anyDuplicated(ratings[rating_key]))
@@ -938,6 +955,7 @@ different question from the mixed-background groups above; specialty and
 training level are not numeric inputs to this PCA.
 
 ``` r
+
 numeric_names <- c("ExperienceYears", "AnnualRatings", "WorkshopHours")
 numeric_review <- mfrm_features(raters, "Rater", numeric_names)
 numeric_direct <- mfrm_cluster_imputed(numeric_review, model,
@@ -997,6 +1015,7 @@ optimum. Assess another seed separately if initialization sensitivity
 matters.
 
 ``` r
+
 first_numeric <- numeric_reduced$analyses[[1]]
 summary(first_numeric$pca)
 #>   Component  Variance Proportion Cumulative Retained
@@ -1017,6 +1036,7 @@ identify omitted
 components.](mfrmr-external-features_files/figure-html/numeric-pca-views-1.png)
 
 ``` r
+
 plot(first_numeric$pca, type = "scores", groups = first_numeric, labels = FALSE)
 ```
 
@@ -1026,6 +1046,7 @@ latent ability or rater-quality
 scale.](mfrmr-external-features_files/figure-html/numeric-pca-views-2.png)
 
 ``` r
+
 plot(first_numeric$pca, type = "loadings", components = 1)
 ```
 
@@ -1034,6 +1055,7 @@ Their signs are arbitrary and the coefficients are not original-unit
 correlations.](mfrmr-external-features_files/figure-html/numeric-pca-views-3.png)
 
 ``` r
+
 plot(first_numeric, type = "profile", feature = "ExperienceYears")
 ```
 

@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>List retained compatibility aliases and preferred names</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/help_compatibility_layer.R" class="external-link"><code>R/help_compatibility_layer.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_compatibility_layer.R" class="external-link"><code>R/help_compatibility_layer.R</code></a></small>
       <div class="d-none name"><code>compatibility_alias_table.Rd</code></div>
     </div>
 
@@ -107,66 +107,117 @@ surface.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">compatibility_alias_table</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Alias               PreferredName     Surface      Lifecycle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     mfrmRFacets             run_mfrm_facets    function retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     analyze_dif                 analyze_dff    function retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3            JMLE                         JML    argument retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     ReadyForAPA                  DraftReady      column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              SE                     ModelSE      column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Fair(M) Average             AdjustedAverage      column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 Fair(Z) Average StandardizedAdjustedAverage      column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8           FairM             AdjustedAverage plot_metric retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9           FairZ StandardizedAdjustedAverage plot_metric retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         RetainedFor           RemovalPlan</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            older workflow scripts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 earlier DIF-oriented package code No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          historical method labels No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           older reporting scripts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       older measure-table scripts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     FACETS-style table continuity No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7     FACETS-style table continuity No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8      legacy plot metric shortcuts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9      legacy plot metric shortcuts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                     Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                      Compatibility wrapper for the legacy-compatible one-shot workflow.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                   Accepted by fit wrappers, but user-facing summaries and docs use JML.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                    Backward-compatible reporting flag; values match DraftReady exactly.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              Backward-compatible standard-error column; ModelSE is the preferred label.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                     Legacy adjusted-average column retained alongside the native label.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Legacy standardized adjusted-average column retained alongside the native label.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                      Accepted by plot_fair_average() as a shortcut for AdjustedAverage.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9          Accepted by plot_fair_average() as a shortcut for StandardizedAdjustedAverage.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                Alias                       PreferredName</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                        mfrmRFacets                     run_mfrm_facets</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                        analyze_dif                         analyze_dff</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                       mfrm_cluster                    mfrm_cluster_pam</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          mfrm_response_imputations             review_mfrm_imputations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  mfrm_response_imputations(impute) review_mfrm_imputations(impute_ids)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                      keep_original                     category_policy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                               JMLE                                 JML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                        ReadyForAPA                          DraftReady</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                 SE                             ModelSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                   Fair(M) Average                     AdjustedAverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                   Fair(Z) Average         StandardizedAdjustedAverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                             FairM                     AdjustedAverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                             FairZ         StandardizedAdjustedAverage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Surface      Lifecycle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     argument retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     argument retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     argument retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8       column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9       column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10      column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11      column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 plot_metric retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13 plot_metric retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    RetainedFor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                       older workflow scripts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                            earlier DIF-oriented package code</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         earlier feature-clustering scripts and saved results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  earlier assigned-score imputation scripts and saved results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        event-ID selection in earlier imputation-review calls</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   existing score-category policy in fitting and input review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                     historical method labels</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                      older reporting scripts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                  older measure-table scripts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                               FACETS-style table continuity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                               FACETS-style table continuity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                legacy plot metric shortcuts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                legacy plot metric shortcuts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              RemovalPlan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                     Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                      Compatibility wrapper for the legacy-compatible one-shot workflow.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                 DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                   Identical Gower/PAM implementation and result class; the preferred name makes the algorithm explicit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                          Same supplied-completion checks and result class; this function does not generate imputations.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                       Use event-ID values in impute_ids, not a logical switch; the old wrapper retains impute and its positional order.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  In fit_mfrm(), describe_mfrm_data() and review_mfrm_anchors(): TRUE maps to preserve and FALSE to collapse. Defaults are unchanged; conflicting explicit choices fail.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                   Accepted by fit wrappers, but user-facing summaries and docs use JML.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                    Backward-compatible reporting flag; values match DraftReady exactly.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                              Backward-compatible standard-error column; ModelSE is the preferred label.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                    Legacy adjusted-average column retained alongside the native label.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                       Legacy standardized adjusted-average column retained alongside the native label.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                     Accepted by plot_fair_average() as a shortcut for AdjustedAverage.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                         Accepted by plot_fair_average() as a shortcut for StandardizedAdjustedAverage.</span>
 <span class="r-in"><span><span class="fu">compatibility_alias_table</span><span class="op">(</span><span class="st">"functions"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Alias   PreferredName  Surface      Lifecycle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 mfrmRFacets run_mfrm_facets function retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 analyze_dif     analyze_dff function retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         RetainedFor           RemovalPlan</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            older workflow scripts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 earlier DIF-oriented package code No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                     Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                      Compatibility wrapper for the legacy-compatible one-shot workflow.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Alias           PreferredName  Surface      Lifecycle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               mfrmRFacets         run_mfrm_facets function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               analyze_dif             analyze_dff function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              mfrm_cluster        mfrm_cluster_pam function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 mfrm_response_imputations review_mfrm_imputations function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                   RetainedFor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                      older workflow scripts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                           earlier DIF-oriented package code</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        earlier feature-clustering scripts and saved results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 earlier assigned-score imputation scripts and saved results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             RemovalPlan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                   Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                    Compatibility wrapper for the legacy-compatible one-shot workflow.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Identical Gower/PAM implementation and result class; the preferred name makes the algorithm explicit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        Same supplied-completion checks and result class; this function does not generate imputations.</span>
 <span class="r-in"><span><span class="fu">compatibility_alias_table</span><span class="op">(</span><span class="st">"fields"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] Alias         PreferredName Surface       Lifecycle     RetainedFor  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [6] RemovalPlan   Notes        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
 <span class="r-in"><span><span class="fu">compatibility_alias_table</span><span class="op">(</span><span class="st">"columns"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Alias               PreferredName Surface      Lifecycle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     ReadyForAPA                  DraftReady  column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              SE                     ModelSE  column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Fair(M) Average             AdjustedAverage  column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 Fair(Z) Average StandardizedAdjustedAverage  column retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     RetainedFor           RemovalPlan</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4       older reporting scripts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   older measure-table scripts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 FACETS-style table continuity No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 FACETS-style table continuity No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4             Backward-compatible reporting flag; values match DraftReady exactly.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       Backward-compatible standard-error column; ModelSE is the preferred label.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              Legacy adjusted-average column retained alongside the native label.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 Legacy standardized adjusted-average column retained alongside the native label.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Alias               PreferredName Surface      Lifecycle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8      ReadyForAPA                  DraftReady  column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9               SE                     ModelSE  column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Fair(M) Average             AdjustedAverage  column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 Fair(Z) Average StandardizedAdjustedAverage  column retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      RetainedFor           RemovalPlan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        older reporting scripts No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9    older measure-table scripts No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 FACETS-style table continuity No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 FACETS-style table continuity No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                               Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8              Backward-compatible reporting flag; values match DraftReady exactly.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9        Backward-compatible standard-error column; ModelSE is the preferred label.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10              Legacy adjusted-average column retained alongside the native label.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 Legacy standardized adjusted-average column retained alongside the native label.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -54,7 +54,7 @@ In many-facet workflows, prefer analyze_dff() as the primary entry point."><meta
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Differential facet functioning analysis</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>analyze_dff.Rd</code></div>
     </div>
 
@@ -149,7 +149,7 @@ Retained but unused for residual comparisons, which return no p-values.</p></dd>
 <li><p><code>cell_table</code>: (residual method) per-cell detail table.</p></li>
 <li><p><code>summary</code>: counts by method-appropriate screening classification.</p></li>
 <li><p><code>group_fits</code>: (refit method) per-group facet estimates.</p></li>
-<li><p><code>gpcm_boundary</code>: for bounded <code>GPCM</code> fits, a capability-boundary table.</p></li>
+<li><p><code>gpcm_boundary</code>: for <code>GPCM</code> fits, a capability-boundary table.</p></li>
 <li><p><code>config</code>: list with facet, group, method, min_obs, p_adjust settings.</p></li>
 </ul></div>
     <div class="section level2">
@@ -254,14 +254,14 @@ ObsScore, ExpScore, ObsExpAvg, StdResidual and an interpretation note.</p></li>
 screening and insufficient-linking rows (<code>method = "refit"</code>).</p></li>
 <li><p><code>$group_fits</code>: (refit method only) list of per-group facet estimates and
 subgroup linking diagnostics.</p></li>
-<li><p><code>$gpcm_boundary</code>: for bounded <code>GPCM</code> fits, a capability-boundary table
+<li><p><code>$gpcm_boundary</code>: for <code>GPCM</code> fits, a capability-boundary table
 marking the DFF/DIF output as caveated screening evidence.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="gpcm-boundary">GPCM boundary<a class="anchor" aria-label="anchor" href="#gpcm-boundary"></a></h2>
 
 
-<p>For bounded <code>GPCM</code>, DFF/DIF rows are available as slope-aware screening
+<p>For <code>GPCM</code>, DFF/DIF rows are available as slope-aware screening
 evidence over the fitted expected-score and residual scale. Keep
 residual-method contrasts and interaction cells in screening language.
 Refit contrasts require explicit subgroup linking and precision support for

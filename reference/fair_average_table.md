@@ -81,13 +81,12 @@ fair_average_table(
 
 - fair_se:
 
-  Logical. When `TRUE` and `fit` is an MML bounded-`GPCM` fit, add
-  structural delta-method standard errors and confidence limits for
-  `Fair(M)` / `AdjustedAverage` and `Fair(Z)` /
-  `StandardizedAdjustedAverage`. Person rows remain `NA` because MML
-  person EAP estimates are not part of the structural Hessian. For
-  `RSM`, `PCM`, and `JML` fits this option leaves fair-average SE
-  columns unavailable.
+  Logical. When `TRUE` and `fit` is an MML `GPCM` fit, add structural
+  delta-method standard errors and confidence limits for `Fair(M)` /
+  `AdjustedAverage` and `Fair(Z)` / `StandardizedAdjustedAverage`.
+  Person rows remain `NA` because MML person EAP estimates are not part
+  of the structural Hessian. For `RSM`, `PCM`, and `JML` fits this
+  option leaves fair-average SE columns unavailable.
 
 - ci_level:
 
@@ -138,28 +137,27 @@ calculations do not use the replacement. Recompute older diagnostics and
 recreate saved tables from the existing fit before summarizing or
 plotting them; no model refit is needed.
 
-Bounded `GPCM` fits are supported under a slope-aware
-element-conditional construction. For each slope-facet element
-\\j^\star\\ the per-row fair-average is the GPCM expected score
-\$\$\mathrm{FA}\_{p, j^\star} = \sum_k k \cdot P\_{GPCM}(X = k \mid
-\theta_p, a\_{j^\star}, \boldsymbol{\delta}\_{j^\star})\$\$ computed at
-that element's own discrimination \\a\_{j^\star}\\ and threshold
-structure. Rows for non-slope facets (Person, Rater, ...) use the
-geometric-mean-one slope by the GPCM identification convention, so those
-rows remain continuous with the standard PCM Linacre fair-average and
-reduce to it exactly when all slopes equal one. This is an
-identification-based reporting convention for the package's bounded
-`GPCM` route, not a unique free-discrimination score-side analogue to
-FACETS fair averages. Do not report it as FACETS score-side equivalence
-or as an operational scoring rule unless that convention is
-substantively justified.
+`GPCM` fits are supported under a slope-aware element-conditional
+construction. For each slope-facet element \\j^\star\\ the per-row
+fair-average is the GPCM expected score \$\$\mathrm{FA}\_{p, j^\star} =
+\sum_k k \cdot P\_{GPCM}(X = k \mid \theta_p, a\_{j^\star},
+\boldsymbol{\delta}\_{j^\star})\$\$ computed at that element's own
+discrimination \\a\_{j^\star}\\ and threshold structure. Rows for
+non-slope facets (Person, Rater, ...) use the geometric-mean-one slope
+by the GPCM identification convention, so those rows remain continuous
+with the standard PCM Linacre fair-average and reduce to it exactly when
+all slopes equal one. This is an identification-based reporting
+convention for the package's `GPCM` route, not a unique
+free-discrimination score-side analogue to FACETS fair averages. Do not
+report it as FACETS score-side equivalence or as an operational scoring
+rule unless that convention is substantively justified.
 
 Standard errors on the fair-average value itself are opt-in for MML
-bounded `GPCM` fits via `fair_se = TRUE`. The `Model S.E.`,
-`ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE` columns retain the same
-meaning as for PCM (scaled facet-measure SEs); fair-average uncertainty
-is reported under distinct columns such as `Fair(M) S.E.`,
-`Fair(M) CI Lower`, and `AdjustedAverageSE`.
+`GPCM` fits via `fair_se = TRUE`. The `Model S.E.`, `ModelBasedSE`,
+`Real S.E.`, and `FitAdjustedSE` columns retain the same meaning as for
+PCM (scaled facet-measure SEs); fair-average uncertainty is reported
+under distinct columns such as `Fair(M) S.E.`, `Fair(M) CI Lower`, and
+`AdjustedAverageSE`.
 
 ## Interpreting output
 
@@ -293,8 +291,8 @@ does not accept this bundle.
 - Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
   Winsteps.com. (FACETS Table 12 corresponds to the fair-average
   construction implemented here for `RSM` / `PCM` fits; the slope-aware
-  element-conditional construction for bounded `GPCM` is documented in
-  this help page.)
+  element-conditional construction for `GPCM` is documented in this help
+  page.)
 
 - Andrich, D. (1978). A rating formulation for ordered response
   categories. *Psychometrika, 43*(4), 561-573.
@@ -306,7 +304,7 @@ does not accept this bundle.
 
 - Muraki, E. (1992). A generalized partial credit model: Application of
   an EM algorithm. *Applied Psychological Measurement, 16*(2), 159-176.
-  (Cited for the bounded `GPCM` slope-aware extension.)
+  (Cited for the `GPCM` slope-aware extension.)
 
 ## See also
 

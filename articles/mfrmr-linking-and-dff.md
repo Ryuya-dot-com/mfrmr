@@ -16,6 +16,7 @@ For the shorter help-page map, see
 ## Minimal setup
 
 ``` r
+
 library(mfrmr)
 
 bias_df <- load_mfrmr_data("example_bias")
@@ -43,6 +44,7 @@ Use
 before interpreting subgroup or cross-form contrasts.
 
 ``` r
+
 sc <- subset_connectivity_report(fit, diagnostics = diag)
 
 sc$summary[, c("Subset", "Observations", "ObservationPercent")]
@@ -71,6 +73,7 @@ mechanically exports fitted values in the direct-anchor schema. Its
 output is a candidate table, not a validated anchor set.
 
 ``` r
+
 anchors <- make_anchor_table(fit, facets = "Criterion")
 head(anchors)
 #> # A tibble: 4 × 3
@@ -150,6 +153,7 @@ and test columns contain `NA`. Recompute older residual results with
 using the existing fit and original data; no model refit is needed.
 
 ``` r
+
 dff_resid <- analyze_dff(
   fit,
   diag,
@@ -214,6 +218,7 @@ separately. Residual DFF remains a screening alternative; see
 for the exact scope.
 
 ``` r
+
 dff_refit <- analyze_dff(
   fit,
   diag,
@@ -248,6 +253,7 @@ If the level-wise screen points to a specific facet, follow up with the
 interaction table and narrative report.
 
 ``` r
+
 dit <- dif_interaction_table(
   fit,
   diag,
@@ -283,6 +289,7 @@ use `facet_interactions` to estimate the named two-way non-person facet
 interaction in the model likelihood.
 
 ``` r
+
 fit_add <- fit_mfrm(
   bias_df,
   person = "Person",
@@ -330,6 +337,7 @@ independent legacy synthetic studies; reused raw labels do not identify
 common persons, raters, or anchors and do not link their scales.
 
 ``` r
+
 declared_common_facets <- c("Criterion")
 
 fit1 <- fit_mfrm(

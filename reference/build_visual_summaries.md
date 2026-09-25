@@ -92,10 +92,10 @@ rendering without hard-coding narrative strings in UI code.
 
 - `top_misfit_n`: number of top misfit entries included
 
-For bounded `GPCM`, this helper returns caveated warning/summary maps
-over supported diagnostics, direct tables, and plots. The returned
-object includes `gpcm_boundary` so score-side, design-forecasting, DFF,
-and linking routes remain visibly separate capability rows.
+For `GPCM`, this helper returns caveated warning/summary maps over
+supported diagnostics, direct tables, and plots. The returned object
+includes `gpcm_boundary` so score-side, design-forecasting, DFF, and
+linking routes remain visibly separate capability rows.
 
 ## Interpreting output
 

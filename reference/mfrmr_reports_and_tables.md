@@ -46,7 +46,7 @@ which bundle, table, or reporting helper to call.
   [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
   or
   [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
-  For bounded `GPCM`, use the same route only where
+  For `GPCM`, use the same route only where
   [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
   marks it as `supported_with_caveat`: direct table/plot helpers,
   summary-table appendix export, caveated
@@ -103,11 +103,10 @@ which bundle, table, or reporting helper to call.
     [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
     for reusable handoff tables or
     [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md)
-    for direct appendix export. For bounded `GPCM`, the same
-    report/export route is available only as a caveated
-    sensitivity-reporting layer with `gpcm_boundary`; keep FACETS-style
-    score-side review and design forecasting on their separate
-    capability rows.
+    for direct appendix export. For `GPCM`, the same report/export route
+    is available only as a caveated sensitivity-reporting layer with
+    `gpcm_boundary`; keep FACETS-style score-side review and design
+    forecasting on their separate capability rows.
 
 If you are unsure which helper to call, start with
 [`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md).
@@ -276,7 +275,7 @@ routes.
   [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)(include
   = "summary_tables").
 
-- Bounded `GPCM` handoff:
+- `GPCM` handoff:
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
   -\> direct summaries/plots -\>
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
@@ -347,10 +346,9 @@ summary(report, view = "reader")
 #>  fit, diagnostics, tables, precision, reporting, categories, plots
 #> 
 #> Decision
-#>  - Interpretation: Fit-readiness requirements satisfied; formal precision
-#>    review required
-#>  - Formal inference: No
-#>  - Why: Formal precision support has not been evaluated.
+#>  - Interpretation: Ready for formal inference
+#>  - Formal inference: Yes
+#>  - Why: All stored fit-readiness components passed.
 #>  - Next: Read the compact results summary.
 #> 
 #> First screen

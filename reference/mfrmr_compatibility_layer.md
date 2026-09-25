@@ -6,7 +6,7 @@ compatibility-oriented workflows, fixed-width reports, or graph/score
 file style outputs.
 
 This compatibility layer currently applies mainly to diagnostics-based
-`RSM` / `PCM` workflows. Bounded `GPCM` fits also support graph-only
+`RSM` / `PCM` workflows. `GPCM` fits also support graph-only
 compatibility-style exports, while scorefile and diagnostics-driven
 compatibility outputs remain limited to `RSM` / `PCM`. Treat this layer
 as a presentation/contract surface, not as a claim of FACETS or ConQuest
@@ -192,7 +192,7 @@ equivalence.
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   -\>
   [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
-  -\> compatibility export only if required. bounded `GPCM`:
+  -\> compatibility export only if required. `GPCM`:
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
   -\>
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
@@ -262,15 +262,26 @@ summary(run)
 #>  - summary(out$fit)
 #>  - summary(out$diagnostics)
 compatibility_alias_table("functions")
-#>         Alias   PreferredName  Surface      Lifecycle
-#> 1 mfrmRFacets run_mfrm_facets function retained_alias
-#> 2 analyze_dif     analyze_dff function retained_alias
-#>                         RetainedFor           RemovalPlan
-#> 1            older workflow scripts No scheduled removal.
-#> 2 earlier DIF-oriented package code No scheduled removal.
-#>                                                                                     Notes
-#> 1                      Compatibility wrapper for the legacy-compatible one-shot workflow.
-#> 2 DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.
+#>                       Alias           PreferredName  Surface      Lifecycle
+#> 1               mfrmRFacets         run_mfrm_facets function retained_alias
+#> 2               analyze_dif             analyze_dff function retained_alias
+#> 3              mfrm_cluster        mfrm_cluster_pam function retained_alias
+#> 4 mfrm_response_imputations review_mfrm_imputations function retained_alias
+#>                                                   RetainedFor
+#> 1                                      older workflow scripts
+#> 2                           earlier DIF-oriented package code
+#> 3        earlier feature-clustering scripts and saved results
+#> 4 earlier assigned-score imputation scripts and saved results
+#>             RemovalPlan
+#> 1 No scheduled removal.
+#> 2 No scheduled removal.
+#> 3 No scheduled removal.
+#> 4 No scheduled removal.
+#>                                                                                                   Notes
+#> 1                                    Compatibility wrapper for the legacy-compatible one-shot workflow.
+#> 2               DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.
+#> 3 Identical Gower/PAM implementation and result class; the preferred name makes the algorithm explicit.
+#> 4        Same supplied-completion checks and result class; this function does not generate imputations.
 
 fixed <- build_fixed_reports(
   estimate_bias(

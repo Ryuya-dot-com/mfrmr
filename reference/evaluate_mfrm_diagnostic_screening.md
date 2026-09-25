@@ -112,8 +112,8 @@ evaluate_mfrm_diagnostic_screening(
 
   Measurement model passed to
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
-  Bounded `GPCM` is supported with caveats as slope-aware screening
-  sensitivity evidence.
+  `GPCM` is supported with caveats as slope-aware screening sensitivity
+  evidence.
 
 - step_facet:
 
@@ -129,8 +129,8 @@ evaluate_mfrm_diagnostic_screening(
 
 - slopes:
 
-  Optional bounded-`GPCM` slope specification used by direct simulation
-  calls when `sim_spec = NULL`.
+  Optional `GPCM` slope specification used by direct simulation calls
+  when `sim_spec = NULL`.
 
 - maxit:
 
@@ -213,7 +213,7 @@ An object of class `mfrm_diagnostic_screening` with:
 
 - `planning_schema`: structured planning metadata
 
-- `gpcm_boundary`: bounded-`GPCM` caveat row when present
+- `gpcm_boundary`: `GPCM` caveat row when present
 
 - `settings`: simulation and fitting settings
 
@@ -255,20 +255,20 @@ changing the facet-level mean effect contract. The
 targets but replaces the normal person distribution with a centered
 bimodal empirical support distribution, while leaving the non-person
 facets on the original scale contract. The
-`"step_structure_misspecification"` scenario uses a `PCM` or
-bounded-`GPCM` generator with facet-specific threshold tables that
-intentionally mismatch the fitted step contract: `RSM` fits receive
-criterion-specific thresholds, and `PCM` / `GPCM` fits receive threshold
-structures indexed by the opposite non-person facet. For bounded `GPCM`,
-the generator and fit each keep `slope_facet == step_facet`; the
-misspecification is the generator-versus-fit step/slope facet mismatch.
+`"step_structure_misspecification"` scenario uses a `PCM` or `GPCM`
+generator with facet-specific threshold tables that intentionally
+mismatch the fitted step contract: `RSM` fits receive criterion-specific
+thresholds, and `PCM` / `GPCM` fits receive threshold structures indexed
+by the opposite non-person facet. For `GPCM`, the generator and fit each
+keep `slope_facet == step_facet`; the misspecification is the
+generator-versus-fit step/slope facet mismatch.
 
 This function is intentionally screening-oriented. The strict marginal
 branch remains exploratory, so the returned summaries should be used to
 compare relative sensitivity across scenarios rather than to claim
-calibrated inferential power. Bounded-`GPCM` rows add explicit
-`gpcm_boundary` caveats and should be read as slope-aware operating
-characteristics under the evaluated role-based design.
+calibrated inferential power. `GPCM` rows add explicit `gpcm_boundary`
+caveats and should be read as slope-aware operating characteristics
+under the evaluated role-based design.
 
 ## See also
 

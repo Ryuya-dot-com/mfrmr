@@ -104,7 +104,7 @@ Recommended read order:
 
 Category response curves follow Andrich's rating-scale formulation,
 Masters' partial-credit model, and Muraki's generalized partial-credit
-model. The `Information` column for bounded `GPCM` uses Muraki's
+model. The `Information` column for `GPCM` uses Muraki's
 item-information result obtained from Samejima's general polytomous
 information formula.
 

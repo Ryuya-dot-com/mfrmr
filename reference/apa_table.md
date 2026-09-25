@@ -26,7 +26,9 @@ apa_table(
   A data.frame, `mfrm_fit`,
   [`summary()`](https://rdrr.io/r/base/summary.html) output supported by
   [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
-  an `mfrm_summary_table_bundle`, diagnostics list, or bias-result list.
+  an `mfrm_summary_table_bundle`, diagnostics list, bias-result list,
+  saved RSM/PCM fixed-facet intervals, or saved GPCM
+  slope/curve/bootstrap inference.
 
 - which:
 
@@ -109,6 +111,18 @@ Supported `which` values:
   `"interrater_summary"`, `"interrater_pairs"`, `"obs"`
 
 - For bias-result list: `"table"`, `"summary"`, `"chi_sq"`
+
+- For RSM/PCM fixed-facet intervals: `"intervals"` (default),
+  `"settings"`, `"contrasts"`, and `"clusters"` when present. Method,
+  confidence level and unavailable reasons remain with the selected
+  estimates and bounds.
+
+- For GPCM inference: `"intervals"` or `"curves"`; bootstrap results
+  also retain `"trials"`, `"checks"` and `"source_checks"` when
+  recorded, `"sampling"`, and `"availability"` for slope intervals or
+  `"test"` for a null-model LRT. Extended results also expose
+  `"settings"`, and `"clusters"`/`"contrasts"` when present. Target and
+  method columns are preserved.
 
 ## Interpreting output
 

@@ -52,7 +52,7 @@ descriptive; they do not measure ability or rater quality."><meta property="og:i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>K-means groups from numeric features or retained principal components</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-numeric-features.R" class="external-link"><code>R/api-numeric-features.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-numeric-features.R" class="external-link"><code>R/api-numeric-features.R</code></a></small>
       <div class="d-none name"><code>mfrm_cluster_kmeans.Rd</code></div>
     </div>
 
@@ -154,7 +154,7 @@ Full-rank PCA preserves the distance objective; truncation changes it.
 No component whitening is performed. The centers of a truncated PCA are
 coordinates in that subspace; <code>profiles</code> describe the original attributes.
 Categorical codes must not be converted to numeric solely to pass this
-interface. Use <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code> for Gower/PAM mixed-feature groups.</p>
+interface. Use <code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code> for Gower/PAM mixed-feature groups.</p>
 <p>Compare fitted partitions using <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code>. Silhouettes
 calculated in different geometries are not directly comparable evidence
 of which feature set, scale or component count is correct. Grouping does
@@ -162,7 +162,7 @@ not propagate measurement uncertainty or establish rater quality.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="mfrm_pca.html">mfrm_pca()</a></code>, <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code>, <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code>,
+    <div class="dont-index"><p><code><a href="mfrm_pca.html">mfrm_pca()</a></code>, <code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code>, <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code>,
 <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code>, <code><a href="plot.mfrm_clusters.html">plot.mfrm_clusters()</a></code>, <code><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">stats::kmeans()</a></code></p></div>
     </div>
 

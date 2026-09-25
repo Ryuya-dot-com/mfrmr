@@ -105,10 +105,10 @@ the active model.
 
 ## GPCM boundary
 
-For bounded `GPCM`, the helper is available with caveat. The casebook
-inherits exploratory screening semantics from the underlying residual
-and strict marginal sources; it should not be read as a formal
-inferential case test.
+For `GPCM`, the helper is available with caveat. The casebook inherits
+exploratory screening semantics from the underlying residual and strict
+marginal sources; it should not be read as a formal inferential case
+test.
 
 ## See also
 
@@ -144,7 +144,7 @@ summary(casebook)
 #>            Item           Value
 #>  Overall status review_required
 #>           Model             RSM
-#>    Bounded GPCM        deferred
+#>            GPCM        deferred
 #> 
 #> Key Warnings
 #>  - Strict pairwise screening contributed 1 flagged pair rows.
@@ -373,12 +373,12 @@ summary(casebook)
 #>  plot_unexpected(unexpected, draw = FALSE)     supported
 #> 
 #> Support Status
-#>         Scope    Status
-#>     RSM / PCM supported
-#>  bounded GPCM  deferred
+#>      Scope    Status
+#>  RSM / PCM supported
+#>       GPCM  deferred
 #>                                                                   Note
 #>  Supported as a synthesis layer over package-native screening outputs.
-#>                 Deferred unless a bounded GPCM source fit is supplied.
+#>                         Deferred unless a GPCM source fit is supplied.
 #> 
 #> Notes
 #>  - Misfit casebook rows are operational review units, not formal case

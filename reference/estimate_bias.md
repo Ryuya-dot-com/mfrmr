@@ -70,7 +70,7 @@ estimate_bias(
 An object of class `mfrm_bias` with:
 
 - `table`: interaction rows with effect size, SE, screening t/p
-  metadata, reporting-use flags, fit columns, and bounded-`GPCM`
+  metadata, reporting-use flags, fit columns, and `GPCM`
   profile-likelihood columns when available
 
 - `summary`: compact summary statistics
@@ -130,11 +130,11 @@ aligned with the many-facet bias literature (Myford & Wolfe, 2003,
 
 Each iteration updates expected scores using the current bias estimates,
 then re-computes the bias. Convergence is reached when the maximum
-absolute change in bias estimates falls below `tol`. For bounded `GPCM`,
-the same additive-bias idea is evaluated with the slope-aware GPCM
-kernel and conditional profile-likelihood follow-up columns; those
-quantities remain screening evidence because theta, facet, step, and
-slope estimates are held fixed.
+absolute change in bias estimates falls below `tol`. For `GPCM`, the
+same additive-bias idea is evaluated with the slope-aware GPCM kernel
+and conditional profile-likelihood follow-up columns; those quantities
+remain screening evidence because theta, facet, step, and slope
+estimates are held fixed.
 
 - For two-way mode, use `facet_a` and `facet_b` (or `interaction_facets`
   with length 2).
@@ -213,7 +213,7 @@ In `bias$table`, the most-used columns are:
 - `Obs-Exp Average`: direction and practical size of
   observed-vs-expected gap on the raw-score metric
 
-- for bounded `GPCM`, `LR ChiSq`, `LR Prob.`, and `Profile CI Lower` /
+- for `GPCM`, `LR ChiSq`, `LR Prob.`, and `Profile CI Lower` /
   `Profile CI Upper`: conditional profile-likelihood checks for a single
   additive bias shift, holding the fitted person, facet, step, and slope
   estimates fixed

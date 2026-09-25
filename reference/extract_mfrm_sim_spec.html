@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Derive a simulation specification from a fitted MFRM object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-simulation-spec.R" class="external-link"><code>R/api-simulation-spec.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-simulation-spec.R" class="external-link"><code>R/api-simulation-spec.R</code></a></small>
       <div class="d-none name"><code>extract_mfrm_sim_spec.Rd</code></div>
     </div>
 
@@ -126,14 +126,14 @@ contrast provenance for categorical covariates</p></li>
 claim that the fitted object perfectly recovers the true data-generating
 mechanism. Users should review and, if necessary, edit the returned
 specification before using it for design planning.</p>
-<p>Bounded <code>GPCM</code> fits are supported here for direct data generation
+<p><code>GPCM</code> fits are supported here for direct data generation
 and parameter-recovery checks, provided that the returned simulation
 specification stores both a threshold table and a parallel slope table.
 The same fit-derived specification can feed caveated role-based design
 evaluation, population forecasting, and fit-based report/export bundles.
 Diagnostic and signal-detection design screening is available with explicit
 caveats. Full FACETS score-side contract review, posterior predictive checks,
-and MCMC estimation are not available for bounded <code>GPCM</code>.</p>
+and MCMC estimation are not available for <code>GPCM</code>.</p>
 <p>If you want to carry person-level group labels into a fit-derived observed
 response skeleton, provide the original <code>source_data</code> together with
 <code>person</code> and <code>group</code>. Group labels are treated as person-level metadata and

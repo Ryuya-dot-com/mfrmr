@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an APA-oriented table handoff using base R structures</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>apa_table.Rd</code></div>
     </div>
 
@@ -77,7 +77,8 @@
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A data.frame, <code>mfrm_fit</code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> output supported by
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code>, an <code>mfrm_summary_table_bundle</code>, diagnostics
-list, or bias-result list.</p></dd>
+list, bias-result list, saved RSM/PCM fixed-facet intervals, or saved
+GPCM slope/curve/bootstrap inference.</p></dd>
 
 
 <dt id="arg-which">which<a class="anchor" aria-label="anchor" href="#arg-which"></a></dt>
@@ -144,6 +145,14 @@ names listed in <code>build_summary_table_bundle(x)$table_index</code></p></li>
 <code>"reliability"</code>, <code>"facets_chisq"</code>, <code>"bias"</code>, <code>"interactions"</code>,
 <code>"interrater_summary"</code>, <code>"interrater_pairs"</code>, <code>"obs"</code></p></li>
 <li><p>For bias-result list: <code>"table"</code>, <code>"summary"</code>, <code>"chi_sq"</code></p></li>
+<li><p>For RSM/PCM fixed-facet intervals: <code>"intervals"</code> (default), <code>"settings"</code>,
+<code>"contrasts"</code>, and <code>"clusters"</code> when present. Method, confidence level and
+unavailable reasons remain with the selected estimates and bounds.</p></li>
+<li><p>For GPCM inference: <code>"intervals"</code> or <code>"curves"</code>; bootstrap results also
+retain <code>"trials"</code>, <code>"checks"</code> and <code>"source_checks"</code> when recorded, <code>"sampling"</code>, and
+<code>"availability"</code> for slope intervals
+or <code>"test"</code> for a null-model LRT. Extended results also expose <code>"settings"</code>,
+and <code>"clusters"</code>/<code>"contrasts"</code> when present. Target and method columns are preserved.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>

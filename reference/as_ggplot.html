@@ -50,7 +50,7 @@ the default; the returned ggplot can be restyled or composed downstream."><meta 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Convert draw-free mfrmr plot data to ggplot2</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-as-ggplot.R" class="external-link"><code>R/api-as-ggplot.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-as-ggplot.R" class="external-link"><code>R/api-as-ggplot.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-gpcm-reporting.R" class="external-link"><code>R/api-gpcm-reporting.R</code></a></small>
       <div class="d-none name"><code>as_ggplot.Rd</code></div>
     </div>
 
@@ -80,6 +80,18 @@ the default; the returned <code>ggplot</code> can be restyled or composed downst
 <span><span class="fu">as_ggplot</span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, component <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'mfrm_plot_data'</span></span>
+<span><span class="fu">as_ggplot</span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, component <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_slope_intervals'</span></span>
+<span><span class="fu">as_ggplot</span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, component <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_curve_intervals'</span></span>
+<span><span class="fu">as_ggplot</span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, component <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_gpcm_bootstrap'</span></span>
+<span><span class="fu">as_ggplot</span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, component <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mfrm_results'</span></span>
 <span><span class="fu">as_ggplot</span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, component <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -165,6 +177,10 @@ honour monochrome presets and supplied palette overrides, and preserve
 line-type or point-shape distinctions. CCC categories retain their source
 order. When <code>slope_aes = "colour"</code>, slopes instead use a continuous viridis
 scale (a grey gradient in monochrome); categories still have line types.</p>
+<p>Fixed-facet RSM/PCM intervals retain the selected covariance method, level,
+status symbols and optional ordinary comparison. Titles, subtitles, captions,
+reference lines and legends can be changed through the source plot arguments.
+Methods use both line types and vertical offsets, including in monochrome.</p>
     </div>
 
     <div class="section level2">

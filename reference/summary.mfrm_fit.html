@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize an <code>mfrm_fit</code> object in a user-friendly format</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_fit.Rd</code></div>
     </div>
 
@@ -263,6 +263,11 @@ records its distribution denominator, exclusion count, and estimate use.</p></li
 <li><p><code>step_overview</code>: threshold spread and monotonicity checks, reported by
 <code>StepFacet</code> ladder for PCM/GPCM fits and as one common ladder for RSM fits.</p></li>
 <li><p><code>settings_overview</code>: estimation settings that affect interpretation.
+<code>CategoryPolicy</code> records <code>"preserve"</code> or <code>"collapse"</code>; <code>ScoreRecoded</code>
+states whether the stored original-to-internal score map changes values.
+A collapse policy need not recode a complete contiguous scale. For older
+saved fits, absent policy or mapping records give <code>"not_recorded"</code> or <code>NA</code>,
+respectively; an unchanged score map does not identify the chosen policy.
 For MML fits, the printed fit and summary also state the engine, fixed or
 adaptive Gauss–Hermite rule and order, one-dimensional latent
 structure, population identification, and discrimination constraint.</p></li>
@@ -300,7 +305,7 @@ FACETS is run.</p></li>
 <code>plot(fit, type = "wright", show_ci = TRUE)</code>; add the FACETS renderer or
 Infit pathway only when they answer a specific follow-up question.</p></li>
 <li><p>For <code>RSM</code> / <code>PCM</code>, continue with <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> for element-level fit
-checks. For bounded <code>GPCM</code>, continue with <code><a href="compute_information.html">compute_information()</a></code> /
+checks. For <code>GPCM</code>, continue with <code><a href="compute_information.html">compute_information()</a></code> /
 <code><a href="plot_information.html">plot_information()</a></code> or the fitted-object posterior scoring helpers.</p></li>
 </ol></div>
     <div class="section level2">
@@ -348,8 +353,8 @@ checks. For bounded <code>GPCM</code>, continue with <code><a href="compute_info
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3     0   <span style="color: #949494;"> </span>         0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6    -<span style="color: #BB0000;">4.64</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion      3            0      0.302      -<span style="color: #BB0000;">0.344</span>       0.224 0.568</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater          6            0      0.399      -<span style="color: #BB0000;">0.606</span>       0.412 1.02 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Check the interpretation status and recommended next step</span></span></span>
 <span class="r-in"><span><span class="va">results</span><span class="op">$</span><span class="va">decision</span></span></span>

@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Evaluate MFRM design conditions by repeated simulation</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>evaluate_mfrm_design.Rd</code></div>
     </div>
 
@@ -152,7 +152,7 @@ variable through both <code>design</code> and the scalar design-grid arguments.<
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
 <dd><p>Measurement model passed to <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. <code>RSM</code> and <code>PCM</code> use
-the documented Rasch-family design-planning layer. Bounded <code>GPCM</code> is
+the documented Rasch-family design-planning layer. <code>GPCM</code> is
 available as a caveated simulation/refit operating-characteristic route.</p></dd>
 
 
@@ -170,7 +170,7 @@ When left <code>NULL</code>, the function inherits the generator step facet from
 
 
 <dt id="arg-slopes">slopes<a class="anchor" aria-label="anchor" href="#arg-slopes"></a></dt>
-<dd><p>Optional bounded-<code>GPCM</code> generator slopes used when
+<dd><p>Optional <code>GPCM</code> generator slopes used when
 <code>sim_spec = NULL</code>. See <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> for accepted formats.</p></dd>
 
 
@@ -263,7 +263,7 @@ summaries and plots</p></li>
 mutable under the current simulation specification</p></li>
 <li><p><code>planning_schema</code>: structured planning metadata bundling the role
 descriptor, scope boundary, and current mutability map</p></li>
-<li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> caveat row when a <code>GPCM</code> design route is
+<li><p><code>gpcm_boundary</code>: <code>GPCM</code> caveat row when a <code>GPCM</code> design route is
 used</p></li>
 <li><p><code>notes</code>: short interpretation notes</p></li>
 <li><p><code>settings</code>: simulation settings</p></li>
@@ -314,9 +314,9 @@ each replication carries forward the simulated one-row-per-person background
 data and refits the MML population-model branch. This remains a scenario
 study under explicit assumptions; it is not a closed-form predictive
 distribution for one future administration.</p>
-<p>Bounded <code>GPCM</code> design evaluation is available with caveats. It repeatedly
+<p><code>GPCM</code> design evaluation is available with caveats. It repeatedly
 generates data from the supplied or fit-derived slope-aware specification,
-refits bounded <code>GPCM</code>, and summarizes facet-level operating characteristics.
+refits <code>GPCM</code>, and summarizes facet-level operating characteristics.
 The route remains a role-based person x rater-like x criterion-like planner:
 it does not validate diagnostic-screening or signal-detection rules, does
 not provide a fully arbitrary-facet planner, and does not replace

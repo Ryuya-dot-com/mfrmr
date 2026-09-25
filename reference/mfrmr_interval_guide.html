@@ -54,7 +54,7 @@ interval should be interpreted."><meta property="og:image" content="https://ryuy
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Confidence-interval and uncertainty route guide</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
       <div class="d-none name"><code>mfrmr_interval_guide.Rd</code></div>
     </div>
 
@@ -149,6 +149,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                   Testlet conditional Person scores</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23       Shared-rater fixed-facet and step calibration</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24              Shared-rater conditional Person scores</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                       GPCM relative-slope intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                              GPCM curve uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                      GPCM bootstrap slope intervals</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                  Scope</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                  table,fit,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                 visual,fit,reporting</span>
@@ -174,6 +177,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22          table,visual,fit,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                 table,fit,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24          table,visual,fit,reporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25     gpcm,visual,table,fit,reporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26         gpcm,visual,table,reporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27         gpcm,visual,table,reporting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                  PrimaryHelper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                          fit_measures_table(ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                          fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)</span>
@@ -199,31 +205,37 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                               predict(testlet_fit, newdata)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                            confint(fit, parm = 'calibration', level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                 score_mfrm_random_rater(fit, persons = ids)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                DisplayRoute</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                   Use the returned table or facets_table.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                         Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                        Use plot(..., draw = FALSE)$data$locations or draw the base-R map.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                              Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                      Use draw = FALSE to reuse the ranked severity table and band labels.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                Use draw = FALSE to reuse wright, severity, threshold, and summary panels.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                               Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                      Use ranked or scatter views; heatmap and profile views intentionally omit intervals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                     Use plot_type = "lollipop" with draw = FALSE for interval-ready data.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                     Use draw = FALSE when rebuilding the summary figure.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                             Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                         Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                     Use linked-wave fit lists only; the helper does not perform linking.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                 Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                       Use ICC tables for interval values; plots expose them when finite.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                    Use summary(result) or plot(result, comparison = TRUE, draw = FALSE).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                                                       Use summary(result) or plot(result, draw = FALSE).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                   Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                      Use plot(result, draw = FALSE), summary(result) or confint(result).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                                                          Inspect the interval and its profile attribute.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21                              Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                      Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23 Use summary(fit, calibration_intervals = 'normal', level = 0.95) or mfrm_results(fit, calibration_intervals = 'normal', calibration_level = 0.95). Defaults omit bounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                    Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                                 confint(fit, parm = "slopes", level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                             mfrm_curve_intervals(fit, grid)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                               confint(bootstrap_mfrm_gpcm(fit, seed = 123))</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                       DisplayRoute</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                          Use the returned table or facets_table.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                               Use plot(..., draw = FALSE)$data$locations or draw the base-R map.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                     Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                             Use draw = FALSE to reuse the ranked severity table and band labels.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                       Use draw = FALSE to reuse wright, severity, threshold, and summary panels.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                      Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                             Use ranked or scatter views; heatmap and profile views intentionally omit intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                            Use plot_type = "lollipop" with draw = FALSE for interval-ready data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                            Use draw = FALSE when rebuilding the summary figure.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                    Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                            Use linked-wave fit lists only; the helper does not perform linking.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                        Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                              Use ICC tables for interval values; plots expose them when finite.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                              Use plot(result), as_ggplot(result), apa_table(result), or attach it with mfrm_results(fit, intervals = list(raters = result), compute = "never").</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                                                              Use summary(result) or plot(result, draw = FALSE).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                          Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                             Use plot(result, draw = FALSE), summary(result) or confint(result).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                                                                 Inspect the interval and its profile attribute.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                     Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                             Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23        Use summary(fit, calibration_intervals = 'normal', level = 0.95) or mfrm_results(fit, calibration_intervals = 'normal', calibration_level = 0.95). Defaults omit bounds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                           Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25 plot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(slopes = result)). diagnose_mfrm() retains default relative/model intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    DefaultLevel</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2          0.95</span>
@@ -249,6 +261,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                   IntervalColumns</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                    CI_Lower, CI_Upper, CI_Level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                    CI_Lower, CI_Upper, CI_Level</span>
@@ -274,6 +289,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                                                                    Lower, Upper, ConditionalSD, Status, Reason</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                                                                                                               Lower, Upper, SE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                                                                    Lower, Upper, ConditionalSD, Status, Reason</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                                                                Lower, Upper; CIEligible, CIUse, InferenceReview in diagnostics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                                                      Lower, Upper, CIEligible, InferenceReview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                                                         Matrix bounds; diagnostics and availability attributes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                               Basis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                  Approximate Wald interval on facet measure: estimate +/- z * SE.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                 Approximate Wald interval on facet measure recomputed for the requested ci_level.</span>
@@ -282,7 +300,7 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                           Approximate Wald interval around centered facet severity using ModelSE.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                        Composite overview; interval evidence comes from the rater severity panel.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7  RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                              Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                      Profile-likelihood limits for GPCM bias rows when available, otherwise per-cell SE fallback.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                               Approximate Wald interval around displacement using DisplacementSE.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                    Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                   Joint MML covariance for pair differences and deviations from the equally weighted facet mean.</span>
@@ -299,6 +317,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                       Continuous equal-tail posterior intervals conditional on calibration and the fitted or specified normal Person population.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                                           Explicit observed-information normal approximation for fixed facets and steps in the shared-rater RSM.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                       Continuous marginal posterior with joint conditional rater Laplace integration and calibration held fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                       Pointwise log-Wald intervals from the inverse full joint MML observed information, with sum-zero log-slope transformation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                       Full calibration covariance at fixed native-scale ability and rating context; logit or log transformation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                                    Fitted-model basic bootstrap errors; unresolved refits enclose all possible empirical limits.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                         UseFor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                           Report facet estimates with uncertainty in tables.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                           Show which facet levels have wide measure uncertainty before discussing fit flags.</span>
@@ -324,6 +345,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                          Score all supplied ratings jointly for a Person without re-estimating calibration.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                     Describe calibration effects separately from realized rater effects and population SDs.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24           Score requested Persons while retaining the complete scoring roster and shared-rater uncertainty.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                   Sampling uncertainty in relative discriminations with geometric mean one.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                            Uncertainty in category probabilities or information per rating.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                          Approximate slope uncertainty under the fitted population and analyzed assignment.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                     InterpretationBoundary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                CI width is precision evidence, not a fit pass/fail rule.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                        Fit status still comes from MnSq/ZSTD review; the CI plot is a precision display.</span>
@@ -349,6 +373,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22            Excludes calibration/population estimation uncertainty, Person-contrast inference and simultaneous decisions. Missing Persons return the prior only; zero ability variance withholds scores.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                            Finite-sample coverage is not established. Numerical/information failures and estimated variance boundaries withhold bounds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                     Excludes calibration/population estimation uncertainty, Person contrasts and coverage guarantees. Numerical checks do not certify Laplace accuracy.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25          Default relative/model target; explicit options select standardized slopes, contrasts, sandwich or Bonferroni intervals. These are not rater-quality intervals or general coverage guarantees.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                                                Not Person-score intervals or a continuous simultaneous confidence band.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                          Not an exact small-sample method; failed refits can leave infinite bounds. Null-model LRT draws cannot supply slope intervals.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                  GPCMStatus</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                     supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                     supported_with_caveat</span>
@@ -374,6 +401,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                            unavailable; Person-specific testlet RSM only</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                                       unavailable; shared-rater RSM only</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                       unavailable; shared-rater RSM only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                     supported_with_caveat; eligible native GPCM MML only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                     supported_with_caveat; eligible native GPCM MML only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                     supported_with_caveat; eligible native GPCM MML only</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                    Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                  The helper already adds CI columns to the returned fit-measure table.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                       Use this when reviewers ask for a forest-style estimate display.</span>
@@ -381,7 +411,7 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                             This explicit helper is useful for publication-style maps.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                         Use facet = ... for non-Rater severity facets.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                Designed for RSM/PCM manuscript routes; inspect returned panel data before publication.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                              The table fair_se option provides bounded GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                      The table fair_se option provides GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                            Heatmaps remain pattern displays and do not draw intervals.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                           Best used after reviewing the underlying displacement table.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                              Use together with dif_report() for narrative boundaries.</span>
@@ -399,6 +429,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22 Unavailable rows retain reasons; new fixed-facet levels are refused. Supply the complete rating set for each Person. Small calibration samples can reduce marginal interval coverage; see vignette('mfrmr-testlets').</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 23                                                                 Uses saved estimates and SEs without refitting. Rebuild output from older fits to apply the default; older result bundles retain their stored tables.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                               persons selects outputs, not data. newdata replaces the entire roster. Prior-only and unavailable rows remain explicit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                 Requires current likelihood metadata, adequate convergence/categories, unit weights, q&gt;=31 and positive unregularized information. Ordinary Wright/Pathway maps do not display these slope intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                           Default model covariance and pointwise intervals; sandwich and finite-grid Bonferroni are explicit options.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                               Default relative 95% pointwise intervals; select scale, level and contrasts explicitly. Generating the bootstrap can be costly; displaying saved output does not refit.</span>
 <span class="r-in"><span><span class="fu">mfrmr_interval_guide</span><span class="op">(</span><span class="st">"visual"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Route"</span>, <span class="st">"DisplayRoute"</span>, <span class="st">"Basis"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                  Route</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                              Fit-measure forest plot</span>
@@ -422,28 +455,34 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 21                     Testlet fixed-facet calibration</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                   Testlet conditional Person scores</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24              Shared-rater conditional Person scores</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                   DisplayRoute</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                            Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                           Use plot(..., draw = FALSE)$data$locations or draw the base-R map.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                 Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                         Use draw = FALSE to reuse the ranked severity table and band labels.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                   Use draw = FALSE to reuse wright, severity, threshold, and summary panels.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                  Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                         Use ranked or scatter views; heatmap and profile views intentionally omit intervals.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                        Use plot_type = "lollipop" with draw = FALSE for interval-ready data.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                        Use draw = FALSE when rebuilding the summary figure.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                            Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                        Use linked-wave fit lists only; the helper does not perform linking.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                    Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                          Use ICC tables for interval values; plots expose them when finite.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                       Use summary(result) or plot(result, comparison = TRUE, draw = FALSE).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                          Use summary(result) or plot(result, draw = FALSE).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                      Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                         Use plot(result, draw = FALSE), summary(result) or confint(result).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21 Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                         Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24                       Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                       GPCM relative-slope intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                              GPCM curve uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                      GPCM bootstrap slope intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                       DisplayRoute</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                Use plot(fit_measures, type = "measure_ci", draw = FALSE) for reusable plot data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                               Use plot(..., draw = FALSE)$data$locations or draw the base-R map.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                     Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                             Use draw = FALSE to reuse the ranked severity table and band labels.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                       Use draw = FALSE to reuse wright, severity, threshold, and summary panels.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                      Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                             Use ranked or scatter views; heatmap and profile views intentionally omit intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                            Use plot_type = "lollipop" with draw = FALSE for interval-ready data.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                            Use draw = FALSE when rebuilding the summary figure.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                    Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                            Use linked-wave fit lists only; the helper does not perform linking.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                        Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                              Use ICC tables for interval values; plots expose them when finite.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                              Use plot(result), as_ggplot(result), apa_table(result), or attach it with mfrm_results(fit, intervals = list(raters = result), compute = "never").</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                                                                              Use summary(result) or plot(result, draw = FALSE).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                          Use plot(fit, intervals = "normal", draw = FALSE); defaults show point estimates only.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                                                                                             Use plot(result, draw = FALSE), summary(result) or confint(result).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                     Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                             Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                           Use scores$table, summary(scores), plot(scores) or as_ggplot(scores); attach with mfrm_results(fit, scores = scores).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25 plot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(slopes = result)). diagnose_mfrm() retains default relative/model intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                   plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                               Basis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                 Approximate Wald interval on facet measure recomputed for the requested ci_level.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                     Approximate facet-level SE overlay on the shared logit scale.</span>
@@ -451,7 +490,7 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                           Approximate Wald interval around centered facet severity using ModelSE.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                        Composite overview; interval evidence comes from the rater severity panel.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7  RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                              Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                      Profile-likelihood limits for GPCM bias rows when available, otherwise per-cell SE fallback.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                               Approximate Wald interval around displacement using DisplacementSE.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                    Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                   Joint MML covariance for pair differences and deviations from the equally weighted facet mean.</span>
@@ -466,6 +505,9 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                                Explicit observed-information normal approximation for fixed facets and steps in the Person-specific testlet RSM.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                       Continuous equal-tail posterior intervals conditional on calibration and the fitted or specified normal Person population.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                       Continuous marginal posterior with joint conditional rater Laplace integration and calibration held fixed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                       Pointwise log-Wald intervals from the inverse full joint MML observed information, with sum-zero log-slope transformation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                       Full calibration covariance at fixed native-scale ability and rating context; logit or log transformation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                                                    Fitted-model basic bootstrap errors; unresolved refits enclose all possible empirical limits.</span>
 <span class="r-in"><span><span class="fu">mfrmr_interval_guide</span><span class="op">(</span><span class="st">"gpcm"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Route"</span>, <span class="st">"GPCMStatus"</span>, <span class="st">"InterpretationBoundary"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                Route</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7   Fair-average diagnostic interval</span>
@@ -473,18 +515,27 @@ columns are the important guardrails.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10            Group contrast summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12          Anchor drift forest plot</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13             Rater trajectory plot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25     GPCM relative-slope intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26            GPCM curve uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27    GPCM bootstrap slope intervals</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                       GPCMStatus</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7                                          supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                                          supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10                                         supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12 exploratory_for_gpcm; linking synthesis supported_with_caveat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13 exploratory_for_gpcm; linking synthesis supported_with_caveat</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25          supported_with_caveat; eligible native GPCM MML only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26          supported_with_caveat; eligible native GPCM MML only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27          supported_with_caveat; eligible native GPCM MML only</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                     InterpretationBoundary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7                          Diagnostic-only: CI_Eligible / FairCIEligible remain FALSE; finite or regularized covariance does not establish full-refit coverage. Gap whiskers hold the observed mean fixed.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                  Bias intervals remain screening evidence unless the study design supports stronger inferential wording.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10 Both routes remain screening-only; adequate linking does not make refit uncertainty formally eligible. Inspect ContrastDirection because residual and severity contrasts use different units and signs.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                           Drift claims require explicit multi-fit wave or form designs.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                Trajectory movement is interpretable only after the supplied fits are on a common scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25          Default relative/model target; explicit options select standardized slopes, contrasts, sandwich or Bonferroni intervals. These are not rater-quality intervals or general coverage guarantees.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                                                                Not Person-score intervals or a continuous simultaneous confidence band.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                          Not an exact small-sample method; failed refits can leave infinite bounds. Null-model LRT draws cannot supply slope intervals.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

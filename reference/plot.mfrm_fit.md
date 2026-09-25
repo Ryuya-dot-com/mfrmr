@@ -273,7 +273,7 @@ Invisibly, an `mfrm_plot_data` object (default and for any single
 and an interpretation status in its data payload, plus a `notes` table
 and `display` settings. It also includes a one-row `scale_contract`
 table recording the fitted coordinate basis, population SD when
-applicable, discrimination basis, and bounded-GPCM MML identification
+applicable, discrimination basis, and GPCM MML identification
 convention.
 
 ## Details

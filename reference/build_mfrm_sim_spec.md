@@ -121,8 +121,8 @@ print(x, ...)
 
 - slope_facet:
 
-  Slope facet used when `model = "GPCM"`. The current bounded `GPCM`
-  branch requires `slope_facet == step_facet`.
+  Slope facet used when `model = "GPCM"`. The current `GPCM` branch
+  requires `slope_facet == step_facet`.
 
 - slopes:
 
@@ -275,8 +275,8 @@ The resulting object records:
 
 - threshold structure (`threshold_table`)
 
-- optional discrimination structure for bounded `GPCM` (`slope_table`)
-  and its identified log-slope spread label (`slope_regime`)
+- optional discrimination structure for `GPCM` (`slope_table`) and its
+  identified log-slope spread label (`slope_regime`)
 
 - assignment design (`assignment`)
 

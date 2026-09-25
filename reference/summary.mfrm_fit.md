@@ -269,9 +269,15 @@ object and prints:
   fits.
 
 - `settings_overview`: estimation settings that affect interpretation.
-  For MML fits, the printed fit and summary also state the engine, fixed
-  or adaptive Gauss–Hermite rule and order, one-dimensional latent
-  structure, population identification, and discrimination constraint.
+  `CategoryPolicy` records `"preserve"` or `"collapse"`; `ScoreRecoded`
+  states whether the stored original-to-internal score map changes
+  values. A collapse policy need not recode a complete contiguous scale.
+  For older saved fits, absent policy or mapping records give
+  `"not_recorded"` or `NA`, respectively; an unchanged score map does
+  not identify the chosen policy. For MML fits, the printed fit and
+  summary also state the engine, fixed or adaptive Gauss–Hermite rule
+  and order, one-dimensional latent structure, population
+  identification, and discrimination constraint.
 
 - `population_coding`: fitted categorical levels and contrasts that must
   be reused when scoring new persons under the population-model
@@ -324,7 +330,7 @@ object and prints:
 
 5.  For `RSM` / `PCM`, continue with
     [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-    for element-level fit checks. For bounded `GPCM`, continue with
+    for element-level fit checks. For `GPCM`, continue with
     [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
     /
     [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
@@ -376,8 +382,8 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 #> # A tibble: 2 × 7
 #>   Facet     Levels MeanEstimate SDEstimate MinEstimate MaxEstimate  Span
 #>   <chr>      <int>        <dbl>      <dbl>       <dbl>       <dbl> <dbl>
-#> 1 Criterion      3     0             0.302      -0.344       0.224 0.568
-#> 2 Rater          6    -4.64e-18      0.399      -0.606       0.412 1.02 
+#> 1 Criterion      3            0      0.302      -0.344       0.224 0.568
+#> 2 Rater          6            0      0.399      -0.606       0.412 1.02 
 
 # Check the interpretation status and recommended next step
 results$decision

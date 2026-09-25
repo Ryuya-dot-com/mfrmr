@@ -111,8 +111,14 @@ mfrm_results(
 
   Optional saved
   [`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
-  result from the exact supplied random-rater fit. No bootstrap is run
-  by this function.
+  result from the exact supplied random-rater fit. For a native GPCM
+  fit, accepts saved slope intervals, curve intervals, a GPCM bootstrap
+  result, or a named list of these. All must match the exact fitted
+  data, parameters, population and integration settings. For native
+  RSM/PCM fits, accepts a saved
+  [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+  result or a named list of them. No bootstrap or interval calculation
+  is run by this function.
 
 - scores:
 
@@ -229,8 +235,8 @@ computed, pass them with `diagnostics = diagnostics` to reuse them.
 - `"response_time"`: descriptive response-time QC review when timing
   metadata are supplied through `response_time` / `response_time_data`
 
-- `"gpcm_review"`: standard sections with bounded-`GPCM` caveats
-  retained in the collected summaries and reports
+- `"gpcm_review"`: standard sections with `GPCM` caveats retained in the
+  collected summaries and reports
 
 - `"all"`: standard sections plus FACETS-fit, network, APA, and
   response-time sections
@@ -252,7 +258,11 @@ Start with `summary(res)`. The most useful fields are:
   count
 
 - `decision`: plain-language interpretation, formal-inference, reason,
-  and next-action text derived from the source-fit readiness record
+  and next-action text derived from source-fit readiness and the saved
+  diagnostic precision profile. Missing precision remains unreviewed; a
+  positive precision assessment cannot override source-fit restrictions.
+  Reading this summary does not compute new diagnostics or establish
+  sampling coverage.
 
 - `readiness`: separate analysis and plot-interpretation checks
 
@@ -346,6 +356,53 @@ deidentifies its contents.
     or the helper named in `summary(res)$next_actions` for
     report-specific follow-up.
 
+## Reproduce attached inference
+
+When additional inference or posterior diagnostics are attached, the
+code shown by `summary(res)` and in HTML saves and reloads the complete
+`res` object. Choose the file path before running it. This preserves
+attached methods, levels and unavailable results without fitting or
+recalculating. Exported replay scripts only reload the RDS already
+written by the export. The starter export index links the saved RSM/PCM
+and GPCM inference figures alongside the ordinary maps, whose
+uncertainty and fit meanings are separate.
+
+## Saved RSM/PCM fixed-facet intervals
+
+Use `intervals = list(raters = ci)` with output from
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md).
+The fit must match the saved data, parameters, constraints, population
+and integration settings. Named results give `facet_` plot routes, for
+example `plot(res, type = "facet_raters")`; a single result gives
+`facet_inference`. Include `"plots"` to enable those routes.
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+supports customization. Tables, reports and exports preserve the
+selected method, confidence level, contrasts, cluster mapping and
+fixed/unavailable targets. Export replay reloads saved results without
+refitting or changing the selected intervals. These are pointwise
+fixed-facet intervals, not simultaneous rater decisions or uncertainty
+for replacement raters. Ordinary map and fit displays keep their own
+meanings and are not recalculated with the attached covariance.
+
+## Saved GPCM inference
+
+Attach explicitly selected results, for example
+`intervals = list(slopes = confint(fit, scale = "standardized"))`.
+Tables retain the target, method, confidence level and multiplicity
+choice;
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+and
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+preserve them. Names become lowercase plot routes, e.g.
+`plot(res, type = "gpcm_slopes")`, when `"plots"` is included. A single
+result uses `"gpcm_inference"`. Passing a raw slope bootstrap object
+selects its default relative 95% pointwise intervals; pass
+`confint(bootstrap, ...)` to select a different target or level. Replay
+reloads saved results, without refitting or changing interval methods.
+Older intervals lacking source metadata must be recomputed from the
+saved fit. These results supplement ordinary location and fit displays;
+discrimination is not rater quality and does not select scoring weights.
+
 ## Testlet and random-rater results
 
 [`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
@@ -416,12 +473,10 @@ fit <- fit_mfrm(
 res <- mfrm_results(fit)
 review <- summary(res)
 review$decision
-#>                                                           Interpretation
-#> 1 Fit-readiness requirements satisfied; formal precision review required
-#>   FormalInference FitReadiness                                              Why
-#> 1              No        ready Formal precision support has not been evaluated.
-#>                          NextAction
-#> 1 Read the compact results summary.
+#>               Interpretation FormalInference FitReadiness
+#> 1 Ready for formal inference             Yes        ready
+#>                                           Why                        NextAction
+#> 1 All stored fit-readiness components passed. Read the compact results summary.
 review$next_actions
 #>   Priority               Area
 #> 1        1           Overview

@@ -84,8 +84,8 @@ plot_bias_interaction(
 - show_ci:
 
   Logical. When `TRUE` and `plot` is `"scatter"` or `"ranked"`, draw
-  confidence-interval whiskers for `Bias Size`. Bounded `GPCM` rows use
-  the conditional profile-likelihood limits returned by
+  confidence-interval whiskers for `Bias Size`. `GPCM` rows use the
+  conditional profile-likelihood limits returned by
   [`estimate_bias()`](https://ryuya-dot-com.github.io/mfrmr/reference/estimate_bias.md)
   when available; otherwise the interval uses the per-cell standard
   error from

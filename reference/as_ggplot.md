@@ -27,6 +27,18 @@ as_ggplot(x, type = NULL, component = NULL, ...)
 
 # S3 method for class 'mfrm_plot_data'
 as_ggplot(x, type = NULL, component = NULL, ...)
+
+# S3 method for class 'mfrm_slope_intervals'
+as_ggplot(x, type = NULL, component = NULL, ...)
+
+# S3 method for class 'mfrm_curve_intervals'
+as_ggplot(x, type = NULL, component = NULL, ...)
+
+# S3 method for class 'mfrm_gpcm_bootstrap'
+as_ggplot(x, type = NULL, component = NULL, ...)
+
+# S3 method for class 'mfrm_results'
+as_ggplot(x, type = NULL, component = NULL, ...)
 ```
 
 ## Arguments
@@ -129,6 +141,12 @@ line-type or point-shape distinctions. CCC categories retain their
 source order. When `slope_aes = "colour"`, slopes instead use a
 continuous viridis scale (a grey gradient in monochrome); categories
 still have line types.
+
+Fixed-facet RSM/PCM intervals retain the selected covariance method,
+level, status symbols and optional ordinary comparison. Titles,
+subtitles, captions, reference lines and legends can be changed through
+the source plot arguments. Methods use both line types and vertical
+offsets, including in monochrome.
 
 ## Examples
 

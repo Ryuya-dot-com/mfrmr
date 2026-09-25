@@ -109,9 +109,9 @@ The dashboard draws nine QC panels in a 3\\\times\\3 grid:
 are available: `"strict"`, `"standard"` (default), and `"lenient"`. Use
 `thresholds` to override any profile value with named entries.
 
-For bounded `GPCM`, the dashboard now reuses the residual-based
-diagnostics stack and marks the fair-average panel unavailable rather
-than silently reusing the Rasch-only compatibility calculation.
+For `GPCM`, the dashboard now reuses the residual-based diagnostics
+stack and marks the fair-average panel unavailable rather than silently
+reusing the Rasch-only compatibility calculation.
 
 ## Plot types
 

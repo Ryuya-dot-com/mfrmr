@@ -56,7 +56,7 @@ this figure ready for the current run?".'><meta property="og:image" content="htt
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Figure-reporting template for visual diagnostics</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_visual_diagnostics.R" class="external-link"><code>R/help_visual_diagnostics.R</code></a></small>
       <div class="d-none name"><code>visual_reporting_template.Rd</code></div>
     </div>
 
@@ -351,6 +351,9 @@ decide how to describe the resulting figure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 21                     Testlet fixed-facet calibration</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                   Testlet conditional Person scores</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24              Shared-rater conditional Person scores</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                       GPCM relative-slope intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                              GPCM curve uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                      GPCM bootstrap slope intervals</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                  PrimaryHelper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                          fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                  plot(fit, type = "wright", show_ci = TRUE, ci_level = 0.95)</span>
@@ -373,6 +376,9 @@ decide how to describe the resulting figure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 21                                                                            confint(fit, parm = 'calibration', level = 0.95)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22                                                                                               predict(testlet_fit, newdata)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24                                                                                 score_mfrm_random_rater(fit, persons = ids)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                                                                 confint(fit, parm = "slopes", level = 0.95)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                                                                             mfrm_curve_intervals(fit, grid)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                                                               confint(bootstrap_mfrm_gpcm(fit, seed = 123))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    DefaultLevel</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2          0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3          0.95</span>
@@ -395,6 +401,9 @@ decide how to describe the resulting figure.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 21         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 22         0.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 24         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26         0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27         0.95</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -27,7 +27,7 @@ plot(x, ids = NULL, labels = NULL, draw = TRUE, preset = "standard", ...)
 - x:
 
   An object returned by
-  [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+  [`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
   [`mfrm_cluster_kmeans()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_kmeans.md)
   or
   [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md),
@@ -105,7 +105,7 @@ for a separate hierarchical analysis and its dendrogram.
 
 ## See also
 
-[`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
+[`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md),
 [`mfrm_cluster_imputed()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_imputed.md),
 [`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
 
@@ -116,7 +116,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   raters <- data.frame(Rater = paste0("R", 1:6),
     ExperienceYears = c(1, 2, 3, 12, 13, 14),
     Specialty = factor(rep(c("Language", "Science"), each = 3)))
-  groups <- mfrm_cluster(mfrm_features(raters, "Rater",
+  groups <- mfrm_cluster_pam(mfrm_features(raters, "Rater",
     c("ExperienceYears", "Specialty")), k = 2)
   plot(groups)
   plot(groups, type = "profile", feature = "ExperienceYears")

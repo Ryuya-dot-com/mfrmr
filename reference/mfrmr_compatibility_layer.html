@@ -3,7 +3,7 @@
 Use this page when you need continuity with older compatibility-oriented workflows,
 fixed-width reports, or graph/score file style outputs.
 This compatibility layer currently applies mainly to diagnostics-based
-RSM / PCM workflows. Bounded GPCM fits also support
+RSM / PCM workflows. GPCM fits also support
 graph-only compatibility-style exports, while scorefile and
 diagnostics-driven compatibility outputs remain limited to RSM / PCM.
 Treat this layer as a presentation/contract surface, not as a claim of
@@ -15,7 +15,7 @@ SPSS estimators, or claim SPSS numerical equivalence."><meta property="og:descri
 Use this page when you need continuity with older compatibility-oriented workflows,
 fixed-width reports, or graph/score file style outputs.
 This compatibility layer currently applies mainly to diagnostics-based
-RSM / PCM workflows. Bounded GPCM fits also support
+RSM / PCM workflows. GPCM fits also support
 graph-only compatibility-style exports, while scorefile and
 diagnostics-driven compatibility outputs remain limited to RSM / PCM.
 Treat this layer as a presentation/contract surface, not as a claim of
@@ -70,7 +70,7 @@ SPSS estimators, or claim SPSS numerical equivalence."><meta property="og:image"
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Compatibility Layer Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/help_compatibility_layer.R" class="external-link"><code>R/help_compatibility_layer.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_compatibility_layer.R" class="external-link"><code>R/help_compatibility_layer.R</code></a></small>
       <div class="d-none name"><code>mfrmr_compatibility_layer.Rd</code></div>
     </div>
 
@@ -79,7 +79,7 @@ SPSS estimators, or claim SPSS numerical equivalence."><meta property="og:image"
 Use this page when you need continuity with older compatibility-oriented workflows,
 fixed-width reports, or graph/score file style outputs.</p>
 <p>This compatibility layer currently applies mainly to diagnostics-based
-<code>RSM</code> / <code>PCM</code> workflows. Bounded <code>GPCM</code> fits also support
+<code>RSM</code> / <code>PCM</code> workflows. <code>GPCM</code> fits also support
 graph-only compatibility-style exports, while scorefile and
 diagnostics-driven compatibility outputs remain limited to <code>RSM</code> / <code>PCM</code>.
 Treat this layer as a presentation/contract surface, not as a claim of
@@ -209,7 +209,7 @@ helper names; user-facing helper names use review/check terminology.</p></li>
 <code>RSM</code> / <code>PCM</code>:
 <code><a href="fit_mfrm.html">fit_mfrm()</a></code> -&gt; <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> -&gt; <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code> -&gt;
 compatibility export only if required.
-bounded <code>GPCM</code>:
+<code>GPCM</code>:
 <code><a href="fit_mfrm.html">fit_mfrm()</a></code> -&gt; <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> -&gt; <code><a href="reporting_checklist.html">reporting_checklist()</a></code> -&gt;
 graph-only compatibility export only when a legacy handoff truly requires
 it.</p></li>
@@ -260,15 +260,26 @@ it.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - summary(out$fit)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - summary(out$diagnostics)</span>
 <span class="r-in"><span><span class="fu"><a href="compatibility_alias_table.html">compatibility_alias_table</a></span><span class="op">(</span><span class="st">"functions"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Alias   PreferredName  Surface      Lifecycle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 mfrmRFacets run_mfrm_facets function retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 analyze_dif     analyze_dff function retained_alias</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         RetainedFor           RemovalPlan</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            older workflow scripts No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 earlier DIF-oriented package code No scheduled removal.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                     Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                      Compatibility wrapper for the legacy-compatible one-shot workflow.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Alias           PreferredName  Surface      Lifecycle</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               mfrmRFacets         run_mfrm_facets function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               analyze_dif             analyze_dff function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              mfrm_cluster        mfrm_cluster_pam function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 mfrm_response_imputations review_mfrm_imputations function retained_alias</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                   RetainedFor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                      older workflow scripts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                           earlier DIF-oriented package code</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        earlier feature-clustering scripts and saved results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 earlier assigned-score imputation scripts and saved results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             RemovalPlan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 No scheduled removal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                   Notes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                    Compatibility wrapper for the legacy-compatible one-shot workflow.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Identical Gower/PAM implementation and result class; the preferred name makes the algorithm explicit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        Same supplied-completion checks and result class; this function does not generate imputations.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_fixed_reports.html">build_fixed_reports</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="estimate_bias.html">estimate_bias</a></span><span class="op">(</span></span></span>

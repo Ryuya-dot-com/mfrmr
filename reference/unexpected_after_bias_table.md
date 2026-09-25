@@ -64,8 +64,7 @@ A named list with:
 
 - `facets`: analyzed bias facet pair
 
-- `gpcm_boundary`: bounded-`GPCM` interpretation guidance when
-  applicable
+- `gpcm_boundary`: `GPCM` interpretation guidance when applicable
 
 ## Details
 
@@ -95,10 +94,10 @@ dispatched through
 
 Lower after-adjustment counts describe an in-sample change in flags;
 they do not show that bias has been removed or establish fairness. For
-bounded `GPCM`, both the bias estimate and the post-adjustment
-comparison use the fitted slope-aware probability kernel while holding
-the other fitted quantities fixed. Read the returned `gpcm_boundary`
-before reporting the comparison.
+`GPCM`, both the bias estimate and the post-adjustment comparison use
+the fitted slope-aware probability kernel while holding the other fitted
+quantities fixed. Read the returned `gpcm_boundary` before reporting the
+comparison.
 
 ## Typical workflow
 

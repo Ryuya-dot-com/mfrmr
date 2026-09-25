@@ -300,6 +300,9 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 21                     Testlet fixed-facet calibration
 #> 22                   Testlet conditional Person scores
 #> 24              Shared-rater conditional Person scores
+#> 25                       GPCM relative-slope intervals
+#> 26                              GPCM curve uncertainty
+#> 27                      GPCM bootstrap slope intervals
 #>                                                                                                                  PrimaryHelper
 #> 2                                                          fit_measures_table(...); plot(type = "measure_ci", ci_level = 0.95)
 #> 3                                                                  plot(fit, type = "wright", show_ci = TRUE, ci_level = 0.95)
@@ -322,6 +325,9 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 21                                                                            confint(fit, parm = 'calibration', level = 0.95)
 #> 22                                                                                               predict(testlet_fit, newdata)
 #> 24                                                                                 score_mfrm_random_rater(fit, persons = ids)
+#> 25                                                                                 confint(fit, parm = "slopes", level = 0.95)
+#> 26                                                                                             mfrm_curve_intervals(fit, grid)
+#> 27                                                                               confint(bootstrap_mfrm_gpcm(fit, seed = 123))
 #>    DefaultLevel
 #> 2          0.95
 #> 3          0.95
@@ -344,4 +350,7 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 21         0.95
 #> 22         0.95
 #> 24         0.95
+#> 25         0.95
+#> 26         0.95
+#> 27         0.95
 ```

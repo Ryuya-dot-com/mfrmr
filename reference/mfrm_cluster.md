@@ -1,11 +1,16 @@
-# Explore groups defined by external features
+# Group mixed external features using Gower distances and PAM
 
 Partition an entity-level feature table using Gower dissimilarities and
 partitioning around medoids (PAM) from the optional `cluster` package.
+Use `mfrm_cluster_pam()` for this method. `mfrm_cluster()` is retained
+as an identical compatibility alias; it does not select an algorithm for
+you.
 
 ## Usage
 
 ``` r
+mfrm_cluster_pam(x, k, weights = NULL, missing = c("error", "omit"))
+
 mfrm_cluster(x, k, weights = NULL, missing = c("error", "omit"))
 
 # S3 method for class 'mfrm_clusters'
@@ -47,7 +52,7 @@ summary(object, ...)
 
 - object:
 
-  An object returned by `mfrm_cluster()`.
+  An object returned by `mfrm_cluster_pam()`.
 
 ## Value
 
@@ -108,7 +113,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     Specialty = rep(c("Language", "Science"), each = 3))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
   # The default stops on missing features. Here omission is explicit.
-  groups <- mfrm_cluster(features, k = 2,
+  groups <- mfrm_cluster_pam(features, k = 2,
     weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
   groups$membership  # R2 remains present with unavailable membership.
   summary(groups)

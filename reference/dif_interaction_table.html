@@ -50,7 +50,7 @@ facet-level x group-value cell."><meta property="og:image" content="https://ryuy
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute interaction table between a facet and a grouping variable</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>dif_interaction_table.Rd</code></div>
     </div>
 
@@ -126,7 +126,7 @@ average, in score units. Default <code>0.5</code>. This is a descriptive magnitu
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Object of class <code>mfrm_dif_interaction</code> with:</p><ul><li><p><code>table</code>: tibble with per-cell statistics and flags.</p></li>
 <li><p><code>summary</code>: tibble summarizing flagged and sparse cell counts.</p></li>
-<li><p><code>gpcm_boundary</code>: for bounded <code>GPCM</code> fits, a capability-boundary table.</p></li>
+<li><p><code>gpcm_boundary</code>: for <code>GPCM</code> fits, a capability-boundary table.</p></li>
 <li><p><code>config</code>: list of analysis parameters.</p></li>
 </ul></div>
     <div class="section level2">
@@ -163,7 +163,7 @@ comparisons. Neither residual output tests differential functioning.</p>
 <ul><li><p><code>$table</code>: the full interaction table with one row per cell.</p></li>
 <li><p><code>$summary</code>: overview counts of flagged and sparse cells.</p></li>
 <li><p><code>$config</code>: analysis configuration parameters.</p></li>
-<li><p><code>$gpcm_boundary</code>: for bounded <code>GPCM</code> fits, a capability-boundary table
+<li><p><code>$gpcm_boundary</code>: for <code>GPCM</code> fits, a capability-boundary table
 marking the table as caveated DFF screening evidence.</p></li>
 <li><p><code>flag_bias</code> records <code>|ObsExpAvg| &gt; abs_bias_warn</code> in score units.
 It does not establish differential functioning. <code>flag_t</code> is unavailable.</p></li>
@@ -174,7 +174,7 @@ residuals and magnitude flags. The score means and counts are retained.</p></li>
     <h2 id="gpcm-boundary">GPCM boundary<a class="anchor" aria-label="anchor" href="#gpcm-boundary"></a></h2>
 
 
-<p>For bounded <code>GPCM</code>, the interaction table uses the fitted slope-aware
+<p>For <code>GPCM</code>, the interaction table uses the fitted slope-aware
 expected-score/residual scale and should be reported as screening evidence,
 not as a standalone fairness, invariance, or operational subgroup decision.</p>
 <p>Residual means can differ even when response parameters are the same between

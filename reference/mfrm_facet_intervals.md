@@ -86,7 +86,9 @@ An `mfrm_facet_intervals` object with `table`, selected target
 model-based SE and interval remain alongside the selected method. Score
 rows are derivatives of a person's marginal log likelihood, not observed
 category scores or ability estimates. Scores are absent for
-`method = "model"`.
+`method = "model"`. When weak information passes numerical refinement,
+`cautions` and `information_review` retain the warning and checks.
+`InferenceCaution` also accompanies the interval table when applicable.
 
 ## Details
 
@@ -113,7 +115,11 @@ span the free-parameter space, sandwich intervals are unavailable; point
 estimates and the reason remain. Singular/regularized observed
 information or an ineligible source fit causes an error. Targets fixed
 by constraints have no inferential interval. Known anchors exclude
-anchor uncertainty.
+anchor uncertainty. An ill-conditioned but numerically verified
+unregularized inverse can be used with a warning. Successful inversion
+does not establish reliable normal intervals. Review interval width,
+boundary proximity and quadrature sensitivity; changing to sandwich
+covariance does not remove this concern.
 
 ## What robustness means here
 
@@ -147,6 +153,30 @@ characteristics. At 200 datasets per condition, MCSE near 95 percent is
 about 1.54 percentage points. See
 [`vignette("mfrmr-facet-intervals", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.md)
 for the design, interpretation and a complete rater-feedback example.
+
+## Save, display and report the selected intervals
+
+Use [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+and
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+to display or extract the saved result, and
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+for tables. Set `title = NULL`, `subtitle = NULL` or `caption = NULL` in
+the plot to omit that text. Attach one result or a named list to
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),
+for example
+`mfrm_results(fit, intervals = list(raters = intervals), include = c("fit", "plots"), compute = "never")`.
+The route `plot(res, type = "facet_raters")` shows the selected
+intervals.
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+and
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+retain the method, level, contrast coefficients, cluster mapping and
+unavailable outcomes. The source fit must match; replay reloads the
+saved results without refitting or recomputing covariance. These
+intervals do not replace uncertainty in ordinary Wright maps, fit
+diagnostics or Person scores.
 
 ## References
 

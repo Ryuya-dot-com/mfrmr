@@ -6,7 +6,15 @@ Plot pooled facet estimates or prespecified contrasts
 
 ``` r
 # S3 method for class 'mfrm_pooled'
-plot(x, draw = TRUE, preset = "standard", ...)
+plot(
+  x,
+  draw = TRUE,
+  preset = "standard",
+  title = paste("Pooled", x$settings$facet, "estimates and contrasts"),
+  subtitle = sprintf("%d imputations | %.0f%% pointwise MI intervals",
+    x$settings$imputations, 100 * x$settings$ci_level),
+  ...
+)
 ```
 
 ## Arguments
@@ -24,6 +32,12 @@ plot(x, draw = TRUE, preset = "standard", ...)
 - preset:
 
   A package plotting preset, such as `"standard"` or `"monochrome"`.
+
+- title, subtitle:
+
+  Optional text; `NULL` omits it. The default subtitle retains a notice
+  when complete-data information is weak. Full cautions remain in the
+  returned plot data even with custom or omitted text.
 
 - ...:
 

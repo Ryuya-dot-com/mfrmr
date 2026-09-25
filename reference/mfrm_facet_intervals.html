@@ -50,7 +50,7 @@ model; the point estimates stay the same when you change the interval method."><
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Pointwise intervals for fixed facet estimates and contrasts</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-facet-intervals.R" class="external-link"><code>R/api-facet-intervals.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-facet-intervals.R" class="external-link"><code>R/api-facet-intervals.R</code></a></small>
       <div class="d-none name"><code>mfrm_facet_intervals.Rd</code></div>
     </div>
 
@@ -141,7 +141,10 @@ This scaling does not guarantee small-sample coverage.</p></dd>
 The model-based SE and interval remain alongside the selected method.
 Score rows are derivatives of a person's marginal log likelihood, not
 observed category scores or ability estimates. Scores are absent for
-<code>method = "model"</code>.</p>
+<code>method = "model"</code>.
+When weak information passes numerical refinement, <code>cautions</code> and
+<code>information_review</code> retain the warning and checks. <code>InferenceCaution</code>
+also accompanies the interval table when applicable.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -164,7 +167,11 @@ poor intervals even with nonsingular covariance. If their scores do not
 span the free-parameter space, sandwich intervals are unavailable; point
 estimates and the reason remain. Singular/regularized observed information
 or an ineligible source fit causes an error. Targets fixed by constraints
-have no inferential interval. Known anchors exclude anchor uncertainty.</p>
+have no inferential interval. Known anchors exclude anchor uncertainty.
+An ill-conditioned but numerically verified unregularized inverse can be
+used with a warning. Successful inversion does not establish reliable
+normal intervals. Review interval width, boundary proximity and quadrature
+sensitivity; changing to sandwich covariance does not remove this concern.</p>
     </div>
     <div class="section level2">
     <h2 id="what-robustness-means-here">What robustness means here<a class="anchor" aria-label="anchor" href="#what-robustness-means-here"></a></h2>
@@ -198,6 +205,22 @@ bounds or universal operating characteristics. At 200 datasets per
 condition, MCSE near 95 percent is about 1.54 percentage points.
 See <code><a href="../articles/mfrmr-facet-intervals.html">vignette("mfrmr-facet-intervals", package = "mfrmr")</a></code> for the
 design, interpretation and a complete rater-feedback example.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="save-display-and-report-the-selected-intervals">Save, display and report the selected intervals<a class="anchor" aria-label="anchor" href="#save-display-and-report-the-selected-intervals"></a></h2>
+
+
+<p>Use <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="as_ggplot.html">as_ggplot()</a></code> and <code><a href="plot_data.html">plot_data()</a></code> to display or extract the
+saved result, and <code><a href="apa_table.html">apa_table()</a></code> for tables. Set <code>title = NULL</code>,
+<code>subtitle = NULL</code> or <code>caption = NULL</code> in the plot to omit that text.
+Attach one result or a named list to <code><a href="mfrm_results.html">mfrm_results()</a></code>, for example
+<code>mfrm_results(fit, intervals = list(raters = intervals), include = c("fit", "plots"), compute = "never")</code>.
+The route <code>plot(res, type = "facet_raters")</code> shows the selected intervals.
+<code><a href="mfrm_report.html">mfrm_report()</a></code> and <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> retain the method, level,
+contrast coefficients, cluster mapping and unavailable outcomes.
+The source fit must match; replay reloads the saved results without
+refitting or recomputing covariance. These intervals do not replace
+uncertainty in ordinary Wright maps, fit diagnostics or Person scores.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

@@ -52,7 +52,7 @@ which includes tables, reports, reviews and exports. It does not analyze data.'>
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Choose an mfrmr output helper by user goal</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
       <div class="d-none name"><code>mfrmr_output_guide.Rd</code></div>
     </div>
 
@@ -69,7 +69,7 @@ which includes tables, reports, reviews and exports. It does not analyze data.</
 <span>  scope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"public"</span>, <span class="st">"beginner"</span>, <span class="st">"psychometric"</span>, <span class="st">"entry"</span>, <span class="st">"viewer"</span>, <span class="st">"binary"</span>,</span>
 <span>    <span class="st">"tables"</span>, <span class="st">"reports"</span>, <span class="st">"reviews"</span>, <span class="st">"bundles"</span>, <span class="st">"exports"</span>, <span class="st">"compatibility"</span>, <span class="st">"gpcm"</span>,</span>
 <span>    <span class="st">"calibration"</span>, <span class="st">"simulation"</span>, <span class="st">"linking"</span>, <span class="st">"network"</span>, <span class="st">"response_time"</span>, <span class="st">"facets"</span>,</span>
-<span>    <span class="st">"conquest"</span>, <span class="st">"r"</span>, <span class="st">"models"</span>, <span class="st">"features"</span>, <span class="st">"imputation"</span>, <span class="st">"gtheory"</span><span class="op">)</span></span>
+<span>    <span class="st">"conquest"</span>, <span class="st">"r"</span>, <span class="st">"models"</span>, <span class="st">"features"</span>, <span class="st">"imputation"</span>, <span class="st">"gtheory"</span>, <span class="st">"feedback"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,7 +85,7 @@ beginner-labelled specialist row.
 <code>"entry"</code> returns the recommended first-screen routes. <code>"viewer"</code> returns
 local-viewer routes built around <code>mfrm_results(include = ...)</code>. <code>"binary"</code>
 returns the two-category person-item Rasch route and checks. Other values
-filter to one output family or to bounded-<code>GPCM</code>-relevant routes.
+filter to one output family or to <code>GPCM</code>-relevant routes.
 <code>"linking"</code> returns anchor, drift, and equating route rows.
 <code>"calibration"</code> returns the portable fixed-calibration lifecycle and
 artifact-only scoring route.
@@ -93,6 +93,8 @@ artifact-only scoring route.
 <code>"response_time"</code> returns descriptive response-time QC rows.
 <code>"models"</code> compares fixed-facet, shared-rater and Person-specific testlet
 workflows, including their distinct prediction and reporting boundaries.
+<code>"feedback"</code> distinguishes fixed-rater uncertainty, unexpected rating
+patterns, shared-rater uncertainty and screening accuracy with known truth.
 <code>"features"</code>, <code>"imputation"</code> and <code>"gtheory"</code> show exploratory attributes,
 assigned-score multiple imputation and observed-score G/D-study workflows,
 including their own table, plot and saving routes.
@@ -144,6 +146,10 @@ purpose-specific specialist helper.
 Use <code>mfrmr_output_guide("viewer")</code> when the next step is the optional local
 Shiny reader; it shows which <code>include</code> preset to use before calling
 <code><a href="launch_mfrmr_viewer.html">launch_mfrmr_viewer()</a></code>.
+Use <code>mfrmr_output_guide("feedback")</code> when preparing rater feedback. Start
+with the question and the fitted model: severity, response misfit and the
+accuracy of a warning rule are different quantities. A severe rater need
+not misfit, and an observed flag does not establish poor rater quality.
 Use <code>mfrmr_output_guide("psychometric")</code> for the technical table,
 review, and reporting routes whose interpretation boundaries should be
 checked before manuscript use.</p>
@@ -157,7 +163,7 @@ checked before manuscript use.</p>
 Cells containing <code>...</code> are outlines, not complete scripts to paste and run.
 Use <a href="mfrmr_workflow_methods.html">mfrmr_workflow_methods</a> for a runnable introduction and an explanation
 of function names. Inspect <code>DecisionBoundary</code> before interpreting a result.
-For bounded <code>GPCM</code>, use <code>scope = "gpcm"</code> to find both the support matrix
+For <code>GPCM</code>, use <code>scope = "gpcm"</code> to find both the support matrix
 and the table that explains how out-of-scope routes are handled.</p>
     </div>
 
@@ -205,6 +211,27 @@ and the table that explains how out-of-scope routes are handled.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 41 You are preparing fixed anchors or group anchors and need to catch overlap, duplicate, missing, sparse, or unsupported anchor rows before estimation.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 42                                           You have two or more independently fitted waves and need common-element drift and thin-link support checks.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 43          You have an ordered sequence of forms or administrations and need screened adjacent-link offsets before operational score-scale maintenance.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">feedback</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"feedback"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">feedback</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"MainFunction"</span>, <span class="st">"DecisionBoundary"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                Question</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82                How uncertain are fixed-rater severities or prespecified differences?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83 Which ordinary-model rating patterns need review, and do flags depend on the cutoff?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84             Which rating patterns need review under a shared-rater or testlet model?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85               How uncertain is an observed rater's severity in a shared-rater model?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86             How often does a warning rule flag unaffected or detect affected raters?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  MainFunction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82                                     mfrm_facet_intervals()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83                                       fit_measures_table()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84                                mfrm_response_diagnostics()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85                   confint(); mfrm_random_rater_intervals()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86 mfrm_screening_performance(); mfrm_screening_sensitivity()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                        DecisionBoundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82                                              Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83                            Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84                                                                                       Posterior predictive Infit/Outfit are descriptive and differ from ordinary plug-in indices. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85 Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86                         Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

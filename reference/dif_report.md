@@ -61,17 +61,17 @@ tests or binary classifications.
   include only cells above the requested absolute residual mean
   threshold, in score units.
 
-- `$gpcm_boundary`: for bounded `GPCM` inputs, a capability-boundary
-  table marking the narrative as caveated DFF screening output.
+- `$gpcm_boundary`: for `GPCM` inputs, a capability-boundary table
+  marking the narrative as caveated DFF screening output.
 
 - `$config`: analysis configuration inherited from the input.
 
 ## GPCM boundary
 
-If the input comes from a bounded `GPCM` fit, the narrative includes a
-bounded-`GPCM` note and the returned report carries `gpcm_boundary`.
-Treat the text as slope-aware screening/reporting support, not as a
-standalone fairness, invariance, or operational subgroup decision.
+If the input comes from a `GPCM` fit, the narrative includes a `GPCM`
+note and the returned report carries `gpcm_boundary`. Treat the text as
+slope-aware screening/reporting support, not as a standalone fairness,
+invariance, or operational subgroup decision.
 
 ## Typical workflow
 

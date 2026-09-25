@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an unexpected-after-adjustment screening report</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>unexpected_after_bias_table.Rd</code></div>
     </div>
 
@@ -107,7 +107,7 @@ observations, regardless of this display limit.</p></dd>
 <li><p><code>summary</code>: one-row summary (includes baseline-vs-after counts)</p></li>
 <li><p><code>thresholds</code>: applied thresholds</p></li>
 <li><p><code>facets</code>: analyzed bias facet pair</p></li>
-<li><p><code>gpcm_boundary</code>: bounded-<code>GPCM</code> interpretation guidance when applicable</p></li>
+<li><p><code>gpcm_boundary</code>: <code>GPCM</code> interpretation guidance when applicable</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -130,7 +130,7 @@ with the original settings; the MFRM fit does not need re-estimation.</p>
 <li><p><code>table</code>: residual unexpected responses after bias adjustment.</p></li>
 <li><p><code>thresholds</code>: screening settings used in this comparison.</p></li>
 </ul><p>Lower after-adjustment counts describe an in-sample change in flags; they do
-not show that bias has been removed or establish fairness. For bounded
+not show that bias has been removed or establish fairness. For
 <code>GPCM</code>, both the bias estimate and the post-adjustment comparison use the
 fitted slope-aware probability kernel while holding the other fitted
 quantities fixed. Read the returned <code>gpcm_boundary</code> before reporting the

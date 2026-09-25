@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Simulate long-format ordered many-facet data for design studies</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>simulate_mfrm_data.Rd</code></div>
     </div>
 
@@ -161,7 +161,7 @@ interaction effects. Must include at least one design column such as
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
 <dd><p>Measurement model recorded in the simulation setup. The current
-public generator supports <code>RSM</code>, <code>PCM</code>, and bounded <code>GPCM</code>.</p></dd>
+public generator supports <code>RSM</code>, <code>PCM</code>, and <code>GPCM</code>.</p></dd>
 
 
 <dt id="arg-step-facet">step_facet<a class="anchor" aria-label="anchor" href="#arg-step-facet"></a></dt>
@@ -171,7 +171,7 @@ vary across levels. Currently <code>"Criterion"</code> and <code>"Rater"</code> 
 
 <dt id="arg-slope-facet">slope_facet<a class="anchor" aria-label="anchor" href="#arg-slope-facet"></a></dt>
 <dd><p>Slope facet used when <code>model = "GPCM"</code>. The current
-bounded <code>GPCM</code> branch requires <code>slope_facet == step_facet</code>.</p></dd>
+<code>GPCM</code> branch requires <code>slope_facet == step_facet</code>.</p></dd>
 
 
 <dt id="arg-thresholds">thresholds<a class="anchor" aria-label="anchor" href="#arg-thresholds"></a></dt>
@@ -236,7 +236,7 @@ also included.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function generates synthetic ordered many-facet data under <code>RSM</code>,
-<code>PCM</code>, or the package's bounded <code>GPCM</code> branch.
+<code>PCM</code>, or the package's <code>GPCM</code> branch.
 The data-generating process is:</p><ol><li><p>Draw person abilities: \(\theta_n \sim N(0, \texttt{theta\_sd}^2)\)</p></li>
 <li><p>Draw rater severities: \(\delta_j \sim N(0, \texttt{rater\_sd}^2)\)</p></li>
 <li><p>Draw criterion difficulties: \(\beta_i \sim N(0, \texttt{criterion\_sd}^2)\)</p></li>
@@ -245,7 +245,7 @@ The data-generating process is:</p><ol><li><p>Draw person abilities: \(\theta_n 
 \(\eta = \theta_n - \delta_j - \beta_i + \epsilon\) where
 \(\epsilon \sim N(0, \texttt{noise\_sd}^2)\) (optional)</p></li>
 <li><p>Compute category probabilities under the recorded measurement model
-(<code>RSM</code>, <code>PCM</code>, or bounded <code>GPCM</code>) and sample the response</p></li>
+(<code>RSM</code>, <code>PCM</code>, or <code>GPCM</code>) and sample the response</p></li>
 </ol><p>Latent-value generation is explicit:</p><ul><li><p><code>latent_distribution = "normal"</code> draws centered normal person/rater/
 criterion values using the supplied standard deviations</p></li>
 <li><p><code>latent_distribution = "empirical"</code> resamples centered support values
@@ -267,7 +267,7 @@ from <code>step_span</code></p></li>
 <li><p>if <code>thresholds</code> is a numeric vector, it is used as one common threshold set</p></li>
 <li><p>if <code>thresholds</code> is a named list, numeric matrix, or data frame, threshold
 values may vary by <code>StepFacet</code> (currently <code>Criterion</code> or <code>Rater</code>)</p></li>
-</ul><p>For bounded <code>GPCM</code>, the generator requires an explicit slope contract in
+</ul><p>For <code>GPCM</code>, the generator requires an explicit slope contract in
 parallel with the threshold table. The supported route keeps
 <code>slope_facet == step_facet</code>, normalizes supplied slopes to the same
 geometric-mean-one log-slope identification used by <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, and
@@ -300,7 +300,7 @@ first via <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></co
 <code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>, then pass it through <code>sim_spec</code>.</p>
 <p>Returned data include attributes:</p><ul><li><p><code>mfrm_truth</code>: simulated true parameters (for parameter-recovery checks)</p></li>
 <li><p><code>mfrm_truth$signals</code>: injected DIF and interaction signal tables</p></li>
-<li><p><code>mfrm_truth$slope_table</code>: simulated discrimination table for bounded
+<li><p><code>mfrm_truth$slope_table</code>: simulated discrimination table for
 <code>GPCM</code></p></li>
 <li><p><code>mfrm_population_data</code>: generated one-row-per-person background data when
 the simulation specification stores an active latent-regression generator,

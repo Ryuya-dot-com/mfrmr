@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build an estimation-iteration report (preferred alias)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>estimation_iteration_report.Rd</code></div>
     </div>
 
@@ -92,7 +92,7 @@ block.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list with iteration-report components and, for bounded
+    <p>A named list with iteration-report components and, for
 <code>GPCM</code>, a <code>gpcm_boundary</code> table. Class: <code>mfrm_iteration_report</code>.</p>
     </div>
     <div class="section level2">
@@ -109,7 +109,7 @@ block.</p></dd>
 <ul><li><p><code>iterations</code>: trajectory of convergence indicators by iteration.</p></li>
 <li><p><code>summary</code>: final status and stopping diagnostics.</p></li>
 <li><p>optional <code>PROX</code> row: pseudo-initial reference point when enabled.</p></li>
-</ul><p>For bounded <code>GPCM</code>, this helper replays slope-aware optimization steps from
+</ul><p>For <code>GPCM</code>, this helper replays slope-aware optimization steps from
 a reconstructed starting state. It is not the exact optimizer history from
 the fitted object and is not an additional convergence test. Use
 <code>summary(fit, profile = "fit", detail = "brief")</code> for the recorded

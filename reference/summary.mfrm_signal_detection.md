@@ -60,7 +60,7 @@ An object of class `summary.mfrm_signal_detection` with:
   named-facet design grid; it reports design bookkeeping rather than
   signal-detection performance
 
-- `gpcm_boundary`: bounded-`GPCM` caveat row when present
+- `gpcm_boundary`: `GPCM` caveat row when present
 
 - `notes`: short interpretation notes, including the bias-side screening
   caveat
@@ -89,7 +89,7 @@ summary(sig_eval)
 #> 
 #> Overview
 #>  Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>        1            1              0             0          0.328
+#>        1            1              0             0          0.336
 #> 
 #> Detection summary (preview)
 #>  design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
@@ -109,7 +109,7 @@ summary(sig_eval)
 #>  BiasScreenMetricAvailabilityRate McseBiasScreenMetricAvailabilityRate
 #>                                 0                                   NA
 #>  BiasScreenFalsePositiveRate McseBiasScreenFalsePositiveRate MeanElapsedSec
-#>                           NA                              NA          0.328
+#>                           NA                              NA          0.336
 #>  McseElapsedSec DIFPlanned DIFAvailable DIFUnavailable DIFPositive DIFMCLower
 #>              NA          1            0              1           0         NA
 #>  DIFMCUpper DIFAllTrialsLower DIFAllTrialsUpper BiasScreenPlanned

@@ -48,7 +48,7 @@ it into a chosen number of groups, and inspect the retained dendrogram."><meta p
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Hierarchical grouping of external features</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-hierarchical-clustering.R" class="external-link"><code>R/api-hierarchical-clustering.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-hierarchical-clustering.R" class="external-link"><code>R/api-hierarchical-clustering.R</code></a></small>
       <div class="d-none name"><code>mfrm_cluster_hierarchical.Rd</code></div>
     </div>
 
@@ -157,7 +157,7 @@ group count, and excluded IDs.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Uses <code><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">stats::hclust()</a></code> followed by <code><a href="https://rdrr.io/r/stats/cutree.html" class="external-link">stats::cutree()</a></code> at the requested <code>k</code>.
 Feature types, scaling, weights, missingness handling, silhouette definition,
-and the 5,000-included-entity limit follow <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code>. No distance
+and the 5,000-included-entity limit follow <code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code>. No distance
 transformation or automatic sampling is performed. This limit is not a
 memory or speed guarantee.</p>
 <p>Only average and complete linkage are supported. Ward's minimum-variance
@@ -194,7 +194,7 @@ Criterion? Journal of Classification, 31, 274–295.
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="mfrm_cluster.html">mfrm_cluster()</a></code>, <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code>, <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code>, <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code>, <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -210,7 +210,7 @@ Criterion? Journal of Classification, 31, 274–295.
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">hierarchy</span>, type <span class="op">=</span> <span class="st">"silhouette"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">hierarchy</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"ExperienceYears"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_cluster_compare.html">mfrm_cluster_compare</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    PAM <span class="op">=</span> <span class="fu"><a href="mfrm_cluster.html">mfrm_cluster</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">2</span>, missing <span class="op">=</span> <span class="st">"omit"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    PAM <span class="op">=</span> <span class="fu"><a href="mfrm_cluster.html">mfrm_cluster_pam</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">2</span>, missing <span class="op">=</span> <span class="st">"omit"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    Average <span class="op">=</span> <span class="va">hierarchy</span>,</span></span>
 <span class="r-in"><span>    Complete <span class="op">=</span> <span class="fu">mfrm_cluster_hierarchical</span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">2</span>,</span></span>
 <span class="r-in"><span>      linkage <span class="op">=</span> <span class="st">"complete"</span>, missing <span class="op">=</span> <span class="st">"omit"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>

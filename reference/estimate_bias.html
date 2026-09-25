@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Estimate bias and interaction screening terms</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>estimate_bias.Rd</code></div>
     </div>
 
@@ -119,7 +119,7 @@ supplied explicitly; see the Person-screening boundary below.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>mfrm_bias</code> with:</p><ul><li><p><code>table</code>: interaction rows with effect size, SE, screening t/p metadata,
-reporting-use flags, fit columns, and bounded-<code>GPCM</code>
+reporting-use flags, fit columns, and <code>GPCM</code>
 profile-likelihood columns when available</p></li>
 <li><p><code>summary</code>: compact summary statistics</p></li>
 <li><p><code>chi_sq</code>: fixed-effect chi-square style screening summary</p></li>
@@ -159,7 +159,7 @@ with the many-facet bias literature (Myford &amp; Wolfe, 2003, 2004):</p>
                     {\sum_n \mathrm{Var}_{njc}}$$</p>
 <p>Each iteration updates expected scores using the current bias estimates,
 then re-computes the bias. Convergence is reached when the maximum absolute
-change in bias estimates falls below <code>tol</code>. For bounded <code>GPCM</code>, the same
+change in bias estimates falls below <code>tol</code>. For <code>GPCM</code>, the same
 additive-bias idea is evaluated with the slope-aware GPCM kernel and
 conditional profile-likelihood follow-up columns; those quantities remain
 screening evidence because theta, facet, step, and slope estimates are held
@@ -225,7 +225,7 @@ consider increasing <code>max_iter</code>.</p>
 <li><p><code>t</code> and <code>Prob.</code>: screening metrics, not formal inferential quantities</p></li>
 <li><p><code>Obs-Exp Average</code>: direction and practical size of observed-vs-expected
 gap on the raw-score metric</p></li>
-<li><p>for bounded <code>GPCM</code>, <code>LR ChiSq</code>, <code>LR Prob.</code>, and <code>Profile CI Lower</code> /
+<li><p>for <code>GPCM</code>, <code>LR ChiSq</code>, <code>LR Prob.</code>, and <code>Profile CI Lower</code> /
 <code>Profile CI Upper</code>: conditional profile-likelihood checks for a single
 additive bias shift, holding the fitted person, facet, step, and slope
 estimates fixed</p></li>

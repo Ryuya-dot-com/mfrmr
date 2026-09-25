@@ -167,10 +167,10 @@
 
         <dt>
 
-          <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code> <code><a href="mfrm_cluster.html">print(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">summary(<i>&lt;mfrm_clusters&gt;</i>)</a></code>
+          <code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code> <code><a href="mfrm_cluster.html">mfrm_cluster()</a></code> <code><a href="mfrm_cluster.html">print(<i>&lt;mfrm_clusters&gt;</i>)</a></code> <code><a href="mfrm_cluster.html">summary(<i>&lt;mfrm_clusters&gt;</i>)</a></code>
 
         </dt>
-        <dd>Explore groups defined by external features</dd>
+        <dd>Group mixed external features using Gower distances and PAM</dd>
 
         <dt>
 
@@ -232,7 +232,7 @@
 
       <dl><dt>
 
-          <code><a href="mfrm_response_imputations.html">mfrm_response_imputations()</a></code> <code><a href="mfrm_response_imputations.html">print(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">summary(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code>
+          <code><a href="mfrm_response_imputations.html">review_mfrm_imputations()</a></code> <code><a href="mfrm_response_imputations.html">mfrm_response_imputations()</a></code> <code><a href="mfrm_response_imputations.html">print(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code> <code><a href="mfrm_response_imputations.html">summary(<i>&lt;mfrm_response_imputations&gt;</i>)</a></code>
 
         </dt>
         <dd>Review multiple imputations of scores on assigned ratings</dd>
@@ -455,9 +455,9 @@
         </dt>
         <dd>Review and plot portable fixed-calibration scores</dd>
       </dl></div><div class="section level2">
-      <h2 id="bounded-gpcm-boundary">Bounded GPCM boundary<a class="anchor" aria-label="anchor" href="#bounded-gpcm-boundary"></a></h2>
+      <h2 id="gpcm-slopes-and-model-comparison">GPCM slopes and model comparison<a class="anchor" aria-label="anchor" href="#gpcm-slopes-and-model-comparison"></a></h2>
 
-      <div class="section-desc"><p>Supported, caveated, blocked, and deferred bounded-GPCM routes.</p></div>
+      <div class="section-desc"><p>Relative-slope intervals, model comparisons, and the scope of GPCM workflows.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -473,6 +473,34 @@
 
         <dt>
 
+          <code><a href="confint.mfrm_fit.html">confint(<i>&lt;mfrm_fit&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Approximate confidence intervals and comparisons for GPCM slopes</dd>
+
+        <dt>
+
+          <code><a href="bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm()</a></code> <code><a href="bootstrap_mfrm_gpcm.html">confint(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code> <code><a href="bootstrap_mfrm_gpcm.html">print(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Parametric bootstrap for GPCM slopes or a matched PCM comparison</dd>
+
+        <dt>
+
+          <code><a href="mfrm_curve_intervals.html">mfrm_curve_intervals()</a></code> <code><a href="mfrm_curve_intervals.html">print(<i>&lt;mfrm_curve_intervals&gt;</i>)</a></code> <code><a href="mfrm_curve_intervals.html">plot(<i>&lt;mfrm_curve_intervals&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Uncertainty in GPCM category probabilities and information curves</dd>
+
+        <dt>
+
+          <code><a href="plot.mfrm_slope_intervals.html">plot(<i>&lt;mfrm_slope_intervals&gt;</i>)</a></code> <code><a href="plot.mfrm_slope_intervals.html">plot(<i>&lt;mfrm_gpcm_bootstrap&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Display saved GPCM intervals and bootstrap results</dd>
+
+        <dt>
+
           <code><a href="gpcm_runtime_guard_coverage.html">gpcm_runtime_guard_coverage()</a></code>
 
         </dt>
@@ -483,21 +511,21 @@
           <code><a href="gpcm_score_side_contract.html">gpcm_score_side_contract()</a></code>
 
         </dt>
-        <dd>Bounded GPCM Score-Side Availability</dd>
+        <dd>GPCM Score-Side Availability</dd>
 
         <dt>
 
           <code><a href="build_model_choice_review.html">build_model_choice_review()</a></code>
 
         </dt>
-        <dd>Build a model-choice review across RSM, PCM, and bounded GPCM fits</dd>
+        <dd>Build a model-choice review across RSM, PCM, and GPCM fits</dd>
 
         <dt>
 
           <code><a href="build_weighting_review.html">build_weighting_review()</a></code>
 
         </dt>
-        <dd>Build a weighting-policy review between Rasch-family and bounded GPCM fits</dd>
+        <dd>Build a weighting-policy review between Rasch-family and GPCM fits</dd>
 
         <dt>
 
@@ -771,7 +799,7 @@
       </dl></div><div class="section level2">
       <h2 id="simulation-design-and-recovery">Simulation, design, and recovery<a class="anchor" aria-label="anchor" href="#simulation-design-and-recovery"></a></h2>
 
-      <div class="section-desc"><p>Design review, bounded-GPCM recovery checks, and future-administration scenarios.</p></div>
+      <div class="section-desc"><p>Design review, GPCM recovery checks, and future-administration scenarios.</p></div>
 
       <dl></dl></div><div class="section level2">
 

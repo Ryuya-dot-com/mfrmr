@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot pooled facet estimates or prespecified contrasts</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-plotting-imputed.R" class="external-link"><code>R/api-plotting-imputed.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-plotting-imputed.R" class="external-link"><code>R/api-plotting-imputed.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_pooled.Rd</code></div>
     </div>
 
@@ -57,7 +57,15 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'mfrm_pooled'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, draw <span class="op">=</span> <span class="cn">TRUE</span>, preset <span class="op">=</span> <span class="st">"standard"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  preset <span class="op">=</span> <span class="st">"standard"</span>,</span>
+<span>  title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Pooled"</span>, <span class="va">x</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">facet</span>, <span class="st">"estimates and contrasts"</span><span class="op">)</span>,</span>
+<span>  subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%d imputations | %.0f%% pointwise MI intervals"</span>,</span>
+<span>    <span class="va">x</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">imputations</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">x</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">ci_level</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -76,6 +84,12 @@ opening a graphics device.</p></dd>
 <dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
 <dd><p>A package plotting preset, such as <code>"standard"</code> or
 <code>"monochrome"</code>.</p></dd>
+
+
+<dt id="arg-title-subtitle">title, subtitle<a class="anchor" aria-label="anchor" href="#arg-title-subtitle"></a></dt>
+<dd><p>Optional text; <code>NULL</code> omits it. The default subtitle
+retains a notice when complete-data information is weak. Full cautions
+remain in the returned plot data even with custom or omitted text.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

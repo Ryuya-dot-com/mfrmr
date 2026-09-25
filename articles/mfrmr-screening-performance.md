@@ -26,6 +26,7 @@ This small invented example has two unaffected raters and four planned
 trials:
 
 ``` r
+
 roster <- expand.grid(Condition = "Null", Replicate = 1:4,
                      Target = c("R1", "R2"), stringsAsFactors = FALSE)
 roster$Affected <- FALSE
@@ -56,6 +57,7 @@ leaves it unavailable. Removing it from the roster would incorrectly
 change the intended experiment.
 
 ``` r
+
 plot(performance)
 ```
 
@@ -82,6 +84,7 @@ universal diagnostic threshold. The model allows rater severity
 differences under this null.
 
 ``` r
+
 spec <- build_mfrm_sim_spec(n_person = 60, n_rater = 4, n_criterion = 3,
                            raters_per_person = 2, assignment = "rotating")
 planned <- expand.grid(Condition = "Rotating null", Replicate = 1:6,
@@ -182,6 +185,7 @@ performance; its label does not make it a validated rater cutoff for
 every assessment.
 
 ``` r
+
 bands <- data.frame(
   Profile = c("0.5-1.5", "0.7-1.3", "0.8-1.2", "0.4-1.2"),
   Lower = c(.5, .7, .8, .4), Upper = c(1.5, 1.3, 1.2, 1.2)
@@ -231,6 +235,7 @@ subset(sensitivity$by_family, Targets > 0)
 ```
 
 ``` r
+
 plot(sensitivity, direction = c("underfit", "overfit"))
 ```
 
@@ -241,6 +246,7 @@ qualify screening
 accuracy.](mfrmr-screening-performance_files/figure-html/directional-tiles-1.png)
 
 ``` r
+
 plot(sensitivity, style = "curves", direction = c("underfit", "overfit"))
 ```
 
@@ -275,6 +281,7 @@ ZSTD columns, flags additional ZSTD-only evidence in `ZSTDOnly`, and
 makes the earlier combined rule available explicitly:
 
 ``` r
+
 review <- fit_measures_table(fit, flag_basis = "mnsq")
 combined_review <- fit_measures_table(fit, flag_basis = "mnsq_or_zstd")
 combined_study <- mfrm_screening_sensitivity(planned, observed, bands,
@@ -515,7 +522,7 @@ methods](https://doi.org/10.1002/sim.8086). Rater misfit and
 differential functioning should be distinguished when designing an
 evaluation; see Wind and Guo (2019), [Exploring the Combined Effects of
 Rater Misfit and Differential Rater Functioning in Performance
-Assessments](https://pubmed.ncbi.nlm.nih.gov/31488921/). Incomplete
+Assessments](https://doi.org/10.1177/0013164419834613). Incomplete
 assignments are also part of the design question; see Wind and Jones
 (2019), [The Effects of Incomplete Rating Designs in Combination With
 Rater Effects](https://doi.org/10.1111/jedm.12201).

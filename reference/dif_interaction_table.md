@@ -75,7 +75,7 @@ Object of class `mfrm_dif_interaction` with:
 
 - `summary`: tibble summarizing flagged and sparse cell counts.
 
-- `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
+- `gpcm_boundary`: for `GPCM` fits, a capability-boundary table.
 
 - `config`: list of analysis parameters.
 
@@ -120,8 +120,8 @@ For plot selection and follow-up diagnostics, see
 
 - `$config`: analysis configuration parameters.
 
-- `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
-  marking the table as caveated DFF screening evidence.
+- `$gpcm_boundary`: for `GPCM` fits, a capability-boundary table marking
+  the table as caveated DFF screening evidence.
 
 - `flag_bias` records `|ObsExpAvg| > abs_bias_warn` in score units. It
   does not establish differential functioning. `flag_t` is unavailable.
@@ -132,7 +132,7 @@ For plot selection and follow-up diagnostics, see
 
 ## GPCM boundary
 
-For bounded `GPCM`, the interaction table uses the fitted slope-aware
+For `GPCM`, the interaction table uses the fitted slope-aware
 expected-score/residual scale and should be reported as screening
 evidence, not as a standalone fairness, invariance, or operational
 subgroup decision.

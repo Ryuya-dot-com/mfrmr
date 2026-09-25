@@ -39,7 +39,7 @@ estimation_iteration_report(
 
 ## Value
 
-A named list with iteration-report components and, for bounded `GPCM`, a
+A named list with iteration-report components and, for `GPCM`, a
 `gpcm_boundary` table. Class: `mfrm_iteration_report`.
 
 ## Details
@@ -59,12 +59,12 @@ dispatched through
 
 - optional `PROX` row: pseudo-initial reference point when enabled.
 
-For bounded `GPCM`, this helper replays slope-aware optimization steps
-from a reconstructed starting state. It is not the exact optimizer
-history from the fitted object and is not an additional convergence
-test. Use `summary(fit, profile = "fit", detail = "brief")` for the
-recorded convergence result, and read the returned `gpcm_boundary`
-before reporting the replay.
+For `GPCM`, this helper replays slope-aware optimization steps from a
+reconstructed starting state. It is not the exact optimizer history from
+the fitted object and is not an additional convergence test. Use
+`summary(fit, profile = "fit", detail = "brief")` for the recorded
+convergence result, and read the returned `gpcm_boundary` before
+reporting the replay.
 
 ## Typical workflow
 

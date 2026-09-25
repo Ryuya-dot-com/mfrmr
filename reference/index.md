@@ -60,10 +60,11 @@ Review entity-level external attributes and describe exploratory groups.
   [`print(`*`<mfrm_features>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
   [`summary(`*`<mfrm_features>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)
   : Prepare external features for exploratory grouping
-- [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+- [`mfrm_cluster_pam()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
+  [`mfrm_cluster()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
   [`print(`*`<mfrm_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
   [`summary(`*`<mfrm_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster.md)
-  : Explore groups defined by external features
+  : Group mixed external features using Gower distances and PAM
 - [`mfrm_cluster_hierarchical()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
   [`plot(`*`<mfrm_hierarchical_clusters>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_hierarchical.md)
   : Hierarchical grouping of external features
@@ -93,7 +94,8 @@ Review entity-level external attributes and describe exploratory groups.
 Review response imputations, fit a common MFRM and pool eligible facet
 targets.
 
-- [`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+- [`review_mfrm_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
+  [`mfrm_response_imputations()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
   [`print(`*`<mfrm_response_imputations>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
   [`summary(`*`<mfrm_response_imputations>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_imputations.md)
   : Review multiple imputations of scores on assigned ratings
@@ -211,21 +213,34 @@ calibration artifact.
   [`plot(`*`<mfrm_calibration_score>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
   : Review and plot portable fixed-calibration scores
 
-## Bounded GPCM boundary
+## GPCM slopes and model comparison
 
-Supported, caveated, blocked, and deferred bounded-GPCM routes.
+Relative-slope intervals, model comparisons, and the scope of GPCM
+workflows.
 
 - [`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
   : GPCM Workflow Availability
+- [`confint(`*`<mfrm_fit>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
+  : Approximate confidence intervals and comparisons for GPCM slopes
+- [`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+  [`confint(`*`<mfrm_gpcm_bootstrap>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+  [`print(`*`<mfrm_gpcm_bootstrap>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+  : Parametric bootstrap for GPCM slopes or a matched PCM comparison
+- [`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
+  [`print(`*`<mfrm_curve_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
+  [`plot(`*`<mfrm_curve_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
+  : Uncertainty in GPCM category probabilities and information curves
+- [`plot(`*`<mfrm_slope_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_slope_intervals.md)
+  [`plot(`*`<mfrm_gpcm_bootstrap>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_slope_intervals.md)
+  : Display saved GPCM intervals and bootstrap results
 - [`gpcm_runtime_guard_coverage()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_runtime_guard_coverage.md)
   : Unavailable GPCM Routes and Alternatives
 - [`gpcm_score_side_contract()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_score_side_contract.md)
-  : Bounded GPCM Score-Side Availability
+  : GPCM Score-Side Availability
 - [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
-  : Build a model-choice review across RSM, PCM, and bounded GPCM fits
+  : Build a model-choice review across RSM, PCM, and GPCM fits
 - [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
-  : Build a weighting-policy review between Rasch-family and bounded
-  GPCM fits
+  : Build a weighting-policy review between Rasch-family and GPCM fits
 - [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
   [`gpcm_mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
   : Review MML sensitivity to the quadrature grid
@@ -338,7 +353,7 @@ bundles.
 
 ## Simulation, design, and recovery
 
-Design review, bounded-GPCM recovery checks, and future-administration
+Design review, GPCM recovery checks, and future-administration
 scenarios.
 
 - [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)

@@ -3,11 +3,17 @@
 Supply these completed data from an imputation model; this function checks
 that observed scores, rating assignments and identifiers are preserved.
 No person-by-facet grid is constructed. This function validates supplied
-imputations; it does not choose or fit an imputation model."><meta property="og:description" content="Check several completed versions of a rating table before analyzing them.
+imputations; it does not choose or fit an imputation model.
+Start with review_mfrm_imputations(), then use fit_mfrm_imputed() and
+pool_mfrm_imputed() for eligible fixed-facet analyses. The older name
+mfrm_response_imputations() is retained with its original impute argument."><meta property="og:description" content="Check several completed versions of a rating table before analyzing them.
 Supply these completed data from an imputation model; this function checks
 that observed scores, rating assignments and identifiers are preserved.
 No person-by-facet grid is constructed. This function validates supplied
-imputations; it does not choose or fit an imputation model."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
+imputations; it does not choose or fit an imputation model.
+Start with review_mfrm_imputations(), then use fit_mfrm_imputed() and
+pool_mfrm_imputed() for eligible fixed-facet analyses. The older name
+mfrm_response_imputations() is retained with its original impute argument."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -54,7 +60,7 @@ imputations; it does not choose or fit an imputation model."><meta property="og:
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review multiple imputations of scores on assigned ratings</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/3cd50b89edaee6b949aa6cc02ab82b27c4be6e71/R/api-response-imputation.R" class="external-link"><code>R/api-response-imputation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-response-imputation.R" class="external-link"><code>R/api-response-imputation.R</code></a></small>
       <div class="d-none name"><code>mfrm_response_imputations.Rd</code></div>
     </div>
 
@@ -63,12 +69,29 @@ imputations; it does not choose or fit an imputation model."><meta property="og:
 Supply these completed data from an imputation model; this function checks
 that observed scores, rating assignments and identifiers are preserved.
 No person-by-facet grid is constructed. This function validates supplied
-imputations; it does not choose or fit an imputation model.</p>
+imputations; it does not choose or fit an imputation model.
+Start with <code>review_mfrm_imputations()</code>, then use <code><a href="fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code> and
+<code><a href="pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code> for eligible fixed-facet analyses. The older name
+<code>mfrm_response_imputations()</code> is retained with its original <code>impute</code> argument.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mfrm_response_imputations</span><span class="op">(</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">review_mfrm_imputations</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">completed</span>,</span>
+<span>  <span class="va">person</span>,</span>
+<span>  <span class="va">facets</span>,</span>
+<span>  <span class="va">score</span>,</span>
+<span>  <span class="va">event_id</span>,</span>
+<span>  <span class="va">impute_ids</span>,</span>
+<span>  <span class="va">categories</span>,</span>
+<span>  assigned <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  imputation_model <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"omit"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">mfrm_response_imputations</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">completed</span>,</span>
 <span>  <span class="va">person</span>,</span>
@@ -113,9 +136,11 @@ rating event, including repeated ratings of the same person and facets.</p></dd>
 <dd><p>Nonempty character vector of facet column names.</p></dd>
 
 
-<dt id="arg-impute">impute<a class="anchor" aria-label="anchor" href="#arg-impute"></a></dt>
+<dt id="arg-impute-ids">impute_ids<a class="anchor" aria-label="anchor" href="#arg-impute-ids"></a></dt>
 <dd><p>Character vector of event IDs explicitly selecting missing
-scores on assigned ratings. Observed scores cannot be selected.</p></dd>
+scores on assigned ratings. Observed scores cannot be selected.
+These are values from the <code>event_id</code> column, not a column name or a logical
+switch. For example, <code>c("E2", "E7")</code> selects those two rating events.</p></dd>
 
 
 <dt id="arg-categories">categories<a class="anchor" aria-label="anchor" href="#arg-categories"></a></dt>
@@ -139,13 +164,19 @@ object is retained automatically; omit this argument.</p></dd>
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
 <dd><p>How to handle assigned missing scores not selected by
-<code>impute</code>: <code>"error"</code> (default) or explicit <code>"omit"</code>. Omitted events remain
+<code>impute_ids</code>: <code>"error"</code> (default) or explicit <code>"omit"</code>. Omitted events remain
 in the roster and every completion, with missing scores, and are excluded
 from each analysis. This choice is not a correction for nonresponse.</p></dd>
 
 
+<dt id="arg-impute">impute<a class="anchor" aria-label="anchor" href="#arg-impute"></a></dt>
+<dd><p>Compatibility name for <code>impute_ids</code>, used only by
+<code>mfrm_response_imputations()</code>. Supply one selection, not both argument names.</p></dd>
+
+
 <dt id="arg-x-object">x, object<a class="anchor" aria-label="anchor" href="#arg-x-object"></a></dt>
-<dd><p>An object returned by <code>mfrm_response_imputations()</code>.</p></dd>
+<dd><p>An object returned by <code>review_mfrm_imputations()</code> or its
+compatibility wrapper <code>mfrm_response_imputations()</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -197,6 +228,32 @@ MI does not create additional observed information.</p>
     <div class="dont-index"><p><code><a href="fit_mfrm_imputed.html">fit_mfrm_imputed()</a></code>, <code><a href="pool_mfrm_imputed.html">pool_mfrm_imputed()</a></code>, <code><a href="mfrm_cluster_imputed.html">mfrm_cluster_imputed()</a></code></p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Small supplied completions to illustrate input checks, not a fitted imputer.</span></span></span>
+<span class="r-in"><span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Event <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"E"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"P1"</span>, <span class="st">"P1"</span>, <span class="st">"P2"</span>, <span class="st">"P2"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>, Score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="cn">NA</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">first</span> <span class="op">&lt;-</span> <span class="va">second</span> <span class="op">&lt;-</span> <span class="va">ratings</span></span></span>
+<span class="r-in"><span><span class="va">first</span><span class="op">$</span><span class="va">Score</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span><span class="va">second</span><span class="op">$</span><span class="va">Score</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">2</span></span></span>
+<span class="r-in"><span><span class="va">reviewed</span> <span class="op">&lt;-</span> <span class="fu">review_mfrm_imputations</span><span class="op">(</span><span class="va">ratings</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">first</span>, <span class="va">second</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>, facets <span class="op">=</span> <span class="st">"Rater"</span>, score <span class="op">=</span> <span class="st">"Score"</span>, event_id <span class="op">=</span> <span class="st">"Event"</span>,</span></span>
+<span class="r-in"><span>  impute_ids <span class="op">=</span> <span class="st">"E2"</span>, categories <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  imputation_model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"Illustrative supplied completions"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">reviewed</span><span class="op">$</span><span class="va">events</span>  <span class="co"># Only E2 is imputed; the three observed scores are retained.</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ID Assigned Observed Imputed Omitted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 E1     TRUE     TRUE   FALSE   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 E2     TRUE    FALSE    TRUE   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 E3     TRUE     TRUE   FALSE   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 E4     TRUE     TRUE   FALSE   FALSE</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">reviewed</span><span class="op">)</span>  <span class="co"># Original observed support and imputation counts per level.</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Facet Level Assigned Observed Imputed Omitted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Person    P1        2        1       1       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Person    P2        2        2       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  Rater     A        2        2       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  Rater     B        2        1       1       0</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
