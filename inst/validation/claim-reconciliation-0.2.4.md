@@ -5101,3 +5101,41 @@ documents and this journal; `[skip ci]` avoids another unchanged-source run.
 Preparation notes, tag/source identities, release metadata, downloaded assets
 and checksum verification are retained in
 `validation-results/release-rc6-20260926/`.
+
+## 2026-09-26 — Check rc.6 submission prerequisites and upload to Win-builder
+
+The user asked to continue with the stated URL, reverse-dependency, Windows
+and submission-note preparation. The archive is unchanged from rc.6:
+SHA256 `0f1f21c042512318a3b3c8ffbce246bcdab21db1d3dc2dce2cf5e091c58155e1`,
+6,925,015 bytes. No rebuild, model fit, simulation or full local test run was
+needed for this step.
+
+**URLs and reverse dependencies.** The current official CRAN source index
+contains 25,196 packages and lists mfrmr 0.2.3.1. Reverse Depends, Imports,
+LinkingTo, Suggests and Enhances each have zero entries. This covers that index,
+not private or non-CRAN users. urlchecker reviews 152 URL occurrences and 76
+distinct references in the exact archive, with HTTP-status exclusions disabled;
+there are no reported problems. Seven distinct references are new relative to
+the September 24 submission snapshot, including a README section link whose
+target heading is present. Unchanged DESCRIPTION DOI references retain their
+previous normalized-link evidence. No package link edit was necessary.
+
+**Uploads.** The official HTTPS Win-builder form accepted the same archive for
+R-release at 2026-09-25 17:04:45 UTC and R-devel at 17:05:29 UTC (September 26
+in Japan). Both HTTP 200 responses identify the expected filename and exact
+size. The local receipts bind the submitted file to the archive hash. Each
+version was sent once. These are receipt confirmations, not completed checks;
+current result links/logs remain pending and earlier results are not substituted.
+A narrowly scoped search of connected Gmail found no mfrmr Win-builder result
+messages; the user has been asked to share the current result links when received.
+
+**Submission notes and scope.** cran-comments is shortened to the changes,
+candidate identity, check environments/results, remaining NOTE and pending
+Windows results. The detailed preceding failed-check/repair/reuse history is
+preserved here and in the prior Git version. ROADMAP records received uploads
+and remaining result review. No final-release tag, lifecycle change or CRAN
+submission is performed while current Windows results remain unavailable.
+Only package-excluded records change, so the existing candidate and check
+evidence remain unchanged. Evidence, URL databases, the CRAN index, scripts,
+HTML upload responses and receipt timestamps are retained in
+`validation-results/cran-preflight-20260926/`.

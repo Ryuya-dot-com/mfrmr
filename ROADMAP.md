@@ -56,10 +56,13 @@ statistical accuracy.
 
 Earlier candidates, including rc.5, remain unchanged evaluation snapshots.
 They also report package version `0.2.4`; retain the exact tag or archive checksum
-with saved analyses. Earlier Win-builder checks refer to their uploaded sources,
-not this successor. No new Win-builder upload or CRAN submission accompanies
-rc.6. Candidate publication, a final release decision and CRAN acceptance remain
-separate; successful package checks do not establish general statistical guarantees.
+with saved analyses. Earlier Win-builder checks refer to their uploaded sources.
+The same rc.6 archive has now been received by Win-builder for R-release and
+R-devel; both results are pending. URL review found no problems, and the current
+CRAN index lists no reverse dependencies in the five dependency categories.
+No CRAN submission has been made. Candidate publication, a final release
+decision and CRAN acceptance remain separate; successful package checks do not
+establish general statistical guarantees.
 
 | Workflow | Current position | Role in the planned 0.2.4 |
 | --- | --- | --- |
@@ -255,7 +258,7 @@ Research extensions already excluded from the scope do not hold up these repairs
 | Reconcile changed bootstrap results | Provenance reconciliation and output repair complete (M2/M4) | The original object has 408 admitted / 91 unresolved; the assembled category-case reanalysis has 470 / 29. Seeds and all 62 replaced rows match their retained records. Two later finite repairs remain separate. Reanalysis history now follows print, intervals and report tables. | Neither saved object is a full run of the current estimator. Preserve both unchanged; do not claim 472 accepted or current-procedure bootstrap performance. A complete new bootstrap is needed only to make a corresponding new performance claim; repeated-dataset coverage remains unqualified. |
 | Assessment-to-feedback and planning workflows | Current-source educational walkthrough complete; author integration review (M4) | The 282-rating educational example runs from rubric/assignment review through RSM MML, diagnostics, feedback, figures, report/export and RDS reload. Saved precision now reaches result/report decisions correctly. Existing PCA/group/MI and complete/incomplete D-study outputs retain matching summaries and plot data without refitting. Earlier extended-model evidence is retained. | Preserve the explicit category choice, session-dependent screening explanation and dedicated branch routes during final integration. This is author review, not a novice-reader study, coverage validation or fresh qualification of every model/option. See the assessment-workflow record below. |
 | Current-source help and local archive | Complete locally (M5) | The September 26 archive has executed/replayed updates for three articles, twelve unchanged article outputs, 72 described figures and a verified 15-entry vignette index. The full test findings and focused repairs are reconciled; the final archive passes its applicable checks with one maintainer/update-frequency NOTE. | Preserve the frozen source and its evidence. Any later runtime change needs impact-specific checks; the earlier CI/Windows snapshots do not validate this archive. |
-| Successor CI, Windows and publication | Candidate handoff complete (M6) | `6f541bfa` passes all five CI environments, including Windows/R-release. Matching website deployment and rc.6 assets are verified. | Preserve the checked source/archive identity for the final release decision and any further pre-submission checks. Earlier Win-builder results retain their original source identity. CRAN submission and acceptance remain distinct. |
+| Successor CI, Windows and publication | Candidate handoff complete (M6); submission checks pending | `6f541bfa` passes all five CI environments, including Windows/R-release. Matching website deployment and rc.6 assets are verified. Both Win-builder versions have received the same archive; URL and CRAN reverse-dependency checks are complete. | Review the current R-release/R-devel result logs before the final release/submission decision. Earlier Win-builder results retain their original source identity. CRAN submission and acceptance remain distinct. |
 
 The claim/evidence mapping is now recorded in the
 [retained-claims review](inst/validation/claim-reconciliation-0.2.4.md#2026-09-25--map-retained-claims-to-evidence-and-audit-changed-admissions).
