@@ -146,7 +146,7 @@ test_that("mfrmr_interval_guide maps CI-capable routes and filters scopes", {
   gpcm <- mfrmr_interval_guide("gpcm")
   expect_true(nrow(gpcm) > 0L)
   expect_true(all(grepl("(^|,)gpcm(,|$)", gpcm$Scope)))
-  expect_true(any(grepl("bounded GPCM", gpcm$Notes, fixed = TRUE)))
+  expect_true(any(grepl("GPCM", gpcm$Notes, fixed = TRUE)))
   expect_true(any(gpcm$Route == "Group contrast summary" &
                     gpcm$GPCMStatus == "supported_with_caveat"))
   expect_true(any(gpcm$Route == "Anchor drift forest plot" &

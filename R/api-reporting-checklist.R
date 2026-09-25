@@ -452,7 +452,7 @@ reporting_checklist <- function(fit,
         "ConQuest overlap wording",
         TRUE,
         detail = if (population_is_gpcm_identification) {
-          "An exact probability/coordinate map exists for item-only bounded-GPCM MML and ConQuest scoresfree; multifacet generalized-item equivalence remains unproved and the public external-table bundle does not yet cover GPCM."
+          "An exact probability/coordinate map exists for item-only GPCM MML and ConQuest scoresfree; multifacet generalized-item equivalence remains unproved and the public external-table bundle does not yet cover GPCM."
         } else {
           "Current public external-table overlap is narrow RSM/PCM unidimensional conditional-normal latent regression."
         },

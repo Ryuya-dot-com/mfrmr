@@ -6,7 +6,7 @@ test_that("component selection cannot turn unsupported views into misleading bar
   }, .package = "mfrmr")
   # These tables have enough numeric/label columns for the old generic fallback
   # to draw a bar chart while discarding axes, groups, intervals or denominators.
-  views <- c("pooled_facet_intervals", "facet_interval_methods", "screening_performance",
+  views <- c("pooled_facet_intervals", "screening_performance",
     "multivariate_d_comparison", "d_study", "cluster_silhouette", "cluster_profile",
     "cluster_dendrogram", "cluster_co_membership", "feature_pca_scree",
     "feature_pca_scores", "feature_pca_loadings")

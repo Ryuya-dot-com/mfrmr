@@ -39,7 +39,7 @@ gpcm_score_design_passing_evidence <- function(env) {
   out
 }
 
-test_that("the bounded GPCM score design is complete and never auto-runs", {
+test_that("the GPCM score design is complete and never auto-runs", {
   env <- load_gpcm_score_calibration_design()$env
   contract <- env$mfrmr_gsc_design_contract()
 

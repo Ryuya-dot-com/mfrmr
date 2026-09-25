@@ -6,6 +6,245 @@ with corrections to uncertainty, subgroup comparisons and design planning.
 
 ## Getting started
 
+* Results now reject unsupported prediction attachments before routing interval
+  inputs. An incomplete fit object receives an explanatory input error instead
+  of an internal missing-logical-value error. Valid fitted analyses and their
+  numerical results are unchanged.
+
+* GPCM bootstrap output now preserves recorded selected-refit history in
+  interval cautions, printed output and reporting tables. An assembled
+  reanalysis is no longer displayed as though it were a complete rerun under
+  one procedure. Saved draws, interval values and acceptance decisions are
+  unchanged. The GPCM guide distinguishes the evidence for each inference
+  target and retains the adverse probability-coverage findings; bootstrap
+  coverage and a general finite-sample guarantee remain unestablished.
+
+* The GPCM guide now reports a reanalysis of 800 saved fits for standardized
+  slope differences, category probabilities and per-rating information.
+  Probability intervals showed undercoverage in small incomplete designs,
+  including Bonferroni-adjusted grid families. Refitting all 100 datasets in
+  one affected condition with the updated optimizer left every parameter and
+  interval endpoint unchanged; these are matched reanalyses, not additional
+  independent replications. Curve printing and default figure subtitles now
+  explicitly identify approximate intervals. Help distinguishes numerical
+  availability from nominal coverage and historical fitted estimates from a
+  new evaluation of the current estimator. These findings do not change the
+  interval formulas or remove the APIs.
+
+* Ordinary result summaries and report decisions now use the saved diagnostic
+  precision assessment instead of describing it as unevaluated. Reports also
+  retain that assessment when a separate precision-review section was not
+  requested. Missing assessments remain unreviewed, and a positive assessment
+  cannot override restrictions on the source fit. No estimates, intervals or
+  eligibility rules change.
+  The introductory workflow now uses explicit rubric bounds and
+  `category_policy = "preserve"`, demonstrates reopening saved results, explains
+  session-dependent screening bands, and links rater differences, missing-score
+  imputation, external-feature groups and observed-score G/D planning to their
+  dedicated workflows.
+
+* GPCM curve plots now mark estimates with unavailable intervals using crosses
+  and report their count in a caption. Ribbons stop at unavailable grid points.
+  Long numerical cautions wrap within the default figure. `caption = NULL`
+  removes the caption while retaining markers and saved failure reasons.
+  The plotting guide explains how to use a logarithmic axis for very wide
+  positive slope/ratio intervals; interval calculations are unchanged.
+  Markdown report summaries now retain GPCM interval counts (finite,
+  unbounded and unavailable) and saved inference cautions/reasons, matching
+  the information already retained in result tables.
+
+* MML information calculations now distinguish poor conditioning from an
+  unusable inverse. Positive ill-conditioned information receives two levels of
+  numerical refinement and checks of curvature stability, unregularized
+  inversion and the curvature-scaled gradient. A verified inverse can support
+  GPCM intervals and local IC/bootstrap checks with an explicit caution;
+  failed verification leaves inference unavailable. No eigenvalue floor is
+  used for the accepted inverse. This common MML calculation also applies to
+  RSM/PCM. Weak information can still produce extremely wide or unreliable
+  intervals. Cautions follow slope/curve intervals, plots, tables and reports;
+  bootstrap checks retain refinement diagnostics. The existing information
+  workspace budget also checks the additional refinement allocation.
+
+* Fixed-facet intervals, practical-equivalence analyses and pooled imputation
+  results now retain weak-information cautions when a numerically verified
+  inverse is used. Warnings remain with tables, saved results and plot data;
+  fixed-facet reports also retain the numerical review. Pooling identifies the
+  affected imputations and never discards a failed completion. These warnings
+  do not change point estimates, covariance formulas or eligibility criteria.
+  Pooled plots now accept optional `title` and `subtitle`, including `NULL`;
+  hiding plot text does not remove the saved caution. Quadrature reviews also
+  retain the covariance calculation's explanation alongside its status.
+
+* Small fixed-grid GPCM MML fits now review negative numerical curvature even
+  after a small terminal gradient. Up to three BFGS restarts can rescale the
+  search coordinates to recover a better finite solution; failed recovery
+  retains the original estimate with a numerical warning. The complete stage
+  history records curvature and any review error. This does not regularize the
+  information matrix. Retained solutions undergo separate interval,
+  information-criterion and bootstrap checks. Quadrature accuracy remains a
+  separate requirement.
+
+* GPCM bootstrap checks now retain the population SD and the minimum/maximum
+  population-SD-standardized optimizer slopes, without additional fitting or
+  information calculations. These diagnostics help separate changes in scale,
+  near-zero discrimination and category-support problems. Help explains why
+  stable slopes do not establish finite thresholds or valid Wald intervals.
+  APA check tables preserve small scale, slope, gradient and information
+  values using significant digits, including in HTML/LaTeX table conversion,
+  instead of displaying a small positive value as zero. Raw checks stay numeric.
+  The additional diagnostics do not change replicate admission or certify
+  a boundary solution.
+
+* GPCM bootstrap results now distinguish refit errors from returned estimates
+  withheld by eligibility checks. `trials` records the last stage and which
+  model fits returned; `checks` retains category support, numerical status and
+  already-computed information diagnostics. `refit_draws` saves returned
+  alternative-model parameters for diagnosis, including rejected estimates;
+  these are never substituted for accepted `draws` in confidence intervals.
+  Saved checks connect to APA tables, reports and exports.
+  A confirmed singleton-only category warning no longer excludes a GPCM
+  point estimate from basic slope bootstrapping when the remaining identity,
+  convergence and unregularized-information checks pass. The source fit uses
+  the same rule. `BootstrapEligible` and `WaldEligible` remain separate;
+  cautions persist in intervals, printed output, default plot subtitles and
+  reports. Wald, IC and LRT rules are unchanged. This does not establish
+  finite-sample coverage or admit singular-information estimates.
+
+* Results with attached inference now show complete-result save/reload code
+  in summaries and HTML. This prevents the displayed reproduction route from
+  omitting saved RSM/PCM intervals, GPCM inference or posterior diagnostics.
+  Exported replay continues to reload the saved RDS. Starter export indexes
+  now show saved RSM/PCM and GPCM inference figures with descriptions, keeping
+  their targets separate from ordinary Wright/Pathway uncertainty.
+
+* Saved RSM/PCM fixed-facet intervals now connect to `apa_table()`,
+  `mfrm_results(intervals = ...)`, reports and exports. Named results have
+  `facet_` plot routes. Source matching checks the fitted data, parameters,
+  constraints, population and integration settings; replay reloads saved
+  results without refitting or recomputing covariance. Method, confidence
+  level, contrast coefficients, cluster mapping and unavailable outcomes
+  remain available. `as_ggplot()` supports the same interval comparisons,
+  with line types and offsets as well as color. Titles, subtitles, captions,
+  reference lines and legends are optional; noninteger confidence levels are
+  displayed without rounding to a different level. The estimator and interval
+  calculations are unchanged, and ordinary Wright/Pathway displays retain
+  their own uncertainty and fit meanings.
+
+* Fixed-grid GPCM response-pattern checks now reuse cumulative category
+  probabilities within each rating design and parameter vector. All response
+  patterns, posterior weights and information checks are retained; the point
+  estimator and default interval calculation are unchanged. Adaptive nodes
+  are excluded from this reuse.
+
+* Saved GPCM slope/curve intervals and bootstrap results now connect to
+  `apa_table()`, `mfrm_results(intervals = ...)`, reports and exports.
+  `plot()`, `as_ggplot()` and `plot_data()` preserve the selected target,
+  method, level and multiplicity adjustment. Plots retain unavailable and
+  unbounded outcomes, use non-color cues, and allow titles/annotations to be
+  removed. Named saved results provide matching result-plot routes. Exact
+  fitted-source matching prevents mixing analyses; export replay reloads
+  the saved results without refitting. These displays supplement location
+  and fit diagnostics and do not classify raters or select scoring weights.
+
+* GPCM help now relates the fitted model and inference targets to ConQuest and
+  TAM, including TAM's documented many-facet slope construction. It explains
+  why shared additive rater effects need not match mfrmr's slope-scaled rater
+  effects, and why standardized-slope uncertainty needs a joint covariance
+  transformation. Existing item-only numerical comparisons are distinguished
+  from unverified interval comparisons and public import/export support.
+* `confint(fit, parm = "slopes", level = 0.95)` supplies approximate pointwise
+  relative-slope intervals for eligible GPCM MML solutions. `diagnose_mfrm()`
+  uses the same joint-information log-Wald calculation; attached diagnostics
+  carry its decision into the fit and weighting-review slope tables. Current
+  likelihood, gradient, category, integration and unregularized-information
+  checks replace the blanket interval restriction. Missing bounds retain
+  reasons. The default retains geometric-mean-one relative slopes. Explicit
+  options provide population-SD-standardized slopes, named ratios/differences
+  with Wald tests, Bonferroni adjustment, and Person or larger independent-cluster
+  sandwich covariance. Standardized intervals include scale cross-covariances;
+  sandwich intervals do not repair bias or informative rating assignment.
+* `bootstrap_mfrm_gpcm()` simulates independent Persons and scores under the
+  fitted population on the analyzed assignment. Saved draws support basic
+  bootstrap slope intervals; a matched PCM null instead supplies a bootstrap
+  LRT. Every planned refit, warning and failure remains in the result. Unresolved
+  draws widen interval limits and bound p-values rather than being discarded.
+  Small-sample accuracy and misspecification robustness are not guaranteed.
+* `mfrm_curve_intervals()` supplies logit/log delta intervals for category
+  probabilities and per-rating information at specified ability values. Plots
+  use lines and ribbons, color plus line types, and optional titles/notes.
+  Bonferroni adjustment covers the requested grid, not a continuous band.
+* IC/LRT and slope intervals now share the joint information calculation and
+  a configurable dense-matrix workspace budget, replacing the IC/LRT-specific
+  80-coordinate cutoff. `mml_quadrature_sensitivity()` preserves explicit
+  population formulas, covariates and coding, and reports changes in slope
+  interval endpoints and availability. A workspace estimate is not a total
+  memory or capacity guarantee.
+
+* `compare_mfrm(..., nested = TRUE)` now provides a PCM/GPCM equal-slope
+  likelihood-ratio test for eligible MML pairs. It verifies the same population
+  design, step/facet constraints and interactions, G-1 relative slope contrasts,
+  and regular numerical solutions. The ordinary chi-square reference is
+  asymptotic. Incompatible settings, non-unit weights, unstable solutions and
+  negative likelihood gains retain explicit reasons instead of a p-value.
+  `build_weighting_review(..., nested = TRUE)` carries the same test and status;
+  its default remains `FALSE`. Slope intervals use their own checks.
+* `compare_mfrm()` now separates GPCM MML information-criterion comparison
+  from slope-interval eligibility. It reevaluates the retained likelihood,
+  gradient and unregularized local information, while preserving the existing
+  data, likelihood, parameter-count and integration checks. `ICFitEligible`
+  and `ICFitReview` explain the solution decision; `ICComparable` controls
+  deltas, weights and preferred candidates. Weighting/model-choice reviews
+  retain that decision. These local checks do not prove global optimality or
+  enable slope intervals or establish the nesting required by a likelihood-ratio test.
+* User-facing model names, messages and help now use "GPCM" instead of
+  "bounded GPCM". The single slope/step facet and each unavailable operation
+  are described separately. The GPCM guide distinguishes slope intervals,
+  information-criterion comparison and the PCM/GPCM likelihood-ratio test,
+  including their distinct eligibility conditions. Unidimensionality is not a reason
+  to prohibit these methods, and unit slopes are not a boundary null.
+  The terminology change itself does not alter statistical eligibility.
+* `mfrmr_output_guide("feedback")` now connects rater-feedback questions to
+  fixed-facet intervals, ordinary or extended-model residual review,
+  shared-rater uncertainty and known-truth screening evaluation. Each route
+  identifies its required inputs, follow-up tables/plots and interpretation
+  limits. This adds guidance for existing functions, not a new estimator or
+  a rater-quality classification rule.
+* Installation guidance distinguishes the current source from GitHub rc.5,
+  which predates the new API names. The package description and MML tutorial
+  now state the GPCM slope/step structure and its separate inference limits.
+* GPCM diagnostics no longer treat missing or outdated slope-eligibility
+  records as permission to report ordinary SEs or confidence intervals.
+  Local covariance calculations remain in explicitly named `Optimizer*`
+  diagnostic columns; regularized covariance does not authorize primary
+  slope uncertainty. SE and interval eligibility are checked separately.
+  Re-run `diagnose_mfrm()` or `confint()` on saved fits to refresh these tables;
+  output-specific slope eligibility does not promote global fit readiness.
+* Use `mfrm_cluster_pam()` for Gower/PAM grouping and
+  `review_mfrm_imputations(..., impute_ids = ...)` to check supplied score
+  completions. The older `mfrm_cluster()` and `mfrm_response_imputations()`
+  calls remain supported with their original arguments. Computations and
+  saved-result classes are unchanged; guides, examples and the compatibility
+  table identify the recommended names.
+* `fit_mfrm()`, `describe_mfrm_data()` and `review_mfrm_anchors()` now accept
+  `category_policy = "preserve"` or `"collapse"`. These choices correspond to
+  `keep_original = TRUE` and `FALSE`; the default behavior is unchanged.
+  Conflicting explicit old/new choices stop. A preserved, unobserved internal
+  category still prevents fitting an unsupported step; this option does not
+  estimate missing category information. Saved fits retain the existing replay
+  representation.
+  Data-review overviews and fit settings now report `CategoryPolicy` and
+  `ScoreRecoded`, distinguishing the selected rule from actual recoding.
+  Older saved results with missing records report an unknown policy or mapping
+  rather than infer the choice from the observed categories.
+* Fitting help groups arguments by data, rubric, model, computation and output.
+  GPCM availability guidance separates its one-facet slope/step structure
+  from limits on formal uncertainty and model comparison, without changing
+  estimation or statistical eligibility.
+* The GPCM tutorial and comparison help describe the separate checks for
+  information-criterion ranking, the matched PCM/GPCM likelihood-ratio test
+  and relative-slope intervals. A larger quadrature grid alone does not
+  qualify any of these outputs. The weighting-review examples retain the
+  corresponding output-specific decisions.
 * Linking, reporting, workflow and visual-diagnostic tutorial figures now have
   descriptive alternative text, including both response-time views. Source
   archives include executed output and figures for all fifteen tutorials.
@@ -34,8 +273,7 @@ with corrections to uncertainty, subgroup comparisons and design planning.
   points to `score_mfrm_persons()` for people already in the fitted model and
   distinguishes the model-specific meanings of `predict()`.
 * Help introductions clarify which functions review supplied imputations,
-  evaluate simulations, summarize attributes or plan G/D studies. API names,
-  arguments and numerical methods are unchanged. The beginner output guide
+  evaluate simulations, summarize attributes or plan G/D studies. The beginner output guide
   uses plainer questions and no longer describes a particular plot as mandatory.
 
 ## Design decisions and saved output
@@ -897,8 +1135,7 @@ and action needed for each affected workflow.
 
 * Weighting and model-choice summaries distinguish numerical convergence from
   eligibility for inference and explain restrictions in plain language.
-  Free-slope GPCM ranking and the PCM-versus-GPCM chi-square LRT remain
-  unavailable. Rebuild saved reviews from the existing fits to obtain the
+  GPCM ranking and PCM/GPCM tests now use separate eligibility checks. Rebuild saved reviews from the existing fits to obtain the
   revised explanations; older saved reviews request this recreation instead of
   displaying outdated guidance. Machine-readable status fields remain in the
   returned objects.
@@ -934,8 +1171,8 @@ and action needed for each affected workflow.
   inference. JML guidance no longer implies that changing to MML alone makes
   uncertainty valid. Model comparisons explain withheld rankings and tests in
   plain language, with detailed status codes retained in the returned tables.
-  Free-slope GPCM rankings and PCM-versus-GPCM likelihood-ratio tests remain
-  unavailable.
+  GPCM rankings and PCM/GPCM tests use the separate comparison checks
+  described above.
 
 * Residual comparisons from `analyze_dff()` / `analyze_dif()` now report group
   differences in observed-minus-expected scores without SEs, p-values,

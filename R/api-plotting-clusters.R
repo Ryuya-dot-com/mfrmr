@@ -3,7 +3,7 @@
 #' Inspect within-sample separation, individual feature profiles, or pairwise
 #' co-membership across imputations using existing clustering results.
 #'
-#' @param x An object returned by [mfrm_cluster()], [mfrm_cluster_kmeans()] or
+#' @param x An object returned by [mfrm_cluster_pam()], [mfrm_cluster_kmeans()] or
 #'   [mfrm_cluster_imputed()], as appropriate.
 #' @param type For a single partition, `"silhouette"` or `"profile"`.
 #' @param feature A single selected feature name, required for `type = "profile"`.
@@ -44,13 +44,13 @@
 #' clustering is performed. PAM is nonhierarchical and these plots do not
 #' provide a dendrogram. Use [mfrm_cluster_hierarchical()] for a separate
 #' hierarchical analysis and its dendrogram.
-#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
+#' @seealso [mfrm_cluster_pam()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
 #'   raters <- data.frame(Rater = paste0("R", 1:6),
 #'     ExperienceYears = c(1, 2, 3, 12, 13, 14),
 #'     Specialty = factor(rep(c("Language", "Science"), each = 3)))
-#'   groups <- mfrm_cluster(mfrm_features(raters, "Rater",
+#'   groups <- mfrm_cluster_pam(mfrm_features(raters, "Rater",
 #'     c("ExperienceYears", "Specialty")), k = 2)
 #'   plot(groups)
 #'   plot(groups, type = "profile", feature = "ExperienceYears")

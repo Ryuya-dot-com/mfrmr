@@ -168,7 +168,7 @@ partial credit model and generalized partial credit model}.
 Educational and Psychological Measurement, 83(5), 953-983.
 \doi{10.1177/00131644221116292} (Recent simulation evidence on
 PCM- and GPCM-based rating-scale diagnostics; useful for
-interpreting the \code{summary(t8)$summary} flags in the bounded
+interpreting the \code{summary(t8)$summary} flags in the
 \code{GPCM} route.)
 }
 }

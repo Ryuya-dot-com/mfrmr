@@ -46,7 +46,7 @@ returns descriptive group differences without tests or binary classifications.
 \item \verb{$large_dif}: an empty compatibility table for current refit output, or
 an empty table for residual comparisons. Interaction reports include only
 cells above the requested absolute residual mean threshold, in score units.
-\item \verb{$gpcm_boundary}: for bounded \code{GPCM} inputs, a capability-boundary table
+\item \verb{$gpcm_boundary}: for \code{GPCM} inputs, a capability-boundary table
 marking the narrative as caveated DFF screening output.
 \item \verb{$config}: analysis configuration inherited from the input.
 }
@@ -54,8 +54,8 @@ marking the narrative as caveated DFF screening output.
 
 \section{GPCM boundary}{
 
-If the input comes from a bounded \code{GPCM} fit, the narrative includes a
-bounded-\code{GPCM} note and the returned report carries \code{gpcm_boundary}.
+If the input comes from a \code{GPCM} fit, the narrative includes a
+\code{GPCM} note and the returned report carries \code{gpcm_boundary}.
 Treat the text as slope-aware screening/reporting support, not as a
 standalone fairness, invariance, or operational subgroup decision.
 }

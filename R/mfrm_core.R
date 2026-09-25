@@ -421,7 +421,7 @@ gpcm_capability_boundary_table <- function(fit = NULL,
 gpcm_fair_average_rationale <- function() {
   paste0(
     "The diagnostics/QC dashboard keeps the embedded fair-average panel ",
-    "disabled for bounded `GPCM` fits so it does not present score-side ",
+    "disabled for `GPCM` fits so it does not present score-side ",
     "adjustments as a FACETS-equivalent reporting surface. ",
     "Use `fair_average_table()` directly for the supported slope-aware ",
     "element-conditional GPCM fair averages, and keep its documented SE ",
@@ -2515,7 +2515,9 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
       grad_interaction_free <- grad_interaction_free +
         compute_interaction_gradient_free(w_residual, idx, config)
 
-      step_resid <- (compute_P_geq(probs_q) - I_geq) * slope_obs * obs_post_q
+      p_geq_q <- if (is.null(logprob_bundle$p_geq_list)) compute_P_geq(probs_q) else
+        logprob_bundle$p_geq_list[[q]]
+      step_resid <- (p_geq_q - I_geq) * slope_obs * obs_post_q
       if (!is.null(weight)) step_resid <- step_resid * weight
       rs_step <- rowsum(step_resid, idx$step_idx, reorder = FALSE)
       rs_ids <- as.integer(rownames(rs_step))
@@ -2768,7 +2770,7 @@ resolve_step_and_slope_facets <- function(model,
   }
 
   if (identical(model, "GPCM") && is.null(step_facet)) {
-    stop("The current bounded `GPCM` branch requires an explicit `step_facet`.",
+    stop("The current `GPCM` branch requires an explicit `step_facet`.",
          call. = FALSE)
   }
 
@@ -2830,7 +2832,7 @@ resolve_step_and_slope_facets <- function(model,
          "Supply a valid facet name.", call. = FALSE)
   }
   if (!identical(resolved_step, resolved_slope)) {
-    stop("The current bounded `GPCM` branch requires `slope_facet == step_facet`.",
+    stop("The current `GPCM` branch requires `slope_facet == step_facet`.",
          call. = FALSE)
   }
 
@@ -4280,7 +4282,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     stop(
       "`facet_interactions` currently supports only `model = \"RSM\"` or ",
       "`model = \"PCM\"`. Re-fit without interactions or use a Rasch-family ",
-      "model before extending the bounded `GPCM` branch.",
+      "model before extending the `GPCM` branch.",
       call. = FALSE
     )
   }
@@ -6101,7 +6103,7 @@ expected_score_from_eta <- function(eta, step_cum, rating_min) {
 # to `expected_score_from_eta()` when `slope == 1` (the PCM/RSM special
 # case). Degenerate or non-finite slopes return `NA` rather than falling back
 # to the PCM/RSM special case, because a silent slope reset can hide a broken
-# bounded-GPCM fit object.
+# GPCM fit object.
 expected_score_from_eta_gpcm <- function(eta, step_cum, slope, rating_min) {
   if (!is.finite(eta) || length(step_cum) == 0) return(NA_real_)
   if (!is.finite(slope) || slope <= 0) return(NA_real_)
@@ -6945,10 +6947,12 @@ add_gpcm_scorefile_delta_se <- function(scorefile,
   }
   detail <- paste(
     "Propagates structural covariance of facet, step, and slope parameters",
-    "to the bounded-GPCM expected score; MML person EAP estimates are",
+    "to the GPCM expected score; MML person EAP estimates are",
     "conditioned on rather than included in the Hessian. This is not a",
     "FACETS-style score-side standard error."
   )
+  caution <- mfrm_mml_information_caution(covariance)
+  if (length(caution)) detail <- paste(detail, paste(caution, collapse = " "))
 
   scorefile$ExpectedScoreSE <- se
   scorefile$ExpectedScoreCI_Lower <- expected_lower
@@ -7207,6 +7211,8 @@ add_gpcm_fair_average_delta_se <- function(raw_tbls,
     "parameters; MML person EAP estimates are conditioned on rather than",
     "included in the Hessian."
   )
+  caution <- mfrm_mml_information_caution(covariance)
+  if (length(caution)) se_detail <- paste(se_detail, paste(caution, collapse = " "))
 
   compute_one <- function(facet, level, estimate, metric) {
     if (!is.finite(estimate)) {
@@ -7458,7 +7464,7 @@ compute_mml_expected_category_diagnostics <- function(res,
   if (!model %in% c("RSM", "PCM", "GPCM")) {
     return(list(
       available = FALSE,
-      reason = "Strict marginal diagnostics are currently implemented only for RSM, PCM, and bounded GPCM."
+      reason = "Strict marginal diagnostics are currently implemented only for RSM, PCM, and GPCM."
     ))
   }
 
@@ -9333,6 +9339,61 @@ invert_information_matrix <- function(info_mat) {
   )
 }
 
+# Review an ill-conditioned positive Hessian without flooring its eigenvalues.
+# Two Richardson levels separate finite-difference truncation from weak local
+# information. Stability is assessed in the curvature metric, not entrywise.
+mfrm_refine_mml_information <- function(par, fn, gr, hessian) {
+  summary <- data.frame(Verified = FALSE, RelativeChange = NA_real_,
+    InverseResidual = NA_real_, CurvatureScaledGradient = NA_real_,
+    Detail = "Information refinement did not complete.")
+  refined <- hessian
+  result <- tryCatch({
+    h1 <- stats::optimHess(par, fn, gr, control = list(ndeps = rep(1e-4, length(par))))
+    h2 <- stats::optimHess(par, fn, gr, control = list(ndeps = rep(1e-5, length(par))))
+    coarse <- symmetrize_matrix((100 * h1 - hessian) / 99)
+    refined <- symmetrize_matrix((100 * h2 - h1) / 99)
+    if (!all(is.finite(c(coarse, refined)))) stop("Refined information was nonfinite.")
+    # Neither pivoting nor an eigenvalue floor may turn indefinite information
+    # into an accepted inverse.
+    coarse_root <- tryCatch(chol(coarse), error = function(e) NULL)
+    root <- tryCatch(chol(refined), error = function(e) NULL)
+    if (is.null(coarse_root) || is.null(root)) stop("Refined information is not consistently positive definite.")
+    inverse_root <- backsolve(root, diag(length(par)))
+    summary$RelativeChange <- norm(crossprod(inverse_root,
+      (refined - coarse) %*% inverse_root), "2")
+    covariance <- chol2inv(root)
+    residual <- refined %*% covariance - diag(length(par))
+    summary$InverseResidual <- max(norm(residual, "I"), norm(residual, "1"))
+    summary$CurvatureScaledGradient <- sqrt(sum(forwardsolve(t(root), gr(par))^2))
+    summary$Verified <- all(is.finite(unlist(summary[2:4]))) &&
+      summary$RelativeChange <= 1e-3 && summary$InverseResidual <= 1e-6 &&
+      summary$CurvatureScaledGradient <= 1e-4 && all(is.finite(covariance))
+    summary$Detail <- if (summary$Verified) {
+      paste("Ill-conditioned information: an unregularized inverse passed numerical",
+        "refinement, inversion and scaled-gradient checks. Weak information can",
+        "still make Wald intervals unreliable; review interval width, boundary",
+        "proximity and quadrature sensitivity.")
+    } else {
+      "Ill-conditioned information did not pass refinement, inversion or scaled-gradient checks; ordinary inference remains unavailable."
+    }
+    if (summary$Verified) covariance else NULL
+  }, error = function(e) {
+    summary$Detail <<- paste("Information refinement failed:", conditionMessage(e),
+      "Ordinary inference remains unavailable.")
+    NULL
+  })
+  list(cov = result, hessian = refined, review = summary)
+}
+
+# Consumers preserve this caution without re-running numerical refinement.
+mfrm_mml_information_caution <- function(information) {
+  review <- information$solution_information$inverse_review
+  if (identical(information$status, "ok") && isTRUE(review$Verified)) {
+    return(review$Detail)
+  }
+  character()
+}
+
 compute_mml_parameter_covariance <- function(res) {
   method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
   if (!identical(method, "MML")) {
@@ -9364,6 +9425,24 @@ compute_mml_parameter_covariance <- function(res) {
 
   config <- res$config
   sizes <- build_param_sizes(config)
+  p <- sum(unlist(sizes))
+  budget <- getOption("mfrmr.max_information_bytes", 256 * 1024^2)
+  if (!is.numeric(budget) || is.complex(budget) || length(budget) != 1L || !is.finite(budget) || budget <= 0) {
+    stop("Option mfrmr.max_information_bytes must be one finite positive byte count.", call. = FALSE)
+  }
+  # Allow eight dense p-by-p matrices for Hessian/inversion workspace. The
+  # likelihood data and quadrature allocation are additional, not covered here.
+  workspace <- 8 * 8 * as.double(p)^2
+  if (workspace > budget || length(res$opt$par) != p || any(!is.finite(res$opt$par))) {
+    return(list(cov = NULL, hessian = NULL, sizes = sizes,
+      param_slices = build_param_slices(sizes), status = "unavailable",
+      regularized = FALSE, rank = 0L,
+      detail = if (workspace > budget) paste0("Joint-information matrix workspace estimate (",
+        format(workspace, scientific = FALSE), " bytes) exceeds option mfrmr.max_information_bytes (",
+        format(budget, scientific = FALSE), " bytes). No matrix was allocated.") else
+        "The retained parameter vector is non-finite or has the wrong dimension."))
+  }
+
   idx <- build_indices(res$prep, step_facet = config$step_facet,
                        slope_facet = config$slope_facet,
                        interaction_specs = config$interaction_specs)
@@ -9413,21 +9492,62 @@ compute_mml_parameter_covariance <- function(res) {
   }
 
   inv_info <- invert_information_matrix(hess)
+  inverse_review <- NULL
+  if (isTRUE(inv_info$regularized) &&
+      isTRUE(min(eigen(symmetrize_matrix(hess), symmetric = TRUE,
+                      only.values = TRUE)$values) > 0)) {
+    # Refinement retains several Hessians and factorization workspaces. Apply
+    # the same user budget before these additional dense allocations.
+    refinement_workspace <- 20 * 8 * as.double(p)^2
+    if (refinement_workspace > budget) {
+      refined <- list(cov = NULL, hessian = hess,
+        review = data.frame(Verified = FALSE, RelativeChange = NA_real_,
+          InverseResidual = NA_real_, CurvatureScaledGradient = NA_real_,
+          Detail = paste0("Information refinement workspace estimate (",
+            format(refinement_workspace, scientific = FALSE),
+            " bytes) exceeds option mfrmr.max_information_bytes (",
+            format(budget, scientific = FALSE), " bytes). Ordinary inference remains unavailable.")))
+    } else {
+      refined <- mfrm_refine_mml_information(res$opt$par,
+        function(p) fn(p, idx, config, sizes, quad),
+        function(p) gr(p, idx, config, sizes, quad), hess)
+    }
+    hess <- refined$hessian
+    inverse_review <- refined$review
+    inv_info <- list(cov = refined$cov, regularized = FALSE,
+      rank = if (isTRUE(inverse_review$Verified)) length(res$opt$par) else 0L)
+  }
+
+  # Reuse this freshly evaluated full joint Hessian for output-specific
+  # qualification; no second differentiation or optimizer run is needed.
+  solution_information <- tryCatch({
+    eig <- eigen(symmetrize_matrix(hess), symmetric = TRUE, only.values = TRUE)$values
+    list(status = "evaluated_diagnostic_only", free_dimension = length(res$opt$par),
+      inverse_review = inverse_review,
+      evaluation_summary = data.frame(
+        ReevaluatedObjective = fn(res$opt$par, idx, config, sizes, quad),
+        GradientMaxAbs = max(abs(gr(res$opt$par, idx, config, sizes, quad)))),
+      eigenvalue_summary = data.frame(Smallest = min(eig), AbsoluteScale = max(abs(eig))))
+  }, error = function(e) list(status = "unavailable", detail = conditionMessage(e)))
+
   cov_free <- inv_info$cov
   if (is.null(cov_free)) {
     return(list(
       cov = NULL,
       hessian = hess,
+      solution_information = solution_information,
       sizes = sizes,
       param_slices = build_param_slices(sizes),
       status = "fallback",
-      detail = "Observed-information matrix could not be inverted; covariance was not computed.",
+      detail = inverse_review$Detail %||% "Observed-information matrix could not be inverted; covariance was not computed.",
       regularized = FALSE,
       rank = inv_info$rank
     ))
   }
 
-  detail <- if (isTRUE(inv_info$regularized)) {
+  detail <- if (isTRUE(inverse_review$Verified)) {
+    inverse_review$Detail
+  } else if (isTRUE(inv_info$regularized)) {
     "MML parameter covariance uses the observed information of the marginal log-likelihood; a near-singular Hessian was regularized during inversion."
   } else {
     "MML parameter covariance uses the observed information of the marginal log-likelihood."
@@ -9435,6 +9555,7 @@ compute_mml_parameter_covariance <- function(res) {
 
   list(
     cov = cov_free,
+    solution_information = solution_information,
     hessian = hess,
     sizes = sizes,
     param_slices = build_param_slices(sizes),
@@ -9498,6 +9619,9 @@ compute_mml_facet_model_se <- function(res, covariance = NULL) {
   } else {
     "MML facet ModelSE values use the observed information of the marginal log-likelihood."
   }
+  if (isTRUE(covariance$solution_information$inverse_review$Verified)) {
+    detail <- paste(detail, covariance$solution_information$inverse_review$Detail)
+  }
 
   list(
     table = facet_tbl,
@@ -9511,6 +9635,21 @@ compute_mml_structural_parameter_se <- function(res,
                                                 ci_level = 0.95) {
   step_tbl <- as.data.frame(res$steps %||% tibble(), stringsAsFactors = FALSE)
   slope_tbl <- as.data.frame(res$slopes %||% tibble(), stringsAsFactors = FALSE)
+  if (identical(res$config$model, "GPCM") && identical(res$config$method, "MML") && nrow(slope_tbl)) {
+    # A prior diagnostic run must not leave primary values after a failed recheck.
+    slope_tbl$PrimaryEstimate <- slope_tbl$PrimaryEstimate %||% rep(NA_real_, nrow(slope_tbl))
+    slope_tbl$PrimaryLogEstimate <- slope_tbl$PrimaryLogEstimate %||% rep(NA_real_, nrow(slope_tbl))
+    slope_tbl$ParameterStatus <- slope_tbl$ParameterStatus %||% rep("not_evaluated", nrow(slope_tbl))
+    slope_tbl$PrimaryEstimateBasis <- slope_tbl$PrimaryEstimateBasis %||%
+      rep("no_primary_value_applicable_audit_incomplete", nrow(slope_tbl))
+    previous <- slope_tbl$ParameterStatus %in% "finite_local_solution"
+    slope_tbl$PrimaryEstimate[previous] <- slope_tbl$PrimaryLogEstimate[previous] <- NA_real_
+    slope_tbl$ParameterStatus[previous] <- "not_evaluated"
+    slope_tbl$PrimaryEstimateBasis[previous] <- "no_primary_value_applicable_audit_incomplete"
+    if ("FixedLatentSDPrimaryEstimate" %in% names(slope_tbl)) {
+      slope_tbl$FixedLatentSDPrimaryEstimate[previous] <- NA_real_
+    }
+  }
   covariance <- covariance %||% compute_mml_parameter_covariance(res)
   z <- stats::qnorm((1 + ci_level) / 2)
 
@@ -9531,6 +9670,12 @@ compute_mml_structural_parameter_se <- function(res,
       tbl$LogSE <- NA_real_
       tbl$LogCI_Lower <- NA_real_
       tbl$LogCI_Upper <- NA_real_
+      tbl$SEEligible <- FALSE
+      tbl$CIEligible <- FALSE
+      tbl$UncertaintyEligibility <- "not_eligible_covariance"
+      tbl$CIUse <- "unavailable"
+      tbl$InferenceBasis <- "mml_joint_information_log_wald"
+      tbl$InferenceReview <- covariance$detail
     }
     tbl
   }
@@ -9617,22 +9762,41 @@ compute_mml_structural_parameter_se <- function(res,
     slope_tbl$OptimizerLogCI_Upper <- slope_tbl$LogCI_Upper
     slope_tbl$OptimizerCI_Lower <- slope_tbl$CI_Lower
     slope_tbl$OptimizerCI_Upper <- slope_tbl$CI_Upper
-    uncertainty_eligible <- if ("SEEligible" %in% names(slope_tbl)) {
-      !is.na(slope_tbl$SEEligible) & as.logical(slope_tbl$SEEligible)
-    } else {
-      rep(TRUE, nrow(slope_tbl))
+    check <- mfrm_gpcm_slope_inference_check(res, covariance)
+    uncertainty_eligible <- rep(isTRUE(check$eligible) && identical(status, "ok"), n_slopes) &
+      is.finite(slope_tbl$LogSE) & slope_tbl$LogSE > 0 & is.finite(slope_tbl$SE)
+    interval_eligible <- uncertainty_eligible &
+      is.finite(slope_tbl$CI_Lower) & slope_tbl$CI_Lower > 0 &
+      is.finite(slope_tbl$CI_Upper)
+    slope_tbl$InferenceBasis <- "mml_joint_information_log_wald"
+    slope_tbl$InferenceReview <- check$review
+    slope_tbl$InferenceCaution <- check$caution %||% ""
+    if (isTRUE(check$eligible)) {
+      slope_tbl$InferenceReview[!uncertainty_eligible] <-
+        "The transformed slope SE is non-finite or non-positive; an interval is unavailable."
+      slope_tbl$InferenceReview[uncertainty_eligible & !interval_eligible] <-
+        "The exponentiated interval is not representable with finite positive bounds; an interval is unavailable."
     }
+    slope_tbl$CIUse <- ifelse(interval_eligible, "approximate_pointwise", "unavailable")
     slope_tbl$LogSE[!uncertainty_eligible] <- NA_real_
     slope_tbl$SE[!uncertainty_eligible] <- NA_real_
-    slope_tbl$LogCI_Lower[!uncertainty_eligible] <- NA_real_
-    slope_tbl$LogCI_Upper[!uncertainty_eligible] <- NA_real_
-    slope_tbl$CI_Lower[!uncertainty_eligible] <- NA_real_
-    slope_tbl$CI_Upper[!uncertainty_eligible] <- NA_real_
-    slope_tbl$UncertaintyEligibility <- ifelse(
-      uncertainty_eligible,
-      "eligible",
-      "not_eligible_parameter_readiness"
-    )
+    slope_tbl$LogCI_Lower[!interval_eligible] <- NA_real_
+    slope_tbl$LogCI_Upper[!interval_eligible] <- NA_real_
+    slope_tbl$CI_Lower[!interval_eligible] <- NA_real_
+    slope_tbl$CI_Upper[!interval_eligible] <- NA_real_
+    slope_tbl$SEEligible <- uncertainty_eligible
+    slope_tbl$CIEligible <- interval_eligible
+    if (identical(config$method, "MML")) {
+      slope_tbl$PrimaryEstimate[uncertainty_eligible] <- slope_tbl$Estimate[uncertainty_eligible]
+      slope_tbl$PrimaryLogEstimate[uncertainty_eligible] <- slope_tbl$LogEstimate[uncertainty_eligible]
+      slope_tbl$ParameterStatus[uncertainty_eligible] <- "finite_local_solution"
+      slope_tbl$PrimaryEstimateBasis[uncertainty_eligible] <- "verified_local_mml_solution"
+      if ("PopulationSD" %in% names(slope_tbl)) {
+        slope_tbl$FixedLatentSDPrimaryEstimate <- slope_tbl$PopulationSD * slope_tbl$PrimaryEstimate
+      }
+    }
+    slope_tbl$UncertaintyEligibility <- ifelse(uncertainty_eligible,
+      "eligible", if (identical(status, "ok")) "not_eligible_solution" else "not_eligible_covariance")
     slope_tbl$CI_Level <- ci_level
     slope_tbl$SE_Method <- se_method
     slope_tbl$SE_Status <- status
@@ -10792,11 +10956,9 @@ mfrm_diagnostics <- function(res,
       fit_readiness_record$components %||% data.frame(),
       stringsAsFactors = FALSE
     ),
-    fit_readiness_parameters = as.data.frame(
-      fit_readiness_record$parameters %||%
-        mfrmr_readiness_empty_parameter_table(),
-      stringsAsFactors = FALSE
-    ),
+    fit_readiness_parameters = mfrm_update_slope_readiness_parameters(
+      fit_readiness_record$parameters %||% mfrmr_readiness_empty_parameter_table(),
+      structural_uncertainty$slopes),
     overall_fit = overall_fit,
     measures = measures,
     fit = fit_tbl,

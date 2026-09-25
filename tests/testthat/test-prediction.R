@@ -503,7 +503,7 @@ test_that("predict_mfrm_units supports JML PCM calibrations with custom facet na
   expect_equal(nrow(pv$values), 2)
 })
 
-test_that("predict_mfrm_units supports bounded GPCM fixed-calibration scoring", {
+test_that("predict_mfrm_units supports GPCM fixed-calibration scoring", {
   toy <- load_mfrmr_data("example_core")
   keep_people <- unique(toy$Person)[1:16]
   toy <- toy[toy$Person %in% keep_people, , drop = FALSE]

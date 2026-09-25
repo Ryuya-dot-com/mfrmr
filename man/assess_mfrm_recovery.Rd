@@ -84,7 +84,7 @@ An object of class \code{mfrm_recovery_assessment} with:
 \itemize{
 \item \code{overview}: compact run-level status.
 \item \code{checklist}: reviewer-facing adequacy checks.
-\item \code{condition_review}: generator-condition metadata, including bounded
+\item \code{condition_review}: generator-condition metadata, including
 \code{GPCM} slope-regime interpretation and generated score-category support
 when available.
 \item \code{condition_reporting_notes}: reporter-facing generator-condition caveats
@@ -107,7 +107,7 @@ reviewer-facing adequacy checklist. The goal is not to impose one universal
 pass/fail rule; it is to make the main user questions explicit: Did the runs
 finish? Did the fitted models converge? Are uncertainty summaries available?
 Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
-limits are supplied, which parameter groups need follow-up? For bounded
+limits are supplied, which parameter groups need follow-up? For
 \code{GPCM}, which slope-regime generator condition frames the recovery evidence?
 }
 \details{
@@ -118,7 +118,7 @@ marked \code{not_assessed} and the next action asks the user to set practical
 thresholds when a decision depends on the metric.
 
 The \code{condition_review} table is generator metadata for interpreting the
-recovery run. For bounded \code{GPCM}, \code{GPCMSlopeRegime}, \code{StressLevel}, and
+recovery run. For \code{GPCM}, \code{GPCMSlopeRegime}, \code{StressLevel}, and
 generated score-category support describe the data-generating condition;
 they are not model-fit tests and they are not literature-derived adequacy
 cut points. \code{condition_reporting_notes} turns those generator conditions
@@ -159,7 +159,7 @@ rec <- evaluate_mfrm_recovery(
 )
 assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 
-# Read the bounded-GPCM generator condition separately from recovery adequacy.
+# Read the GPCM generator condition separately from recovery adequacy.
 gpcm_spec <- build_mfrm_sim_spec(
   n_person = 14,
   n_rater = 2,

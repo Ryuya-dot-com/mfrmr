@@ -3253,7 +3253,7 @@ draw_facet_plot <- function(facet_tbl,
 #'   data payload, plus a `notes` table and `display` settings. It also includes
 #'   a one-row `scale_contract` table recording
 #'   the fitted coordinate basis, population SD when applicable,
-#'   discrimination basis, and bounded-GPCM MML identification convention.
+#'   discrimination basis, and GPCM MML identification convention.
 #' @seealso [fit_mfrm()], [plot_wright_unified()], [plot_bubble()],
 #'   [mfrmr_visual_diagnostics]
 #' @concept confidence intervals

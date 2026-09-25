@@ -82,7 +82,7 @@ loglik_pcm <- function(eta, score_k, step_cum_mat, criterion_idx, weight = NULL,
 
 # GPCM log-likelihood: same adjacent-category structure as PCM but with a
 # positive discrimination attached to each designated slope-facet level.
-# For the identified, scope-bounded GPCM parameterization:
+# For the identified, GPCM parameterization:
 #   log(P_k / P_{k-1}) = a_c * (eta - tau_{c,k})
 # so category k has kernel exp(a_c * (k * eta - tau_{c,k}^{cum})).
 loglik_gpcm <- function(eta, score_k, step_cum_mat, criterion_idx, slopes,
@@ -218,7 +218,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
   )
   fourth_central_moment <- as.vector(rowSums(probs * diff_k^4))
   var_k <- ifelse(var_k <= 1e-10, NA_real_, var_k)
-  # For bounded GPCM, the score information with respect to eta is
+  # For GPCM, the score information with respect to eta is
   # a^2 Var(X | eta); PCM/RSM are the a = 1 special case.
   score_information <- ifelse(
     is.finite(var_k) & is.finite(slope_obs),

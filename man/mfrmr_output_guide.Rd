@@ -8,7 +8,7 @@ mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
     "calibration", "simulation", "linking", "network", "response_time", "facets",
-    "conquest", "r", "models", "features", "imputation", "gtheory")
+    "conquest", "r", "models", "features", "imputation", "gtheory", "feedback")
 )
 }
 \arguments{
@@ -19,7 +19,7 @@ beginner-labelled specialist row.
 \code{"entry"} returns the recommended first-screen routes. \code{"viewer"} returns
 local-viewer routes built around \code{mfrm_results(include = ...)}. \code{"binary"}
 returns the two-category person-item Rasch route and checks. Other values
-filter to one output family or to bounded-\code{GPCM}-relevant routes.
+filter to one output family or to \code{GPCM}-relevant routes.
 \code{"linking"} returns anchor, drift, and equating route rows.
 \code{"calibration"} returns the portable fixed-calibration lifecycle and
 artifact-only scoring route.
@@ -27,6 +27,8 @@ artifact-only scoring route.
 \code{"response_time"} returns descriptive response-time QC rows.
 \code{"models"} compares fixed-facet, shared-rater and Person-specific testlet
 workflows, including their distinct prediction and reporting boundaries.
+\code{"feedback"} distinguishes fixed-rater uncertainty, unexpected rating
+patterns, shared-rater uncertainty and screening accuracy with known truth.
 \code{"features"}, \code{"imputation"} and \code{"gtheory"} show exploratory attributes,
 assigned-score multiple imputation and observed-score G/D-study workflows,
 including their own table, plot and saving routes.
@@ -85,6 +87,10 @@ purpose-specific specialist helper.
 Use \code{mfrmr_output_guide("viewer")} when the next step is the optional local
 Shiny reader; it shows which \code{include} preset to use before calling
 \code{\link[=launch_mfrmr_viewer]{launch_mfrmr_viewer()}}.
+Use \code{mfrmr_output_guide("feedback")} when preparing rater feedback. Start
+with the question and the fitted model: severity, response misfit and the
+accuracy of a warning rule are different quantities. A severe rater need
+not misfit, and an observed flag does not establish poor rater quality.
 Use \code{mfrmr_output_guide("psychometric")} for the technical table,
 review, and reporting routes whose interpretation boundaries should be
 checked before manuscript use.
@@ -97,7 +103,7 @@ Read \code{Question} first, then open the help for a function in \code{MainFunct
 Cells containing \code{...} are outlines, not complete scripts to paste and run.
 Use \link{mfrmr_workflow_methods} for a runnable introduction and an explanation
 of function names. Inspect \code{DecisionBoundary} before interpreting a result.
-For bounded \code{GPCM}, use \code{scope = "gpcm"} to find both the support matrix
+For \code{GPCM}, use \code{scope = "gpcm"} to find both the support matrix
 and the table that explains how out-of-scope routes are handled.
 }
 
@@ -108,6 +114,9 @@ beginner[, c("Question", "MainFunction", "NextStep")]
 # Ask for a specialist map only when that question arises.
 linking <- mfrmr_output_guide("linking")
 linking[, c("Question", "MainFunction", "UseWhen")]
+
+feedback <- mfrmr_output_guide("feedback")
+feedback[, c("Question", "MainFunction", "DecisionBoundary")]
 }
 \concept{GPCM boundaries}
 \concept{reporting workflow}

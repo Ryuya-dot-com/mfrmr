@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-advanced.R
 \name{build_model_choice_review}
 \alias{build_model_choice_review}
-\title{Build a model-choice review across RSM, PCM, and bounded GPCM fits}
+\title{Build a model-choice review across RSM, PCM, and GPCM fits}
 \usage{
 build_model_choice_review(
   ...,
@@ -22,7 +22,7 @@ build_model_choice_review(
 model/method combinations.}
 
 \item{run_weighting_review}{Logical. If \code{TRUE} and the supplied fits include
-at least one \code{RSM}/\code{PCM} reference plus one bounded \code{GPCM} fit, also run
+at least one \code{RSM}/\code{PCM} reference plus one \code{GPCM} fit, also run
 \code{\link[=build_weighting_review]{build_weighting_review()}} for the first such pair.}
 
 \item{theta_range, theta_points, top_n}{Passed to \code{\link[=build_weighting_review]{build_weighting_review()}} when
@@ -34,7 +34,7 @@ at least one \code{RSM}/\code{PCM} reference plus one bounded \code{GPCM} fit, a
 An object of class \code{mfrm_model_choice_review}.
 }
 \description{
-Build a model-choice review across RSM, PCM, and bounded GPCM fits
+Build a model-choice review across RSM, PCM, and GPCM fits
 }
 \details{
 \code{build_model_choice_review()} is a user-facing synthesis helper. It does not
@@ -44,16 +44,16 @@ estimate new models. It bundles:
 comparison;
 \item comparison-boundary warnings captured from \code{\link[=compare_mfrm]{compare_mfrm()}} and retained
 in \code{comparison_warnings} for printing and appendix export;
-\item model-role guidance for \code{RSM}, \code{PCM}, and bounded \code{GPCM};
+\item model-role guidance for \code{RSM}, \code{PCM}, and \code{GPCM};
 \item reported step/slope coordinate counts, identified free-parameter counts,
 and the stored fit-readiness decision for every supplied model;
 \item downstream-route availability for APA output, score-side export, linking,
 recovery, fair averages, bias screening, and summary-appendix handoff;
-\item report wording templates that avoid treating better bounded-\code{GPCM} fit as
+\item report wording templates that avoid treating better \code{GPCM} fit as
 an automatic operational-scoring decision;
-\item \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when bounded \code{GPCM} is present;
+\item \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when \code{GPCM} is present;
 \item optionally, \code{\link[=build_weighting_review]{build_weighting_review()}} for the first Rasch-family reference
-versus bounded-\code{GPCM} pair.
+versus \code{GPCM} pair.
 }
 
 The word "bounded" describes the documented model and workflow scope: the

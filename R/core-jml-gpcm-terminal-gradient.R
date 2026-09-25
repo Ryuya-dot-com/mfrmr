@@ -514,7 +514,7 @@ audit_mfrm_jml_gpcm_terminal_gradient <- function(
       "retained_point_gradient_small_boundary_open", TRUE,
       paste(
         "The retained-point gradient is within the implementation tolerance,",
-        "but the bounded GPCM path-family classification is incomplete or",
+        "but the GPCM boundary-path classification is incomplete or",
         "has a mismatched identity."
       ),
       "retained_point_gradient_small_boundary_classification_open"
@@ -525,7 +525,7 @@ audit_mfrm_jml_gpcm_terminal_gradient <- function(
     paste(
       "The code-zero retained optimizer point has a coherent analytic",
       "gradient within the existing implementation tolerance, and both",
-      "bounded GPCM path families completed without a positive certificate.",
+      "evaluated GPCM path families completed without a positive certificate.",
       "This is retained-point first-order evidence only."
     ),
     paste(

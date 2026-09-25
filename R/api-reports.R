@@ -1284,7 +1284,7 @@ data_quality_report <- function(fit,
 #' - `summary`: final status and stopping diagnostics.
 #' - optional `PROX` row: pseudo-initial reference point when enabled.
 #'
-#' For bounded `GPCM`, this helper replays slope-aware optimization steps from
+#' For `GPCM`, this helper replays slope-aware optimization steps from
 #' a reconstructed starting state. It is not the exact optimizer history from
 #' the fitted object and is not an additional convergence test. Use
 #' `summary(fit, profile = "fit", detail = "brief")` for the recorded
@@ -1295,7 +1295,7 @@ data_quality_report <- function(fit,
 #' 1. Run `estimation_iteration_report(fit)`.
 #' 2. Inspect plateau/stability patterns in summary/plot.
 #' 3. Adjust optimization settings if convergence looks weak.
-#' @return A named list with iteration-report components and, for bounded
+#' @return A named list with iteration-report components and, for
 #'   `GPCM`, a `gpcm_boundary` table. Class: `mfrm_iteration_report`.
 #' @seealso [fit_mfrm()], [specifications_report()], [data_quality_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
@@ -4404,7 +4404,7 @@ category_structure_report <- function(fit,
 #' @section References:
 #' Category response curves follow Andrich's rating-scale formulation,
 #' Masters' partial-credit model, and Muraki's generalized partial-credit
-#' model. The `Information` column for bounded `GPCM` uses Muraki's
+#' model. The `Information` column for `GPCM` uses Muraki's
 #' item-information result obtained from Samejima's general polytomous
 #' information formula.
 #'
@@ -4881,7 +4881,7 @@ bias_pairwise_report <- function(x,
 #'   `"abs_t_hist"`, or `"facet_profile"`.
 #' @param show_ci Logical. When `TRUE` and `plot` is `"scatter"` or
 #'   `"ranked"`, draw confidence-interval whiskers for `Bias Size`.
-#'   Bounded `GPCM` rows use the conditional profile-likelihood limits
+#'   `GPCM` rows use the conditional profile-likelihood limits
 #'   returned by [estimate_bias()] when available; otherwise the interval
 #'   uses the per-cell standard error from [estimate_bias()]. Ignored for
 #'   `"heatmap"`, `"abs_t_hist"`, and `"facet_profile"`.
@@ -5017,7 +5017,7 @@ plot_bias_interaction <- function(x,
 #' Output text includes residual-PCA screening commentary if PCA diagnostics are
 #' available in `diagnostics`.
 #'
-#' For bounded `GPCM`, this helper returns a caveated partial reporting bundle
+#' For `GPCM`, this helper returns a caveated partial reporting bundle
 #' over supported diagnostics, direct tables, and plots. It also includes a
 #' `gpcm_boundary` table. Treat the output as slope-aware sensitivity-reporting
 #' text, not FACETS score-side equivalence, automatic operational scoring, or
@@ -5207,9 +5207,9 @@ build_apa_outputs <- function(fit,
       fit,
       helper = "build_apa_outputs()",
       extra_areas = c(
-        "Score-side scorefile export under bounded GPCM",
+        "Score-side scorefile export under GPCM",
         "FACETS output-contract score-side review",
-        "Design evaluation and population forecasting under bounded GPCM"
+        "Design evaluation and population forecasting under GPCM"
       )
     ),
     contract = contract
@@ -6939,8 +6939,8 @@ summary_table_bundle_spec <- function(summary_obj) {
         overview = "Run-level recovery adequacy status for the current assessment.",
         reading_order = "Recommended first-read order for recovery assessment summary, condition, plot, and row-level outputs.",
         checklist = "Reviewer-facing adequacy checklist for replication count, convergence, uncertainty, Monte Carlo precision, and practical thresholds.",
-        condition_reporting_notes = "Reporter-facing generator-condition notes for bounded-GPCM slope stress and generated score-category support.",
-        condition_review = "Generator-condition metadata for interpreting recovery evidence, including bounded-GPCM slope-regime labels and generated score-category support when available.",
+        condition_reporting_notes = "Reporter-facing generator-condition notes for GPCM slope stress and generated score-category support.",
+        condition_review = "Generator-condition metadata for interpreting recovery evidence, including GPCM slope-regime labels and generated score-category support when available.",
         diagnostic_reporting_notes = "Reporter-facing fit/separation diagnostic notes that flag caveats without treating them as recovery criteria.",
         diagnostic_review = "Fit/separation operating-characteristic review retained as diagnostic context rather than a recovery criterion.",
         metric_review = "Parameter-group recovery review with threshold status and next-action guidance.",
@@ -7372,7 +7372,7 @@ summary_table_bundle_spec <- function(summary_obj) {
           chain_risks = "Adjacent-link instability rows from the screened equating chain.",
           plot_map = "Routing map to existing plotting helpers for operational follow-up.",
           reporting_map = "Map from operational review outputs to manuscript/reporting companions.",
-          support_status = "Current support contract for RSM/PCM versus bounded GPCM use.",
+          support_status = "Current support contract for RSM/PCM versus GPCM use.",
           next_actions = "Top next-step actions for anchor repair or linking follow-up.",
           notes = "Compact interpretation notes for operational linking review.",
           settings = "Settings and provenance recorded by build_linking_review()."
@@ -7434,7 +7434,7 @@ summary_table_bundle_spec <- function(summary_obj) {
           source_summary = "Counts and maximum priority by source family for the current casebook.",
           plot_map = "Routing map from casebook source families to dedicated follow-up plotting helpers.",
           reporting_map = "Map from operational case review to reporting and appendix companions.",
-          support_status = "Current support contract for Rasch-family versus bounded GPCM case review.",
+          support_status = "Current support contract for Rasch-family versus GPCM case review.",
           key_warnings = "Top warning lines for the current casebook build.",
           next_actions = "Top next-step actions for misfit case follow-up.",
           notes = "Compact interpretation notes for the misfit casebook.",
@@ -7498,8 +7498,8 @@ summary_table_bundle_spec <- function(summary_obj) {
           downstream_routes = "Route-availability table for APA, score-side export, linking, recovery, fair averages, bias screening, and appendix handoff.",
           report_templates = "Cautious model-choice wording templates and phrases to avoid.",
           route_map = "Question-to-helper map for model-choice follow-up.",
-          weighting_review_status = "Whether detailed equal-weighting versus bounded-GPCM weighting review was requested and available.",
-          support_status = "Capability boundary when bounded GPCM is present.",
+          weighting_review_status = "Whether detailed equal-weighting versus GPCM weighting review was requested and available.",
+          support_status = "Capability boundary when GPCM is present.",
           key_warnings = "Top warning lines for model-choice reporting.",
           comparison_warnings = "Comparison-boundary warnings retained from compare_mfrm(), including reasons that automatic ranking was withheld.",
           next_actions = "Recommended next-step actions after model-choice review.",
@@ -7552,14 +7552,14 @@ summary_table_bundle_spec <- function(summary_obj) {
           settings = "estimation_settings"
         ),
         descriptions = c(
-          overview = "Overview of the equal-weighting versus bounded GPCM weighting review.",
+          overview = "Overview of the equal-weighting versus GPCM weighting review.",
           status = "Compact status block for the weighting-policy review.",
           comparison_contract = "Evidence-tier contract separating selectable MML information criteria, descriptive JML reweighting, and non-ready optimizer traces.",
-          top_measure_shifts = "Largest non-person facet-measure shifts between the Rasch-family reference and bounded GPCM.",
-          top_reweighted_levels = "Largest slope-facet reweighting signals under bounded GPCM.",
+          top_measure_shifts = "Largest non-person facet-measure shifts between the Rasch-family reference and GPCM.",
+          top_reweighted_levels = "Largest slope-facet reweighting signals under GPCM.",
           plot_map = "Public plot routes for precision redistribution and comparison follow-up.",
           reporting_map = "Bundle/report handoff map for weighting-policy review outputs.",
-          support_status = "Capability-boundary statement for the bounded GPCM weighting review.",
+          support_status = "Capability-boundary statement for the GPCM weighting review.",
           key_warnings = "Top warning lines for weighting-policy review.",
           next_actions = "Recommended next-step actions after weighting-policy review.",
           notes = "Interpretation notes for the weighting review.",
@@ -7783,7 +7783,7 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #'   documented with the coefficient table.
 #' - model-choice-review summaries expose `comparison_table`,
 #'   `comparison_warnings`, `model_roles`, `downstream_routes`, and
-#'   `report_templates` so RSM/PCM versus bounded `GPCM` comparisons remain
+#'   `report_templates` so RSM/PCM versus `GPCM` comparisons remain
 #'   tied to their same-basis limits, equal-weighting, sensitivity, and
 #'   reporting-boundary roles.
 #'
@@ -7800,7 +7800,7 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #'    diagnostics, read `diagnostic_reporting_notes` before the raw
 #'    `diagnostic_review` or `diagnostic_oc_summary`. Read
 #'    `condition_reporting_notes` before `condition_review` or
-#'    `condition_summary` when bounded `GPCM` generator stress is part of the
+#'    `condition_summary` when `GPCM` generator stress is part of the
 #'    plan.
 #'
 #' @return An object of class `mfrm_summary_table_bundle` with:
@@ -8347,7 +8347,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       "Capability-boundary statement for supported-with-caveat review helpers.",
       "Recommended action-oriented table for repair or follow-up planning.",
       "Interpretation notes; retain mainly in full reporting exports.",
-      "Recommended reweighting-change table for bounded GPCM comparison review.",
+      "Recommended reweighting-change table for GPCM comparison review.",
       "Recommended caveat table for retained zero-count score categories and related score-support warnings.",
       "Recommended fit-level caveat table for score-support, population-model, and other analysis warnings.",
       "Recommended overview table for posterior unit-scoring appendix handoff.",
@@ -8512,7 +8512,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       "Workflow-only route-availability table for model-choice follow-up.",
       "Recommended cautious wording table for model-choice reporting.",
       "Workflow-only question-to-helper map for model-choice review.",
-      "Recommended status table for optional bounded-GPCM weighting review."
+      "Recommended status table for optional GPCM weighting review."
     ),
     stringsAsFactors = FALSE
   )
@@ -9838,7 +9838,8 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #'
 #' @param x A data.frame, `mfrm_fit`, `summary()` output supported by
 #'   [build_summary_table_bundle()], an `mfrm_summary_table_bundle`, diagnostics
-#'   list, or bias-result list.
+#'   list, bias-result list, saved RSM/PCM fixed-facet intervals, or saved
+#'   GPCM slope/curve/bootstrap inference.
 #' @param which Optional table selector when `x` has multiple tables.
 #' @param diagnostics Optional diagnostics from [diagnose_mfrm()] (used when
 #'   `x` is `mfrm_fit` and `which` targets diagnostics tables).
@@ -9869,6 +9870,14 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #'   `"reliability"`, `"facets_chisq"`, `"bias"`, `"interactions"`,
 #'   `"interrater_summary"`, `"interrater_pairs"`, `"obs"`
 #' - For bias-result list: `"table"`, `"summary"`, `"chi_sq"`
+#' - For RSM/PCM fixed-facet intervals: `"intervals"` (default), `"settings"`,
+#'   `"contrasts"`, and `"clusters"` when present. Method, confidence level and
+#'   unavailable reasons remain with the selected estimates and bounds.
+#' - For GPCM inference: `"intervals"` or `"curves"`; bootstrap results also
+#'   retain `"trials"`, `"checks"` and `"source_checks"` when recorded, `"sampling"`, and
+#'   `"availability"` for slope intervals
+#'   or `"test"` for a null-model LRT. Extended results also expose `"settings"`,
+#'   and `"clusters"`/`"contrasts"` when present. Target and method columns are preserved.
 #'
 #' @section Interpreting output:
 #' - `table`: plain data.frame ready for export or further formatting.
@@ -9938,7 +9947,27 @@ apa_table <- function(x,
   }
   summary_bundle_classes <- summary_table_bundle_supported_summary_classes()
 
-  if (inherits(x, "mfrm_summary_table_bundle")) {
+  if (inherits(x, "mfrm_facet_intervals")) {
+    source_type <- "mfrm_facet_intervals"
+    tables <- mfrm_facet_interval_tables(x)
+    if (is.null(which)) which <- "intervals"
+    if (length(which) != 1L || is.na(which) || !which %in% names(tables)) {
+      stop("Choose a fixed-facet table: ", paste(names(tables), collapse = ", "), call. = FALSE)
+    }
+    resolved_which <- which; table_out <- tables[[which]]
+    if (is.null(caption)) caption <- "Fixed-facet uncertainty"
+    if (is.null(note)) note <- "Pointwise normal intervals conditional on the observed facet levels; changing covariance does not correct biased estimates. Fixed and unavailable targets remain present. No rater-quality decision is implied."
+  } else if (inherits(x, c("mfrm_slope_intervals", "mfrm_curve_intervals", "mfrm_gpcm_bootstrap"))) {
+    source_type <- class(x)[1]
+    tables <- mfrm_gpcm_inference_tables(x)
+    if (is.null(which)) which <- names(tables)[1]
+    if (length(which) != 1L || is.na(which) || !which %in% names(tables)) {
+      stop("Choose a GPCM table: ", paste(names(tables), collapse = ", "), call. = FALSE)
+    }
+    resolved_which <- which; table_out <- tables[[which]]
+    if (is.null(caption)) caption <- "GPCM inference"
+    if (is.null(note)) note <- "Approximate inference under the stated target and method; unavailable outcomes remain present. No rater-quality or scoring-weight decision is implied."
+  } else if (inherits(x, "mfrm_summary_table_bundle")) {
     source_type <- "mfrm_summary_table_bundle"
     selected <- resolve_summary_bundle_table_selection(x, which = which)
     resolved_which <- selected$which
@@ -10035,6 +10064,16 @@ apa_table <- function(x,
   }
   table_out <- as.data.frame(table_out, stringsAsFactors = FALSE)
   if (nrow(table_out) > 0) {
+    # Bootstrap diagnostics must distinguish a small positive value from zero,
+    # including after downstream kable decimal formatting. Raw checks stay numeric.
+    if (all(c("BootstrapEligible", "WaldEligible") %in% names(table_out))) {
+      fields <- intersect(c("PopulationSD", "MinimumStandardizedSlope", "MaximumStandardizedSlope",
+        "GradientMaxAbs", "SmallestEigenvalue", "InformationScale", "InformationRelativeChange",
+        "InformationInverseResidual", "InformationScaledGradient"), names(table_out))
+      for (field in fields) if (is.numeric(table_out[[field]])) {
+        table_out[[field]] <- trimws(formatC(table_out[[field]], format = "g", digits = max(1L, digits)))
+      }
+    }
     num_cols <- vapply(table_out, is.numeric, logical(1))
     table_out[num_cols] <- lapply(table_out[num_cols], round, digits = digits)
   }
@@ -10774,7 +10813,7 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
 #' - `max_facet_ranges`: max facet-range snippets shown in visual summaries
 #' - `top_misfit_n`: number of top misfit entries included
 #'
-#' For bounded `GPCM`, this helper returns caveated warning/summary maps over
+#' For `GPCM`, this helper returns caveated warning/summary maps over
 #' supported diagnostics, direct tables, and plots. The returned object includes
 #' `gpcm_boundary` so score-side, design-forecasting, DFF, and linking routes
 #' remain visibly separate capability rows.
@@ -10939,9 +10978,9 @@ build_visual_summaries <- function(fit,
       fit,
       helper = "build_visual_summaries()",
       extra_areas = c(
-        "Score-side scorefile export under bounded GPCM",
+        "Score-side scorefile export under GPCM",
         "FACETS output-contract score-side review",
-        "Design evaluation and population forecasting under bounded GPCM"
+        "Design evaluation and population forecasting under GPCM"
       )
     ),
     branch = branch,
@@ -12431,7 +12470,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
       "Reported precision",
       "Small df",
       "External FACETS fit",
-      "Bounded GPCM"
+      "GPCM"
     ),
     Guidance = c(
       "Compare MnSq values separately from ZSTD values; MnSq differences indicate fit-statistic or estimation differences.",
@@ -12445,7 +12484,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
         "No external FACETS table was supplied; the review reports within-mfrmr engine-vs-FACETS-style standardization only."
       },
       if (identical(model, "GPCM")) {
-        "Bounded GPCM has no direct FACETS free-slope counterpart; read this as a within-mfrmr comparison of engine and FACETS-style df/ZSTD conventions, not external FACETS equivalence."
+        "GPCM has no direct FACETS free-slope counterpart; read this as a within-mfrmr comparison of engine and FACETS-style df/ZSTD conventions, not external FACETS equivalence."
       } else {
         "For RSM/PCM this review supports FACETS comparison, but it still does not prove full software equivalence."
       }
@@ -12557,7 +12596,7 @@ facets_fit_review <- function(fit,
   external_supplied <- !is.null(facets_fit)
   if (identical(model, "GPCM") && isTRUE(external_supplied)) {
     stop(
-      "External FACETS fit comparison is not defined for bounded GPCM, ",
+      "External FACETS fit comparison is not defined for GPCM, ",
       "because FACETS does not estimate the package's free-slope GPCM route. ",
       "Run without `facets_fit` to compare the engine and FACETS-style df/ZSTD conventions within mfrmr.",
       call. = FALSE
@@ -12681,12 +12720,12 @@ facets_fit_review <- function(fit,
 #' establish external validity or software equivalence beyond the specific
 #' schema/metric contract encoded in the contract file.
 #'
-#' @section Bounded GPCM boundary:
-#' This helper is unavailable for bounded `GPCM` fits because the FACETS
+#' @section GPCM boundary:
+#' This helper is unavailable for `GPCM` fits because the FACETS
 #' output contract includes score-side rows whose measure-to-score and
 #' uncertainty semantics are supported for the Rasch-family route, not
-#' for free-discrimination bounded `GPCM`. Use [gpcm_capability_matrix()] before
-#' routing a bounded `GPCM` fit into score-side compatibility-output helpers.
+#' for free-discrimination `GPCM`. Use [gpcm_capability_matrix()] before
+#' routing a `GPCM` fit into score-side compatibility-output helpers.
 #'
 #' Coverage interpretation in `overall`:
 #' - `MeanColumnCoverage` and `MinColumnCoverage` are computed across all
@@ -13276,13 +13315,13 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' - `$large_dif`: an empty compatibility table for current refit output, or
 #'   an empty table for residual comparisons. Interaction reports include only
 #'   cells above the requested absolute residual mean threshold, in score units.
-#' - `$gpcm_boundary`: for bounded `GPCM` inputs, a capability-boundary table
+#' - `$gpcm_boundary`: for `GPCM` inputs, a capability-boundary table
 #'   marking the narrative as caveated DFF screening output.
 #' - `$config`: analysis configuration inherited from the input.
 #'
 #' @section GPCM boundary:
-#' If the input comes from a bounded `GPCM` fit, the narrative includes a
-#' bounded-`GPCM` note and the returned report carries `gpcm_boundary`.
+#' If the input comes from a `GPCM` fit, the narrative includes a
+#' `GPCM` note and the returned report carries `gpcm_boundary`.
 #' Treat the text as slope-aware screening/reporting support, not as a
 #' standalone fairness, invariance, or operational subgroup decision.
 #'
@@ -13412,8 +13451,8 @@ dif_report <- function(dif_result, ...) {
   gpcm_boundary <- dif_result$gpcm_boundary %||% data.frame()
   if (is.data.frame(gpcm_boundary) && nrow(gpcm_boundary) > 0L) {
     lines <- c(lines, paste0(
-      "\nBounded GPCM note: Treat these differential-functioning rows as ",
-      "slope-aware screening evidence under the current bounded-GPCM fit. ",
+      "\nGPCM note: Treat these differential-functioning rows as ",
+      "slope-aware screening evidence under the current GPCM fit. ",
       "They do not by themselves establish fairness, invariance, or an ",
       "operational subgroup decision."
     ))
@@ -13500,8 +13539,8 @@ dif_report <- function(dif_result, ...) {
   gpcm_boundary <- dif_result$gpcm_boundary %||% data.frame()
   if (is.data.frame(gpcm_boundary) && nrow(gpcm_boundary) > 0L) {
     lines <- c(lines, paste0(
-      "\nBounded GPCM note: Treat these interaction-screening rows as ",
-      "slope-aware residual evidence under the current bounded-GPCM fit. ",
+      "\nGPCM note: Treat these interaction-screening rows as ",
+      "slope-aware residual evidence under the current GPCM fit. ",
       "They do not by themselves establish fairness, invariance, or an ",
       "operational subgroup decision."
     ))
@@ -13623,7 +13662,7 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' Individual thresholds can be overridden via the `thresholds` argument
 #' (a named list using entries such as `global_fit_warn` or `reliability_pass`).
 #'
-#' For bounded `GPCM`, this pipeline is available as caveated operational
+#' For `GPCM`, this pipeline is available as caveated operational
 #' triage over supported diagnostics. Its pass/warn/fail labels remain package
 #' QC policy overlays; they are not FACETS score-side equivalence, operational
 #' scoring decisions, design-forecasting evidence, or automatic fairness /
@@ -14352,9 +14391,9 @@ run_qc_pipeline <- function(fit,
       fit,
       helper = "run_qc_pipeline()",
       extra_areas = c(
-        "Score-side scorefile export under bounded GPCM",
+        "Score-side scorefile export under GPCM",
         "FACETS output-contract score-side review",
-        "Design evaluation and population forecasting under bounded GPCM"
+        "Design evaluation and population forecasting under GPCM"
       )
     ),
     config = list(

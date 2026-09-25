@@ -20,7 +20,8 @@ apa_table(
 \arguments{
 \item{x}{A data.frame, \code{mfrm_fit}, \code{summary()} output supported by
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, an \code{mfrm_summary_table_bundle}, diagnostics
-list, or bias-result list.}
+list, bias-result list, saved RSM/PCM fixed-facet intervals, or saved
+GPCM slope/curve/bootstrap inference.}
 
 \item{which}{Optional table selector when \code{x} has multiple tables.}
 
@@ -75,6 +76,14 @@ names listed in \code{build_summary_table_bundle(x)$table_index}
 \code{"reliability"}, \code{"facets_chisq"}, \code{"bias"}, \code{"interactions"},
 \code{"interrater_summary"}, \code{"interrater_pairs"}, \code{"obs"}
 \item For bias-result list: \code{"table"}, \code{"summary"}, \code{"chi_sq"}
+\item For RSM/PCM fixed-facet intervals: \code{"intervals"} (default), \code{"settings"},
+\code{"contrasts"}, and \code{"clusters"} when present. Method, confidence level and
+unavailable reasons remain with the selected estimates and bounds.
+\item For GPCM inference: \code{"intervals"} or \code{"curves"}; bootstrap results also
+retain \code{"trials"}, \code{"checks"} and \code{"source_checks"} when recorded, \code{"sampling"}, and
+\code{"availability"} for slope intervals
+or \code{"test"} for a null-model LRT. Extended results also expose \code{"settings"},
+and \code{"clusters"}/\code{"contrasts"} when present. Target and method columns are preserved.
 }
 }
 \section{Interpreting output}{

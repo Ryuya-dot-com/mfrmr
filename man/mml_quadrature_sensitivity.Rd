@@ -24,7 +24,7 @@ gpcm_mml_quadrature_sensitivity(
 )
 }
 \arguments{
-\item{fit}{An RSM, PCM, or bounded GPCM MML \code{mfrm_fit} returned by
+\item{fit}{An RSM, PCM, or GPCM MML \code{mfrm_fit} returned by
 \code{\link[=fit_mfrm]{fit_mfrm()}}. \code{\link[=gpcm_mml_quadrature_sensitivity]{gpcm_mml_quadrature_sensitivity()}} accepts only GPCM fits.}
 
 \item{data}{The original response data.frame used to create \code{fit}. Prepared
@@ -60,7 +60,9 @@ mode/curvature and computation status. Unavailable rows retain their reason.
 \code{summary()} also supplies a compact \code{quadrature_overview};
 \item \code{runs}: likelihood, gradient, curvature, population-scale, and readiness
 details for each fit;
-\item \code{slopes}: relative-slope estimates and raw diagnostic SEs;
+\item \code{slopes}: relative-slope estimates, raw diagnostic SEs and freshly checked
+95\% model intervals. The summary reports endpoint changes among jointly
+eligible levels and counts changes in interval availability;
 \item \code{conditions}: warnings and messages emitted by the explicit refits;
 \item \code{fits}: the reference and refitted \code{mfrm_fit} objects;
 \item \code{settings} and \code{notes}: the fixed comparison contract and interpretation
@@ -89,6 +91,10 @@ facet interactions and, for GPCM, the complete-predictor slope action.
 Same-Person EAP and posterior-SD changes use each fit's corresponding
 quadrature count. A one-point grid has no public scoring route, so those two
 changes are \code{NA} when it is the reference.
+
+Explicit intercept-only and covariate population models reuse the retained
+person table, factor coding and formula, with design equality checked by Person.
+Older fits without that data cannot be replayed.
 
 Raw slope and population-SD standard errors are computed from each local
 observed-information Hessian for diagnostic comparison only. The public

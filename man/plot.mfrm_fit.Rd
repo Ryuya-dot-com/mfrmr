@@ -192,7 +192,7 @@ includes domain-specific readiness and an interpretation status in its
 data payload, plus a \code{notes} table and \code{display} settings. It also includes
 a one-row \code{scale_contract} table recording
 the fitted coordinate basis, population SD when applicable,
-discrimination basis, and bounded-GPCM MML identification convention.
+discrimination basis, and GPCM MML identification convention.
 }
 \description{
 Plot fitted MFRM results with base R

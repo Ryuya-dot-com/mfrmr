@@ -142,13 +142,13 @@ summary.mfrm_pca <- function(object, ...) object$variance
 #'   No component whitening is performed. The centers of a truncated PCA are
 #'   coordinates in that subspace; `profiles` describe the original attributes.
 #'   Categorical codes must not be converted to numeric solely to pass this
-#'   interface. Use [mfrm_cluster()] for Gower/PAM mixed-feature groups.
+#'   interface. Use [mfrm_cluster_pam()] for Gower/PAM mixed-feature groups.
 #'
 #'   Compare fitted partitions using [mfrm_cluster_compare()]. Silhouettes
 #'   calculated in different geometries are not directly comparable evidence
 #'   of which feature set, scale or component count is correct. Grouping does
 #'   not propagate measurement uncertainty or establish rater quality.
-#' @seealso [mfrm_pca()], [mfrm_cluster()], [mfrm_cluster_imputed()],
+#' @seealso [mfrm_pca()], [mfrm_cluster_pam()], [mfrm_cluster_imputed()],
 #'   [mfrm_cluster_compare()], [plot.mfrm_clusters()], [stats::kmeans()]
 #' @examples
 #' raters <- data.frame(Rater = paste0("R", 1:8),

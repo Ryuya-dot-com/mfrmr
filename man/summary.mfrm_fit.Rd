@@ -195,6 +195,11 @@ records its distribution denominator, exclusion count, and estimate use.
 \item \code{step_overview}: threshold spread and monotonicity checks, reported by
 \code{StepFacet} ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 \item \code{settings_overview}: estimation settings that affect interpretation.
+\code{CategoryPolicy} records \code{"preserve"} or \code{"collapse"}; \code{ScoreRecoded}
+states whether the stored original-to-internal score map changes values.
+A collapse policy need not recode a complete contiguous scale. For older
+saved fits, absent policy or mapping records give \code{"not_recorded"} or \code{NA},
+respectively; an unchanged score map does not identify the chosen policy.
 For MML fits, the printed fit and summary also state the engine, fixed or
 adaptive Gauss--Hermite rule and order, one-dimensional latent
 structure, population identification, and discrimination constraint.
@@ -233,7 +238,7 @@ FACETS is run.
 \code{plot(fit, type = "wright", show_ci = TRUE)}; add the FACETS renderer or
 Infit pathway only when they answer a specific follow-up question.
 \item For \code{RSM} / \code{PCM}, continue with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for element-level fit
-checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]{compute_information()}} /
+checks. For \code{GPCM}, continue with \code{\link[=compute_information]{compute_information()}} /
 \code{\link[=plot_information]{plot_information()}} or the fitted-object posterior scoring helpers.
 }
 }

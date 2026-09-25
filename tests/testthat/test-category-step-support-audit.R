@@ -210,7 +210,7 @@ test_that("unsupported contrast suppresses only its missing internal category", 
   expect_gt(log_likelihood(20), log_likelihood(7))
 })
 
-test_that("bounded GPCM inherits the PCM unsupported-step gate", {
+test_that("GPCM inherits the PCM unsupported-step gate", {
   audit <- .category_support_audit(
     .category_support_data(c2_categories = c(0L, 2L, 3L)),
     model = "GPCM"

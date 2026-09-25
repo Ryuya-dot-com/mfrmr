@@ -70,10 +70,12 @@ An object of class \code{mfrm_diagnostics} including:
 recommended use
 \item \code{precision_review}: package-native checks for SE, CI, and reliability
 \item \code{parameter_uncertainty}: MML observed-information uncertainty for
-structural parameters when available (\code{steps}, and bounded-\code{GPCM}
+structural parameters when available (\code{steps}, and \code{GPCM}
 \code{slopes} on both log and positive scales), plus covariance status metadata.
 Step \code{CIEligible} and \code{CIUse} retain the source fit's restrictions;
-non-unit observation-weight bands are diagnostic only.
+non-unit observation-weight bands are diagnostic only. GPCM MML relative
+slopes use the separate \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} checks and pointwise log-Wald
+approximation; inspect \code{CIEligible}, \code{CIUse} and \code{InferenceReview}.
 \item \code{facet_precision}: facet-level precision summary by distribution basis and
 SE mode
 \item \code{facets_chisq}: fixed/random facet variability summary
@@ -82,14 +84,15 @@ SE mode
 agreement and rater-severity spread indices
 \item \code{unexpected}: unexpected-response bundle
 \item \code{fair_average}: adjusted-score reference bundle (reported as unavailable
-for bounded \code{GPCM})
+for \code{GPCM})
 \item \code{displacement}: displacement diagnostics bundle
 \item \code{approximation_notes}: method notes for SE/CI/reliability summaries
 \item \code{diagnostic_basis}: guide to the statistical target of each diagnostic path
 \item \code{fit_standardization}: guide to the df convention behind fit ZSTD values
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
 \code{fit_readiness_parameters}: the source fit's versioned readiness decision;
-diagnostic computation does not override a blocked or review-only fit
+diagnostic computation does not override global fit readiness. GPCM slope
+parameter rows additionally retain the output-specific interval decision
 \item \code{marginal_fit}: optional strict marginal-fit companion based on
 posterior-expected first-order category counts, with classification coverage
 \item \code{residual_pca_overall}: optional overall PCA object
@@ -143,10 +146,10 @@ the priority.
 without the extra legacy bundle.
 \item \code{"both"}: recommended when you want continuity with the legacy residual
 stack while making the strict marginal path explicit for \code{RSM}, \code{PCM},
-and bounded \code{GPCM} fits.
+and \code{GPCM} fits.
 }
 
-For bounded \code{GPCM}, the same generalized partial credit kernel now
+For \code{GPCM}, the same generalized partial credit kernel now
 drives both the residual/probability tables and the strict marginal
 category-fit companion. Residual-based MnSq summaries should still be read
 as exploratory screening tools rather than strict Rasch-style invariance
@@ -243,7 +246,7 @@ uses model-based \code{ModelSE} values where available; \code{JML} keeps these
 quantities as exploratory approximations.
 \item \code{fit}: element-level misfit scan (\code{Infit}, \code{Outfit}, \code{ZSTD}).
 \item \code{unexpected}, \code{fair_average}, \code{displacement}: targeted QC bundles.
-For bounded \code{GPCM}, \code{fair_average} is retained with an unavailable
+For \code{GPCM}, \code{fair_average} is retained with an unavailable
 status because that compatibility calculation is outside the documented
 generalized-model contract.
 \item \code{approximation_notes}: method notes for SE/CI/reliability summaries.

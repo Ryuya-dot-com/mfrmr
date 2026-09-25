@@ -83,12 +83,29 @@ two models are supplied and the current conservative nesting review passes,
 a likelihood-ratio test is included.
 }
 \details{
+GPCM MML and RSM/PCM MML with an estimated normal population use a separate
+local-solution check for information criteria, without refitting. It checks
+the retained likelihood, terminal gradient and positive unregularized
+observed information. \code{ICFitEligible}, \code{ICFitBasis} and \code{ICFitReview} record
+that decision; \code{ICComparable} also requires the common data/likelihood and
+integration checks. This can allow IC comparison while \code{InferenceReady}
+remains false for intervals or tests. It shares the joint-information
+calculation and workspace budget with \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}. Unknown, unstable or unavailable results
+remain ineligible with a reason. A local check does not prove a global
+maximum or negligible integration error; examine starting-value and
+\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} results when the decision is close.
+Positive but ill-conditioned information may pass with a caution after
+numerical refinement, unregularized inversion and curvature-scaled gradient
+checks. A warning is emitted and retained in \code{ICFitCaution}, \code{ICFitReview}
+and the requested LRT's interpretation; it does not establish
+finite-sample accuracy for model ranking or tests.
+
 Models should be fit to the \strong{same data} (same rows, same person/facet
 columns) for the comparison to be meaningful. The function checks that
 observation counts match and warns otherwise.
 
 Information-criterion ranking is reported only when all candidates are
-inference-ready fits from the package's current \code{MML} contract, use the same
+eligible solutions under the package's current \code{MML} contract, use the same
 prepared observations, score coding, constraints, formula contract, and
 integration-evaluation identity, are eligible under the weighting policy,
 and have a selectable integration tier. For fixed-facet MML,
@@ -122,11 +139,14 @@ contract. Do not use either the LRT or IC ranking as a direct cross-method
 comparison.
 
 In the \strong{current \code{mfrmr} model space}, the automatic nesting review is
-intentionally conservative. It currently supports two fixed-effect
+intentionally conservative. It currently supports the following
 restrictions under shared data and shared constraints:
 \itemize{
 \item \code{RSM} nested inside \code{PCM} when the \code{PCM} fit has an explicit
 \code{step_facet};
+\item \code{PCM} nested inside \code{GPCM} with the same step/slope facet, population
+design, other facet/step constraints and interactions. The only additional
+parameters must be G-1 relative log-slope contrasts for G slope levels;
 \item same-family additive-vs-interaction comparisons when the smaller fit's
 \code{facet_interactions} set is a subset of the larger fit's set.
 }
@@ -141,7 +161,9 @@ estimated-normal design, with the same declared columns and design values
 aligned by Person. Coefficient and variance estimates may differ. Row and
 column permutations are aligned; other recodings, changed designs, and
 unavailable design metadata require separate review. Passing this check
-does not grant inference readiness to an estimated-population fit.
+does not grant inference readiness to an estimated-population fit. For a
+matched PCM/GPCM pair, the local-solution checks described above supply
+the numerical requirement independently of slope-interval availability.
 
 The \strong{likelihood-ratio test (LRT)} is reported only when exactly two
 models are supplied, \code{nested = TRUE}, the structural nesting review passes, and the
@@ -286,13 +308,16 @@ all other structural settings match and the smaller model's
 \code{facet_interactions} set is a subset of the larger model's set.
 \item Do not assume that \code{nested = TRUE} overrides the package's conservative
 nesting boundary; unsupported relations remain unsupported.
-\item PCM is the unit-slope response-kernel reduction of the bounded GPCM when
-both use the same explicit step owner. Nevertheless, the current automatic
-nesting review does not authorize a PCM-versus-GPCM chi-square LRT. Use
-\code{\link[=build_weighting_review]{build_weighting_review()}} for descriptive score and weighting comparisons.
-Free-slope GPCM fits currently lack the inference checks required for IC
-ranking, even under MML. Raw criteria, when available, are diagnostic only;
-\code{PCM_in_GPCM_ic_only} records a structural relation, not permission to rank.
+\item PCM is the unit-slope reduction of an aligned GPCM. \code{nested = TRUE} tests
+equal relative slopes only after population, constraint, free-dimension
+and numerical checks pass. The relation is recorded as \code{PCM_in_GPCM}.
+Default PCM uses a fixed standard-normal population, whereas default GPCM
+estimates its mean and variance: changing only \code{model} does not isolate
+slope differences. Supply \code{population_formula = ~1} and the same
+\code{person_data} to both fits for an estimated-normal comparison.
+Unit slopes are interior positive values; the reference is ordinary
+asymptotic chi-square with G-1 degrees of freedom, not a boundary mixture.
+IC eligibility alone does not establish nesting or qualify slope intervals.
 \item Do not compare models fit to different datasets, different score codings,
 or materially different constraint systems as if they were commensurate.
 \item At large Person counts, a small systematic likelihood gain can dominate an
@@ -347,14 +372,14 @@ using IC or LRT results in reporting.
 \section{Typical workflow}{
 
 \enumerate{
-\item Fit two models with \code{\link[=fit_mfrm]{fit_mfrm()}} (e.g., PCM and bounded GPCM) on the
+\item Fit two models with \code{\link[=fit_mfrm]{fit_mfrm()}} (e.g., PCM and GPCM) on the
 same prepared rows, explicit step owner, constraints, and MML quadrature
 setting. Use at least 31 common quadrature points for selectable ICs.
 \item Compare with \code{compare_mfrm(fit_pcm, fit_gpcm)} and start by checking
 \code{comparison$table$ICComparable}.
 \item Inspect \code{summary(comparison)} for AIC/BIC/SABIC diagnostics and the reasons
-for withholding ranking or tests. Free-slope GPCM rankings and
-PCM-versus-GPCM LRTs are currently withheld.
+for withholding ranking or tests. GPCM IC ranking has separate solution
+checks; request the matched PCM/GPCM test with \code{nested = TRUE}.
 \item Use \code{build_weighting_review(fit_pcm, fit_gpcm)} to inspect which selected
 facet levels and information shares were reweighted by the slopes.
 }
@@ -412,6 +437,8 @@ comparison$table[, c("Label", "AIC", "Delta_AIC", "BIC", "Delta_BIC")]
 # Delta is the difference from the lowest value of that criterion
 # For close or consequential comparisons, check a denser shared grid with
 # mml_quadrature_sensitivity() before choosing a model
+# For a PCM/GPCM equal-slope test, see the matched-population example in
+# vignette("mfrmr-gpcm-scope"); request compare_mfrm(..., nested = TRUE).
 }
 }
 \seealso{

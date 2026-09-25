@@ -75,7 +75,7 @@ The dashboard draws nine QC panels in a 3\eqn{\times}3 grid:\tabular{lll}{
 are available: \code{"strict"}, \code{"standard"} (default), and \code{"lenient"}.
 Use \code{thresholds} to override any profile value with named entries.
 
-For bounded \code{GPCM}, the dashboard now reuses the residual-based
+For \code{GPCM}, the dashboard now reuses the residual-based
 diagnostics stack and marks the fair-average panel unavailable rather
 than silently reusing the Rasch-only compatibility calculation.
 }

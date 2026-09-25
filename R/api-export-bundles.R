@@ -493,7 +493,7 @@ validate_bias_results_input <- function(bias_results,
 #' 4. If you need files on disk, pass the same objects to
 #'    [export_mfrm_bundle()].
 #'
-#' For bounded `GPCM` fits, the manifest is available with an explicit
+#' For `GPCM` fits, the manifest is available with an explicit
 #' `gpcm_boundary` table. It records supported direct diagnostics/reporting
 #' surfaces while keeping full FACETS score-side contract review blocked and
 #' routing design forecasting through its separate caveated capability row.
@@ -930,9 +930,9 @@ build_mfrm_manifest <- function(fit,
       fit,
       helper = "build_mfrm_manifest()",
       extra_areas = c(
-        "Score-side scorefile export under bounded GPCM",
+        "Score-side scorefile export under GPCM",
         "FACETS output-contract score-side review",
-        "Design evaluation and population forecasting under bounded GPCM"
+        "Design evaluation and population forecasting under GPCM"
       )
     ),
     settings = settings
@@ -1160,7 +1160,7 @@ build_mfrm_session_info_table <- function() {
 #' `fit_person_data_file` is supplied, the generated script reads it from that
 #' sidecar CSV relative to the replay script location.
 #'
-#' For bounded `GPCM`, replay scripts are available with an explicit
+#' For `GPCM`, replay scripts are available with an explicit
 #' `gpcm_boundary` table. The generated script records `step_facet` and
 #' `slope_facet` settings, but full FACETS score-side contract review remains
 #' outside this replay contract. Role-based design forecasting is available
@@ -1854,9 +1854,9 @@ build_mfrm_replay_script <- function(fit,
       fit,
       helper = "build_mfrm_replay_script()",
       extra_areas = c(
-        "Score-side scorefile export under bounded GPCM",
+        "Score-side scorefile export under GPCM",
         "FACETS output-contract score-side review",
-        "Design evaluation and population forecasting under bounded GPCM"
+        "Design evaluation and population forecasting under GPCM"
       )
     ),
     anchors = anchor_df,
@@ -4675,10 +4675,10 @@ export_summary_appendix <- function(x,
 #' `*_population_prediction_settings.csv` or ADeMP CSVs; the compact simulation
 #' specification files carry the replay-relevant settings instead.
 #'
-#' For bounded `GPCM`, this exporter is available as a caveated partial bundle
+#' For `GPCM`, this exporter is available as a caveated partial bundle
 #' over supported diagnostics, report text, visual summaries, manifests, and
 #' replay scripts. The returned object and manifest include `gpcm_boundary`.
-#' Package-native bounded-`GPCM` scorefile export is available with caveats,
+#' Package-native `GPCM` scorefile export is available with caveats,
 #' while full FACETS-style score-side contract review and design forecasting
 #' remain outside this bundle contract.
 #'
@@ -5623,9 +5623,9 @@ export_mfrm_bundle <- function(fit,
       fit,
       helper = "export_mfrm_bundle()",
       extra_areas = c(
-        "Score-side scorefile export under bounded GPCM",
+        "Score-side scorefile export under GPCM",
         "FACETS output-contract score-side review",
-        "Design evaluation and population forecasting under bounded GPCM"
+        "Design evaluation and population forecasting under GPCM"
       )
     ),
     settings = settings,

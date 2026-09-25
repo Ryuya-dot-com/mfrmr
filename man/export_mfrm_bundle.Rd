@@ -175,10 +175,10 @@ from scenario-level population predictions are not flattened into
 \verb{*_population_prediction_settings.csv} or ADeMP CSVs; the compact simulation
 specification files carry the replay-relevant settings instead.
 
-For bounded \code{GPCM}, this exporter is available as a caveated partial bundle
+For \code{GPCM}, this exporter is available as a caveated partial bundle
 over supported diagnostics, report text, visual summaries, manifests, and
 replay scripts. The returned object and manifest include \code{gpcm_boundary}.
-Package-native bounded-\code{GPCM} scorefile export is available with caveats,
+Package-native \code{GPCM} scorefile export is available with caveats,
 while full FACETS-style score-side contract review and design forecasting
 remain outside this bundle contract.
 }

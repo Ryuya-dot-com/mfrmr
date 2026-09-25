@@ -107,7 +107,7 @@ criterion level in each design.}
 
 \item{fit_method}{Estimation method passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. Bounded \code{GPCM} is
+\item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. \code{GPCM} is
 supported with caveats as slope-aware signal-detection sensitivity
 evidence.}
 
@@ -119,7 +119,7 @@ When left \code{NULL}, the function inherits the generator step facet from
 \item{slope_facet}{Slope facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when
 \code{model = "GPCM"}. Defaults to the fitted step facet.}
 
-\item{slopes}{Optional bounded-\code{GPCM} slope specification used by direct
+\item{slopes}{Optional \code{GPCM} slope specification used by direct
 simulation calls when \code{sim_spec = NULL}.}
 
 \item{maxit}{Maximum iterations passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
@@ -176,7 +176,7 @@ summaries and plots
 mutable under the current simulation specification
 \item \code{planning_schema}: structured planning metadata bundling the role
 descriptor, scope boundary, and current mutability map
-\item \code{gpcm_boundary}: bounded-\code{GPCM} caveat row when a \code{GPCM} screening route
+\item \code{gpcm_boundary}: \code{GPCM} caveat row when a \code{GPCM} screening route
 is used
 \item \code{settings}: signal-analysis settings
 \item \code{ademp}: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
@@ -204,7 +204,7 @@ effect (\code{bias_effect} logits)
 \item Records whether the injected signals were detected or screen-positive
 }
 
-Bounded-\code{GPCM} runs preserve the current package constraint
+\code{GPCM} runs preserve the current package constraint
 \code{slope_facet == step_facet} within the generator and fitted model. The
 resulting DIF and bias rates are slope-aware screening summaries, not
 formal inferential power, alpha calibration, operational scoring, or

@@ -2,10 +2,13 @@
 % Please edit documentation in R/api-feature-clustering.R
 \name{mfrm_cluster}
 \alias{mfrm_cluster}
+\alias{mfrm_cluster_pam}
 \alias{print.mfrm_clusters}
 \alias{summary.mfrm_clusters}
-\title{Explore groups defined by external features}
+\title{Group mixed external features using Gower distances and PAM}
 \usage{
+mfrm_cluster_pam(x, k, weights = NULL, missing = c("error", "omit"))
+
 mfrm_cluster(x, k, weights = NULL, missing = c("error", "omit"))
 
 \method{print}{mfrm_clusters}(x, ...)
@@ -29,7 +32,7 @@ group membership in the result. No values are imputed.}
 
 \item{...}{Reserved for method compatibility.}
 
-\item{object}{An object returned by \code{\link[=mfrm_cluster]{mfrm_cluster()}}.}
+\item{object}{An object returned by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}.}
 }
 \value{
 An \code{mfrm_clusters} object containing \code{membership} (ID, Cluster,
@@ -41,6 +44,8 @@ resampling stability. \code{summary()} returns the cluster-size/silhouette table
 \description{
 Partition an entity-level feature table using Gower dissimilarities and
 partitioning around medoids (PAM) from the optional \code{cluster} package.
+Use \code{mfrm_cluster_pam()} for this method. \code{mfrm_cluster()} is retained as
+an identical compatibility alias; it does not select an algorithm for you.
 }
 \details{
 Numeric differences are divided by the feature range among included
@@ -74,7 +79,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     Specialty = rep(c("Language", "Science"), each = 3))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
   # The default stops on missing features. Here omission is explicit.
-  groups <- mfrm_cluster(features, k = 2,
+  groups <- mfrm_cluster_pam(features, k = 2,
     weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
   groups$membership  # R2 remains present with unavailable membership.
   summary(groups)

@@ -930,7 +930,7 @@ mfrm_results_linking_review_bundle <- function(fit) {
   support_status <- as.data.frame(review$support_status %||% data.frame(), stringsAsFactors = FALSE)
   gpcm_status <- if (nrow(support_status) > 0L &&
       all(c("Scope", "Status") %in% names(support_status))) {
-    as.character(support_status$Status[support_status$Scope %in% "bounded GPCM"][1] %||% "")
+    as.character(support_status$Status[support_status$Scope %in% "GPCM"][1] %||% "")
   } else {
     ""
   }
@@ -961,7 +961,7 @@ mfrm_results_linking_review_bundle <- function(fit) {
       "Drift checks compare at least two separately fitted calibrations and are not inferred from one fit.",
       "Screened chain offsets require an ordered list of fitted forms or waves.",
       if (identical(model, "GPCM")) {
-        "Bounded GPCM linking synthesis is available as caveated exploratory review; do not treat it as an operational linking decision or anchor-drift absence claim."
+        "GPCM linking synthesis is available as caveated exploratory review; do not treat it as an operational linking decision or anchor-drift absence claim."
       } else {
         "RSM/PCM operational linking review is the supported synthesis route."
       },
@@ -1206,6 +1206,22 @@ mfrm_results_reproducible_code <- function(ctx, include, output = "object") {
     ")"
   )
   paste(lines, collapse = "\n")
+}
+
+mfrm_results_uses_saved_replay <- function(x) {
+  mfrm_extended_fit(x$fit) || !is.null(x$response_diagnostics) ||
+    !is.null(x$gpcm_inference) || !is.null(x$facet_intervals)
+}
+
+mfrm_results_saved_replay_code <- function(file = "mfrmr_results.rds", save = TRUE) {
+  quoted <- encodeString(file, quote = '"')
+  paste(c("library(mfrmr)",
+    if (save) c("# In the current session, save the complete result named res.",
+      "# Choose a file path for this analysis; the result includes fitted data.",
+      paste0("saveRDS(res, ", quoted, ")"),
+      "# In a later session, reload the saved result without recalculating it."),
+    paste0("res <- readRDS(", quoted, ")"),
+    "summary(res)", "report <- mfrm_report(res)", "summary(report)"), collapse = "\n")
 }
 
 mfrm_results_code_table <- function(code) {
@@ -1520,7 +1536,7 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       "info",
       "bounded_gpcm_scope",
       "gpcm_capability_matrix()",
-      "Bounded GPCM results should be read through the documented capability matrix and caveats."
+      "GPCM results should be read through the documented capability matrix and caveats."
     )
   }
 
@@ -1721,7 +1737,7 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     add(
       13L,
       "GPCM scope",
-      "Check bounded-GPCM support boundaries before interpreting advanced outputs.",
+      "Check GPCM support boundaries before interpreting advanced outputs.",
       "gpcm_capability_matrix()",
       "The GPCM route is supported with documented helper-specific caveats and should not be treated as a universal Rasch-family replacement."
     )
@@ -2270,7 +2286,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
       "The fitted model is GPCM.",
       "gpcm_capability_matrix(); mfrmr_output_guide(\"gpcm\")",
       "Use direct outputs with documented helper-specific caveats.",
-      "Do not present bounded GPCM helper coverage as universal equivalence with all RSM/PCM report routes."
+      "Do not present GPCM helper coverage as universal equivalence with all RSM/PCM report routes."
     )
   }
   out <- do.call(rbind, rows)
@@ -3078,7 +3094,10 @@ mfrm_report_precision_evidence_summary <- function(x) {
   }
 
   precision <- precision_info$bundle %||% list()
-  profile <- as.data.frame(precision$profile %||% data.frame(), stringsAsFactors = FALSE)
+  profile <- as.data.frame(
+    precision$profile %||% x$diagnostics$precision_profile %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
   checks <- as.data.frame(precision$checks %||% data.frame(), stringsAsFactors = FALSE)
   sep_range <- mfrm_report_finite_range(reliability_tbl$Separation %||% numeric(0))
   rel_range <- mfrm_report_finite_range(reliability_tbl$Reliability %||% numeric(0))
@@ -3968,12 +3987,12 @@ mfrm_report_linking_reporting_templates <- function(style, linking_evidence_summ
   add(
     "GPCM boundary wording",
     paste0(
-      "Bounded GPCM linking support was recorded as ",
+      "GPCM linking support was recorded as ",
       as.character(ev$GPCMSupport[1] %||% "not_available"),
-      ". For bounded GPCM, read direct anchor/drift helper outputs with the capability-matrix caveat."
+      ". For GPCM, read direct anchor/drift helper outputs with the capability-matrix caveat."
     ),
     "linking_evidence_summary; support_status",
-    "Do not extend RSM/PCM linking synthesis wording to bounded GPCM without an explicit validation route.",
+    "Do not extend RSM/PCM linking synthesis wording to GPCM without an explicit validation route.",
     "gpcm_capability_matrix(); mfrmr_output_guide(\"gpcm\")"
   )
   add(
@@ -4121,7 +4140,7 @@ mfrm_report_claim_readiness <- function(x, sections, style) {
   )
   if (identical(toupper(model), "GPCM")) {
     add(
-      "Bounded GPCM interpretation",
+      "GPCM interpretation",
       "GPCM scope",
       "Capability-matrix row for each helper used with GPCM outputs.",
       "Report GPCM outputs through documented helper-specific caveats.",
@@ -4933,6 +4952,15 @@ mfrm_report_build <- function(x, style) {
   if (!is.null(x$response_diagnostics)) {
     tables <- c(tables, mfrm_response_diagnostic_tables(x$response_diagnostics))
   }
+  if (!is.null(x$facet_intervals)) {
+    keys <- unlist(lapply(names(x$facet_intervals), function(name)
+      paste("facet", name, names(mfrm_facet_interval_tables(x$facet_intervals[[name]])), sep = "_")),
+      use.names = FALSE)
+    tables <- c(tables, x$tables[keys])
+  }
+  if (!is.null(x$gpcm_inference)) {
+    tables <- c(tables, x$tables[startsWith(names(x$tables), "gpcm_")])
+  }
   out <- list(
     style = style,
     title = mfrm_report_title(style),
@@ -4986,6 +5014,45 @@ mfrm_report_build <- function(x, style) {
       "Same-data descriptive summaries with calibration fixed; no reference cutoffs or tests. These do not replace the ordinary plug-in fit indices.",
       mfrm_report_markdown_table(tables$response_measures),
       "All selected rows and probabilities remain in report$tables and CSV exports.", sep = "\n\n")
+  }
+  if (!is.null(x$gpcm_inference)) {
+    overview <- do.call(rbind, lapply(names(x$gpcm_inference), function(name) {
+      saved <- mfrm_gpcm_inference_tables(x$gpcm_inference[[name]])
+      primary <- saved[[1L]]
+      interval_status <- "Test result"
+      if ("CIEligible" %in% names(primary)) {
+        lower <- if ("CI_Lower" %in% names(primary)) primary$CI_Lower else primary$Lower
+        upper <- if ("CI_Upper" %in% names(primary)) primary$CI_Upper else primary$Upper
+        finite <- sum(primary$CIEligible & is.finite(lower) & is.finite(upper))
+        unbounded <- sum(is.infinite(lower) | is.infinite(upper))
+        interval_status <- paste0(finite, " finite; ", unbounded, " unbounded; ",
+          nrow(primary) - finite - unbounded, " unavailable")
+      }
+      data.frame(Result = name, Table = paste0("gpcm_", name, "_", names(saved)[1L]),
+        Rows = nrow(primary), Target = if ("Target" %in% names(primary)) primary$Target[1L] else "PCM-null bootstrap LRT",
+        Method = if ("Method" %in% names(primary)) primary$Method[1L] else "Fitted-model parametric bootstrap",
+        IntervalStatus = interval_status,
+        InferenceReview = paste(unique(primary$InferenceReview), collapse = " "))
+    }))
+    out$markdown <- paste(out$markdown, "## GPCM uncertainty",
+      "Saved targets, confidence levels, methods, multiplicity adjustments and unavailable outcomes are retained in the corresponding report tables. These approximate results do not classify raters, select scoring weights, or replace Wright/Pathway location and fit displays.",
+      mfrm_report_markdown_table(overview), sep = "\n\n")
+  }
+  if (!is.null(x$facet_intervals)) {
+    overview <- do.call(rbind, lapply(names(x$facet_intervals), function(name) {
+      saved <- x$facet_intervals[[name]]
+      data.frame(Result = name, Table = paste0("facet_", name, "_intervals"),
+        Facet = saved$settings$facet, Method = saved$settings$method,
+        ConfidenceLevel = paste0(format(100 * saved$settings$level, trim = TRUE), "%"),
+        Targets = nrow(saved$table), Unavailable = sum(!saved$table$Status %in% c("available", "fixed")),
+        Fixed = sum(saved$table$Status == "fixed"))
+    }))
+    cautions <- vapply(x$facet_intervals, function(saved)
+      paste(saved$cautions, collapse = " "), character(1))
+    if (any(nzchar(cautions))) overview$InferenceCaution <- unname(cautions)
+    out$markdown <- paste(out$markdown, "## Fixed-facet uncertainty",
+      "Saved pointwise normal intervals condition on the observed facet levels. Method, level, contrast coefficients, cluster mapping and unavailable outcomes remain in the report tables. Changing covariance does not correct biased estimates or classify rater quality. Ordinary Wright/Pathway displays retain their own uncertainty and fit meanings.",
+      mfrm_report_markdown_table(overview), sep = "\n\n")
   }
   class(out) <- "mfrm_report"
   out
@@ -5486,6 +5553,20 @@ mfrm_results_export_index_html <- function(prefix, written_files, plot_errors, e
         '" alt="', html_escape(description), '"></a></figure>')
     }))
   }
+  inference_images <- files[files$Format %in% "png" &
+    grepl("^plot_(facet_|gpcm_)", files$Component), , drop = FALSE]
+  inference_block <- if (!extended && nrow(inference_images)) c(
+    "<section><h2>Saved inference</h2>",
+    "<p>These figures use the attached inference results. Review their corresponding tables for the target, method, confidence level and unavailable outcomes. Their uncertainty does not replace the uncertainty or fit statistics in the Wright or Pathway maps.</p>",
+    vapply(seq_len(nrow(inference_images)), function(i) {
+      file <- html_escape(basename(inference_images$Path[i]))
+      label <- html_escape(sub("^plot_", "", inference_images$Component[i]))
+      description <- if (nzchar(inference_images$Note[i])) inference_images$Note[i] else
+        "Saved inference; see the corresponding tables for its target, method, level and unavailable outcomes."
+      paste0('<figure><a href="', file, '"><img src="', file, '" alt="',
+        html_escape(description), '"></a><figcaption>', label, ': ',
+        html_escape(description), '</figcaption></figure>')
+    }, character(1)), "</section>") else character()
   plot_error_note <- if (nrow(errors) > 0L) {
     paste0("<p class=\"warning\">", nrow(errors),
            " optional plot route(s) failed. See the written-files manifest and plot-errors CSV.</p>")
@@ -5516,6 +5597,7 @@ mfrm_results_export_index_html <- function(prefix, written_files, plot_errors, e
     paste0("<li><strong>Reproducibility:</strong> ", link("replay_code", "review the replay script"), " and ", link("written_files", "the written-files manifest"), ".</li>"),
     "</ol>",
     wright_block,
+    inference_block,
     plot_error_note,
     "<p class=\"boundary\"><strong>Interpretation boundary:</strong> these files summarize stored results and their availability. They do not establish validity, fairness, or an automatic pass/fail decision by themselves.</p>",
     "</body></html>"
@@ -5638,11 +5720,13 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' - a lightweight HTML report equivalent to `mfrm_results(x, output = "html")`
 #'   for the already-created object;
 #' - an `.rds` copy of the `mfrm_results` object;
-#' - a replay `.R` script from `x$input$reproducible_code`;
+#' - a replay `.R` script, reloading the saved result when additional inference
+#'   or posterior diagnostics are attached;
 #' - a written-files manifest and compact export summary.
 #'
 #' For testlet, random-rater and ordinary results with saved posterior response
-#' diagnostics, replay reloads the exported RDS without
+#' diagnostics, GPCM inference or RSM/PCM fixed-facet intervals, replay reloads
+#' the exported RDS without
 #' refitting, rescoring or resampling. Requesting `"replay"` also includes
 #' `"rds"`. Run the script from the exported folder. Stored prediction settings,
 #' unavailable rows, numerical checks and interval meanings travel with the
@@ -5728,7 +5812,7 @@ export_mfrm_results <- function(x,
     tolower(as.character(preset[1])), c("starter")
   )
   include <- mfrm_results_export_include(include, preset = preset)
-  stored_replay <- mfrm_extended_fit(x$fit) || !is.null(x$response_diagnostics)
+  stored_replay <- mfrm_results_uses_saved_replay(x)
   if (stored_replay && "replay" %in% include) include <- unique(c(include, "rds"))
   overwrite <- isTRUE(overwrite)
   acknowledge_sensitive <- isTRUE(acknowledge_sensitive)
@@ -5872,9 +5956,8 @@ export_mfrm_results <- function(x,
   if ("replay" %in% include) {
     replay_code <- as.character(x$input$reproducible_code %||% "")
     if (stored_replay) {
-      replay_code <- paste(c("# Run from the exported folder; this reloads results without refitting.",
-        "library(mfrmr)", paste0("res <- readRDS(", encodeString(paste0(prefix, "_results.rds"), quote = '"'), ")"),
-        "summary(res)", "report <- mfrm_report(res)", "summary(report)"), collapse = "\n")
+      replay_code <- paste("# Run from the exported folder; this reloads results without refitting.",
+        mfrm_results_saved_replay_code(paste0(prefix, "_results.rds"), save = FALSE), sep = "\n")
     }
     if (!nzchar(replay_code)) {
       replay_code <- paste(as.character(summary(x)$reproducible_code$Code %||% ""), collapse = "\n")
@@ -5944,6 +6027,13 @@ export_mfrm_results <- function(x,
             "Selected-row posterior Infit versus conditional reference location; no classic fit cutoffs."
           } else if (identical(type, "fit_pathway")) {
             "Infit-versus-measure pathway with up to 12 selected person rows included; IDs remain in the result data."
+          } else if (startsWith(type, "facet_")) {
+            saved <- x$facet_intervals[[sub("^facet_", "", type)]]
+            paste0(saved$settings$facet, " fixed-facet estimates or contrasts; ",
+              saved$settings$method, ", ", format(100 * saved$settings$level, trim = TRUE),
+              "% pointwise normal intervals. Fixed and unavailable targets remain visible.")
+          } else if (startsWith(type, "gpcm_")) {
+            "Saved GPCM inference; see the corresponding tables for its target, method, confidence level and unresolved outcomes. This does not classify rater quality or select scoring weights."
           } else {
             ""
           }
@@ -6141,7 +6231,7 @@ export_mfrm_results <- function(x,
 #' - `"network"`: standard sections plus network/connectivity review
 #' - `"response_time"`: descriptive response-time QC review when timing
 #'   metadata are supplied through `response_time` / `response_time_data`
-#' - `"gpcm_review"`: standard sections with bounded-`GPCM` caveats retained
+#' - `"gpcm_review"`: standard sections with `GPCM` caveats retained
 #'   in the collected summaries and reports
 #' - `"all"`: standard sections plus FACETS-fit, network, APA, and
 #'   response-time sections
@@ -6158,7 +6248,10 @@ export_mfrm_results <- function(x,
 #' Start with `summary(res)`. The most useful fields are:
 #' - `overview`: input mode, model, method, table count, and plot-route count
 #' - `decision`: plain-language interpretation, formal-inference, reason, and
-#'   next-action text derived from the source-fit readiness record
+#'   next-action text derived from source-fit readiness and the saved diagnostic
+#'   precision profile. Missing precision remains unreviewed; a positive
+#'   precision assessment cannot override source-fit restrictions. Reading this
+#'   summary does not compute new diagnostics or establish sampling coverage.
 #' - `readiness`: separate analysis and plot-interpretation checks
 #' - `fit_readiness`, `fit_readiness_components`, and
 #'   `fit_readiness_parameters`: the exact source-fit readiness record retained
@@ -6277,7 +6370,48 @@ export_mfrm_results <- function(x,
 #'   between zero and one; default 0.95. Nondefault calibration options are
 #'   unavailable for ordinary MFRM fits.
 #' @param intervals Optional saved [mfrm_random_rater_intervals()] result from
-#'   the exact supplied random-rater fit. No bootstrap is run by this function.
+#'   the exact supplied random-rater fit. For a native GPCM fit, accepts saved
+#'   slope intervals, curve intervals, a GPCM bootstrap result, or a named list
+#'   of these. All must match the exact fitted data, parameters, population and
+#'   integration settings. For native RSM/PCM fits, accepts a saved
+#'   [mfrm_facet_intervals()] result or a named list of them. No bootstrap
+#'   or interval calculation is run by this function.
+#'
+#' @section Reproduce attached inference:
+#' When additional inference or posterior diagnostics are attached, the code
+#' shown by `summary(res)` and in HTML saves and reloads the complete `res`
+#' object. Choose the file path before running it. This preserves attached
+#' methods, levels and unavailable results without fitting or recalculating.
+#' Exported replay scripts only reload the RDS already written by the export.
+#' The starter export index links the saved RSM/PCM and GPCM inference figures
+#' alongside the ordinary maps, whose uncertainty and fit meanings are separate.
+#'
+#' @section Saved RSM/PCM fixed-facet intervals:
+#' Use `intervals = list(raters = ci)` with output from [mfrm_facet_intervals()].
+#' The fit must match the saved data, parameters, constraints, population and
+#' integration settings. Named results give `facet_` plot routes, for example
+#' `plot(res, type = "facet_raters")`; a single result gives `facet_inference`.
+#' Include `"plots"` to enable those routes. [as_ggplot()] supports customization.
+#' Tables, reports and exports preserve the selected method, confidence level,
+#' contrasts, cluster mapping and fixed/unavailable targets. Export replay
+#' reloads saved results without refitting or changing the selected intervals.
+#' These are pointwise fixed-facet intervals, not simultaneous rater decisions
+#' or uncertainty for replacement raters. Ordinary map and fit displays keep
+#' their own meanings and are not recalculated with the attached covariance.
+#'
+#' @section Saved GPCM inference:
+#' Attach explicitly selected results, for example
+#' `intervals = list(slopes = confint(fit, scale = "standardized"))`.
+#' Tables retain the target, method, confidence level and multiplicity choice;
+#' [mfrm_report()] and [export_mfrm_results()] preserve them. Names become
+#' lowercase plot routes, e.g. `plot(res, type = "gpcm_slopes")`, when `"plots"`
+#' is included. A single result uses `"gpcm_inference"`. Passing a raw slope
+#' bootstrap object selects its default relative 95% pointwise intervals;
+#' pass `confint(bootstrap, ...)` to select a different target or level.
+#' Replay reloads saved results, without refitting or changing interval methods.
+#' Older intervals lacking source metadata must be recomputed from the saved fit.
+#' These results supplement ordinary location and fit displays; discrimination
+#' is not rater quality and does not select scoring weights.
 #'
 #' @section Testlet and random-rater results:
 #' [fit_mfrm_testlet()] and [fit_mfrm_random_rater()] results use a separate
@@ -6384,9 +6518,12 @@ mfrm_results <- function(fit,
   }
   if (calibration_intervals != "none" || calibration_level != .95) stop("`calibration_intervals` and `calibration_level` select approximations only for testlet and random-rater fits.", call. = FALSE)
   if (!is.null(comparison)) stop("`comparison` can be attached to its matching testlet or random-rater fit.", call. = FALSE)
-  if (!is.null(predictions) || !is.null(intervals) || !is.null(scores)) {
-    stop("`predictions`, `scores` and `intervals` are supported only for testlet and random-rater fits.", call. = FALSE)
+  if (!is.null(predictions) || !is.null(scores)) {
+    stop("`predictions` and `scores` are supported only for testlet and random-rater fits.", call. = FALSE)
   }
+  fixed_intervals <- inherits(fit, "mfrm_fit") && isTRUE(fit$config$model %in% c("RSM", "PCM"))
+  facet_intervals <- if (fixed_intervals) mfrm_facet_results_inputs(fit, intervals) else NULL
+  gpcm_inference <- if (!fixed_intervals) mfrm_gpcm_results_inputs(fit, intervals) else NULL
   ctx <- mfrm_results_resolve_input(fit, compute = compute)
   if (!is.null(diagnostics)) {
     if (!inherits(diagnostics, "mfrm_diagnostics")) {
@@ -6425,6 +6562,8 @@ mfrm_results <- function(fit,
     score = response_time_score
   )
   out <- mfrm_results_build(ctx, include = include)
+  out <- mfrm_gpcm_results_attach(out, gpcm_inference)
+  out <- mfrm_facet_results_attach(out, facet_intervals)
   if (!is.null(response_diagnostics)) {
     out$response_diagnostics <- response_diagnostics
     out$components$response_diagnostics <- response_diagnostics
@@ -6438,6 +6577,10 @@ mfrm_results <- function(fit,
       Detail = "Saved posterior predictive residuals; no calibrated fit test or cutoffs.",
       InterpretationStatus = "descriptive_only", InterpretationReady = FALSE,
       ReadinessRoute = "res$tables$response_diagnostic_settings"))
+  }
+
+  if (mfrm_results_uses_saved_replay(out)) {
+    out$input$reproducible_code <- mfrm_results_saved_replay_code()
   }
 
   switch(
@@ -6660,7 +6803,8 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
   triage <- as.data.frame(object$triage %||% data.frame(), stringsAsFactors = FALSE)
   next_actions <- as.data.frame(object$next_actions %||% data.frame(), stringsAsFactors = FALSE)
   mapping <- mfrm_results_mapping_table(object$input$mapping %||% NULL)
-  reproducible_code <- mfrm_results_code_table(object$input$reproducible_code %||% "")
+  reproducible_code <- mfrm_results_code_table(if (mfrm_results_uses_saved_replay(object))
+    mfrm_results_saved_replay_code() else object$input$reproducible_code %||% "")
   next_action <- if (
     nrow(next_actions) > 0L && "RecommendedAction" %in% names(next_actions)
   ) {
@@ -6670,8 +6814,20 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
   } else {
     NA_character_
   }
+  precision_profile <- as.data.frame(
+    object$diagnostics$precision_profile %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
   decision <- mfrm_fit_decision_summary(
-    fit_readiness, next_action = next_action
+    fit_readiness, next_action = next_action,
+    supports_formal_inference = if (nrow(precision_profile) > 0L) {
+      isTRUE(precision_profile$SupportsFormalInference[1L])
+    } else {
+      NA
+    },
+    precision_tier = as.character(
+      precision_profile$PrecisionTier[1L] %||% NA_character_
+    )
   )
 
   out <- list(
@@ -6742,7 +6898,7 @@ print.summary.mfrm_results <- function(x, ...) {
     cat("\nPlot routes\n")
     plot_map <- as.data.frame(x$plot_map)
     if (brief) {
-      if (is.null(x$model_family)) plot_map <- plot_map[plot_map$Type %in% c("wright", "fit_pathway", "qc"), , drop = FALSE]
+      if (is.null(x$model_family)) plot_map <- plot_map[plot_map$Type %in% c("wright", "fit_pathway", "qc") | (startsWith(plot_map$Type, "gpcm_") | startsWith(plot_map$Type, "facet_")), , drop = FALSE]
       keep <- intersect(c("Type", "Available", "RequiredArtifact"), names(plot_map))
       print(plot_map[, keep, drop = FALSE], row.names = FALSE)
       if (all(c("Type", "Route") %in% names(plot_map))) {
@@ -6908,7 +7064,10 @@ plot.mfrm_results <- function(x,
   }
   if (mfrm_extended_fit(x$fit)) return(mfrm_extended_results_plot(x, type, ...))
   available <- as.data.frame(x$plot_map %||% data.frame(), stringsAsFactors = FALSE)
-  type_choices <- c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables", "response_diagnostics")
+  gpcm_routes <- paste0("gpcm_", names(x$gpcm_inference %||% list()))
+  if (is.null(x$gpcm_inference)) gpcm_routes <- character()
+  facet_routes <- if (length(x$facet_intervals)) paste0("facet_", names(x$facet_intervals)) else character()
+  type_choices <- c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables", "response_diagnostics", gpcm_routes, facet_routes)
   type_missing <- missing(type) || is.null(type)
   if (isTRUE(type_missing)) {
     person_tbl <- as.data.frame(x$fit$facets$person %||% data.frame(), stringsAsFactors = FALSE)
@@ -6942,6 +7101,8 @@ plot.mfrm_results <- function(x,
       )
     }
   }
+  if (type %in% facet_routes) return(plot(x$facet_intervals[[match(type, facet_routes)]], ...))
+  if (type %in% gpcm_routes) return(plot(x$gpcm_inference[[match(type, gpcm_routes)]], ...))
   if (identical(type, "response_diagnostics")) {
     if (is.null(x$response_diagnostics)) stop("Supply saved response_diagnostics to mfrm_results() first.", call. = FALSE)
     return(plot(x$response_diagnostics, ...))

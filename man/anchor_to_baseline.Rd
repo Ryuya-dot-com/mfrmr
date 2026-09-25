@@ -81,7 +81,7 @@ facet parameters fixed at the values from a previous (baseline) calibration.
 This transfers baseline coordinates into a new fit through direct equality
 constraints. Common-scale interpretation is conditional on a defensible
 baseline and invariant cross-run element identity.
-For bounded \code{GPCM}, treat this as direct exploratory anchor/drift support
+For \code{GPCM}, treat this as direct exploratory anchor/drift support
 rather than as the package's formal linking-synthesis route.
 }
 \details{

@@ -1,3 +1,29 @@
+test_that("rater-feedback guidance separates uncertainty, misfit and known-truth accuracy", {
+  feedback <- mfrmr_output_guide("feedback")
+  expect_true(all(feedback$Scope == "feedback"))
+  expect_true(all(feedback$Question %in% mfrmr_output_guide()$Question))
+  expect_identical(names(feedback), names(mfrmr_output_guide("public")))
+  expect_identical(feedback$DecisionBoundary, feedback$Notes)
+  # Recommended calls must resolve; the guide must not invent a wrapper/API.
+  functions <- unique(unlist(regmatches(feedback$MainFunction,
+    gregexpr("[A-Za-z][A-Za-z0-9_.]*(?=\\()", feedback$MainFunction, perl = TRUE))))
+  for (name in functions) expect_true(is.function(get(name, mode = "function")))
+  fixed <- feedback[feedback$MainFunction == "mfrm_facet_intervals()", ]
+  expect_match(fixed$TypicalInput, "fixed-standard-normal RSM/PCM MML", fixed = TRUE)
+  expect_match(fixed$DecisionBoundary, "do not correct a biased estimate", fixed = TRUE)
+  ordinary <- feedback[feedback$MainFunction == "fit_measures_table()", ]
+  expect_match(ordinary$NextStep, "profile_summary_by_facet", fixed = TRUE)
+  expect_match(ordinary$DecisionBoundary, "does not estimate", fixed = TRUE)
+  extended <- feedback[feedback$MainFunction == "mfrm_response_diagnostics()", ]
+  expect_match(extended$DecisionBoundary, "No classic cutoffs", fixed = TRUE)
+  uncertainty <- feedback[grepl("mfrm_random_rater_intervals", feedback$MainFunction), ]
+  expect_match(uncertainty$NextStep, "parm = 'raters'", fixed = TRUE)
+  expect_match(uncertainty$DecisionBoundary, "unqualified for general coverage", fixed = TRUE)
+  accuracy <- feedback[grepl("mfrm_screening_performance", feedback$MainFunction), ]
+  expect_match(accuracy$TypicalInput, "known Affected", fixed = TRUE)
+  expect_match(accuracy$DecisionBoundary, "real-data flags alone cannot", fixed = TRUE)
+})
+
 test_that("mfrmr_output_guide returns a stable purpose-to-helper map", {
   guide <- mfrmr_output_guide()
 
@@ -353,7 +379,7 @@ test_that("facets_feature_coverage separates native calibration from unsupported
   )))
   expect_true(any(
     future$FACETSFeature == "Unrestricted GPCM" &
-      grepl("bounded", future$Capability, fixed = TRUE)
+      grepl("requires slope_facet to equal step_facet", future$Capability, fixed = TRUE)
   ))
   expect_true(any(
     future$FACETSFeature == "Nominal/multinomial response models" &

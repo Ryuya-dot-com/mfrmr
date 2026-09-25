@@ -2,7 +2,7 @@
 % Please edit documentation in R/help_gpcm_scope.R
 \name{gpcm_score_side_contract}
 \alias{gpcm_score_side_contract}
-\title{Bounded GPCM Score-Side Availability}
+\title{GPCM Score-Side Availability}
 \usage{
 gpcm_score_side_contract(status = "all")
 }
@@ -20,7 +20,7 @@ A data.frame with columns:
 }
 }
 \description{
-Show which bounded-\code{GPCM} score-side quantities are available, the limits on
+Show which \code{GPCM} score-side quantities are available, the limits on
 their interpretation, and the alternative route when a quantity is not
 available.
 }

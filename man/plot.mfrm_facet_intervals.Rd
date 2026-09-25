@@ -4,7 +4,22 @@
 \alias{plot.mfrm_facet_intervals}
 \title{Plot fixed-facet interval methods}
 \usage{
-\method{plot}{mfrm_facet_intervals}(x, comparison = TRUE, draw = TRUE, preset = "standard", ...)
+\method{plot}{mfrm_facet_intervals}(
+  x,
+  comparison = TRUE,
+  draw = TRUE,
+  preset = "standard",
+  title = paste(x$settings$facet, "estimates and contrasts"),
+  subtitle = paste0(format(100 * x$settings$level, trim = TRUE),
+    "\% pointwise normal intervals | ", if (x$settings$method == "sandwich")
+    paste0("Sandwich | ", x$settings$clusters, " independent clusters assumed") else
+    "Observed information"),
+  caption = if (any(x$table$Status != "available"))
+    "Open diamonds: fixed targets | Crosses: unavailable selected intervals" else NULL,
+  reference = 0,
+  show_legend = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{Output from \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}.}
@@ -16,12 +31,20 @@ model-based interval. Both intervals use the same point estimate.}
 
 \item{preset}{A package plot preset, for example \code{"standard"} or \code{"monochrome"}.}
 
+\item{title, subtitle, caption}{Optional text; \code{NULL} omits it. Defaults show
+the facet, exact confidence level, method and fixed/unavailable symbols.}
+
+\item{reference}{Optional finite vertical reference; default zero. Use
+\code{NULL} to omit it. This is not a rater-quality threshold.}
+
+\item{show_legend}{Logical; show the method legend (default \code{TRUE}).}
+
 \item{...}{Unused.}
 }
 \value{
 Invisibly, an \code{mfrm_plot_data} object retaining the \code{table}, contrast
 coefficients, settings and labels. Use \code{\link[=plot_data]{plot_data()}} for custom graphics;
-automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion is unavailable.
+\code{\link[=as_ggplot]{as_ggplot()}} returns a customizable ggplot with the same saved values.
 }
 \description{
 Plot fixed-facet interval methods
@@ -32,4 +55,6 @@ Unavailable selected intervals use crosses; an ordinary comparison interval
 does not substitute for a missing sandwich interval. The zero line is a
 reference, not a threshold of practical importance or a rater-quality rule.
 No fit or covariance is recalculated. Target order is preserved.
+Weak-information cautions remain in the returned data and appear in the
+default subtitle. Custom or omitted subtitles change display only.
 }

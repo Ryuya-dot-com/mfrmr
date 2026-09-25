@@ -71,11 +71,11 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   ]
   route_areas <- c(
     FullAPARoute = "APA writer and fit-based export bundles",
-    ScoreSideExport = "Score-side scorefile export under bounded GPCM",
+    ScoreSideExport = "Score-side scorefile export under GPCM",
     LinkingSynthesis = "Operational linking synthesis",
     RecoveryChecks = "Direct simulation-spec generation and recovery",
-    FairAverage = "Fair-average semantics under bounded GPCM (slope-aware)",
-    BiasScreening = "Residual-bias screening under bounded GPCM",
+    FairAverage = "Fair-average semantics under GPCM (slope-aware)",
+    BiasScreening = "Residual-bias screening under GPCM",
     SummaryAppendix = "Checklist and summary-table appendix route"
   )
   for (field in names(route_areas)) {
@@ -84,7 +84,7 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
     expect_identical(
       gpcm_route[[field]][1],
       capability$Status[idx],
-      info = paste("Stale bounded-GPCM downstream status for", field)
+      info = paste("Stale GPCM downstream status for", field)
     )
   }
   expect_identical(gpcm_route$FullAPARoute[1], "supported_with_caveat")
@@ -93,13 +93,13 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   expect_true(any(review$downstream_routes$FairAverage == "supported_with_caveat" &
     review$downstream_routes$Model == "GPCM"))
   expect_false(any(grepl(
-    "blocked for bounded GPCM|fit-based bundles remain RSM/PCM only",
+    "blocked for GPCM|fit-based bundles remain RSM/PCM only",
     review$route_map$Interpretation,
     fixed = FALSE
   )))
   expect_true(any(grepl("automatic operational-scoring decision", review$key_warnings, fixed = TRUE)))
   expect_true(any(grepl(
-    "Inference readiness is not satisfied",
+    "IC solution checks are not satisfied",
     review$comparison_warnings,
     fixed = TRUE
   )))

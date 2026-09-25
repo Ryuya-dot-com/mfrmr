@@ -65,13 +65,13 @@ package-native counterpart and which remain unavailable. It does not
 establish external validity or software equivalence beyond the specific
 schema/metric contract encoded in the contract file.
 }
-\section{Bounded GPCM boundary}{
+\section{GPCM boundary}{
 
-This helper is unavailable for bounded \code{GPCM} fits because the FACETS
+This helper is unavailable for \code{GPCM} fits because the FACETS
 output contract includes score-side rows whose measure-to-score and
 uncertainty semantics are supported for the Rasch-family route, not
-for free-discrimination bounded \code{GPCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before
-routing a bounded \code{GPCM} fit into score-side compatibility-output helpers.
+for free-discrimination \code{GPCM}. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before
+routing a \code{GPCM} fit into score-side compatibility-output helpers.
 
 Coverage interpretation in \code{overall}:
 \itemize{

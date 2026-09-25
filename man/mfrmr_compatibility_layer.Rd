@@ -9,7 +9,7 @@ Use this page when you need continuity with older compatibility-oriented workflo
 fixed-width reports, or graph/score file style outputs.
 
 This compatibility layer currently applies mainly to diagnostics-based
-\code{RSM} / \code{PCM} workflows. Bounded \code{GPCM} fits also support
+\code{RSM} / \code{PCM} workflows. \code{GPCM} fits also support
 graph-only compatibility-style exports, while scorefile and
 diagnostics-driven compatibility outputs remain limited to \code{RSM} / \code{PCM}.
 Treat this layer as a presentation/contract surface, not as a claim of
@@ -126,7 +126,7 @@ helper names; user-facing helper names use review/check terminology.
 \code{RSM} / \code{PCM}:
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
 compatibility export only if required.
-bounded \code{GPCM}:
+\code{GPCM}:
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
 graph-only compatibility export only when a legacy handoff truly requires
 it.

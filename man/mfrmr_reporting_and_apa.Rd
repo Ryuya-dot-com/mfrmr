@@ -8,12 +8,12 @@ Package-native guide to moving from fitted model objects to
 manuscript-draft text, tables, notes, and revision checklists in \code{mfrmr}.
 
 This guide currently applies fully to diagnostics-based \code{RSM} / \code{PCM}
-workflows. Bounded \code{GPCM} fits support \code{\link[=reporting_checklist]{reporting_checklist()}},
+workflows. \code{GPCM} fits support \code{\link[=reporting_checklist]{reporting_checklist()}},
 \code{\link[=precision_review_report]{precision_review_report()}}, direct curve/graph and residual table helpers,
 and caveated APA/QC/export bundles. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you
 need the formal boundary for the current \code{GPCM} reporting path.
 
-In particular, bounded \code{GPCM} \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+In particular, \code{GPCM} \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
 \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, and
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} outputs include explicit \code{gpcm_boundary} caveats.
@@ -62,7 +62,7 @@ layer for the current run.
 \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} before finalizing
 the narrative around local misfit.
 \item Create manuscript-draft prose and metadata with \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
-For bounded \code{GPCM}, treat the APA/QC/export stack as caveated
+For \code{GPCM}, treat the APA/QC/export stack as caveated
 sensitivity-reporting output and keep its \code{gpcm_boundary} visible.
 \item Convert summary outputs to reusable table bundles with
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, review the bundle with \code{summary()} /
@@ -70,7 +70,7 @@ sensitivity-reporting output and keep its \code{gpcm_boundary} visible.
 \code{\link[=apa_table]{apa_table()}} or export them directly with \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 \item When candidate models are compared, keep the comparison as a reporting
 review: \code{\link[=compare_mfrm]{compare_mfrm()}} -> \code{\link[=build_model_choice_review]{build_model_choice_review()}} ->
-\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}. Treat bounded \code{GPCM} as a slope-aware
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}. Treat \code{GPCM} as a slope-aware
 sensitivity route unless the study design explicitly justifies
 discrimination-based operational scoring.
 }
@@ -105,9 +105,9 @@ templates, and optional \code{\link[=build_weighting_review]{build_weighting_rev
 review with \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} when a manuscript appendix,
 coauthor handoff, or HTML export needs stable table names.
 
-A conservative bounded-\code{GPCM} reporting sequence is:
+A conservative \code{GPCM} reporting sequence is:
 \code{\link[=fit_mfrm]{fit_mfrm()}} for the equal-weighting \code{RSM} / \code{PCM} reference,
-\code{\link[=fit_mfrm]{fit_mfrm()}} for the bounded \code{GPCM} sensitivity fit,
+\code{\link[=fit_mfrm]{fit_mfrm()}} for the \code{GPCM} sensitivity fit,
 \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_model_choice_review]{build_model_choice_review()}},
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, then \code{\link[=export_summary_appendix]{export_summary_appendix()}} or
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}. Do not use \code{AIC}, \code{BIC}, or log-likelihood alone as
@@ -158,7 +158,7 @@ The manuscript helpers are APA-oriented drafting aids informed by the
 and the quantitative Journal Article Reporting Standards (JARS-Quant;
 Appelbaum et al., 2018). The MFRM-specific prompts also draw on the model and
 diagnostic sources returned by \code{reporting_checklist(..., include_references = TRUE)}, including Eckes, Myford and Wolfe, Linacre,
-Wright and Masters, and Muraki for bounded \code{GPCM}.
+Wright and Masters, and Muraki for \code{GPCM}.
 
 The package only knows the fitted measurement objects and context supplied
 by the analyst. It therefore cannot certify research-level JARS completeness
@@ -244,7 +244,7 @@ claims.
 drafting-readiness flag, not as a substitute for methodological review.
 \item Rebuild APA outputs after major model changes instead of editing old text
 by hand.
-\item For bounded \code{GPCM}, use APA/QC/export helpers only as caveated
+\item For \code{GPCM}, use APA/QC/export helpers only as caveated
 sensitivity-reporting surfaces and keep full FACETS-style score-side
 review outside this route.
 }
@@ -275,7 +275,7 @@ any handoff.
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = c("summary_tables", "html")).
 For \code{RSM} / \code{PCM} final reports, prefer \code{method = "MML"} and
 \code{diagnostic_mode = "both"} in the diagnostics step.
-For bounded \code{GPCM}, use the same fit-based reporting/export family only
+For \code{GPCM}, use the same fit-based reporting/export family only
 as caveated sensitivity-reporting output and inspect its \code{gpcm_boundary}
 rows before writing claims.
 \item Appendix-first route:
@@ -284,7 +284,7 @@ rows before writing claims.
 \item Precision-sensitive route:
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=precision_review_report]{precision_review_report()}} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
-\item bounded \code{GPCM} route:
+\item \code{GPCM} route:
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=precision_review_report]{precision_review_report()}} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> direct residual/category/information helpers ->
 caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
@@ -302,7 +302,7 @@ caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=bui
 \item For report/table selection, see \link{mfrmr_reports_and_tables}.
 \item For end-to-end analysis routes, see \link{mfrmr_workflow_methods}.
 \item For visual follow-up, see \link{mfrmr_visual_diagnostics}.
-\item For the bounded \code{GPCM} support statement, see \link{gpcm_capability_matrix}.
+\item For the \code{GPCM} support statement, see \link{gpcm_capability_matrix}.
 \item For a longer walkthrough, see
 \code{vignette("mfrmr-reporting-and-apa", package = "mfrmr")}.
 }

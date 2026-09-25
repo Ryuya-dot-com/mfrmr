@@ -2697,7 +2697,7 @@ test_that("extract_mfrm_sim_spec captures fitted threshold and assignment metada
   expect_true(is.data.frame(spec$threshold_table))
 })
 
-test_that("extract_mfrm_sim_spec captures bounded GPCM slope metadata", {
+test_that("extract_mfrm_sim_spec captures GPCM slope metadata", {
   toy <- load_mfrmr_data("example_core")
   keep_people <- unique(toy$Person)[1:14]
   toy <- toy[toy$Person %in% keep_people, , drop = FALSE]

@@ -33,7 +33,7 @@ all-trial bounds describe unresolved outcomes, not confidence intervals.
 \item \code{structural_design_review}: deterministic structural review of the
 named-facet design grid; it reports
 design bookkeeping rather than signal-detection performance
-\item \code{gpcm_boundary}: bounded-\code{GPCM} caveat row when present
+\item \code{gpcm_boundary}: \code{GPCM} caveat row when present
 \item \code{notes}: short interpretation notes, including the bias-side screening caveat
 }
 }

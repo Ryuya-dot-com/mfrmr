@@ -163,6 +163,8 @@ print.mfrm_plot_data <- function(x, ...) {
 }
 
 as_mfrm_plot_data_object <- function(x, type = NULL, ...) {
+  saved <- attr(x, "mfrmr_plot_data", exact = TRUE)
+  if (inherits(saved, "mfrm_plot_data")) return(saved)
   if (inherits(x, "mfrm_plot_data")) {
     return(x)
   }
@@ -182,6 +184,8 @@ as_mfrm_plot_data_object <- function(x, type = NULL, ...) {
       )
     }
   )
+  saved <- attr(out, "mfrmr_plot_data", exact = TRUE)
+  if (inherits(saved, "mfrm_plot_data")) return(saved)
   if (!inherits(out, "mfrm_plot_data")) {
     stop(
       "`plot(..., draw = FALSE)` must return an `mfrm_plot_data` object.",
@@ -2679,7 +2683,7 @@ plot_facets_chisq <- function(x,
 #' are available: `"strict"`, `"standard"` (default), and `"lenient"`.
 #' Use `thresholds` to override any profile value with named entries.
 #'
-#' For bounded `GPCM`, the dashboard now reuses the residual-based
+#' For `GPCM`, the dashboard now reuses the residual-based
 #' diagnostics stack and marks the fair-average panel unavailable rather
 #' than silently reusing the Rasch-only compatibility calculation.
 #'

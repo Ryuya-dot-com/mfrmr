@@ -86,7 +86,7 @@ long data frame with columns \code{StepFacet}, \code{Step}/\code{StepIndex}, and
 vary across levels.}
 
 \item{slope_facet}{Slope facet used when \code{model = "GPCM"}. The current
-bounded \code{GPCM} branch requires \code{slope_facet == step_facet}.}
+\code{GPCM} branch requires \code{slope_facet == step_facet}.}
 
 \item{slopes}{Optional slope specification for \code{model = "GPCM"}. Use either
 a numeric vector aligned to the generated slope-facet levels or a data
@@ -196,7 +196,7 @@ The resulting object records:
 \item latent spread assumptions (\code{theta_sd}, \code{rater_sd}, \code{criterion_sd})
 \item optional empirical latent support values for semi-parametric simulation
 \item threshold structure (\code{threshold_table})
-\item optional discrimination structure for bounded \code{GPCM} (\code{slope_table}) and
+\item optional discrimination structure for \code{GPCM} (\code{slope_table}) and
 its identified log-slope spread label (\code{slope_regime})
 \item assignment design (\code{assignment})
 \item optional sparse linked-design controls (\code{sparse_controls}) when

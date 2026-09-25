@@ -1009,11 +1009,13 @@ test_that("compare_mfrm suppresses IC ranking when a fit is marked unconverged",
   fit <- mark_test_inference_ready(fit)
   fit2 <- mark_test_inference_review(fit2)
 
-  expect_warning(
-    expect_warning(comp <- compare_mfrm(RSM = fit, PCM = fit2),
-      "^Information-criterion ranking is limited to converged MML fits"),
-    "Inference readiness is not satisfied: PCM/JML: .*Numerical convergence requires review"
-  )
+  warnings <- character(0)
+  comp <- withCallingHandlers(compare_mfrm(RSM = fit, PCM = fit2), warning = function(w) {
+    warnings <<- c(warnings, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  })
+  expect_true(any(grepl("^Information-criterion ranking is limited to converged MML fits", warnings)))
+  expect_true(any(grepl("IC solution checks are not satisfied: PCM/JML: .*Numerical convergence requires review", warnings)))
 
   expect_false(isTRUE(comp$comparison_basis$ic_comparable))
   expect_false(isTRUE(comp$comparison_basis$all_converged))

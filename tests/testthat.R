@@ -11,6 +11,7 @@ is_cran_check <- local({
 })
 
 cran_light_tests <- c(
+  "api-migration",
   "adaptive-fitting",
   "adaptive-quadrature-review",
   "calibration-public-api",
@@ -29,6 +30,7 @@ cran_light_tests <- c(
   "numeric-feature-workflows",
   "response-imputation",
   "facet-intervals",
+  "facet-interval-reporting",
   "screening-performance",
   "random-rater",
   "random-rater-intervals",
@@ -49,6 +51,12 @@ cran_light_tests <- c(
   "missing-codes-integration",
   "bundle-summary-privacy",
   "gpcm-capability-matrix",
+  "gpcm-ic-eligibility",
+  "gpcm-lrt",
+  "gpcm-uncertainty-readiness",
+  "gpcm-inference-extensions",
+  "gpcm-inference-reporting",
+    "gpcm-pattern-cache",
   "namespace-contract",
   "optimizer-curvature",
   "vignette-artifacts"

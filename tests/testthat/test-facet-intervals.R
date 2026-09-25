@@ -95,7 +95,7 @@ local({
     expect_true(plot_data(result)$comparison)
     expect_false(plot_data(plot(intervals, comparison = FALSE, draw = FALSE))$comparison)
     expect_error(plot(intervals, draw = NA), "TRUE or FALSE")
-    if (requireNamespace("ggplot2", quietly = TRUE)) expect_error(as_ggplot(result), "interval methods")
+    if (requireNamespace("ggplot2", quietly = TRUE)) expect_s3_class(as_ggplot(result), "ggplot")
     file <- tempfile(fileext = ".pdf"); grDevices::pdf(file)
     before <- graphics::par("mar"); plot(intervals)
     expect_equal(graphics::par("mar"), before)

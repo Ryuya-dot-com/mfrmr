@@ -52,6 +52,9 @@ and criterion difficulty. A *facet* is a source of variation in scores; here,
 are case-sensitive; `Study` and `Group` are extra labels unused by this model.
 `MML` selects marginal maximum likelihood; `RSM` selects a rating-scale model
 with shared category thresholds (the transitions between adjacent scores).
+The rubric uses scores 1 through 4. `category_policy = "preserve"` keeps that
+category ladder; it prevents an unobserved intermediate category from being
+silently collapsed into a different scale.
 
 ```{r quick-start, fig.alt = "Wright map of fitted person abilities, rater severities, criterion difficulties and shared category steps for the synthetic ratings. All locations use the same logit scale."}
 # Load the package
@@ -67,6 +70,8 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4,
+  category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -214,7 +219,7 @@ as the practice file's `Study` and `Group` are unused by this model.
 
 Set the minimum and maximum from the **rubric**, not the observed minimum and
 maximum in this sample. The code below describes a 1-to-4 rubric. Keep the same
-values in the data review and the fit. `keep_original = TRUE` preserves the
+values in the data review and the fit. `category_policy = "preserve"` preserves the
 intended category structure, including categories with no observations.
 
 ```{r csv-data-review}
@@ -225,7 +230,7 @@ data_review <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE
+  category_policy = "preserve"
 )
 data_review$row_retention
 data_review$missing_by_column
@@ -243,7 +248,7 @@ Read these four tables in order:
   when the retained count is unexpected.
 - `score_distribution`: `RawN` counts the retained ratings in each category.
   A zero count in an internal category, such as 3 on a 1-to-4 scale, prevents
-  fitting with `keep_original = TRUE`. Review the data and rubric before
+  fitting with `category_policy = "preserve"`. Review the data and rubric before
   changing categories; increasing optimizer iterations cannot supply missing
   category information.
 - `design_connectivity`: `Components = 1` means a facet's levels are connected
@@ -275,7 +280,7 @@ csv_fit <- fit_mfrm(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE,
+  category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -388,7 +393,7 @@ data_review_toy <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE,
+  category_policy = "preserve",
   expected_design = mfrmr_example_operational_design
 )
 data_summary_toy <- summary(data_review_toy)
@@ -545,8 +550,12 @@ interval overlap is not a test of the difference between two raters. Read
 complete pass when diagnostics are unavailable. A `REVIEW ONLY` label retains
 the fit's restrictions; the plot does not override them.
 
-In this synthetic example, none of the six raters has a severity or misfit
-flag under the displayed settings. The earlier response-level screen still
+With the unmodified package defaults (absolute severity at least 1 logit,
+Infit or Outfit at or beyond 0.5 and 1.5), none of the six raters is flagged
+in this synthetic example. Session options can change the misfit band:
+check `rater_review$settings` before comparing your output. A numeric
+`misfit_warn = 1.5` instead selects a lower bound of about 0.67; it does not
+preserve the default 0.5. These bands prompt review, not a verdict on quality. The earlier response-level screen still
 selected 141 ratings: the two screens assess different units and use different
 rules. Neither result establishes that every rating is appropriate.
 
@@ -627,6 +636,17 @@ or local paths from real analyses. Review the files before sharing them.
 The table previews six filenames; `export_toy$written_files` retains the full
 list, and its `Path` column locates the generated files. Temporary
 files are for practice; choose a study directory for an archive you will keep.
+To reopen the saved analysis without fitting or computing diagnostics, locate
+the RDS in that file list:
+
+```{r report-reload}
+results_file <- subset(export_toy$written_files, Component == "results_rds")$Path
+restored_results <- readRDS(results_file)
+summary(restored_results)$decision
+```
+
+This restores the collected results and diagnostics. The separate dashboard
+object `rater_review` still needs its own `saveRDS()` call as described above.
 With a precomputed fit as input, this archive's replay code assumes that
 `fit` and `diagnostics` already exist. Keep your original data-to-fit script.
 For a fit replay including its input CSV, and for saving a manuscript table,
@@ -641,13 +661,26 @@ vignette_artifact("workflow_export_files.csv")
 
 | Question | Follow-up |
 | --- | --- |
+| How uncertain is a specified difference between two raters? | `mfrm_facet_intervals()` uses their covariance; choose the model-based or sandwich method for the sampling assumptions. Attach the result with `mfrm_results(fit, intervals = ...)`. See `mfrmr-facet-intervals`; an ordinary Wright map does not switch to sandwich intervals. |
 | Do category thresholds need to differ by criterion? | `compare_mfrm()` and `mml_quadrature_sensitivity()`; fit candidates to the same observations and review numerical sensitivity. |
 | Do specific rater-by-criterion or group contrasts depart from the model? | `estimate_bias()` or `analyze_dff()`; specify the contrasts, screening rules, and multiplicity plan. See the reporting vignette and `mfrmr-linking-and-dff`. |
 | How often does a declared rater-warning rule detect a specified departure or falsely flag an unaffected rater? | `mfrm_screening_performance()` with known simulation truth and all planned trials. See `mfrmr-screening-performance` for individual/family rates, unavailable results and Monte Carlo uncertainty. |
-| Would the conclusions change under a bounded GPCM? | `gpcm_capability_matrix()` and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
+| Would the conclusions change under a GPCM? | `gpcm_capability_matrix()` and `mfrmr-gpcm-scope`; explain what discrimination reweighting means for the score interpretation. |
+| Are scores missing from assigned rating events? | Start with the assignment roster, then `review_mfrm_imputations()`, `fit_mfrm_imputed()` and `pool_mfrm_imputed()`. See `mfrmr-response-imputation` for an explicit imputation model; the review function does not generate scores. Do not fill unassigned combinations. |
+| Do external attributes describe different groups of persons, raters or tasks? | `mfrm_features()` with PCA/k-means for numeric features, or PAM/hierarchical clustering for mixed features. See `mfrmr-external-features` for missing attributes, group stability and links back to rating events. Groups are not ability classes or judgments of rater quality. |
+| Would more raters or tasks improve observed-score dependability? | `mfrm_multivariate_gstudy()` followed by `mfrm_multivariate_d_study()`; declare the observed-score design, candidate plans and any composite weights. Their help explains G/Phi and SEM. These coefficients describe observed scores, not MFRM latent abilities. |
 | Are forms or waves on a comparable scale? | `mfrmr-linking-and-dff` and `mfrmr-portable-calibration`; common labels alone do not establish linking. |
 | How does a proposed rating design perform under stated assumptions? | `build_mfrm_sim_spec()`, `evaluate_mfrm_recovery()`, and `assess_mfrm_recovery()`; report generating conditions, repetitions, failures, and Monte Carlo uncertainty. |
 | How should new persons be scored under an existing calibration? | `predict_mfrm_units()` and `sample_mfrm_plausible_values()`; reuse an eligible fitted calibration and report the conditioning assumptions. |
+
+Missing **attributes** and missing **rating scores** need different models and
+workflows. Neither clustering nor response-score imputation is a prerequisite
+for ordinary MFRM analysis. G/D-studies start from observed scores and their
+design; do not substitute MFRM estimates or testlet variances for their input.
+For these branches, `mfrmr_output_guide("features")`,
+`mfrmr_output_guide("imputation")` and `mfrmr_output_guide("gtheory")` identify
+the supported summaries and plots. Save their full objects with `saveRDS()`;
+they have dedicated output routes and are not `mfrm_results()` inputs.
 
 Simulation examples with one or two repetitions test the computational setup;
 they do not estimate operating characteristics adequately for a paper. A

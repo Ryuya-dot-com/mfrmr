@@ -32,7 +32,7 @@ reference:
     desc: "Review entity-level external attributes and describe exploratory groups."
     contents:
       - mfrm_features
-      - mfrm_cluster
+      - mfrm_cluster_pam
       - mfrm_cluster_hierarchical
       - mfrm_pca
       - plot.mfrm_pca
@@ -44,7 +44,7 @@ reference:
   - title: "Missing assigned scores"
     desc: "Review response imputations, fit a common MFRM and pool eligible facet targets."
     contents:
-      - mfrm_response_imputations
+      - review_mfrm_imputations
       - fit_mfrm_imputed
       - pool_mfrm_imputed
       - plot.mfrm_pooled
@@ -88,10 +88,14 @@ reference:
       - mfrm_calibration_methods
       - mfrm_calibration_score_methods
 
-  - title: "Bounded GPCM boundary"
-    desc: "Supported, caveated, blocked, and deferred bounded-GPCM routes."
+  - title: "GPCM slopes and model comparison"
+    desc: "Relative-slope intervals, model comparisons, and the scope of GPCM workflows."
     contents:
       - gpcm_capability_matrix
+      - confint.mfrm_fit
+      - bootstrap_mfrm_gpcm
+      - mfrm_curve_intervals
+      - plot.mfrm_slope_intervals
       - gpcm_runtime_guard_coverage
       - gpcm_score_side_contract
       - build_model_choice_review
@@ -142,7 +146,7 @@ reference:
       - mfrmr_reporting_and_apa
 
   - title: "Simulation, design, and recovery"
-    desc: "Design review, bounded-GPCM recovery checks, and future-administration scenarios."
+    desc: "Design review, GPCM recovery checks, and future-administration scenarios."
     contents:
       - build_mfrm_sim_spec
       - simulate_mfrm_data

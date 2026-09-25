@@ -136,7 +136,7 @@ When the fitted population model is intercept-only (\code{population_formula = ~
 but it can reconstruct the minimal scored-person table internally because no
 background covariates are needed beyond the person IDs in \code{new_data}.
 
-The current bounded \code{GPCM} branch is included in this scoring layer,
+The current \code{GPCM} branch is included in this scoring layer,
 so fitted \code{GPCM} objects can be used for the same fitted-object
 posterior summaries. This does not imply that every downstream diagnostic or
 reporting helper has already been generalized to \code{GPCM}.

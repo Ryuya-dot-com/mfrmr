@@ -78,7 +78,7 @@ it into a chosen number of groups, and inspect the retained dendrogram.
 \details{
 Uses \code{\link[stats:hclust]{stats::hclust()}} followed by \code{\link[stats:cutree]{stats::cutree()}} at the requested \code{k}.
 Feature types, scaling, weights, missingness handling, silhouette definition,
-and the 5,000-included-entity limit follow \code{\link[=mfrm_cluster]{mfrm_cluster()}}. No distance
+and the 5,000-included-entity limit follow \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}. No distance
 transformation or automatic sampling is performed. This limit is not a
 memory or speed guarantee.
 
@@ -121,7 +121,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   plot(hierarchy, type = "silhouette")
   plot(hierarchy, type = "profile", feature = "ExperienceYears")
   comparison <- mfrm_cluster_compare(list(
-    PAM = mfrm_cluster(features, k = 2, missing = "omit"),
+    PAM = mfrm_cluster_pam(features, k = 2, missing = "omit"),
     Average = hierarchy,
     Complete = mfrm_cluster_hierarchical(features, k = 2,
       linkage = "complete", missing = "omit")))
@@ -136,5 +136,5 @@ Criterion? Journal of Classification, 31, 274--295.
 \doi{10.1007/s00357-014-9161-z}.
 }
 \seealso{
-\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
+\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
 }

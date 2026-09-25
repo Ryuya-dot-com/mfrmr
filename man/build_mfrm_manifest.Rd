@@ -128,7 +128,7 @@ control over residual PCA.
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}.
 }
 
-For bounded \code{GPCM} fits, the manifest is available with an explicit
+For \code{GPCM} fits, the manifest is available with an explicit
 \code{gpcm_boundary} table. It records supported direct diagnostics/reporting
 surfaces while keeping full FACETS score-side contract review blocked and
 routing design forecasting through its separate caveated capability row.

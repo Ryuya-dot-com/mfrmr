@@ -2,10 +2,25 @@
 % Please edit documentation in R/api-response-imputation.R
 \name{mfrm_response_imputations}
 \alias{mfrm_response_imputations}
+\alias{review_mfrm_imputations}
 \alias{print.mfrm_response_imputations}
 \alias{summary.mfrm_response_imputations}
 \title{Review multiple imputations of scores on assigned ratings}
 \usage{
+review_mfrm_imputations(
+  data,
+  completed,
+  person,
+  facets,
+  score,
+  event_id,
+  impute_ids,
+  categories,
+  assigned = NULL,
+  imputation_model = NULL,
+  missing = c("error", "omit")
+)
+
 mfrm_response_imputations(
   data,
   completed,
@@ -37,8 +52,10 @@ rating event, including repeated ratings of the same person and facets.}
 
 \item{facets}{Nonempty character vector of facet column names.}
 
-\item{impute}{Character vector of event IDs explicitly selecting missing
-scores on assigned ratings. Observed scores cannot be selected.}
+\item{impute_ids}{Character vector of event IDs explicitly selecting missing
+scores on assigned ratings. Observed scores cannot be selected.
+These are values from the \code{event_id} column, not a column name or a logical
+switch. For example, \code{c("E2", "E7")} selects those two rating events.}
 
 \item{categories}{The full intended contiguous integer category vector,
 for example \code{0:4}. It is preserved across all completed analyses.}
@@ -54,11 +71,15 @@ Required so that the provenance is retained. For a \code{mids} input, that
 object is retained automatically; omit this argument.}
 
 \item{missing}{How to handle assigned missing scores not selected by
-\code{impute}: \code{"error"} (default) or explicit \code{"omit"}. Omitted events remain
+\code{impute_ids}: \code{"error"} (default) or explicit \code{"omit"}. Omitted events remain
 in the roster and every completion, with missing scores, and are excluded
 from each analysis. This choice is not a correction for nonresponse.}
 
-\item{x, object}{An object returned by \code{mfrm_response_imputations()}.}
+\item{impute}{Compatibility name for \code{impute_ids}, used only by
+\code{mfrm_response_imputations()}. Supply one selection, not both argument names.}
+
+\item{x, object}{An object returned by \code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}} or its
+compatibility wrapper \code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}.}
 
 \item{...}{Unused for print and summary methods.}
 }
@@ -75,6 +96,9 @@ Supply these completed data from an imputation model; this function checks
 that observed scores, rating assignments and identifiers are preserved.
 No person-by-facet grid is constructed. This function validates supplied
 imputations; it does not choose or fit an imputation model.
+Start with \code{review_mfrm_imputations()}, then use \code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}} and
+\code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}} for eligible fixed-facet analyses. The older name
+\code{mfrm_response_imputations()} is retained with its original \code{impute} argument.
 }
 \details{
 The score must contain numeric integer category labels (numeric
@@ -109,6 +133,20 @@ regenerates that example; it is not a general imputation engine.
 Under the same score model and ignorable missingness, observed-score MML
 can directly estimate the fixed-facet target without completing scores.
 MI does not create additional observed information.
+}
+\examples{
+# Small supplied completions to illustrate input checks, not a fitted imputer.
+ratings <- data.frame(Event = paste0("E", 1:4), Person = c("P1", "P1", "P2", "P2"),
+  Rater = c("A", "B", "A", "B"), Score = c(0, NA, 1, 2))
+first <- second <- ratings
+first$Score[2] <- 1
+second$Score[2] <- 2
+reviewed <- review_mfrm_imputations(ratings, list(first, second),
+  person = "Person", facets = "Rater", score = "Score", event_id = "Event",
+  impute_ids = "E2", categories = 0:2,
+  imputation_model = list(method = "Illustrative supplied completions"))
+reviewed$events  # Only E2 is imputed; the three observed scores are retained.
+summary(reviewed)  # Original observed support and imputation counts per level.
 }
 \seealso{
 \code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}}, \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}

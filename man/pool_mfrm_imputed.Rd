@@ -51,6 +51,9 @@ the pooled point estimate, \code{sqrt(B / m)}; it is not its inferential SE.
 \code{MissingVarianceFraction} is \verb{(1 + 1/m) B / T}, not the raw missing-rate.
 Fixed targets retain their value and zero variance, but no inferential
 interval or degrees of freedom. No imputation is omitted.
+\code{information_review} retains any numerical-refinement review at each
+imputation's list position. \code{cautions} identifies affected imputations;
+when present, \code{InferenceCaution} also accompanies the pooled table.
 }
 \description{
 Combine results such as rater severity or a prespecified difference between
@@ -73,6 +76,10 @@ and identification. Known anchors are fixed and their uncertainty is
 excluded. Singular or regularized free-parameter information and any
 failed/ineligible completion prevent pooling. A target fixed by a constraint
 is labelled \code{"fixed"}; it is not evidence of perfect precision.
+A verified unregularized inverse of ill-conditioned information can be used
+with a warning identifying the affected imputations. Rubin pooling does not
+repair unreliable complete-data approximations. Review interval widths,
+boundary proximity and quadrature sensitivity before interpreting the pool.
 
 The intervals are pointwise model-based multiple-imputation intervals,
 conditional on adequate proper imputations and complete-data inference.
@@ -127,5 +134,5 @@ imputation under uncongeniality and misspecification.
 \doi{10.1177/0962280220932189}.
 }
 \seealso{
-\code{\link[mice:pool.scalar]{mice::pool.scalar()}}, \code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}, \code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}}
+\code{\link[mice:pool.scalar]{mice::pool.scalar()}}, \code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}}, \code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}}
 }

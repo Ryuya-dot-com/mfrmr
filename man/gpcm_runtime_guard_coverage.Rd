@@ -17,12 +17,12 @@ A data.frame with columns:
 }
 }
 \description{
-List bounded-\code{GPCM} routes that are not currently available and show the
+List \code{GPCM} routes that are not currently available and show the
 supported alternative for each route.
 }
 \details{
 A \code{blocked} row names a helper that intentionally stops instead of returning
-an unsupported bounded-\code{GPCM} result. A \code{deferred} row has no public helper.
+an unsupported \code{GPCM} result. A \code{deferred} row has no public helper.
 In either case, read \code{Boundary} for the reason and \code{RecommendedRoute} for a
 currently available analysis route.
 }

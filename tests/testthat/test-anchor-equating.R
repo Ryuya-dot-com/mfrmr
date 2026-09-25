@@ -482,7 +482,7 @@ test_that("build_linking_review rejects malformed inputs", {
   )
 })
 
-test_that("build_linking_review returns exploratory bounded GPCM source reviews", {
+test_that("build_linking_review returns exploratory GPCM source reviews", {
   toy <- load_mfrmr_data("example_core")
   gpcm_fit1 <- suppressWarnings(fit_mfrm(
     toy,
@@ -515,7 +515,7 @@ test_that("build_linking_review returns exploratory bounded GPCM source reviews"
   review <- build_linking_review(drift = drift_gpcm)
   expect_s3_class(review, "mfrm_linking_review")
   expect_identical(review$settings$intended_use, "exploratory_gpcm_linking_review")
-  expect_true(any(review$support_status$Scope == "bounded GPCM" &
+  expect_true(any(review$support_status$Scope == "GPCM" &
                     review$support_status$Status == "supported_with_caveat"))
   expect_true(any(grepl("exploratory", review$notes, ignore.case = TRUE)))
 })

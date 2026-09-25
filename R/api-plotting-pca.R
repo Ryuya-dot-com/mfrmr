@@ -8,7 +8,7 @@
 #' @param components For scores, two distinct retained component numbers.
 #'   For loadings, one retained component number. Defaults to `c(1, 2)` for
 #'   scores and `1` for loadings. Unavailable axes cause an error.
-#' @param groups Optional [mfrm_cluster_kmeans()], [mfrm_cluster()] or
+#' @param groups Optional [mfrm_cluster_kmeans()], [mfrm_cluster_pam()] or
 #'   [mfrm_cluster_hierarchical()] result used to color a scores plot. Its IDs,
 #'   included entities and shared PCA features must match. Labels only annotate
 #'   the view; they do not refit PCA or imply separation on every component.

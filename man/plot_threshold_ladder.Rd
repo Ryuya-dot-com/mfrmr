@@ -32,7 +32,7 @@ row.
 Renders the Rasch-Andrich threshold structure as a vertical ladder per
 step-facet level. Each tick is a \code{tau_k}; lines connecting adjacent
 thresholds are coloured to make disordered crossings (\verb{tau_\{k+1\} < tau_k}) visually obvious. For RSM there is one ladder; for PCM (and
-bounded GPCM) there is one ladder per \code{step_facet} level.
+GPCM) there is one ladder per \code{step_facet} level.
 }
 \section{Interpreting output}{
 

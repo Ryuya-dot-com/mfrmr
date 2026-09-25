@@ -108,7 +108,7 @@ Use \code{\link[=plot_residual_matrix]{plot_residual_matrix()}}.
 Use \code{\link[=plot_shrinkage_funnel]{plot_shrinkage_funnel()}} on a fit augmented via
 \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}.
 \item "I need one compact triage screen first."
-Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code{PCM}. The bounded \code{GPCM}
+Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code{PCM}. The \code{GPCM}
 branch can also call \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average
 panel reports an explicit unavailability indicator because that
 panel's score-metric semantics are limited to the Rasch-family branch.

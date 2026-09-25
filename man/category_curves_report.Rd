@@ -88,7 +88,7 @@ contributions are needed.
 
 Category response curves follow Andrich's rating-scale formulation,
 Masters' partial-credit model, and Muraki's generalized partial-credit
-model. The \code{Information} column for bounded \code{GPCM} uses Muraki's
+model. The \code{Information} column for \code{GPCM} uses Muraki's
 item-information result obtained from Samejima's general polytomous
 information formula.
 \itemize{

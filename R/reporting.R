@@ -1073,7 +1073,7 @@ summarize_population_model_for_apa <- function(res) {
     paste0(
       "An intercept-only conditional-normal population model was activated via ",
       formula_label,
-      " to estimate the bounded-GPCM MML location and common discrimination scale; it is not a substantive covariate regression."
+      " to estimate the GPCM MML location and common discrimination scale; it is not a substantive covariate regression."
     )
   } else {
     paste0(
@@ -1574,7 +1574,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     model,
     RSM = "A many-facet rating-scale Rasch model",
     PCM = "A many-facet partial-credit Rasch model",
-    GPCM = "A bounded generalized partial-credit many-facet model",
+    GPCM = "A generalized partial-credit many-facet model",
     "A many-facet ordered-response model"
   )
   design_overview_sentence <- paste0(
@@ -2108,7 +2108,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   }
   gpcm_caution <- if (identical(model, "GPCM")) {
     paste(
-      "Bounded GPCM note: this APA/reporting bundle is a slope-aware",
+      "GPCM note: this APA/reporting bundle is a slope-aware",
       "sensitivity-reporting surface over supported diagnostics, direct",
       "tables, and plots. It is not FACETS score-side equivalence, an",
       "automatic operational-scoring decision, or design-forecasting evidence."

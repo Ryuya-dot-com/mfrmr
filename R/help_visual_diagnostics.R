@@ -102,7 +102,7 @@
 #'   Use [plot_shrinkage_funnel()] on a fit augmented via
 #'   [apply_empirical_bayes_shrinkage()].
 #' - "I need one compact triage screen first."
-#'   Use [plot_qc_dashboard()] for `RSM` / `PCM`. The bounded `GPCM`
+#'   Use [plot_qc_dashboard()] for `RSM` / `PCM`. The `GPCM`
 #'   branch can also call [plot_qc_dashboard()], but its fair-average
 #'   panel reports an explicit unavailability indicator because that
 #'   panel's score-metric semantics are limited to the Rasch-family branch.
@@ -871,7 +871,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Approximate Wald interval around centered facet severity using ModelSE.",
       "Composite overview; interval evidence comes from the rater severity panel.",
       "RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.",
-      "Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.",
+      "Profile-likelihood limits for GPCM bias rows when available, otherwise per-cell SE fallback.",
       "Approximate Wald interval around displacement using DisplacementSE.",
       "Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.",
       "Joint MML covariance for pair differences and deviations from the equally weighted facet mean.",
@@ -938,7 +938,7 @@ mfrmr_interval_guide <- function(scope = c(
       "This explicit helper is useful for publication-style maps.",
       "Use facet = ... for non-Rater severity facets.",
       "Designed for RSM/PCM manuscript routes; inspect returned panel data before publication.",
-      "The table fair_se option provides bounded GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.",
+      "The table fair_se option provides GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.",
       "Heatmaps remain pattern displays and do not draw intervals.",
       "Best used after reviewing the underlying displacement table.",
       "Use together with dif_report() for narrative boundaries.",
@@ -959,7 +959,7 @@ mfrmr_interval_guide <- function(scope = c(
       "pool_mfrm_imputed(analyses, facet, ci_level = 0.95)"
     ),
     DisplayRoute = c(
-      "Use summary(result) or plot(result, comparison = TRUE, draw = FALSE).",
+      "Use plot(result), as_ggplot(result), apa_table(result), or attach it with mfrm_results(fit, intervals = list(raters = result), compute = \"never\").",
       "Use summary(result) or plot(result, draw = FALSE)."
     ),
     DefaultLevel = c(0.95, 0.95),
@@ -1059,6 +1059,37 @@ mfrmr_interval_guide <- function(scope = c(
     InterpretationBoundary = "Excludes calibration/population estimation uncertainty, Person contrasts and coverage guarantees. Numerical checks do not certify Laplace accuracy.",
     GPCMStatus = "unavailable; shared-rater RSM only",
     Notes = "persons selects outputs, not data. newdata replaces the entire roster. Prior-only and unavailable rows remain explicit.",
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = "GPCM relative-slope intervals", Scope = "gpcm,visual,table,fit,reporting",
+    PrimaryHelper = "confint(fit, parm = \"slopes\", level = 0.95)",
+    DisplayRoute = "plot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(slopes = result)). diagnose_mfrm() retains default relative/model intervals.",
+    DefaultLevel = 0.95, IntervalColumns = "Lower, Upper; CIEligible, CIUse, InferenceReview in diagnostics",
+    Basis = "Pointwise log-Wald intervals from the inverse full joint MML observed information, with sum-zero log-slope transformation.",
+    UseFor = "Sampling uncertainty in relative discriminations with geometric mean one.",
+    InterpretationBoundary = "Default relative/model target; explicit options select standardized slopes, contrasts, sandwich or Bonferroni intervals. These are not rater-quality intervals or general coverage guarantees.",
+    GPCMStatus = "supported_with_caveat; eligible native GPCM MML only",
+    Notes = "Requires current likelihood metadata, adequate convergence/categories, unit weights, q>=31 and positive unregularized information. Ordinary Wright/Pathway maps do not display these slope intervals.",
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = c("GPCM curve uncertainty", "GPCM bootstrap slope intervals"),
+    Scope = "gpcm,visual,table,reporting",
+    PrimaryHelper = c("mfrm_curve_intervals(fit, grid)", "confint(bootstrap_mfrm_gpcm(fit, seed = 123))"),
+    DisplayRoute = "plot(result), as_ggplot(result), apa_table(result), plot_data(result); attach with mfrm_results(fit, intervals = list(uncertainty = result)).",
+    DefaultLevel = .95,
+    IntervalColumns = c("Lower, Upper, CIEligible, InferenceReview", "Matrix bounds; diagnostics and availability attributes"),
+    Basis = c("Full calibration covariance at fixed native-scale ability and rating context; logit or log transformation.",
+      "Fitted-model basic bootstrap errors; unresolved refits enclose all possible empirical limits."),
+    UseFor = c("Uncertainty in category probabilities or information per rating.", "Approximate slope uncertainty under the fitted population and analyzed assignment."),
+    InterpretationBoundary = c("Not Person-score intervals or a continuous simultaneous confidence band.",
+      "Not an exact small-sample method; failed refits can leave infinite bounds. Null-model LRT draws cannot supply slope intervals."),
+    GPCMStatus = "supported_with_caveat; eligible native GPCM MML only",
+    Notes = c("Default model covariance and pointwise intervals; sandwich and finite-grid Bonferroni are explicit options.",
+      "Default relative 95% pointwise intervals; select scale, level and contrasts explicitly. Generating the bootstrap can be costly; displaying saved output does not refit."),
     stringsAsFactors = FALSE
   ))
 

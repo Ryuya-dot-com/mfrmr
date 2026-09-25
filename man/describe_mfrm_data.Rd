@@ -20,7 +20,8 @@ describe_mfrm_data(
   context_facets = NULL,
   agreement_top_n = NULL,
   expected_design = NULL,
-  min_linking_persons = 2L
+  min_linking_persons = 2L,
+  category_policy = NULL
 )
 }
 \arguments{
@@ -44,7 +45,8 @@ support.}
 
 \item{keep_original}{Keep original category values. Use this with
 \code{rating_min} / \code{rating_max} when the intended scale has unused
-intermediate categories such as \verb{1, 2, 4, 5} on a 1-5 scale.}
+intermediate categories such as \verb{1, 2, 4, 5} on a 1-5 scale.
+New code can instead use \code{category_policy = "preserve"}.}
 
 \item{missing_codes}{Optional. \code{NULL} (default) is a no-op;
 \code{TRUE} or \code{"default"} activates the FACETS / SPSS / SAS
@@ -83,11 +85,25 @@ can be distinguished from cells that were never assigned.}
 flag. A facet level observed for fewer than this many distinct persons is
 counted in \code{linkage_summary$SparseLevels}. This is a review threshold, not
 a model-acceptance rule.}
+
+\item{category_policy}{Optional explicit category choice: \code{"collapse"}
+maps gaps in the observed categories to consecutive scores;
+\code{"preserve"} keeps the intended ladder, declared with \code{rating_min} and
+\code{rating_max}. This changes the fitted category steps, not just labels.
+\code{NULL} (default) uses \code{keep_original}, whose default is \code{FALSE}
+(\code{"collapse"}). Supplying both choices is allowed only when they agree.
+Preservation does not estimate unsupported steps: fitting stops if a
+retained internal category has no observations. Use the same policy in
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.}
 }
 \value{
 A list of class \code{mfrm_data_description} with:
 \itemize{
 \item \code{overview}: one-row run-level summary
+including \code{CategoryPolicy} and \code{ScoreRecoded}. The former records the
+selected category handling; the latter indicates whether original score
+values actually changed. A \code{"collapse"} policy can leave a contiguous
+scale unchanged. Inspect \code{score_support$score_map} for the mapping.
 \item \code{missing_by_column}: missing counts in selected input columns
 \item \code{missing_rate_summary}: per-column missingness rate summary
 (one row per input column, with raw and proportion-of-N columns)
@@ -234,7 +250,7 @@ data_review <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE
+  category_policy = "preserve"
 )
 data_review$row_retention       # Input and retained rows; check DroppedRows
 data_review$missing_by_column   # Missing input values in each model column

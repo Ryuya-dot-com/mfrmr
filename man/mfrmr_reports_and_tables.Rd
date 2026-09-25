@@ -28,7 +28,7 @@ Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and 
 \item "What should go into the manuscript text and tables?"
 For \code{RSM} / \code{PCM}, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 and \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or \code{\link[=export_summary_appendix]{export_summary_appendix()}}. For
-bounded \code{GPCM}, use the same route only where
+\code{GPCM}, use the same route only where
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} marks it as \code{supported_with_caveat}: direct
 table/plot helpers, summary-table appendix export, caveated
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, and caveated \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} are available
@@ -56,7 +56,7 @@ describe spread, linkage, and measurability.
 \item For \code{RSM} / \code{PCM}, finish with \code{\link[=reporting_checklist]{reporting_checklist()}} and
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} for manuscript-oriented output, then
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for reusable handoff tables or
-\code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct appendix export. For bounded
+\code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct appendix export. For
 \code{GPCM}, the same report/export route is available only as a caveated
 sensitivity-reporting layer with \code{gpcm_boundary}; keep FACETS-style
 score-side review and design forecasting on their separate capability
@@ -157,7 +157,7 @@ still needs missing diagnostics or clearer caveats.
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{summary()} / \code{plot()} -> \code{\link[=apa_table]{apa_table()}}
 or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}(include = "summary_tables").
-\item Bounded \code{GPCM} handoff:
+\item \code{GPCM} handoff:
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> direct summaries/plots ->
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} or \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} ->
 \code{\link[=export_summary_appendix]{export_summary_appendix()}} or caveated \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, with

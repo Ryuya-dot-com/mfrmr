@@ -27,6 +27,11 @@
 #' Non-unit observation weights are inference-ineligible, including weights
 #' normalized to mean one. Older bundles must retain the current readiness
 #' contract as well as the covariance basis before they can be displayed.
+#' A numerically verified inverse of ill-conditioned information is retained
+#' with a warning, not silently treated as strong evidence. When applicable,
+#' `cautions`, `information_review` and table column `InferenceCaution` preserve
+#' that warning through summaries and plots. Numerical verification does not
+#' establish the accuracy of the normal or chi-square approximations.
 #'
 #' The heterogeneity table uses a joint Wald chi-square test of equality of
 #' the facet levels. Non-significant heterogeneity is neither necessary nor
@@ -359,6 +364,15 @@ analyze_facet_equivalence <- function(fit,
       covariance_basis = "mml_observed_information_contrasts"
     )
   )
+  cautions <- mfrm_mml_information_caution(covariance)
+  if (length(cautions)) {
+    out$cautions <- cautions
+    out$information_review <- covariance$solution_information$inverse_review
+    for (name in c("summary", "chi_square", "pairwise", "rope", "forest")) {
+      out[[name]]$InferenceCaution <- paste(cautions, collapse = " ")
+    }
+    warning(paste(cautions, collapse = " "), call. = FALSE)
+  }
   as_mfrm_bundle(out, "mfrm_facet_equivalence")
 }
 
@@ -459,7 +473,10 @@ plot_facet_equivalence <- function(x,
     equivalence_bound = suppressWarnings(as.numeric(settings$equivalence_bound %||% summary_tbl$EquivalenceBound[1] %||% NA_real_)),
     type = type,
     title = paste0(as.character(settings$facet), ": deviation from facet mean"),
-    note = "Mean-deviation intervals do not establish pairwise equivalence.",
+    note = paste(c("Mean-deviation intervals do not establish pairwise equivalence.",
+      x$cautions), collapse = " "),
+    cautions = x$cautions,
+    information_review = x$information_review,
     inference_ready = TRUE,
     covariance_basis = settings$covariance_basis
   )
@@ -520,6 +537,8 @@ plot_facet_equivalence <- function(x,
     out$bar_midpoints <- mids
   }
 
+  if (length(x$cautions)) graphics::mtext(
+    "Weak information: review interval and test reliability.", side = 3, line = 0.3, cex = .8)
   invisible(out)
 }
 

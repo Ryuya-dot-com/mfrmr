@@ -23,13 +23,13 @@
 #' @details Numeric `NA` and `NaN` are missing. Infinite numeric values and blank
 #'   categorical labels are refused; replace missing markers with `NA` explicitly.
 #'   Constant and entirely missing features remain available for review but
-#'   cannot be used by [mfrm_cluster()]. IDs and unselected columns do not enter
+#'   cannot be used by [mfrm_cluster_pam()]. IDs and unselected columns do not enter
 #'   distances. These functions are intended for external attributes such as
 #'   training, experience, or specialization. They do not propagate uncertainty
 #'   from estimated ability, severity, or fit statistics.
 #'   See `vignette("mfrmr-external-features")` for a complete rater-attribute
 #'   example including missingness review and multiple imputation.
-#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
+#' @seealso [mfrm_cluster_pam()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
 #'   [mfrm_pca()], [mfrm_cluster_kmeans()]
 #' @examples
 #' # Fictional rater attributes; experience is measured in completed years.
@@ -154,10 +154,12 @@ print.mfrm_features <- function(x, ...) {
 #' @export
 summary.mfrm_features <- function(object, ...) object$feature_summary
 
-#' Explore groups defined by external features
+#' Group mixed external features using Gower distances and PAM
 #'
 #' Partition an entity-level feature table using Gower dissimilarities and
 #' partitioning around medoids (PAM) from the optional `cluster` package.
+#' Use `mfrm_cluster_pam()` for this method. `mfrm_cluster()` is retained as
+#' an identical compatibility alias; it does not select an algorithm for you.
 #'
 #' @param x An object returned by [mfrm_features()].
 #' @param k Number of groups, an integer from 2 to one less than the number of
@@ -206,17 +208,23 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'     Specialty = rep(c("Language", "Science"), each = 3))
 #'   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
 #'   # The default stops on missing features. Here omission is explicit.
-#'   groups <- mfrm_cluster(features, k = 2,
+#'   groups <- mfrm_cluster_pam(features, k = 2,
 #'     weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
 #'   groups$membership  # R2 remains present with unavailable membership.
 #'   summary(groups)
 #'   groups$profiles
 #'   groups$medoids
 #' }
+#' @name mfrm_cluster
+#' @rdname mfrm_cluster
 #' @export
-mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
+mfrm_cluster_pam <- function(x, k, weights = NULL, missing = c("error", "omit")) {
   cluster_external_features(x, k, weights, match.arg(missing))
 }
+
+#' @rdname mfrm_cluster
+#' @export
+mfrm_cluster <- mfrm_cluster_pam
 
 cluster_external_features <- function(x, k, weights, missing, linkage = NULL) {
   if (!inherits(x, "mfrm_features")) {
@@ -330,7 +338,7 @@ cluster_feature_profiles <- function(values, labels) {
 }
 
 #' @rdname mfrm_cluster
-#' @param object An object returned by [mfrm_cluster()].
+#' @param object An object returned by [mfrm_cluster_pam()].
 #' @param ... Reserved for method compatibility.
 #' @export
 print.mfrm_clusters <- function(x, ...) {
@@ -366,7 +374,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   If all selected features are already complete, supply the empty
 #'   `x$missing` table. This retains one partition per imputation so the result
 #'   can be compared with other feature selections from the same model.
-#' @param k,weights As in [mfrm_cluster()]. The same choices apply to every
+#' @param k,weights As in [mfrm_cluster_pam()]. The same choices apply to every
 #'   imputation.
 #' @param missing Either `"error"` (default) or `"omit"`, applied to missing
 #'   features remaining after imputation. Explicit omission retains excluded
@@ -439,7 +447,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   For a complete example with fictional rater attributes, explicit missingness
 #'   reasons, imputation diagnostics, and comparisons of group counts and weights,
 #'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
-#' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
+#' @seealso [mfrm_features()], [mfrm_cluster_pam()], [mfrm_cluster_compare()],
 #'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()],
 #'   [mice::mice()], [mice::complete()]
 #' @examples
@@ -578,7 +586,7 @@ mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
       check_values(completed, remaining)
       reviewed <- mfrm_features(completed, x$id, x$features, reasons)
       if (method == "pam") {
-        mfrm_cluster(reviewed, k = k, weights = weights, missing = missing)
+        mfrm_cluster_pam(reviewed, k = k, weights = weights, missing = missing)
       } else if (method == "hierarchical") {
         mfrm_cluster_hierarchical(reviewed, k = k, weights = weights,
           missing = missing, linkage = linkage)

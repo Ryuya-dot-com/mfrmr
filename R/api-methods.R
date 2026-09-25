@@ -2110,7 +2110,8 @@ summary_mfrm_bundle_impl <- function(object,
       notes = c(
         "Each pair uses two one-sided normal-reference tests at 5%, with its 90% interval and the stated bound in logits.",
         "Individual pair decisions are unadjusted for multiple comparisons. The all-pairs conclusion requires every pair to meet the bound.",
-        "The mean-deviation plots describe proximity to the facet mean; they do not show pairwise equivalence or posterior probabilities."
+        "The mean-deviation plots describe proximity to the facet mean; they do not show pairwise equivalence or posterior probabilities.",
+        object$cautions
       ), digits = digits, top_n = top_n
     )
     out$covariance_verified <- TRUE
@@ -7874,7 +7875,7 @@ summary.mfrm_diagnostics <- function(object,
     notes <- c(
       notes,
       paste0(
-        "The embedded fair-average dashboard panel is disabled for bounded GPCM; ",
+        "The embedded fair-average dashboard panel is disabled for GPCM; ",
         "use `fair_average_table(fit, diagnostics = diagnostics)` for the ",
         "supported slope-aware element-conditional table."
       )
@@ -8288,7 +8289,7 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
 #' - `overview`: interaction order, analyzed cells, and effect-size profile.
 #' - `chi_sq`: fixed-effect test block.
 #' - `final_iteration`: end-of-loop status from the bias routine.
-#' - `top_rows`: strongest bias contrasts by `|t|`; bounded `GPCM`
+#' - `top_rows`: strongest bias contrasts by `|t|`; `GPCM`
 #'   summaries also retain the profile-likelihood review columns when present.
 #'
 #' @section Typical workflow:
@@ -8594,6 +8595,11 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `step_overview`: threshold spread and monotonicity checks, reported by
 #'   `StepFacet` ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 #' - `settings_overview`: estimation settings that affect interpretation.
+#'   `CategoryPolicy` records `"preserve"` or `"collapse"`; `ScoreRecoded`
+#'   states whether the stored original-to-internal score map changes values.
+#'   A collapse policy need not recode a complete contiguous scale. For older
+#'   saved fits, absent policy or mapping records give `"not_recorded"` or `NA`,
+#'   respectively; an unchanged score map does not identify the chosen policy.
 #'   For MML fits, the printed fit and summary also state the engine, fixed or
 #'   adaptive Gauss--Hermite rule and order, one-dimensional latent
 #'   structure, population identification, and discrimination constraint.
@@ -8628,7 +8634,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'    `plot(fit, type = "wright", show_ci = TRUE)`; add the FACETS renderer or
 #'    Infit pathway only when they answer a specific follow-up question.
 #' 5. For `RSM` / `PCM`, continue with [diagnose_mfrm()] for element-level fit
-#'    checks. For bounded `GPCM`, continue with [compute_information()] /
+#'    checks. For `GPCM`, continue with [compute_information()] /
 #'    [plot_information()] or the fitted-object posterior scoring helpers.
 #'
 #' @return An object of class `summary.mfrm_fit` with:
@@ -9572,7 +9578,8 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     },
     UnusedScoreCategories = "",
     UnusedScoreCategoryCount = 0L,
-    UnusedScoreCategoryType = "none"
+    UnusedScoreCategoryType = "none",
+    !!!mfrm_category_settings(prep, config)
   )
 
   score_category_profile <- score_category_support_profile(prep = prep)
@@ -10659,6 +10666,18 @@ mfrm_fit_decision_summary <- function(readiness,
   } else {
     reasons <- paste0(paste(reasons, collapse = "; "), ".")
   }
+  if (any(c("mml_gpcm_slope_boundary_not_evaluated",
+            "jml_gpcm_joint_boundary_not_evaluated",
+            "jml_gpcm_joint_boundary_candidate") %in%
+          mfrmr_readiness_split_codes(readiness$ReasonCodes))) {
+    reasons <- paste(
+      reasons,
+      "For GPCM MML, confint(fit, parm = 'slopes') separately checks approximate relative-slope intervals.",
+      "This does not certify global boundary absence or authorize other parameter intervals.",
+      "MML information-criterion comparison and matched PCM/GPCM tests have separate checks;",
+      "inspect ICComparable and the LRT status from compare_mfrm()."
+    )
+  }
   data.frame(
     Interpretation = interpretation,
     FormalInference = if (formal_supported) "Yes" else "No",
@@ -11408,7 +11427,7 @@ print.summary.mfrm_fit <- function(x, ...) {
       "PrimaryReady", "FixedLatentSDBasis"))]
     if ("ValueBasis" %in% names(slopes)) slopes$ValueBasis <- mfrm_fit_display_status(slopes$ValueBasis)
     print(round_numeric_df(slopes, digits = digits), row.names = FALSE)
-    print_wrapped_line("Optimizer traces do not establish supported slope estimates or intervals. The fixed-latent-SD value multiplies each relative slope by the fitted population SD.")
+    print_wrapped_line("Use confint(fit, parm = 'slopes') or diagnose_mfrm(fit) for separately checked MML relative-slope intervals. Their CIEligible decision does not certify global boundary absence. Use confint(fit, scale = 'standardized') for intervals on population-SD times slope, including estimated-scale uncertainty. With covariates, this is the residual population SD.")
   }
   if (nrow(x$interaction_overview %||% data.frame()) > 0) {
     cat("\nFacet interaction summary\n")
@@ -11418,7 +11437,8 @@ print.summary.mfrm_fit <- function(x, ...) {
     cat("\nEstimation settings\n")
     settings <- as.data.frame(x$settings_overview)
     keep <- intersect(c("StepFacet", "SlopeFacet", "NoncenterFacet", "WeightColumn",
-      "RatingMin", "RatingMax", "DummyFacets", "PositiveFacets", "FacetInteractions",
+      "RatingMin", "RatingMax", "CategoryPolicy", "ScoreRecoded",
+      "DummyFacets", "PositiveFacets", "FacetInteractions",
       "UnusedScoreCategories", "UnusedScoreCategoryCount"), names(settings))
     print(round_numeric_df(settings[keep], digits = digits), row.names = FALSE)
     print_wrapped_line(settings$StepFacetNote %||% character(0))

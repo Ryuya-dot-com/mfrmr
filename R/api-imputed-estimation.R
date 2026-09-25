@@ -1,11 +1,11 @@
 #' Fit the same MFRM to every completed rating data set
 #'
 #' Fit a separate MFRM to each completed version of the ratings reviewed by
-#' [mfrm_response_imputations()]. All fits use the same model and measurement
+#' [review_mfrm_imputations()]. All fits use the same model and measurement
 #' scale so eligible estimates can be combined with [pool_mfrm_imputed()].
 #' Failed fits and their messages are retained for review.
 #'
-#' @param x An [mfrm_response_imputations()] object.
+#' @param x An [review_mfrm_imputations()] object.
 #' @param model `"RSM"` or `"PCM"`.
 #' @param step_facet Required for PCM: the facet with separate step parameters.
 #' @param ... Shared [fit_mfrm()] arguments, such as `quad_points`, `anchors`,
@@ -32,15 +32,15 @@
 #'   posterior SDs are not ordinary complete-data parameter estimates and
 #'   standard errors for Rubin pooling.
 #'
-#' @seealso [mfrm_response_imputations()], [pool_mfrm_imputed()]
+#' @seealso [review_mfrm_imputations()], [pool_mfrm_imputed()]
 #' @export
 fit_mfrm_imputed <- function(x, model = c("RSM", "PCM"), step_facet = NULL, ...) {
   model <- match.arg(model)
   if (!inherits(x, "mfrm_response_imputations")) {
-    stop("`x` must come from mfrm_response_imputations().", call. = FALSE)
+    stop("`x` must come from review_mfrm_imputations().", call. = FALSE)
   }
   s <- x$settings
-  x <- mfrm_response_imputations(x$data, x$completed, s$person, s$facets, s$score,
+  x <- review_mfrm_imputations(x$data, x$completed, s$person, s$facets, s$score,
     s$event_id, x$events$ID[x$events$Imputed], s$categories, s$assigned,
     x$imputation_model, s$missing)
   if ((model == "PCM" && (length(step_facet) != 1L || is.na(step_facet) ||
@@ -49,7 +49,7 @@ fit_mfrm_imputed <- function(x, model = c("RSM", "PCM"), step_facet = NULL, ...)
   }
   dots <- list(...)
   blocked <- c("data", "person", "facets", "score", "rating_min", "rating_max",
-    "keep_original", "missing_codes", "method", "weight", "population_formula",
+    "keep_original", "category_policy", "missing_codes", "method", "weight", "population_formula",
     "person_data", "person_id", "population_policy", "facet_shrinkage",
     "facet_prior_sd", "shrink_person", "checkpoint", "gpcm_mml_identification",
     "slope_facet", "mml_integration", "attach_diagnostics")
@@ -135,6 +135,9 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   `MissingVarianceFraction` is `(1 + 1/m) B / T`, not the raw missing-rate.
 #'   Fixed targets retain their value and zero variance, but no inferential
 #'   interval or degrees of freedom. No imputation is omitted.
+#'   `information_review` retains any numerical-refinement review at each
+#'   imputation's list position. `cautions` identifies affected imputations;
+#'   when present, `InferenceCaution` also accompanies the pooled table.
 #'
 #' @details For a common target, `Qbar` is the mean completed-data estimate,
 #'   `Ubar` the mean complete-data covariance and `B` their between-imputation
@@ -150,6 +153,10 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #' excluded. Singular or regularized free-parameter information and any
 #' failed/ineligible completion prevent pooling. A target fixed by a constraint
 #' is labelled `"fixed"`; it is not evidence of perfect precision.
+#' A verified unregularized inverse of ill-conditioned information can be used
+#' with a warning identifying the affected imputations. Rubin pooling does not
+#' repair unreliable complete-data approximations. Review interval widths,
+#' boundary proximity and quadrature sensitivity before interpreting the pool.
 #'
 #' The intervals are pointwise model-based multiple-imputation intervals,
 #' conditional on adequate proper imputations and complete-data inference.
@@ -199,7 +206,7 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   imputation under uncongeniality and misspecification.
 #'   *Statistical Methods in Medical Research*, 29, 3533--3546.
 #'   \doi{10.1177/0962280220932189}.
-#' @seealso [mice::pool.scalar()], [mfrm_response_imputations()], [fit_mfrm_imputed()]
+#' @seealso [mice::pool.scalar()], [review_mfrm_imputations()], [fit_mfrm_imputed()]
 #' @export
 pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
                              df_complete = Inf) {
@@ -249,6 +256,8 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
   m <- length(x$fits)
   q <- matrix(NA_real_, m, nrow(contrasts), dimnames = list(seq_len(m), rownames(contrasts)))
   u <- vector("list", m)
+  information_review <- vector("list", m)
+  cautions <- rep("", m)
   for (i in seq_len(m)) {
     f <- x$fits[[i]]
     covariance <- compute_mml_parameter_covariance(f)
@@ -258,6 +267,9 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
       stop("Imputation ", i, " requires unregularized positive-definite observed-information covariance.", call. = FALSE)
     }
     expanded <- expand_params(f$opt$par, covariance$sizes, f$config)$facets[[facet]]
+    information_review[i] <- list(covariance$solution_information$inverse_review)
+    caution <- mfrm_mml_information_caution(covariance)
+    if (length(caution)) cautions[i] <- paste(caution, collapse = " ")
     q[i, ] <- drop(contrasts %*% expanded)
     q[i, fixed] <- fixed_value[fixed]
     slice <- covariance$param_slices[[facet]]
@@ -295,6 +307,15 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
       covariance = "MML observed information", intervals = "pointwise multiple-imputation t intervals"),
     analyses = x)
   class(out) <- "mfrm_pooled"
+  cautions <- vapply(unique(cautions[nzchar(cautions)]), function(note)
+    paste0("Imputation(s) ", paste(which(cautions == note), collapse = ", "), ": ", note),
+    character(1), USE.NAMES = FALSE)
+  out$information_review <- information_review
+  out$cautions <- cautions
+  if (length(cautions)) {
+    out$table$InferenceCaution <- paste(cautions, collapse = " ")
+    warning(paste(cautions, collapse = " "), call. = FALSE)
+  }
   out
 }
 
@@ -303,7 +324,8 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
 #' @export
 print.mfrm_pooled <- function(x, ...) {
   cat("Pooled", x$settings$facet, "targets across", x$settings$imputations, "imputations\n")
-  print(x$table, row.names = FALSE)
+  print(x$table[setdiff(names(x$table), "InferenceCaution")], row.names = FALSE)
+  for (caution in x$cautions) print_wrapped_line(paste0("Caution: ", caution))
   cat("Pointwise model-based intervals; fixed anchors exclude anchor uncertainty.\n")
   if (is.infinite(x$settings$df_complete)) cat("Large-sample complete-data reference assumed.\n")
   invisible(x)

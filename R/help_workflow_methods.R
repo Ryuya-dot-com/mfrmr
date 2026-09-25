@@ -39,6 +39,8 @@
 #' - `score_` estimates Person abilities using a fitted calibration, for example
 #'   [score_mfrm_persons()] for people already in a supported fitted RSM.
 #' - `pool_` combines eligible analyses, for example [pool_mfrm_imputed()].
+#' - `review_` checks supplied data or analysis choices, for example
+#'   [review_mfrm_imputations()]; it does not generate missing scores.
 #' - `export_` writes files, for example [export_mfrm_results()].
 #' - `summary(object)` and `plot(object)` select a method for the object you
 #'   supply. You normally do not call `plot.mfrm_testlet()` directly.
@@ -48,8 +50,14 @@
 #' The prefixes do not select different estimators. For a short ordinary-MFRM
 #' map, use `mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]`.
 #' The no-argument guide lists all specialist routes and is not a first lesson.
+#' For rater feedback, use `mfrmr_output_guide("feedback")`: it distinguishes
+#' uncertainty in severity from unexpected rating patterns and the accuracy
+#' of a warning rule. [mfrm_facet_intervals()] concerns specified fixed raters;
+#' shared-rater intervals have a different target and retain their separate
+#' limitations. Ordinary and extended-model residuals also use different
+#' definitions. The guide names the matching summary, plot and saving routes.
 #'
-#' Some names need extra care. [mfrm_response_imputations()] checks completed
+#' [review_mfrm_imputations()] checks completed
 #' data supplied by you; it does not generate missing scores. Follow it with
 #' [fit_mfrm_imputed()] and then [pool_mfrm_imputed()].
 #' [mfrm_screening_performance()] evaluates a warning rule against known
@@ -57,12 +65,26 @@
 #' across specified thresholds; it does not establish accuracy from real
 #' ratings alone. [mfrm_pca()] summarizes numeric external attributes;
 #' [mfrm_cluster_kmeans()] forms groups. PCA is optional before k-means.
-#' [mfrm_cluster()] uses partitioning around medoids (PAM) for mixed attributes;
+#' [mfrm_cluster_pam()] uses partitioning around medoids (PAM) for mixed attributes;
 #' it does not automatically choose a clustering algorithm. For a dendrogram,
 #' use [mfrm_cluster_hierarchical()].
 #' A G-study ([mfrm_multivariate_gstudy()]) estimates sources of variation in
 #' observed scores; a D-study ([mfrm_multivariate_d_study()]) uses them to
 #' compare future rater/task plans. Neither needs an MFRM fit.
+#'
+#' @section Updating earlier scripts:
+#' | Earlier call | Recommended call | Meaning retained |
+#' | --- | --- | --- |
+#' | `mfrm_cluster(x, k)` | `mfrm_cluster_pam(x, k)` | Same Gower/PAM partition and result class. |
+#' | `mfrm_response_imputations(..., impute = ids)` | `review_mfrm_imputations(..., impute_ids = ids)` | Same checks of supplied completed ratings; no imputation model is fitted. |
+#' | `keep_original = TRUE` | `category_policy = "preserve"` | Same category ladder in fitting, data review and anchor review. |
+#' | `keep_original = FALSE` | `category_policy = "collapse"` | Same collapsing of gaps; still the default when no policy is supplied. |
+#'
+#' The old calls remain supported, including positional arguments. Saved
+#' objects retain their classes and `summary()`/`plot()` methods. Do not pass
+#' conflicting old/new category choices. See [compatibility_alias_table()] for
+#' the complete migration map. This does not change what `predict()` returns:
+#' use the ability-scoring or response-prediction route named for your model.
 #'
 #' A **calibration** is the fitted set of model parameters, such as rater
 #' severity and category thresholds. A **conditional** ability interval holds
@@ -83,13 +105,18 @@
 #'   ability variance by default (`person_sd = NULL`). Their model-comparison
 #'   tutorials show how to match population assumptions. Changing only the
 #'   fitting function can change more than the rater/dependence structure.
-#' - **Rating scale:** supply `rating_min`, `rating_max` and `keep_original`
+#' - **Rating scale:** supply `rating_min`, `rating_max` and `category_policy`
 #'   from the rubric in both data review and ordinary fitting. Omitted bounds
-#'   use the observed range. The ordinary default `keep_original = FALSE` can
+#'   use the observed range. The ordinary default `category_policy = NULL`
+#'   retains `keep_original = FALSE` and can
 #'   collapse unobserved internal categories, for example observed 1, 3, 5 to
 #'   1, 2, 3. This changes the fitted category structure, not just labels.
 #'   A warning and the stored score map identify the recoding.
-#'   Use `keep_original = TRUE` to preserve the declared ladder; an unsupported
+#'   Inspect `CategoryPolicy` and `ScoreRecoded` in `data_review$overview`
+#'   or `summary(fit)$settings_overview` to distinguish the chosen rule from
+#'   an actual change to score values. With a complete contiguous scale,
+#'   `"collapse"` can still have `ScoreRecoded = FALSE`.
+#'   Use `category_policy = "preserve"` to preserve the declared ladder; an unsupported
 #'   internal category then stops fitting and needs substantive review.
 #' - **Missingness and assignment:** ordinary fitting excludes rows missing
 #'   a score or required ID (and nonpositive-weight rows); inspect
@@ -98,7 +125,7 @@
 #'   In contrast, the extended models stop on missing assigned scores by
 #'   default, and feature/G-study routes also require an explicit omission
 #'   choice. Omission does not correct informative missingness. In
-#'   [mfrm_response_imputations()], `assigned = NULL` declares every supplied
+#'   [review_mfrm_imputations()], `assigned = NULL` declares every supplied
 #'   row assigned: supply an assignment column if unassigned rows are present.
 #' - **Included effects:** both extensions default to no additional fixed
 #'   facets. For example, `testlet = "Task"` groups local dependence but does
@@ -160,7 +187,7 @@
 #'   explains the full data checks versus their compact summary tables.
 #'
 #' Set the score bounds from your rubric and use the same columns, bounds,
-#' and `keep_original` setting for the review and the fit. Reviewing data does
+#' and `category_policy` setting for the review and the fit. Reviewing data does
 #' not change the original ratings. After correcting or recoding them, repeat
 #' the review and pass the corrected data frame to [fit_mfrm()]. A
 #' `data_review` object contains checks; it is not the rating data to fit.
@@ -227,7 +254,7 @@
 #' from the ratings and their declared G-study design.
 #'
 #' To group persons, raters or tasks by external attributes, use [mfrm_features()]
-#' followed by [mfrm_cluster()] or [mfrm_cluster_hierarchical()] for mixed
+#' followed by [mfrm_cluster_pam()] or [mfrm_cluster_hierarchical()] for mixed
 #' attributes. [mfrm_pca()] and [mfrm_cluster_kmeans()] use selected numeric
 #' features with explicitly chosen scaling and component counts. See
 #' `vignette("mfrmr-external-features", package = "mfrmr")` for imputation and
@@ -244,7 +271,7 @@
 #' their base plots or explicit custom graphics from [plot_data()].
 #'
 #' @section Missing scores on assigned ratings:
-#' [mfrm_response_imputations()] reviews supplied ordinal completions;
+#' [review_mfrm_imputations()] reviews supplied ordinal completions;
 #' [fit_mfrm_imputed()] fits each dataset and retains failures. Inspect every
 #' completion before [pool_mfrm_imputed()] combines eligible non-Person facet
 #' estimates or prespecified contrasts and their covariance. This route does
@@ -433,7 +460,7 @@
 #' [plot_anchor_drift()] or `plot(anchor_review, ...)` for the specific flagged
 #' evidence family.
 #'
-#' For bounded `GPCM`, use [build_linking_review()] as a caveated exploratory
+#' For `GPCM`, use [build_linking_review()] as a caveated exploratory
 #' synthesis over direct anchor, drift, and chain evidence. It is not an
 #' operational `GPCM` linking decision or evidence that anchor drift is absent.
 #'
@@ -449,7 +476,7 @@
 #' [build_summary_table_bundle()] / [export_summary_appendix()] when the
 #' flagged cases need appendix-style reporting support.
 #'
-#' `build_misfit_casebook()` can still be used for bounded `GPCM`, but it
+#' `build_misfit_casebook()` can still be used for `GPCM`, but it
 #' should be read as an operational exploratory screen rather than as a strict
 #' Rasch-style invariance report.
 #'
@@ -481,7 +508,7 @@
 #' boundary is review evidence for the separate element-boundary contract; it
 #' is not by itself an unsupported free-step contrast.
 #' If an intermediate category is unobserved (for example 1, 2, 4, 5 with no
-#' 3), also set `keep_original = TRUE` if the zero-count category should remain
+#' 3), also set `category_policy = "preserve"` if the zero-count category should remain
 #' in the fitted support. `summary(describe_mfrm_data(...))` reports retained
 #' zero-count categories in `Notes`, printed `Caveats`, and `$caveats`;
 #' `summary(fit)` carries full structured rows into printed `Caveats` and
@@ -513,7 +540,7 @@
 #' 5. For `RSM` / `PCM`, build diagnostics with [diagnose_mfrm()].
 #'    For final reporting, prefer `diagnostic_mode = "both"` so the legacy
 #'    residual path and the strict marginal screen remain visible side by side.
-#'    For bounded `GPCM`, diagnostics are now available through
+#'    For `GPCM`, diagnostics are now available through
 #'    [diagnose_mfrm()] together with [analyze_residual_pca()],
 #'    [interrater_agreement_table()], [unexpected_response_table()],
 #'    [displacement_table()], [measurable_summary_table()],
@@ -525,7 +552,7 @@
 #'    Treat those residual-based
 #'    summaries as exploratory screens because the discrimination
 #'    parameter is free.
-#'    Full FACETS-style score-side contract review remains blocked for bounded
+#'    Full FACETS-style score-side contract review remains blocked for
 #'    `GPCM`; package-native scorefile export, fit-based reporting bundles,
 #'    direct fair-average tables, and bias-screening tables carry their own
 #'    caveats.
@@ -552,19 +579,19 @@
 #'    roster. It distinguishes individual and any-target rates, Monte Carlo
 #'    uncertainty and unavailable outcomes. See
 #'    `vignette("mfrmr-screening-performance", package = "mfrmr")`.
-#' 6. (Optional, `RSM` / `PCM`; bounded `GPCM` with caveat) Estimate
+#' 6. (Optional, `RSM` / `PCM`; `GPCM` with caveat) Estimate
 #'    interaction bias with [estimate_bias()].
 #' 7. Choose a downstream branch:
 #'    [reporting_checklist()] for direct report preparation, or
-#'    [build_weighting_review()] for Rasch-versus-bounded-`GPCM`
+#'    [build_weighting_review()] for Rasch-versus-`GPCM`
 #'    weighting review, or [build_misfit_casebook()] / [build_linking_review()]
-#'    for operational case review. For bounded `GPCM`, use
+#'    for operational case review. For `GPCM`, use
 #'    [build_linking_review()] only as an exploratory index over direct
 #'    anchor/drift/chain evidence.
 #' 8. Generate reporting bundles:
 #'    [build_summary_table_bundle()], [apa_table()],
 #'    [export_summary_appendix()], [build_fixed_reports()],
-#'    [build_visual_summaries()]. For bounded `GPCM`, use the APA, visual,
+#'    [build_visual_summaries()]. For `GPCM`, use the APA, visual,
 #'    QC, and fit-based export bundles as caveated sensitivity-reporting
 #'    surfaces; full score-side FACETS review stays blocked, while
 #'    diagnostic/signal-detection design screening has its own caveated
@@ -586,7 +613,7 @@
 #'    [predict_mfrm_units()] / [sample_mfrm_plausible_values()]. Current
 #'    fit-derived simulation specs include direct `GPCM` data generation and
 #'    recovery checks. Design-evaluation, population-forecasting, diagnostic-
-#'    screening, and signal-detection helpers also support bounded `GPCM` as
+#'    screening, and signal-detection helpers also support `GPCM` as
 #'    caveated role-based simulation/refit evidence; inspect `gpcm_boundary`
 #'    before using those results in design claims.
 #'    Unit scoring can use an ordinary `MML` fit directly, a latent-regression
@@ -608,13 +635,13 @@
 #' - Quick first pass:
 #'   `RSM` / `PCM`: [fit_mfrm()] -> [diagnose_mfrm()] -> [plot_qc_dashboard()] ->
 #'   [reporting_checklist()] when you want the package to route the next figures.
-#'   bounded `GPCM`: [fit_mfrm()] -> [diagnose_mfrm()] ->
+#'   `GPCM`: [fit_mfrm()] -> [diagnose_mfrm()] ->
 #'   [plot_qc_dashboard()] / [unexpected_response_table()] ->
 #'   [rating_scale_table()] ->
 #'   [compute_information()] -> [plot_information()] ->
 #'   [plot.mfrm_fit()] / [category_curves_report()] ->
 #'   [fair_average_table()] / [estimate_bias()] when those screening tables
-#'   answer the question. For bounded `GPCM`, the fit-based export family
+#'   answer the question. For `GPCM`, the fit-based export family
 #'   ([build_mfrm_manifest()], [build_mfrm_replay_script()],
 #'   [export_mfrm_bundle()]) is available as caveated sensitivity-reporting
 #'   output with explicit `gpcm_boundary` rows.
@@ -627,19 +654,28 @@
 #'   `"Method Section"` rows -> [build_apa_outputs()] ->
 #'   [build_summary_table_bundle()] -> [apa_table()] or
 #'   [export_summary_appendix()].
-#'   bounded `GPCM`:
+#'   `GPCM`:
 #'   [reporting_checklist()] -> direct table/plot helpers ->
 #'   [build_apa_outputs()] / [build_visual_summaries()] ->
 #'   [export_mfrm_bundle()] with `gpcm_boundary` caveats.
 #' - Weighting-policy review:
 #'   [compare_mfrm()] -> [build_weighting_review()] ->
 #'   [compute_information()] / [plot_information()] when you want to inspect
-#'   whether bounded `GPCM` is introducing substantively acceptable
+#'   whether `GPCM` is introducing substantively acceptable
 #'   discrimination-based reweighting relative to the Rasch-family reference.
 #'   Eligible MML comparisons require a common grid of at least 31 points and
 #'   a denser common-grid sensitivity check when close or consequential.
-#'   Free-slope GPCM ranking and the PCM-versus-GPCM chi-square LRT remain
-#'   unavailable; grid refinement alone does not change those restrictions.
+#'   GPCM MML ranking requires the separate likelihood and solution checks;
+#'   `nested = TRUE` additionally checks the PCM/GPCM equal-slope test;
+#'   [confint.mfrm_fit()] separately checks approximate slope intervals, with
+#'   explicit standardized-scale, contrast, sandwich and Bonferroni options.
+#'   [bootstrap_mfrm_gpcm()] supplies a fitted-model bootstrap alternative;
+#'   [mfrm_curve_intervals()] adds uncertainty to probabilities and per-rating
+#'   information. [mml_quadrature_sensitivity()] preserves explicit population
+#'   covariates and reports interval changes across grids. Attach the explicitly
+#'   selected intervals with `mfrm_results(fit, intervals = list(slopes = ci))`;
+#'   plot via `type = "gpcm_slopes"` or use [apa_table()] and [plot_data()].
+#'   Saved reports/exports retain methods and targets without refitting.
 #' - Design planning and forecasting:
 #'   [build_mfrm_sim_spec()] or [extract_mfrm_sim_spec()] ->
 #'   [evaluate_mfrm_recovery()] -> [assess_mfrm_recovery()] for
@@ -651,7 +687,7 @@
 #'   Here again, [predict_mfrm_population()] is the
 #'   scenario-level forecast helper, whereas [predict_mfrm_units()] /
 #'   [sample_mfrm_plausible_values()] are the scoring layer. Prediction export
-#'   requires actual prediction objects. Bounded `GPCM` supports
+#'   requires actual prediction objects. `GPCM` supports
 #'   direct data generation via
 #'   [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()], and
 #'   [simulate_mfrm_data()], [evaluate_mfrm_recovery()],
@@ -757,7 +793,7 @@
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1, rating_max = 4, keep_original = TRUE,
+#'   rating_min = 1, rating_max = 4, category_policy = "preserve",
 #'   method = "MML",
 #'   model = "RSM",
 #'   population_formula = NULL # Fixed N(0,1) ability distribution

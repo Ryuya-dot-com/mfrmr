@@ -7,7 +7,11 @@
 
 `mfrmr` fits unidimensional many-facet ordered-response models in R.
 It supports rating-scale (`RSM`) and partial-credit (`PCM`) models, together
-with a documented bounded `GPCM` extension. A facet can represent a rater,
+with a `GPCM` extension in which one selected facet supplies level-specific
+discriminations and category steps. GPCM MML information-criterion comparison
+uses explicit likelihood and solution checks; `confint(fit, parm = "slopes")`
+checks approximate pointwise relative-slope intervals separately. Matched PCM/GPCM MML fits can be tested
+with `compare_mfrm(..., nested = TRUE)`. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score.
 
@@ -32,11 +36,11 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the expanded `0.2.4` release candidate, including
+This README describes the current `0.2.4` source, including
 portable calibration, exploratory external-feature groups, numeric PCA/k-means,
 assigned-score imputation, fixed-facet sandwich intervals, screening evaluation,
 multivariate G/D-studies, and shared random-rater and Person-specific testlet
-RSMs. See [the roadmap](ROADMAP.md) for supported scope and future work.
+RSMs. See [the roadmap](https://ryuya-dot-com.github.io/mfrmr/ROADMAP.html) for supported scope and future work.
 The candidate is intended for evaluation and has not been released on CRAN.
 Functions and options shown here may differ from an installed release; retain
 the installed source tag or commit and use its matching help. Earlier candidates
@@ -50,7 +54,19 @@ Install the published CRAN release with:
 install.packages("mfrmr")
 ```
 
-To install the expanded 0.2.4 candidate from its fixed GitHub tag:
+To use the examples below with this source archive, install the downloaded
+file (replace the path with its location on your computer):
+
+```r
+install.packages("path/to/mfrmr_0.2.4.tar.gz", repos = NULL, type = "source")
+```
+
+The latest published GitHub candidate is `rc.5`. It predates
+`mfrm_cluster_pam()`, `review_mfrm_imputations()` and `category_policy`;
+their older equivalents are `mfrm_cluster()`, `mfrm_response_imputations()`
+and `keep_original`. The `"feedback"` output-guide scope also requires the
+current source. Use the current source archive or checkout for these additions.
+To install that earlier published candidate reproducibly:
 
 ```r
 if (!requireNamespace("remotes", quietly = TRUE)) {
@@ -65,9 +81,9 @@ remotes::install_github(
 ```
 
 The [release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5)
-provides the source archive with prebuilt tutorials, its checksum and the
-applicable check results. Use `ref = "main"` only when you want the latest
-development source; it may change after this candidate. A local checkout can
+provides the rc.5 source archive with prebuilt tutorials, its checksum and the
+applicable check results. Check which revision contains a new API before using
+`ref = "main"`; that branch changes over time. A local checkout can
 also be installed with `remotes::install_local("path/to/mfrmr")`, using the
 directory containing `DESCRIPTION` and this README.
 
@@ -97,7 +113,7 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1, rating_max = 4, keep_original = TRUE,
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM",
   population_formula = NULL # Fixed N(0,1) ability distribution
@@ -182,19 +198,32 @@ reviewed fit to tables and manuscript-draft output.
 
 You do not need to learn every function before starting. Continue with the
 question you have and open the named function's help, for example
-`help("mfrm_response_imputations", package = "mfrmr")`.
+`help("review_mfrm_imputations", package = "mfrmr")`.
+
+Earlier scripts using `mfrm_cluster()` or `mfrm_response_imputations()` remain
+valid. For new scripts, the names below make the clustering method and the
+imputation-review step explicit. In imputation review, `impute_ids` contains
+rating-event IDs to check, not a switch that starts an imputation model.
+`compatibility_alias_table()` maps old calls to their recommended names.
 
 | Your question | Start with | What you receive |
 | --- | --- | --- |
 | Are my rating rows and categories usable? | `describe_mfrm_data()` | A data review; correct problems in the rating table before fitting. |
 | How severe are these raters, allowing for person ability and criterion difficulty? | `fit_mfrm()` | A fitted model; use `summary()` and `diagnose_mfrm()` to review it. |
+| How uncertain is a specified fixed-rater difference? | `mfrm_facet_intervals()` | Pointwise intervals for an eligible ordinary RSM/PCM fit, using model-based or explicitly selected sandwich covariance. |
 | What are the abilities of people already in my fitted RSM? | `score_mfrm_persons()` | Conditional ability scores under a supported ordinary, shared-rater or testlet RSM. |
-| Do raters with similar backgrounds form descriptive groups? | `mfrm_features()`, then `mfrm_cluster()` or `mfrm_cluster_kmeans()` | Groups based on external attributes, not rater quality. `mfrm_pca()` optionally summarizes numeric attributes first. |
-| How do I analyze several completed versions of missing assigned scores? | `mfrm_response_imputations()`, then `fit_mfrm_imputed()` and `pool_mfrm_imputed()` | A review, separate fits and pooled eligible facet estimates. Supply the completed data; the first function does not generate replacements. |
+| Do raters with similar backgrounds form descriptive groups? | `mfrm_features()`, then `mfrm_cluster_pam()` or `mfrm_cluster_kmeans()` | Groups based on external attributes, not rater quality. `mfrm_pca()` optionally summarizes numeric attributes first. |
+| How do I analyze several completed versions of missing assigned scores? | `review_mfrm_imputations()`, then `fit_mfrm_imputed()` and `pool_mfrm_imputed()` | A review, separate fits and pooled eligible facet estimates. Supply the completed data; the first function does not generate replacements. |
 | Would more raters or tasks make scores more dependable? | `mfrm_multivariate_gstudy()`, then `mfrm_multivariate_d_study()` | Sources of variation in observed scores, then projections for the plans you specify. |
 | How often does my warning rule miss a simulated problem or raise a false flag? | `mfrm_screening_performance()`; `mfrm_screening_sensitivity()` to compare thresholds | Simulation summaries with known truth, not an accuracy estimate from real ratings alone. |
 
-`mfrm_cluster()` uses partitioning around medoids (PAM), which represents each
+For feedback to raters, `mfrmr_output_guide("feedback")` connects these
+questions to the appropriate model, tables, plots and saved results. A severe
+rater need not misfit. Changing a cutoff shows how flags change in your data;
+it does not estimate the rule's false-flag rate without known truth. Shared-rater
+severity intervals and fixed-rater coefficient intervals have different targets.
+
+`mfrm_cluster_pam()` uses partitioning around medoids (PAM), which represents each
 group by an actual member and accepts mixed numeric/categorical attributes.
 `mfrm_cluster_kmeans()` uses numeric group means. For a tree of nested groups
 and a dendrogram, choose `mfrm_cluster_hierarchical()`. These are different
@@ -677,7 +706,7 @@ returns to the packaged data to illustrate further review and reporting.
 ### Response type and frequencies
 
 The current response likelihood is ordered categorical. Binary scores are the
-two-category special case, and RSM, PCM, and bounded GPCM cover ordered
+two-category special case, and RSM, PCM, and GPCM cover ordered
 polytomous scores. Although their category probabilities form a vector that
 sums to one, they are not unordered nominal-response or multinomial-logit
 models. Poisson, negative-binomial, and grouped binomial-trial count responses
@@ -816,10 +845,12 @@ summary(q_review)
 apa_table(q_review)
 ```
 
-The review works for RSM, PCM, and bounded GPCM. It reports changes in marginal
+The review works for RSM, PCM, and GPCM. It reports changes in marginal
 likelihood per Person, measurement coordinates, probabilities, EAP, posterior
 SD, and, when present, relative slopes, raw local-curvature SEs, and population
-SD. The GPCM-specific `gpcm_mml_quadrature_sensitivity()` name remains
+SD. Explicit population formulas, person covariates and their coding are
+preserved. GPCM tables also show interval endpoints, eligibility and their
+changes across grids. The GPCM-specific `gpcm_mml_quadrature_sensitivity()` name remains
 available. Neither route assigns a universal stable/unstable cutoff, makes raw
 slope SEs inferentially eligible, or changes the fit-readiness decision.
 
@@ -1350,9 +1381,9 @@ and run date during normalization so the external comparison remains
 reproducible.
 
 This public bundle route does not cover multidimensional models, arbitrary
-imported design matrices, bounded `GPCM` latent regression, JML latent
+imported design matrices, `GPCM` latent regression, JML latent
 regression, or the full ConQuest plausible-values workflow. Separately, the
-item-only bounded-GPCM parameterization can be compared only after the response
+item-only GPCM parameterization can be compared only after the response
 kernel, slope grouping, threshold coordinates, latent-scale identification,
 retained rows, and category map have been matched. A result in that restricted
 overlap does not extend automatically to a multifacet ConQuest generalized-item
@@ -1379,7 +1410,7 @@ imputation predictors separate from clustering features.
 
 In version 0.2.4, `mfrm_features()` reviews a table with one row per
 person, rater, or task and explicitly selected external attributes, such as
-experience or specialization. `mfrm_cluster()` groups those profiles using Gower distances
+experience or specialization. `mfrm_cluster_pam()` groups those profiles using Gower distances
 and PAM; install the optional `cluster` package to use it.
 
 ```r
@@ -1387,7 +1418,7 @@ features <- mfrm_features(rater_attributes, id = "Rater",
                          features = c("ExperienceYears", "Specialty"))
 summary(features)
 features$missing
-groups <- mfrm_cluster(features, k = 3)
+groups <- mfrm_cluster_pam(features, k = 3)
 groups$membership
 groups$profiles
 plot(groups)
@@ -1470,9 +1501,9 @@ comparison reuses these results without refitting:
 
 ```r
 alternatives <- list(
-  TwoGroups = mfrm_cluster(features, k = 2),
+  TwoGroups = mfrm_cluster_pam(features, k = 2),
   ThreeGroups = groups,
-  ExperienceWeighted = mfrm_cluster(features, k = 3,
+  ExperienceWeighted = mfrm_cluster_pam(features, k = 3,
     weights = c(ExperienceYears = 3, Specialty = 1))
 )
 comparison <- mfrm_cluster_compare(alternatives)
@@ -1518,9 +1549,9 @@ The following outline assumes that `ratings`, `completed`, `impute_ids` and
 `model` have been constructed as in that tutorial:
 
 ```r
-review <- mfrm_response_imputations(
+review <- review_mfrm_imputations(
   ratings, completed, person = "Person", facets = c("Rater", "Criterion"),
-  score = "Score", event_id = "Event", impute = impute_ids, categories = 1:4,
+  score = "Score", event_id = "Event", impute_ids = impute_ids, categories = 1:4,
   assigned = "Assigned", imputation_model = model
 )
 summary(review)                  # Original observed and imputed support
@@ -2065,10 +2096,11 @@ bootstrap diagnostics. See `help("compute_facet_icc")` for details.
 
 ## Model scope
 
-For GPCM, *bounded* refers to the documented model and workflow scope; it does
-not mean finite parameter box constraints. Unsupported combinations and
-inference states are reported explicitly rather than silently treated as
-ordinary estimates.
+GPCM uses one substantive ability dimension and assigns relative
+discriminations and category steps to the same selected facet. Its model
+structure and the availability of intervals, comparisons and downstream
+workflows are described separately. Unsupported combinations and inference
+states are reported explicitly.
 
 The package extends Rasch-family RSM/PCM work with MML, modern diagnostics,
 reproducibility, network review, and reporting support. It is not a general
@@ -2118,7 +2150,7 @@ and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
 example. See `help("mfrm_calibration_methods", package = "mfrmr")` for the
 artifact summaries and `help("mfrm_calibration_score_methods",
 package = "mfrmr")` for score summaries and plots. Estimated-population and
-latent-regression MML, JML, and bounded GPCM
+latent-regression MML, JML, and GPCM
 remain fitted-object-only routes; they do not create portable calibration
 artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
 frozen point calibration and recorded prior. Their intervals exclude
@@ -2140,7 +2172,7 @@ grid-based intervals, whose posterior mass may differ from the requested level.
 | Facets | Multiple observed facet roles | The design must remain connected for the intended contrasts |
 | `RSM` | Shared step structure | The common rating-scale assumption must be substantively defensible |
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
-| Bounded `GPCM` | Documented slope-aware core with `slope_facet == step_facet`; MML estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
+| `GPCM` | Documented slope-aware core with `slope_facet == step_facet`; MML estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
 | Latent regression | Conditional-normal, unidimensional MML population model | Person scoring requires explicit exploratory review and omits uncertainty in the fitted population parameters |
 | Diagnostics | Residual and posterior-averaged marginal screens | A flag is not a deletion, fairness, or validity decision; missing results remain unavailable |
@@ -2159,7 +2191,7 @@ justify downstream regression or group inference without a compatible
 conditioning model and sampling design. See `?predict_mfrm_units` and
 `?sample_mfrm_plausible_values`.
 
-For bounded `GPCM`, inspect the capability table before choosing a downstream
+For `GPCM`, inspect the capability table before choosing a downstream
 helper:
 
 ```r
@@ -2167,15 +2199,32 @@ gpcm_capability_matrix()
 vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
 
-Free-slope GPCM fits can be estimation-converged while parameter-level
-inference remains review-only. Read `print(fit)`, `summary(fit)$decision`, and
-the slope table's `ParameterStatus` and `PrimaryEstimate` before interpreting
-the finite optimizer trace in `OptimizerEstimate`. `Optimizer*SE` and
-`Optimizer*CI` are diagnostic quantities; ordinary slope SEs and confidence
-intervals are currently unavailable for free slopes (`SEEligible = FALSE`,
-`CIEligible = FALSE`). Convergence or quadrature stability does not change
-that eligibility. The GPCM scope vignette explains each status and the
-appropriate next action.
+GPCM output has separate eligibility checks. Use `confint(fit, parm = "slopes")`
+for approximate pointwise MML relative-slope intervals. The same 95% calculation
+is in `diagnose_mfrm(fit)$parameter_uncertainty$slopes`; read `CIEligible` and
+`InferenceReview`. It uses the inverse joint observed information and log-slope
+transformation after checking the current solution. Singular, regularized,
+nonconverged, coarse-grid or non-unit-weight fits do not receive ordinary bounds.
+Global `InferenceReady` is not promoted: slope intervals do not establish a
+global maximum or authorize other parameter families. These intervals are
+model-based approximations, not universal coverage guarantees.
+
+Use `scale = "standardized"` to include uncertainty in population-SD times
+slope; with covariates this is the residual population SD. Named `contrasts`
+compare slopes by ratio or difference. Request `method = "sandwich"` for
+Person-level or specified independent-cluster covariance, and
+`simultaneous = "bonferroni"` for the finite family in that call. Sandwich
+covariance does not correct biased estimates or dependence between clusters.
+`bootstrap_mfrm_gpcm(fit, nsim = 499, seed = 92401)` supplies a fitted-model
+bootstrap alternative, with failed refits retained. Supplying `null_fit`
+instead performs a matched PCM/GPCM bootstrap LRT. `mfrm_curve_intervals()`
+adds intervals and customizable plots to category probabilities or per-rating
+information at known ability values. See the GPCM tutorial for worked choices;
+these methods have different targets and assumptions.
+Probability-curve intervals showed undercoverage in a small incomplete-design
+check, including Bonferroni-adjusted families. Numerical availability is not a
+coverage certification, and neither sandwich covariance nor a bootstrap option
+automatically resolves that limitation.
 
 For MML, the default `gpcm_mml_identification = "free_population"` estimates
 an intercept-only population distribution while relative slopes satisfy a
@@ -2184,7 +2233,8 @@ coordinate is retained in `FixedLatentSDOptimizerEstimate`. Use
 `gpcm_mml_identification = "fixed_standard_normal"` only when a deliberately
 matched legacy or external comparison requires that identification.
 
-The bounded GPCM is an **aligned single-owner relative-slope GPCM**:
+The GPCM estimates **relative discriminations and category steps for the same
+selected facet**:
 
 $$
 \log\frac{P(Y_o=k)}{P(Y_o=k-1)}
@@ -2243,16 +2293,19 @@ applies to any GPCM slope whose boundary status has not been resolved: a finite
 optimizer iterate is not automatically a finite maximum suitable for ordinary
 inference.
 
-PCM and bounded GPCM can be reviewed on the same data with
+PCM and GPCM can be reviewed on the same data with
 `compare_mfrm(fit_pcm, fit_gpcm)`, `build_weighting_review(fit_pcm, fit_gpcm)`,
 or `build_model_choice_review(..., run_weighting_review = TRUE)`. Selectable
 information-criterion ranking requires comparable MML fits with adequate
-support for inference on a common quadrature grid with at least 31 points.
-Free-slope GPCM fits currently do not satisfy these inference requirements,
-so their criteria, when available, are descriptive only. PCM is the
-all-unit-slope reduction of the aligned GPCM kernel, but a PCM-versus-GPCM
-chi-square LRT is unavailable. The recorded `PCM_in_GPCM_ic_only` relation
-does not authorize automatic ranking.
+support for comparison on a common quadrature grid with at least 31 points.
+For GPCM, `ICFitEligible` checks the reevaluated likelihood, gradient and
+positive unregularized local information independently of slope-interval
+eligibility. `ICComparable` records the final comparison decision. PCM is the
+all-unit-slope reduction of the aligned GPCM kernel. `nested = TRUE` requests
+an asymptotic chi-square test with G-1 degrees of freedom, after verifying
+that only the relative slopes differ. Match the population model explicitly
+(for example, `population_formula = ~1` and the same person data in both
+fits); the defaults differ. IC ranking and LRT eligibility are separate.
 
 The practical comparison is available without reconstructing the model
 matrices manually. After fitting the same data as `fit_pcm` and `fit_gpcm`
@@ -2269,8 +2322,8 @@ choice$model_roles[, c(
 
 The coordinate columns count reported values; the free-parameter columns also
 apply the fitted constraints. `build_weighting_review()` describes changes in
-measures and information under discrimination-based weighting. Free-slope
-GPCM ranking remains unavailable under MML, and an unpenalized JML likelihood
+measures and information under discrimination-based weighting. GPCM MML
+ranking is returned only for an eligible comparison; an unpenalized JML likelihood
 difference does not justify an automatic PCM-versus-GPCM choice.
 
 Cross-software slope values are not automatically matched estimands. FACETS
@@ -2278,15 +2331,29 @@ does not jointly fit Muraki's free-slope polytomous GPCM. FACETS' reported
 element discrimination is a post-fit diagnostic computed after the Rasch
 measures and does not feed back into the other estimates; it must not be
 treated as a free-GPCM slope estimate
-from `mfrmr`. TAM can estimate GPCM
-slopes through its 2PL/GPCM MML route, but its many-facet fitting route does
-not estimate those slopes. The current `immer` estimation routes provide PCM-
+from `mfrmr`. TAM's documented Example 14c combines a facet intercept design
+with grouped slopes through `tam.mml.2pl(irtmodel = "GPCM.design")`;
+`tam.mml.mfr()` alone does not estimate slopes. ConQuest's `scoresfree` route
+assigns slopes to generalized items (facet combinations), with further
+sharing specified through a scoring design. These constructions do not
+automatically match mfrmr's slope multiplying ability, rater severity and
+steps together. The current `immer` estimation routes provide PCM-
 design and hierarchical-rater references rather than a matched free-GPCM fit.
 Consequently, FACETS and `immer` are appropriate only for documented
 equal-discrimination overlaps or deliberately different-model sensitivity
-checks. A TAM GPCM comparison is numerical only after the response kernel,
-slope grouping, threshold parameterization, latent-scale identification,
-retained rows, category map, and covariance information have been matched.
+checks. Replicating GPCM point estimates with ConQuest or TAM requires matching
+the response kernel, slope grouping, threshold parameterization, latent-scale
+identification, retained rows and category map.
+
+For the matched item-only model, mfrmr's relative slopes become
+population-SD-standardized slopes after multiplying by the fitted population
+SD (conditional on any population covariates). Transforming intervals also
+requires the SD's uncertainty and its covariance with the slopes; multiplying
+interval endpoints is insufficient.
+The [GPCM tutorial](vignettes/mfrmr-gpcm-scope.Rmd#what-can-and-cannot-be-compared-across-programs)
+links the official ConQuest/TAM specifications and distinguishes existing
+numerical comparisons from unverified uncertainty comparisons. Its scope is
+separate from the public ConQuest overlap-bundle and external-import APIs.
 
 For strict MML diagnostics, keep the two evidence bases distinct:
 
@@ -2349,7 +2416,7 @@ For an MFRM-based analysis, this assumes a fit with current estimation checks:
 
 The complete instructions, including function names and exceptions, are in
 "Updating saved analyses for 0.2.4" under
-`help("mfrmr_workflow_methods", package = "mfrmr")`. [NEWS](NEWS.md) explains
+`help("mfrmr_workflow_methods", package = "mfrmr")`. [NEWS](https://ryuya-dot-com.github.io/mfrmr/news/index.html) explains
 the individual changes. Re-exporting an old derived object does not update
 its calculations, and updating an object does not broaden its statistical use.
 
@@ -2374,7 +2441,7 @@ shipped with your installed version.
 | Visual diagnostics | `vignette("mfrmr-visual-diagnostics", package = "mfrmr")` |
 | Reporting and APA-oriented output | `vignette("mfrmr-reporting-and-apa", package = "mfrmr")` |
 | Linking and DFF | `vignette("mfrmr-linking-and-dff", package = "mfrmr")` |
-| Bounded GPCM scope | `vignette("mfrmr-gpcm-scope", package = "mfrmr")` |
+| GPCM scope | `vignette("mfrmr-gpcm-scope", package = "mfrmr")` |
 
 List installed guides with `browseVignettes("mfrmr")`. A printable API overview is installed
 at `cheatsheet/mfrmr-cheatsheet.pdf`. Function-level help starts with

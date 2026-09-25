@@ -89,7 +89,7 @@ By default that replay-ready table is embedded inline; when
 \code{fit_person_data_file} is supplied, the generated script reads it from that
 sidecar CSV relative to the replay script location.
 
-For bounded \code{GPCM}, replay scripts are available with an explicit
+For \code{GPCM}, replay scripts are available with an explicit
 \code{gpcm_boundary} table. The generated script records \code{step_facet} and
 \code{slope_facet} settings, but full FACETS score-side contract review remains
 outside this replay contract. Role-based design forecasting is available

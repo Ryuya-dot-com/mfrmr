@@ -13,7 +13,7 @@ fit_mfrm_imputed(x, model = c("RSM", "PCM"), step_facet = NULL, ...)
 \method{summary}{mfrm_imputed_fits}(object, ...)
 }
 \arguments{
-\item{x}{An \code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}} object.}
+\item{x}{An \code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}} object.}
 
 \item{model}{\code{"RSM"} or \code{"PCM"}.}
 
@@ -35,7 +35,7 @@ fit's status, error and warnings, and common \code{settings}. Use
 }
 \description{
 Fit a separate MFRM to each completed version of the ratings reviewed by
-\code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}. All fits use the same model and measurement
+\code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}}. All fits use the same model and measurement
 scale so eligible estimates can be combined with \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}.
 Failed fits and their messages are retained for review.
 }
@@ -54,5 +54,5 @@ posterior SDs are not ordinary complete-data parameter estimates and
 standard errors for Rubin pooling.
 }
 \seealso{
-\code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}, \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}
+\code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}}, \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}
 }

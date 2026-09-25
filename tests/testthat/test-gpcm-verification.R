@@ -1,4 +1,4 @@
-# Verification tests for the bounded-GPCM workflow declared in
+# Verification tests for the GPCM workflow declared in
 # `gpcm_capability_matrix()`. Each test exercises one row of the
 # matrix that is `"supported"` or `"supported_with_caveat"` and
 # asserts the corresponding helper returns the documented shape.
@@ -165,7 +165,9 @@ test_that("q31 and q41 separate stable local evidence from formal readiness", {
       info = name
     )
     expect_true(any(is.finite(uncertainty[[name]]$OptimizerSE)), info = name)
-    expect_true(all(is.na(uncertainty[[name]]$SE)), info = name)
+    expect_true(all(is.finite(uncertainty[[name]]$SE)), info = name)
+    expect_true(all(uncertainty[[name]]$CIEligible), info = name)
+    expect_true(all(uncertainty[[name]]$CIUse == "approximate_pointwise"), info = name)
   }
 
   # These are regression tolerances for this fixed teaching fixture, not
@@ -191,7 +193,7 @@ test_that("GPCM iteration report is an explicitly caveated replay", {
   expect_equal(nrow(replay$gpcm_boundary), 1L)
   expect_identical(
     replay$gpcm_boundary$Area[1],
-    "Replayed optimization diagnostics under bounded GPCM"
+    "Replayed optimization diagnostics under GPCM"
   )
   expect_identical(
     replay$gpcm_boundary$Status[1],
@@ -305,7 +307,7 @@ test_that("GPCM APA/QC reporting bundle returns with explicit caveats", {
   apa <- suppressMessages(build_apa_outputs(.gpcm_fit, diag))
   expect_s3_class(apa, "mfrm_apa_outputs")
   expect_true(nrow(apa$gpcm_boundary) > 0)
-  expect_true(grepl("Bounded\\s+GPCM note", apa$report_text))
+  expect_true(grepl("GPCM note", apa$report_text, fixed = TRUE))
 
   qc <- run_qc_pipeline(.gpcm_fit, diag)
   expect_s3_class(qc, "mfrm_qc_pipeline")

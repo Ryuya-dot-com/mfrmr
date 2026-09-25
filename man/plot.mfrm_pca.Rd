@@ -24,7 +24,7 @@
 For loadings, one retained component number. Defaults to \code{c(1, 2)} for
 scores and \code{1} for loadings. Unavailable axes cause an error.}
 
-\item{groups}{Optional \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}} or
+\item{groups}{Optional \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} or
 \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} result used to color a scores plot. Its IDs,
 included entities and shared PCA features must match. Labels only annotate
 the view; they do not refit PCA or imply separation on every component.

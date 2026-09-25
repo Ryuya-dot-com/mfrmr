@@ -53,7 +53,7 @@ plot_bias_interaction(
 
 \item{show_ci}{Logical. When \code{TRUE} and \code{plot} is \code{"scatter"} or
 \code{"ranked"}, draw confidence-interval whiskers for \verb{Bias Size}.
-Bounded \code{GPCM} rows use the conditional profile-likelihood limits
+\code{GPCM} rows use the conditional profile-likelihood limits
 returned by \code{\link[=estimate_bias]{estimate_bias()}} when available; otherwise the interval
 uses the per-cell standard error from \code{\link[=estimate_bias]{estimate_bias()}}. Ignored for
 \code{"heatmap"}, \code{"abs_t_hist"}, and \code{"facet_profile"}.}

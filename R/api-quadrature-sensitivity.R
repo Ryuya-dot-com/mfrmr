@@ -38,7 +38,7 @@ mfrmr_gqs_validate <- function(fit, data, quad_points,
     "`gpcm_mml_quadrature_sensitivity()` requires a GPCM MML fit."
   } else {
     paste0(
-      "`mml_quadrature_sensitivity()` requires an RSM, PCM, or bounded ",
+      "`mml_quadrature_sensitivity()` requires an RSM, PCM, or ",
       "GPCM MML fit."
     )
   }
@@ -47,18 +47,6 @@ mfrmr_gqs_validate <- function(fit, data, quad_points,
   mfrmr_gqs_assert(
     is.data.frame(data) && nrow(data) > 0L,
     "`data` must be the non-empty data.frame used to create `fit`."
-  )
-  population <- fit$population %||% list()
-  mfrmr_gqs_assert(
-    !isTRUE(population$active) || identical(
-      as.character(population$source %||% ""),
-      "gpcm_mml_default_identification"
-    ),
-    paste(
-      "Quadrature sensitivity for user-supplied latent-regression",
-      "population models is not yet implemented. Compare those fits",
-      "explicitly with the same person-data contract."
-    )
   )
 
   integer_tolerance <- sqrt(.Machine$double.eps)
@@ -180,7 +168,23 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
         config$gpcm_mml_identification %||% "free_population"
     )
   )
-  arguments
+  c(arguments, mfrmr_gqs_population_arguments(fit))
+}
+
+mfrmr_gqs_population_arguments <- function(fit) {
+  pop <- fit$population %||% list()
+  if (!isTRUE(pop$active)) return(list())
+  persons <- pop$person_table_replay %||% pop$person_table
+  if (!is.data.frame(persons) || is.null(pop$formula) ||
+      !pop$person_id %in% names(persons)) {
+    stop("The fitted population formula and person data are required for a same-model refit.", call. = FALSE)
+  }
+  for (name in names(pop$xlevels)) {
+    persons[[name]] <- factor(persons[[name]], levels = pop$xlevels[[name]],
+      ordered = is.ordered(persons[[name]]))
+    if (!is.null(pop$contrasts[[name]])) stats::contrasts(persons[[name]]) <- pop$contrasts[[name]]
+  }
+  list(population_formula = pop$formula, person_data = persons, person_id = pop$person_id)
 }
 
 mfrmr_gqs_canonical_prepared_data <- function(fit) {
@@ -429,7 +433,9 @@ mfrmr_gqs_person_scores <- function(fit, data, nodes) {
     fit,
     data,
     scoring_quad_points = as.integer(nodes),
-    readiness_policy = "review"
+    readiness_policy = "review",
+    person_data = fit$population$person_table_replay %||% fit$population$person_table,
+    person_id = fit$population$person_id
   )$estimates
   estimates <- as.data.frame(estimates, stringsAsFactors = FALSE)
   mfrmr_gqs_assert(
@@ -505,7 +511,10 @@ mfrmr_gqs_raw_information <- function(fit) {
   }
 
   list(
+    slope_intervals = if (identical(fit$config$model, "GPCM"))
+      compute_mml_structural_parameter_se(fit, covariance = covariance)$slopes else NULL,
     covariance_status = as.character(covariance$status),
+    covariance_detail = covariance$detail,
     rank = as.integer(covariance$rank),
     dimension = as.integer(length(fit$opt$par %||% numeric())),
     minimum_eigenvalue = minimum,
@@ -571,6 +580,15 @@ mfrmr_gqs_extract_run <- function(fit, data, nodes,
     )
   }
 
+  ci <- information$slope_intervals
+  if (!is.null(ci) && nrow(ci)) {
+    aligned <- match(slope_labels, ci$SlopeFacet)
+    slope_table$PublicSEEligible <- ci$SEEligible[aligned]
+    slope_table$CIEligible <- ci$CIEligible[aligned]
+    slope_table$CI_Lower <- ci$CI_Lower[aligned]
+    slope_table$CI_Upper <- ci$CI_Upper[aligned]
+    slope_table$InferenceReview <- ci$InferenceReview[aligned]
+  }
   list(
     run = data.frame(
       Nodes = as.integer(nodes),
@@ -590,6 +608,7 @@ mfrmr_gqs_extract_run <- function(fit, data, nodes,
         as.integer(fit$opt$convergence), 0L
       ),
       CovarianceStatus = information$covariance_status,
+      CovarianceDetail = information$covariance_detail,
       HessianRank = information$rank,
       HessianDimension = information$dimension,
       MinimumEigenvalue = information$minimum_eigenvalue,
@@ -652,7 +671,7 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' its own quadrature count; all other fits reuse its stored model,
 #' identification, anchor, interaction, optimizer, and population settings.
 #'
-#' @param fit An RSM, PCM, or bounded GPCM MML `mfrm_fit` returned by
+#' @param fit An RSM, PCM, or GPCM MML `mfrm_fit` returned by
 #'   [fit_mfrm()]. [gpcm_mml_quadrature_sensitivity()] accepts only GPCM fits.
 #' @param data The original response data.frame used to create `fit`. Prepared
 #'   response rows are compared semantically after refitting; row order may
@@ -685,6 +704,10 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' quadrature count. A one-point grid has no public scoring route, so those two
 #' changes are `NA` when it is the reference.
 #'
+#' Explicit intercept-only and covariate population models reuse the retained
+#' person table, factor coding and formula, with design equality checked by Person.
+#' Older fits without that data cannot be replayed.
+#'
 #' Raw slope and population-SD standard errors are computed from each local
 #' observed-information Hessian for diagnostic comparison only. The public
 #' parameter-level `SEEligible` state remains unchanged.
@@ -699,7 +722,9 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'   `summary()` also supplies a compact `quadrature_overview`;
 #' - `runs`: likelihood, gradient, curvature, population-scale, and readiness
 #'   details for each fit;
-#' - `slopes`: relative-slope estimates and raw diagnostic SEs;
+#' - `slopes`: relative-slope estimates, raw diagnostic SEs and freshly checked
+#'   95% model intervals. The summary reports endpoint changes among jointly
+#'   eligible levels and counts changes in interval availability;
 #' - `conditions`: warnings and messages emitted by the explicit refits;
 #' - `fits`: the reference and refitted `mfrm_fit` objects;
 #' - `settings` and `notes`: the fixed comparison contract and interpretation
@@ -773,6 +798,9 @@ mfrmr_gqs_run <- function(
           " refit did not reproduce the reference fit's prepared response rows."
         )
       )
+      mfrmr_gqs_assert(!is.null(mfrm_population_design(fit)) &&
+        identical(mfrm_population_design(fit), mfrm_population_design(candidate)),
+        "The refit did not preserve the fitted population design by Person.")
       fits[[name]] <- candidate
     }
     extracted[[name]] <- mfrmr_gqs_extract_run(
@@ -828,6 +856,20 @@ mfrmr_gqs_run <- function(
       ),
       SlopeMaxAbsChange = slope_difference,
       RawSlopeSEMaxAbsChange = slope_se_difference,
+      SlopeIntervalMaxAbsChange = {
+        old <- reference$slopes; new <- candidate$slopes
+        if (!"CIEligible" %in% names(old)) NA_real_ else {
+          new <- new[match(old$SlopeFacet, new$SlopeFacet), , drop = FALSE]
+          usable <- old$CIEligible & new$CIEligible
+          if (any(usable)) max(abs(c(old$CI_Lower[usable] - new$CI_Lower[usable],
+            old$CI_Upper[usable] - new$CI_Upper[usable]))) else NA_real_
+        }
+      },
+      SlopeIntervalEligibilityChanged = {
+        old <- reference$slopes; new <- candidate$slopes
+        if (!"CIEligible" %in% names(old)) NA_integer_ else
+          sum(old$CIEligible != new$CIEligible[match(old$SlopeFacet, new$SlopeFacet)])
+      },
       PopulationSDAbsChange = abs(
         candidate$population_sd - reference$population_sd
       ),

@@ -87,7 +87,7 @@ including a \code{facet_manifest}
 \item \code{planning_constraints}: explicit record of mutable/locked design variables
 \item \code{planning_schema}: structured planning metadata carrying the role
 table, supported boundary, mutability map, and facet manifest
-\item \code{gpcm_boundary}: bounded-\code{GPCM} caveat row when a \code{GPCM} forecast route is
+\item \code{gpcm_boundary}: \code{GPCM} caveat row when a \code{GPCM} forecast route is
 used
 \item \code{settings}: forecasting settings
 \item \code{ademp}: simulation-study metadata
@@ -123,7 +123,7 @@ person-level covariates and responses, refits the MML population-model
 branch, and summarizes the resulting facet-level behavior. This is distinct
 from the fitted-model posterior scoring provided by \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
 
-Bounded \code{GPCM} forecasts are available with caveats through the same
+\code{GPCM} forecasts are available with caveats through the same
 repeated simulation/refit design route used by \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}.
 They summarize design-level operating characteristics under the supplied or
 fit-derived slope-aware specification; they do not validate operational

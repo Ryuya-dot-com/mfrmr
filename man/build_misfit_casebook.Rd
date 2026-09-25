@@ -72,7 +72,7 @@ yourself when you want custom thresholds before synthesizing the casebook.
 
 \section{GPCM boundary}{
 
-For bounded \code{GPCM}, the helper is available with caveat. The casebook inherits
+For \code{GPCM}, the helper is available with caveat. The casebook inherits
 exploratory screening semantics from the underlying residual and strict
 marginal sources; it should not be read as a formal inferential case test.
 }

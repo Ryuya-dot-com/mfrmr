@@ -17,7 +17,7 @@
 }
 \value{
 An object of class \code{summary.mfrm_weighting_review}, including the
-evidence-tier \code{comparison_contract} table.
+evidence-tier \code{comparison_contract} table and any computed \code{lrt}.
 }
 \description{
 Summarize a weighting-review object

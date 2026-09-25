@@ -13,7 +13,7 @@ mfrm_cluster_compare(analyses)
 \method{summary}{mfrm_cluster_comparison}(object, ...)
 }
 \arguments{
-\item{analyses}{A named list of at least two results from \code{\link[=mfrm_cluster]{mfrm_cluster()}}
+\item{analyses}{A named list of at least two results from \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}
 and/or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} or \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}},
 or a named list of results from \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}. Do not mix the two
 result types. Names must be unique and nonblank. All results must use the
@@ -95,9 +95,9 @@ if (requireNamespace("cluster", quietly = TRUE)) {
     Specialty = rep(c("Language", "Science"), 4))
   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
   fits <- list(
-    TwoGroups = mfrm_cluster(features, k = 2),
-    ThreeGroups = mfrm_cluster(features, k = 3),
-    ExperienceWeighted = mfrm_cluster(features, k = 2,
+    TwoGroups = mfrm_cluster_pam(features, k = 2),
+    ThreeGroups = mfrm_cluster_pam(features, k = 3),
+    ExperienceWeighted = mfrm_cluster_pam(features, k = 2,
       weights = c(ExperienceYears = 3, Specialty = 1)))
   comparison <- mfrm_cluster_compare(fits)
   summary(comparison)
@@ -107,7 +107,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   experience <- mfrm_features(raters, "Rater", "ExperienceYears")
   feature_comparison <- mfrm_cluster_compare(list(
     BothFeatures = fits$TwoGroups,
-    ExperienceOnly = mfrm_cluster(experience, k = 2)))
+    ExperienceOnly = mfrm_cluster_pam(experience, k = 2)))
   feature_comparison$analysis_summary
   feature_comparison$weights
 }
@@ -117,6 +117,6 @@ Hubert, L. and Arabie, P. (1985). Comparing partitions.
 Journal of Classification, 2, 193--218. \doi{10.1007/BF01908075}.
 }
 \seealso{
-\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
+\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
 \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}
 }

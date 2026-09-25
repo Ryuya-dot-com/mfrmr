@@ -67,13 +67,13 @@ through both \code{design} and the scalar count arguments.}
 \item{step_span}{Spread of step thresholds on the logit scale.}
 
 \item{model}{Measurement model recorded in the simulation setup. The current
-public generator supports \code{RSM}, \code{PCM}, and bounded \code{GPCM}.}
+public generator supports \code{RSM}, \code{PCM}, and \code{GPCM}.}
 
 \item{step_facet}{Step facet used when \code{model = "PCM"} and threshold values
 vary across levels. Currently \code{"Criterion"} and \code{"Rater"} are supported.}
 
 \item{slope_facet}{Slope facet used when \code{model = "GPCM"}. The current
-bounded \code{GPCM} branch requires \code{slope_facet == step_facet}.}
+\code{GPCM} branch requires \code{slope_facet == step_facet}.}
 
 \item{thresholds}{Optional threshold specification. Use a numeric vector of
 common thresholds; a named list such as \code{list(C01 = c(-1, 0, 1))}; a
@@ -168,7 +168,7 @@ constant to one location block should not be counted as recovery failure.
 Raw, unaligned errors are retained in \code{recovery} and summarized as
 \code{RawBias} / \code{RawRMSE}.
 
-For bounded \code{GPCM}, supplied generator slopes are treated as relative
+For \code{GPCM}, supplied generator slopes are treated as relative
 discriminations and normalized to the same geometric-mean-one log-slope
 identification used by the fitter. Slope recovery is therefore summarized on
 the identified log-slope scale without an additional mean-alignment step.

@@ -25,7 +25,7 @@ estimation_iteration_report(
 block.}
 }
 \value{
-A named list with iteration-report components and, for bounded
+A named list with iteration-report components and, for
 \code{GPCM}, a \code{gpcm_boundary} table. Class: \code{mfrm_iteration_report}.
 }
 \description{
@@ -45,7 +45,7 @@ Build an estimation-iteration report (preferred alias)
 \item optional \code{PROX} row: pseudo-initial reference point when enabled.
 }
 
-For bounded \code{GPCM}, this helper replays slope-aware optimization steps from
+For \code{GPCM}, this helper replays slope-aware optimization steps from
 a reconstructed starting state. It is not the exact optimizer history from
 the fitted object and is not an additional convergence test. Use
 \code{summary(fit, profile = "fit", detail = "brief")} for the recorded

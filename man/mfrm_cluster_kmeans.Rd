@@ -76,7 +76,7 @@ Full-rank PCA preserves the distance objective; truncation changes it.
 No component whitening is performed. The centers of a truncated PCA are
 coordinates in that subspace; \code{profiles} describe the original attributes.
 Categorical codes must not be converted to numeric solely to pass this
-interface. Use \code{\link[=mfrm_cluster]{mfrm_cluster()}} for Gower/PAM mixed-feature groups.
+interface. Use \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} for Gower/PAM mixed-feature groups.
 
 Compare fitted partitions using \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}. Silhouettes
 calculated in different geometries are not directly comparable evidence
@@ -97,6 +97,6 @@ direct$centers
 direct$profiles$numeric
 }
 \seealso{
-\code{\link[=mfrm_pca]{mfrm_pca()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
+\code{\link[=mfrm_pca]{mfrm_pca()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
 \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}, \code{\link[stats:kmeans]{stats::kmeans()}}
 }

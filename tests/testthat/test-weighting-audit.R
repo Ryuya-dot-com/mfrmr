@@ -122,12 +122,8 @@ test_that("summary methods for build_weighting_review expose front-door tables",
   expect_true(audit$overview$UnitSlopePCMReduction)
   expect_identical(audit$overview$ReferenceStepFacet, "Criterion")
   expect_true(audit$overview$AlignedStepSlopeOwner)
-  expect_identical(audit$overview$PCMvsGPCMLRT, "withheld_current_scope")
-  expect_true(any(grepl(
-    "PCM-versus-GPCM chi-square LRT",
-    audit$key_warnings,
-    fixed = TRUE
-  )))
+  expect_identical(audit$overview$PCMvsGPCMLRT, "not_requested")
+  expect_false(any(grepl("LRT was not computed", audit$key_warnings, fixed = TRUE)))
   expect_true(any(grepl(
     "other facets have no separate slope block",
     audit$notes,
@@ -208,7 +204,7 @@ test_that("JML weighting review is keeps numerical review separate from descript
     fixed = TRUE
   )))
   expect_true(any(grepl(
-    "GPCM ranking remains unavailable",
+    "Use IC ranking only when ICComparable is true",
     audit$next_actions,
     fixed = TRUE
   )))

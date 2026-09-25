@@ -149,9 +149,9 @@ completed <- lapply(seq_len(m), function(i) {
   result$Score[missing_assigned] <- example$scores[, i]
   result
 })
-review <- mfrm_response_imputations(
+review <- review_mfrm_imputations(
   ratings, completed, person = "Person", facets = c("Rater", "Criterion"),
-  score = "Score", event_id = "Event", impute = impute_ids, categories = 1:4,
+  score = "Score", event_id = "Event", impute_ids = impute_ids, categories = 1:4,
   assigned = "Assigned", imputation_model = model
 )
 review
@@ -399,9 +399,9 @@ lower_scores <- lapply(completed, function(d) {
   d$Score[missing_assigned] <- pmax(1L, d$Score[missing_assigned] - 1L)
   d
 })
-lower_review <- mfrm_response_imputations(
+lower_review <- review_mfrm_imputations(
   ratings, lower_scores, person = "Person", facets = c("Rater", "Criterion"),
-  score = "Score", event_id = "Event", impute = impute_ids, categories = 1:4,
+  score = "Score", event_id = "Event", impute_ids = impute_ids, categories = 1:4,
   assigned = "Assigned", imputation_model = list(
     baseline = model, assumption = "Missing scores one category lower, floored at 1")
 )

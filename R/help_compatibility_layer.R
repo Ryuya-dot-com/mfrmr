@@ -6,7 +6,7 @@
 #' fixed-width reports, or graph/score file style outputs.
 #'
 #' This compatibility layer currently applies mainly to diagnostics-based
-#' `RSM` / `PCM` workflows. Bounded `GPCM` fits also support
+#' `RSM` / `PCM` workflows. `GPCM` fits also support
 #' graph-only compatibility-style exports, while scorefile and
 #' diagnostics-driven compatibility outputs remain limited to `RSM` / `PCM`.
 #' Treat this layer as a presentation/contract surface, not as a claim of
@@ -99,7 +99,7 @@
 #'   `RSM` / `PCM`:
 #'   [fit_mfrm()] -> [diagnose_mfrm()] -> [build_apa_outputs()] ->
 #'   compatibility export only if required.
-#'   bounded `GPCM`:
+#'   `GPCM`:
 #'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
 #'   graph-only compatibility export only when a legacy handoff truly requires
 #'   it.
@@ -191,6 +191,10 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
     Alias = c(
       "mfrmRFacets",
       "analyze_dif",
+      "mfrm_cluster",
+      "mfrm_response_imputations",
+      "mfrm_response_imputations(impute)",
+      "keep_original",
       "JMLE",
       "ReadyForAPA",
       "SE",
@@ -202,6 +206,10 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
     PreferredName = c(
       "run_mfrm_facets",
       "analyze_dff",
+      "mfrm_cluster_pam",
+      "review_mfrm_imputations",
+      "review_mfrm_imputations(impute_ids)",
+      "category_policy",
       "JML",
       "DraftReady",
       "ModelSE",
@@ -213,6 +221,10 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
     Surface = c(
       "function",
       "function",
+      "function",
+      "function",
+      "argument",
+      "argument",
       "argument",
       "column",
       "column",
@@ -230,11 +242,19 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
       "retained_alias",
       "retained_alias",
       "retained_alias",
+      "retained_alias",
+      "retained_alias",
+      "retained_alias",
+      "retained_alias",
       "retained_alias"
     ),
     RetainedFor = c(
       "older workflow scripts",
       "earlier DIF-oriented package code",
+      "earlier feature-clustering scripts and saved results",
+      "earlier assigned-score imputation scripts and saved results",
+      "event-ID selection in earlier imputation-review calls",
+      "existing score-category policy in fitting and input review",
       "historical method labels",
       "older reporting scripts",
       "older measure-table scripts",
@@ -252,11 +272,19 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
       "No scheduled removal.",
       "No scheduled removal.",
       "No scheduled removal.",
+      "No scheduled removal.",
+      "No scheduled removal.",
+      "No scheduled removal.",
+      "No scheduled removal.",
       "No scheduled removal."
     ),
     Notes = c(
       "Compatibility wrapper for the legacy-compatible one-shot workflow.",
       "DFF naming is preferred for many-facet workflows; the older DIF name is still accepted.",
+      "Identical Gower/PAM implementation and result class; the preferred name makes the algorithm explicit.",
+      "Same supplied-completion checks and result class; this function does not generate imputations.",
+      "Use event-ID values in impute_ids, not a logical switch; the old wrapper retains impute and its positional order.",
+      "In fit_mfrm(), describe_mfrm_data() and review_mfrm_anchors(): TRUE maps to preserve and FALSE to collapse. Defaults are unchanged; conflicting explicit choices fail.",
       "Accepted by fit wrappers, but user-facing summaries and docs use JML.",
       "Backward-compatible reporting flag; values match DraftReady exactly.",
       "Backward-compatible standard-error column; ModelSE is the preferred label.",

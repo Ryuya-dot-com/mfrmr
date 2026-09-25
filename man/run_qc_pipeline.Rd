@@ -95,7 +95,7 @@ Three threshold presets are available via \code{threshold_profile}:\tabular{llll
 Individual thresholds can be overridden via the \code{thresholds} argument
 (a named list using entries such as \code{global_fit_warn} or \code{reliability_pass}).
 
-For bounded \code{GPCM}, this pipeline is available as caveated operational
+For \code{GPCM}, this pipeline is available as caveated operational
 triage over supported diagnostics. Its pass/warn/fail labels remain package
 QC policy overlays; they are not FACETS score-side equivalence, operational
 scoring decisions, design-forecasting evidence, or automatic fairness /

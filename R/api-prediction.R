@@ -57,7 +57,7 @@
 #' branch, and summarizes the resulting facet-level behavior. This is distinct
 #' from the fitted-model posterior scoring provided by [predict_mfrm_units()].
 #'
-#' Bounded `GPCM` forecasts are available with caveats through the same
+#' `GPCM` forecasts are available with caveats through the same
 #' repeated simulation/refit design route used by [evaluate_mfrm_design()].
 #' They summarize design-level operating characteristics under the supplied or
 #' fit-derived slope-aware specification; they do not validate operational
@@ -118,7 +118,7 @@
 #' - `planning_constraints`: explicit record of mutable/locked design variables
 #' - `planning_schema`: structured planning metadata carrying the role
 #'   table, supported boundary, mutability map, and facet manifest
-#' - `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` forecast route is
+#' - `gpcm_boundary`: `GPCM` caveat row when a `GPCM` forecast route is
 #'   used
 #' - `settings`: forecasting settings
 #' - `ademp`: simulation-study metadata
@@ -324,7 +324,7 @@ predict_mfrm_population <- function(fit = NULL,
 #' - `planning_scope`: explicit record of the current planning contract
 #' - `planning_constraints`: explicit record of mutable/locked design variables
 #' - `planning_schema`: structured planning metadata
-#' - `gpcm_boundary`: bounded-`GPCM` caveat row when present
+#' - `gpcm_boundary`: `GPCM` caveat row when present
 #' - `structural_design_review`: deterministic structural review of the
 #'   named-facet design grid; it is not
 #'   a forecast-uncertainty result
@@ -1331,7 +1331,7 @@ prediction_validate_population_output <- function(x) {
 #' but it can reconstruct the minimal scored-person table internally because no
 #' background covariates are needed beyond the person IDs in `new_data`.
 #'
-#' The current bounded `GPCM` branch is included in this scoring layer,
+#' The current `GPCM` branch is included in this scoring layer,
 #' so fitted `GPCM` objects can be used for the same fitted-object
 #' posterior summaries. This does not imply that every downstream diagnostic or
 #' reporting helper has already been generalized to `GPCM`.

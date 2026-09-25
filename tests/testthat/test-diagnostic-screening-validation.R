@@ -198,7 +198,7 @@ test_that("evaluate_mfrm_diagnostic_screening supports caveated GPCM screening o
   expect_true(nrow(diag_summary$gpcm_boundary) > 0L)
   expect_true(any(grepl("slope-aware operating-characteristic", diag_summary$notes, fixed = TRUE)))
   printed <- capture.output(print(diag_summary))
-  expect_true(any(grepl("Bounded GPCM boundary", printed, fixed = TRUE)))
+  expect_true(any(grepl("GPCM boundary", printed, fixed = TRUE)))
 
   diag_plot <- plot(diag_eval, type = "overview", metric = "rate", draw = FALSE)
   expect_s3_class(diag_plot, "mfrm_plot_data")

@@ -75,12 +75,14 @@ evidence-summary, and reporting-template CSVs plus Markdown and HTML;
 \item a lightweight HTML report equivalent to \code{mfrm_results(x, output = "html")}
 for the already-created object;
 \item an \code{.rds} copy of the \code{mfrm_results} object;
-\item a replay \code{.R} script from \code{x$input$reproducible_code};
+\item a replay \code{.R} script, reloading the saved result when additional inference
+or posterior diagnostics are attached;
 \item a written-files manifest and compact export summary.
 }
 
 For testlet, random-rater and ordinary results with saved posterior response
-diagnostics, replay reloads the exported RDS without
+diagnostics, GPCM inference or RSM/PCM fixed-facet intervals, replay reloads
+the exported RDS without
 refitting, rescoring or resampling. Requesting \code{"replay"} also includes
 \code{"rds"}. Run the script from the exported folder. Stored prediction settings,
 unavailable rows, numerical checks and interval meanings travel with the

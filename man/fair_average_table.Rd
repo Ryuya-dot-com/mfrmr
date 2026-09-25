@@ -51,7 +51,7 @@ replaces the displayed \code{Measure} by inversion of an expected score that
 far from the endpoint. It does not adjust responses, refit the model or
 correct JML bias.}
 
-\item{fair_se}{Logical. When \code{TRUE} and \code{fit} is an MML bounded-\code{GPCM}
+\item{fair_se}{Logical. When \code{TRUE} and \code{fit} is an MML \code{GPCM}
 fit, add structural delta-method standard errors and confidence limits
 for \code{Fair(M)} / \code{AdjustedAverage} and \code{Fair(Z)} /
 \code{StandardizedAdjustedAverage}. Person rows remain \code{NA} because MML
@@ -105,7 +105,7 @@ display adjustment. Fair-score calculations do not use the replacement.
 Recompute older diagnostics and recreate saved tables from the existing
 fit before summarizing or plotting them; no model refit is needed.
 
-Bounded \code{GPCM} fits are supported under a slope-aware
+\code{GPCM} fits are supported under a slope-aware
 element-conditional construction. For each slope-facet element
 \eqn{j^\star} the per-row fair-average is the GPCM expected score
 \deqn{\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
@@ -116,13 +116,13 @@ identification convention, so those rows remain continuous with
 the standard PCM Linacre fair-average and reduce to it exactly
 when all slopes equal one.
 This is an identification-based reporting convention for the package's
-bounded \code{GPCM} route, not a unique free-discrimination score-side analogue
+\code{GPCM} route, not a unique free-discrimination score-side analogue
 to FACETS fair averages. Do not report it as FACETS score-side equivalence
 or as an operational scoring rule unless that convention is substantively
 justified.
 
 Standard errors on the fair-average value itself are opt-in for MML
-bounded \code{GPCM} fits via \code{fair_se = TRUE}. The
+\code{GPCM} fits via \code{fair_se = TRUE}. The
 \verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE} columns
 retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
 uncertainty is reported under distinct columns such as \verb{Fair(M) S.E.},
@@ -211,7 +211,7 @@ MESA Press.
 Winsteps.com.
 (FACETS Table 12 corresponds to the fair-average
 construction implemented here for \code{RSM} / \code{PCM} fits; the
-slope-aware element-conditional construction for bounded \code{GPCM}
+slope-aware element-conditional construction for \code{GPCM}
 is documented in this help page.)
 \item Andrich, D. (1978). A rating formulation for ordered response
 categories. \emph{Psychometrika, 43}(4), 561-573.
@@ -220,7 +220,7 @@ categories. \emph{Psychometrika, 43}(4), 561-573.
 \emph{Psychometrika, 47}(2), 149-174. \doi{10.1007/BF02296272}
 \item Muraki, E. (1992). A generalized partial credit model:
 Application of an EM algorithm. \emph{Applied Psychological
-Measurement, 16}(2), 159-176. (Cited for the bounded \code{GPCM}
+Measurement, 16}(2), 159-176. (Cited for the \code{GPCM}
 slope-aware extension.)
 }
 }

@@ -15,7 +15,7 @@
 mfrm_calibration_capabilities <- function() {
   data.frame(
     Model = c(
-      "RSM", "PCM", "RSM/PCM", "bounded GPCM", "RSM/PCM", "bounded GPCM"
+      "RSM", "PCM", "RSM/PCM", "GPCM", "RSM/PCM", "GPCM"
     ),
     Estimator = c("MML", "MML", "MML", "MML", "JML", "JML"),
     ScoringBasis = c(
@@ -41,9 +41,9 @@ mfrm_calibration_capabilities <- function() {
       "portable artifact or fitted-object scoring",
       "portable artifact or fitted-object scoring",
       "use fitted-object scoring with the fitted population model",
-      "use fitted-object bounded-GPCM scoring",
+      "use fitted-object GPCM scoring",
       "use fitted-object scoring with an explicit post-hoc prior",
-      "use fitted-object bounded-GPCM scoring with an explicit post-hoc prior"
+      "use fitted-object GPCM scoring with an explicit post-hoc prior"
     ),
     Limitation = c(
       paste(
@@ -204,7 +204,7 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' The portable 0.2.4 workflow supports one observed score scale, one latent
 #' dimension, known non-Person facet levels, and stored two-way facet
 #' interactions. Estimated-population or latent-regression MML, JML, and
-#' bounded `GPCM` remain available only through their fitted-object routes; see
+#' `GPCM` remain available only through their fitted-object routes; see
 #' [mfrm_calibration_capabilities()].
 #'
 #' Before extraction, run [mml_quadrature_sensitivity()] on user-selected grids

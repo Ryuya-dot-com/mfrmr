@@ -1580,6 +1580,12 @@ mfrmr_mml_evaluate_person_patterns <- function(
     matrix(numeric(0), nrow = 0L, ncol = free_dimension)
   }
 
+  # At fixed nodes, category probabilities depend on the parameters and
+  # rating design, not the response pattern. Cache only their cumulative
+  # probabilities; pattern likelihoods and posterior weights are recomputed.
+  cache_gpcm_steps <- isTRUE(include_scores) && identical(config$model, "GPCM") &&
+    !mfrmr_adaptive_integration(config)
+  p_geq_list <- NULL
   for (pattern_row in seq_len(nrow(patterns))) {
     pattern_idx <- person_idx
     pattern_idx$score_k <- as.integer(patterns[pattern_row, ])
@@ -1593,6 +1599,10 @@ mfrmr_mml_evaluate_person_patterns <- function(
       include_linear_part = isTRUE(include_scores) &&
         identical(config$model, "GPCM")
     )
+    if (cache_gpcm_steps) {
+      if (is.null(p_geq_list)) p_geq_list <- lapply(logprob_bundle$prob_list, compute_P_geq)
+      logprob_bundle$p_geq_list <- p_geq_list
+    }
     posterior_bundle <- mfrm_mml_posterior_bundle(logprob_bundle)
     marginal <- posterior_bundle$person_bundle$log_marginal
     if (length(marginal) != 1L || !is.finite(marginal)) {

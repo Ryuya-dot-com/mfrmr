@@ -23,7 +23,7 @@
 #' - "What should go into the manuscript text and tables?"
 #'   For `RSM` / `PCM`, use [reporting_checklist()], [build_apa_outputs()],
 #'   and [build_summary_table_bundle()] or [export_summary_appendix()]. For
-#'   bounded `GPCM`, use the same route only where
+#'   `GPCM`, use the same route only where
 #'   [gpcm_capability_matrix()] marks it as `supported_with_caveat`: direct
 #'   table/plot helpers, summary-table appendix export, caveated
 #'   [build_apa_outputs()], and caveated [export_mfrm_bundle()] are available
@@ -47,7 +47,7 @@
 #' 5. For `RSM` / `PCM`, finish with [reporting_checklist()] and
 #'    [build_apa_outputs()] for manuscript-oriented output, then
 #'    [build_summary_table_bundle()] for reusable handoff tables or
-#'    [export_summary_appendix()] for direct appendix export. For bounded
+#'    [export_summary_appendix()] for direct appendix export. For
 #'    `GPCM`, the same report/export route is available only as a caveated
 #'    sensitivity-reporting layer with `gpcm_boundary`; keep FACETS-style
 #'    score-side review and design forecasting on their separate capability
@@ -138,7 +138,7 @@
 #'   [build_summary_table_bundle()] -> `summary()` / `plot()` -> [apa_table()]
 #'   or [export_summary_appendix()] /
 #'   [export_mfrm_bundle()](include = "summary_tables").
-#' - Bounded `GPCM` handoff:
+#' - `GPCM` handoff:
 #'   [reporting_checklist()] -> direct summaries/plots ->
 #'   [build_apa_outputs()] or [build_summary_table_bundle()] ->
 #'   [export_summary_appendix()] or caveated [export_mfrm_bundle()], with
@@ -202,7 +202,7 @@ NULL
 #'   `"entry"` returns the recommended first-screen routes. `"viewer"` returns
 #'   local-viewer routes built around `mfrm_results(include = ...)`. `"binary"`
 #'   returns the two-category person-item Rasch route and checks. Other values
-#'   filter to one output family or to bounded-`GPCM`-relevant routes.
+#'   filter to one output family or to `GPCM`-relevant routes.
 #'   `"linking"` returns anchor, drift, and equating route rows.
 #'   `"calibration"` returns the portable fixed-calibration lifecycle and
 #'   artifact-only scoring route.
@@ -210,6 +210,8 @@ NULL
 #'   `"response_time"` returns descriptive response-time QC rows.
 #'   `"models"` compares fixed-facet, shared-rater and Person-specific testlet
 #'   workflows, including their distinct prediction and reporting boundaries.
+#'   `"feedback"` distinguishes fixed-rater uncertainty, unexpected rating
+#'   patterns, shared-rater uncertainty and screening accuracy with known truth.
 #'   `"features"`, `"imputation"` and `"gtheory"` show exploratory attributes,
 #'   assigned-score multiple imputation and observed-score G/D-study workflows,
 #'   including their own table, plot and saving routes.
@@ -239,6 +241,10 @@ NULL
 #' Use `mfrmr_output_guide("viewer")` when the next step is the optional local
 #' Shiny reader; it shows which `include` preset to use before calling
 #' [launch_mfrmr_viewer()].
+#' Use `mfrmr_output_guide("feedback")` when preparing rater feedback. Start
+#' with the question and the fitted model: severity, response misfit and the
+#' accuracy of a warning rule are different quantities. A severe rater need
+#' not misfit, and an observed flag does not establish poor rater quality.
 #' Use `mfrmr_output_guide("psychometric")` for the technical table,
 #' review, and reporting routes whose interpretation boundaries should be
 #' checked before manuscript use.
@@ -249,7 +255,7 @@ NULL
 #' Cells containing `...` are outlines, not complete scripts to paste and run.
 #' Use [mfrmr_workflow_methods] for a runnable introduction and an explanation
 #' of function names. Inspect `DecisionBoundary` before interpreting a result.
-#' For bounded `GPCM`, use `scope = "gpcm"` to find both the support matrix
+#' For `GPCM`, use `scope = "gpcm"` to find both the support matrix
 #' and the table that explains how out-of-scope routes are handled.
 #'
 #' @return A data.frame with one row per recommended route and columns:
@@ -276,6 +282,9 @@ NULL
 #' # Ask for a specialist map only when that question arises.
 #' linking <- mfrmr_output_guide("linking")
 #' linking[, c("Question", "MainFunction", "UseWhen")]
+#'
+#' feedback <- mfrmr_output_guide("feedback")
+#' feedback[, c("Question", "MainFunction", "DecisionBoundary")]
 #' @concept reporting workflow
 #' @concept route selection
 #' @concept GPCM boundaries
@@ -285,7 +294,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
                                          "bundles", "exports", "compatibility",
                                          "gpcm", "calibration", "simulation", "linking", "network",
                                          "response_time", "facets", "conquest", "r", "models",
-                                         "features", "imputation", "gtheory")) {
+                                         "features", "imputation", "gtheory", "feedback")) {
   scope <- match.arg(scope)
 
   out <- data.frame(
@@ -302,7 +311,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Review category functioning and expected-score curves",
       "Screen bias, DFF, or interaction evidence",
       "Review anchors, drift, and linking readiness",
-      "Compare equal-weighting and bounded-GPCM routes",
+      "Compare equal-weighting and GPCM routes",
       "Turn summaries into reusable appendix tables",
       "Assemble manuscript-oriented narrative output",
       "Write files for appendix, replay, or handoff",
@@ -365,7 +374,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Use plots or summary-table bundles for presentation.",
       "Use plot helpers or export curve tables.",
       "Treat positive screens as follow-up prompts, not final decisions.",
-      "Use operational linking synthesis for RSM/PCM; keep bounded GPCM linking review caveated and exploratory.",
+      "Use operational linking synthesis for RSM/PCM; keep GPCM linking review caveated and exploratory.",
       "Report GPCM fit gains as sensitivity evidence, not automatic scoring policy.",
       "Use apa_table() or export_summary_appendix().",
       "Start from res <- mfrm_results(fit); use mfrm_report(res, style = \"qc\") before manuscript-specific prose.",
@@ -395,11 +404,11 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Good bridge from diagnostics to report text.",
       "Category curves carry reusable plot data.",
       "Bias outputs are screening layers.",
-      "Operational linking conclusions remain RSM/PCM-scoped; bounded GPCM review is caveated exploratory synthesis.",
+      "Operational linking conclusions remain RSM/PCM-scoped; GPCM review is caveated exploratory synthesis.",
       "Use with gpcm_capability_matrix().",
       "Works for several object classes; inspect table_index.",
-      "mfrm_report() is the report entry point over mfrm_results(); bounded GPCM APA text is caveated and carries gpcm_boundary.",
-      "Use export_mfrm_results() for controlled mfrm_results analysis archives; it does not deidentify files. Choose the narrowest route needed for review and keep gpcm_boundary with bounded GPCM bundles.",
+      "mfrm_report() is the report entry point over mfrm_results(); GPCM APA text is caveated and carries gpcm_boundary.",
+      "Use export_mfrm_results() for controlled mfrm_results analysis archives; it does not deidentify files. Choose the narrowest route needed for review and keep gpcm_boundary with GPCM bundles.",
       "Compatibility is a presentation contract, not numerical equivalence."
     ),
     stringsAsFactors = FALSE
@@ -639,7 +648,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     Notes = c(
       "The viewer reads a completed mfrm_results object; it does not estimate or change diagnostics.",
-      "For bounded GPCM, publication viewer sections can show direct outputs, caveated APA text, and gpcm_boundary.",
+      "For GPCM, publication viewer sections can show direct outputs, caveated APA text, and gpcm_boundary.",
       "This route is a display layer over existing validation and fit/separation helpers.",
       "Bias screens are follow-up prompts, not fairness conclusions.",
       "Pathway and unexpected-response displays help locate cases; they do not decide whether observations are invalid.",
@@ -803,8 +812,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   gpcm_rows <- data.frame(
     Scope = rep("gpcm", 2L),
     Question = c(
-      "Check the bounded GPCM support matrix",
-      "Find alternatives for unavailable bounded GPCM routes"
+      "Check the GPCM support matrix",
+      "Find alternatives for unavailable GPCM routes"
     ),
     OutputFamily = c("guide", "review"),
     MainFunction = c(
@@ -813,7 +822,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     UseWhen = c(
       "You need to confirm which GPCM helper families are supported, caveated, blocked, or deferred before choosing a route.",
-      "A bounded GPCM route is blocked or deferred and you need an available alternative."
+      "A GPCM route is blocked or deferred and you need an available alternative."
     ),
     TypicalInput = c(
       "none",
@@ -828,7 +837,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "out_of_scope_route_guidance"
     ),
     Notes = c(
-      "The capability matrix is the user-facing bounded-GPCM support matrix.",
+      "The capability matrix is the user-facing GPCM support matrix.",
       "This table lists unavailable routes and the supported alternatives; it does not expand GPCM availability."
     ),
     stringsAsFactors = FALSE
@@ -1048,13 +1057,13 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     Notes = c(
       "mfrmr is not a FACETS numerical clone; familiar names help transition, but estimates remain package-native unless external output is supplied.",
       "Direct anchors fix element logits; group anchors constrain a group mean. Overlapping constraints are retained jointly and must be compatible.",
-      "Operational linking conclusions remain RSM/PCM-scoped; bounded GPCM linking review is caveated exploratory synthesis.",
+      "Operational linking conclusions remain RSM/PCM-scoped; GPCM linking review is caveated exploratory synthesis.",
       "Closest current route for FACETS users who expect fit measures in one table.",
       "The guide explains engine df, FACETS-style df, Wilson-Hilferty ZSTD, and WHEXACT caveats.",
       "This is a review of supplied rectangular output, not raw FACETS text parsing; use df_sensitive for convention-sensitive rows.",
       "GPCM fair averages are slope-aware direct outputs, not FACETS score-side equivalence.",
       "Bias outputs are conditional screening layers; use substantive review before fairness conclusions.",
-      "Wright maps visualize fitted scale locations; under bounded GPCM, interpret step/threshold locations with slope-aware caveats.",
+      "Wright maps visualize fitted scale locations; under GPCM, interpret step/threshold locations with slope-aware caveats.",
       "Separates global score-support gaps from facet-level category restriction; neither local avoidance nor a near-zero severity estimate is by itself a reason to select GPCM.",
       "Residual and subset writers are package-native CSV/TSV handoff routes, not exact FACETS fixed-field command-file clones.",
       "ConQuest support is intentionally scoped to a documented comparison case.",
@@ -1095,8 +1104,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Analyze missing scores on assigned ratings with multiple imputation",
       "Plan assessment counts or weights on an observed-score scale"),
     OutputFamily = rep("entry", 3),
-    MainFunction = c("mfrm_features(); mfrm_cluster(); mfrm_cluster_hierarchical(); mfrm_pca(); mfrm_cluster_kmeans(); mfrm_cluster_imputed(); mfrm_cluster_compare()",
-      "mfrm_response_imputations(); fit_mfrm_imputed(); pool_mfrm_imputed()",
+    MainFunction = c("mfrm_features(); mfrm_cluster_pam(); mfrm_cluster_hierarchical(); mfrm_pca(); mfrm_cluster_kmeans(); mfrm_cluster_imputed(); mfrm_cluster_compare()",
+      "review_mfrm_imputations(); fit_mfrm_imputed(); pool_mfrm_imputed()",
       "mfrm_multivariate_gstudy(); mfrm_multivariate_d_study(); mfrm_multivariate_d_compare()"),
     UseWhen = c("Exploratory groups summarize selected external attributes; numeric PCA/k-means and mixed-feature grouping use different distances.",
       "Reviewed completions preserve observed scores, allowed categories and the assigned roster, with a justified imputation model.",
@@ -1114,9 +1123,52 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     stringsAsFactors = FALSE
   )
 
+  feedback_rows <- data.frame(
+    Scope = rep("feedback", 5),
+    Question = c(
+      "How uncertain are fixed-rater severities or prespecified differences?",
+      "Which ordinary-model rating patterns need review, and do flags depend on the cutoff?",
+      "Which rating patterns need review under a shared-rater or testlet model?",
+      "How uncertain is an observed rater's severity in a shared-rater model?",
+      "How often does a warning rule flag unaffected or detect affected raters?"),
+    OutputFamily = c("entry", "review", "review", "entry", "review"),
+    MainFunction = c("mfrm_facet_intervals()",
+      "fit_measures_table()", "mfrm_response_diagnostics()",
+      "confint(); mfrm_random_rater_intervals()",
+      "mfrm_screening_performance(); mfrm_screening_sensitivity()"),
+    UseWhen = c(
+      "The target is a specified fixed rater or contrast, conditional on the fitted facet levels.",
+      "Review ordinary Infit/Outfit and directional flags; choose lower/upper and flag_basis explicitly when a rule is prespecified.",
+      "Review same-data posterior predictive residuals that integrate the model's latent effects, rather than ordinary plug-in residuals.",
+      "The target is an observed rater's latent severity relative to the modeled rater population, not a fixed-facet coefficient.",
+      "A simulation provides prespecified truth and every planned replication/target, including failed or unavailable screens."),
+    TypicalInput = c(
+      "Inference-ready fixed-standard-normal RSM/PCM MML fit with unit weights and fixed quadrature; facet name and optional named contrast matrix.",
+      "Ordinary mfrm_fit or matching diagnose_mfrm() result; select the actual rater facet column.",
+      "A numerically ready shared-rater or testlet fit; optional rating-row and grouping selections.",
+      "A shared-rater fit; saved mfrm_random_rater_intervals output for bootstrap review without new refits.",
+      "Planned roster with known Affected status plus saved flags, or saved Infit/Outfit and explicit threshold profiles."),
+    NextStep = c(
+      "Choose method = 'model' or 'sandwich' explicitly; sandwich assumes independent declared clusters. Inspect summary(intervals), plot(intervals), as_ggplot(intervals) and apa_table(intervals). Attach with mfrm_results(fit, intervals = list(raters = intervals), compute = 'never'); use plot(res, type = 'facet_raters') and export_mfrm_results(res) for the same saved inference. Ordinary Wright/Pathway uncertainty is separate. For supplied missing-score completions, see the imputation guide.",
+      "Inspect settings, threshold_profiles and profile_summary_by_facet; keep underfit and overfit separate. Use the ordinary results pathway plot with matching diagnostics. Save the full review, not just flagged rows.",
+      "Save diagnostics; inspect summary(diagnostics), plot(diagnostics) and plot_data(diagnostics). Attach with mfrm_results(fit, response_diagnostics = diagnostics, compute = 'never') for reports and model-aware pathway maps.",
+      "Begin with point estimates in summary(fit) and plot(fit). confint(fit, parm = 'raters') requests the normal approximation; bootstrap fitting is separate and can be costly. Retain all bootstrap trials and unavailable or infinite endpoints when saving/reporting.",
+      "Inspect target and family rates together with availability and all-trial bounds; plot(performance), plot_data(performance), and saveRDS(performance). Compare threshold profiles without automatically choosing the best one."),
+    GPCMStatus = c("unavailable; RSM/PCM MML only", "supported_with_caveat",
+      "not_applicable", "not_applicable", "not_applicable"),
+    Notes = c(
+      "Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.",
+      "Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.",
+      "Posterior predictive Infit/Outfit are descriptive and differ from ordinary plug-in indices. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.",
+      "Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.",
+      "Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials."),
+    stringsAsFactors = FALSE
+  )
+
   out <- rbind(
     public_rows, calibration_rows, entry_rows, viewer_rows, binary_rows, out, linking_rows,
-    advanced_rows, gpcm_rows, migration_entry_rows, user_pathway_rows, model_rows, workflow_rows
+    advanced_rows, gpcm_rows, migration_entry_rows, user_pathway_rows, model_rows, workflow_rows,
+    feedback_rows
   )
   out$Lifecycle <- "stable"
   out$Lifecycle[out$OutputFamily %in% "compatibility" | out$Scope %in% c("compatibility", "facets", "conquest")] <- "compatibility"
@@ -1172,7 +1224,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   out$DecisionBoundary[out$ObjectRole %in% "route-selection guide"] <-
     "Chooses the next help route; it is not analysis evidence."
   out$DecisionBoundary[out$ObjectRole %in% "out-of-scope route-status table"] <-
-    "Explains supported-with-caveat, blocked, and deferred bounded-GPCM route handling; it does not broaden any route beyond its current capability row."
+    "Explains supported-with-caveat, blocked, and deferred GPCM route handling; it does not broaden any route beyond its current capability row."
   out$DecisionBoundary[out$ObjectRole %in% "explicit opt-in interactive entry"] <-
     "Collects column choices interactively; move replay code into an explicit script before reporting."
   out$DecisionBoundary[out$ObjectRole %in% "portable calibration lifecycle"] <-
@@ -1205,8 +1257,11 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
 
   out$RecommendedEntry <- out$Scope %in% c("public", "calibration", "entry", "viewer", "binary")
   dedicated <- out$Scope %in% c("features", "imputation", "gtheory")
-  out$DecisionBoundary[dedicated | out$Scope == "models"] <- out$Notes[dedicated | out$Scope == "models"]
+  targeted <- dedicated | out$Scope %in% c("models", "feedback")
+  out$DecisionBoundary[targeted] <- out$Notes[targeted]
   out$ObjectRole[dedicated] <- "dedicated analysis and saved-output workflow"
+  out$ObjectRole[out$Scope == "feedback"] <- "rater-feedback route selection"
+  out$APILayer[out$Scope == "feedback"] <- "specialist_followup"
   out$Lifecycle[dedicated] <- "advanced"
   out$Lifecycle[out$Scope == "models" & out$MainFunction != "fit_mfrm()"] <- "advanced"
   out <- out[, c(

@@ -235,7 +235,7 @@ test_that("estimate_bias() no longer hard-stops on GPCM fits", {
   expect_true(nrow(post_bias$gpcm_boundary) == 1L)
   expect_identical(
     post_bias$gpcm_boundary$Area[1],
-    "Residual-bias screening under bounded GPCM"
+    "Residual-bias screening under GPCM"
   )
   expect_identical(
     post_bias$gpcm_boundary$Status[1],

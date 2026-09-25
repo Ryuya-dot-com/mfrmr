@@ -78,6 +78,7 @@ test_that("source matching rejects different calibration semantics and unsupport
   expect_error(mfrm_results(fit, diagnostics = list()), "mfrm_response_diagnostics")
   expect_error(mfrm_results(fit, response_time_score = "Score"), "unavailable")
   expect_error(mfrm_results(structure(list(), class = "mfrm_fit"), predictions = scores), "only for testlet")
+  expect_error(mfrm_results(structure(list(), class = "mfrm_fit"), intervals = list()), "native GPCM fit")
   expect_error(mfrm_results(scores), "first argument")
   # Numerical failures remain reportable; no successful-inference label is introduced.
   fit$checks$NumericalReady <- FALSE

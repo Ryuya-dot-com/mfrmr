@@ -46,7 +46,7 @@ supplied explicitly; see the Person-screening boundary below.}
 An object of class \code{mfrm_bias} with:
 \itemize{
 \item \code{table}: interaction rows with effect size, SE, screening t/p metadata,
-reporting-use flags, fit columns, and bounded-\code{GPCM}
+reporting-use flags, fit columns, and \code{GPCM}
 profile-likelihood columns when available
 \item \code{summary}: compact summary statistics
 \item \code{chi_sq}: fixed-effect chi-square style screening summary
@@ -94,7 +94,7 @@ with the many-facet bias literature (Myford & Wolfe, 2003, 2004):
 
 Each iteration updates expected scores using the current bias estimates,
 then re-computes the bias. Convergence is reached when the maximum absolute
-change in bias estimates falls below \code{tol}. For bounded \code{GPCM}, the same
+change in bias estimates falls below \code{tol}. For \code{GPCM}, the same
 additive-bias idea is evaluated with the slope-aware GPCM kernel and
 conditional profile-likelihood follow-up columns; those quantities remain
 screening evidence because theta, facet, step, and slope estimates are held
@@ -169,7 +169,7 @@ In \code{bias$table}, the most-used columns are:
 \item \code{t} and \code{Prob.}: screening metrics, not formal inferential quantities
 \item \verb{Obs-Exp Average}: direction and practical size of observed-vs-expected
 gap on the raw-score metric
-\item for bounded \code{GPCM}, \verb{LR ChiSq}, \verb{LR Prob.}, and \verb{Profile CI Lower} /
+\item for \code{GPCM}, \verb{LR ChiSq}, \verb{LR Prob.}, and \verb{Profile CI Lower} /
 \verb{Profile CI Upper}: conditional profile-likelihood checks for a single
 additive bias shift, holding the fitted person, facet, step, and slope
 estimates fixed

@@ -67,7 +67,7 @@ category_prob_pcm <- function(eta, step_cum_mat, criterion_idx,
   probs
 }
 
-# Category response probabilities under the bounded Generalized
+# Category response probabilities under the Generalized
 # Partial Credit Model (GPCM; Muraki, 1992). Discriminations
 # (`slopes`) must be strictly positive; the internal convention is
 # sum-to-zero on the log-slope scale with geometric-mean-one

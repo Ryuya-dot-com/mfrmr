@@ -11,17 +11,226 @@ The roadmap is repository-only and is excluded from source-package tarballs.
 
 ## Current work plan
 
-Updated 2026-09-24 after the user's release-scope and milestone request. Preserve the
-sequencing decision: finish implemented
-development functions, extend statistical support, extend models, then integrate
-them as 0.2.4. This replaces the previous release-first recommendation. This
-section is the active execution order. Update it in place when a decision
+Updated 2026-09-24 after the user's post-release roadmap request. The agreed
+0.2.4 sequence was to finish implemented development functions, extend statistical
+support, extend models, then integrate the retained scope. That GitHub candidate
+work is complete; CRAN preparation and review are separate. The user's subsequent
+pre-submission review moves API integration and the existing-GPCM disposition
+into 0.2.4. The sequence below is the prospective work order. Update it in place when a decision
 changes; do not create another competing "next steps" list. The public ROADMAP owns feature
 priorities and user promises. The dated sections below retain evidence and
 superseded plans; their imperatives are not current execution instructions.
 In particular, the September 18 DRF-first queue, automatic full-suite/matrix
 requirements, old numbered feature releases and research-prototype gates do
 not override this plan. Their original protocols and results remain intact.
+
+### Current execution order, 2026-09-24
+
+The public [pre-submission review](../../ROADMAP.md#before-cran-submission-interface-and-gpcm-review),
+[post-release priorities](../../ROADMAP.md#post-release-priorities)
+and [completion milestones](../../ROADMAP.md#milestones-after-024) own the user
+promises. This section specifies execution without creating another roadmap.
+The user's established priorities are educational performance assessment,
+cross-domain role/design generality, sparse designs and useful rater feedback.
+Multidimensional MFRM remains deferred by the user's explicit choice.
+
+**Current state: local development, not submission handoff.** The revised
+snapshot `404d54d1676cb8ce6694a4839fa359c2a25496b17e257127c2e9c795108d286a`
+contains the compatible API/GPCM repairs and reconciled executed articles.
+It passed the local packaging check with 0 errors, 0 warnings and 1 NOTE;
+examples, CRAN-tier tests (3,121 passes / 4 skips) and manuals passed on an
+archive proven identical except for repaired vignette times and Packaged time.
+Both official Win-builder forms accepted it before the user's steering message
+returned the work to local development. Results remain pending. Preserve this
+snapshot and receipts; it is not the final source or evidence for later edits.
+Details are in the [local-development follow-through](claim-reconciliation-0.2.4.md#september-24-local-development-after-candidate-checks).
+
+Continue the principal API input/default/result review and repair demonstrated
+gaps before another archive or external check. The category-policy output gap
+is now repaired locally: policy and actual score recoding are distinct, and
+missing legacy metadata stays unknown. Its focused checks, help and NEWS must
+accompany the eventual source. Do not substitute check totals or a new label
+for the remaining workflow review or GPCM inference qualification. No CRAN
+submission has occurred; rc.5 and earlier Windows results retain their exact
+historical source identities.
+
+The user's subsequent instruction requires resolving the three GPCM outputs
+in 0.2.4, superseding the retain-with-restrictions release proposal. Use GPCM
+as the public model name; one
+substantive ability dimension does not distinguish it from the other current
+response models. Keep explicit slope/step-facet and output limitations.
+Complete the public roadmap's G1 IC, G2 matched LRT and G3 interval milestones
+before source freeze, starting with the MML IC-specific rule. Do not treat
+relabelling, a blanket unavailable state or the earlier scope proposal as
+completion. Regular supported cases must return useful results; failures
+must remain visible. Do not add a new model or a universal proof requirement.
+
+G1 now has a local implementation: `compare_mfrm()` reevaluates the retained
+likelihood, gradient and information for GPCM and estimated-population RSM/PCM.
+The ordinary fixed-population path keeps its existing rule. Same-data,
+likelihood/count, unit-weight and integration checks remain; interval/LRT
+readiness is not promoted. Two saved GPCM examples with current matched PCM
+fits exercise both slope facets and weighting-review propagation. Evidence is
+in `validation-results/gpcm-ic-eligibility-20260924/`.
+
+G2 now provides the matched PCM/GPCM MML equal-slope LRT after structural,
+free-dimension, likelihood and numerical checks. Weighting reviews preserve the
+explicit request, result and unavailable reason. The ordinary chi-square
+reference is asymptotic, with G-1 degrees of freedom; it does not inherit a
+boundary mixture from slope positivity. Focused tests, saved examples and the
+targeted null evaluation are in `validation-results/gpcm-lrt-20260924/`.
+G3 slope intervals and final integrated checks remain required before submission;
+this milestone does not promote global fit readiness or interval eligibility.
+
+The portfolio review now traces eight retained user workflows: ordinary fitting
+and calibration, source-Person scoring, rater feedback, external features,
+assigned-score MI, observed-score G/D planning, the two extended-model routes,
+and saved reporting. Reuse the earlier cross-workflow/statistical evidence for
+unchanged implementation. Do not open a new model or repeat a simulation solely
+because its existing bounded evidence does not establish a general guarantee.
+A concrete discoverability gap was fixed in the existing guide:
+`mfrmr_output_guide("feedback")` connects fixed-facet intervals and the two
+screening APIs to the distinct ordinary/extended diagnostic and shared-rater
+uncertainty routes. Its purpose is choosing an already implemented analysis,
+not making these targets interchangeable. Fixed-rater inference and automatic
+rater-quality classification remain different claims.
+
+M4 now records the ongoing local integration rather than inheriting a blanket
+completion claim from rc.5. M5 remains open for the current source; M6 records
+the verified rc.5 snapshot separately from unpublished changes and unfinished
+final/CRAN publication. The next local completion decision must review the
+adopted source/help/output changes as one set and any demonstrated unresolved
+defect; it must not be replaced by an ever-growing list of optional refinements.
+Evidence: `validation-results/portfolio-review-20260924/`.
+
+
+| Order | Work package and why it matters | Concrete next deliverable | Exit or stop |
+| --- | --- | --- | --- |
+| Ongoing | Correct demonstrated defects and preserve saved analyses. Maintain ordinary RSM/PCM, bounded GPCM/JML and portable scoring alongside newer workflows. | Reproduction, affected-source attribution and the smallest sufficient repair/check set; actual beginner walkthroughs when readers are available. | Close the reported defect with recovery/migration guidance. Domain renaming or an author walkthrough is not independent usability validation. |
+| Before 0.2.4 submission: API integration | Make API names, arguments and help express the operation and its consequences. Resolve GPCM terminology and contradictory guidance in the same vocabulary review. | A task-to-entry and migration table for the existing front doors, distinguishing established CRAN interfaces from additions first reaching CRAN; implement adopted changes with matching help/examples. | One recommended route per distinct task, interpretable defaults/results, old-call and saved-object compatibility, and explicit statistical restrictions. This is required before submission, not automatically deferred to 0.2.5. |
+| Before 0.2.4 submission: existing GPCM inference | Complete IC comparison, matched PCM/GPCM LRT and approximate relative-slope intervals for the existing MML model. | G1 separates IC solution checks from generic inference readiness; G2 and G3 add their own statistical rules and evidence, followed by integrated output/help/examples. | All three operations work for eligible regular fits and explain unavailable results. A blanket restriction or a 0.2.5 deferral is not completion; final source freeze waits for these milestones. |
+| First statistical focus | Qualify observed-rater uncertainty in the existing shared-rater RSM. The 800-dataset normal-interval failure and the user's feedback priority supply the reason; another model family is unnecessary to ask this question. | A single protocol mapping the current interval implementation, inferential target, reusable source-specific results, remaining numerical concerns and one chosen method comparison to an adopt/restrict/stop decision. | Separate mathematical/numerical validity, interval performance and user usefulness. An unsupported method remains restricted; do not continue adding generic pilots until it passes. |
+| Next planning focus | Compare feasible assessment plans using the current G/D-study framework. | First describe costs, constraints and a decision current scenarios can answer. Confirm a concrete need before selecting the leading statistical candidate: paired uncertainty for one supported nested design. | Do not bundle a general fixed-facet solver, unequal future allocation, optimal assignment and nested intervals into one task. Existing point/scenario APIs remain useful independently of any new interval. |
+| Subsequent selection | Calibration-aware Person/contrast uncertainty; dependence-specific robust intervals; calibrated screening/DRF; selected model/design or feature/MI extensions. | Choose a named target from the public candidate table, supported by actual use and an explicit existing-workflow or external-tool comparison. | A new scope decision precedes code or a confirmation grid. No automatic version slot or obligation to execute the full list. |
+
+**API integration acceptance.** Start with the existing entry points for data
+review, fitting, scoring/prediction, rater feedback, G/D planning, external
+features and imputation. The public [API work package](../../ROADMAP.md#first-integration-work-package-api-names-arguments-and-help)
+records the actual confusing interfaces. Decide canonical names and argument
+semantics before adding aliases. In particular, distinguish Gower/PAM from
+k-means, reviewing supplied imputations from generating them, response
+probabilities from Person scores, score-category preservation from display,
+and fixed population SD from an estimated variance. Audit model-dependent
+defaults, row omission and complete shared-effect rosters before harmonizing
+spellings. Do not create another universal wrapper or move essential choices
+into opaque control lists to reduce an argument count.
+
+The migration table must state the old call, recommended call, input/output
+meaning, default consequences and transition period. Adopted aliases must
+produce equivalent results and reject conflicting argument pairs. Preserve
+saved objects, S3 dispatch and ordinary R conventions; do not silently change
+`predict()` outputs. Help must explain the user's question, input, consequential
+defaults/NULLs, result and interpretation with a small executable example.
+Use the same vocabulary in warnings, returned tables, installed help and site
+articles. The [local compatible API implementation](claim-reconciliation-0.2.4.md#september-24-compatible-api-integration)
+now provides PAM/imputation-review names and explicit category policy with
+focused checks and a checked development snapshot. The
+[GPCM output review](claim-reconciliation-0.2.4.md#september-24-gpcm-output-eligibility-decision)
+records the retained inference restrictions and the legacy-uncertainty repair.
+The remaining local work is task-to-input-to-output consistency, including
+saved results and reports, before submission selection. The README author
+walkthrough passed but is not a beginner-participant study. New GPCM inference
+qualification is not claimed complete.
+
+**GPCM decision acceptance.** In `R/core-readiness.R`, the MML branch of
+`mfrmr_readiness_boundary_component()` returns `not_evaluated` for every
+free-slope GPCM, independent of increased iterations or quadrature. Joint
+covariance and constrained-log/natural-slope transformations already exist in
+`R/mfrm_core.R`; their numerical availability does not justify primary SEs.
+`compare_mfrm()` and the weighting review deliberately withhold free-slope
+ranking. The September 24 tutorial correction reconciles this behavior without
+relaxing it. Investigate identification, relevant competing solutions and
+boundary paths, integration and uncertainty for the current MML target, using
+the prior item-only TAM coordinate/probability witness and owner-specific
+records only within their exact population and estimator scope. Distinguish a
+missing numerical calculation from an unjustifiably universal acceptance
+condition. A global theorem over every likelihood path, MCMC and complete
+FACETS parity are not a bundled prerequisite for one qualified inference claim.
+No new confirmation grid starts until this minimum evidence contract is set.
+
+The September 24 output-specific review records that decision: retain the
+current inferential restrictions, repair the legacy uncertainty fallback and
+explain which restrictions arise from package qualification. Existing stable
+local/TAM witnesses support numerical implementation, while the endpoint and
+variance-path records demonstrate why a finite optimizer value alone is
+insufficient. Neither set supplies a qualified automatic eligibility rule.
+That proposal described the then-current release scope; the user's later
+question explicitly reopens output-specific eligibility. In particular,
+`compare_mfrm()` currently depends on the shared `InferenceReady` flag even
+though IC comparison does not require a slope CI. Reuse its likelihood/count/
+integration checks and establish the actual remaining solution-quality
+requirements before more simulation. The aligned PCM/GPCM LRT is explicitly
+unimplemented; unit slopes are an interior null, not a variance-boundary test.
+An IC rule and an interval procedure require separate evidence matching their
+claims; no universal coverage or global-optimum proof is a bundled gate. The first
+structural GPCM extension considered afterward is a single slope family with
+separate slope and step facets. Qualify identification and current-model/unit-
+slope reductions plus the retained downstream workflow. Portable calibration,
+multiple slope families and multidimensional traits have independent targets;
+they are not prerequisites for that extension. A failed inferential method
+does not force an indefinite generic label or authorize an unsupported one.
+
+The first interval decision must distinguish marginal repeated-sampling
+prediction coverage for generated rater effects from coverage conditional on
+each fixed true severity. `mfrm_random_rater_intervals()` currently targets the
+former under the analyzed rating arrangement. Its basic and studentized methods
+are candidates, not established improvements. The likelihood, estimated ability
+variance, shared rater effects, population reference (not sample centering)
+and use of source `PredictionSE` must
+match the chosen target. Inspect the existing source and literature mapping;
+consult original papers page by page for any newly adopted derivation, without
+turning earlier linear-mixed-model theory into proof for a crossed ordinal RSM.
+The [earlier 24-source / 2,376-refit pilot](random-rater-interval-record-0.2.4.md#completed-comparison-and-decision)
+already compares normal, unscaled and studentized intervals. Its 12 independent
+sources per cell, 99 inner draws and original population specification cannot
+qualify the current estimated-population workflow. Reuse its failure handling,
+cost and method trade-offs; do not rerun it or treat its zero empirical MCSE in
+one cell as established precision. Reuse the existing normal-interval study and
+bootstrap pilot as distinct evidence rather than combining unmatched estimates.
+
+Before generating results, freeze practical tolerance/precision and a bounded
+resource plan, distinguishing outer coverage replications from inner bootstrap
+draws. Reuse the 800-dataset evidence only where source, numerical repairs and
+targets agree. Retain all planned trials, including failed or unbounded results;
+report all-returned and finite-only coverage, finite/unbounded/unavailable
+proportions, finite-and-covering frequency among all planned trials, width,
+computation and MC uncertainty. Average rater outcomes within each dataset and
+use independent outer datasets for Monte Carlo precision, retaining dependence
+between raters; do not treat every rater as an independent simulation replicate.
+Predeclare small/sparse, weak-link and variance-boundary challenges and relevant
+severity strata; do not allow marginal averages to conceal a tail failure or
+silently change the conditional/marginal target. Separate numerical selection
+from statistical qualification. Ordinary MFRM supplies a matched-data context,
+not a presumed identical uncertainty estimand.
+
+The first statistical work package ends with an admissible bounded workflow or a recorded
+negative decision. A negative decision does not mark a feature implemented, does
+not create a reason for an empty feature release, and does not hold defect fixes hostage. Review
+the whole portfolio then; the next planning question may proceed without waiting
+for universal rater-interval performance. Maintenance may run alongside one main
+statistical/model investigation and the API integration; do not open several new likelihoods to evade a
+difficult result. No new numerical study is authorized or executed merely by
+writing this plan.
+
+Version allocation is provisional: complete the API integration and GPCM scope
+decision before 0.2.4 submission, maintain that release as needed, then consider
+qualified rater feedback improvements (working label 0.2.5) and a separately
+admitted planning/inference/model scope. The old 0.2.5 multiple-scales and 0.3.0 dependency
+chain below is archived, not a schedule. API/schema stability and a later stable
+release need a maintenance and migration contract, not completion of all research.
+At each accepted/rejected work package and scope freeze, reassess user benefit,
+remaining uncertainty and total maintenance cost. Do not select the next task
+merely because it is adjacent to the last calculation.
 
 ### Active milestones and completion boundary, 2026-09-23
 
@@ -12458,6 +12667,10 @@ model cannot silently create a multidimensional `mfrmr` support claim.
 
 ## 0.2.4: operational calibration
 
+**Historical plan, superseded.** The retained 0.2.4 scope and its implementation
+status are in the public roadmap and current work plan above. The checkboxes
+below preserve the earlier proposal; they are not the present completion status.
+
 0.2.4 should make stable calibrations reusable without implying that every
 model is suitable for high-stakes scoring. The first implementation target is
 one observed score scale; multi-scale indexing remains deferred to 0.2.5.
@@ -12487,6 +12700,10 @@ schema sketches may be prepared earlier, but they are not current API.
   operational-scoring language.
 
 ## 0.2.5: multiple observed scales and mixed response structures
+
+**Historical version allocation, superseded on 2026-09-24.** Multiple observed
+scales remain a separately justified candidate, not the committed next release.
+Use the public post-release priorities and the current work plan above.
 
 This release addresses observed-score complexity while retaining a
 one-dimensional latent trait unless a separately validated design says
@@ -12524,6 +12741,10 @@ numerical or 0.2.4 calibration problem.
 
 ## 0.3.0: API, evidence, and ecosystem consolidation
 
+**Historical dependency chain, superseded on 2026-09-24.** The stability and
+migration goals remain relevant, but they do not require implementing the old
+0.2.5 proposal or every research track below. No 0.3.0 scope is committed here.
+
 0.3.0 is a consolidation release, not a container for whichever research
 feature happens to finish first. Its entry condition is completion of the
 0.2.3 evidence contract and stable 0.2.4/0.2.5 reduction cases. Its exit gates
@@ -12549,6 +12770,12 @@ are:
   drift without requiring proprietary software.
 
 ## Research tracks after core consolidation
+
+**Historical inventory.** Some bounded workflows listed below, including
+multivariate observed-score G-theory and the two RSM random-effect extensions,
+are now implemented. Their current support boundaries and future additions are
+in the public roadmap; this list must not be used to rediscover or reimplement
+completed features.
 
 These are separate research programs, not promises attached to 0.2.x or 0.3.0.
 

@@ -154,13 +154,10 @@ test_that("same-data and scope contracts fail closed", {
   )
   regression_fit <- fit
   regression_fit$population$source <- "user_supplied"
-  expect_error(
-    mfrmr_gqs_validate(
-      regression_fit, fixture$data, c(5L, 7L), c(-4, 4), 41L
-    ),
-    "user-supplied latent-regression",
-    fixed = TRUE
-  )
+  expect_no_error(mfrmr_gqs_validate(regression_fit, fixture$data, c(5L, 7L), c(-4, 4), 41L))
+  regression_fit$population$person_table <- NULL
+  regression_fit$population$person_table_replay <- NULL
+  expect_error(mfrmr_gqs_refit_arguments(regression_fit, fixture$data, 7L), "person data")
 })
 
 test_that("refit conditions are retained without error suppression", {

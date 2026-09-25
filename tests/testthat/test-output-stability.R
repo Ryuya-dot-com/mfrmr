@@ -149,7 +149,7 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
     dx$fair_average$direct_route,
     "fair_average_table(fit, diagnostics = diagnostics)"
   )
-  expect_true(grepl("disabled for bounded `GPCM`", dx$fair_average$reason, fixed = TRUE))
+  expect_true(grepl("disabled for `GPCM`", dx$fair_average$reason, fixed = TRUE))
   expect_true(grepl("slope-aware", dx$fair_average$reason, fixed = TRUE))
   expect_true(isFALSE(qc$data$fair_average$available))
   expect_identical(qc$data$fair_average$status, "available_direct_only")

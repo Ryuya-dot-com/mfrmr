@@ -38,7 +38,7 @@ A named list with:
 \item \code{summary}: one-row summary (includes baseline-vs-after counts)
 \item \code{thresholds}: applied thresholds
 \item \code{facets}: analyzed bias facet pair
-\item \code{gpcm_boundary}: bounded-\code{GPCM} interpretation guidance when applicable
+\item \code{gpcm_boundary}: \code{GPCM} interpretation guidance when applicable
 }
 }
 \description{
@@ -66,7 +66,7 @@ with the original settings; the MFRM fit does not need re-estimation.
 }
 
 Lower after-adjustment counts describe an in-sample change in flags; they do
-not show that bias has been removed or establish fairness. For bounded
+not show that bias has been removed or establish fairness. For
 \code{GPCM}, both the bias estimate and the post-adjustment comparison use the
 fitted slope-aware probability kernel while holding the other fitted
 quantities fixed. Read the returned \code{gpcm_boundary} before reporting the

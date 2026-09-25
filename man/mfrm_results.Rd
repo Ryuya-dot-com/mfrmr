@@ -79,7 +79,12 @@ predictions without this metadata must be regenerated from the saved fit
 before attachment; the fit itself does not need to be re-estimated.}
 
 \item{intervals}{Optional saved \code{\link[=mfrm_random_rater_intervals]{mfrm_random_rater_intervals()}} result from
-the exact supplied random-rater fit. No bootstrap is run by this function.}
+the exact supplied random-rater fit. For a native GPCM fit, accepts saved
+slope intervals, curve intervals, a GPCM bootstrap result, or a named list
+of these. All must match the exact fitted data, parameters, population and
+integration settings. For native RSM/PCM fits, accepts a saved
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} result or a named list of them. No bootstrap
+or interval calculation is run by this function.}
 
 \item{scores}{Optional saved \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} result for an extension,
 or \code{\link[=score_mfrm_random_rater]{score_mfrm_random_rater()}} output, with matching source calibration.
@@ -165,7 +170,7 @@ fitted forms or waves
 \item \code{"network"}: standard sections plus network/connectivity review
 \item \code{"response_time"}: descriptive response-time QC review when timing
 metadata are supplied through \code{response_time} / \code{response_time_data}
-\item \code{"gpcm_review"}: standard sections with bounded-\code{GPCM} caveats retained
+\item \code{"gpcm_review"}: standard sections with \code{GPCM} caveats retained
 in the collected summaries and reports
 \item \code{"all"}: standard sections plus FACETS-fit, network, APA, and
 response-time sections
@@ -188,7 +193,10 @@ Start with \code{summary(res)}. The most useful fields are:
 \itemize{
 \item \code{overview}: input mode, model, method, table count, and plot-route count
 \item \code{decision}: plain-language interpretation, formal-inference, reason, and
-next-action text derived from the source-fit readiness record
+next-action text derived from source-fit readiness and the saved diagnostic
+precision profile. Missing precision remains unreviewed; a positive
+precision assessment cannot override source-fit restrictions. Reading this
+summary does not compute new diagnostics or establish sampling coverage.
 \item \code{readiness}: separate analysis and plot-interpretation checks
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
 \code{fit_readiness_parameters}: the exact source-fit readiness record retained
@@ -258,6 +266,48 @@ interactive session.
 \item Use \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or the helper named in
 \code{summary(res)$next_actions} for report-specific follow-up.
 }
+}
+
+\section{Reproduce attached inference}{
+
+When additional inference or posterior diagnostics are attached, the code
+shown by \code{summary(res)} and in HTML saves and reloads the complete \code{res}
+object. Choose the file path before running it. This preserves attached
+methods, levels and unavailable results without fitting or recalculating.
+Exported replay scripts only reload the RDS already written by the export.
+The starter export index links the saved RSM/PCM and GPCM inference figures
+alongside the ordinary maps, whose uncertainty and fit meanings are separate.
+}
+
+\section{Saved RSM/PCM fixed-facet intervals}{
+
+Use \code{intervals = list(raters = ci)} with output from \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}.
+The fit must match the saved data, parameters, constraints, population and
+integration settings. Named results give \code{facet_} plot routes, for example
+\code{plot(res, type = "facet_raters")}; a single result gives \code{facet_inference}.
+Include \code{"plots"} to enable those routes. \code{\link[=as_ggplot]{as_ggplot()}} supports customization.
+Tables, reports and exports preserve the selected method, confidence level,
+contrasts, cluster mapping and fixed/unavailable targets. Export replay
+reloads saved results without refitting or changing the selected intervals.
+These are pointwise fixed-facet intervals, not simultaneous rater decisions
+or uncertainty for replacement raters. Ordinary map and fit displays keep
+their own meanings and are not recalculated with the attached covariance.
+}
+
+\section{Saved GPCM inference}{
+
+Attach explicitly selected results, for example
+\code{intervals = list(slopes = confint(fit, scale = "standardized"))}.
+Tables retain the target, method, confidence level and multiplicity choice;
+\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} preserve them. Names become
+lowercase plot routes, e.g. \code{plot(res, type = "gpcm_slopes")}, when \code{"plots"}
+is included. A single result uses \code{"gpcm_inference"}. Passing a raw slope
+bootstrap object selects its default relative 95\% pointwise intervals;
+pass \code{confint(bootstrap, ...)} to select a different target or level.
+Replay reloads saved results, without refitting or changing interval methods.
+Older intervals lacking source metadata must be recomputed from the saved fit.
+These results supplement ordinary location and fit displays; discrimination
+is not rater quality and does not select scoring weights.
 }
 
 \section{Testlet and random-rater results}{

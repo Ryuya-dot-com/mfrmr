@@ -5,6 +5,9 @@
 #' that observed scores, rating assignments and identifiers are preserved.
 #' No person-by-facet grid is constructed. This function validates supplied
 #' imputations; it does not choose or fit an imputation model.
+#' Start with `review_mfrm_imputations()`, then use [fit_mfrm_imputed()] and
+#' [pool_mfrm_imputed()] for eligible fixed-facet analyses. The older name
+#' `mfrm_response_imputations()` is retained with its original `impute` argument.
 #'
 #' @param data Original long-format rating roster, including missing scores.
 #' @param completed A list of at least two completed data frames, or a `mids`
@@ -14,8 +17,12 @@
 #' @param person,score,event_id Column names. `event_id` uniquely identifies a
 #'   rating event, including repeated ratings of the same person and facets.
 #' @param facets Nonempty character vector of facet column names.
-#' @param impute Character vector of event IDs explicitly selecting missing
+#' @param impute_ids Character vector of event IDs explicitly selecting missing
 #'   scores on assigned ratings. Observed scores cannot be selected.
+#'   These are values from the `event_id` column, not a column name or a logical
+#'   switch. For example, `c("E2", "E7")` selects those two rating events.
+#' @param impute Compatibility name for `impute_ids`, used only by
+#'   `mfrm_response_imputations()`. Supply one selection, not both argument names.
 #' @param categories The full intended contiguous integer category vector,
 #'   for example `0:4`. It is preserved across all completed analyses.
 #' @param assigned Optional name of a complete logical column: `TRUE` denotes
@@ -27,7 +34,7 @@
 #'   Required so that the provenance is retained. For a `mids` input, that
 #'   object is retained automatically; omit this argument.
 #' @param missing How to handle assigned missing scores not selected by
-#'   `impute`: `"error"` (default) or explicit `"omit"`. Omitted events remain
+#'   `impute_ids`: `"error"` (default) or explicit `"omit"`. Omitted events remain
 #'   in the roster and every completion, with missing scores, and are excluded
 #'   from each analysis. This choice is not a correction for nonresponse.
 #'
@@ -71,9 +78,24 @@
 #' MI does not create additional observed information.
 #'
 #' @seealso [fit_mfrm_imputed()], [pool_mfrm_imputed()], [mfrm_cluster_imputed()]
+#' @examples
+#' # Small supplied completions to illustrate input checks, not a fitted imputer.
+#' ratings <- data.frame(Event = paste0("E", 1:4), Person = c("P1", "P1", "P2", "P2"),
+#'   Rater = c("A", "B", "A", "B"), Score = c(0, NA, 1, 2))
+#' first <- second <- ratings
+#' first$Score[2] <- 1
+#' second$Score[2] <- 2
+#' reviewed <- review_mfrm_imputations(ratings, list(first, second),
+#'   person = "Person", facets = "Rater", score = "Score", event_id = "Event",
+#'   impute_ids = "E2", categories = 0:2,
+#'   imputation_model = list(method = "Illustrative supplied completions"))
+#' reviewed$events  # Only E2 is imputed; the three observed scores are retained.
+#' summary(reviewed)  # Original observed support and imputation counts per level.
+#' @name mfrm_response_imputations
+#' @rdname mfrm_response_imputations
 #' @export
-mfrm_response_imputations <- function(data, completed, person, facets, score,
-                                     event_id, impute, categories,
+review_mfrm_imputations <- function(data, completed, person, facets, score,
+                                     event_id, impute_ids, categories,
                                      assigned = NULL, imputation_model = NULL,
                                      missing = c("error", "omit")) {
   missing <- match.arg(missing)
@@ -113,17 +135,17 @@ mfrm_response_imputations <- function(data, completed, person, facets, score,
   if (any(!is_assigned & !is.na(original_score))) {
     stop("Unassigned rows must have missing scores.", call. = FALSE)
   }
-  if (!is.character(impute) || !length(impute) || anyNA(impute) ||
-      anyDuplicated(impute) || !all(impute %in% ids)) {
-    stop("`impute` must explicitly list distinct event IDs with missing assigned scores.", call. = FALSE)
+  if (!is.character(impute_ids) || !length(impute_ids) || anyNA(impute_ids) ||
+      anyDuplicated(impute_ids) || !all(impute_ids %in% ids)) {
+    stop("`impute_ids` must explicitly list distinct event IDs with missing assigned scores.", call. = FALSE)
   }
-  selected <- ids %in% impute
+  selected <- ids %in% impute_ids
   if (any(selected & (!is_assigned | !is.na(original_score)))) {
-    stop("Only missing scores on assigned ratings may be selected by `impute`.", call. = FALSE)
+    stop("Only missing scores on assigned ratings may be selected by `impute_ids`.", call. = FALSE)
   }
   omitted <- is_assigned & is.na(original_score) & !selected
   if (any(omitted) && missing == "error") {
-    stop("Some assigned missing scores are not selected; review `impute` or use missing = 'omit' explicitly.", call. = FALSE)
+    stop("Some assigned missing scores are not selected; review `impute_ids` or use missing = 'omit' explicitly.", call. = FALSE)
   }
   align <- function(z, original = FALSE) {
     if (!is.data.frame(z) || nrow(z) != nrow(data) || anyDuplicated(names(z)) ||
@@ -171,7 +193,7 @@ mfrm_response_imputations <- function(data, completed, person, facets, score,
     }
     where <- where[match(ids, as.character(completed$data[[event_id]])), , drop = FALSE]
     if (!identical(unname(where[, score]), selected) || any(where[, c(id_columns, assigned), drop = FALSE])) {
-      stop("mice `where` must select exactly `impute` scores and no identifier or assignment cells.", call. = FALSE)
+      stop("mice `where` must select exactly `impute_ids` scores and no identifier or assignment cells.", call. = FALSE)
     }
     imputation_model <- completed
     completed <- lapply(seq_len(completed$m), function(i) mice::complete(completed, action = i))
@@ -202,6 +224,17 @@ mfrm_response_imputations <- function(data, completed, person, facets, score,
   out
 }
 
+#' @rdname mfrm_response_imputations
+#' @export
+mfrm_response_imputations <- function(data, completed, person, facets, score,
+                                     event_id, impute, categories,
+                                     assigned = NULL, imputation_model = NULL,
+                                     missing = c("error", "omit")) {
+  review_mfrm_imputations(data, completed, person, facets, score, event_id,
+    impute_ids = impute, categories = categories, assigned = assigned,
+    imputation_model = imputation_model, missing = match.arg(missing))
+}
+
 response_imputation_scores <- function(x, categories) {
   if (!(is.numeric(x) || is.character(x) || is.factor(x)) || is.complex(x)) {
     stop("Scores must use numeric integer category labels or NA.", call. = FALSE)
@@ -215,7 +248,8 @@ response_imputation_scores <- function(x, categories) {
 }
 
 #' @rdname mfrm_response_imputations
-#' @param x,object An object returned by `mfrm_response_imputations()`.
+#' @param x,object An object returned by [review_mfrm_imputations()] or its
+#'   compatibility wrapper [mfrm_response_imputations()].
 #' @param ... Unused for print and summary methods.
 #' @export
 print.mfrm_response_imputations <- function(x, ...) {

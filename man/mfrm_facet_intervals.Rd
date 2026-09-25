@@ -61,6 +61,9 @@ The model-based SE and interval remain alongside the selected method.
 Score rows are derivatives of a person's marginal log likelihood, not
 observed category scores or ability estimates. Scores are absent for
 \code{method = "model"}.
+When weak information passes numerical refinement, \code{cautions} and
+\code{information_review} retain the warning and checks. \code{InferenceCaution}
+also accompanies the interval table when applicable.
 }
 \description{
 Describe uncertainty about a fixed facet estimate, such as rater severity,
@@ -90,6 +93,10 @@ span the free-parameter space, sandwich intervals are unavailable; point
 estimates and the reason remain. Singular/regularized observed information
 or an ineligible source fit causes an error. Targets fixed by constraints
 have no inferential interval. Known anchors exclude anchor uncertainty.
+An ill-conditioned but numerically verified unregularized inverse can be
+used with a warning. Successful inversion does not establish reliable
+normal intervals. Review interval width, boundary proximity and quadrature
+sensitivity; changing to sandwich covariance does not remove this concern.
 }
 \section{What robustness means here}{
 
@@ -121,6 +128,21 @@ bounds or universal operating characteristics. At 200 datasets per
 condition, MCSE near 95 percent is about 1.54 percentage points.
 See \code{vignette("mfrmr-facet-intervals", package = "mfrmr")} for the
 design, interpretation and a complete rater-feedback example.
+}
+
+\section{Save, display and report the selected intervals}{
+
+Use \code{\link[=plot]{plot()}}, \code{\link[=as_ggplot]{as_ggplot()}} and \code{\link[=plot_data]{plot_data()}} to display or extract the
+saved result, and \code{\link[=apa_table]{apa_table()}} for tables. Set \code{title = NULL},
+\code{subtitle = NULL} or \code{caption = NULL} in the plot to omit that text.
+Attach one result or a named list to \code{\link[=mfrm_results]{mfrm_results()}}, for example
+\code{mfrm_results(fit, intervals = list(raters = intervals), include = c("fit", "plots"), compute = "never")}.
+The route \code{plot(res, type = "facet_raters")} shows the selected intervals.
+\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} retain the method, level,
+contrast coefficients, cluster mapping and unavailable outcomes.
+The source fit must match; replay reloads the saved results without
+refitting or recomputing covariance. These intervals do not replace
+uncertainty in ordinary Wright maps, fit diagnostics or Person scores.
 }
 
 \examples{

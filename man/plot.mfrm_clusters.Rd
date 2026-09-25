@@ -18,7 +18,7 @@
 \method{plot}{mfrm_imputed_clusters}(x, ids = NULL, labels = NULL, draw = TRUE, preset = "standard", ...)
 }
 \arguments{
-\item{x}{An object returned by \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} or
+\item{x}{An object returned by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} or
 \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, as appropriate.}
 
 \item{type}{For a single partition, \code{"silhouette"} or \code{"profile"}.}
@@ -79,7 +79,7 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   raters <- data.frame(Rater = paste0("R", 1:6),
     ExperienceYears = c(1, 2, 3, 12, 13, 14),
     Specialty = factor(rep(c("Language", "Science"), each = 3)))
-  groups <- mfrm_cluster(mfrm_features(raters, "Rater",
+  groups <- mfrm_cluster_pam(mfrm_features(raters, "Rater",
     c("ExperienceYears", "Specialty")), k = 2)
   plot(groups)
   plot(groups, type = "profile", feature = "ExperienceYears")
@@ -89,5 +89,5 @@ if (requireNamespace("cluster", quietly = TRUE)) {
 }
 }
 \seealso{
-\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
+\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
 }

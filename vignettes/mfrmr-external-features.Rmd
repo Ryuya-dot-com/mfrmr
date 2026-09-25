@@ -117,7 +117,7 @@ features$feature_summary
 table(features$row_summary$Complete)
 ```
 
-`mfrm_cluster(features, k = 3)` would stop on the remaining missing values.
+`mfrm_cluster_pam(features, k = 3)` would stop on the remaining missing values.
 Explicit `missing = "omit"` is available, but selects complete raters and
 changes the population being described. It does not correct missing-data bias.
 
@@ -425,9 +425,9 @@ tasks <- data.frame(
   TimeLimitMinutes = sample(c(10, 20, 30), 12, replace = TRUE),
   WordLimit = sample(c(100, 200, 400), 12, replace = TRUE),
   ResponseFormat = factor(rep(c("Summary", "Argument", "Explanation"), 4)))
-person_groups <- mfrm_cluster(mfrm_features(persons, "Person",
+person_groups <- mfrm_cluster_pam(mfrm_features(persons, "Person",
   c("LanguageStudyYears", "PreparationHours", "InstructionMode")), k = 3)
-task_groups <- mfrm_cluster(mfrm_features(tasks, "Task",
+task_groups <- mfrm_cluster_pam(mfrm_features(tasks, "Task",
   c("TimeLimitMinutes", "WordLimit", "ResponseFormat")), k = 3)
 ```
 

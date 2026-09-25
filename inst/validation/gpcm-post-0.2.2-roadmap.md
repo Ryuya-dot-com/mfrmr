@@ -1,12 +1,14 @@
 # Bounded-GPCM technical evidence supplement after 0.2.2
 
 Status: subordinate validation supplement, reviewed 2026-07-26; model-family
-refinement added 2026-08-08.
+refinement added 2026-08-08; blanket exit rule superseded 2026-09-24.
 
 The repository-root `ROADMAP.md` controls release sequencing. This file only
 records technical exit criteria for bounded-GPCM capability rows that remain
 caveated, blocked, or deferred. It must not be read as a list of current API
-functions or as authorization to broaden the 0.2.2 release.
+functions or as authorization to broaden a release. The dated 0.2.2/0.2.3
+sections below retain historical contracts and evidence, not current version
+allocations or an exhaustive description of 0.2.4 capabilities.
 
 The current executable contract is `gpcm_capability_matrix()` together with
 `gpcm_runtime_guard_coverage()`. In 0.2.2, bounded GPCM requires an explicit
@@ -29,25 +31,34 @@ consistency, reliability, competence, or absence of random error requires
 separate recovery and attribution evidence against category-use, targeting,
 interaction, multidimensional, and local-dependence alternatives.
 
-## Complete package-native GPCM exit criteria
+## Separate GPCM exit decisions, revised September 24
 
-The bounded label remains required until all relevant parts of the following
-contract are implemented and validated:
+The earlier requirement to keep the word bounded until every model, scoring
+and inference extension was complete is superseded. Follow the public
+[GPCM stages](../../ROADMAP.md#gpcm-specific-restrictions-and-their-exit-conditions)
+and the [active execution plan](internal-roadmap-0.2.3.md#current-execution-order-2026-09-24).
+Name the current model and the restriction on the requested operation; a more
+precise label does not promote its statistical status.
 
-- slopes can be specified, estimated, constrained, and reported independently
-  of the step facet where identified;
-- positive-slope, latent-scale, location, and step-profile constraints have a
-  documented covariance and uncertainty basis;
-- estimation, fixed-calibration scoring, diagnostics, information, category
-  curves, exports, and replay consume the same general likelihood;
-- unit-slope reductions recover PCM behavior and two-category reductions
-  recover the intended binary model;
-- score-side output has an explicitly named estimand and never relies on
-  Rasch-family raw-score sufficiency when discrimination is free; and
-- seeded recovery, stress, negative-identification, and matched external
-  comparisons are retained as release evidence.
+Before 0.2.4 submission, reconcile the API/help vocabulary and decide the
+inferential scope of the existing aligned single-owner MML model. Existing
+derivatives and joint covariance are reusable numerical evidence; the current
+free-slope boundary-readiness rule and inference guards remain until the named
+claim is justified. JML, slope-owner roles and latent-population specifications
+retain distinct evidence. Neither extra optimizer iterations nor a matching
+external point estimate resolves that decision.
 
-Until then, “bounded GPCM” is the correct public term.
+After that decision, separate slope and step facets are the first structural
+GPCM extension to assess. Required evidence includes identifiable designs,
+positive-slope and scale constraints, current-model and unit-slope reductions,
+probabilities/derivatives, parameter mapping and the admitted uncertainty and
+downstream workflows. Portable calibration is a separate lifecycle extension;
+simultaneous slope families and multidimensional traits are separate models.
+MCMC and FACETS-equivalent outputs are not prerequisites for the preceding
+decisions. Existing restrictions remain visible for unqualified operations,
+and every score-side output must retain its actual estimand rather than borrow
+Rasch raw-score sufficiency. Matched external calculations are evidence for a
+specific mathematical question, not a requirement of software-wide parity.
 
 ## Current 0.2.2 bounded-GPCM surfaces
 
@@ -150,14 +161,14 @@ chain evidence. Stronger operational wording requires a fixed calibration
 identity contract and examples separating sparse-link design problems from
 fitted-model recovery failures.
 
-## Relationship to later releases
+## Historical release allocation and owner evidence
 
-The 0.2.3 work package owns calibrated MML joint-stationarity, recovery, and
-matched ConQuest/FACETS evidence for the existing overlap scope. Operational
-calibration follows in 0.2.4, and multiple observed scales follow in 0.2.5.
-Unrestricted GPCM, multidimensional traits, posterior-predictive computation,
-and heavy backends remain 0.3-or-later research programs unless the root
-roadmap is explicitly revised.
+The old sequence (0.2.3 numerical validation, 0.2.4 calibration, 0.2.5 multiple
+scales, 0.3-or-later unrestricted GPCM) is superseded by the public roadmap.
+It does not delay the current-model inference decision or separate slope/step
+roles until multi-scale or multidimensional work. The owner-specific records
+below remain historical evidence with their original limitations; their
+instructions to start a particular pilot do not replace the active work plan.
 
 Within 0.2.3, the next gate-specification revision should either split the
 current bounded-GPCM evidence into criterion-aligned and rater-aligned strata

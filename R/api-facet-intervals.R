@@ -37,6 +37,9 @@
 #'   Score rows are derivatives of a person's marginal log likelihood, not
 #'   observed category scores or ability estimates. Scores are absent for
 #'   `method = "model"`.
+#'   When weak information passes numerical refinement, `cautions` and
+#'   `information_review` retain the warning and checks. `InferenceCaution`
+#'   also accompanies the interval table when applicable.
 #'
 #' @details For cluster score `s_g` and observed negative-log-likelihood
 #'   Hessian `H`, the unadjusted sandwich is
@@ -56,6 +59,10 @@
 #'   estimates and the reason remain. Singular/regularized observed information
 #'   or an ineligible source fit causes an error. Targets fixed by constraints
 #'   have no inferential interval. Known anchors exclude anchor uncertainty.
+#'   An ill-conditioned but numerically verified unregularized inverse can be
+#'   used with a warning. Successful inversion does not establish reliable
+#'   normal intervals. Review interval width, boundary proximity and quadrature
+#'   sensitivity; changing to sandwich covariance does not remove this concern.
 #'
 #' @section What robustness means here:
 #'   Under model misspecification, the sandwich describes sampling variation
@@ -92,6 +99,20 @@
 #'   An object-oriented implementation of clustered covariances in R.
 #'   *Journal of Statistical Software*, 95(1), 1--36.
 #'   \doi{10.18637/jss.v095.i01}.
+#' @section Save, display and report the selected intervals:
+#'   Use [plot()], [as_ggplot()] and [plot_data()] to display or extract the
+#'   saved result, and [apa_table()] for tables. Set `title = NULL`,
+#'   `subtitle = NULL` or `caption = NULL` in the plot to omit that text.
+#'   Attach one result or a named list to [mfrm_results()], for example
+#'   `mfrm_results(fit, intervals = list(raters = intervals),
+#'   include = c("fit", "plots"), compute = "never")`.
+#'   The route `plot(res, type = "facet_raters")` shows the selected intervals.
+#'   [mfrm_report()] and [export_mfrm_results()] retain the method, level,
+#'   contrast coefficients, cluster mapping and unavailable outcomes.
+#'   The source fit must match; replay reloads the saved results without
+#'   refitting or recomputing covariance. These intervals do not replace
+#'   uncertainty in ordinary Wright maps, fit diagnostics or Person scores.
+#'
 #' @seealso [analyze_facet_equivalence()], [pool_mfrm_imputed()],
 #'   [plot.mfrm_facet_intervals()]
 #' @examples
@@ -134,28 +155,10 @@ mfrm_facet_intervals <- function(fit, facet, contrasts = NULL,
   factor <- 1
   if (method == "sandwich") {
     person_scores <- mfrm_person_likelihood_scores(fit)
-    ids <- rownames(person_scores)
-    if (is.null(clusters)) clusters <- data.frame(Person = ids, Cluster = ids)
-    if (!is.data.frame(clusters) || anyDuplicated(names(clusters)) ||
-        !all(c("Person", "Cluster") %in% names(clusters)) ||
-        nrow(clusters) != length(ids) || anyNA(clusters[c("Person", "Cluster")]) ||
-        anyDuplicated(as.character(clusters$Person)) ||
-        !setequal(as.character(clusters$Person), ids) ||
-        any(!nzchar(trimws(as.character(clusters$Cluster))))) {
-      stop("`clusters` must map every fitted Person exactly once to one nonmissing Cluster.", call. = FALSE)
-    }
-    clusters <- data.frame(Person = ids,
-      Cluster = as.character(clusters$Cluster[match(ids, as.character(clusters$Person))]))
-    cluster_scores <- rowsum(person_scores, clusters$Cluster, reorder = FALSE)
-    nclusters <- nrow(cluster_scores)
-    if (nclusters < 2L) stop("Sandwich inference needs at least two independent clusters.", call. = FALSE)
-    scale <- sqrt(colSums(cluster_scores^2))
-    nonzero <- scale > 0
-    rank <- if (!any(nonzero)) 0L else
-      qr(sweep(cluster_scores[, nonzero, drop = FALSE], 2, scale[nonzero], "/"), tol = 1e-10)$rank
-    factor <- if (adjust) nclusters / (nclusters - 1) else 1
-    cov <- symmetrize_matrix(model_cov %*% crossprod(cluster_scores) %*% model_cov) * factor
-    if (any(!is.finite(cov))) stop("The sandwich covariance is not finite.", call. = FALSE)
+    sandwich <- mfrm_cluster_sandwich(model_cov, person_scores, clusters, adjust)
+    clusters <- sandwich$clusters; cluster_scores <- sandwich$cluster_scores
+    nclusters <- nrow(cluster_scores); rank <- sandwich$rank
+    factor <- sandwich$factor; cov <- sandwich$covariance
   }
   slice <- information$param_slices[[facet]]
   transform <- function(v) symmetrize_matrix(
@@ -191,6 +194,12 @@ mfrm_facet_intervals <- function(fit, facet, contrasts = NULL,
       reference = "pointwise normal", quad_points = fit$config$estimation_control$quad_points),
     fit = fit)
   class(out) <- "mfrm_facet_intervals"
+  out$cautions <- mfrm_mml_information_caution(information)
+  out$information_review <- information$solution_information$inverse_review
+  if (length(out$cautions)) {
+    out$table$InferenceCaution <- paste(out$cautions, collapse = " ")
+    warning(paste(out$cautions, collapse = " "), call. = FALSE)
+  }
   out
 }
 
@@ -271,7 +280,8 @@ print.mfrm_facet_intervals <- function(x, ...) {
   cat(x$settings$facet, "intervals:", x$settings$method, "covariance\n")
   if (x$settings$method == "sandwich") cat(x$settings$clusters,
     "declared independent clusters;", x$settings$persons, "persons\n")
-  print(x$table, row.names = FALSE)
+  print(x$table[setdiff(names(x$table), "InferenceCaution")], row.names = FALSE)
+  for (caution in x$cautions) print_wrapped_line(paste0("Caution: ", caution))
   cat("Pointwise normal intervals; changing covariance does not correct biased estimates.\n")
   invisible(x)
 }
@@ -279,3 +289,71 @@ print.mfrm_facet_intervals <- function(x, ...) {
 #' @rdname mfrm_facet_intervals
 #' @export
 summary.mfrm_facet_intervals <- function(object, ...) object$table
+
+# Tables share the same saved values across APA output, reports and exports.
+mfrm_facet_interval_tables <- function(x) {
+  tab <- x$table
+  tab$Facet <- x$settings$facet
+  tab$Method <- x$settings$method
+  tab$ConfidenceLevel <- paste0(format(100 * x$settings$level, trim = TRUE), "%")
+  tab$Adjustment <- "Pointwise"
+  settings <- as.data.frame(x$settings, stringsAsFactors = FALSE)
+  settings$ConfidenceLevel <- paste0(format(100 * settings$level, trim = TRUE), "%")
+  settings$level <- NULL
+  tables <- list(intervals = tab,
+    settings = settings,
+    contrasts = data.frame(Comparison = rownames(x$contrasts),
+      x$contrasts, row.names = NULL, check.names = FALSE))
+  if (!is.null(x$clusters)) tables$clusters <- x$clusters
+  if (!is.null(x$information_review)) tables$information_review <- x$information_review
+  tables
+}
+
+mfrm_facet_results_inputs <- function(fit, intervals) {
+  if (is.null(intervals)) return(NULL)
+  if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
+      !fit$config$model %in% c("RSM", "PCM")) {
+    stop("Saved fixed-facet intervals require their native RSM/PCM fit.", call. = FALSE)
+  }
+  if (inherits(intervals, "mfrm_facet_intervals")) intervals <- list(inference = intervals)
+  if (!is.list(intervals) || !length(intervals) || is.null(names(intervals)) ||
+      anyNA(names(intervals)) || anyDuplicated(tolower(names(intervals))) ||
+      any(!grepl("^[A-Za-z][A-Za-z0-9_]*$", names(intervals))) ||
+      !all(vapply(intervals, inherits, logical(1), what = "mfrm_facet_intervals"))) {
+    stop("`intervals` must be saved fixed-facet intervals or a named list of them; use distinct letter/number/underscore names.", call. = FALSE)
+  }
+  names(intervals) <- tolower(names(intervals))
+  # The existing signature also describes ordinary native RSM/PCM fits.
+  source <- mfrm_gpcm_inference_source(fit)
+  for (x in intervals) {
+    if (is.null(x$fit) || !identical(source, mfrm_gpcm_inference_source(x$fit))) {
+      stop("Saved fixed-facet intervals must match the fitted parameters, data, constraints, population and integration settings.", call. = FALSE)
+    }
+  }
+  intervals
+}
+
+mfrm_facet_results_attach <- function(out, inputs) {
+  if (is.null(inputs)) return(out)
+  out$facet_intervals <- inputs
+  for (name in names(inputs)) {
+    key <- paste0("facet_", name)
+    tables <- mfrm_facet_interval_tables(inputs[[name]])
+    names(tables) <- paste(key, names(tables), sep = "_")
+    out$tables <- c(out$tables, tables)
+    out$components[[key]] <- inputs[[name]]
+    out$status <- rbind(out$status, mfrm_results_status_row(key, "review",
+      "Saved fixed-facet pointwise intervals; method, confidence level, contrasts and unavailable outcomes retained. No automatic rater-quality decision."))
+    out$plot_map <- dplyr::bind_rows(out$plot_map, data.frame(Type = key,
+      Available = "plots" %in% out$include, RequiredArtifact = FALSE,
+      Route = paste0('plot(res, type = "', key, '")'),
+      Detail = "Saved fixed-facet uncertainty; no refitting or covariance calculation.",
+      InterpretationStatus = "approximate_inference", InterpretationReady = FALSE,
+      ReadinessRoute = paste0("res$tables$", names(tables)[1])))
+  }
+  out$table_index <- mfrm_results_table_index(out$tables)
+  out$notes <- unique(c(out$notes,
+    unlist(lapply(inputs, `[[`, "cautions"), use.names = FALSE),
+    "Fixed-facet pointwise intervals condition on the observed facet levels. Sandwich covariance does not correct biased estimates or imply rater quality."))
+  out
+}

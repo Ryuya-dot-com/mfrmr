@@ -26,7 +26,7 @@
 #' @details
 #' Uses [stats::hclust()] followed by [stats::cutree()] at the requested `k`.
 #' Feature types, scaling, weights, missingness handling, silhouette definition,
-#' and the 5,000-included-entity limit follow [mfrm_cluster()]. No distance
+#' and the 5,000-included-entity limit follow [mfrm_cluster_pam()]. No distance
 #' transformation or automatic sampling is performed. This limit is not a
 #' memory or speed guarantee.
 #'
@@ -60,7 +60,7 @@
 #'   Agglomerative Clustering Method: Which Algorithms Implement Ward's
 #'   Criterion? Journal of Classification, 31, 274--295.
 #'   \doi{10.1007/s00357-014-9161-z}.
-#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
+#' @seealso [mfrm_cluster_pam()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
 #'   # Fictional rater backgrounds; R7 has unrecorded experience.
@@ -73,7 +73,7 @@
 #'   plot(hierarchy, type = "silhouette")
 #'   plot(hierarchy, type = "profile", feature = "ExperienceYears")
 #'   comparison <- mfrm_cluster_compare(list(
-#'     PAM = mfrm_cluster(features, k = 2, missing = "omit"),
+#'     PAM = mfrm_cluster_pam(features, k = 2, missing = "omit"),
 #'     Average = hierarchy,
 #'     Complete = mfrm_cluster_hierarchical(features, k = 2,
 #'       linkage = "complete", missing = "omit")))

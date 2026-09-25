@@ -44,7 +44,7 @@ If all selected features are already complete, supply the empty
 \code{x$missing} table. This retains one partition per imputation so the result
 can be compared with other feature selections from the same model.}
 
-\item{k, weights}{As in \code{\link[=mfrm_cluster]{mfrm_cluster()}}. The same choices apply to every
+\item{k, weights}{As in \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}. The same choices apply to every
 imputation.}
 
 \item{missing}{Either \code{"error"} (default) or \code{"omit"}, applied to missing
@@ -159,7 +159,7 @@ if (requireNamespace("mice", quietly = TRUE) &&
 }
 }
 \seealso{
-\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
+\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
 \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}},
 \code{\link[mice:mice]{mice::mice()}}, \code{\link[mice:complete]{mice::complete()}}
 }

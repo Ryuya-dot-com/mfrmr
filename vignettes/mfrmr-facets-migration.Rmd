@@ -22,7 +22,7 @@ This vignette walks FACETS users through the closest `mfrmr` workflow:
 preparing data, fitting an `RSM`/`PCM` many-facet Rasch-family model with
 FACETS-oriented settings, generating related diagnostic and reporting tables,
 and reviewing the output-contract
-boundary between the two systems. Bounded `GPCM` can be fit in `mfrmr`, but its slope-aware
+boundary between the two systems. `GPCM` can be fit in `mfrmr`, but its slope-aware
 score semantics are intentionally outside the score-side FACETS output-contract
 route.
 
@@ -54,7 +54,7 @@ contract.
 | Input | Specification file plus data file | `data.frame` in long format |
 | Estimation | JMLE by default | `MML` by default; `JML` is the closest estimation route for a JMLE-oriented comparison |
 | Fit-statistic basis | Residuals at JMLE estimates | Residuals at EAP person measures under `MML` (shrunken toward the mean); refit with `method = "JML"` for a JMLE-style residual basis |
-| Models | Multiple model statements, rating scales, partial credit, and other response families can coexist | One response-model family per fit: `RSM`, `PCM`, or bounded `GPCM` |
+| Models | Multiple model statements, rating scales, partial credit, and other response families can coexist | One response-model family per fit: `RSM`, `PCM`, or `GPCM` |
 | Output | Tables 0-30 plus graphic files | Returned R objects with `summary()` and `plot()` methods |
 | Anchoring | Element/group anchors, rating-scale calibration, and reusable starting values | Element and group anchors; no general threshold/scale anchors or fixed-calibration starting-value bundle |
 | Repeated cells | Multiple observations may be represented within a design cell | Exact Person-by-facet duplicates are retained but force Data review; distinguish legitimate repeats with an event/occasion facet |
@@ -371,7 +371,7 @@ files <- facets_output_file_bundle(
 )
 ```
 
-For RSM and PCM the score-side helpers are available. Under bounded `GPCM`
+For RSM and PCM the score-side helpers are available. Under `GPCM`
 the score-side bundle is intentionally restricted; see
 `?gpcm_capability_matrix` and the `mfrmr-gpcm-scope` vignette for the
 documented limitation.

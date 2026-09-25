@@ -5,12 +5,12 @@
 #' manuscript-draft text, tables, notes, and revision checklists in `mfrmr`.
 #'
 #' This guide currently applies fully to diagnostics-based `RSM` / `PCM`
-#' workflows. Bounded `GPCM` fits support [reporting_checklist()],
+#' workflows. `GPCM` fits support [reporting_checklist()],
 #' [precision_review_report()], direct curve/graph and residual table helpers,
 #' and caveated APA/QC/export bundles. Use [gpcm_capability_matrix()] when you
 #' need the formal boundary for the current `GPCM` reporting path.
 #'
-#' In particular, bounded `GPCM` [build_apa_outputs()],
+#' In particular, `GPCM` [build_apa_outputs()],
 #' [build_visual_summaries()], [run_qc_pipeline()],
 #' [build_mfrm_manifest()], [build_mfrm_replay_script()], and
 #' [export_mfrm_bundle()] outputs include explicit `gpcm_boundary` caveats.
@@ -53,7 +53,7 @@
 #'    [plot_marginal_fit()] and [plot_marginal_pairwise()] before finalizing
 #'    the narrative around local misfit.
 #' 6. Create manuscript-draft prose and metadata with [build_apa_outputs()].
-#'    For bounded `GPCM`, treat the APA/QC/export stack as caveated
+#'    For `GPCM`, treat the APA/QC/export stack as caveated
 #'    sensitivity-reporting output and keep its `gpcm_boundary` visible.
 #' 7. Convert summary outputs to reusable table bundles with
 #'    [build_summary_table_bundle()], review the bundle with `summary()` /
@@ -61,7 +61,7 @@
 #'    [apa_table()] or export them directly with [export_summary_appendix()].
 #' 8. When candidate models are compared, keep the comparison as a reporting
 #'    review: [compare_mfrm()] -> [build_model_choice_review()] ->
-#'    [build_summary_table_bundle()]. Treat bounded `GPCM` as a slope-aware
+#'    [build_summary_table_bundle()]. Treat `GPCM` as a slope-aware
 #'    sensitivity route unless the study design explicitly justifies
 #'    discrimination-based operational scoring.
 #'
@@ -91,9 +91,9 @@
 #' review with [build_summary_table_bundle()] when a manuscript appendix,
 #' coauthor handoff, or HTML export needs stable table names.
 #'
-#' A conservative bounded-`GPCM` reporting sequence is:
+#' A conservative `GPCM` reporting sequence is:
 #' [fit_mfrm()] for the equal-weighting `RSM` / `PCM` reference,
-#' [fit_mfrm()] for the bounded `GPCM` sensitivity fit,
+#' [fit_mfrm()] for the `GPCM` sensitivity fit,
 #' [compare_mfrm()], [build_model_choice_review()],
 #' [build_summary_table_bundle()], then [export_summary_appendix()] or
 #' [export_mfrm_bundle()]. Do not use `AIC`, `BIC`, or log-likelihood alone as
@@ -139,7 +139,7 @@
 #' Appelbaum et al., 2018). The MFRM-specific prompts also draw on the model and
 #' diagnostic sources returned by `reporting_checklist(...,
 #' include_references = TRUE)`, including Eckes, Myford and Wolfe, Linacre,
-#' Wright and Masters, and Muraki for bounded `GPCM`.
+#' Wright and Masters, and Muraki for `GPCM`.
 #'
 #' The package only knows the fitted measurement objects and context supplied
 #' by the analyst. It therefore cannot certify research-level JARS completeness
@@ -220,7 +220,7 @@
 #'   drafting-readiness flag, not as a substitute for methodological review.
 #' - Rebuild APA outputs after major model changes instead of editing old text
 #'   by hand.
-#' - For bounded `GPCM`, use APA/QC/export helpers only as caveated
+#' - For `GPCM`, use APA/QC/export helpers only as caveated
 #'   sensitivity-reporting surfaces and keep full FACETS-style score-side
 #'   review outside this route.
 #'
@@ -246,7 +246,7 @@
 #'   [export_mfrm_bundle()](include = c("summary_tables", "html")).
 #'   For `RSM` / `PCM` final reports, prefer `method = "MML"` and
 #'   `diagnostic_mode = "both"` in the diagnostics step.
-#'   For bounded `GPCM`, use the same fit-based reporting/export family only
+#'   For `GPCM`, use the same fit-based reporting/export family only
 #'   as caveated sensitivity-reporting output and inspect its `gpcm_boundary`
 #'   rows before writing claims.
 #' - Appendix-first route:
@@ -255,7 +255,7 @@
 #' - Precision-sensitive route:
 #'   [diagnose_mfrm()] -> [precision_review_report()] ->
 #'   [reporting_checklist()] -> [build_apa_outputs()].
-#' - bounded `GPCM` route:
+#' - `GPCM` route:
 #'   [diagnose_mfrm()] -> [precision_review_report()] ->
 #'   [reporting_checklist()] -> direct residual/category/information helpers ->
 #'   caveated [build_apa_outputs()], [build_visual_summaries()],
@@ -269,7 +269,7 @@
 #' - For report/table selection, see [mfrmr_reports_and_tables].
 #' - For end-to-end analysis routes, see [mfrmr_workflow_methods].
 #' - For visual follow-up, see [mfrmr_visual_diagnostics].
-#' - For the bounded `GPCM` support statement, see [gpcm_capability_matrix].
+#' - For the `GPCM` support statement, see [gpcm_capability_matrix].
 #' - For a longer walkthrough, see
 #'   `vignette("mfrmr-reporting-and-apa", package = "mfrmr")`.
 #'

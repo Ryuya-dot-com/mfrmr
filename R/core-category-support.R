@@ -1,6 +1,22 @@
 # ==============================================================================
 # Category and step-support audit
 # ==============================================================================
+
+mfrm_category_settings <- function(prep, config = list()) {
+  keep <- prep$keep_original %||% config$keep_original %||%
+    config$replay_inputs$keep_original
+  policy <- if (identical(keep, TRUE)) "preserve" else
+    if (identical(keep, FALSE)) "collapse" else "not_recorded"
+  map <- prep$score_map %||% config$score_map
+  recoded <- NA
+  if (is.data.frame(map) && nrow(map) > 0L &&
+      all(c("OriginalScore", "InternalScore") %in% names(map)) &&
+      is.numeric(map$OriginalScore) && is.numeric(map$InternalScore) &&
+      all(is.finite(map$OriginalScore)) && all(is.finite(map$InternalScore))) {
+    recoded <- any(map$OriginalScore != map$InternalScore)
+  }
+  list(CategoryPolicy = policy, ScoreRecoded = recoded)
+}
 #
 # The current package fits one observed score scale at a time.  This audit uses
 # an explicit internal scale key so that the one-scale reduction does not bake
@@ -608,8 +624,7 @@ mfrmr_stop_unsupported_category <- function(audit) {
     "sum-zero step parameterization. Optimization was not run. Collect ",
     "observations in every affected internal category, revise the score ",
     "support or response model, or separate the fitted ladder; threshold ",
-    "anchoring is not available ",
-    "in mfrmr 0.2.3."
+    "anchoring is not currently available."
   )
   stop(mfrmr_category_condition(message, audit, type = "error"))
 }

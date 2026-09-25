@@ -17,7 +17,7 @@
 #' step-facet level. Each tick is a `tau_k`; lines connecting adjacent
 #' thresholds are coloured to make disordered crossings (`tau_{k+1} <
 #' tau_k`) visually obvious. For RSM there is one ladder; for PCM (and
-#' bounded GPCM) there is one ladder per `step_facet` level.
+#' GPCM) there is one ladder per `step_facet` level.
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param highlight_disorder Logical. When `TRUE` (default), draw

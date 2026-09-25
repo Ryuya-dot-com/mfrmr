@@ -74,13 +74,13 @@ interaction effects. Must include at least one design column such as
 \item{seed}{Optional random seed.}
 
 \item{model}{Measurement model recorded in the simulation setup. The current
-public generator supports \code{RSM}, \code{PCM}, and bounded \code{GPCM}.}
+public generator supports \code{RSM}, \code{PCM}, and \code{GPCM}.}
 
 \item{step_facet}{Step facet used when \code{model = "PCM"} and threshold values
 vary across levels. Currently \code{"Criterion"} and \code{"Rater"} are supported.}
 
 \item{slope_facet}{Slope facet used when \code{model = "GPCM"}. The current
-bounded \code{GPCM} branch requires \code{slope_facet == step_facet}.}
+\code{GPCM} branch requires \code{slope_facet == step_facet}.}
 
 \item{thresholds}{Optional threshold specification. Use a numeric vector of
 common thresholds; a named list such as \code{list(C01 = c(-1, 0, 1))}; a
@@ -135,7 +135,7 @@ Simulate long-format ordered many-facet data for design studies
 }
 \details{
 This function generates synthetic ordered many-facet data under \code{RSM},
-\code{PCM}, or the package's bounded \code{GPCM} branch.
+\code{PCM}, or the package's \code{GPCM} branch.
 The data-generating process is:
 \enumerate{
 \item Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
@@ -146,7 +146,7 @@ The data-generating process is:
 \eqn{\eta = \theta_n - \delta_j - \beta_i + \epsilon} where
 \eqn{\epsilon \sim N(0, \texttt{noise\_sd}^2)} (optional)
 \item Compute category probabilities under the recorded measurement model
-(\code{RSM}, \code{PCM}, or bounded \code{GPCM}) and sample the response
+(\code{RSM}, \code{PCM}, or \code{GPCM}) and sample the response
 }
 
 Latent-value generation is explicit:
@@ -180,7 +180,7 @@ from \code{step_span}
 values may vary by \code{StepFacet} (currently \code{Criterion} or \code{Rater})
 }
 
-For bounded \code{GPCM}, the generator requires an explicit slope contract in
+For \code{GPCM}, the generator requires an explicit slope contract in
 parallel with the threshold table. The supported route keeps
 \code{slope_facet == step_facet}, normalizes supplied slopes to the same
 geometric-mean-one log-slope identification used by \code{\link[=fit_mfrm]{fit_mfrm()}}, and
@@ -222,7 +222,7 @@ Returned data include attributes:
 \itemize{
 \item \code{mfrm_truth}: simulated true parameters (for parameter-recovery checks)
 \item \code{mfrm_truth$signals}: injected DIF and interaction signal tables
-\item \code{mfrm_truth$slope_table}: simulated discrimination table for bounded
+\item \code{mfrm_truth$slope_table}: simulated discrimination table for
 \code{GPCM}
 \item \code{mfrm_population_data}: generated one-row-per-person background data when
 the simulation specification stores an active latent-regression generator,

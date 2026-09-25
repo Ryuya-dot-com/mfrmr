@@ -1049,6 +1049,11 @@
 #' order. When `slope_aes = "colour"`, slopes instead use a continuous viridis
 #' scale (a grey gradient in monochrome); categories still have line types.
 #'
+#' Fixed-facet RSM/PCM intervals retain the selected covariance method, level,
+#' status symbols and optional ordinary comparison. Titles, subtitles, captions,
+#' reference lines and legends can be changed through the source plot arguments.
+#' Methods use both line types and vertical offsets, including in monochrome.
+#'
 #' @param x An `mfrm_plot_data` object, or an mfrmr object with a draw-free
 #'   plot method.
 #' @param type Optional plot type passed to `plot()` for a non-plot-data input.
@@ -1134,8 +1139,14 @@ as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL,
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
-  if (x$name %in% c("pooled_facet_intervals", "facet_interval_methods", "screening_performance")) {
-    stop("Use plot() for pooled facet intervals, fixed-facet interval methods, screening performance, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
+  if (identical(x$name, "facet_interval_methods")) {
+    if (!is.null(component)) stop("Use plot_data() to select a fixed-facet table; as_ggplot() preserves the complete interval view.", call. = FALSE)
+    rlang::check_dots_empty()
+    if (!is.null(type)) stop("Fixed-facet intervals have one plot type.", call. = FALSE)
+    return(mfrm_gg_facet_intervals(x))
+  }
+  if (x$name %in% c("pooled_facet_intervals", "screening_performance")) {
+    stop("Use plot() for pooled facet intervals, screening performance, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
   }
   if (identical(x$name, "multivariate_d_comparison")) {
     stop("Use plot() for D-study difference intervals, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)

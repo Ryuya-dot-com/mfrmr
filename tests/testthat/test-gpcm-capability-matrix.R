@@ -124,15 +124,15 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
-    tbl$Area == "Design evaluation and population forecasting under bounded GPCM" &
+    tbl$Area == "Design evaluation and population forecasting under GPCM" &
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
-    tbl$Area == "Diagnostic and signal-detection design screening under bounded GPCM" &
+    tbl$Area == "Diagnostic and signal-detection design screening under GPCM" &
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
-    tbl$Area == "Differential facet functioning screening under bounded GPCM" &
+    tbl$Area == "Differential facet functioning screening under GPCM" &
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
@@ -159,7 +159,7 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
       grepl("connected public reporting/export route", tbl$Boundary, fixed = TRUE)
   ))
   expect_true(any(
-    tbl$Area == "Score-side scorefile export under bounded GPCM" &
+    tbl$Area == "Score-side scorefile export under GPCM" &
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
@@ -168,18 +168,18 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
   ))
   expect_true(any(
     grepl("unexpected_after_bias_table()", tbl$Helpers, fixed = TRUE) &
-      tbl$Area == "Residual-bias screening under bounded GPCM" &
+      tbl$Area == "Residual-bias screening under GPCM" &
       tbl$Status == "supported_with_caveat",
     na.rm = TRUE
   ))
   expect_true(any(
     tbl$Helpers == "estimation_iteration_report()" &
-      tbl$Area == "Replayed optimization diagnostics under bounded GPCM" &
+      tbl$Area == "Replayed optimization diagnostics under GPCM" &
       tbl$Status == "supported_with_caveat",
     na.rm = TRUE
   ))
   expect_true(any(
-    tbl$Area == "Diagnostic and signal-detection design screening under bounded GPCM" &
+    tbl$Area == "Diagnostic and signal-detection design screening under GPCM" &
       tbl$Status == "supported_with_caveat" &
       grepl("screening evidence", tbl$Boundary, fixed = TRUE)
   ))
@@ -264,7 +264,7 @@ test_that("gpcm_score_side_contract exposes user-facing availability only", {
   unavailable <- gpcm_score_side_contract("unavailable")
   registry <- .gpcm_score_side_contract_registry()
   matrix <- gpcm_capability_matrix()
-  score_row <- matrix[matrix$Area == "Score-side scorefile export under bounded GPCM", , drop = FALSE]
+  score_row <- matrix[matrix$Area == "Score-side scorefile export under GPCM", , drop = FALSE]
   review_row <- matrix[matrix$Area == "FACETS output-contract score-side review", , drop = FALSE]
 
   expect_s3_class(contract, "data.frame")
@@ -434,7 +434,7 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
   expect_s3_class(apa, "mfrm_apa_outputs")
   expect_true(nrow(apa$gpcm_boundary) > 0)
   expect_true(any(apa$gpcm_boundary$Area == "APA writer and fit-based export bundles"))
-  expect_true(grepl("Bounded\\s+GPCM note", apa$report_text))
+  expect_match(apa$report_text, "GPCM note", fixed = TRUE)
 
   visual <- build_visual_summaries(fit, diag)
   expect_s3_class(visual, "mfrm_visual_summaries")
@@ -511,7 +511,7 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
   p_score_se <- plot(score, type = "score_se", draw = FALSE)
   expect_s3_class(p_score_se, "mfrm_plot_data")
   expect_identical(p_score_se$data$se_column, "ScoreSideSE")
-  expect_true(any(score$gpcm_boundary$Area == "Score-side scorefile export under bounded GPCM"))
+  expect_true(any(score$gpcm_boundary$Area == "Score-side scorefile export under GPCM"))
 
   drift <- structure(
     list(config = list(models = "GPCM")),
@@ -532,7 +532,7 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
     min_obs = 1
   )
   expect_s3_class(dff, "mfrm_dff")
-  expect_true(any(dff$gpcm_boundary$Area == "Differential facet functioning screening under bounded GPCM"))
+  expect_true(any(dff$gpcm_boundary$Area == "Differential facet functioning screening under GPCM"))
   dff_summary <- summary(dff)
   expect_true(nrow(dff_summary$gpcm_boundary) > 0)
 
@@ -541,7 +541,7 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
     testthat::local_mocked_bindings(
       fit_mfrm = function(...) {
         refit_calls[[length(refit_calls) + 1L]] <<- list(...)
-        stop("captured bounded-GPCM subgroup replay")
+        stop("captured GPCM subgroup replay")
       },
       .package = "mfrmr"
     )
@@ -583,7 +583,7 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
   dff_report <- dif_report(dff)
   expect_s3_class(dff_report, "mfrm_dif_report")
   expect_true(nrow(dff_report$gpcm_boundary) > 0)
-  expect_match(dff_report$narrative, "Bounded GPCM note", fixed = TRUE)
+  expect_match(dff_report$narrative, "GPCM note", fixed = TRUE)
   expect_true(nrow(summary(dff_report)$gpcm_boundary) > 0)
 
   dff_heatmap <- plot_dif_heatmap(dff, metric = "contrast", draw = FALSE)
@@ -667,7 +667,7 @@ test_that("GPCM design evaluation and population forecasts return caveated objec
   expect_identical(design$settings$model, "GPCM")
   expect_identical(design$settings$gpcm_design_status, "supported_with_caveat")
   expect_true(nrow(design$gpcm_boundary) > 0L)
-  expect_true(any(design$gpcm_boundary$Area == "Design evaluation and population forecasting under bounded GPCM"))
+  expect_true(any(design$gpcm_boundary$Area == "Design evaluation and population forecasting under GPCM"))
   expect_true(any(design$results$FitModel == "GPCM"))
   expect_true(any(grepl("design-level sensitivity evidence", design$notes, fixed = TRUE)))
   design_summary <- summary(design)

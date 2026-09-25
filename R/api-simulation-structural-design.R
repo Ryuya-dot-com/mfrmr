@@ -6156,7 +6156,7 @@ simulation_planning_constraints <- function(sim_spec = NULL) {
     lock_var <- if (identical(role, "criterion")) "n_criterion" else if (identical(role, "rater")) "n_rater" else NULL
     if (!is.null(lock_var)) {
       reasons[lock_var] <- paste0(
-        "The bounded `GPCM` specification stores slope values for `",
+        "The `GPCM` specification stores slope values for `",
         sim_spec$slope_facet,
         "` levels."
       )

@@ -602,11 +602,11 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'   screening and insufficient-linking rows (`method = "refit"`).
 #' - `$group_fits`: (refit method only) list of per-group facet estimates and
 #'   subgroup linking diagnostics.
-#' - `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
+#' - `$gpcm_boundary`: for `GPCM` fits, a capability-boundary table
 #'   marking the DFF/DIF output as caveated screening evidence.
 #'
 #' @section GPCM boundary:
-#' For bounded `GPCM`, DFF/DIF rows are available as slope-aware screening
+#' For `GPCM`, DFF/DIF rows are available as slope-aware screening
 #' evidence over the fitted expected-score and residual scale. Keep
 #' residual-method contrasts and interaction cells in screening language.
 #' Refit contrasts require explicit subgroup linking and precision support for
@@ -635,7 +635,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' - `cell_table`: (residual method) per-cell detail table.
 #' - `summary`: counts by method-appropriate screening classification.
 #' - `group_fits`: (refit method) per-group facet estimates.
-#' - `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
+#' - `gpcm_boundary`: for `GPCM` fits, a capability-boundary table.
 #' - `config`: list with facet, group, method, min_obs, p_adjust settings.
 #'
 #' @seealso [fit_mfrm()], [estimate_bias()], [compare_mfrm()],
@@ -1154,7 +1154,7 @@ analyze_dif <- function(...) {
     gpcm_boundary = gpcm_capability_boundary_table(
       fit,
       helper = "analyze_dff()",
-      area = "Differential facet functioning screening under bounded GPCM"
+      area = "Differential facet functioning screening under GPCM"
     ),
     config = list(facet = facet, group = group, method = "residual",
                   residual_output_version = 2L,
@@ -1468,7 +1468,7 @@ analyze_dif <- function(...) {
     gpcm_boundary = gpcm_capability_boundary_table(
       fit,
       helper = "analyze_dff()",
-      area = "Differential facet functioning screening under bounded GPCM"
+      area = "Differential facet functioning screening under GPCM"
     ),
     config = list(facet = facet, group = group, method = "refit",
                   min_obs = min_obs, p_adjust = p_adjust,
@@ -1702,7 +1702,7 @@ print.mfrm_dff <- function(x, ...) {
 #' - `$table`: the full interaction table with one row per cell.
 #' - `$summary`: overview counts of flagged and sparse cells.
 #' - `$config`: analysis configuration parameters.
-#' - `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
+#' - `$gpcm_boundary`: for `GPCM` fits, a capability-boundary table
 #'   marking the table as caveated DFF screening evidence.
 #' - `flag_bias` records `|ObsExpAvg| > abs_bias_warn` in score units.
 #'   It does not establish differential functioning. `flag_t` is unavailable.
@@ -1710,7 +1710,7 @@ print.mfrm_dff <- function(x, ...) {
 #'   residuals and magnitude flags. The score means and counts are retained.
 #'
 #' @section GPCM boundary:
-#' For bounded `GPCM`, the interaction table uses the fitted slope-aware
+#' For `GPCM`, the interaction table uses the fitted slope-aware
 #' expected-score/residual scale and should be reported as screening evidence,
 #' not as a standalone fairness, invariance, or operational subgroup decision.
 #'
@@ -1727,7 +1727,7 @@ print.mfrm_dff <- function(x, ...) {
 #' @return Object of class `mfrm_dif_interaction` with:
 #' - `table`: tibble with per-cell statistics and flags.
 #' - `summary`: tibble summarizing flagged and sparse cell counts.
-#' - `gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table.
+#' - `gpcm_boundary`: for `GPCM` fits, a capability-boundary table.
 #' - `config`: list of analysis parameters.
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()], [dif_report()],
@@ -1886,7 +1886,7 @@ dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
     gpcm_boundary = gpcm_capability_boundary_table(
       fit,
       helper = "dif_interaction_table()",
-      area = "Differential facet functioning screening under bounded GPCM"
+      area = "Differential facet functioning screening under GPCM"
     ),
     config = list(facet = facet, group = group, min_obs = min_obs,
                   method = "residual", residual_output_version = 2L,
@@ -2414,7 +2414,7 @@ information_build_step_structure <- function(fit, model) {
 #' Compute design-weighted precision curves for ordered many-facet fits
 #'
 #' Calculates design-weighted score-variance curves across the latent
-#' trait (theta) for a fitted ordered-category `RSM`, `PCM`, or bounded
+#' trait (theta) for a fitted ordered-category `RSM`, `PCM`, or
 #' `GPCM` model. Returns both an overall precision curve (`$tif`) and
 #' per-facet-level contribution curves (`$iif`) based on the realized
 #' observation pattern.
@@ -2444,7 +2444,7 @@ information_build_step_structure <- function(fit, model) {
 #' identity rather than a separate approximation. For binary data it reduces to
 #' the familiar \eqn{p(\theta)\{1 - p(\theta)\}} form. For `PCM`, the package
 #' evaluates each observed design cell using the threshold vector associated
-#' with that cell's realized `step_facet` level. For bounded `GPCM`, the
+#' with that cell's realized `step_facet` level. For `GPCM`, the
 #' same design-weighted score variance is scaled by the squared discrimination
 #' attached to the realized `slope_facet` level, which is the
 #' \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} item-information identity that
@@ -2453,13 +2453,13 @@ information_build_step_structure <- function(fit, model) {
 #'
 #' @section What `tif` and `iif` mean here:
 #' In `mfrmr`, this helper supports ordered-category `RSM`, `PCM`, and the
-#' current bounded `GPCM` fit. The total curve (`$tif`) is the sum of
+#' current `GPCM` fit. The total curve (`$tif`) is the sum of
 #' design-weighted cell contributions across all non-person facet levels in the
 #' fitted model. The facet-level contribution curves (`$iif`) keep those
 #' weighted contributions separated, so you can see which observed rater
 #' levels, criteria, or other facet levels are driving precision at different
 #' parts of the scale. For `PCM`, step-facet-specific thresholds are respected
-#' when each observed design cell is evaluated. For bounded `GPCM`, those
+#' when each observed design cell is evaluated. For `GPCM`, those
 #' same cell-level variances are additionally scaled by the squared
 #' discrimination associated with the realized `slope_facet` level.
 #'
@@ -2469,11 +2469,11 @@ information_build_step_structure <- function(fit, model) {
 #' - It should not be used as if it were design-free evidence about a form's
 #'   precision independent of the realized observation pattern.
 #' - It does not currently extend beyond the ordered-category `RSM` / `PCM` /
-#'   bounded `GPCM` family implemented by [fit_mfrm()].
+#'   `GPCM` family implemented by [fit_mfrm()].
 #'
 #' @section When to use this:
 #' Use `compute_information()` when you want a design-weighted precision screen
-#' for an `RSM`, `PCM`, or bounded `GPCM` fit along the latent
+#' for an `RSM`, `PCM`, or `GPCM` fit along the latent
 #' continuum. In practice:
 #' - start with the total precision curve for overall targeting across the
 #'   realized observation pattern
@@ -2491,7 +2491,7 @@ information_build_step_structure <- function(fit, model) {
 #'
 #' @section References:
 #' The ordered-category probability structures come from Andrich's `RSM`
-#' formulation and Masters' `PCM`. The bounded `GPCM` information identity
+#' formulation and Masters' `PCM`. The `GPCM` information identity
 #' \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} is derived in Muraki
 #' (1993, Equation 10) by applying Samejima's (1974) general polytomous
 #' information formula \eqn{I_j(\theta) = \sum_k P_{jk}(\theta)
@@ -2520,7 +2520,7 @@ information_build_step_structure <- function(fit, model) {
 #'   \eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
 #'   applying Samejima's (1974) polytomous information formula to the
 #'   GPCM kernel; this is the canonical reference for `compute_information()`
-#'   under bounded `GPCM`.)
+#'   under `GPCM`.)
 #' - Samejima, F. (1974). *Normal ogive model on the continuous
 #'   response level in the multidimensional latent space*.
 #'   Psychometrika, 39, 111-121. (Source for the general polytomous
@@ -2803,7 +2803,7 @@ compute_information <- function(fit,
 #' - `"se"` / `"sem"` / `"csem"`: conditional SEM across theta.
 #' - `"both"`: precision and conditional SEM together, useful for presentations.
 #' - `"iif"`: facet-level contribution curves for one selected facet in a
-#'   supported `RSM`, `PCM`, or bounded `GPCM` fit.
+#'   supported `RSM`, `PCM`, or `GPCM` fit.
 #'
 #' @section Which type should I use?:
 #' - Use `"tif"` for a quick overall read on precision.
@@ -2818,7 +2818,7 @@ compute_information <- function(fit,
 #' - Conditional SEM is derived as `1 / sqrt(precision)`; lower is better.
 #' - Facet-level curves show which facet levels contribute most to that
 #'   realized precision at each theta.
-#' - For bounded `GPCM`, those contributions include the squared
+#' - For `GPCM`, those contributions include the squared
 #'   discrimination scaling implied by the fitted `slope_facet`.
 #' - If the precision peak sits far from the bulk of person measures, the
 #'   realized design may be poorly targeted.
@@ -3532,7 +3532,7 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' This transfers baseline coordinates into a new fit through direct equality
 #' constraints. Common-scale interpretation is conditional on a defensible
 #' baseline and invariant cross-run element identity.
-#' For bounded `GPCM`, treat this as direct exploratory anchor/drift support
+#' For `GPCM`, treat this as direct exploratory anchor/drift support
 #' rather than as the package's formal linking-synthesis route.
 #'
 #' @param new_data Data frame in long format (one row per rating).
@@ -4805,14 +4805,14 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 .linking_review_support_status <- function(source_models) {
   gpcm_detected <- any(identical(source_models, "GPCM") | source_models == "GPCM")
   tibble::tibble(
-    Scope = c("RSM / PCM", "bounded GPCM"),
+    Scope = c("RSM / PCM", "GPCM"),
     Status = c("supported", "supported_with_caveat"),
     Note = c(
       "Supported as a synthesis layer over documented anchor-review, drift, and equating-chain objects.",
       if (gpcm_detected) {
-        "Supported with caveat: bounded GPCM source objects are summarized as exploratory anchor/drift/chain evidence, not an operational linking decision."
+        "Supported with caveat: GPCM source objects are summarized as exploratory anchor/drift/chain evidence, not an operational linking decision."
       } else {
-        "Supported with caveat when bounded GPCM source objects are supplied; not active for this RSM/PCM review."
+        "Supported with caveat when GPCM source objects are supplied; not active for this RSM/PCM review."
       }
     )
   )
@@ -5239,7 +5239,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #'
 #' @section GPCM boundary:
 #' This helper is currently intended for the documented `RSM` / `PCM` linking
-#' workflow. If the supplied drift/chain sources resolve to bounded `GPCM`,
+#' workflow. If the supplied drift/chain sources resolve to `GPCM`,
 #' the helper stops with a package-level message rather than silently implying
 #' support.
 #'
@@ -5338,7 +5338,7 @@ build_linking_review <- function(anchor_review = NULL,
     TopRiskRows = nrow(all_risks),
     GroupViews = sum(group_view_index$Rows > 0L),
     SourceModels = if (length(source_models) > 0) paste(source_models, collapse = ", ") else NA_character_,
-    GPCMSupport = as.character(support_status$Status[support_status$Scope == "bounded GPCM"][1] %||% NA_character_)
+    GPCMSupport = as.character(support_status$Status[support_status$Scope == "GPCM"][1] %||% NA_character_)
   )
 
   key_warnings <- character(0)
@@ -5399,7 +5399,7 @@ build_linking_review <- function(anchor_review = NULL,
       if (!is.null(drift)) "drift",
       if (!is.null(chain)) "chain"
     ), collapse = ", "),
-    "Bounded GPCM" = as.character(support_status$Status[support_status$Scope == "bounded GPCM"][1] %||% NA_character_)
+    "GPCM" = as.character(support_status$Status[support_status$Scope == "GPCM"][1] %||% NA_character_)
   )
 
   plot_map <- tibble::tibble(
@@ -5462,7 +5462,7 @@ build_linking_review <- function(anchor_review = NULL,
       },
       helper = "build_linking_review()",
       extra_areas = c(
-        "Score-side scorefile export under bounded GPCM",
+        "Score-side scorefile export under GPCM",
         "FACETS output-contract score-side review"
       )
     ),
@@ -5584,7 +5584,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
   model <- as.character(model %||% NA_character_)[1]
   gpcm <- identical(model, "GPCM")
   tibble::tibble(
-    Scope = c("RSM / PCM", "bounded GPCM"),
+    Scope = c("RSM / PCM", "GPCM"),
     Status = c(
       "supported",
       if (gpcm) "supported_with_caveat" else "deferred"
@@ -5593,11 +5593,11 @@ print.summary.mfrm_linking_review <- function(x, ...) {
       "Supported as a synthesis layer over package-native screening outputs.",
       if (gpcm) {
         paste(
-          "Supported with caveat: bounded GPCM casebook rows inherit",
+          "Supported with caveat: GPCM casebook rows inherit",
           "exploratory screening semantics from residual and strict marginal sources."
         )
       } else {
-        "Deferred unless a bounded GPCM source fit is supplied."
+        "Deferred unless a GPCM source fit is supplied."
       }
     )
   )
@@ -5622,7 +5622,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
       Note = if (isTRUE(marginal_fit$available)) {
         if (gpcm) {
           paste(
-            "Strict marginal cell screening is available, but bounded GPCM rows remain",
+            "Strict marginal cell screening is available, but GPCM rows remain",
             "exploratory and should not be treated as formal item-fit tests."
           )
         } else {
@@ -5648,7 +5648,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
       Note = if (isTRUE(pairwise_fit$available)) {
         if (gpcm) {
           paste(
-            "Strict pairwise screening is available, but bounded GPCM rows remain",
+            "Strict pairwise screening is available, but GPCM rows remain",
             "exploratory and should not be treated as formal local-dependence tests."
           )
         } else {
@@ -5673,7 +5673,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
       },
       Note = if (inherits(unexpected, "mfrm_unexpected")) {
         if (gpcm) {
-          "Unexpected-response rows are available, but bounded GPCM interpretation remains operational rather than inferential."
+          "Unexpected-response rows are available, but GPCM interpretation remains operational rather than inferential."
         } else {
           "Unexpected-response rows are available for operational follow-up."
         }
@@ -5692,7 +5692,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
       },
       Note = if (inherits(displacement, "mfrm_displacement")) {
         if (gpcm) {
-          "Displacement rows are available, but bounded GPCM interpretation remains operational rather than inferential."
+          "Displacement rows are available, but GPCM interpretation remains operational rather than inferential."
         } else {
           "Displacement rows are available for operational follow-up."
         }
@@ -6459,7 +6459,7 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #'    yourself when you want custom thresholds before synthesizing the casebook.
 #'
 #' @section GPCM boundary:
-#' For bounded `GPCM`, the helper is available with caveat. The casebook inherits
+#' For `GPCM`, the helper is available with caveat. The casebook inherits
 #' exploratory screening semantics from the underlying residual and strict
 #' marginal sources; it should not be read as a formal inferential case test.
 #'
@@ -6616,7 +6616,7 @@ build_misfit_casebook <- function(fit,
     "Model" = model,
     "Administration ID" = administration_id,
     "Wave ID" = wave_id,
-    "Bounded GPCM" = as.character(support_status$Status[support_status$Scope == "bounded GPCM"][1] %||% NA_character_)
+    "GPCM" = as.character(support_status$Status[support_status$Scope == "GPCM"][1] %||% NA_character_)
   )
 
   plot_map <- tibble::tibble(
@@ -6673,7 +6673,7 @@ build_misfit_casebook <- function(fit,
       nrow(unexpected_cases) > 0L,
       nrow(displacement_cases) > 0L
     )),
-    GPCMSupport = as.character(support_status$Status[support_status$Scope == "bounded GPCM"][1] %||% NA_character_)
+    GPCMSupport = as.character(support_status$Status[support_status$Scope == "GPCM"][1] %||% NA_character_)
   )
 
   notes <- clean_summary_lines(c(
@@ -6841,7 +6841,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 
 .weighting_review_support_status <- function() {
   tibble::tibble(
-    Scope = c("RSM / PCM reference", "bounded GPCM comparison"),
+    Scope = c("RSM / PCM reference", "GPCM comparison"),
     Status = c("supported", "supported_with_caveat"),
     Note = c(
       "Supported as the equal-weighting reference side of the review.",
@@ -6890,8 +6890,8 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
       AbsDeltaEstimate = abs(.data$DeltaEstimate),
       RankShift = .data$ComparisonRank - .data$ReferenceRank,
       Direction = dplyr::case_when(
-        .data$DeltaEstimate > 0 ~ "Higher in bounded GPCM",
-        .data$DeltaEstimate < 0 ~ "Lower in bounded GPCM",
+        .data$DeltaEstimate > 0 ~ "Higher in GPCM",
+        .data$DeltaEstimate < 0 ~ "Lower in GPCM",
         TRUE ~ "No change"
       )
     ) |>
@@ -6985,6 +6985,9 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     identical(as.character(mfrmr_get_readiness_record(fit)$fit$NumericalState[1]), "ready")
   }, logical(1)))
   ic_selectable <- isTRUE(basis$all_ic_selectable)
+  ic_available <- both_mml && same_data && isTRUE(basis$ic_comparable) &&
+    nrow(comparison_tbl) == 2L && "ICFitEligible" %in% names(comparison_tbl) &&
+    all(!is.na(comparison_tbl$ICFitEligible) & comparison_tbl$ICFitEligible)
 
   loglik_difference <- NA_real_
   if (nrow(comparison_tbl) >= 2L && "LogLik" %in% names(comparison_tbl)) {
@@ -6994,7 +6997,9 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     }
   }
 
-  evidence_tier <- if (both_jml && same_data && !both_numerical) {
+  evidence_tier <- if (ic_available) {
+    "mml_information_criterion_comparison"
+  } else if (both_jml && same_data && !both_numerical) {
     "jml_numerical_review_only"
   } else if (both_jml && same_data) {
     "jml_descriptive_reweighting_only"
@@ -7014,13 +7019,17 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     "unavailable"
   } else if (!both_numerical) {
     "numerical_review_required"
+  } else if (ic_available) {
+    "comparable_mml_likelihood"
   } else if (both_jml) {
     "descriptive_unpenalized_gain_not_selection"
   } else {
     "descriptive_noncomparable"
   }
 
-  selection_route <- if (both_jml) {
+  selection_route <- if (ic_available) {
+    "compare_mfrm_information_criteria"
+  } else if (both_jml) {
     "withheld_JML_has_no_automatic_PCM_GPCM_selection"
   } else {
     "withheld_comparison_basis_not_selectable"
@@ -7037,8 +7046,20 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 
   recommended_use <- paste(
     "Inspect changes in facet measures, relative slopes and information shares.",
-    "Free-slope GPCM information-criterion ranking and the PCM-versus-GPCM",
-    "chi-square LRT are unavailable; a larger likelihood does not select a scoring model."
+    if (ic_available) {
+      "Information criteria compare the supplied MML candidates; they do not select an operational scoring policy."
+    } else {
+      "The supplied fits do not satisfy the information-criterion comparison checks."
+    },
+    if (identical(pcm_gpcm_lrt, "computed")) {
+      "The PCM/GPCM LRT tests equal relative slopes; it does not decide the scoring policy."
+    } else if (isTRUE(basis$nested_requested)) {
+      paste("The requested likelihood-ratio test was not computed:", basis$lrt_reason)
+    } else if (!both_mml || !identical(reference_model, "PCM") || !aligned_pcm_owner) {
+      "An equal-slope PCM/GPCM test requires two MML fits with the same step facet and population model."
+    } else {
+      "For an equal-slope test, set nested = TRUE and inspect the separate LRT status and reason."
+    }
   )
   numerical_note <- if (both_numerical) {
     "Numerical convergence checks passed for both fits; inference eligibility is assessed separately."
@@ -7057,42 +7078,44 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     BothNumericallyReady = both_numerical,
     NumericalReview = numerical_note,
     EvidenceTier = evidence_tier,
-    FormalModelSelectionAvailable = FALSE,
+    FormalModelSelectionAvailable = ic_available,
     SelectionRoute = selection_route,
     ObservedLogLikDifference = loglik_difference,
     LogLikDifferenceStatus = loglik_status,
-    AICPreferred = NA_character_,
-    PersonBICPreferred = NA_character_,
-    SABICPreferred = NA_character_,
+    AICPreferred = if (ic_available) comparison$preferred$AIC %||% NA_character_ else NA_character_,
+    PersonBICPreferred = if (ic_available) comparison$preferred$BIC %||% NA_character_ else NA_character_,
+    SABICPreferred = if (ic_available) comparison$preferred$SABIC %||% NA_character_ else NA_character_,
     PCMvsGPCMLRT = pcm_gpcm_lrt,
     FACETSComparisonRole = facets_role,
     RecommendedUse = recommended_use
   )
 }
 
-#' Build a weighting-policy review between Rasch-family and bounded GPCM fits
+#' Build a weighting-policy review between Rasch-family and GPCM fits
 #'
 #' @param rasch_fit Output from [fit_mfrm()] using `model = "RSM"` or `"PCM"`.
-#' @param gpcm_fit Output from [fit_mfrm()] using bounded `model = "GPCM"`.
+#' @param gpcm_fit Output from [fit_mfrm()] using `model = "GPCM"`.
 #' @param theta_range Numeric vector of length 2 passed to [compute_information()]
 #'   for the information-redistribution comparison.
 #' @param theta_points Integer number of theta grid points passed to
 #'   [compute_information()].
 #' @param top_n Maximum number of rows to keep in compact summary outputs.
+#' @param nested Request the PCM/GPCM equal-slope likelihood-ratio test. Default
+#'   `FALSE`. Requires matched MML fits and the checks in [compare_mfrm()].
 #'
 #' @details
 #' `build_weighting_review()` is an operational model-choice review helper. It
 #' is designed for the common question:
 #'
 #' - what changes when a Rasch-family equal-weighting model is replaced with a
-#'   bounded `GPCM` that allows discrimination-based reweighting?
+#'   `GPCM` that allows discrimination-based reweighting?
 #'
 #' The helper does not estimate a new model. Instead, it synthesizes four
 #' package-native evidence sources:
 #'
 #' - [compare_mfrm()] for same-data model comparison
 #' - the non-person facet measures from each fit
-#' - the bounded `GPCM` slope table
+#' - the `GPCM` slope table
 #' - [compute_information()] for design-weighted information redistribution
 #'
 #' The result is intended for substantive review, not for automatic model
@@ -7102,11 +7125,12 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' not one common slope and not simultaneous criterion-by-rater slope blocks.
 #' The overview records the slope owner, step owner, level count, free relative
 #' slope contrasts, and whether the supplied reference is the exact unit-slope
-#' PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
-#' unavailable. Free-slope GPCM also lacks the inference checks required for
-#' information-criterion ranking, even under MML. The returned
-#' `comparison_contract` records the applicable comparison restrictions;
-#' observed changes in fit, scores and information remain descriptive. A JML
+#' PCM response-kernel reduction. MML information-criterion ranking requires
+#' the likelihood and local-solution checks in [compare_mfrm()]. With
+#' `nested = TRUE`, a PCM/GPCM asymptotic chi-square LRT additionally requires
+#' matching population, step and facet settings and G-1 free slope contrasts.
+#' The returned `comparison_contract` records the comparison and test status;
+#' observed changes in scores and information need substantive interpretation. A JML
 #' log-likelihood increase is not promoted to automatic PCM-versus-GPCM model
 #' selection because it is unpenalized and the GPCM contains additional slope
 #' parameters. FACETS may serve as a direct comparator for the PCM/JML side
@@ -7115,28 +7139,27 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'
 #' @section Recommended input route:
 #' 1. Fit an equal-weighting reference model with `model = "RSM"` or `"PCM"`.
-#' 2. Fit a bounded `GPCM` on the same prepared response data.
+#' 2. Fit a `GPCM` on the same prepared response data.
 #' 3. Run `build_weighting_review(rasch_fit, gpcm_fit)`.
 #' 4. Read `summary(review)` before deciding whether the discrimination-based
 #'    reweighting is substantively acceptable.
 #'
 #' @section What the returned tables mean:
 #' - `model_comparison`: same-data model-comparison bundle from [compare_mfrm()].
-#'   AIC/Person-BIC/SABIC ranking is unavailable for the current free-slope
-#'   GPCM fits. PCM-versus-GPCM LRT also remains unavailable even though PCM
-#'   is the aligned GPCM's unit-slope reduction.
+#'   AIC/Person-BIC/SABIC ranking is available only when `ICComparable` is true.
+#'   Inspect `$lrt` and `$comparison_basis$lrt_reason` for a requested test.
 #' - `comparison_contract`: one-row evidence-tier table stating whether formal
 #'   model selection is available, how any observed log-likelihood difference
 #'   may be read, and the bounded role of FACETS in a JML review.
-#' - `facet_shift`: how non-person facet estimates move under bounded `GPCM`.
+#' - `facet_shift`: how non-person facet estimates move under `GPCM`.
 #' - `slope_profile`: which `slope_facet` levels are upweighted or downweighted.
 #' - `information_redistribution`: within-facet information-share changes
-#'   between the Rasch-family fit and bounded `GPCM`.
+#'   between the Rasch-family fit and `GPCM`.
 #' - `top_reweighted_levels`: compact triage table for the strongest
 #'   slope-facet-level redistribution signals.
 #'
 #' @section GPCM boundary:
-#' This helper is available only for the current bounded `GPCM` branch. It
+#' This helper is available only for the current `GPCM` branch. It
 #' requires the package's existing `slope_facet == step_facet` contract and
 #' should be read as an operational weighting-policy review, not as a formal
 #' validity adjudication.
@@ -7176,7 +7199,8 @@ build_weighting_review <- function(rasch_fit,
                                    gpcm_fit,
                                    theta_range = c(-6, 6),
                                    theta_points = 101L,
-                                   top_n = 10L) {
+                                   top_n = 10L,
+                                   nested = FALSE) {
   rasch_fit <- .validate_weighting_review_fit(rasch_fit, "rasch_fit", c("RSM", "PCM"))
   gpcm_fit <- .validate_weighting_review_fit(gpcm_fit, "gpcm_fit", "GPCM")
   top_n <- max(1L, as.integer(top_n %||% 10L))
@@ -7186,7 +7210,7 @@ build_weighting_review <- function(rasch_fit,
   step_facet <- as.character(gpcm_fit$config$step_facet %||% NA_character_)[1]
   if (!identical(slope_facet, step_facet)) {
     stop(
-      "build_weighting_review() currently requires the bounded `GPCM` branch with `slope_facet == step_facet`.",
+      "build_weighting_review() currently requires the `GPCM` branch with `slope_facet == step_facet`.",
       call. = FALSE
     )
   }
@@ -7196,10 +7220,10 @@ build_weighting_review <- function(rasch_fit,
     gpcm_fit,
     labels = c(
       paste0(as.character(rasch_fit$config$model %||% "RSM")[1], " reference"),
-      "bounded GPCM"
+      "GPCM"
     ),
     warn_constraints = FALSE,
-    nested = FALSE
+    nested = nested
   ))
 
   basis <- comparison$comparison_basis %||% list()
@@ -7296,7 +7320,7 @@ build_weighting_review <- function(rasch_fit,
   pcm_gpcm_lrt <- if (!identical(reference_model, "PCM")) {
     "not_applicable_reference_is_not_pcm"
   } else if (aligned_pcm_owner) {
-    "withheld_current_scope"
+    as.character(basis$lrt_status %||% "not_requested")
   } else {
     "not_available_owner_mismatch"
   }
@@ -7336,7 +7360,7 @@ build_weighting_review <- function(rasch_fit,
 
   status <- make_summary_block(
     "Overall status" = review_status,
-    "Weighting principle" = "Rasch-family equal weighting vs bounded GPCM discrimination-based reweighting",
+    "Weighting principle" = "Rasch-family equal weighting vs GPCM discrimination-based reweighting",
     "Slope ownership" = paste0(
       slope_facet, " levels; one aligned slope/step owner only"
     ),
@@ -7366,16 +7390,7 @@ build_weighting_review <- function(rasch_fit,
       )
     )
   }
-  if (aligned_pcm_owner) {
-    key_warnings <- c(
-      key_warnings,
-      paste(
-        "PCM is the all-unit-slope response-kernel reduction of this aligned",
-        "GPCM, but the current automatic comparison does not authorize a",
-        "PCM-versus-GPCM chi-square LRT."
-      )
-    )
-  } else if (identical(reference_model, "PCM")) {
+  if (!aligned_pcm_owner && identical(reference_model, "PCM")) {
     key_warnings <- c(
       key_warnings,
       paste(
@@ -7390,7 +7405,7 @@ build_weighting_review <- function(rasch_fit,
     key_warnings <- c(
       key_warnings,
       paste0(
-        "Largest bounded GPCM slope deviation is at ",
+        "Largest GPCM slope deviation is at ",
         slope_facet, " = ", lead_slope$SlopeFacet[[1]],
         " (Estimate = ", format(round(lead_slope$Estimate[[1]], 3), nsmall = 3), ")."
       )
@@ -7422,14 +7437,14 @@ build_weighting_review <- function(rasch_fit,
 
   next_actions <- clean_summary_lines(c(
     "Read summary(model_comparison) before interpreting any fit advantage as a scoring recommendation.",
-    "Use likelihood and weighting differences descriptively; GPCM ranking remains unavailable even after numerical convergence.",
+    "Use IC ranking only when ICComparable is true; weighting consequences require a separate substantive decision.",
     paste0("Use slope_profile and top_reweighted_levels to inspect whether ", slope_facet, " levels are being upweighted or downweighted in substantively acceptable ways."),
-    paste0("Use plot_information(compute_information(rasch_fit), type = \"iif\", facet = \"", slope_facet, "\", draw = FALSE) and the bounded GPCM analogue to inspect precision redistribution visually."),
-    "If equal contributions of items and raters are part of the score interpretation, retain the Rasch-family fit as the operational reference even when bounded GPCM fits better."
+    paste0("Use plot_information(compute_information(rasch_fit), type = \"iif\", facet = \"", slope_facet, "\", draw = FALSE) and the GPCM analogue to inspect precision redistribution visually."),
+    "If equal contributions of items and raters are part of the score interpretation, retain the Rasch-family fit as the operational reference even when GPCM fits better."
   ), max_n = 4L)
 
   plot_map <- tibble::tibble(
-    ReviewArea = c("Reference precision", "bounded GPCM precision", "Fit comparison"),
+    ReviewArea = c("Reference precision", "GPCM precision", "Fit comparison"),
     Available = c(TRUE, TRUE, TRUE),
     PlotHelper = c(
       paste0("plot_information(compute_information(rasch_fit), type = \"iif\", facet = \"", slope_facet, "\", draw = FALSE)"),
@@ -7438,7 +7453,7 @@ build_weighting_review <- function(rasch_fit,
     ),
     Trigger = c(
       "Use to inspect the equal-weighting reference precision split across slope-facet levels.",
-      "Use to inspect how bounded GPCM redistributes precision across the same levels.",
+      "Use to inspect how GPCM redistributes precision across the same levels.",
       "Use to review q>=31 comparable AIC/Person-BIC/SABIC and relative candidate-set weights before making a model-choice argument; close decisions need a denser common-grid check."
     )
   )
@@ -7453,7 +7468,7 @@ build_weighting_review <- function(rasch_fit,
     CompanionOutput = c(
       "summary(build_weighting_review(...))",
       "compare_mfrm() / summary(compare_mfrm(...))",
-      "fair_average_table() for the Rasch-family route; keep bounded GPCM score semantics separate"
+      "fair_average_table() for the Rasch-family route; keep GPCM score semantics separate"
     )
   )
 
@@ -7463,9 +7478,9 @@ build_weighting_review <- function(rasch_fit,
       "The fitted slopes vary across levels of `", slope_facet,
       "`; other facets have no separate slope block."
     ),
-    "Criterion-owned and rater-owned GPCM fits are separate restricted models; both blocks cannot be estimated together by the current bounded-GPCM interface.",
+    "Criterion-owned and rater-owned GPCM fits are separate restricted models; both blocks cannot be estimated together by the current GPCM interface.",
     "FACETS is a direct JML comparator only for the aligned equal-discrimination PCM side; its reported discrimination is a post-fit diagnostic, not the fitted free-slope GPCM parameter.",
-    "The review is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
+    "The review is intended to make reweighting visible; it does not decide by itself whether GPCM should replace the Rasch-family operational model.",
     "Information-share changes are computed within each facet because the same total information is partitioned separately by facet."
   ))
 
@@ -7490,7 +7505,8 @@ build_weighting_review <- function(rasch_fit,
       theta_points = theta_points,
       top_n = top_n,
       slope_facet = slope_facet,
-      intended_use = "weighting_policy_review"
+      intended_use = "weighting_policy_review",
+      nested = isTRUE(nested)
     )
   )
   as_mfrm_bundle(out, "mfrm_weighting_review")
@@ -7524,7 +7540,7 @@ print.mfrm_weighting_review <- function(x, ...) {
 #' @param ... Reserved for generic compatibility.
 #'
 #' @return An object of class `summary.mfrm_weighting_review`, including the
-#'   evidence-tier `comparison_contract` table.
+#'   evidence-tier `comparison_contract` table and any computed `lrt`.
 #' @seealso [build_weighting_review()]
 #' @export
 summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
@@ -7537,6 +7553,7 @@ summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
   top_n <- max(1L, as.integer(top_n))
 
   out <- list(
+    lrt = object$model_comparison$lrt,
     overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
     status = tibble::as_tibble(object$status %||% tibble::tibble()),
     comparison_contract = tibble::as_tibble(
@@ -7581,6 +7598,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
         format(round(contract$ObservedLogLikDifference[1], digits)), "\n")
     print_wrapped_line(contract$RecommendedUse[1])
   }
+  if (!is.null(x$lrt)) print_mfrm_lrt(x$lrt)
   print_bullet_section("Key Warnings", x$key_warnings)
   print_bullet_section("Next Actions", x$next_actions)
   if (nrow(x$top_measure_shifts) > 0) {
@@ -7637,7 +7655,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     PCM = "Step thresholds vary by the designated step facet; equal discrimination fixed at 1.",
     GPCM = paste(
       "One positive relative slope is estimated for every level of one",
-      "designated slope facet; the current bounded route requires",
+      "designated slope facet; the current model requires",
       "slope_facet == step_facet, identifies slopes with geometric mean 1,",
       "and does not combine criterion and rater slope blocks."
     ),
@@ -7651,7 +7669,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     model,
     RSM = "We fit a many-facet rating-scale Rasch model, treating category thresholds as common across the step facet.",
     PCM = "We fit a many-facet partial-credit Rasch model, allowing step thresholds to vary by the designated step facet while retaining equal discrimination.",
-    GPCM = "We fit a bounded generalized partial-credit many-facet model as a slope-aware sensitivity analysis; interpretation focused on whether discrimination-based reweighting changed the substantive conclusions.",
+    GPCM = "We fit a generalized partial-credit many-facet model as a slope-aware sensitivity analysis; interpretation focused on whether discrimination-based reweighting changed the substantive conclusions.",
     "We fit a many-facet ordered-response model; report the fitted response-model contract explicitly."
   )
 }
@@ -7680,7 +7698,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       idx <- which(capability$CapabilityID == capability_id)
       if (length(idx) != 1L) {
         stop(
-          "Expected one bounded-GPCM capability for ID `",
+          "Expected one GPCM capability for ID `",
           capability_id,
           "`; found ",
           length(idx),
@@ -7787,7 +7805,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       ),
       Template = .data$ReportTemplate,
       Avoid = dplyr::case_when(
-        .data$Model == "GPCM" ~ "Do not write that better fit alone makes bounded GPCM the operational scoring model.",
+        .data$Model == "GPCM" ~ "Do not write that better fit alone makes GPCM the operational scoring model.",
         .data$Model %in% c("RSM", "PCM") ~ "Do not describe the fit as free-discrimination or slope-weighted.",
         TRUE ~ "Do not omit the model's response-kernel and score-contract assumptions."
       )
@@ -7798,8 +7816,8 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
   base <- tibble::tibble(
     Question = c(
       "Which model fits better on the same likelihood basis?",
-      "Does bounded GPCM change the score interpretation?",
-      "Where did precision move under bounded GPCM?",
+      "Does GPCM change the score interpretation?",
+      "Where did precision move under GPCM?",
       "Can I use manuscript APA/report bundles?",
       "Can I use fair averages?",
       "Can I screen bias/interactions?",
@@ -7816,18 +7834,18 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     ),
     Interpretation = c(
       "Use q>=31 comparable AIC/Person-BIC/SABIC/logLik as candidate-set fit evidence, not as a standalone scoring decision; close decisions need a denser common-grid check.",
-      "Use only when comparing an RSM/PCM reference to bounded GPCM.",
+      "Use only when comparing an RSM/PCM reference to GPCM.",
       "Review item/rater/criterion information redistribution before changing the operational model.",
-      "Supported for RSM/PCM; available with explicit sensitivity-reporting caveats for bounded GPCM.",
-      "Supported for RSM/PCM; supported with explicit SE caveat for bounded GPCM.",
-      "Supported for RSM/PCM; conditional screening with profile-likelihood follow-up for bounded GPCM.",
-      "Available for direct supported outputs; bounded-GPCM fit bundles remain sensitivity-reporting outputs with explicit caveats."
+      "Supported for RSM/PCM; available with explicit sensitivity-reporting caveats for GPCM.",
+      "Supported for RSM/PCM; supported with explicit SE caveat for GPCM.",
+      "Supported for RSM/PCM; conditional screening with profile-likelihood follow-up for GPCM.",
+      "Available for direct supported outputs; GPCM fit bundles remain sensitivity-reporting outputs with explicit caveats."
     )
   )
   if (isTRUE(has_gpcm)) {
     base <- dplyr::bind_rows(
       tibble::tibble(
-        Question = "What is the exact bounded GPCM support boundary?",
+        Question = "What is the exact GPCM support boundary?",
         PrimaryHelper = "gpcm_capability_matrix()",
         Interpretation = "Treat supported_with_caveat rows as review outputs and blocked/deferred rows as out of scope."
       ),
@@ -7853,14 +7871,14 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
   list(reference = fits[[ref_idx]], gpcm = fits[[gpcm_idx]])
 }
 
-#' Build a model-choice review across RSM, PCM, and bounded GPCM fits
+#' Build a model-choice review across RSM, PCM, and GPCM fits
 #'
 #' @param ... Two or more fitted `mfrm_fit` objects from [fit_mfrm()].
 #' @param labels Optional labels for the supplied fits. If omitted, names from
 #'   `...` are used when available; otherwise labels are generated from
 #'   model/method combinations.
 #' @param run_weighting_review Logical. If `TRUE` and the supplied fits include
-#'   at least one `RSM`/`PCM` reference plus one bounded `GPCM` fit, also run
+#'   at least one `RSM`/`PCM` reference plus one `GPCM` fit, also run
 #'   [build_weighting_review()] for the first such pair.
 #' @param theta_range,theta_points,top_n Passed to [build_weighting_review()] when
 #'   `run_weighting_review = TRUE`.
@@ -7874,16 +7892,16 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #'   comparison;
 #' - comparison-boundary warnings captured from [compare_mfrm()] and retained
 #'   in `comparison_warnings` for printing and appendix export;
-#' - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
+#' - model-role guidance for `RSM`, `PCM`, and `GPCM`;
 #' - reported step/slope coordinate counts, identified free-parameter counts,
 #'   and the stored fit-readiness decision for every supplied model;
 #' - downstream-route availability for APA output, score-side export, linking,
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
-#' - report wording templates that avoid treating better bounded-`GPCM` fit as
+#' - report wording templates that avoid treating better `GPCM` fit as
 #'   an automatic operational-scoring decision;
-#' - [gpcm_capability_matrix()] when bounded `GPCM` is present;
+#' - [gpcm_capability_matrix()] when `GPCM` is present;
 #' - optionally, [build_weighting_review()] for the first Rasch-family reference
-#'   versus bounded-`GPCM` pair.
+#'   versus `GPCM` pair.
 #'
 #' The word "bounded" describes the documented model and workflow scope: the
 #' package does not implement every possible generalized partial-credit
@@ -7969,15 +7987,15 @@ build_model_choice_review <- function(...,
   if (isTRUE(has_gpcm)) {
     key_warnings <- c(
       key_warnings,
-      "Bounded GPCM is slope-aware: better fit is sensitivity evidence, not an automatic operational-scoring decision.",
-      "Bounded means the current route is constrained to positive slopes, slope_facet == step_facet, and documented downstream support."
+      "GPCM is slope-aware: better fit is sensitivity evidence, not an automatic operational-scoring decision.",
+      "The current GPCM uses positive slopes and requires slope_facet == step_facet; output-specific limits are described separately."
     )
   }
   if (!isTRUE(basis$ic_comparable)) {
     key_warnings <- c(
       key_warnings,
       if (isTRUE(has_gpcm)) {
-        "Free-slope GPCM lacks the inference checks required for information-criterion ranking. Numerical convergence alone does not remove this restriction."
+        "GPCM IC comparison requires its likelihood and solution checks to pass; slope intervals and PCM/GPCM LRT have separate eligibility."
       } else {
         "Information-criterion ranking is unavailable. Review the comparison warnings for data, estimation, integration and inference requirements."
       }
@@ -8011,7 +8029,7 @@ build_model_choice_review <- function(...,
   if (isTRUE(run_weighting_review)) {
     pair <- .model_choice_find_weighting_pair(fits, role_table)
     if (is.null(pair)) {
-      weighting_review_error <- "No RSM/PCM reference plus bounded GPCM pair was available."
+      weighting_review_error <- "No RSM/PCM reference plus GPCM pair was available."
     } else {
       weighting_review <- tryCatch(
         build_weighting_review(
@@ -8037,14 +8055,14 @@ build_model_choice_review <- function(...,
     } else if (isTRUE(run_weighting_review)) {
       weighting_review_error
     } else {
-      "Not requested; set `run_weighting_review = TRUE` for the first RSM/PCM versus bounded GPCM pair."
+      "Not requested; set `run_weighting_review = TRUE` for the first RSM/PCM versus GPCM pair."
     }
   )
 
   notes <- clean_summary_lines(c(
     "This review is a decision aid; it does not refit models or choose an operational model automatically.",
     "Observation weights and GPCM discrimination-based reweighting are separate concepts.",
-    "Use bounded GPCM wording only for the current constrained implementation, not for an unrestricted GPCM family claim."
+    "Use GPCM wording only for the current constrained implementation, not for an unrestricted GPCM family claim."
   ))
 
   out <- list(

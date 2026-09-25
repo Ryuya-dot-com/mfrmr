@@ -8,8 +8,11 @@
 \description{
 \code{mfrmr} provides estimation, diagnostics, and reporting utilities for
 many-facet ordered-response measurement models: the Rasch-family \code{RSM} /
-\code{PCM} route and the package's bounded \code{GPCM} extension where explicitly
-documented.
+\code{PCM} route and a \code{GPCM} extension in which one selected facet supplies
+level-specific discriminations and category steps. \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}
+supplies approximate relative-slope intervals for eligible MML fits; model
+ranking and matched PCM/GPCM tests use separate checks in \code{\link[=compare_mfrm]{compare_mfrm()}}.
+\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} explains the supported uses.
 }
 \details{
 Start with the complete script in the Examples section:
@@ -46,7 +49,7 @@ analysis workflow. If vignettes are not installed, start with
 \item \link{mfrmr_visual_diagnostics} for choosing follow-up figures.
 \item \link{mfrmr_reporting_and_apa} and \link{mfrmr_reports_and_tables} for reporting.
 \item \link{mfrmr_linking_and_dff} for linking and differential facet functioning.
-\item \link{gpcm_capability_matrix} for the bounded \code{GPCM} extension.
+\item \link{gpcm_capability_matrix} for the \code{GPCM} extension.
 \item \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}} for the broader purpose-to-function map.
 }
 
@@ -63,7 +66,7 @@ basis. Use \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabili
 score the artifact. Review the returned batch with
 \link{mfrm_calibration_score_methods} before using its estimates. Estimated-
 population or latent-regression MML, JML, and
-bounded \code{GPCM} remain fitted-object-only scoring routes in 0.2.4. Artifact
+\code{GPCM} remain fitted-object-only scoring routes in 0.2.4. Artifact
 score uncertainty is conditional on the frozen point calibration and its
 recorded prior; loading validates consistency but does not authenticate an
 untrusted file.
@@ -77,17 +80,17 @@ After the basic route above:
 for ordered-response \code{RSM} / \code{PCM} models with a one-dimensional
 conditional-normal population model and explicit one-row-per-person
 covariates expanded through \code{stats::model.matrix()}
-\item bounded \code{GPCM} support is summarized by \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
-\item bounded \code{GPCM} supports the core fit/summary/scoring/information
+\item \code{GPCM} support is summarized by \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
+\item \code{GPCM} supports the core fit/summary/scoring/information
 path, direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
 residual-based diagnostics tables/plots as exploratory tools
 \item posterior-predictive checks and \code{MCMC} estimation are not available for
-bounded \code{GPCM}; use external Bayesian software when they are required
+\code{GPCM}; use external Bayesian software when they are required
 \item direct \code{GPCM} data generation through \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}},
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} is available when
 the specification carries both thresholds and slopes
 \item slope-aware \code{\link[=fair_average_table]{fair_average_table()}} and \code{\link[=estimate_bias]{estimate_bias()}} are available for
-bounded \code{GPCM} with explicit caveats; \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+\code{GPCM} with explicit caveats; \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
 \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, and
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} are available as caveated partial reporting/export
@@ -106,15 +109,15 @@ than as mixture-model substitutes
 }
 }
 
-\section{Equal weighting versus bounded GPCM}{
+\section{Equal weighting versus GPCM}{
 
 The package's operational reference route is the Rasch-family
 \code{RSM} / \code{PCM} branch. That route enforces fixed discrimination and therefore
 preserves an equal-weighting scoring interpretation across observed ratings.
 
-Bounded \code{GPCM} is supported because some users want a slope-aware model-
+\code{GPCM} is supported because some users want a slope-aware model-
 comparison or sensitivity layer inside the same many-facet workflow. However,
-the package does not treat bounded \code{GPCM} as a universal replacement for the
+the package does not treat \code{GPCM} as a universal replacement for the
 Rasch-family route. A better fit under \code{GPCM} should be read as evidence
 about discrimination-based reweighting, not as an automatic reason to
 discard the equal-weighting model.
@@ -152,15 +155,15 @@ specifications; fitted-object posterior scoring supports \code{MML} fits
 directly, latent-regression \code{MML} fits through the fitted population
 model when scored units also provide one-row-per-person background data,
 and \code{JML} fits through a post hoc reference-prior EAP layer;
-fit-derived simulation specifications also support direct bounded
+fit-derived simulation specifications also support direct
 \code{GPCM} data generation, recovery checks, role-based design evaluation,
 population forecasting, diagnostic-screening, and signal-detection
 helpers with documented caveats; curve reports, graph-only exports,
-fair-average tables, and bias screening are also available for bounded
+fair-average tables, and bias screening are also available for
 \code{GPCM} with documented caveats)
 \item Reporting: \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=apa_table]{apa_table()}} for the full \code{RSM} / \code{PCM} route;
-bounded \code{GPCM} uses these as caveated partial surfaces and retains direct
+\code{GPCM} uses these as caveated partial surfaces and retains direct
 table, plot, checklist, and summary-appendix routes
 \item Weighting review: \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_weighting_review]{build_weighting_review()}},
 \code{\link[=build_model_choice_review]{build_model_choice_review()}}, \code{\link[=compute_information]{compute_information()}}, \code{\link[=plot_information]{plot_information()}}
@@ -176,7 +179,7 @@ table, plot, checklist, and summary-appendix routes
 \code{\link[=normalize_conquest_overlap_tables]{normalize_conquest_overlap_tables()}},
 \code{\link[=review_conquest_overlap]{review_conquest_overlap()}},
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for the diagnostics-compatible Rasch-family route;
-bounded \code{GPCM} supports caveated partial manifest, replay, and bundle
+\code{GPCM} supports caveated partial manifest, replay, and bundle
 output as well as \code{\link[=export_summary_appendix]{export_summary_appendix()}}
 \item Equivalence: \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}, \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}}
 \item Data and anchors: \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}},
@@ -247,13 +250,13 @@ persons under the fitted scoring basis.
 \item For \code{RSM} / \code{PCM}, diagnose with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and prefer
 \code{diagnostic_mode = "both"} for final \code{MML} runs.
 \item For \code{RSM} / \code{PCM}, run \code{\link[=analyze_dff]{analyze_dff()}} or \code{\link[=estimate_bias]{estimate_bias()}} when
-fairness or interaction questions matter; bounded \code{GPCM} also supports
+fairness or interaction questions matter; \code{GPCM} also supports
 \code{\link[=estimate_bias]{estimate_bias()}} as a conditional screening review.
 \item For \code{RSM} / \code{PCM}, report with \code{\link[=build_apa_outputs]{build_apa_outputs()}} and
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}.
 \item For design planning, move to \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}},
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}},
-and \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}. Bounded
+and \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}.
 \code{GPCM} also supports direct simulation via
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} / \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} and caveated role-based
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} / \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} routes. Those
@@ -273,7 +276,7 @@ fit when scored units also provide one-row-per-person background data, or
 use a \code{JML} calibration when a post hoc fitted-object EAP layer is
 acceptable; then score with
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.
-\item For bounded \code{GPCM}, use \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}},
+\item For \code{GPCM}, use \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}},
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}},
 \code{\link[=compute_information]{compute_information()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},
@@ -285,7 +288,7 @@ documented caveats. Caveated APA/QC/export bundles and exploratory
 linking review plus role-based design evaluation, population
 forecasting, diagnostic-screening, and signal-detection helpers are
 available, while full score-side FACETS review, posterior-predictive
-checks, and \code{MCMC} estimation are not available for bounded \code{GPCM}. Use
+checks, and \code{MCMC} estimation are not available for \code{GPCM}. Use
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal boundary statement.
 }
 }
@@ -330,9 +333,9 @@ In the current implementation, threshold locations may vary by step-facet
 level, but the fitted score range is defined by one global category
 set taken from the observed data.
 
-\strong{Bounded Generalized Partial Credit Model (GPCM)}
+\strong{Generalized Partial Credit Model (GPCM)}
 
-Under bounded \code{GPCM} (Muraki, 1992), the same adjacent-category partial-credit
+Under \code{GPCM} (Muraki, 1992), the same adjacent-category partial-credit
 kernel is multiplied by a positive slope \eqn{\alpha_g} for the designated
 slope-facet level \eqn{g}:
 
@@ -340,12 +343,12 @@ slope-facet level \eqn{g}:
   \alpha_g(\theta_n - \delta_j - \beta_i - \tau_{gk}).}
 
 The current implementation requires \code{slope_facet == step_facet} and
-identifies slopes on the log scale with geometric mean 1. This makes bounded
+identifies slopes on the log scale with geometric mean 1. This makes
 \code{GPCM} a slope-aware sensitivity/extension route, not a replacement for the
 equal-weighting \code{RSM}/\code{PCM} interpretation.
-It is an aligned single-owner many-facet GPCM rather than the broader
-Uto--Ueno generalized MFRM: it does not jointly estimate multiplicative task
-and rater slope blocks or allow a distinct step owner. Unit slopes reduce to
+It assigns slopes and steps to the same facet. It does not jointly estimate
+the multiplicative task and rater slopes of the broader Uto--Ueno generalized
+MFRM or allow a distinct step owner. Unit slopes reduce to
 the equal-discrimination PCM kernel.
 Under default MML, an intercept-only person distribution
 \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
@@ -368,7 +371,7 @@ The implemented response-model scope is ordered categorical only.
 Binary responses are the \eqn{K = 1} special case of the same formulation,
 so they are handled through the ordinary ordered-score interface. This means
 \code{mfrmr} supports ordered binary and ordered polytomous data under \code{RSM} and
-\code{PCM}, plus a narrow bounded \code{GPCM} branch with one designated
+\code{PCM}, plus a narrow \code{GPCM} branch with one designated
 \code{slope_facet} that currently must equal \code{step_facet}. Unordered
 nominal/multinomial response models are outside the documented model scope,
 as are Poisson, negative-binomial, and grouped binomial-trial count-response
@@ -620,7 +623,7 @@ credit model. \emph{Applied Psychological Measurement}, 17(4),
 item information identity \eqn{I_j(\theta) = D^2 a_j^2
   \mathrm{Var}(T \mid \theta)} via Samejima's (1974) polytomous
 information formula. This is the canonical reference for
-\code{compute_information()} under bounded \code{GPCM}.)
+\code{compute_information()} under \code{GPCM}.)
 \item Samejima, F. (1974). Normal ogive model on the continuous response
 level in the multidimensional latent space. \emph{Psychometrika}, 39,
 111--121. (General polytomous information formula that Muraki

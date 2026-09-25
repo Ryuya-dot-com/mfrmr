@@ -64,6 +64,9 @@ Recommended read order:
 \item \code{overview}: retained ratings (\code{Observations}), persons, facets, and
 categories. Compare input and retained \code{Rows} in \code{row_retention} and
 investigate unexpected \code{DroppedRows}.
+\code{CategoryPolicy} and \code{ScoreRecoded} distinguish the selected policy from
+actual changes to score values. Older results without the policy record
+report \code{"not_recorded"}; an absent map gives \code{NA} for recoding.
 \item \code{missing}: input \code{NA} counts by column. This table is named
 \code{missing_by_column} in the original \code{data_review} object. Declared
 missing-code replacements and invalid score text can cause additional
@@ -108,7 +111,7 @@ data_review <- describe_mfrm_data(
   score = "Score",
   rating_min = 1,
   rating_max = 4,
-  keep_original = TRUE
+  category_policy = "preserve"
 )
 review <- summary(data_review)
 review$row_retention # 282 input rows, 280 retained rows

@@ -134,7 +134,7 @@ fail-closed transitions. Only a frozen artifact can be passed to
 The portable 0.2.4 workflow supports one observed score scale, one latent
 dimension, known non-Person facet levels, and stored two-way facet
 interactions. Estimated-population or latent-regression MML, JML, and
-bounded \code{GPCM} remain available only through their fitted-object routes; see
+\code{GPCM} remain available only through their fitted-object routes; see
 \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}.
 
 Before extraction, run \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} on user-selected grids

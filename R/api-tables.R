@@ -533,7 +533,7 @@ validate_unexpected_coverage <- function(x) {
 #'   replaces the displayed `Measure` by inversion of an expected score that
 #'   far from the endpoint. It does not adjust responses, refit the model or
 #'   correct JML bias.
-#' @param fair_se Logical. When `TRUE` and `fit` is an MML bounded-`GPCM`
+#' @param fair_se Logical. When `TRUE` and `fit` is an MML `GPCM`
 #'   fit, add structural delta-method standard errors and confidence limits
 #'   for `Fair(M)` / `AdjustedAverage` and `Fair(Z)` /
 #'   `StandardizedAdjustedAverage`. Person rows remain `NA` because MML
@@ -574,7 +574,7 @@ validate_unexpected_coverage <- function(x) {
 #' Recompute older diagnostics and recreate saved tables from the existing
 #' fit before summarizing or plotting them; no model refit is needed.
 #'
-#' Bounded `GPCM` fits are supported under a slope-aware
+#' `GPCM` fits are supported under a slope-aware
 #' element-conditional construction. For each slope-facet element
 #' \eqn{j^\star} the per-row fair-average is the GPCM expected score
 #' \deqn{\mathrm{FA}_{p, j^\star} = \sum_k k \cdot P_{GPCM}(X = k \mid \theta_p, a_{j^\star}, \boldsymbol{\delta}_{j^\star})}
@@ -585,13 +585,13 @@ validate_unexpected_coverage <- function(x) {
 #' the standard PCM Linacre fair-average and reduce to it exactly
 #' when all slopes equal one.
 #' This is an identification-based reporting convention for the package's
-#' bounded `GPCM` route, not a unique free-discrimination score-side analogue
+#' `GPCM` route, not a unique free-discrimination score-side analogue
 #' to FACETS fair averages. Do not report it as FACETS score-side equivalence
 #' or as an operational scoring rule unless that convention is substantively
 #' justified.
 #'
 #' Standard errors on the fair-average value itself are opt-in for MML
-#' bounded `GPCM` fits via `fair_se = TRUE`. The
+#' `GPCM` fits via `fair_se = TRUE`. The
 #' `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE` columns
 #' retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
 #' uncertainty is reported under distinct columns such as `Fair(M) S.E.`,
@@ -699,7 +699,7 @@ validate_unexpected_coverage <- function(x) {
 #'   Winsteps.com.
 #'   (FACETS Table 12 corresponds to the fair-average
 #'   construction implemented here for `RSM` / `PCM` fits; the
-#'   slope-aware element-conditional construction for bounded `GPCM`
+#'   slope-aware element-conditional construction for `GPCM`
 #'   is documented in this help page.)
 #' - Andrich, D. (1978). A rating formulation for ordered response
 #'   categories. *Psychometrika, 43*(4), 561-573.
@@ -708,7 +708,7 @@ validate_unexpected_coverage <- function(x) {
 #'   *Psychometrika, 47*(2), 149-174. \doi{10.1007/BF02296272}
 #' - Muraki, E. (1992). A generalized partial credit model:
 #'   Application of an EM algorithm. *Applied Psychological
-#'   Measurement, 16*(2), 159-176. (Cited for the bounded `GPCM`
+#'   Measurement, 16*(2), 159-176. (Cited for the `GPCM`
 #'   slope-aware extension.)
 #' @export
 fair_average_table <- function(fit,
@@ -1197,7 +1197,7 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   Educational and Psychological Measurement, 83(5), 953-983.
 #'   \doi{10.1177/00131644221116292} (Recent simulation evidence on
 #'   PCM- and GPCM-based rating-scale diagnostics; useful for
-#'   interpreting the `summary(t8)$summary` flags in the bounded
+#'   interpreting the `summary(t8)$summary` flags in the
 #'   `GPCM` route.)
 #' @export
 rating_scale_table <- function(fit,
@@ -1547,7 +1547,7 @@ bias_count_table <- function(bias_results,
 #' - `thresholds`: screening settings used in this comparison.
 #'
 #' Lower after-adjustment counts describe an in-sample change in flags; they do
-#' not show that bias has been removed or establish fairness. For bounded
+#' not show that bias has been removed or establish fairness. For
 #' `GPCM`, both the bias estimate and the post-adjustment comparison use the
 #' fitted slope-aware probability kernel while holding the other fitted
 #' quantities fixed. Read the returned `gpcm_boundary` before reporting the
@@ -1582,7 +1582,7 @@ bias_count_table <- function(bias_results,
 #' - `summary`: one-row summary (includes baseline-vs-after counts)
 #' - `thresholds`: applied thresholds
 #' - `facets`: analyzed bias facet pair
-#' - `gpcm_boundary`: bounded-`GPCM` interpretation guidance when applicable
+#' - `gpcm_boundary`: `GPCM` interpretation guidance when applicable
 #'
 #' @seealso [estimate_bias()], [unexpected_response_table()], [bias_count_table()],
 #'   [mfrmr_visual_diagnostics]
@@ -4895,7 +4895,7 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' @param theta_range Theta/logit range for graph coordinates.
 #' @param theta_points Number of points on the theta grid for graph coordinates.
 #' @param digits Rounding digits for numeric fields.
-#' @param score_se_method For bounded `GPCM` scorefile exports, which
+#' @param score_se_method For `GPCM` scorefile exports, which
 #'   observation-level score uncertainty columns to compute. `"both"`
 #'   (default) includes native structural expected-score SEs and score-side
 #'   delta-method SEs; `"native"` includes only the structural expected-score
@@ -4937,15 +4937,15 @@ build_cumulative_boundary_table <- function(cumulative, categories_chr) {
 #' `facets_output_file_bundle()` only when a legacy-compatible graphfile or
 #' scorefile contract is required.
 #'
-#' @section Bounded GPCM boundary:
-#' For bounded `GPCM`, graph output and package-native scorefile output are
+#' @section GPCM boundary:
+#' For `GPCM`, graph output and package-native scorefile output are
 #' available with caveats. `include = "score"` returns observation-level fitted
 #' expected score, residual, standardized residual, observed-category
 #' probability, GPCM slope fields, and native structural delta-method
 #' expected-score uncertainty and/or score-side delta-method SEs when the
 #' required MML diagnostics are available. Use `score_se_method` to choose
 #' `"both"` (default), `"native"`, `"score_side"`, or `"none"`.
-#' The score-side route transforms a logit-side standard error with the bounded
+#' The score-side route transforms a logit-side standard error with the
 #' GPCM expected-score derivative
 #' \eqn{dE[X]/d\eta = \alpha Var(X)}, where `ScoreSlope` is \eqn{\alpha}.
 #' `ScoreSideLogitSE` remains on the logit side; `ScoreSideSE` and its interval
@@ -5021,7 +5021,7 @@ facets_output_file_bundle <- function(fit,
       fit,
       "facets_output_file_bundle(include = \"score\")",
       supported = paste(
-        "package-native bounded-GPCM scorefile export with explicit caveat",
+        "package-native GPCM scorefile export with explicit caveat",
         "columns; full FACETS output-contract review remains blocked"
       )
     )
@@ -5156,7 +5156,7 @@ facets_output_file_bundle <- function(fit,
       scorefile$ScoreSideStatus <- "supported_with_caveat"
       scorefile$ScoreSideEstimand <- "fitted_bounded_gpcm_expected_score"
       scorefile$ScoreSideCaveat <- paste(
-        "Package-native bounded-GPCM scorefile: slope-aware expected score,",
+        "Package-native GPCM scorefile: slope-aware expected score,",
         "residual, standardized residual, observed-category probability,",
         "score slope, native expected-score uncertainty, and score-side",
         "delta-method SEs are exported for sensitivity review when requested",
@@ -6748,7 +6748,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #'
 #' Each iteration updates expected scores using the current bias estimates,
 #' then re-computes the bias. Convergence is reached when the maximum absolute
-#' change in bias estimates falls below `tol`. For bounded `GPCM`, the same
+#' change in bias estimates falls below `tol`. For `GPCM`, the same
 #' additive-bias idea is evaluated with the slope-aware GPCM kernel and
 #' conditional profile-likelihood follow-up columns; those quantities remain
 #' screening evidence because theta, facet, step, and slope estimates are held
@@ -6806,7 +6806,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' - `t` and `Prob.`: screening metrics, not formal inferential quantities
 #' - `Obs-Exp Average`: direction and practical size of observed-vs-expected
 #'   gap on the raw-score metric
-#' - for bounded `GPCM`, `LR ChiSq`, `LR Prob.`, and `Profile CI Lower` /
+#' - for `GPCM`, `LR ChiSq`, `LR Prob.`, and `Profile CI Lower` /
 #'   `Profile CI Upper`: conditional profile-likelihood checks for a single
 #'   additive bias shift, holding the fitted person, facet, step, and slope
 #'   estimates fixed
@@ -6822,7 +6822,7 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' @return
 #' An object of class `mfrm_bias` with:
 #' - `table`: interaction rows with effect size, SE, screening t/p metadata,
-#'   reporting-use flags, fit columns, and bounded-`GPCM`
+#'   reporting-use flags, fit columns, and `GPCM`
 #'   profile-likelihood columns when available
 #' - `summary`: compact summary statistics
 #' - `chi_sq`: fixed-effect chi-square style screening summary
@@ -8092,7 +8092,7 @@ plot_table13_bias <- function(x,
   profile <- as.data.frame(bundle$facet_profile %||% data.frame(), stringsAsFactors = FALSE)
   thr <- bundle$thresholds
 
-  # Add CI bounds for Bias Size when requested.  Bounded GPCM rows carry
+  # Add CI bounds for Bias Size when requested.  GPCM rows carry
   # conditional profile-likelihood limits; otherwise we use the
   # conditional plug-in SE column.
   ci_requested <- isTRUE(show_ci) && plot %in% c("scatter", "ranked")

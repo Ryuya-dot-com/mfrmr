@@ -25,7 +25,7 @@ An object of class \code{summary.mfrm_population_prediction} with:
 \item \code{planning_scope}: explicit record of the current planning contract
 \item \code{planning_constraints}: explicit record of mutable/locked design variables
 \item \code{planning_schema}: structured planning metadata
-\item \code{gpcm_boundary}: bounded-\code{GPCM} caveat row when present
+\item \code{gpcm_boundary}: \code{GPCM} caveat row when present
 \item \code{structural_design_review}: deterministic structural review of the
 named-facet design grid; it is not
 a forecast-uncertainty result

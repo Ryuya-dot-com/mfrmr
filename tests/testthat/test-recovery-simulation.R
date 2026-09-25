@@ -343,7 +343,7 @@ test_that("evaluate_mfrm_recovery refits on the declared generator score support
   expect_false(any(grepl("Rating range inferred", messages, fixed = TRUE)))
 })
 
-test_that("evaluate_mfrm_recovery supports fitted bounded GPCM slope rows", {
+test_that("evaluate_mfrm_recovery supports fitted GPCM slope rows", {
   spec <- build_mfrm_sim_spec(
     n_person = 14,
     n_rater = 2,
@@ -421,7 +421,7 @@ test_that("evaluate_mfrm_recovery supports fitted bounded GPCM slope rows", {
   expect_true(all(is.finite(slope_rows$RawEstimate)))
   expect_equal(exp(mean(log(slope_rows$RawTruth))), 1, tolerance = 1e-12)
   expect_true(any(rec$recovery_summary$ParameterType == "slope"))
-  expect_true(any(grepl("Bounded GPCM recovery", rec$notes, fixed = TRUE)))
+  expect_true(any(grepl("GPCM recovery", rec$notes, fixed = TRUE)))
 
   slope_plot <- plot(rec, type = "summary", metric = "bias",
                      parameter_type = "slope", draw = FALSE)

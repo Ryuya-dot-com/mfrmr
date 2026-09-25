@@ -28,11 +28,11 @@
 #'   `Rater` or `Criterion`, plus numeric `Effect`.
 #' @param seed Optional random seed.
 #' @param model Measurement model recorded in the simulation setup. The current
-#'   public generator supports `RSM`, `PCM`, and bounded `GPCM`.
+#'   public generator supports `RSM`, `PCM`, and `GPCM`.
 #' @param step_facet Step facet used when `model = "PCM"` and threshold values
 #'   vary across levels. Currently `"Criterion"` and `"Rater"` are supported.
 #' @param slope_facet Slope facet used when `model = "GPCM"`. The current
-#'   bounded `GPCM` branch requires `slope_facet == step_facet`.
+#'   `GPCM` branch requires `slope_facet == step_facet`.
 #' @param thresholds Optional threshold specification. Use a numeric vector of
 #'   common thresholds; a named list such as `list(C01 = c(-1, 0, 1))`; a
 #'   numeric matrix with one row per `StepFacet` and one column per step; or a
@@ -70,7 +70,7 @@
 #'
 #' @details
 #' This function generates synthetic ordered many-facet data under `RSM`,
-#' `PCM`, or the package's bounded `GPCM` branch.
+#' `PCM`, or the package's `GPCM` branch.
 #' The data-generating process is:
 #'
 #' 1. Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
@@ -81,7 +81,7 @@
 #'    \eqn{\eta = \theta_n - \delta_j - \beta_i + \epsilon} where
 #'    \eqn{\epsilon \sim N(0, \texttt{noise\_sd}^2)} (optional)
 #' 6. Compute category probabilities under the recorded measurement model
-#'    (`RSM`, `PCM`, or bounded `GPCM`) and sample the response
+#'    (`RSM`, `PCM`, or `GPCM`) and sample the response
 #'
 #' Latent-value generation is explicit:
 #' - `latent_distribution = "normal"` draws centered normal person/rater/
@@ -110,7 +110,7 @@
 #' - if `thresholds` is a named list, numeric matrix, or data frame, threshold
 #'   values may vary by `StepFacet` (currently `Criterion` or `Rater`)
 #'
-#' For bounded `GPCM`, the generator requires an explicit slope contract in
+#' For `GPCM`, the generator requires an explicit slope contract in
 #' parallel with the threshold table. The supported route keeps
 #' `slope_facet == step_facet`, normalizes supplied slopes to the same
 #' geometric-mean-one log-slope identification used by [fit_mfrm()], and
@@ -149,7 +149,7 @@
 #' Returned data include attributes:
 #' - `mfrm_truth`: simulated true parameters (for parameter-recovery checks)
 #' - `mfrm_truth$signals`: injected DIF and interaction signal tables
-#' - `mfrm_truth$slope_table`: simulated discrimination table for bounded
+#' - `mfrm_truth$slope_table`: simulated discrimination table for
 #'   `GPCM`
 #' - `mfrm_population_data`: generated one-row-per-person background data when
 #'   the simulation specification stores an active latent-regression generator,
@@ -1392,7 +1392,7 @@ simulation_gpcm_design_boundary <- function(active) {
     return(data.frame())
   }
   tbl <- gpcm_capability_matrix("supported_with_caveat")
-  out <- tbl[tbl$Area == "Design evaluation and population forecasting under bounded GPCM", , drop = FALSE]
+  out <- tbl[tbl$Area == "Design evaluation and population forecasting under GPCM", , drop = FALSE]
   rownames(out) <- NULL
   out
 }
@@ -1400,9 +1400,9 @@ simulation_gpcm_design_boundary <- function(active) {
 simulation_gpcm_design_notes <- function(active) {
   if (!isTRUE(active)) return(character(0))
   c(
-    "Bounded-GPCM design evaluation is supported with caveats as repeated simulation/refit operating-characteristic review.",
+    "GPCM design evaluation is supported with caveats as repeated simulation/refit operating-characteristic review.",
     "Interpret GPCM design and forecast outputs as design-level sensitivity evidence, not as operational scoring, diagnostic-screening, signal-detection, or arbitrary-facet planning validation.",
-    "Use evaluate_mfrm_recovery() when the target is bounded-GPCM slope or parameter-recovery adequacy."
+    "Use evaluate_mfrm_recovery() when the target is GPCM slope or parameter-recovery adequacy."
   )
 }
 
@@ -1411,7 +1411,7 @@ simulation_gpcm_screening_boundary <- function(active) {
     return(data.frame())
   }
   tbl <- gpcm_capability_matrix("supported_with_caveat")
-  out <- tbl[tbl$Area == "Diagnostic and signal-detection design screening under bounded GPCM", , drop = FALSE]
+  out <- tbl[tbl$Area == "Diagnostic and signal-detection design screening under GPCM", , drop = FALSE]
   rownames(out) <- NULL
   out
 }
@@ -1419,7 +1419,7 @@ simulation_gpcm_screening_boundary <- function(active) {
 simulation_gpcm_screening_notes <- function(active) {
   if (!isTRUE(active)) return(character(0))
   c(
-    "Bounded-GPCM diagnostic and signal-detection screening is supported with caveats as repeated simulation/refit sensitivity evidence.",
+    "GPCM diagnostic and signal-detection screening is supported with caveats as repeated simulation/refit sensitivity evidence.",
     "Interpret GPCM screening outputs as slope-aware operating-characteristic readouts under the evaluated role-based design, not as calibrated inferential tests, operational scoring, or arbitrary-facet planning validation.",
     "Report the active step/slope facet and slope-regime context before interpreting Type I proxy, sensitivity proxy, DIF, or bias-screening rates."
   )
@@ -2446,7 +2446,7 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
   if (identical(model, "GPCM")) {
     notes <- c(
       notes,
-      "Bounded GPCM recovery compares identified log slopes under the geometric-mean-one slope convention and keeps the current bounded GPCM support caveats."
+      "GPCM recovery compares identified log slopes under the geometric-mean-one slope convention and keeps the current GPCM support caveats."
     )
   }
   if (length(notes) == 0L) notes <- "No immediate warnings from the recovery simulation summary."
@@ -2489,7 +2489,7 @@ recovery_build_notes <- function(rep_overview, recovery_summary, model) {
 #' Raw, unaligned errors are retained in `recovery` and summarized as
 #' `RawBias` / `RawRMSE`.
 #'
-#' For bounded `GPCM`, supplied generator slopes are treated as relative
+#' For `GPCM`, supplied generator slopes are treated as relative
 #' discriminations and normalized to the same geometric-mean-one log-slope
 #' identification used by the fitter. Slope recovery is therefore summarized on
 #' the identified log-slope scale without an additional mean-alignment step.
@@ -2827,7 +2827,7 @@ evaluate_mfrm_recovery <- function(n_person = 50,
     estimands = c(
       "Person and facet location recovery after identification alignment",
       "Step-threshold recovery after identification alignment",
-      "Bounded GPCM log-slope recovery when slopes are fitted",
+      "GPCM log-slope recovery when slopes are fitted",
       "Latent-regression coefficient and variance recovery when present"
     ),
     analysis_methods = list(
@@ -3251,7 +3251,7 @@ recovery_assessment_condition_review <- function(x) {
   )
   interpretation <- dplyr::case_when(
     !identical(model, "GPCM") ~
-      "The fitted generator is not bounded GPCM, so slope-regime metadata is not part of this recovery condition.",
+      "The fitted generator is not GPCM, so slope-regime metadata is not part of this recovery condition.",
     identical(regime, "unit_slopes") ~
       "The GPCM generator is the unit-slope PCM-reduction condition.",
     identical(regime, "near_flat") ~
@@ -3267,7 +3267,7 @@ recovery_assessment_condition_review <- function(x) {
     !identical(model, "GPCM") ~
       "No GPCM slope-condition follow-up is needed for this model.",
     identical(status, "not_available") ~
-      "Rebuild the simulation specification with explicit bounded-GPCM slopes before using slope-recovery evidence.",
+      "Rebuild the simulation specification with explicit GPCM slopes before using slope-recovery evidence.",
     identical(regime, "high_dispersion") ~
       "Report the high-dispersion generator condition explicitly alongside slope recovery and uncertainty summaries.",
     TRUE ~
@@ -3362,7 +3362,7 @@ recovery_assessment_condition_reporting_notes <- function(condition_review) {
       "context",
       "slope_regime_not_applicable",
       slope_evidence,
-      "This model does not use bounded-GPCM slope-regime metadata.",
+      "This model does not use GPCM slope-regime metadata.",
       "Do not use slope-regime language for this recovery condition."
     )
   } else if (!identical(condition_status, "ok")) {
@@ -3371,8 +3371,8 @@ recovery_assessment_condition_reporting_notes <- function(condition_review) {
       "not_available",
       "slope_regime_not_available",
       slope_evidence,
-      "Bounded-GPCM slope-regime metadata were unavailable, so slope-stress interpretation should be withheld.",
-      "Rebuild the simulation specification with explicit bounded-GPCM slopes before reporting slope-recovery context."
+      "GPCM slope-regime metadata were unavailable, so slope-stress interpretation should be withheld.",
+      "Rebuild the simulation specification with explicit GPCM slopes before reporting slope-recovery context."
     )
   } else if (identical(regime, "high_dispersion")) {
     make_note(
@@ -3389,7 +3389,7 @@ recovery_assessment_condition_reporting_notes <- function(condition_review) {
       "context",
       paste0(ifelse(is.na(regime), "unknown", regime), "_slope_regime"),
       slope_evidence,
-      "The bounded-GPCM slope-regime label describes the generator condition for recovery interpretation.",
+      "The GPCM slope-regime label describes the generator condition for recovery interpretation.",
       "Report the generator condition alongside recovery and uncertainty summaries."
     )
   }
@@ -3630,7 +3630,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' pass/fail rule; it is to make the main user questions explicit: Did the runs
 #' finish? Did the fitted models converge? Are uncertainty summaries available?
 #' Are coverage and Monte Carlo precision plausible? If practical RMSE or bias
-#' limits are supplied, which parameter groups need follow-up? For bounded
+#' limits are supplied, which parameter groups need follow-up? For
 #' `GPCM`, which slope-regime generator condition frames the recovery evidence?
 #'
 #' @param x For `assess_mfrm_recovery()`, output from
@@ -3665,7 +3665,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' thresholds when a decision depends on the metric.
 #'
 #' The `condition_review` table is generator metadata for interpreting the
-#' recovery run. For bounded `GPCM`, `GPCMSlopeRegime`, `StressLevel`, and
+#' recovery run. For `GPCM`, `GPCMSlopeRegime`, `StressLevel`, and
 #' generated score-category support describe the data-generating condition;
 #' they are not model-fit tests and they are not literature-derived adequacy
 #' cut points. `condition_reporting_notes` turns those generator conditions
@@ -3697,7 +3697,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' @return An object of class `mfrm_recovery_assessment` with:
 #' - `overview`: compact run-level status.
 #' - `checklist`: reviewer-facing adequacy checks.
-#' - `condition_review`: generator-condition metadata, including bounded
+#' - `condition_review`: generator-condition metadata, including
 #'   `GPCM` slope-regime interpretation and generated score-category support
 #'   when available.
 #' - `condition_reporting_notes`: reporter-facing generator-condition caveats
@@ -3725,7 +3725,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' )
 #' assess_mfrm_recovery(rec, min_reps = 1, max_rmse = 1)
 #'
-#' # Read the bounded-GPCM generator condition separately from recovery adequacy.
+#' # Read the GPCM generator condition separately from recovery adequacy.
 #' gpcm_spec <- build_mfrm_sim_spec(
 #'   n_person = 14,
 #'   n_rater = 2,
@@ -3927,7 +3927,7 @@ assess_mfrm_recovery <- function(x,
       )
     } else {
       sprintf(
-        "Model %s does not use bounded-GPCM slope-regime metadata.",
+        "Model %s does not use GPCM slope-regime metadata.",
         as.character(condition_review$Model[1] %||% "unknown")
       )
     }
@@ -3981,7 +3981,7 @@ assess_mfrm_recovery <- function(x,
     ),
     recovery_assessment_check_row(
       "Generator conditions",
-      "Bounded-GPCM slope regime",
+      "GPCM slope regime",
       condition_status,
       condition_evidence,
       as.character(condition_review$NextAction[1] %||% recovery_assessment_action(condition_status, "generator conditions"))
@@ -5220,7 +5220,7 @@ simulation_evaluate_design_cell <- function(design,
 #' @param step_span Spread of step thresholds on the logit scale.
 #' @param fit_method Estimation method passed to [fit_mfrm()].
 #' @param model Measurement model passed to [fit_mfrm()]. `RSM` and `PCM` use
-#'   the documented Rasch-family design-planning layer. Bounded `GPCM` is
+#'   the documented Rasch-family design-planning layer. `GPCM` is
 #'   available as a caveated simulation/refit operating-characteristic route.
 #' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
 #'   `model = "GPCM"`.
@@ -5229,7 +5229,7 @@ simulation_evaluate_design_cell <- function(design,
 #' @param slope_facet Slope facet passed to [fit_mfrm()] when
 #'   `model = "GPCM"`. The current bounded branch requires
 #'   `slope_facet == step_facet`.
-#' @param slopes Optional bounded-`GPCM` generator slopes used when
+#' @param slopes Optional `GPCM` generator slopes used when
 #'   `sim_spec = NULL`. See [build_mfrm_sim_spec()] for accepted formats.
 #' @param assignment Optional assignment design used when `sim_spec = NULL`.
 #'   `"sparse_linked"` activates planned-missing sparse rating designs; use
@@ -5321,9 +5321,9 @@ simulation_evaluate_design_cell <- function(design,
 #' study under explicit assumptions; it is not a closed-form predictive
 #' distribution for one future administration.
 #'
-#' Bounded `GPCM` design evaluation is available with caveats. It repeatedly
+#' `GPCM` design evaluation is available with caveats. It repeatedly
 #' generates data from the supplied or fit-derived slope-aware specification,
-#' refits bounded `GPCM`, and summarizes facet-level operating characteristics.
+#' refits `GPCM`, and summarizes facet-level operating characteristics.
 #' The route remains a role-based person x rater-like x criterion-like planner:
 #' it does not validate diagnostic-screening or signal-detection rules, does
 #' not provide a fully arbitrary-facet planner, and does not replace
@@ -5427,7 +5427,7 @@ simulation_evaluate_design_cell <- function(design,
 #'   mutable under the current simulation specification
 #' - `planning_schema`: structured planning metadata bundling the role
 #'   descriptor, scope boundary, and current mutability map
-#' - `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` design route is
+#' - `gpcm_boundary`: `GPCM` caveat row when a `GPCM` design route is
 #'   used
 #' - `notes`: short interpretation notes
 #' - `settings`: simulation settings
@@ -6704,7 +6704,7 @@ diagnostic_screening_build_step_misspecification_spec <- function(row_spec_base,
                                                                   fit_slope_facet = NULL) {
   if (!identical(fit_model, "RSM") && !identical(fit_model, "PCM") &&
       !identical(fit_model, "GPCM")) {
-    stop("Step-structure screening is currently scoped to `RSM`, `PCM`, and bounded `GPCM` fits.", call. = FALSE)
+    stop("Step-structure screening is currently scoped to `RSM`, `PCM`, and `GPCM` fits.", call. = FALSE)
   }
   if (!is.null(row_spec_base) && isTRUE((row_spec_base$population %||% list(active = FALSE))$active)) {
     stop(
@@ -7131,13 +7131,13 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #' @param criterion_sd Standard deviation of simulated criterion difficulties.
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
-#' @param model Measurement model passed to [fit_mfrm()]. Bounded `GPCM` is
+#' @param model Measurement model passed to [fit_mfrm()]. `GPCM` is
 #'   supported with caveats as slope-aware screening sensitivity evidence.
 #' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
 #'   `model = "GPCM"`.
 #' @param slope_facet Slope facet passed to [fit_mfrm()] when
 #'   `model = "GPCM"`. Defaults to the fitted step facet.
-#' @param slopes Optional bounded-`GPCM` slope specification used by direct
+#' @param slopes Optional `GPCM` slope specification used by direct
 #'   simulation calls when `sim_spec = NULL`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
 #' @param quad_points Quadrature points for the underlying `MML` fit.
@@ -7175,18 +7175,18 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #' keeps the same marginal spread targets but replaces the normal person
 #' distribution with a centered bimodal empirical support distribution, while
 #' leaving the non-person facets on the original scale contract. The
-#' `"step_structure_misspecification"` scenario uses a `PCM` or bounded-`GPCM`
+#' `"step_structure_misspecification"` scenario uses a `PCM` or `GPCM`
 #' generator with facet-specific threshold tables that intentionally mismatch
 #' the fitted step contract: `RSM` fits receive criterion-specific thresholds,
 #' and `PCM` / `GPCM` fits receive threshold structures indexed by the opposite
-#' non-person facet. For bounded `GPCM`, the generator and fit each keep
+#' non-person facet. For `GPCM`, the generator and fit each keep
 #' `slope_facet == step_facet`; the misspecification is the generator-versus-fit
 #' step/slope facet mismatch.
 #'
 #' This function is intentionally screening-oriented. The strict marginal branch
 #' remains exploratory, so the returned summaries should
 #' be used to compare relative sensitivity across scenarios rather than to claim
-#' calibrated inferential power. Bounded-`GPCM` rows add explicit
+#' calibrated inferential power. `GPCM` rows add explicit
 #' `gpcm_boundary` caveats and should be read as slope-aware operating
 #' characteristics under the evaluated role-based design.
 #'
@@ -7206,7 +7206,7 @@ diagnostic_screening_summarize_results <- function(results, design_variable_alia
 #' - `planning_scope`: explicit record of the current planning contract
 #' - `planning_constraints`: explicit record of mutable/locked design variables
 #' - `planning_schema`: structured planning metadata
-#' - `gpcm_boundary`: bounded-`GPCM` caveat row when present
+#' - `gpcm_boundary`: `GPCM` caveat row when present
 #' - `settings`: simulation and fitting settings
 #' - `ademp`: simulation-study metadata
 #' - `notes`: short interpretation notes
@@ -8204,7 +8204,7 @@ print.summary.mfrm_diagnostic_screening <- function(x, ...) {
     print(round_df(as.data.frame(preview_df(x$performance_summary))), row.names = FALSE)
   }
   if (!is.null(x$gpcm_boundary) && nrow(x$gpcm_boundary) > 0L) {
-    cat("\nBounded GPCM boundary\n")
+    cat("\nGPCM boundary\n")
     keep <- intersect(
       c("Area", "Status", "Boundary", "RecommendedRoute"),
       names(x$gpcm_boundary)
@@ -8924,7 +8924,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #' @param noise_sd Optional observation-level noise added to the linear predictor.
 #' @param step_span Spread of step thresholds on the logit scale.
 #' @param fit_method Estimation method passed to [fit_mfrm()].
-#' @param model Measurement model passed to [fit_mfrm()]. Bounded `GPCM` is
+#' @param model Measurement model passed to [fit_mfrm()]. `GPCM` is
 #'   supported with caveats as slope-aware signal-detection sensitivity
 #'   evidence.
 #' @param step_facet Step facet passed to [fit_mfrm()] when `model = "PCM"` or
@@ -8933,7 +8933,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #'   `sim_spec` when available and otherwise defaults to `"Criterion"`.
 #' @param slope_facet Slope facet passed to [fit_mfrm()] when
 #'   `model = "GPCM"`. Defaults to the fitted step facet.
-#' @param slopes Optional bounded-`GPCM` slope specification used by direct
+#' @param slopes Optional `GPCM` slope specification used by direct
 #'   simulation calls when `sim_spec = NULL`.
 #' @param maxit Maximum iterations passed to [fit_mfrm()].
 #' @param quad_points Quadrature points for `fit_method = "MML"`.
@@ -8976,7 +8976,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #' 5. Runs [analyze_dff()] and [estimate_bias()]
 #' 6. Records whether the injected signals were detected or screen-positive
 #'
-#' Bounded-`GPCM` runs preserve the current package constraint
+#' `GPCM` runs preserve the current package constraint
 #' `slope_facet == step_facet` within the generator and fitted model. The
 #' resulting DIF and bias rates are slope-aware screening summaries, not
 #' formal inferential power, alpha calibration, operational scoring, or
@@ -9091,7 +9091,7 @@ signal_eval_metric_col <- function(signal, metric) {
 #'   mutable under the current simulation specification
 #' - `planning_schema`: structured planning metadata bundling the role
 #'   descriptor, scope boundary, and current mutability map
-#' - `gpcm_boundary`: bounded-`GPCM` caveat row when a `GPCM` screening route
+#' - `gpcm_boundary`: `GPCM` caveat row when a `GPCM` screening route
 #'   is used
 #' - `settings`: signal-analysis settings
 #' - `ademp`: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
@@ -9607,7 +9607,7 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
 #' - `structural_design_review`: deterministic structural review of the
 #'   named-facet design grid; it reports
 #'   design bookkeeping rather than signal-detection performance
-#' - `gpcm_boundary`: bounded-`GPCM` caveat row when present
+#' - `gpcm_boundary`: `GPCM` caveat row when present
 #' - `notes`: short interpretation notes, including the bias-side screening caveat
 #' @seealso [evaluate_mfrm_signal_detection()], [plot.mfrm_signal_detection]
 #' @examples
@@ -9703,7 +9703,7 @@ print.summary.mfrm_signal_detection <- function(x, ...) {
     print(round_df(as.data.frame(preview_df(x$detection_summary))), row.names = FALSE)
   }
   if (!is.null(x$gpcm_boundary) && nrow(x$gpcm_boundary) > 0L) {
-    cat("\nBounded GPCM boundary\n")
+    cat("\nGPCM boundary\n")
     keep <- intersect(
       c("Area", "Status", "Boundary", "RecommendedRoute"),
       names(x$gpcm_boundary)

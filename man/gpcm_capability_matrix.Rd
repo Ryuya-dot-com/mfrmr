@@ -24,13 +24,18 @@ workflow family and columns:
 }
 }
 \description{
-Check which bounded \code{GPCM} workflows can be used in \code{mfrmr}, the limits that
+Check which \code{GPCM} workflows can be used in \code{mfrmr}, the limits that
 apply to each workflow, and the recommended alternative when a route is not
 available.
 
 The table is intended for route selection before or after fitting and is
 limited to workflow availability, interpretive constraints, and the route
 to use next.
+The fitted model uses one facet for both relative discriminations and
+category steps (\code{slope_facet == step_facet}). It has one substantive ability
+dimension. These structural choices are stated separately from the
+availability of each output. An available probability or descriptive comparison does
+not establish eligibility for a confidence interval or model-selection rule.
 }
 \details{
 \code{Status} has the following user-facing meanings:
@@ -38,7 +43,7 @@ to use next.
 \item \code{supported}: the helper is available within the stated boundary;
 \item \code{supported_with_caveat}: the helper runs, but its interpretation is
 restricted as described in \code{Boundary};
-\item \code{blocked}: the helper intentionally stops for a bounded \code{GPCM} fit;
+\item \code{blocked}: the helper intentionally stops for a \code{GPCM} fit;
 \item \code{deferred}: no public \code{mfrmr} route is currently available.
 }
 
@@ -46,6 +51,150 @@ Read \code{Boundary} before interpreting a caveated result. For a blocked or
 deferred row, use \code{RecommendedRoute} to choose a supported analysis or a
 Rasch-family alternative.
 }
+\section{Estimates, intervals and comparisons}{
+
+For free slopes, these are different questions:
+\itemize{
+\item \strong{What did the numerical fit return?} \code{fit$slopes$OptimizerEstimate}
+retains the fitted relative slopes for descriptive sensitivity analysis.
+The compatibility column \code{Estimate} contains the same numerical values;
+it does not override \code{ParameterStatus} or \code{PrimaryEstimate}.
+\item \strong{How uncertain is a slope?} \code{confint(fit, parm = "slopes")} returns
+approximate pointwise intervals for eligible GPCM MML fits.
+\code{diagnose_mfrm(fit)$parameter_uncertainty$slopes} supplies the same 95\%
+calculation with \code{CIEligible} and \code{InferenceReview}. Ineligible solutions
+retain missing ordinary bounds and explicitly labelled \verb{Optimizer*}
+diagnostic quantities. Old eligibility flags do not authorize an interval.
+\item \strong{Which model should be selected?} MML information criteria may be
+retained numerically. \code{compare_mfrm()} ranks GPCM MML candidates when its
+separate solution and comparison checks pass. \code{ICSelectable} describes
+likelihood and integration requirements; \code{ICFitEligible} describes the
+fit's solution check; \code{ICComparable} is the final comparison decision.
+The weighting review preserves this decision without making an
+operational-scoring recommendation. With \code{nested = TRUE}, it can also
+request the separately checked PCM/GPCM equal-slope test.
+}
+
+The inference restrictions above concern the current package implementation;
+they are not a claim that GPCM inference is impossible in general. A local
+rank or curvature check does not by itself assess competing solutions,
+numerical integration error or the performance of an interval procedure.
+Relative-slope intervals have their own checks. A PCM/GPCM LRT requires the matched
+comparison described below; more iterations or quadrature points alone do
+not establish its structural assumptions.
+}
+
+\section{Different requirements for intervals and model comparison}{
+
+These decisions are separate, and do not follow from unidimensionality:
+\itemize{
+\item \strong{Slope intervals:} \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} uses the inverse joint observed
+information, including estimated population parameters, and the sum-zero
+log-slope transformation. It checks likelihood consistency, convergence,
+positive unregularized information, unit weights and a grid of at least
+31 points. The exponentiated log-Wald limits are pointwise model-based
+approximations for geometric-mean-one relative slopes by default.
+Explicit options add population-SD-standardized slopes, named ratios or
+differences, Bonferroni adjustment and independent-cluster sandwich
+covariance. Small samples and misspecification can still affect coverage.
+Failed checks retain missing limits and a reason. \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}}
+provides fitted-model bootstrap intervals or a matched PCM/GPCM test;
+\code{\link[=mfrm_curve_intervals]{mfrm_curve_intervals()}} propagates calibration uncertainty to curves.
+Probability-curve intervals showed undercoverage in a saved-fit study of
+small incomplete designs, including finite-grid Bonferroni families.
+Numerical availability and multiplicity adjustment do not certify nominal
+coverage; bootstrap coverage requires separate evidence too.
+Saved results support \code{\link[=apa_table]{apa_table()}}, \code{\link[=plot_data]{plot_data()}} and \code{\link[=as_ggplot]{as_ggplot()}};
+attach selected intervals to \code{\link[=mfrm_results]{mfrm_results()}} for reports and exports.
+Their targets remain separate from Wright/Pathway location and fit displays.
+\item \strong{Information criteria:} AIC/BIC compare maximized likelihoods on the same
+response data, with appropriate free-parameter counts and numerical
+accuracy. They do not require a slope confidence interval or nested
+models. The GPCM MML solution check reevaluates the retained likelihood,
+terminal gradient and positive unregularized local information without
+refitting. It uses the existing numerical-gradient tolerance (at most
+\eqn{10^{-4}}) and information-inversion eigenvalue tolerance. The existing
+joint information calculation is shared with slope intervals and governed
+by \code{options(mfrmr.max_information_bytes = 256 * 1024^2)} rather than an
+80-coordinate cutoff. The budget estimates dense matrix workspace, not
+total process memory. An unavailable check gives a reason, not permission
+to rank. Local checks do
+not prove global optimality or integration accuracy; inspect different
+starts and \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} when the decision is close.
+\item \strong{PCM/GPCM likelihood-ratio test:} with the same population model, step
+structure and other constraints, setting all relative slopes to one gives
+PCM. One is an interior positive slope value, not a variance-zero boundary.
+With \eqn{G} slope levels and no other differing free parameters, the null
+imposes \eqn{G-1} independent log-slope restrictions. A chi-square reference
+additionally requires identified, regular solutions and adequate sample
+information. \code{\link[=compare_mfrm]{compare_mfrm()}} with \code{nested = TRUE} checks the matched
+model settings, G-1 free dimensions and regular local MML solutions before
+reporting an asymptotic chi-square p-value. Default PCM and GPCM calls can
+use different population models: supply \code{population_formula = ~1} and the
+same person data to both fits to compare estimated-normal models.
+Small or sparse samples can give inaccurate asymptotic p-values; examine
+starting-value and quadrature sensitivity and report the test's assumptions.
+}
+
+The official \href{https://stat.ethz.ch/R-manual/R-devel/library/stats/html/AIC.html}{R AIC documentation}
+describes likelihood comparability. The \href{https://philchalmers.github.io/mirt/reference/mirt.html}{mirt model documentation}
+documents GPCM and information-matrix SEs, and its
+\href{https://philchalmers.github.io/mirt/reference/anova-method.html}{model-comparison documentation}
+describes likelihood-ratio and information-criterion comparisons. These are
+examples of supported statistical methods, not validation of mfrmr's
+many-facet implementation.
+}
+
+\section{Comparing models with ConQuest and TAM}{
+
+Match the response formula before comparing estimates. In mfrmr, the
+selected positive slope multiplies ability, facet locations and the category
+step together. A slope multiplying ability alone, with separately additive
+rater severity, generally specifies a different many-facet model.
+
+TAM's \code{tam.mml.mfr()} does not estimate slopes itself, but its documented
+Example 14, Model 14c combines a facet intercept design with grouped slopes
+in \code{tam.mml.2pl(irtmodel = "GPCM.design")}. ConQuest estimates GPCM scores
+with \code{scoresfree}; its default slopes belong to combinations of facets
+(generalized items), with further grouping available through a scoring
+design. Neither construction automatically reproduces mfrmr's single
+slope/step facet and complete-predictor multiplication. See the
+\href{https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html}{TAM fitting documentation}
+and \href{https://www.acer.org/files/Note_8--The_ConQuest_4_Model.pdf}{ConQuest Note 8}.
+
+A matched item-only, positive-slope GPCM with an estimated normal population
+can be expressed on either scale. mfrmr fixes the geometric mean of relative
+slopes \eqn{\alpha_i} to one and estimates the population SD \eqn{\sigma}
+conditional on any population covariates. On the unit-variance scale the
+slopes become \eqn{a_i=\sigma\alpha_i}.
+Locations, steps and any population regression also need transformation.
+This equivalence does not include imposing both unit variance and
+geometric-mean-one slopes: together they impose an additional restriction.
+
+Transformed intervals require the joint parameter covariance. Multiplying
+relative-slope interval endpoints by an estimated population SD omits its
+uncertainty and covariance with the slopes. Use \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} with
+\code{scale = "standardized"} for the full transformation; with covariates the SD
+is the residual population SD. TAM's documented \code{tam.se()} omits
+parameter covariances; ConQuest distinguishes the covariance of parameter
+estimates from the latent-population covariance. Neither marginal SEs nor
+a latent-population covariance matrix replace the required joint matrix.
+Numerical replication requires matching data, model and identification.
+IC selection can compare different, nonnested models on compatible
+likelihoods; verify each model's free-parameter count and integration
+accuracy. A likelihood-ratio test additionally requires a nested null.
+Consult \code{vignette("mfrmr-gpcm-scope")} for examples, sources and the scope
+of existing numerical comparisons. These do not supply a general GPCM
+import or comparison API.
+}
+
+\section{Conditional Person uncertainty}{
+
+Person posterior SDs and intervals, where returned, condition on the fitted
+calibration; they are not slope intervals or calibration-aware confidence
+intervals. An unstable calibration also limits their interpretation.
+}
+
 \section{Typical workflow}{
 
 \enumerate{

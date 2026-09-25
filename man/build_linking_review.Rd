@@ -71,7 +71,7 @@ helper should be used separately.
 \section{GPCM boundary}{
 
 This helper is currently intended for the documented \code{RSM} / \code{PCM} linking
-workflow. If the supplied drift/chain sources resolve to bounded \code{GPCM},
+workflow. If the supplied drift/chain sources resolve to \code{GPCM},
 the helper stops with a package-level message rather than silently implying
 support.
 }

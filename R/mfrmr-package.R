@@ -3,8 +3,11 @@
 #' @description
 #' `mfrmr` provides estimation, diagnostics, and reporting utilities for
 #' many-facet ordered-response measurement models: the Rasch-family `RSM` /
-#' `PCM` route and the package's bounded `GPCM` extension where explicitly
-#' documented.
+#' `PCM` route and a `GPCM` extension in which one selected facet supplies
+#' level-specific discriminations and category steps. [confint.mfrm_fit()]
+#' supplies approximate relative-slope intervals for eligible MML fits; model
+#' ranking and matched PCM/GPCM tests use separate checks in [compare_mfrm()].
+#' [gpcm_capability_matrix()] explains the supported uses.
 #'
 #' @useDynLib mfrmr, .registration = TRUE
 #'
@@ -40,7 +43,7 @@
 #' - [mfrmr_visual_diagnostics] for choosing follow-up figures.
 #' - [mfrmr_reporting_and_apa] and [mfrmr_reports_and_tables] for reporting.
 #' - [mfrmr_linking_and_dff] for linking and differential facet functioning.
-#' - [gpcm_capability_matrix] for the bounded `GPCM` extension.
+#' - [gpcm_capability_matrix] for the `GPCM` extension.
 #' - [mfrmr_output_guide()] for the broader purpose-to-function map.
 #'
 #' A printable reference card is available at
@@ -54,7 +57,7 @@
 #' score the artifact. Review the returned batch with
 #' [mfrm_calibration_score_methods] before using its estimates. Estimated-
 #' population or latent-regression MML, JML, and
-#' bounded `GPCM` remain fitted-object-only scoring routes in 0.2.4. Artifact
+#' `GPCM` remain fitted-object-only scoring routes in 0.2.4. Artifact
 #' score uncertainty is conditional on the frozen point calibration and its
 #' recorded prior; loading validates consistency but does not authenticate an
 #' untrusted file.
@@ -65,17 +68,17 @@
 #'   for ordered-response `RSM` / `PCM` models with a one-dimensional
 #'   conditional-normal population model and explicit one-row-per-person
 #'   covariates expanded through `stats::model.matrix()`
-#' - bounded `GPCM` support is summarized by [gpcm_capability_matrix()]
-#' - bounded `GPCM` supports the core fit/summary/scoring/information
+#' - `GPCM` support is summarized by [gpcm_capability_matrix()]
+#' - `GPCM` supports the core fit/summary/scoring/information
 #'   path, direct Wright/pathway/CCC plots, residual-PCA follow-up, and the
 #'   residual-based diagnostics tables/plots as exploratory tools
 #' - posterior-predictive checks and `MCMC` estimation are not available for
-#'   bounded `GPCM`; use external Bayesian software when they are required
+#'   `GPCM`; use external Bayesian software when they are required
 #' - direct `GPCM` data generation through [build_mfrm_sim_spec()],
 #'   [extract_mfrm_sim_spec()], and [simulate_mfrm_data()] is available when
 #'   the specification carries both thresholds and slopes
 #' - slope-aware [fair_average_table()] and [estimate_bias()] are available for
-#'   bounded `GPCM` with explicit caveats; [build_apa_outputs()],
+#'   `GPCM` with explicit caveats; [build_apa_outputs()],
 #'   [build_visual_summaries()], [run_qc_pipeline()],
 #'   [build_mfrm_manifest()], [build_mfrm_replay_script()], and
 #'   [export_mfrm_bundle()] are available as caveated partial reporting/export
@@ -92,14 +95,14 @@
 #'   local-dependence, and rater-drift diagnostics as screening layers rather
 #'   than as mixture-model substitutes
 #'
-#' @section Equal weighting versus bounded GPCM:
+#' @section Equal weighting versus GPCM:
 #' The package's operational reference route is the Rasch-family
 #' `RSM` / `PCM` branch. That route enforces fixed discrimination and therefore
 #' preserves an equal-weighting scoring interpretation across observed ratings.
 #'
-#' Bounded `GPCM` is supported because some users want a slope-aware model-
+#' `GPCM` is supported because some users want a slope-aware model-
 #' comparison or sensitivity layer inside the same many-facet workflow. However,
-#' the package does not treat bounded `GPCM` as a universal replacement for the
+#' the package does not treat `GPCM` as a universal replacement for the
 #' Rasch-family route. A better fit under `GPCM` should be read as evidence
 #' about discrimination-based reweighting, not as an automatic reason to
 #' discard the equal-weighting model.
@@ -134,15 +137,15 @@
 #'   directly, latent-regression `MML` fits through the fitted population
 #'   model when scored units also provide one-row-per-person background data,
 #'   and `JML` fits through a post hoc reference-prior EAP layer;
-#'   fit-derived simulation specifications also support direct bounded
+#'   fit-derived simulation specifications also support direct
 #'   `GPCM` data generation, recovery checks, role-based design evaluation,
 #'   population forecasting, diagnostic-screening, and signal-detection
 #'   helpers with documented caveats; curve reports, graph-only exports,
-#'   fair-average tables, and bias screening are also available for bounded
+#'   fair-average tables, and bias screening are also available for
 #'   `GPCM` with documented caveats)
 #' - Reporting: [build_apa_outputs()], [build_visual_summaries()],
 #'   [reporting_checklist()], [apa_table()] for the full `RSM` / `PCM` route;
-#'   bounded `GPCM` uses these as caveated partial surfaces and retains direct
+#'   `GPCM` uses these as caveated partial surfaces and retains direct
 #'   table, plot, checklist, and summary-appendix routes
 #' - Weighting review: [compare_mfrm()], [build_weighting_review()],
 #'   [build_model_choice_review()], [compute_information()], [plot_information()]
@@ -158,7 +161,7 @@
 #'   [normalize_conquest_overlap_tables()],
 #'   [review_conquest_overlap()],
 #'   [export_mfrm_bundle()] for the diagnostics-compatible Rasch-family route;
-#'   bounded `GPCM` supports caveated partial manifest, replay, and bundle
+#'   `GPCM` supports caveated partial manifest, replay, and bundle
 #'   output as well as [export_summary_appendix()]
 #' - Equivalence: [analyze_facet_equivalence()], [plot_facet_equivalence()]
 #' - Data and anchors: [describe_mfrm_data()], [review_mfrm_anchors()],
@@ -219,13 +222,13 @@
 #' 3. For `RSM` / `PCM`, diagnose with [diagnose_mfrm()] and prefer
 #'    `diagnostic_mode = "both"` for final `MML` runs.
 #' 4. For `RSM` / `PCM`, run [analyze_dff()] or [estimate_bias()] when
-#'    fairness or interaction questions matter; bounded `GPCM` also supports
+#'    fairness or interaction questions matter; `GPCM` also supports
 #'    [estimate_bias()] as a conditional screening review.
 #' 5. For `RSM` / `PCM`, report with [build_apa_outputs()] and
 #'    [build_visual_summaries()].
 #' 6. For design planning, move to [build_mfrm_sim_spec()],
 #'    [evaluate_mfrm_design()], [mfrm_generalizability()], [mfrm_d_study()],
-#'    and [predict_mfrm_population()]. Bounded
+#'    and [predict_mfrm_population()].
 #'    `GPCM` also supports direct simulation via
 #'    [extract_mfrm_sim_spec()] / [simulate_mfrm_data()] and caveated role-based
 #'    [evaluate_mfrm_design()] / [predict_mfrm_population()] routes. Those
@@ -245,7 +248,7 @@
 #'    use a `JML` calibration when a post hoc fitted-object EAP layer is
 #'    acceptable; then score with
 #'    [predict_mfrm_units()] or [sample_mfrm_plausible_values()].
-#' 8. For bounded `GPCM`, use [summary.mfrm_fit()],
+#' 8. For `GPCM`, use [summary.mfrm_fit()],
 #'    [diagnose_mfrm()], [analyze_residual_pca()],
 #'    [predict_mfrm_units()], [sample_mfrm_plausible_values()],
 #'    [compute_information()], [plot_qc_dashboard()], [plot.mfrm_fit()],
@@ -257,7 +260,7 @@
 #'    linking review plus role-based design evaluation, population
 #'    forecasting, diagnostic-screening, and signal-detection helpers are
 #'    available, while full score-side FACETS review, posterior-predictive
-#'    checks, and `MCMC` estimation are not available for bounded `GPCM`. Use
+#'    checks, and `MCMC` estimation are not available for `GPCM`. Use
 #'    [gpcm_capability_matrix()] as the formal boundary statement.
 #'
 #' @section Model formulation:
@@ -299,9 +302,9 @@
 #' level, but the fitted score range is defined by one global category
 #' set taken from the observed data.
 #'
-#' **Bounded Generalized Partial Credit Model (GPCM)**
+#' **Generalized Partial Credit Model (GPCM)**
 #'
-#' Under bounded `GPCM` (Muraki, 1992), the same adjacent-category partial-credit
+#' Under `GPCM` (Muraki, 1992), the same adjacent-category partial-credit
 #' kernel is multiplied by a positive slope \eqn{\alpha_g} for the designated
 #' slope-facet level \eqn{g}:
 #'
@@ -309,12 +312,12 @@
 #'   \alpha_g(\theta_n - \delta_j - \beta_i - \tau_{gk}).}
 #'
 #' The current implementation requires `slope_facet == step_facet` and
-#' identifies slopes on the log scale with geometric mean 1. This makes bounded
+#' identifies slopes on the log scale with geometric mean 1. This makes
 #' `GPCM` a slope-aware sensitivity/extension route, not a replacement for the
 #' equal-weighting `RSM`/`PCM` interpretation.
-#' It is an aligned single-owner many-facet GPCM rather than the broader
-#' Uto--Ueno generalized MFRM: it does not jointly estimate multiplicative task
-#' and rater slope blocks or allow a distinct step owner. Unit slopes reduce to
+#' It assigns slopes and steps to the same facet. It does not jointly estimate
+#' the multiplicative task and rater slopes of the broader Uto--Ueno generalized
+#' MFRM or allow a distinct step owner. Unit slopes reduce to
 #' the equal-discrimination PCM kernel.
 #' Under default MML, an intercept-only person distribution
 #' \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
@@ -337,7 +340,7 @@
 #' Binary responses are the \eqn{K = 1} special case of the same formulation,
 #' so they are handled through the ordinary ordered-score interface. This means
 #' `mfrmr` supports ordered binary and ordered polytomous data under `RSM` and
-#' `PCM`, plus a narrow bounded `GPCM` branch with one designated
+#' `PCM`, plus a narrow `GPCM` branch with one designated
 #' `slope_facet` that currently must equal `step_facet`. Unordered
 #' nominal/multinomial response models are outside the documented model scope,
 #' as are Poisson, negative-binomial, and grouped binomial-trial count-response
@@ -580,7 +583,7 @@
 #'   item information identity \eqn{I_j(\theta) = D^2 a_j^2
 #'   \mathrm{Var}(T \mid \theta)} via Samejima's (1974) polytomous
 #'   information formula. This is the canonical reference for
-#'   `compute_information()` under bounded `GPCM`.)
+#'   `compute_information()` under `GPCM`.)
 #' - Samejima, F. (1974). Normal ogive model on the continuous response
 #'   level in the multidimensional latent space. *Psychometrika*, 39,
 #'   111--121. (General polytomous information formula that Muraki

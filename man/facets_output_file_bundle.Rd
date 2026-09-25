@@ -33,7 +33,7 @@ facets_output_file_bundle(
 
 \item{digits}{Rounding digits for numeric fields.}
 
-\item{score_se_method}{For bounded \code{GPCM} scorefile exports, which
+\item{score_se_method}{For \code{GPCM} scorefile exports, which
 observation-level score uncertainty columns to compute. \code{"both"}
 (default) includes native structural expected-score SEs and score-side
 delta-method SEs; \code{"native"} includes only the structural expected-score
@@ -102,16 +102,16 @@ For new scripts, prefer \code{\link[=category_curves_report]{category_curves_rep
 scorefile contract is required.
 }
 
-\section{Bounded GPCM boundary}{
+\section{GPCM boundary}{
 
-For bounded \code{GPCM}, graph output and package-native scorefile output are
+For \code{GPCM}, graph output and package-native scorefile output are
 available with caveats. \code{include = "score"} returns observation-level fitted
 expected score, residual, standardized residual, observed-category
 probability, GPCM slope fields, and native structural delta-method
 expected-score uncertainty and/or score-side delta-method SEs when the
 required MML diagnostics are available. Use \code{score_se_method} to choose
 \code{"both"} (default), \code{"native"}, \code{"score_side"}, or \code{"none"}.
-The score-side route transforms a logit-side standard error with the bounded
+The score-side route transforms a logit-side standard error with the
 GPCM expected-score derivative
 \eqn{dE[X]/d\eta = \alpha Var(X)}, where \code{ScoreSlope} is \eqn{\alpha}.
 \code{ScoreSideLogitSE} remains on the logit side; \code{ScoreSideSE} and its interval

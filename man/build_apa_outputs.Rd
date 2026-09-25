@@ -54,7 +54,7 @@ Frequently used fields include:
 Output text includes residual-PCA screening commentary if PCA diagnostics are
 available in \code{diagnostics}.
 
-For bounded \code{GPCM}, this helper returns a caveated partial reporting bundle
+For \code{GPCM}, this helper returns a caveated partial reporting bundle
 over supported diagnostics, direct tables, and plots. It also includes a
 \code{gpcm_boundary} table. Treat the output as slope-aware sensitivity-reporting
 text, not FACETS score-side equivalence, automatic operational scoring, or

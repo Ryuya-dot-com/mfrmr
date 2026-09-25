@@ -45,7 +45,8 @@ fit_mfrm(
   attach_diagnostics = FALSE,
   checkpoint = NULL,
   gpcm_mml_identification = c("free_population", "fixed_standard_normal"),
-  mml_integration = c("fixed", "adaptive")
+  mml_integration = c("fixed", "adaptive"),
+  category_policy = NULL
 )
 }
 \arguments{
@@ -90,7 +91,9 @@ unused intermediate categories remain visible in
 preserving the rubric. This changes which category steps are fitted, not
 just their displayed labels. Fitting stops if a retained internal category
 has no observations; reviewing or revising that ladder is a substantive
-decision, not a formatting option.}
+decision, not a formatting option.
+Retained for compatibility; \code{category_policy = "preserve"} or
+\code{"collapse"} makes the choice explicit in new code.}
 
 \item{missing_codes}{Optional pre-processing step that converts sentinel
 missing-code values to \code{NA} before any downstream logic. One of:
@@ -108,20 +111,20 @@ Replacement counts are recorded in \code{fit$prep$missing_recoding} and
 surfaced by \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}. Equivalent to calling
 \code{\link[=recode_missing_codes]{recode_missing_codes()}} manually before the fit.}
 
-\item{model}{\code{"RSM"} (default), \code{"PCM"}, or bounded \code{"GPCM"}.}
+\item{model}{\code{"RSM"} (default), \code{"PCM"}, or \code{"GPCM"}.}
 
 \item{method}{\code{"MML"} (default) or \code{"JML"}. \code{"JMLE"} is accepted as a
 backward-compatible alias for the same joint-maximum-likelihood path.}
 
 \item{step_facet}{Facet whose levels receive separate step parameters in
-\code{PCM} and bounded \code{GPCM}. Supply it explicitly for a final analysis. If it
+\code{PCM} and \code{GPCM}. Supply it explicitly for a final analysis. If it
 is omitted for \code{PCM}, mfrmr uses a unique item-like facet name (for
 example, \code{Item}, \code{Task}, or \code{Criterion}) when available; otherwise it
 retains the first-facet fallback with a warning. \code{GPCM} always requires an
 explicit value. This argument is not used by \code{RSM}, which has one shared
 set of rating-scale thresholds.}
 
-\item{slope_facet}{Slope facet for the bounded \code{GPCM} branch. mfrmr
+\item{slope_facet}{Slope facet for the \code{GPCM} branch. mfrmr
 estimates one positive slope for every level of this designated facet.
 Thus \code{slope_facet = "Criterion"} gives criterion-specific slopes, whereas
 \code{slope_facet = "Rater"} gives rater-specific slopes. The current route
@@ -220,7 +223,19 @@ curvature step to restart the selected optimizer. The step requires
 positive-definite, well-conditioned curvature, a smaller gradient and
 an objective that does not worsen beyond floating-point roundoff.
 The original convergence and terminal-gradient criteria still apply;
-failed proposals retain their reasons in the stage history.}
+failed proposals retain their reasons in the stage history.
+Fixed-grid GPCM MML fits with at most 64 free parameters also check
+numerical curvature after optimizer code zero. Negative curvature can
+trigger up to three BFGS restarts in rescaled search coordinates, even
+when the raw gradient is small. Each restart uses the requested \code{maxit}
+ceiling. A replacement must pass the original gradient/convergence checks,
+have no detected negative curvature and not worsen the objective beyond
+roundoff. Failed recovery retains the estimate with a numerical warning.
+This changes only the search coordinates, not the model or information
+matrix used for inference. It does not establish a global optimum,
+adequate quadrature, or valid confidence intervals. Inspect the
+\code{SmallestCurvature}, \code{CurvatureScale} and \code{CurvatureReviewError} fields
+in the stage history alongside the objective and terminal gradient.}
 
 \item{optimizer}{Direct-optimization method. \code{"auto"} (default) uses the
 limited-memory \code{"L-BFGS-B"} method for MML and for larger JML parameter
@@ -349,6 +364,16 @@ Adaptive fits with nonlinear coordinates have no completed probability-
 map identification audit; GPCM also lacks an adaptive slope-boundary audit.
 These fits remain review-only for formal parameter inference. ConQuest exports
 currently require fixed integration.}
+
+\item{category_policy}{Optional explicit category choice: \code{"collapse"}
+maps gaps in the observed categories to consecutive scores;
+\code{"preserve"} keeps the intended ladder, declared with \code{rating_min} and
+\code{rating_max}. This changes the fitted category steps, not just labels.
+\code{NULL} (default) uses \code{keep_original}, whose default is \code{FALSE}
+(\code{"collapse"}). Supplying both choices is allowed only when they agree.
+Preservation does not estimate unsupported steps: fitting stops if a
+retained internal category has no observations. Use the same policy in
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.}
 }
 \value{
 An object of class \code{mfrm_fit} (named list) with:
@@ -402,9 +427,12 @@ evidence only. The implementation threshold is not a frozen scientific
 criterion and the audit does not certify a finite global maximum,
 boundary absence, uncertainty, external comparability, or readiness.
 The conditional JML boundary checks are not reused for MML.
-\code{diagnose_mfrm()} may retain observed-information and delta-method values
-in \code{Optimizer*SE} / \code{Optimizer*CI} columns, but ordinary \code{SE} / \code{CI}
-columns remain unavailable while parameter readiness is not established.
+\code{confint(fit, parm = "slopes")} and \code{diagnose_mfrm()} separately check
+the current local MML solution before supplying approximate pointwise
+relative-slope intervals. \code{CIEligible} and \code{InferenceReview} record this
+output-specific decision, without overriding the global boundary audit.
+Ineligible local calculations remain in \code{Optimizer*SE} / \code{Optimizer*CI}.
+Refresh saved fits through either function; no refitting is necessary.
 The identification convention pins the geometric mean of finite optimizer
 slopes at 1.
 \item \code{readiness}: the versioned fit record, five component rows, and current
@@ -414,7 +442,7 @@ other non-Person parameter classes remain scheduled for later propagation.
 when \code{facet_interactions} is supplied
 \item \code{population}: population-model metadata. Ordinary RSM/PCM and JML fits
 keep an inactive record (\code{active = FALSE},
-\code{posterior_basis = "legacy_mml"}). Default bounded-GPCM MML and active
+\code{posterior_basis = "legacy_mml"}). Default GPCM MML and active
 latent-regression fits store the fitted design matrix, regression
 coefficients, residual variance, omission review, the complete-case
 estimation table (\code{person_table}), and the observed-person-aligned
@@ -445,8 +473,9 @@ Each data row is one rating. Supply its column names with \code{person},
 \code{facets}, and \code{score}, as in the complete example below.
 The default is \code{method = "MML"} (marginal maximum likelihood).
 The \code{RSM} / \code{PCM} branches are the package's many-facet Rasch-family
-reference route; the bounded \code{GPCM} branch is available where explicitly
-documented.
+reference route. \code{GPCM} adds positive, level-specific discriminations to
+one facet, which must also supply its category steps. See "GPCM model and
+inference" below for the current limits on uncertainty and comparisons.
 In the example, \code{toy} stores the data and \code{fit} stores the fitted model.
 Quoted column names such as \code{"Person"} must match the data, including case.
 For your own CSV, see the "Use your own CSV" section of
@@ -466,11 +495,52 @@ replication evidence. A legitimate re-rating or replicated scoring event
 should be represented by an event, occasion, or other distinguishing facet
 before fitting.
 }
+\section{Choose the arguments by their purpose}{
+
+\itemize{
+\item \strong{Identify the ratings:} \code{data} is the rating table; \code{person}, \code{facets}
+and \code{score} are quoted column names, not the values in those columns.
+\item \strong{Declare the rubric:} set \code{rating_min}, \code{rating_max} and
+\code{category_policy} consistently with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. The default
+can collapse gaps; preservation can reveal an unsupported category step.
+\item \strong{Choose the statistical model:} \code{model}, \code{step_facet}, \code{slope_facet},
+anchors and population arguments determine what is estimated. Ordinary
+RSM/PCM MML with \code{population_formula = NULL} fixes N(0,1); the default
+GPCM MML instead estimates the normal population mean and variance.
+\item \strong{Control computation:} \code{quad_points}, \code{maxit}, \code{reltol}, \code{optimizer}
+and \code{mml_engine} govern numerical fitting. Increasing them does not change
+the model's support or automatically justify statistical inference.
+\item \strong{Choose follow-up output:} \code{attach_diagnostics = TRUE} computes and
+attaches diagnostics; the default leaves that separate. \code{summary(fit)}
+explains the result's status; \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} reviews response fit.
+}
+}
+
+\section{GPCM model and inference}{
+
+One selected facet supplies both level-specific positive discriminations
+and category steps: \code{slope_facet == step_facet}. For example, selecting
+\code{Criterion} estimates a relative discrimination for each criterion; it does
+not simultaneously estimate rater discriminations. The model has one
+substantive ability dimension; its structural choices and currently
+unavailable inferential outputs are separate considerations.
+
+Free-slope fits retain numerical estimates for review. \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}
+supplies approximate relative-slope intervals for eligible MML solutions.
+MML information-criterion ranking uses separate
+likelihood and local-solution checks in \code{\link[=compare_mfrm]{compare_mfrm()}}.
+\code{\link[=compare_mfrm]{compare_mfrm()}} and \code{\link[=build_weighting_review]{build_weighting_review()}} also accept \code{nested = TRUE}
+for an equal-slope PCM/GPCM test after verifying matching population and
+constraint settings. Fitted-object scoring and information have their own
+scope and do not imply a portable GPCM calibration artifact. Consult
+\code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for each operation before using its output.
+}
+
 \section{Model}{
 
 \code{fit_mfrm()} estimates many-facet ordered-response models. The \code{RSM} and
 \code{PCM} branches follow the many-facet Rasch-family tradition (Linacre, 1989);
-the bounded \code{GPCM} branch extends the partial-credit kernel with estimated
+the \code{GPCM} branch extends the partial-credit kernel with estimated
 positive slopes under the package's documented identification constraints.
 For the equal-slope \code{RSM}/\code{PCM} branch, a two-facet design
 (rater \eqn{j}, criterion \eqn{i}) is:
@@ -495,7 +565,7 @@ interface does not combine binary, RSM, PCM, or GPCM observations in one
 fit, define multiple independent rating scales, or accept general
 threshold/scale anchors and fixed-calibration starting values.
 
-With bounded \code{model = "GPCM"}, the adjacent-category kernel is multiplied by
+With \code{model = "GPCM"}, the adjacent-category kernel is multiplied by
 a positive slope for the designated slope-facet level:
 
 \deqn{\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
@@ -517,7 +587,7 @@ multiplies ability while rater severity and other intercept terms remain
 unscaled. Such a formulation, including TAM multifacet \code{GPCM.design}
 constructions with separate linear intercept and slope designs, is a
 different model unless an algebraic reduction establishes equivalence.
-This is an aligned single-owner many-facet GPCM: exactly one facet owns both
+In this many-facet GPCM, exactly one facet supplies both
 the slope and step blocks. It is not the broader Uto--Ueno generalized MFRM,
 whose task and rater slopes enter multiplicatively and whose step owner must
 be stated separately. Setting every current slope to one recovers the
@@ -535,9 +605,8 @@ branch is a narrower relative-discrimination model. Under JML, the
 geometric-mean-one constraint is required to resolve the ability/slope
 scale because person coordinates are estimated jointly.
 
-Here and elsewhere in the package, "bounded GPCM" means that the documented
-model/workflow scope is deliberately narrow. It does not mean box-constrained
-estimation. The JML branch maximizes the identified joint log-likelihood
+The model name does not imply finite parameter bounds. The JML branch
+maximizes the identified joint log-likelihood
 without a statistical penalty or finite bounds on person, location, step, or
 slope coordinates. Numerical line-search rejection of non-representable
 slope proposals is not regularization. When a recession direction is
@@ -551,7 +620,7 @@ boundary:
 
 \deqn{\ln\frac{P(X_{n\cdot} = 1)}{P(X_{n\cdot} = 0)} = \eta - \tau_1}
 
-Bounded \code{GPCM} uses the slope-scaled counterpart
+\code{GPCM} uses the slope-scaled counterpart
 \eqn{\alpha_g(\eta - \tau_{g,1})}.
 
 With \code{method = "MML"}, person parameters are integrated out using
@@ -569,7 +638,7 @@ operational many-facet measurement. In that Rasch-family branch,
 discrimination is fixed, so the scoring model does not differentially
 reweight item-facet combinations through estimated slopes.
 
-Bounded \code{GPCM} is supported as an alternative when users explicitly accept
+\code{GPCM} is supported as an alternative when users explicitly accept
 discrimination-based reweighting. This often improves model fit, but the
 package does not treat better fit alone as a sufficient reason to replace an
 equal-weighting Rasch-family model.
@@ -660,7 +729,7 @@ the full \code{rating_min} / \code{rating_max} range.
 \code{fit_mfrm()} follows the Linacre (1989) many-facet Rasch specification:
 person ability is integrated out under a \code{N(0, 1)} distribution (or under
 the \verb{N(X\\beta, \\sigma^2)} population model when \code{population_formula} is
-supplied). Bounded GPCM MML instead activates an intercept-only
+supplied). GPCM MML instead activates an intercept-only
 \verb{N(\\beta_0, \\sigma^2)} population model by default so its common
 discrimination scale is estimable. Every facet parameter
 (\code{Rater}, \code{Criterion}, \code{Task}, ...) is estimated as a fixed effect
@@ -806,7 +875,7 @@ documented caveats. Role-based design evaluation, population forecasting,
 diagnostic-screening, and signal-detection helpers are available as
 caveated sensitivity evidence. Full FACETS-style score-side contract
 review, posterior predictive checks, and MCMC estimation are not available
-for bounded \code{GPCM}. Use
+for \code{GPCM}. Use
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal boundary statement for the
 current \code{GPCM} scope.
 }
@@ -814,7 +883,7 @@ current \code{GPCM} scope.
 Latent-regression status:
 \itemize{
 \item \code{population_formula = NULL} keeps the standard unconditional behavior for
-RSM/PCM and JML. For bounded GPCM MML, the default
+RSM/PCM and JML. For GPCM MML, the default
 \code{gpcm_mml_identification = "free_population"} constructs an intercept-only
 population model internally; use \code{"fixed_standard_normal"} only to
 reproduce the legacy restricted likelihood.
@@ -944,7 +1013,7 @@ fit with an \code{mfrmr_estimability_warning}: its cross-panel contrasts rely on
 the common latent-population assumption and remain review-only.
 
 Inspect \code{fit$data_review$estimability}. RSM and PCM use the full linear
-free-coordinate check. For bounded GPCM and an active latent-regression
+free-coordinate check. For GPCM and an active latent-regression
 residual variance, the additive block is audited before fitting. A retained
 vector also records the analytic free-to-expanded log/natural-scale
 transformation Jacobians and a central-difference check in
@@ -1067,7 +1136,7 @@ on the observed information of the marginal log-likelihood and person rows
 use posterior SDs from EAP scoring. For \code{JML}, these quantities remain
 exploratory approximations and should not be treated as equally formal.
 
-For bounded \code{GPCM}, residual-based mean-square fit screens are also
+For \code{GPCM}, residual-based mean-square fit screens are also
 best treated as exploratory diagnostics rather than strict Rasch-style
 invariance tests, because the discrimination parameter is free.
 }
@@ -1080,7 +1149,7 @@ A typical first-pass read is:
 \item \code{summary(fit)} for human-readable overviews.
 \item for \code{RSM} / \code{PCM}, \code{diagnose_mfrm(fit)} for element-level fit,
 approximate separation/reliability, and warning tables.
-\item for bounded \code{GPCM}, use \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and the residual-based
+\item for \code{GPCM}, use \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and the residual-based
 table helpers as exploratory screens, together with posterior scoring /
 \code{\link[=compute_information]{compute_information()}} where documented.
 }
@@ -1093,7 +1162,7 @@ table helpers as exploratory screens, together with posterior scoring /
 \item Validate convergence and scale structure with \code{summary(fit)}.
 \item For \code{RSM} / \code{PCM}, run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and proceed to reporting with
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
-\item For bounded \code{GPCM}, use the fitted object, slope summary,
+\item For \code{GPCM}, use the fitted object, slope summary,
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, residual-based table helpers, posterior scoring
 helpers, \code{\link[=compute_information]{compute_information()}}, direct simulation/recovery helpers,
 \code{\link[=fair_average_table]{fair_average_table()}}, and \code{\link[=estimate_bias]{estimate_bias()}} with their documented
@@ -1135,7 +1204,7 @@ denser common grid.
 
 The ordered-category many-facet formulation follows Linacre (1989), with
 the \code{RSM} and \code{PCM} branches grounded in Andrich (1978) and Masters (1982).
-The bounded \code{GPCM} branch follows the generalized partial credit
+The \code{GPCM} branch follows the generalized partial credit
 formulation of Muraki (1992) under a package-specific positive
 log-slope identification convention. The \code{MML} route follows the
 quadrature-based marginal-likelihood framework of Bock and Aitkin (1981).

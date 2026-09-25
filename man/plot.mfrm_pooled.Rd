@@ -4,7 +4,15 @@
 \alias{plot.mfrm_pooled}
 \title{Plot pooled facet estimates or prespecified contrasts}
 \usage{
-\method{plot}{mfrm_pooled}(x, draw = TRUE, preset = "standard", ...)
+\method{plot}{mfrm_pooled}(
+  x,
+  draw = TRUE,
+  preset = "standard",
+  title = paste("Pooled", x$settings$facet, "estimates and contrasts"),
+  subtitle = sprintf("\%d imputations | \%.0f\%\% pointwise MI intervals",
+    x$settings$imputations, 100 * x$settings$ci_level),
+  ...
+)
 }
 \arguments{
 \item{x}{Output from \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}.}
@@ -14,6 +22,10 @@ opening a graphics device.}
 
 \item{preset}{A package plotting preset, such as \code{"standard"} or
 \code{"monochrome"}.}
+
+\item{title, subtitle}{Optional text; \code{NULL} omits it. The default subtitle
+retains a notice when complete-data information is weak. Full cautions
+remain in the returned plot data even with custom or omitted text.}
 
 \item{...}{Unused.}
 }

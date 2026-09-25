@@ -2,7 +2,7 @@ Package: mfrmr
 Type: Package
 Title: Estimation and Diagnostics for Many-Facet Measurement Models
 Version: 0.2.4
-Date: 2026-09-22
+Date: 2026-09-26
 Config/mfrmr/release-status: candidate
 Config/mfrmr/public-version: 0.2.3.1
 Authors@R:
@@ -11,8 +11,9 @@ Authors@R:
            comment = c(ORCID = "0000-0001-9205-0926"))
 Description: Native R implementation of many-facet ordered-response
     measurement models with arbitrary facet counts, rating-scale and
-    partial-credit parameterizations, a bounded generalized partial-credit
-    extension, and both marginal and joint maximum likelihood estimation.
+    partial-credit parameterizations, a generalized partial-credit extension
+    with discrimination and category steps varying across levels of one
+    selected facet, and both marginal and joint maximum likelihood estimation.
     The package provides a fit / diagnose / report pipeline covering
     anchoring, linking, bias and differential-functioning screening, and
     publication-oriented reporting summaries, with reproducibility manifests

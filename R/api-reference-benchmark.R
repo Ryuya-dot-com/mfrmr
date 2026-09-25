@@ -626,7 +626,7 @@ build_gpcm_recovery_checks <- function(case_id, fit_obj) {
     } else {
       "Fail"
     },
-    Detail = "Step recovery is reviewed on the row-centered step scale stored by the current bounded GPCM branch."
+    Detail = "Step recovery is reviewed on the row-centered step scale stored by the current GPCM branch."
   )
 
   criterion_tbl <- as.data.frame(fit_obj$fit$facets$others, stringsAsFactors = FALSE)
@@ -1285,7 +1285,7 @@ summarize_reference_benchmark_case <- function(case_id, case_type, fit_runs, des
 #'   bundle for the latent-regression synthetic case, round-trips package tables
 #'   through the normalization/review helpers, and confirms the package-side
 #'   workflow without claiming that ConQuest itself was executed.
-#' - `synthetic_gpcm`: checks whether the bounded `GPCM` branch recovers
+#' - `synthetic_gpcm`: checks whether the `GPCM` branch recovers
 #'   known criterion-specific slopes, row-centered step parameters, and
 #'   criterion ordering from a synthetic overlap case. This case
 #'   currently requires `model = "GPCM"` and is intended for `method = "MML"`.

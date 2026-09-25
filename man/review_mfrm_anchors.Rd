@@ -20,7 +20,8 @@ review_mfrm_anchors(
   min_obs_per_element = 30,
   min_obs_per_category = 10,
   noncenter_facet = "Person",
-  dummy_facets = NULL
+  dummy_facets = NULL,
+  category_policy = NULL
 )
 }
 \arguments{
@@ -44,7 +45,8 @@ values are fixed during estimation.}
 
 \item{rating_max}{Optional maximum category value.}
 
-\item{keep_original}{Keep original category values.}
+\item{keep_original}{Keep original category values.
+New code can instead use \code{category_policy = "preserve"}.}
 
 \item{missing_codes}{Optional. \code{NULL} (default) is a no-op;
 \code{TRUE} or \code{"default"} converts the FACETS / SPSS / SAS sentinel
@@ -65,6 +67,16 @@ used in recommendations (default \code{10}).}
 \item{noncenter_facet}{One facet to leave non-centered.}
 
 \item{dummy_facets}{Facets to fix at zero.}
+
+\item{category_policy}{Optional explicit category choice: \code{"collapse"}
+maps gaps in the observed categories to consecutive scores;
+\code{"preserve"} keeps the intended ladder, declared with \code{rating_min} and
+\code{rating_max}. This changes the fitted category steps, not just labels.
+\code{NULL} (default) uses \code{keep_original}, whose default is \code{FALSE}
+(\code{"collapse"}). Supplying both choices is allowed only when they agree.
+Preservation does not estimate unsupported steps: fitting stops if a
+retained internal category has no observations. Use the same policy in
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.}
 }
 \value{
 A list of class \code{mfrm_anchor_review} with:

@@ -885,7 +885,7 @@ test_that("build_mfrm_manifest records latent-regression omit provenance", {
   expect_match(value_of(manifest$settings, "plausible_value_population_formula"), "~\\s*X")
 })
 
-test_that("build_mfrm_manifest returns bounded GPCM caveat boundary", {
+test_that("build_mfrm_manifest returns GPCM caveat boundary", {
   dat <- load_mfrmr_data("example_core")
   keep_people <- unique(dat$Person)[1:14]
   dat <- dat[dat$Person %in% keep_people, , drop = FALSE]

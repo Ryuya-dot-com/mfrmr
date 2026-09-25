@@ -50,6 +50,8 @@ Learn the operation first, then open its help page:
 \item \code{score_} estimates Person abilities using a fitted calibration, for example
 \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for people already in a supported fitted RSM.
 \item \code{pool_} combines eligible analyses, for example \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}.
+\item \code{review_} checks supplied data or analysis choices, for example
+\code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}}; it does not generate missing scores.
 \item \code{export_} writes files, for example \code{\link[=export_mfrm_results]{export_mfrm_results()}}.
 \item \code{summary(object)} and \code{plot(object)} select a method for the object you
 supply. You normally do not call \code{plot.mfrm_testlet()} directly.
@@ -60,8 +62,14 @@ many-facet Rasch model. Some help guides use the package prefix \code{mfrmr_}.
 The prefixes do not select different estimators. For a short ordinary-MFRM
 map, use \code{mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]}.
 The no-argument guide lists all specialist routes and is not a first lesson.
+For rater feedback, use \code{mfrmr_output_guide("feedback")}: it distinguishes
+uncertainty in severity from unexpected rating patterns and the accuracy
+of a warning rule. \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} concerns specified fixed raters;
+shared-rater intervals have a different target and retain their separate
+limitations. Ordinary and extended-model residuals also use different
+definitions. The guide names the matching summary, plot and saving routes.
 
-Some names need extra care. \code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}} checks completed
+\code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}} checks completed
 data supplied by you; it does not generate missing scores. Follow it with
 \code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}} and then \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}}.
 \code{\link[=mfrm_screening_performance]{mfrm_screening_performance()}} evaluates a warning rule against known
@@ -69,12 +77,29 @@ simulation truth. \code{\link[=mfrm_screening_sensitivity]{mfrm_screening_sensit
 across specified thresholds; it does not establish accuracy from real
 ratings alone. \code{\link[=mfrm_pca]{mfrm_pca()}} summarizes numeric external attributes;
 \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} forms groups. PCA is optional before k-means.
-\code{\link[=mfrm_cluster]{mfrm_cluster()}} uses partitioning around medoids (PAM) for mixed attributes;
+\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} uses partitioning around medoids (PAM) for mixed attributes;
 it does not automatically choose a clustering algorithm. For a dendrogram,
 use \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}.
 A G-study (\code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}) estimates sources of variation in
 observed scores; a D-study (\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}) uses them to
 compare future rater/task plans. Neither needs an MFRM fit.
+}
+
+\section{Updating earlier scripts}{
+\tabular{lll}{
+   Earlier call \tab Recommended call \tab Meaning retained \cr
+   \code{mfrm_cluster(x, k)} \tab \code{mfrm_cluster_pam(x, k)} \tab Same Gower/PAM partition and result class. \cr
+   \code{mfrm_response_imputations(..., impute = ids)} \tab \code{review_mfrm_imputations(..., impute_ids = ids)} \tab Same checks of supplied completed ratings; no imputation model is fitted. \cr
+   \code{keep_original = TRUE} \tab \code{category_policy = "preserve"} \tab Same category ladder in fitting, data review and anchor review. \cr
+   \code{keep_original = FALSE} \tab \code{category_policy = "collapse"} \tab Same collapsing of gaps; still the default when no policy is supplied. \cr
+}
+
+
+The old calls remain supported, including positional arguments. Saved
+objects retain their classes and \code{summary()}/\code{plot()} methods. Do not pass
+conflicting old/new category choices. See \code{\link[=compatibility_alias_table]{compatibility_alias_table()}} for
+the complete migration map. This does not change what \code{predict()} returns:
+use the ability-scoring or response-prediction route named for your model.
 
 A \strong{calibration} is the fitted set of model parameters, such as rater
 severity and category thresholds. A \strong{conditional} ability interval holds
@@ -97,13 +122,18 @@ the ability distribution at N(0,1). Both extended RSMs instead estimate
 ability variance by default (\code{person_sd = NULL}). Their model-comparison
 tutorials show how to match population assumptions. Changing only the
 fitting function can change more than the rater/dependence structure.
-\item \strong{Rating scale:} supply \code{rating_min}, \code{rating_max} and \code{keep_original}
+\item \strong{Rating scale:} supply \code{rating_min}, \code{rating_max} and \code{category_policy}
 from the rubric in both data review and ordinary fitting. Omitted bounds
-use the observed range. The ordinary default \code{keep_original = FALSE} can
+use the observed range. The ordinary default \code{category_policy = NULL}
+retains \code{keep_original = FALSE} and can
 collapse unobserved internal categories, for example observed 1, 3, 5 to
 1, 2, 3. This changes the fitted category structure, not just labels.
 A warning and the stored score map identify the recoding.
-Use \code{keep_original = TRUE} to preserve the declared ladder; an unsupported
+Inspect \code{CategoryPolicy} and \code{ScoreRecoded} in \code{data_review$overview}
+or \code{summary(fit)$settings_overview} to distinguish the chosen rule from
+an actual change to score values. With a complete contiguous scale,
+\code{"collapse"} can still have \code{ScoreRecoded = FALSE}.
+Use \code{category_policy = "preserve"} to preserve the declared ladder; an unsupported
 internal category then stops fitting and needs substantive review.
 \item \strong{Missingness and assignment:} ordinary fitting excludes rows missing
 a score or required ID (and nonpositive-weight rows); inspect
@@ -112,7 +142,7 @@ a score or required ID (and nonpositive-weight rows); inspect
 In contrast, the extended models stop on missing assigned scores by
 default, and feature/G-study routes also require an explicit omission
 choice. Omission does not correct informative missingness. In
-\code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}}, \code{assigned = NULL} declares every supplied
+\code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}}, \code{assigned = NULL} declares every supplied
 row assigned: supply an assignment column if unassigned rows are present.
 \item \strong{Included effects:} both extensions default to no additional fixed
 facets. For example, \code{testlet = "Task"} groups local dependence but does
@@ -179,7 +209,7 @@ explains the full data checks versus their compact summary tables.
 }
 
 Set the score bounds from your rubric and use the same columns, bounds,
-and \code{keep_original} setting for the review and the fit. Reviewing data does
+and \code{category_policy} setting for the review and the fit. Reviewing data does
 not change the original ratings. After correcting or recoding them, repeat
 the review and pass the corrected data frame to \code{\link[=fit_mfrm]{fit_mfrm()}}. A
 \code{data_review} object contains checks; it is not the rating data to fit.
@@ -251,7 +281,7 @@ be substituted for an observed-score G-study component. Start G/D analyses
 from the ratings and their declared G-study design.
 
 To group persons, raters or tasks by external attributes, use \code{\link[=mfrm_features]{mfrm_features()}}
-followed by \code{\link[=mfrm_cluster]{mfrm_cluster()}} or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for mixed
+followed by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for mixed
 attributes. \code{\link[=mfrm_pca]{mfrm_pca()}} and \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} use selected numeric
 features with explicitly chosen scaling and component counts. See
 \code{vignette("mfrmr-external-features", package = "mfrmr")} for imputation and
@@ -270,7 +300,7 @@ their base plots or explicit custom graphics from \code{\link[=plot_data]{plot_d
 
 \section{Missing scores on assigned ratings}{
 
-\code{\link[=mfrm_response_imputations]{mfrm_response_imputations()}} reviews supplied ordinal completions;
+\code{\link[=review_mfrm_imputations]{review_mfrm_imputations()}} reviews supplied ordinal completions;
 \code{\link[=fit_mfrm_imputed]{fit_mfrm_imputed()}} fits each dataset and retains failures. Inspect every
 completion before \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}} combines eligible non-Person facet
 estimates or prespecified contrasts and their covariance. This route does
@@ -466,7 +496,7 @@ inspect \code{review$group_view_index} for stable wave / link / facet rollups an
 \code{\link[=plot_anchor_drift]{plot_anchor_drift()}} or \code{plot(anchor_review, ...)} for the specific flagged
 evidence family.
 
-For bounded \code{GPCM}, use \code{\link[=build_linking_review]{build_linking_review()}} as a caveated exploratory
+For \code{GPCM}, use \code{\link[=build_linking_review]{build_linking_review()}} as a caveated exploratory
 synthesis over direct anchor, drift, and chain evidence. It is not an
 operational \code{GPCM} linking decision or evidence that anchor drift is absent.
 }
@@ -484,7 +514,7 @@ the next plot helper ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} / \code{\link[=export_summary_appendix]{export_summary_appendix()}} when the
 flagged cases need appendix-style reporting support.
 
-\code{build_misfit_casebook()} can still be used for bounded \code{GPCM}, but it
+\code{build_misfit_casebook()} can still be used for \code{GPCM}, but it
 should be read as an operational exploratory screen rather than as a strict
 Rasch-style invariance report.
 }
@@ -522,7 +552,7 @@ This preserves the declaration in the data-support review. A zero-count
 boundary is review evidence for the separate element-boundary contract; it
 is not by itself an unsupported free-step contrast.
 If an intermediate category is unobserved (for example 1, 2, 4, 5 with no
-3), also set \code{keep_original = TRUE} if the zero-count category should remain
+3), also set \code{category_policy = "preserve"} if the zero-count category should remain
 in the fitted support. \code{summary(describe_mfrm_data(...))} reports retained
 zero-count categories in \code{Notes}, printed \code{Caveats}, and \verb{$caveats};
 \code{summary(fit)} carries full structured rows into printed \code{Caveats} and
@@ -559,7 +589,7 @@ legacy-compatible one-shot workflow wrapper.
 \item For \code{RSM} / \code{PCM}, build diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 For final reporting, prefer \code{diagnostic_mode = "both"} so the legacy
 residual path and the strict marginal screen remain visible side by side.
-For bounded \code{GPCM}, diagnostics are now available through
+For \code{GPCM}, diagnostics are now available through
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} together with \code{\link[=analyze_residual_pca]{analyze_residual_pca()}},
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
 \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}},
@@ -571,7 +601,7 @@ when you need the supported slope-aware element-conditional fair averages.
 Treat those residual-based
 summaries as exploratory screens because the discrimination
 parameter is free.
-Full FACETS-style score-side contract review remains blocked for bounded
+Full FACETS-style score-side contract review remains blocked for
 \code{GPCM}; package-native scorefile export, fit-based reporting bundles,
 direct fair-average tables, and bias-screening tables carry their own
 caveats.
@@ -598,19 +628,19 @@ simulation truth, use \code{\link[=mfrm_screening_performance]{mfrm_screening_pe
 roster. It distinguishes individual and any-target rates, Monte Carlo
 uncertainty and unavailable outcomes. See
 \code{vignette("mfrmr-screening-performance", package = "mfrmr")}.
-\item (Optional, \code{RSM} / \code{PCM}; bounded \code{GPCM} with caveat) Estimate
+\item (Optional, \code{RSM} / \code{PCM}; \code{GPCM} with caveat) Estimate
 interaction bias with \code{\link[=estimate_bias]{estimate_bias()}}.
 \item Choose a downstream branch:
 \code{\link[=reporting_checklist]{reporting_checklist()}} for direct report preparation, or
-\code{\link[=build_weighting_review]{build_weighting_review()}} for Rasch-versus-bounded-\code{GPCM}
+\code{\link[=build_weighting_review]{build_weighting_review()}} for Rasch-versus-\code{GPCM}
 weighting review, or \code{\link[=build_misfit_casebook]{build_misfit_casebook()}} / \code{\link[=build_linking_review]{build_linking_review()}}
-for operational case review. For bounded \code{GPCM}, use
+for operational case review. For \code{GPCM}, use
 \code{\link[=build_linking_review]{build_linking_review()}} only as an exploratory index over direct
 anchor/drift/chain evidence.
 \item Generate reporting bundles:
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=apa_table]{apa_table()}},
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},
-\code{\link[=build_visual_summaries]{build_visual_summaries()}}. For bounded \code{GPCM}, use the APA, visual,
+\code{\link[=build_visual_summaries]{build_visual_summaries()}}. For \code{GPCM}, use the APA, visual,
 QC, and fit-based export bundles as caveated sensitivity-reporting
 surfaces; full score-side FACETS review stays blocked, while
 diagnostic/signal-detection design screening has its own caveated
@@ -632,7 +662,7 @@ simulation/prediction layer:
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} / \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}. Current
 fit-derived simulation specs include direct \code{GPCM} data generation and
 recovery checks. Design-evaluation, population-forecasting, diagnostic-
-screening, and signal-detection helpers also support bounded \code{GPCM} as
+screening, and signal-detection helpers also support \code{GPCM} as
 caveated role-based simulation/refit evidence; inspect \code{gpcm_boundary}
 before using those results in design claims.
 Unit scoring can use an ordinary \code{MML} fit directly, a latent-regression
@@ -658,13 +688,13 @@ helpers) for base-R visual diagnostics.
 \item Quick first pass:
 \code{RSM} / \code{PCM}: \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}} when you want the package to route the next figures.
-bounded \code{GPCM}: \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} ->
+\code{GPCM}: \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} ->
 \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} / \code{\link[=unexpected_response_table]{unexpected_response_table()}} ->
 \code{\link[=rating_scale_table]{rating_scale_table()}} ->
 \code{\link[=compute_information]{compute_information()}} -> \code{\link[=plot_information]{plot_information()}} ->
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} / \code{\link[=category_curves_report]{category_curves_report()}} ->
 \code{\link[=fair_average_table]{fair_average_table()}} / \code{\link[=estimate_bias]{estimate_bias()}} when those screening tables
-answer the question. For bounded \code{GPCM}, the fit-based export family
+answer the question. For \code{GPCM}, the fit-based export family
 (\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}},
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}) is available as caveated sensitivity-reporting
 output with explicit \code{gpcm_boundary} rows.
@@ -677,19 +707,28 @@ output with explicit \code{gpcm_boundary} rows.
 \code{"Method Section"} rows -> \code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=apa_table]{apa_table()}} or
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
-bounded \code{GPCM}:
+\code{GPCM}:
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> direct table/plot helpers ->
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} / \code{\link[=build_visual_summaries]{build_visual_summaries()}} ->
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} with \code{gpcm_boundary} caveats.
 \item Weighting-policy review:
 \code{\link[=compare_mfrm]{compare_mfrm()}} -> \code{\link[=build_weighting_review]{build_weighting_review()}} ->
 \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} when you want to inspect
-whether bounded \code{GPCM} is introducing substantively acceptable
+whether \code{GPCM} is introducing substantively acceptable
 discrimination-based reweighting relative to the Rasch-family reference.
 Eligible MML comparisons require a common grid of at least 31 points and
 a denser common-grid sensitivity check when close or consequential.
-Free-slope GPCM ranking and the PCM-versus-GPCM chi-square LRT remain
-unavailable; grid refinement alone does not change those restrictions.
+GPCM MML ranking requires the separate likelihood and solution checks;
+\code{nested = TRUE} additionally checks the PCM/GPCM equal-slope test;
+\code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} separately checks approximate slope intervals, with
+explicit standardized-scale, contrast, sandwich and Bonferroni options.
+\code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}} supplies a fitted-model bootstrap alternative;
+\code{\link[=mfrm_curve_intervals]{mfrm_curve_intervals()}} adds uncertainty to probabilities and per-rating
+information. \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} preserves explicit population
+covariates and reports interval changes across grids. Attach the explicitly
+selected intervals with \code{mfrm_results(fit, intervals = list(slopes = ci))};
+plot via \code{type = "gpcm_slopes"} or use \code{\link[=apa_table]{apa_table()}} and \code{\link[=plot_data]{plot_data()}}.
+Saved reports/exports retain methods and targets without refitting.
 \item Design planning and forecasting:
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} ->
 \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} -> \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} for
@@ -701,7 +740,7 @@ background data, or \code{JML} with the documented post hoc EAP approximation).
 Here again, \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} is the
 scenario-level forecast helper, whereas \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} /
 \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} are the scoring layer. Prediction export
-requires actual prediction objects. Bounded \code{GPCM} supports
+requires actual prediction objects. \code{GPCM} supports
 direct data generation via
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}},
@@ -813,7 +852,7 @@ fit <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1, rating_max = 4, keep_original = TRUE,
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM",
   population_formula = NULL # Fixed N(0,1) ability distribution

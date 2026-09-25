@@ -42,7 +42,7 @@ per-facet-level contribution curves from \code{\link[=compute_information]{compu
 \item \code{"se"} / \code{"sem"} / \code{"csem"}: conditional SEM across theta.
 \item \code{"both"}: precision and conditional SEM together, useful for presentations.
 \item \code{"iif"}: facet-level contribution curves for one selected facet in a
-supported \code{RSM}, \code{PCM}, or bounded \code{GPCM} fit.
+supported \code{RSM}, \code{PCM}, or \code{GPCM} fit.
 }
 }
 
@@ -65,7 +65,7 @@ precision curve.
 \item Conditional SEM is derived as \code{1 / sqrt(precision)}; lower is better.
 \item Facet-level curves show which facet levels contribute most to that
 realized precision at each theta.
-\item For bounded \code{GPCM}, those contributions include the squared
+\item For \code{GPCM}, those contributions include the squared
 discrimination scaling implied by the fitted \code{slope_facet}.
 \item If the precision peak sits far from the bulk of person measures, the
 realized design may be poorly targeted.

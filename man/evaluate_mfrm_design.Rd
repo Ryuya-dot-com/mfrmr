@@ -69,7 +69,7 @@ variable through both \code{design} and the scalar design-grid arguments.}
 \item{fit_method}{Estimation method passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{model}{Measurement model passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. \code{RSM} and \code{PCM} use
-the documented Rasch-family design-planning layer. Bounded \code{GPCM} is
+the documented Rasch-family design-planning layer. \code{GPCM} is
 available as a caveated simulation/refit operating-characteristic route.}
 
 \item{step_facet}{Step facet passed to \code{\link[=fit_mfrm]{fit_mfrm()}} when \code{model = "PCM"} or
@@ -81,7 +81,7 @@ When left \code{NULL}, the function inherits the generator step facet from
 \code{model = "GPCM"}. The current bounded branch requires
 \code{slope_facet == step_facet}.}
 
-\item{slopes}{Optional bounded-\code{GPCM} generator slopes used when
+\item{slopes}{Optional \code{GPCM} generator slopes used when
 \code{sim_spec = NULL}. See \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} for accepted formats.}
 
 \item{assignment}{Optional assignment design used when \code{sim_spec = NULL}.
@@ -156,7 +156,7 @@ summaries and plots
 mutable under the current simulation specification
 \item \code{planning_schema}: structured planning metadata bundling the role
 descriptor, scope boundary, and current mutability map
-\item \code{gpcm_boundary}: bounded-\code{GPCM} caveat row when a \code{GPCM} design route is
+\item \code{gpcm_boundary}: \code{GPCM} caveat row when a \code{GPCM} design route is
 used
 \item \code{notes}: short interpretation notes
 \item \code{settings}: simulation settings
@@ -224,9 +224,9 @@ data and refits the MML population-model branch. This remains a scenario
 study under explicit assumptions; it is not a closed-form predictive
 distribution for one future administration.
 
-Bounded \code{GPCM} design evaluation is available with caveats. It repeatedly
+\code{GPCM} design evaluation is available with caveats. It repeatedly
 generates data from the supplied or fit-derived slope-aware specification,
-refits bounded \code{GPCM}, and summarizes facet-level operating characteristics.
+refits \code{GPCM}, and summarizes facet-level operating characteristics.
 The route remains a role-based person x rater-like x criterion-like planner:
 it does not validate diagnostic-screening or signal-detection rules, does
 not provide a fully arbitrary-facet planner, and does not replace

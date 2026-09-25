@@ -78,6 +78,7 @@ example_policy_active_lines <- function(lines) {
   active <- character()
   guard_depth <- 0L
   for (line in lines) {
+    if (grepl("^\\s*#", line, perl = TRUE)) next
     if (guard_depth > 0L) {
       guard_depth <- max(0L, guard_depth + example_policy_count(line, "{") -
                            example_policy_count(line, "}"))
@@ -100,6 +101,21 @@ example_policy_count <- function(x, pattern) {
   matches <- gregexpr(pattern, x, fixed = TRUE)[[1]]
   if (length(matches) == 1L && matches[[1]] == -1L) 0L else length(matches)
 }
+
+test_that("example policy excludes comments without hiding executable calls", {
+  active <- example_policy_active_lines(c(
+    '# After fitting with method = "MML":',
+    '# fit_mfrm(data, method = "MML", parallel = TRUE)',
+    '# \\donttest{',
+    'fit_mfrm(data, method = "MML")',
+    '\\donttest{',
+    '# }',
+    'fit_mfrm(other_data, method = "MML")',
+    '}',
+    'plot(fit)'
+  ))
+  expect_identical(active, c('fit_mfrm(data, method = "MML")', 'plot(fit)'))
+})
 
 example_policy_hits <- function(rows) {
   if (nrow(rows) == 0L) return(character(0))

@@ -56,7 +56,7 @@ response-row review, active person estimates, and replay provenance.
 bundle for the latent-regression synthetic case, round-trips package tables
 through the normalization/review helpers, and confirms the package-side
 workflow without claiming that ConQuest itself was executed.
-\item \code{synthetic_gpcm}: checks whether the bounded \code{GPCM} branch recovers
+\item \code{synthetic_gpcm}: checks whether the \code{GPCM} branch recovers
 known criterion-specific slopes, row-centered step parameters, and
 criterion ordering from a synthetic overlap case. This case
 currently requires \code{model = "GPCM"} and is intended for \code{method = "MML"}.

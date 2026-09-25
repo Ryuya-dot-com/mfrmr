@@ -2,20 +2,21 @@
 % Please edit documentation in R/api-advanced.R
 \name{build_weighting_review}
 \alias{build_weighting_review}
-\title{Build a weighting-policy review between Rasch-family and bounded GPCM fits}
+\title{Build a weighting-policy review between Rasch-family and GPCM fits}
 \usage{
 build_weighting_review(
   rasch_fit,
   gpcm_fit,
   theta_range = c(-6, 6),
   theta_points = 101L,
-  top_n = 10L
+  top_n = 10L,
+  nested = FALSE
 )
 }
 \arguments{
 \item{rasch_fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{model = "RSM"} or \code{"PCM"}.}
 
-\item{gpcm_fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} using bounded \code{model = "GPCM"}.}
+\item{gpcm_fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{model = "GPCM"}.}
 
 \item{theta_range}{Numeric vector of length 2 passed to \code{\link[=compute_information]{compute_information()}}
 for the information-redistribution comparison.}
@@ -24,19 +25,22 @@ for the information-redistribution comparison.}
 \code{\link[=compute_information]{compute_information()}}.}
 
 \item{top_n}{Maximum number of rows to keep in compact summary outputs.}
+
+\item{nested}{Request the PCM/GPCM equal-slope likelihood-ratio test. Default
+\code{FALSE}. Requires matched MML fits and the checks in \code{\link[=compare_mfrm]{compare_mfrm()}}.}
 }
 \value{
 An object of class \code{mfrm_weighting_review}.
 }
 \description{
-Build a weighting-policy review between Rasch-family and bounded GPCM fits
+Build a weighting-policy review between Rasch-family and GPCM fits
 }
 \details{
 \code{build_weighting_review()} is an operational model-choice review helper. It
 is designed for the common question:
 \itemize{
 \item what changes when a Rasch-family equal-weighting model is replaced with a
-bounded \code{GPCM} that allows discrimination-based reweighting?
+\code{GPCM} that allows discrimination-based reweighting?
 }
 
 The helper does not estimate a new model. Instead, it synthesizes four
@@ -44,7 +48,7 @@ package-native evidence sources:
 \itemize{
 \item \code{\link[=compare_mfrm]{compare_mfrm()}} for same-data model comparison
 \item the non-person facet measures from each fit
-\item the bounded \code{GPCM} slope table
+\item the \code{GPCM} slope table
 \item \code{\link[=compute_information]{compute_information()}} for design-weighted information redistribution
 }
 
@@ -55,11 +59,12 @@ The fitted GPCM contains one slope for every level of one designated facet,
 not one common slope and not simultaneous criterion-by-rater slope blocks.
 The overview records the slope owner, step owner, level count, free relative
 slope contrasts, and whether the supplied reference is the exact unit-slope
-PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
-unavailable. Free-slope GPCM also lacks the inference checks required for
-information-criterion ranking, even under MML. The returned
-\code{comparison_contract} records the applicable comparison restrictions;
-observed changes in fit, scores and information remain descriptive. A JML
+PCM response-kernel reduction. MML information-criterion ranking requires
+the likelihood and local-solution checks in \code{\link[=compare_mfrm]{compare_mfrm()}}. With
+\code{nested = TRUE}, a PCM/GPCM asymptotic chi-square LRT additionally requires
+matching population, step and facet settings and G-1 free slope contrasts.
+The returned \code{comparison_contract} records the comparison and test status;
+observed changes in scores and information need substantive interpretation. A JML
 log-likelihood increase is not promoted to automatic PCM-versus-GPCM model
 selection because it is unpenalized and the GPCM contains additional slope
 parameters. FACETS may serve as a direct comparator for the PCM/JML side
@@ -70,7 +75,7 @@ free-slope GPCM counterpart.
 
 \enumerate{
 \item Fit an equal-weighting reference model with \code{model = "RSM"} or \code{"PCM"}.
-\item Fit a bounded \code{GPCM} on the same prepared response data.
+\item Fit a \code{GPCM} on the same prepared response data.
 \item Run \code{build_weighting_review(rasch_fit, gpcm_fit)}.
 \item Read \code{summary(review)} before deciding whether the discrimination-based
 reweighting is substantively acceptable.
@@ -81,16 +86,15 @@ reweighting is substantively acceptable.
 
 \itemize{
 \item \code{model_comparison}: same-data model-comparison bundle from \code{\link[=compare_mfrm]{compare_mfrm()}}.
-AIC/Person-BIC/SABIC ranking is unavailable for the current free-slope
-GPCM fits. PCM-versus-GPCM LRT also remains unavailable even though PCM
-is the aligned GPCM's unit-slope reduction.
+AIC/Person-BIC/SABIC ranking is available only when \code{ICComparable} is true.
+Inspect \verb{$lrt} and \verb{$comparison_basis$lrt_reason} for a requested test.
 \item \code{comparison_contract}: one-row evidence-tier table stating whether formal
 model selection is available, how any observed log-likelihood difference
 may be read, and the bounded role of FACETS in a JML review.
-\item \code{facet_shift}: how non-person facet estimates move under bounded \code{GPCM}.
+\item \code{facet_shift}: how non-person facet estimates move under \code{GPCM}.
 \item \code{slope_profile}: which \code{slope_facet} levels are upweighted or downweighted.
 \item \code{information_redistribution}: within-facet information-share changes
-between the Rasch-family fit and bounded \code{GPCM}.
+between the Rasch-family fit and \code{GPCM}.
 \item \code{top_reweighted_levels}: compact triage table for the strongest
 slope-facet-level redistribution signals.
 }
@@ -98,7 +102,7 @@ slope-facet-level redistribution signals.
 
 \section{GPCM boundary}{
 
-This helper is available only for the current bounded \code{GPCM} branch. It
+This helper is available only for the current \code{GPCM} branch. It
 requires the package's existing \code{slope_facet == step_facet} contract and
 should be read as an operational weighting-policy review, not as a formal
 validity adjudication.

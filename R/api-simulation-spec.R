@@ -29,7 +29,7 @@
 #' @param step_facet Step facet used when `model = "PCM"` and threshold values
 #'   vary across levels.
 #' @param slope_facet Slope facet used when `model = "GPCM"`. The current
-#'   bounded `GPCM` branch requires `slope_facet == step_facet`.
+#'   `GPCM` branch requires `slope_facet == step_facet`.
 #' @param slopes Optional slope specification for `model = "GPCM"`. Use either
 #'   a numeric vector aligned to the generated slope-facet levels or a data
 #'   frame with columns `SlopeFacet` and `Estimate`. Supplied slopes are treated
@@ -107,7 +107,7 @@
 #' - latent spread assumptions (`theta_sd`, `rater_sd`, `criterion_sd`)
 #' - optional empirical latent support values for semi-parametric simulation
 #' - threshold structure (`threshold_table`)
-#' - optional discrimination structure for bounded `GPCM` (`slope_table`) and
+#' - optional discrimination structure for `GPCM` (`slope_table`) and
 #'   its identified log-slope spread label (`slope_regime`)
 #' - assignment design (`assignment`)
 #' - optional sparse linked-design controls (`sparse_controls`) when
@@ -792,14 +792,14 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #' mechanism. Users should review and, if necessary, edit the returned
 #' specification before using it for design planning.
 #'
-#' Bounded `GPCM` fits are supported here for direct data generation
+#' `GPCM` fits are supported here for direct data generation
 #' and parameter-recovery checks, provided that the returned simulation
 #' specification stores both a threshold table and a parallel slope table.
 #' The same fit-derived specification can feed caveated role-based design
 #' evaluation, population forecasting, and fit-based report/export bundles.
 #' Diagnostic and signal-detection design screening is available with explicit
 #' caveats. Full FACETS score-side contract review, posterior predictive checks,
-#' and MCMC estimation are not available for bounded `GPCM`.
+#' and MCMC estimation are not available for `GPCM`.
 #'
 #' If you want to carry person-level group labels into a fit-derived observed
 #' response skeleton, provide the original `source_data` together with
@@ -1742,7 +1742,7 @@ simulation_build_slope_table <- function(slopes,
     n_criterion = n_criterion
   )
   if (length(expected_levels) == 0L) {
-    stop("Could not resolve expected slope-facet levels for bounded `GPCM`.", call. = FALSE)
+    stop("Could not resolve expected slope-facet levels for `GPCM`.", call. = FALSE)
   }
 
   normalize_slopes <- function(x) {
@@ -1857,7 +1857,7 @@ simulation_extract_slopes_from_fit <- function(slope_tbl, model) {
   }
   if (!is.data.frame(slope_tbl) || nrow(slope_tbl) == 0) {
     stop(
-      "`extract_mfrm_sim_spec()` requires a non-empty `fit$slopes` table for bounded `GPCM` fits.",
+      "`extract_mfrm_sim_spec()` requires a non-empty `fit$slopes` table for `GPCM` fits.",
       call. = FALSE
     )
   }

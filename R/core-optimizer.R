@@ -225,6 +225,9 @@ mfrm_optimizer_stage_row <- function(stage, selected = FALSE) {
     ),
     Objective = as.numeric(stage$opt$value %||% NA_real_),
     MaxParameterChange = as.numeric(stage$max_parameter_change %||% NA_real_),
+    SmallestCurvature = as.numeric(stage$curvature$smallest %||% NA_real_),
+    CurvatureScale = as.numeric(stage$curvature$scale %||% NA_real_),
+    CurvatureReviewError = as.character(stage$curvature$error %||% ""),
     ElapsedSeconds = as.numeric(stage$elapsed %||% NA_real_),
     Selected = isTRUE(selected),
     Error = as.character(stage$error %||% ""),
@@ -517,6 +520,31 @@ mfrm_optimizer_curvature_proposal <- function(par, fn, gr) {
        counts = counts)
 }
 
+# A fixed, invertible change of search coordinates, not a covariance estimate.
+# Absolute eigenvalues allow a restart from negative curvature; the floor only
+# limits the search scaling. Information inference still uses the original H.
+mfrm_optimizer_curvature_scale <- function(par, fn, gr) {
+  counts <- c("function" = 0L, "gradient" = 0L)
+  value <- function(p) { counts[1L] <<- counts[1L] + 1L; fn(p) }
+  gradient <- function(p) { counts[2L] <<- counts[2L] + 1L; gr(p) }
+  result <- tryCatch({
+    if (!length(par) || length(par) > 64L) stop("Curvature review is limited to 1-64 free parameters.")
+    h <- stats::optimHess(par, value, gradient)
+    if (!all(is.finite(h))) stop("Curvature was nonfinite.")
+    e <- eigen(h, symmetric = TRUE)
+    scale <- max(abs(e$values))
+    if (scale == 0) stop("Curvature was identically zero.")
+    transform <- sweep(e$vectors, 2L,
+      sqrt(pmax(abs(e$values), scale * 1e-10)), "/")
+    if (!all(is.finite(transform))) stop("Curvature scaling was nonfinite.")
+    list(smallest = min(e$values), scale = scale,
+      negative = min(e$values) < -64 * .Machine$double.eps * max(1, scale),
+      transform = transform, error = "")
+  }, error = function(e) list(transform = NULL, error = conditionMessage(e)))
+  result$counts <- counts
+  result
+}
+
 run_mfrm_direct_optimization <- function(start,
                                          method,
                                          idx,
@@ -558,7 +586,8 @@ run_mfrm_direct_optimization <- function(start,
   gr <- function(par, ...) safe_objective$gradient(par)
 
   run_stage <- function(par, stage_method, stage_reltol, index, label,
-                        fail_hard = FALSE, curvature_restart = FALSE) {
+                        fail_hard = FALSE, curvature_restart = FALSE,
+                        coordinate_scale = NULL) {
     input_par <- par
     proposal_counts <- c("function" = 0L, "gradient" = 0L)
     # The finite penalty applies only to proposals from a valid starting point.
@@ -578,8 +607,17 @@ run_mfrm_direct_optimization <- function(start,
         if (is.null(proposal$par)) stop(proposal$error)
         par <- proposal$par
       }
-      result <- optim(par = par, fn = fn, gr = gr, method = stage_method,
-                      control = stage_control)
+      if (is.null(coordinate_scale)) {
+        result <- optim(par = par, fn = fn, gr = gr, method = stage_method,
+                        control = stage_control)
+      } else {
+        to_native <- function(z) par + drop(coordinate_scale %*% z)
+        result <- optim(par = rep(0, length(par)),
+          fn = function(z) fn(to_native(z)),
+          gr = function(z) drop(crossprod(coordinate_scale, gr(to_native(z)))),
+          method = stage_method, control = stage_control)
+        result$par <- to_native(result$par)
+      }
       result$counts <- result$counts + proposal_counts
       result
     }, error = function(e) e)
@@ -729,6 +767,66 @@ run_mfrm_direct_optimization <- function(start,
     }
   }
 
+  # A small raw gradient can hide an unfinished GPCM fit when coordinates have
+  # very different scales. Review small fixed-grid problems even after code 0.
+  # Limit dense work and keep the existing path for other models/integration.
+  if (identical(method, "MML") && identical(config$model, "GPCM") &&
+      !mfrmr_adaptive_integration(config) && length(start) > 0L &&
+      length(start) <= 64L && is.finite(reltol) && reltol <= 1e-9 &&
+      identical(selected$opt$convergence, 0L)) {
+    review_curvature <- function(stage) {
+      started <- proc.time()[["elapsed"]]
+      stage$curvature <- mfrm_optimizer_curvature_scale(
+        stage$opt$par, evaluator$value, evaluator$gradient)
+      stage$elapsed <- stage$elapsed + proc.time()[["elapsed"]] - started
+      for (name in c("FunctionEvaluations", "GradientEvaluations")) {
+        k <- if (name == "FunctionEvaluations") 1L else 2L
+        stage$diagnostics[[name]] <- stage$diagnostics[[name]] + stage$curvature$counts[k]
+      }
+      stage
+    }
+    selected <- review_curvature(selected)
+    stages[[selected$index]] <- selected
+    if (isTRUE(selected$curvature$negative)) {
+      polish_triggered <- TRUE
+      working <- selected
+      for (attempt in seq_len(3L)) {
+        candidate <- run_stage(working$opt$par, "BFGS", min(reltol, 1e-14),
+          length(stages) + 1L, "curvature_rescale",
+          coordinate_scale = working$curvature$transform)
+        if (!nzchar(candidate$error)) candidate <- review_curvature(candidate)
+        stages[[length(stages) + 1L]] <- candidate
+        slack <- 64 * .Machine$double.eps * max(1, abs(working$opt$value))
+        if (nzchar(candidate$error) || !is.finite(candidate$opt$value) ||
+            candidate$opt$value > working$opt$value + slack ||
+            is.null(candidate$curvature$transform)) break
+        ready <- identical(candidate$diagnostics$ConvergenceSeverity, "pass") &&
+          !isTRUE(candidate$curvature$negative)
+        if (ready) {
+          # Among numerically ready points, an actual likelihood improvement
+          # takes precedence over a smaller raw gradient in different scales.
+          if (candidate$opt$value <= selected$opt$value + slack &&
+              (candidate$opt$value < selected$opt$value - slack ||
+               mfrm_optimizer_stage_is_better(candidate, selected))) selected <- candidate
+          break
+        }
+        if (isTRUE(all.equal(candidate$opt$par, working$opt$par,
+                             tolerance = 0, check.attributes = FALSE))) break
+        working <- candidate
+      }
+      if (isTRUE(selected$curvature$negative)) {
+        selected$diagnostics$ConvergenceStatus <- "converged_curvature_review"
+        selected$diagnostics$ConvergenceReason <- "negative_curvature_review"
+        selected$diagnostics$ConvergenceSeverity <- "review"
+        selected$diagnostics$ReviewableWarning <- TRUE
+        selected$diagnostics$ConvergenceDetail <- paste0(
+          "Numerical curvature remained negative after limited rescaled restarts; ",
+          "a small terminal gradient alone does not establish a local likelihood maximum.")
+        stages[[selected$index]] <- selected
+      }
+    }
+  }
+
   opt <- selected$opt
   total_functions <- sum(vapply(stages, function(stage) {
     as.numeric(stage$diagnostics$FunctionEvaluations %||% 0)
@@ -795,7 +893,7 @@ run_mfrm_direct_optimization <- function(start,
       ", status = ", opt$optimizer_diagnostics$ConvergenceStatus, "). ",
       opt$optimizer_diagnostics$ConvergenceDetail, " ",
       if (isTRUE(polish_triggered)) {
-        paste0("Bounded gradient polishing attempted ", length(stages) - 1L,
+        paste0("Limited numerical polishing attempted ", length(stages) - 1L,
                " additional stage(s). ")
       } else {
         ""

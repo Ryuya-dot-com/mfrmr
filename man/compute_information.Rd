@@ -28,7 +28,7 @@ contribution value retained under that column name for compatibility.
 }
 \description{
 Calculates design-weighted score-variance curves across the latent
-trait (theta) for a fitted ordered-category \code{RSM}, \code{PCM}, or bounded
+trait (theta) for a fitted ordered-category \code{RSM}, \code{PCM}, or
 \code{GPCM} model. Returns both an overall precision curve (\verb{$tif}) and
 per-facet-level contribution curves (\verb{$iif}) based on the realized
 observation pattern.
@@ -52,7 +52,7 @@ this score-variance representation is the natural conditional information
 identity rather than a separate approximation. For binary data it reduces to
 the familiar \eqn{p(\theta)\{1 - p(\theta)\}} form. For \code{PCM}, the package
 evaluates each observed design cell using the threshold vector associated
-with that cell's realized \code{step_facet} level. For bounded \code{GPCM}, the
+with that cell's realized \code{step_facet} level. For \code{GPCM}, the
 same design-weighted score variance is scaled by the squared discrimination
 attached to the realized \code{slope_facet} level, which is the
 \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} item-information identity that
@@ -62,13 +62,13 @@ polytomous information formula to the GPCM kernel of Muraki (1992).
 \section{What \code{tif} and \code{iif} mean here}{
 
 In \code{mfrmr}, this helper supports ordered-category \code{RSM}, \code{PCM}, and the
-current bounded \code{GPCM} fit. The total curve (\verb{$tif}) is the sum of
+current \code{GPCM} fit. The total curve (\verb{$tif}) is the sum of
 design-weighted cell contributions across all non-person facet levels in the
 fitted model. The facet-level contribution curves (\verb{$iif}) keep those
 weighted contributions separated, so you can see which observed rater
 levels, criteria, or other facet levels are driving precision at different
 parts of the scale. For \code{PCM}, step-facet-specific thresholds are respected
-when each observed design cell is evaluated. For bounded \code{GPCM}, those
+when each observed design cell is evaluated. For \code{GPCM}, those
 same cell-level variances are additionally scaled by the squared
 discrimination associated with the realized \code{slope_facet} level.
 }
@@ -81,14 +81,14 @@ fixed item set.
 \item It should not be used as if it were design-free evidence about a form's
 precision independent of the realized observation pattern.
 \item It does not currently extend beyond the ordered-category \code{RSM} / \code{PCM} /
-bounded \code{GPCM} family implemented by \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\code{GPCM} family implemented by \code{\link[=fit_mfrm]{fit_mfrm()}}.
 }
 }
 
 \section{When to use this}{
 
 Use \code{compute_information()} when you want a design-weighted precision screen
-for an \code{RSM}, \code{PCM}, or bounded \code{GPCM} fit along the latent
+for an \code{RSM}, \code{PCM}, or \code{GPCM} fit along the latent
 continuum. In practice:
 \itemize{
 \item start with the total precision curve for overall targeting across the
@@ -112,7 +112,7 @@ for reporting or custom graphics.
 \section{References}{
 
 The ordered-category probability structures come from Andrich's \code{RSM}
-formulation and Masters' \code{PCM}. The bounded \code{GPCM} information identity
+formulation and Masters' \code{PCM}. The \code{GPCM} information identity
 \eqn{a_j^2 \cdot \mathrm{Var}(T \mid \theta)} is derived in Muraki
 (1993, Equation 10) by applying Samejima's (1974) general polytomous
 information formula \eqn{I_j(\theta) = \sum_k P_{jk}(\theta)
@@ -141,7 +141,7 @@ item information function for the GPCM,
 \eqn{I_j(\theta) = D^2 a_j^2 \mathrm{Var}(T \mid \theta)}, by
 applying Samejima's (1974) polytomous information formula to the
 GPCM kernel; this is the canonical reference for \code{compute_information()}
-under bounded \code{GPCM}.)
+under \code{GPCM}.)
 \item Samejima, F. (1974). \emph{Normal ogive model on the continuous
 response level in the multidimensional latent space}.
 Psychometrika, 39, 111-121. (Source for the general polytomous

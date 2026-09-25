@@ -48,7 +48,7 @@ and optionally attach user-supplied reasons for missing values.
 Numeric \code{NA} and \code{NaN} are missing. Infinite numeric values and blank
 categorical labels are refused; replace missing markers with \code{NA} explicitly.
 Constant and entirely missing features remain available for review but
-cannot be used by \code{\link[=mfrm_cluster]{mfrm_cluster()}}. IDs and unselected columns do not enter
+cannot be used by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}. IDs and unselected columns do not enter
 distances. These functions are intended for external attributes such as
 training, experience, or specialization. They do not propagate uncertainty
 from estimated ability, severity, or fit statistics.
@@ -70,6 +70,6 @@ features$missing
 features$row_summary
 }
 \seealso{
-\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
+\code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
 \code{\link[=mfrm_pca]{mfrm_pca()}}, \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}}
 }

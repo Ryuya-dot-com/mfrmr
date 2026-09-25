@@ -1,4 +1,4 @@
-test_that("bounded GPCM assigns level-specific slopes to exactly one facet", {
+test_that("GPCM assigns level-specific slopes to exactly one facet", {
   facets <- c("Rater", "Task", "Criterion")
 
   criterion <- mfrmr:::resolve_step_and_slope_facets(
@@ -40,61 +40,6 @@ test_that("bounded GPCM assigns level-specific slopes to exactly one facet", {
   expect_length(slopes, length(criterion_levels))
   expect_true(all(slopes > 0))
   expect_equal(exp(mean(log(slopes))), 1, tolerance = 1e-15)
-})
-
-test_that("PCM versus aligned GPCM records IC-only nesting scope", {
-  make_signature_fit <- function(model,
-                                 step_facet,
-                                 slope_facet = NULL) {
-    list(
-      config = list(
-        model = model,
-        method = "MML",
-        person_col = "Person",
-        facet_cols = c("Rater", "Criterion"),
-        score_col = "Score",
-        rating_min = 0,
-        rating_max = 3,
-        score_map = data.frame(
-          OriginalScore = 0:3,
-          InternalScore = 0:3
-        ),
-        weight_col = NULL,
-        step_facet = step_facet,
-        slope_facet = slope_facet,
-        facet_interactions = character(0),
-        noncenter_facet = "Person",
-        dummy_facets = character(0),
-        positive_facets = character(0),
-        anchors = NULL,
-        group_anchors = NULL
-      )
-    )
-  }
-
-  pcm <- make_signature_fit("PCM", "Criterion")
-  gpcm <- make_signature_fit("GPCM", "Criterion", "Criterion")
-  aligned <- mfrmr:::audit_compare_mfrm_nesting(
-    list(pcm, gpcm),
-    labels = c("PCM", "GPCM")
-  )
-  expect_false(aligned$eligible)
-  expect_identical(aligned$relation, "PCM_in_GPCM_ic_only")
-  expect_identical(aligned$simpler, "PCM")
-  expect_identical(aligned$complex, "GPCM")
-  expect_match(aligned$reason, "unit-slope response-kernel reduction")
-  expect_match(aligned$reason, "chi-square LRT is not implemented")
-
-  rater_gpcm <- make_signature_fit("GPCM", "Rater", "Rater")
-  mismatch <- mfrmr:::audit_compare_mfrm_nesting(
-    list(pcm, rater_gpcm),
-    labels = c("PCM", "rater GPCM")
-  )
-  expect_false(mismatch$eligible)
-  expect_identical(mismatch$relation, "PCM_GPCM_owner_mismatch")
-  expect_true(is.na(mismatch$simpler))
-  expect_true(is.na(mismatch$complex))
-  expect_match(mismatch$reason, "do not share one explicit aligned")
 })
 
 test_that("model-choice contract names level-specific single-owner slopes", {

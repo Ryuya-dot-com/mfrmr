@@ -397,7 +397,7 @@ The Monte Carlo reporting principles follow Morris, White and Crowther (2019),
 [Using simulation studies to evaluate statistical methods](https://doi.org/10.1002/sim.8086).
 Rater misfit and differential functioning should be distinguished when designing
 an evaluation; see Wind and Guo (2019),
-[Exploring the Combined Effects of Rater Misfit and Differential Rater Functioning in Performance Assessments](https://pubmed.ncbi.nlm.nih.gov/31488921/).
+[Exploring the Combined Effects of Rater Misfit and Differential Rater Functioning in Performance Assessments](https://doi.org/10.1177/0013164419834613).
 Incomplete assignments are also part of the design question; see Wind and Jones
 (2019), [The Effects of Incomplete Rating Designs in Combination With Rater Effects](https://doi.org/10.1111/jedm.12201).
 

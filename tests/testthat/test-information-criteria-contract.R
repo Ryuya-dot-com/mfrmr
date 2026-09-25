@@ -441,7 +441,7 @@ test_that("fitted-object IC comparison audits weights, legacy state, and identit
     }
   )
   expect_true(any(grepl("cannot be ranked by information criteria", warnings)))
-  expect_true(any(grepl("Inference readiness is not satisfied", warnings)))
+  expect_true(any(grepl("IC solution checks are not satisfied", warnings)))
   expect_false(any(constant_comparison$table$ICComparable))
 
   varying_data <- data
