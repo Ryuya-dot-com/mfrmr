@@ -1,9 +1,9 @@
 # mfrmr 0.2.4 — submission preparation
 
 This is a preparation draft. No CRAN submission has been made for this source.
-Local integration is complete as of September 26, 2026. New platform and
-Windows checks are still required; earlier uploaded candidates are different
-sources and do not validate this archive.
+Local integration and five-platform GitHub CI are complete as of September 26,
+2026. The matching website is deployed. Earlier Win-builder uploads are different
+sources and do not validate this archive; no new upload was made in this step.
 
 ## Changes
 
@@ -66,10 +66,32 @@ attempt stopped before tests because repository names could not be resolved;
 its log is retained separately from the completed network-enabled checks.
 No upload or submission was involved in those read-only repository queries.
 
+## Cross-platform checks and website
+
+Source commit `6f541bfa3ff5eb6f59e513ee4a375956e9119eb7` passes
+[five-platform CI](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335441):
+
+- macOS arm64, R 4.6.1.
+- Windows, R 4.6.1 UCRT.
+- Ubuntu, R 4.6.1 and R 4.5.3.
+- Ubuntu, R-devel (2026-09-23 r90586).
+
+All five independently built source packages report `Status: OK` (zero errors,
+warnings or notes). These are ordinary checks with `--no-manual` and
+`NOT_CRAN=false`, not five new exhaustive or `--as-cran` runs. Each also passes
+the international-input and moved-folder replay checks. These CI archives are
+identified separately from the frozen local archive above.
+
+The [site build](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335057)
+and [Pages deployment](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36159750653)
+succeed. Published GPCM help and tutorial source links match the checked commit.
+The follow-up result-recording commit changes only package-excluded documents;
+package sources and CI configuration are unchanged.
+
 ## Before submission
 
-Run the applicable successor platform/Windows checks on this same source,
-reconcile any findings, and match release/help assets to the resulting source.
+Match tagged release assets to this checked source and perform any further
+pre-submission Windows checks on the chosen archive.
 Keep CRAN submission and acceptance distinct from local checks or GitHub
 publication. Historical check logs and detailed evidence remain in the
 repository's validation record; they are not bundled in the submitted package.

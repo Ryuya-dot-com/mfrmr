@@ -6,12 +6,15 @@ See [NEWS](NEWS.md) for changes and the [README](README.md) for use and examples
 Before CRAN submission, see the [0.2.4 interface and GPCM review](#before-cran-submission-interface-and-gpcm-review).
 The subsequent [GPCM inference audit](#gpcm-inference-follow-up-after-local-integration)
 now includes the approved inference extensions and population-replay correction.
-These are local changes after the frozen archive, which retains only its own
-recorded check results. The retained GPCM inference outputs now have explicit
+These changes are integrated into `main` at
+[`6f541bfa`](https://github.com/Ryuya-dot-com/mfrmr/commit/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7).
+Earlier candidate archives retain only their own recorded check results.
+The retained GPCM inference outputs now have explicit
 release dispositions: approximate methods remain available, while adverse
 coverage results and unqualified stronger claims remain visible. M5 local
-archive integration is complete for the September 26 successor; M6 platform
-checking and publication remain open.
+archive integration is complete for the September 26 successor. Its five-platform
+checks, `main` integration and website update are complete; M6 remains open for
+matching tagged release assets.
 For the current completion order, start with [Remaining work for the current source](#remaining-work-for-the-current-source).
 For work after 0.2.4, start with [Post-release priorities](#post-release-priorities).
 That section distinguishes ongoing maintenance, the next development focus and
@@ -54,10 +57,18 @@ information. A revised API/GPCM snapshot has since passed local checks and was
 sent for Windows checking. That upload is an earlier development snapshot.
 The initial API and GPCM inference changes were consolidated in a locally
 checked archive, as recorded under M5 below. The additional inference targets
-described below postdate that archive. The September 26 successor has now completed local integrated checks,
-including repairs found in the full packaged test suite. It has not received
-successor five-environment CI or Windows checks. Passing package checks does
-not establish statistical performance beyond the stated scope.
+described below postdate that archive. The September 26 successor has now
+completed local integrated checks, including repairs found in the full packaged
+test suite. Commit `6f541bfa` passes the
+[five-environment CI](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335441):
+macOS/R-release, Windows/R-release and Ubuntu/R-release, R-devel and R-oldrel-1.
+All five package checks report `Status: OK`; input and saved-result portability
+checks also pass. The matching
+[website build](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335057)
+and Pages deployment succeed, and published help/tutorial source links identify
+this commit. No successor tag, release archive or Win-builder upload was created.
+Passing package checks does not establish statistical performance beyond the
+stated scope.
 
 | Workflow | Current position | Role in the planned 0.2.4 |
 | --- | --- | --- |
@@ -103,7 +114,8 @@ The following is the retained candidate scope. These public workflows have compl
 local integration, cross-platform package checks and GitHub publication verification.
 Completion of the previously published candidate alone did not establish this
 expanded scope. The interface and GPCM review below is a further pre-submission
-requirement; its local API, summary and guidance changes are not in the published candidate.
+requirement; its API, summary and guidance changes are now in `main`, but are
+not in the tagged rc.5 candidate.
 
 | Included in 0.2.4 | Outcome required before release | Explicit boundary |
 | --- | --- | --- |
@@ -166,7 +178,7 @@ additional confirmation simulations or a final source freeze.
 | M3 — Qualified model workflows | Numerical and statistical evidence supports the retained model outputs under declared conditions; adverse results remain visible. | Release disposition settled for the retained approximate outputs, as specified below. This is not a finding that every nominal interval has adequate coverage: probability families show substantial undercoverage, and bootstrap repeated-dataset accuracy remains unqualified. The agreed APIs remain available with those limits; no improved-coverage claim or new interval method is included. Earlier shared-rater/testlet restrictions remain in force. |
 | M4 — User and maintenance integration | Representative workflows, defaults, warnings, figures, exports and help agree on the same source. | Changed GPCM paths and common-MML consumers have focused evidence. Actual weak/unavailable/unbounded interval displays, Markdown reasons and CSV/RDS replay now pass representative review. The current-source educational assessment-to-feedback walkthrough is complete, including its precision-decision repair and optional saved-result branches. Independent novice usability testing has not been performed. |
 | M5 — Local completion | Freeze one source/archive after M1–M4; run applicable integrated checks and resolve failures. | Complete locally for the September 26 successor. The initial full suite found three failures, all repaired and checked with 516 focused expectations. Source-documentation and fresh-session complements pass; the final archive passes 0 errors / 0 warnings / 1 maintainer/update-frequency NOTE. Full tests/examples/manuals were not repeated: the exact repair delta and reusable evidence are recorded in the [integration record](inst/validation/claim-reconciliation-0.2.4.md#2026-09-26--complete-local-integration-of-the-retained-inference-scope). |
-| M6 — Public release | The same successor source passes applicable platform checks and has matching main/release assets/help/site. | Open for the current source. The recorded rc.5 publication and Windows uploads do not validate the subsequent changes. CRAN submission and acceptance are separate. |
+| M6 — Public release | The same successor source passes applicable platform checks and has matching main/release assets/help/site. | Partly complete: `6f541bfa` is in `main`, all five platform checks pass, and matching help/tutorials are deployed. Matching tagged release assets remain open. The rc.5 archive and earlier Win-builder uploads still refer to earlier sources. CRAN submission and acceptance are separate. |
 
 M1 workflow finishing and M2 read-only model/statistical decisions can progress
 together. M2 precedes new confirmation work; M3 and M4 precede M5. Corrections
@@ -200,16 +212,17 @@ expanded 0.2.4 needs its own source identity and final verification. See
 [updating saved analyses](README.md#updating-saved-analyses) and
 `vignette("mfrmr-portable-calibration", package = "mfrmr")`.
 
-## Current local implementation and remaining evidence
+## Current implementation and remaining evidence
 
 The table below records current capability and statistical limits. The release
 scope and milestones above set the completion conditions. The September 26 successor completes M5 locally. Evidence is reused only for
 unchanged source and matching scope, with the exact repair delta recorded.
-Successor platform checks and public release remain pending.
+This implementation is now in `main`; its five-platform checks and website
+deployment pass. A matching tagged release remains pending.
 
 | Workstream | Current status and completion condition |
 | --- | --- |
-| Numeric k-means/PCA | Implemented and checked locally with explicit geometry, component selection, paired feature imputations, plots, comparisons and executed help examples. Included in GitHub rc.5; the later recommended PAM name and guidance remain local. Group validity and inferential guarantees are not established. |
+| Numeric k-means/PCA | Implemented and checked locally with explicit geometry, component selection, paired feature imputations, plots, comparisons and executed help examples. Included in GitHub rc.5; the later recommended PAM name and guidance are now in `main`. Group validity and inferential guarantees are not established. |
 | Assigned-response multiple imputation | Implemented and checked locally for reviewed supplied imputations and fixed-standard-normal RSM/PCM MML analyses. Event eligibility, assignment, categories and observed evidence are preserved; eligible non-person facet targets use covariance-aware Rubin pooling. The joint-RSM tutorial includes forty posterior predictive completions, shared Person draws, calibration uncertainty, sampling diagnostics, category probabilities and a separate lower-score assumption. In its 30-missing-score example, direct observed-score MML and MI contrasts are 0.463 and 0.468 logits; the lower-score assumption gives 0.667 logits. All eighty completed-data fits are eligible. A paired 200-dataset comparison now adds bounded evidence: under the tested MAR design, MI coverage is 96.5% among 198 available intervals (95% Monte Carlo bounds 92.9--98.6%); two posteriors miss the sampling-diagnostic threshold. Under low-score-dependent MNAR, coverage is 26.0% with +0.574-logit bias despite a similar missing fraction near 14%. The planned comparison is complete. Preserve this scope through integration; proper imputer priors versus MML moments remain an approximation, and arbitrary imputers/designs or general coverage are not qualified. EAP pooling and other model families remain outside this route. |
 | Robust intervals and coverage | A one-way sandwich API is implemented and checked locally for fixed-facet RSM/PCM MML estimates and contrasts, using persons or declared larger independent clusters. Help, plots, independent derivative checks and a 1,600-dataset bounded comparison are complete. All intervals were available; generating-truth coverage still fell to 87% in the joint skewed/sparse scenario. The method targets the working model's limiting parameter and does not remove misspecification bias. This bounded target, its public interpretation and local integration are complete. Small-cluster, multiway/crossed, G/D-study and variance-boundary extensions remain later work. |
 | Rater diagnostic accuracy | A planned-roster API, plot and tutorial are implemented locally, with unavailable outcomes retained and per-target/family rates distinguished. A prespecified 1,000-trial matched-budget study reused 200 results and fitted 800 new datasets. The tested Infit/Outfit union detected only 6/100 and 2/100 contaminated-rater cases under two sparse assignments; false-family flags were 0/100 except 1/100 in one missingness condition. All screens were computable, but three fits required category-support review. Threshold calibration, other departures including differential rater functioning, and broader accuracy remain open. Flagging alone does not justify rater exclusion. |
@@ -251,7 +264,7 @@ Research extensions already excluded from the scope do not hold up these repairs
 | Reconcile changed bootstrap results | Provenance reconciliation and output repair complete (M2/M4) | The original object has 408 admitted / 91 unresolved; the assembled category-case reanalysis has 470 / 29. Seeds and all 62 replaced rows match their retained records. Two later finite repairs remain separate. Reanalysis history now follows print, intervals and report tables. | Neither saved object is a full run of the current estimator. Preserve both unchanged; do not claim 472 accepted or current-procedure bootstrap performance. A complete new bootstrap is needed only to make a corresponding new performance claim; repeated-dataset coverage remains unqualified. |
 | Assessment-to-feedback and planning workflows | Current-source educational walkthrough complete; author integration review (M4) | The 282-rating educational example runs from rubric/assignment review through RSM MML, diagnostics, feedback, figures, report/export and RDS reload. Saved precision now reaches result/report decisions correctly. Existing PCA/group/MI and complete/incomplete D-study outputs retain matching summaries and plot data without refitting. Earlier extended-model evidence is retained. | Preserve the explicit category choice, session-dependent screening explanation and dedicated branch routes during final integration. This is author review, not a novice-reader study, coverage validation or fresh qualification of every model/option. See the assessment-workflow record below. |
 | Current-source help and local archive | Complete locally (M5) | The September 26 archive has executed/replayed updates for three articles, twelve unchanged article outputs, 72 described figures and a verified 15-entry vignette index. The full test findings and focused repairs are reconciled; the final archive passes its applicable checks with one maintainer/update-frequency NOTE. | Preserve the frozen source and its evidence. Any later runtime change needs impact-specific checks; the earlier CI/Windows snapshots do not validate this archive. |
-| Successor CI, Windows and publication | Required public handoff (M6), after local completion | Earlier published/check snapshots are recorded above. | Use the frozen successor source for applicable platform checks and matching release artifacts. Keep final publication, CRAN submission and CRAN acceptance distinct. Current local work does not initiate external publication. |
+| Successor CI, Windows and publication | Public handoff partly complete (M6) | `6f541bfa` passes all five CI environments, including Windows/R-release. Matching website deployment is verified. | Publish matching tagged release artifacts when authorized; perform any further pre-submission Windows checks on the chosen archive. Earlier Win-builder results retain their original source identity. Final publication, CRAN submission and acceptance remain distinct. |
 
 The claim/evidence mapping is now recorded in the
 [retained-claims review](inst/validation/claim-reconciliation-0.2.4.md#2026-09-25--map-retained-claims-to-evidence-and-audit-changed-admissions).
@@ -352,7 +365,7 @@ they are not silently claimed by this release decision. The broad grid and
 nested study remain unexecuted. General guarantees were already outside the
 stated scope; no agreed API is being moved to another release.
 
-**M5 is complete locally; next is M6 on the frozen successor.** The final
+**M5 is complete; M6 platform checks and the website update now pass.** The final
 archive SHA256 is `0f1f21c042512318a3b3c8ffbce246bcdab21db1d3dc2dce2cf5e091c58155e1`.
 The initial full suite passed 23,290 expectations and found three failures;
 these are repaired, with 516 focused expectations passing. The final archive
@@ -364,9 +377,9 @@ are unchanged. Source documentation and fresh-session checks complement the
 installed suite; 32 repository-research skips retain their existing scope.
 
 Do not repeat the 100 matched refits, 800-fit reanalysis or full suite without
-a relevant change or failure. Successor platform/Windows checks, publication
-and CRAN submission remain separate; the completed local work initiates none
-of them. Probability undercoverage and unqualified bootstrap sampling claims
+a relevant change or failure. The five-platform run and website deployment
+were separately authorized after local completion. Tagged release publication,
+Win-builder upload and CRAN submission remain separate. Probability undercoverage and unqualified bootstrap sampling claims
 remain as stated in the release dispositions.
 
 The common-MML consumer repair remains supported by its focused checks; those
@@ -791,8 +804,9 @@ summaries, figures, reports and installed help. Category policy and actual
 score recoding remain distinct, including unknown metadata in older objects.
 The feedback guide and GPCM inference decisions are included in the checked
 archive. The M5 record identifies the full run, test repairs and reused results;
-older Windows checks do not validate this successor. M6 platform checking and
-publication remain open. Package checks do not turn restricted outputs into
+older Windows checks do not validate this successor. Its five-platform CI now
+passes and its website is updated; matching tagged release assets remain open
+under M6. Package checks do not turn restricted outputs into
 universal statistical guarantees.
 
 ## GPCM: specific restrictions and their exit conditions
@@ -983,7 +997,7 @@ any future adapter extension.
 
 | Horizon | Outcome | Release boundary |
 | --- | --- | --- |
-| 0.2.4 | Finish the pre-submission API/GPCM review, publish and maintain the retained assessment workflows. | GitHub rc.5 publication is verified. The September 26 successor completes M5 for the retained GPCM inference extensions and reporting workflows, with approximate-output limits explicit. New platform checks and publication remain open. Windows results belong to their uploaded snapshots. CRAN review and acceptance remain separate. |
+| 0.2.4 | Finish the pre-submission API/GPCM review, publish and maintain the retained assessment workflows. | GitHub rc.5 publication is verified. The September 26 successor completes M5, is integrated into `main`, passes five-platform CI and has matching published help/tutorials. Approximate-output limits remain explicit. Matching tagged release assets remain open; earlier Win-builder results belong to their uploaded snapshots. CRAN review and acceptance remain separate. |
 | Maintenance releases, if needed | Correct reproducible calculation, interpretation, installation or compatibility defects. | Preserve supported behavior where possible; identify affected versions, explain any changed result and provide recovery or migration instructions. Research extensions do not delay necessary repairs. |
 | Next feature release, provisionally 0.2.5 | Improve rater feedback where qualified and address actual post-release API experience. | Build on the interface and GPCM scope decisions completed before 0.2.4 submission. Keep compatible transitions; admit additional inference or model scope only with its own evidence. |
 | Subsequent feature releases | Extend assessment planning and the retained models for concrete decisions. | Assess the GPCM slope action and slope/step ownership separately, using the ConQuest/TAM model decisions above. Neither waits for multidimensional MFRM or full software parity. Each admitted extension has its own release scope; not every candidate belongs in 0.2.5. |

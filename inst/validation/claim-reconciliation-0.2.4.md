@@ -5023,3 +5023,48 @@ archive are unchanged. The source-truth and maintenance-admission CI prerequisit
 both pass after this correction. No eligibility rule or CI guard was relaxed.
 The five-platform run will use the pushed commit; its results must be recorded
 separately from the completed local package checks.
+
+## 2026-09-26 — Complete successor five-platform CI and website deployment
+
+**Source and authorization.** The requested commit/push is complete on `main`:
+`6f541bfa3ff5eb6f59e513ee4a375956e9119eb7`, "Integrate GPCM inference and
+finalize 0.2.4 workflows". All accumulated source changes were included. Ignored
+local evidence and libraries were preserved. No numerical source change or
+additional simulation was needed during CI.
+
+**Platform results.** [Run 36155335441](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335441)
+completes successfully at that exact commit. Each job logs `Status: OK`, zero
+errors/warnings/notes, and the checked commit identity:
+
+| Environment | R | Job | Result |
+| --- | --- | --- | --- |
+| macOS arm64 | 4.6.1 | 108138363648 | Success |
+| Windows | 4.6.1 UCRT | 108143941851 | Success |
+| Ubuntu release | 4.6.1 | 108143941716 | Success |
+| Ubuntu oldrel-1 | 4.5.3 | 108143941847 | Success |
+| Ubuntu devel | 2026-09-23 r90586 | 108143941698 | Success |
+
+Each job builds its own source archive, checks it with `--no-manual` and
+`NOT_CRAN=false`, then passes two international-input cases, eight moved-folder
+replay cases and the repository review. The CI archives are not asserted to be
+byte-identical to the prebuilt M5 local archive. This is platform/package-check
+evidence, not a fresh exhaustive suite, `--as-cran` run, G4 confirmation or
+statistical-performance qualification. The M5 local archive and full-run repair
+history remain as recorded above.
+
+**Website.** [pkgdown run 36155335057](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335057)
+succeeds at the same source. Its `gh-pages` commit is
+`14d111c5b5831b64469589d3e061d937183798a4`; the matching
+[Pages deployment](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36159750653)
+also succeeds. The public `mfrm_curve_intervals` help and `mfrmr-gpcm-scope`
+tutorial return successfully and link their sources to the full checked commit.
+No successor release tag/archive, Win-builder upload or CRAN submission was made.
+
+**Record-only follow-up.** ROADMAP and cran-comments now distinguish completed
+main/platform/site integration from outstanding tagged release assets and any
+further submission checks. This follow-up changes those two documents and this
+journal only, all excluded by `.Rbuildignore`. The result-recording commit uses
+`[skip ci]` to avoid repeating checks or rebuilding the site for unchanged package
+inputs. The source-truth precheck is rerun on the changed public wording.
+Machine-readable run results, five job logs and the two published HTML pages
+are retained under `validation-results/github-integration-20260926/`.
