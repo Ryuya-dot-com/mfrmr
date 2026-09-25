@@ -5068,3 +5068,36 @@ journal only, all excluded by `.Rbuildignore`. The result-recording commit uses
 inputs. The source-truth precheck is rerun on the changed public wording.
 Machine-readable run results, five job logs and the two published HTML pages
 are retained under `validation-results/github-integration-20260926/`.
+
+## 2026-09-26 — Publish the verified rc.6 tag and archive
+
+The user requested release-tag creation after the successful five-platform CI.
+The existing candidate lifecycle is preserved: the next tag is `v0.2.4-rc.6`,
+not a final `v0.2.4` declaration. Its annotated tag object is
+`9031d0ee88fb3decaa8e7ef6b2ace87da20929d5`, pointing to
+`a7529b73a76f131cdd7368ce69d1af6267b42b0b`. Remote tag resolution was verified.
+That commit adds only package-excluded records to the five-platform implementation
+`6f541bfa3ff5eb6f59e513ee4a375956e9119eb7`.
+
+The [GitHub pre-release](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.6)
+is public, not a draft, and was explicitly not marked as the latest stable release.
+Its two attachments are the unchanged M5 `mfrmr_0.2.4.tar.gz` and a SHA256 file.
+All 686 selected source inputs match the final source manifest; the packaged
+source identity and unchanged archive hash were rechecked before upload.
+Both public assets were downloaded afterwards. The downloaded archive and
+checksum agree with SHA256
+`0f1f21c042512318a3b3c8ffbce246bcdab21db1d3dc2dce2cf5e091c58155e1`.
+
+Release notes describe GPCM/API changes, compatible entry points, approximate
+inference limits, the exact CI source and the distinction between the initial
+full local check, its repairs and final complementary checks. No full suite,
+simulation, archive rebuild, Win-builder upload or CRAN submission was repeated.
+The existing website deployment already matches the implementation.
+
+ROADMAP and cran-comments now record verified candidate publication, while
+keeping the final-release/submission decision and statistical qualification
+separate. The follow-up publication record changes only these two excluded
+documents and this journal; `[skip ci]` avoids another unchanged-source run.
+Preparation notes, tag/source identities, release metadata, downloaded assets
+and checksum verification are retained in
+`validation-results/release-rc6-20260926/`.

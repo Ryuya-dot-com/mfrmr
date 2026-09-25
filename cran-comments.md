@@ -2,7 +2,7 @@
 
 This is a preparation draft. No CRAN submission has been made for this source.
 Local integration and five-platform GitHub CI are complete as of September 26,
-2026. The matching website is deployed. Earlier Win-builder uploads are different
+2026. The matching website and `v0.2.4-rc.6` candidate are published. Earlier Win-builder uploads are different
 sources and do not validate this archive; no new upload was made in this step.
 
 ## Changes
@@ -88,10 +88,17 @@ succeed. Published GPCM help and tutorial source links match the checked commit.
 The follow-up result-recording commit changes only package-excluded documents;
 package sources and CI configuration are unchanged.
 
+The [rc.6 candidate](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.6)
+tags `a7529b73a76f131cdd7368ce69d1af6267b42b0b`, which differs from the CI source
+only in excluded result records. The attached archive is the frozen local
+archive above; its checksum and the downloaded copy were verified after
+publication. This candidate publication does not constitute a final release
+decision or CRAN submission.
+
 ## Before submission
 
-Match tagged release assets to this checked source and perform any further
-pre-submission Windows checks on the chosen archive.
+Perform any further pre-submission Windows checks on the chosen archive and
+settle the final release/submission decision.
 Keep CRAN submission and acceptance distinct from local checks or GitHub
 publication. Historical check logs and detailed evidence remain in the
 repository's validation record; they are not bundled in the submitted package.
