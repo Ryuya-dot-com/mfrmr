@@ -5980,3 +5980,14 @@ The protocol, runner, summary and result/cost record are retained as
 fits are local under `validation-results/gpcm-separated-owner-pilot-20260926/`.
 D1's diagnostic pilot is complete, while statistical qualification remains open.
 No public API, statistical cutoff or default was changed by this study.
+
+## 2026-09-26: Repair the S3 registry expectation after the CI package check
+
+Run 36231290875 reached the macOS source-tarball package check and failed one
+test: the exact expected S3 registry omitted `print.mfrm_rater_feedback`.
+The source registration was correct. The same failure reproduced locally;
+adding the method to the expected registry repairs the contract without
+weakening the equality assertion or changing package behavior. The namespace
+contract and API S3 consistency files now pass, and `getS3method()` resolves
+the feedback method. The other four CI environments were skipped in that run;
+a replacement CI run is still required before claiming five-platform success.
