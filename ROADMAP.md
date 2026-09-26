@@ -94,7 +94,7 @@ statistical qualification or release approval.
 | Milestone | Present state | Work and exit condition |
 | --- | --- | --- |
 | D0 — Preserve and review the implemented development snapshot | Implemented locally; focused checks recorded. | Publish the current development branch, verify the remote commit, and link checks for that exact source with their current status. Preserve source/test/help changes together. CI may still be pending at this checkpoint; successful five-platform checks are required for D4 and do not qualify coverage. |
-| D1 — Evaluate separate-owner GPCM for a declared use | MML fitting, scoring, output-specific inference, matched PCM comparison, paired reference curves and saved output are connected. Independent kernels, crossed/incomplete fitted examples and a confounding rejection are checked. Sampling performance remains unqualified. | Evaluate criterion discrimination with rater-specific category steps under the design below. Close with a supported scope, an explicit limitation or a documented rejection; implementation success alone cannot close this milestone. |
+| D1 — Evaluate separate-owner GPCM for a declared use | MML fitting, scoring, output-specific inference, matched PCM comparison, paired reference curves and saved output are connected. Independent kernels, crossed/incomplete examples and confounding rejection are checked. The fixed four-cell diagnostic pilot is complete; sampling-performance qualification remains open. | Evaluate criterion discrimination with rater-specific category steps under the design below. Close with a supported scope, an explicit limitation or a documented rejection; implementation success alone cannot close this milestone. |
 | D2 — Consolidate the delivered user workflow | Fixed-rater HTML sheets, selected plot guide, common presets and additional conversions work locally. | Reconcile recommended routes, argument names/defaults, compatibility, conversion status and saved-result behavior across the selected workflows. Complete one graduate-student-oriented walkthrough and, when a reader is available, record actual comprehension problems. Do not claim novice usability from author checks alone. |
 | D3 — Freeze the next integration scope | Not yet frozen. | Select the implemented and adequately described outputs from D1/D2; list retained approximations, unsupported combinations and deferred features. Reconcile NEWS, help, examples and capability tables. A failed research claim may be excluded without blocking useful interface improvements. |
 | D4 — Integrate and qualify the selected source | Pending. | Resolve source changes against `main`, check the exact resulting source on five environments, perform one batched package/replay/documentation review, and resolve failures. Archive source identity and evidence. Submission-specific checks apply to the final archive, not earlier candidates. |
@@ -141,6 +141,15 @@ are outside this evaluation.
    Preserve adverse results. Do not claim nominal coverage from the pilot, or
    broaden the grid merely to explain earlier runs. Existing small-sample GPCM
    undercoverage remains relevant caution, not evidence for this new structure.
+
+The first four-cell pilot is complete. In the correctly specified model, all
+planned fits and target intervals were available. Removing one of three raters
+per Person widened the slope intervals by about 45–53%; no estimator defect was
+reproduced. The small repeated-sampling check does not establish 95% coverage:
+even perfect coverage in a cell of 20 datasets has a 95% Monte Carlo lower bound
+near 83%. See the [pilot result and cost review](inst/validation/gpcm-separated-owner-pilot-record-20260926.md).
+Do not repeat that pilot. A confirmation study needs an explicit target and
+precision decision; D2 can proceed while stronger interval claims remain open.
 
 General simulation/design APIs and dedicated weighting reviews should be
 extended only after the role semantics, replay and intended decision are clear.

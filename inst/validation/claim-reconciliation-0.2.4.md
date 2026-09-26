@@ -5955,3 +5955,28 @@ warnings or skips); the direct CI metadata check and diff whitespace check pass.
 Logs are retained in `validation-results/development-ci-repair-20260926/`.
 These results repair the stopped check; they do not constitute a five-platform
 package-check result or completion of D1 statistical evaluation.
+
+
+## 2026-09-26: Complete the separate-owner GPCM diagnostic pilot
+
+The fixed protocol ran 20 datasets in each of four cells: N=120/400 and
+complete/connected rotating assignment. All 80 fits and targeted slope/curve
+intervals returned under existing checks; all optimizer codes were zero and
+joint-information statuses were ok. Total fit/inference time was 147.304 seconds.
+All failed/unavailable and planned-but-unrun accounting is retained in the
+runner/summary even though no such cases occurred in this pilot. A separate
+summary check exercises unavailable and unexecuted cases.
+
+Slope coverage was 18/20 for both 120-person cells and 20/20 for both 400-person
+cells. Probability-target coverage ranges were 16–20/20, 16–20/20, 18–20/20 and
+17–20/20 respectively (120 complete, 120 incomplete, 400 complete, 400 incomplete).
+Dependent targets are not counted as independent replications; the minimum
+across 54 probability targets is not a multiplicity-adjusted finding. No nominal
+coverage guarantee or estimator improvement is claimed. The pilot does not
+justify repeating itself or automatic bootstrap/confirmation expansion.
+
+The protocol, runner, summary and result/cost record are retained as
+`inst/validation/gpcm-separated-owner-pilot*-20260926.*`; generated data and
+fits are local under `validation-results/gpcm-separated-owner-pilot-20260926/`.
+D1's diagnostic pilot is complete, while statistical qualification remains open.
+No public API, statistical cutoff or default was changed by this study.
