@@ -5991,3 +5991,25 @@ weakening the equality assertion or changing package behavior. The namespace
 contract and API S3 consistency files now pass, and `getS3method()` resolves
 the feedback method. The other four CI environments were skipped in that run;
 a replacement CI run is still required before claiming five-platform success.
+
+## 2026-09-26: Align the fixed-rater reporting walkthrough with the primary API
+
+The main reporting help previously led with the specialist manuscript stack.
+It now begins with stored results, selected plots, reports and analyst archives,
+while retaining the purpose of the specialist helpers. The existing fixed-facet
+tutorial distinguishes `style`, `output`, `include`, and the two meanings of
+`preset`; it explicitly selects the saved individual interval and executes an
+archive/reopen example that checks identical saved interval objects. Recipient
+HTML and analyst archives remain separate. No estimator, API name or default
+was changed.
+
+The complete tutorial rendered with `NOT_CRAN=true`, including RSM/PCM fits,
+individual sheets, interval figures and the new archive/reopen example. The
+existing rater-feedback tests passed, including real print dispatch, no-refit
+checks, identifier omission, missing intervals and rejected model scopes.
+Roxygen regenerated the reporting help without warnings. Outputs and logs are
+under `validation-results/d2-feedback-workflow-20260926/`. Browser visual review
+was unavailable because the UI tool reported no available browser; successful
+HTML generation is not a layout inspection or a novice-comprehension study.
+The CI for repair commit `0b11aed9` does not include these later documentation
+changes. D2's broader argument inventory and reader feedback remain open.

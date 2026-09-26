@@ -171,6 +171,14 @@ saved replay. Mark a function superseded only when its replacement covers its
 actual task. Extend the plot conversion inventory when a user workflow exposes
 a gap; exhaustive conversion is not a prerequisite to a useful release.
 
+The fixed-rater walkthrough now connects saved results to individual sheets,
+interval figures, analyst reports and archive/reopen operations. The reporting
+guide uses the same entry points and keeps specialist manuscript tools visible.
+The executable walkthrough and existing feedback tests pass locally. This is
+an author-checked workflow, not evidence of novice comprehension. The broader
+argument/default comparison across selected plot routes and actual reader
+feedback remain open; D2 is not complete.
+
 ### Later extensions and explicit reopening conditions
 
 | Candidate | Dependency and decision before work resumes |

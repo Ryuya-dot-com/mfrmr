@@ -20,6 +20,15 @@
 #' treated as automatic operational-scoring evidence.
 #'
 #' @section Start with the reporting question:
+#' - "Where should I start with an existing fit?"
+#'   Use [mfrm_results()] to retain the fit and matching outputs, inspect
+#'   `summary(res)`, then use [mfrm_report()] for a report or
+#'   [export_mfrm_results()] for an analyst archive.
+#' - "What can I give to an individual rater?"
+#'   Use `mfrm_report(res, style = "rater", facet = "Rater", rater = "R01",
+#'   output = "html")` for native additive RSM/PCM results. Review and retain
+#'   the standalone HTML file. The complete analysis archive serves the analyst
+#'   and retains source data and identifiers.
 #' - "Which parts of this run are ready to draft, and with what caveats?"
 #'   Use [reporting_checklist()].
 #' - "How should I phrase the model, fit, and precision sections?"
@@ -42,24 +51,45 @@
 #'   `reporting_checklist()$visual_scope`.
 #'
 #' @section Recommended reporting route:
-#' 1. Fit with [fit_mfrm()].
-#' 2. Build diagnostics with [diagnose_mfrm()].
-#' 3. Review precision strength with [precision_review_report()] when
-#'    inferential language matters.
-#' 4. Run [reporting_checklist()] to identify missing sections, caveats, and
-#'    next actions. Use the `"Visual Displays"` rows as the figure-routing
-#'    layer for the current run.
-#' 5. When strict marginal rows are available, follow up with
-#'    [plot_marginal_fit()] and [plot_marginal_pairwise()] before finalizing
-#'    the narrative around local misfit.
-#' 6. Create manuscript-draft prose and metadata with [build_apa_outputs()].
-#'    For `GPCM`, treat the APA/QC/export stack as caveated
-#'    sensitivity-reporting output and keep its `gpcm_boundary` visible.
-#' 7. Convert summary outputs to reusable table bundles with
-#'    [build_summary_table_bundle()], review the bundle with `summary()` /
-#'    `plot()`, then convert specific components to handoff tables with
-#'    [apa_table()] or export them directly with [export_summary_appendix()].
-#' 8. When candidate models are compared, keep the comparison as a reporting
+#' 1. Fit with [fit_mfrm()] and inspect `summary(fit)` before interpreting it.
+#' 2. Calculate the diagnostics or intervals needed for the question. For a
+#'    fixed-rater RSM/PCM feedback sheet, use [diagnose_mfrm()] and, for
+#'    eligible MML fits, [mfrm_facet_intervals()]. A rater coefficient and a
+#'    difference between raters are distinct interval targets.
+#' 3. Retain them with `res <- mfrm_results(fit, diagnostics = diagnostics,
+#'    intervals = list(raters = ci), compute = "never")` when these objects
+#'    have been calculated. Omit attachments you do not need. Here
+#'    `compute = "never"` avoids filling absent diagnostics automatically;
+#'    missing sections remain explicit.
+#' 4. Inspect `summary(res)$triage` and `summary(res)$next_actions`. Choose a
+#'    figure through `summary(res)$plot_map` or `mfrmr_output_guide("plots")`.
+#'    Use `plot(res, ...)` or [as_ggplot()] for supported views. An attached
+#'    rater interval is displayed by `type = "facet_raters"`; an ordinary
+#'    Wright map does not acquire that interval method automatically.
+#' 5. Use `mfrm_report(res)` for the analyst's quality-control report, or
+#'    `style = "rater"` with explicit `facet` and `rater` for one recipient.
+#'    `output = "html"` creates a temporary file; copy it to keep it.
+#' 6. Save `res` with [base::saveRDS()] for later use, or use
+#'    [export_mfrm_results()] for CSVs, HTML, RDS and replay files.
+#'    `preset = "starter"` also requests reports and available figures.
+#'    Review `written_files` and `plot_errors` before treating export as complete.
+#'
+#' These functions serve different purposes; figures and reports are optional
+#' branches from the saved results, not compulsory steps before saving them.
+#' The worked example in `vignette("mfrmr-facet-intervals")` follows this route
+#' through individual feedback, interval figures and save/reopen operations.
+#'
+#' @section Specialist reporting tools:
+#' Use [reporting_checklist()] to inspect manuscript sections and
+#' [precision_review_report()] when the strength of precision claims matters.
+#' [build_apa_outputs()] supplies manuscript-draft prose and metadata;
+#' [build_summary_table_bundle()] collects selected tables for [apa_table()]
+#' or [export_summary_appendix()]. These narrower tools remain useful and
+#' are not replaced by the general report. For `GPCM`, keep the
+#' `gpcm_boundary` caveats with APA/QC/export output.
+#' When strict marginal rows are available, [plot_marginal_fit()] and
+#' [plot_marginal_pairwise()] support local-misfit follow-up.
+#' When candidate models are compared, keep the comparison as a reporting
 #'    review: [compare_mfrm()] -> [build_model_choice_review()] ->
 #'    [build_summary_table_bundle()]. Treat `GPCM` as a slope-aware
 #'    sensitivity route unless the study design explicitly justifies

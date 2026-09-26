@@ -25,6 +25,14 @@ treated as automatic operational-scoring evidence.
 \section{Start with the reporting question}{
 
 \itemize{
+\item "Where should I start with an existing fit?"
+Use \code{\link[=mfrm_results]{mfrm_results()}} to retain the fit and matching outputs, inspect
+\code{summary(res)}, then use \code{\link[=mfrm_report]{mfrm_report()}} for a report or
+\code{\link[=export_mfrm_results]{export_mfrm_results()}} for an analyst archive.
+\item "What can I give to an individual rater?"
+Use \code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01", output = "html")} for native additive RSM/PCM results. Review and retain
+the standalone HTML file. The complete analysis archive serves the analyst
+and retains source data and identifiers.
 \item "Which parts of this run are ready to draft, and with what caveats?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}}.
 \item "How should I phrase the model, fit, and precision sections?"
@@ -51,29 +59,51 @@ sentence starters, then verify availability with
 \section{Recommended reporting route}{
 
 \enumerate{
-\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-\item Build diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
-\item Review precision strength with \code{\link[=precision_review_report]{precision_review_report()}} when
-inferential language matters.
-\item Run \code{\link[=reporting_checklist]{reporting_checklist()}} to identify missing sections, caveats, and
-next actions. Use the \code{"Visual Displays"} rows as the figure-routing
-layer for the current run.
-\item When strict marginal rows are available, follow up with
-\code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} before finalizing
-the narrative around local misfit.
-\item Create manuscript-draft prose and metadata with \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
-For \code{GPCM}, treat the APA/QC/export stack as caveated
-sensitivity-reporting output and keep its \code{gpcm_boundary} visible.
-\item Convert summary outputs to reusable table bundles with
-\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, review the bundle with \code{summary()} /
-\code{plot()}, then convert specific components to handoff tables with
-\code{\link[=apa_table]{apa_table()}} or export them directly with \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
-\item When candidate models are compared, keep the comparison as a reporting
+\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and inspect \code{summary(fit)} before interpreting it.
+\item Calculate the diagnostics or intervals needed for the question. For a
+fixed-rater RSM/PCM feedback sheet, use \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} and, for
+eligible MML fits, \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}. A rater coefficient and a
+difference between raters are distinct interval targets.
+\item Retain them with \code{res <- mfrm_results(fit, diagnostics = diagnostics, intervals = list(raters = ci), compute = "never")} when these objects
+have been calculated. Omit attachments you do not need. Here
+\code{compute = "never"} avoids filling absent diagnostics automatically;
+missing sections remain explicit.
+\item Inspect \code{summary(res)$triage} and \code{summary(res)$next_actions}. Choose a
+figure through \code{summary(res)$plot_map} or \code{mfrmr_output_guide("plots")}.
+Use \code{plot(res, ...)} or \code{\link[=as_ggplot]{as_ggplot()}} for supported views. An attached
+rater interval is displayed by \code{type = "facet_raters"}; an ordinary
+Wright map does not acquire that interval method automatically.
+\item Use \code{mfrm_report(res)} for the analyst's quality-control report, or
+\code{style = "rater"} with explicit \code{facet} and \code{rater} for one recipient.
+\code{output = "html"} creates a temporary file; copy it to keep it.
+\item Save \code{res} with \code{\link[base:saveRDS]{base::saveRDS()}} for later use, or use
+\code{\link[=export_mfrm_results]{export_mfrm_results()}} for CSVs, HTML, RDS and replay files.
+\code{preset = "starter"} also requests reports and available figures.
+Review \code{written_files} and \code{plot_errors} before treating export as complete.
+}
+
+These functions serve different purposes; figures and reports are optional
+branches from the saved results, not compulsory steps before saving them.
+The worked example in \code{vignette("mfrmr-facet-intervals")} follows this route
+through individual feedback, interval figures and save/reopen operations.
+}
+
+\section{Specialist reporting tools}{
+
+Use \code{\link[=reporting_checklist]{reporting_checklist()}} to inspect manuscript sections and
+\code{\link[=precision_review_report]{precision_review_report()}} when the strength of precision claims matters.
+\code{\link[=build_apa_outputs]{build_apa_outputs()}} supplies manuscript-draft prose and metadata;
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} collects selected tables for \code{\link[=apa_table]{apa_table()}}
+or \code{\link[=export_summary_appendix]{export_summary_appendix()}}. These narrower tools remain useful and
+are not replaced by the general report. For \code{GPCM}, keep the
+\code{gpcm_boundary} caveats with APA/QC/export output.
+When strict marginal rows are available, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and
+\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} support local-misfit follow-up.
+When candidate models are compared, keep the comparison as a reporting
 review: \code{\link[=compare_mfrm]{compare_mfrm()}} -> \code{\link[=build_model_choice_review]{build_model_choice_review()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}. Treat \code{GPCM} as a slope-aware
 sensitivity route unless the study design explicitly justifies
 discrimination-based operational scoring.
-}
 }
 
 \section{Keep each fit with its own diagnostics}{

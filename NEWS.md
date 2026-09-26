@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* The reporting guide now starts from saved results, figures, reports and
+  analyst archives, with specialist manuscript tools described separately.
+  The fixed-rater tutorial explains report-purpose and output-format defaults,
+  explicitly selects a saved interval for recipient sheets, and demonstrates
+  exporting and reopening an analysis without recalculating its intervals.
+  Export presets select files; plotting presets select appearance.
+
 * GPCM MML now allows different slope and step facets, for example criterion
   discrimination with rater-specific category steps. One slope family retains
   geometric-mean-one identification and multiplies the entire adjacent-category
