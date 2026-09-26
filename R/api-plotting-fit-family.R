@@ -3035,6 +3035,10 @@ draw_facet_plot <- function(facet_tbl,
 #'   explicitly setting `show_ci = TRUE` creates a hybrid display: FACETS-style
 #'   ruler grammar with mfrmr uncertainty intervals.
 #' @param ci_level Confidence level used when `show_ci = TRUE`.
+#' @param level Named alternative to `ci_level`, a single number strictly
+#'   between 0 and 1. Supply only one of these names, even when equal.
+#'   Both omitted retain 0.95. This controls the fitted-model plot intervals;
+#'   attached interval results retain the level chosen when they were computed.
 #' @param group Optional grouping for `type = "wright"` to overlay
 #'   per-group person-density curves (DIF / DFF screening view).
 #'   Either a column name (looked up first in `group_data` when
@@ -3348,7 +3352,15 @@ plot.mfrm_fit <- function(x,
                           persons_per_star = NULL,
                           show_title = TRUE,
                           show_notes = TRUE,
-                          ...) {
+                          ..., level = NULL) {
+  if (!missing(level)) {
+    if (!missing(ci_level)) stop("Supply only one of `level` and `ci_level`.", call. = FALSE)
+    if (!is.numeric(level) || is.complex(level) || length(level) != 1L ||
+        is.na(level) || !is.finite(level) || level <= 0 || level >= 1) {
+      stop("`level` must be a single number strictly between 0 and 1.", call. = FALSE)
+    }
+    ci_level <- level
+  }
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(x, "mfrm_fit")) {
     stop("`x` must be an mfrm_fit object from fit_mfrm().")

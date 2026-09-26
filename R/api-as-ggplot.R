@@ -1114,6 +1114,12 @@
 #' @param component Optional tabular payload component to convert.
 #' @param ... Arguments passed to the draw-free plot method. CCC conversion
 #'   additionally accepts `slope_aes`, `facet_by`, and `show_overlay`.
+#'   A saved `mfrm_plot_data` object already contains its view and display
+#'   settings: it rejects extra arguments (except those three CCC controls
+#'   for a complete CCC view). To change the level or source plot settings,
+#'   create a new payload from the fitted model or statistical result. For
+#'   appearance changes after conversion, use ggplot tools such as
+#'   `ggplot2::labs(title = NULL)`.
 #'
 #' @return A `ggplot2` plot object, with a `mfrmr_notes` attribute when the
 #'   source plot payload contains a `notes` table.
@@ -1285,6 +1291,14 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
       "D-study conversion uses component = 'series'; use plot_data() for tables and other components.", call. = FALSE)
     return(.mfrmr_gg_multivariate_d_study(payload))
   }
+  conversion_args <- if (is.null(component) && x$name %in% c(
+    "category_characteristic_curves", "category_characteristic_curves_overlay"
+  )) c("slope_aes", "facet_by", "show_overlay") else character()
+  if (length(dots) && (is.null(names(dots)) || anyDuplicated(names(dots)) ||
+      any(!names(dots) %in% conversion_args))) {
+    stop("Unsupported arguments for a saved plot. Recreate the plot from its fit or result to change settings; use ggplot2::labs() for converted labels. Only complete CCC views accept slope_aes, facet_by and show_overlay.", call. = FALSE)
+  }
+  if (!is.null(type)) stop("A saved plot already selects its type. Recreate it from the fit or result to select another view.", call. = FALSE)
   if (is.null(component) && identical(x$name, "fair_average") && !is.null(payload$plot_data)) {
     df <- payload$plot_data
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Y))

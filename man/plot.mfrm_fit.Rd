@@ -41,7 +41,8 @@
   persons_per_star = NULL,
   show_title = TRUE,
   show_notes = TRUE,
-  ...
+  ...,
+  level = NULL
 )
 }
 \arguments{
@@ -183,6 +184,11 @@ review-only title markers. Notes remain available in the returned object,
 and R warnings are still issued when this is \code{FALSE}.}
 
 \item{...}{Additional arguments ignored for S3 compatibility.}
+
+\item{level}{Named alternative to \code{ci_level}, a single number strictly
+between 0 and 1. Supply only one of these names, even when equal.
+Both omitted retain 0.95. This controls the fitted-model plot intervals;
+attached interval results retain the level chosen when they were computed.}
 }
 \value{
 Invisibly, an \code{mfrm_plot_data} object (default and for any

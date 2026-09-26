@@ -1,5 +1,17 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Ordinary fitted-model plots now accept named `level` as an alternative to
+  `ci_level`, also through results and ggplot entry points. Previously `level`
+  could be silently ignored. Supplying both names is an error; the default
+  remains 0.95 and old positional calls retain their meanings. Saved interval
+  results retain their original confidence level.
+
+* Conversion of saved core plot payloads now rejects unsupported settings
+  instead of silently ignoring them, including attempted title or interval
+  changes. Create a new payload from the fit/result to change plot settings,
+  or use ggplot label controls after conversion. Complete CCC views retain
+  their documented conversion-specific appearance options.
+
 * The reporting guide now starts from saved results, figures, reports and
   analyst archives, with specialist manuscript tools described separately.
   The fixed-rater tutorial explains report-purpose and output-format defaults,

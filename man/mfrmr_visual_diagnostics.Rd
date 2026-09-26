@@ -99,6 +99,37 @@ caption or accompanying report. Use the plot guide to check ggplot support;
 accepting \code{title} does not add a converter for an unsupported plot.
 }
 
+\section{Fitted plots and saved intervals}{
+
+For ordinary fitted-model plots, \code{plot(fit, level = 0.90)} is an alternative
+to \code{ci_level = 0.90}; use only one spelling. The same control is forwarded
+by ordinary fit-based routes of \code{plot(res, ...)} and \code{as_ggplot(fit, ...)}.
+It changes the normal intervals where \code{show_ci = TRUE}, without refitting
+the model. The default remains 0.95. Specialist helpers that document
+only \code{ci_level} retain that argument; this is not a package-wide rename.
+
+A saved inferential result has already chosen its method and level. For
+example, create \code{ci <- mfrm_facet_intervals(fit, "Rater", level = 0.90)}
+before \code{plot(ci)}; passing \code{level} to that plotting method is an error.
+The attached route \code{plot(res, type = "facet_raters")} uses those saved
+endpoints and does not inherit the Wright map's interval settings.
+
+A saved plot payload also retains its rendering choices. With
+\code{p <- plot(fit, level = 0.90, show_title = FALSE, draw = FALSE)},
+\code{as_ggplot(p)} keeps that selection. To change it, make a new plot from
+\code{fit}; extra settings such as \code{as_ggplot(p, level = 0.80)} are rejected.
+To change labels on the converted ggplot, use
+\code{as_ggplot(p) + ggplot2::labs(title = NULL)}.
+
+Title suppression depends on the entry point. Ordinary fitted-model plots
+retain the historical \code{title = NULL} meaning (automatic title); use
+\code{show_title = FALSE} to hide it and \code{show_notes = FALSE} to hide notes.
+Fixed-facet interval plots and the helpers listed above accept
+\code{title = NULL} to hide the title. These distinctions preserve existing
+scripts. Hiding annotations does not remove numerical cautions from the
+saved results or establish stronger inference.
+}
+
 \section{Start with the question}{
 
 \itemize{

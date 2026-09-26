@@ -45,7 +45,13 @@ plot method.}
 \item{component}{Optional tabular payload component to convert.}
 
 \item{...}{Arguments passed to the draw-free plot method. CCC conversion
-additionally accepts \code{slope_aes}, \code{facet_by}, and \code{show_overlay}.}
+additionally accepts \code{slope_aes}, \code{facet_by}, and \code{show_overlay}.
+A saved \code{mfrm_plot_data} object already contains its view and display
+settings: it rejects extra arguments (except those three CCC controls
+for a complete CCC view). To change the level or source plot settings,
+create a new payload from the fitted model or statistical result. For
+appearance changes after conversion, use ggplot tools such as
+\code{ggplot2::labs(title = NULL)}.}
 }
 \value{
 A \code{ggplot2} plot object, with a \code{mfrmr_notes} attribute when the

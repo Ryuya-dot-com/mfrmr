@@ -179,6 +179,16 @@ an author-checked workflow, not evidence of novice comprehension. The broader
 argument/default comparison across selected plot routes and actual reader
 feedback remain open; D2 is not complete.
 
+The primary fitted-model plot route now accepts named `level` alongside the
+existing `ci_level` spelling, rejecting simultaneous use. Saved fixed-facet
+intervals retain their computed level; saved core plot conversion rejects
+unsupported settings rather than silently ignoring them. Source help explains
+why ordinary fitted plots use `show_title = FALSE`, while newer interval plots
+use `title = NULL`. Keep these compatibility distinctions visible instead of
+changing existing scripts silently. Selected-route regression checks cover
+actual interval widths, old/new spelling equivalence, plot-data/result/ggplot
+forwarding and saved rendering. This does not rename every specialist helper.
+
 ### Later extensions and explicit reopening conditions
 
 | Candidate | Dependency and decision before work resumes |

@@ -92,6 +92,35 @@
 #' caption or accompanying report. Use the plot guide to check ggplot support;
 #' accepting `title` does not add a converter for an unsupported plot.
 #'
+#' @section Fitted plots and saved intervals:
+#' For ordinary fitted-model plots, `plot(fit, level = 0.90)` is an alternative
+#' to `ci_level = 0.90`; use only one spelling. The same control is forwarded
+#' by ordinary fit-based routes of `plot(res, ...)` and `as_ggplot(fit, ...)`.
+#' It changes the normal intervals where `show_ci = TRUE`, without refitting
+#' the model. The default remains 0.95. Specialist helpers that document
+#' only `ci_level` retain that argument; this is not a package-wide rename.
+#'
+#' A saved inferential result has already chosen its method and level. For
+#' example, create `ci <- mfrm_facet_intervals(fit, "Rater", level = 0.90)`
+#' before `plot(ci)`; passing `level` to that plotting method is an error.
+#' The attached route `plot(res, type = "facet_raters")` uses those saved
+#' endpoints and does not inherit the Wright map's interval settings.
+#'
+#' A saved plot payload also retains its rendering choices. With
+#' `p <- plot(fit, level = 0.90, show_title = FALSE, draw = FALSE)`,
+#' `as_ggplot(p)` keeps that selection. To change it, make a new plot from
+#' `fit`; extra settings such as `as_ggplot(p, level = 0.80)` are rejected.
+#' To change labels on the converted ggplot, use
+#' `as_ggplot(p) + ggplot2::labs(title = NULL)`.
+#'
+#' Title suppression depends on the entry point. Ordinary fitted-model plots
+#' retain the historical `title = NULL` meaning (automatic title); use
+#' `show_title = FALSE` to hide it and `show_notes = FALSE` to hide notes.
+#' Fixed-facet interval plots and the helpers listed above accept
+#' `title = NULL` to hide the title. These distinctions preserve existing
+#' scripts. Hiding annotations does not remove numerical cautions from the
+#' saved results or establish stronger inference.
+#'
 #' @section Start with the question:
 #' - "Do persons and facet levels overlap on the same logit scale?"
 #'   Use `plot(fit, type = "wright")` or [plot_wright_unified()].

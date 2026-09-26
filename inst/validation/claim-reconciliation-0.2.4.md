@@ -6013,3 +6013,30 @@ was unavailable because the UI tool reported no available browser; successful
 HTML generation is not a layout inspection or a novice-comprehension study.
 The CI for repair commit `0b11aed9` does not include these later documentation
 changes. D2's broader argument inventory and reader feedback remain open.
+
+## 2026-09-26: Repair silent plot-argument loss in the primary workflow
+
+Two failures were reproduced: `plot(fit, level = .8)` ignored `level`, and
+`as_ggplot(saved_plot, title = ..., level = ...)` ignored both settings.
+The fitted-model method now accepts a named-only `level` alternative after
+`...`, preserving every previous positional argument. Simultaneous `level`
+and `ci_level` are rejected, even if equal; the default remains .95. The alias
+is forwarded through ordinary result plots, plot-data extraction and ggplot.
+Saved interval-result plotting still rejects a new level rather than changing
+the inferential result. The saved core-payload converter rejects unsupported
+arguments and a new plot type. Complete CCC views retain their three documented
+conversion controls; existing dedicated converters keep their own validation.
+
+New checks compare actual 80%/95% interval widths with their normal-quantile
+ratio, compare the old/new spellings, reject invalid/conflicting requests, and
+check saved conversion without changed data. The new argument tests and the
+existing ggplot, preset, title, fixed-facet reporting and testlet integration
+files pass. No full suite or sampling experiment was repeated. Help and NEWS
+describe the distinction between a fit, a saved inferential result and a saved
+plot; estimator calculations, statistical qualification and specialist helper
+names are unchanged. Evidence is in
+`validation-results/d2-plot-arguments-20260926/`.
+
+The earlier repair commit `0b11aed9` passed the macOS CI prerequisite and
+started the four remaining environments. That run does not cover these later
+source/help changes, which require their own integrated check.
