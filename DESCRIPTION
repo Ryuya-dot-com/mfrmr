@@ -11,8 +11,9 @@ Authors@R:
 Description: Native R implementation of many-facet ordered-response
     measurement models with arbitrary facet counts, rating-scale and
     partial-credit parameterizations, a generalized partial-credit extension
-    with discrimination and category steps varying across levels of one
-    selected facet, and both marginal and joint maximum likelihood estimation.
+    with discrimination varying across levels of one selected facet.
+    Marginal maximum likelihood permits a different facet to own category
+    steps; joint maximum likelihood requires the same facet for both roles.
     The package provides a fit / diagnose / report pipeline covering
     anchoring, linking, bias and differential-functioning screening, and
     publication-oriented reporting summaries, with reproducibility manifests

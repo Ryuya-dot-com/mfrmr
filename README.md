@@ -8,7 +8,8 @@
 `mfrmr` fits unidimensional many-facet ordered-response models in R.
 It supports rating-scale (`RSM`) and partial-credit (`PCM`) models, together
 with a `GPCM` extension in which one selected facet supplies level-specific
-discriminations and category steps. GPCM MML information-criterion comparison
+discriminations. MML permits a different facet to supply category steps;
+JML requires the same facet for both roles. GPCM MML information-criterion comparison
 uses explicit likelihood and solution checks; `confint(fit, parm = "slopes")`
 checks approximate pointwise relative-slope intervals separately. Matched PCM/GPCM MML fits can be tested
 with `compare_mfrm(..., nested = TRUE)`. A facet can represent a rater,

@@ -1040,7 +1040,7 @@ the same model.
 
 | Route | Where slopes are assigned | Relationship to current mfrmr |
 |---|---|---|
-| `mfrmr::fit_mfrm(model = "GPCM")` | One selected facet supplies positive relative slopes and steps. | Each slope multiplies the complete adjacent-category predictor. |
+| `mfrmr::fit_mfrm(model = "GPCM")` | One selected facet supplies positive relative slopes. MML permits a different step owner; JML requires the same owner. | Each slope multiplies the complete adjacent-category predictor. |
 | TAM `tam.mml.2pl()` | Item slopes, shared slope groups or a design `E`; Example 14c combines this with a facet intercept design `A`. | The example has slopes on ability and separately additive facet intercepts. `tam.mml.mfr()` alone does not estimate slopes. |
 | ConQuest `scoresfree` | By default, one slope for each generalized item, meaning a combination of facets; a `C` design can constrain sharing. | Sharing slopes by criterion still does not impose their products with estimated rater effects in the intercept design. |
 

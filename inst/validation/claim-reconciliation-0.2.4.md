@@ -6078,3 +6078,35 @@ check and main integration; D5 and the release-version decision are separate.
 
 New logs are under `validation-results/d3-integration-scope-20260926/`.
 Earlier evidence remains in the directories recorded in the preceding entries.
+
+## 2026-09-26: Prepare the D4 source and public entry pages
+
+The package-level descriptions in DESCRIPTION, README, package help, the
+fit_mfrm introduction and the GPCM cross-software table still implied one
+shared slope/step owner. They now state the implemented MML/JML distinction.
+The package-help simulation paragraph also states the retained shared-owner
+restriction. Parsed executable expressions of both edited R files are
+identical to `e6f8397b`; this correction changes descriptions, not estimation.
+Generated help parses and release-metadata checks pass.
+
+The homepage, NEWS and seven primary reference pages were generated locally
+with the installed pkgdown workflow. An initial sandboxed attempt stopped at
+the CRAN sidebar-link lookup and cache write; the network-enabled retry passed.
+Examples were deliberately not rerun in this documentation build: their
+existing execution evidence remains separate. The generated homepage and
+primary package/fit pages contain the corrected owner distinction; the
+homepage identifies 0.2.4.9000 as unreleased development source. This is HTML
+generation/content verification, not browser visual inspection or deployment.
+
+Remote main and the local main reference both remained at `82aaa318` and were
+ancestors of the selected development branch. A local fast-forward and source
+archive can therefore preserve history without conflict resolution. Remote
+main publication remains contingent on the running integration checks.
+CI run 36234591527 refers to `e6f8397b`, not these later descriptive changes;
+the final main source needs its own exact-source check. Main pushes also start
+the normal pkgdown publication workflow, whose result must be reported
+separately from package checks and the frozen rc.6 release.
+
+Evidence: `validation-results/d4-integration-20260926/` (documentation build,
+source-expression comparison and metadata checks). No new numerical study or
+CRAN submission is performed by this preparation.

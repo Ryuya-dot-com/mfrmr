@@ -4,7 +4,8 @@
 #' `mfrmr` provides estimation, diagnostics, and reporting utilities for
 #' many-facet ordered-response measurement models: the Rasch-family `RSM` /
 #' `PCM` route and a `GPCM` extension in which one selected facet supplies
-#' level-specific discriminations and category steps. [confint.mfrm_fit()]
+#' level-specific discriminations. MML permits a different facet to supply
+#' category steps; JML requires the same facet for both roles. [confint.mfrm_fit()]
 #' supplies approximate relative-slope intervals for eligible MML fits; model
 #' ranking and matched PCM/GPCM tests use separate checks in [compare_mfrm()].
 #' [gpcm_capability_matrix()] explains the supported uses.
@@ -76,7 +77,8 @@
 #'   `GPCM`; use external Bayesian software when they are required
 #' - direct `GPCM` data generation through [build_mfrm_sim_spec()],
 #'   [extract_mfrm_sim_spec()], and [simulate_mfrm_data()] is available when
-#'   the specification carries both thresholds and slopes
+#'   the specification carries both thresholds and slopes with the same owner;
+#'   general simulation/design workflows do not support separate owners
 #' - slope-aware [fair_average_table()] and [estimate_bias()] are available for
 #'   `GPCM` with explicit caveats; [build_apa_outputs()],
 #'   [build_visual_summaries()], [run_qc_pipeline()],

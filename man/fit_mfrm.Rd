@@ -474,7 +474,8 @@ Each data row is one rating. Supply its column names with \code{person},
 The default is \code{method = "MML"} (marginal maximum likelihood).
 The \code{RSM} / \code{PCM} branches are the package's many-facet Rasch-family
 reference route. \code{GPCM} adds positive, level-specific discriminations to
-one facet, which must also supply its category steps. See "GPCM model and
+one facet. MML permits a different facet to supply category steps;
+JML requires the same facet for both roles. See "GPCM model and
 inference" below for the current limits on uncertainty and comparisons.
 In the example, \code{toy} stores the data and \code{fit} stores the fitted model.
 Quoted column names such as \code{"Person"} must match the data, including case.

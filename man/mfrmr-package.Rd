@@ -9,7 +9,8 @@
 \code{mfrmr} provides estimation, diagnostics, and reporting utilities for
 many-facet ordered-response measurement models: the Rasch-family \code{RSM} /
 \code{PCM} route and a \code{GPCM} extension in which one selected facet supplies
-level-specific discriminations and category steps. \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}
+level-specific discriminations. MML permits a different facet to supply
+category steps; JML requires the same facet for both roles. \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}
 supplies approximate relative-slope intervals for eligible MML fits; model
 ranking and matched PCM/GPCM tests use separate checks in \code{\link[=compare_mfrm]{compare_mfrm()}}.
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} explains the supported uses.
@@ -88,7 +89,8 @@ residual-based diagnostics tables/plots as exploratory tools
 \code{GPCM}; use external Bayesian software when they are required
 \item direct \code{GPCM} data generation through \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}},
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} is available when
-the specification carries both thresholds and slopes
+the specification carries both thresholds and slopes with the same owner;
+general simulation/design workflows do not support separate owners
 \item slope-aware \code{\link[=fair_average_table]{fair_average_table()}} and \code{\link[=estimate_bias]{estimate_bias()}} are available for
 \code{GPCM} with explicit caveats; \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=run_qc_pipeline]{run_qc_pipeline()}},
