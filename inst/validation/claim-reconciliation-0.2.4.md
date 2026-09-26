@@ -5183,3 +5183,51 @@ for R-release and 133/1,587 seconds for R-devel. Logs and binary receipts are in
 ROADMAP and cran-comments replace pending status with the observed outcomes.
 Only excluded records change; no archive rebuild, repeated numerical tests,
 new release tag or CRAN submission is performed in this step.
+
+## 2026-09-26 — Review next-feature GPCM and interface proposals
+
+The user's proposals were checked against source `7d12af23`. Namespace/formal
+inspection confirms 208 exports, 35 `plot_*` names and 44 registered `plot()`
+methods. First arguments among the 35 are x=20, fit=13, fits=1 and reference=1;
+main=8, title=0, ci_level=10, level=0 and preset=28. This prefix count includes
+the two `plot_data*` extraction helpers and is not a count of figure types.
+The per-function inventory is retained as
+`validation-results/post-release-scope-review-20260926/plot-arguments.csv`.
+
+The primary route and primary/specialist pkgdown organization already exist.
+The report and export consume `mfrm_results`, not the return value of `plot()`.
+Focused APA tables, fixed bias reports and replay exports have distinct input
+and output roles; no wholesale superseded/deprecation designation is justified
+by counts alone. The guide already has RecommendedEntry/UserLevel/APILayer
+metadata, but its Lifecycle column mixes stage and role concepts. A future
+cleanup must preserve existing guide consumers and distinguish these concepts.
+
+`as_ggplot()` has dedicated name/class routes as well as a tabular fallback.
+Clustering/PCA, main-effects D-study, multivariate difference intervals, pooled
+intervals and screening-performance payloads have explicit refusals. Other
+families have dedicated conversions. This static review is not a complete
+class/type/component conversion test matrix. The next delivery specifies that
+matrix and an aligned purpose gallery before introducing additional mapping
+machinery. Shared appearance can reuse the current resolver/internal theme;
+global option precedence and replay semantics remain to be implemented.
+
+The GPCM kernel already accepts distinct step and slope indices, but supported
+fitting, inference, simulation and reporting retain the shared-owner contract.
+Owner separation is therefore not implemented by deleting one guard. It still
+admits only one slope family and preserves full-predictor slope action initially.
+Profile intervals require target-specific constrained nuisance optimization;
+they are not supplied by the joint Hessian alone and do not automatically fix
+probability-interval undercoverage or outrun bootstrap. The method references
+are Fischer and Lewis (2021), DOI 10.1007/s11222-021-10012-y, and the official
+lifecycle stage documentation. These informed planning, not a new estimator
+implementation or a comprehensive statistical literature review.
+
+ROADMAP now sets explicit next-delivery conditions for navigation/lifecycle,
+argument compatibility, ggplot support, an accessible purpose gallery,
+individual rater sheets, consistent appearance, separate GPCM ownership,
+profile inference and portable scoring. These are proposed extensions and
+acceptance conditions, not claimed implementations or a reopening of the
+checked 0.2.4 source. Individual sheets must preserve model-specific meanings,
+available uncertainty, identifiers/privacy and readable interpretation.
+Only excluded planning records change; no package code, help, NEWS, archive,
+full suite, simulation, release tag or submission changes in this review.

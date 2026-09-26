@@ -839,7 +839,26 @@ structures remain outside these implementations.
 | 0.2.4 pre-submission integration | Readers can distinguish model structure, estimation checks, uncertainty, scoring and diagnostic availability. | Fit help, tutorial, capability table, summaries and comparisons agree on the current behavior. No claim that a new name unlocks an unavailable interval or prediction. |
 | 0.2.4 existing-model inference | The current single-facet GPCM provides MML IC comparison, a matched PCM/GPCM LRT and approximate relative-slope intervals for eligible fits. | Complete G1--G3, propagate their separate decisions through summaries, weighting reviews, plots and saved output, and reconcile help/examples/NEWS. Reuse existing numerical evidence and run only missing target-specific checks. JML inference and additional slope structures remain separate. |
 | First structural extension | For example, criterion-specific discrimination with rater-specific category steps, using one slope family. | Specify separate slope/step roles and identifiable data patterns; recover the current model when roles coincide and PCM at unit slopes. Verify probabilities, derivatives, parameter maps, numerical behavior, uncertainty and the retained scoring/reporting paths. This removes the equality restriction only for the admitted scope. |
+| Next inference candidate | Profile-likelihood intervals for a prespecified GPCM MML slope target, with a profile plot and comparison to its Wald interval. | Reoptimize nuisance parameters subject to the existing identification constraints. Retain failed searches, unbounded endpoints and numerical/integration diagnostics. Qualify coverage, interval availability and computing cost for the chosen target; superiority over Wald or lower cost than bootstrap is not assumed. |
+| Operational GPCM extension | Save a reviewed GPCM calibration and score new Persons without refitting that calibration. | Carry slopes and their owner, steps and their owner, category coding, population/scoring reference, anchors, constraints and schema version. Match supported in-fit versus saved-calibration scores, fresh-session replay and explicit rejection of incompatible new data. Conditional scoring and calibration uncertainty remain distinct. |
 | Further model proposals | Simultaneous task/rater slope families, moderated effects or other structures. | A separate substantive need, constraints separating the effects, informative designs, matched numerical/statistical evidence and useful output. These proposals are not prerequisites for completing the preceding stages. |
+
+Separate slope/step ownership still uses one slope family; it does not estimate
+rater and criterion slopes simultaneously. Its first implementation should keep
+the current full-predictor slope action unchanged. Rater-specific steps describe
+category use conditional on that model, not an automatic diagnosis of a rater's
+habit. Rater location and step contrasts need separate identification, adequate
+crossing and category support, especially in incomplete designs.
+
+Profile likelihood is a candidate method, not an established repair for the
+observed probability-interval undercoverage. A relative slope, a
+population-standardized slope and a category probability are different targets;
+improving one interval does not qualify the others. Model misspecification and
+nonregular cases are not repaired by replacing a Wald interval with an ordinary
+likelihood-ratio cutoff. The existing likelihood and derivatives can be reused,
+but the joint information matrix alone does not produce a profile. Numerical
+search reliability and time must be measured, as discussed by
+[Fischer and Lewis](https://doi.org/10.1007/s11222-021-10012-y).
 
 Qualification must match the output: a parameter interval, a predictive
 quantity and an information-criterion comparison do not have identical
@@ -1073,6 +1092,50 @@ argument list is not solved by hiding everything in `...` or an undocumented
 control list, and a second universal wrapper is not a substitute for clearer
 existing entries. Reuse current tutorials and improve them around actual
 reader failures rather than adding a parallel set of guides.
+
+### Next interface and feedback delivery
+
+The September 26 review confirms 208 exports, 35 `plot_*` names and 44
+registered `plot()` methods. Among the 35 names, first arguments are `x` (20),
+`fit` (13), `fits` (1) and `reference` (1); eight expose `main`, none expose
+`title`, ten expose `ci_level`, and 28 expose `preset`. Two of these 35 names
+are the extraction helpers `plot_data()` and `plot_data_components()`, so these
+counts are not a count of distinct figure types. Counts describe the reviewed
+source, not a target for reducing exports.
+
+The recommended results/report/export route, beginner/feedback guide and
+primary-versus-specialist pkgdown sections already exist. They need a clearer
+task-based presentation. `plot(res)`, `mfrm_report(res)` and
+`export_mfrm_results(res)` consume the same saved results object; they are not
+a pipe in which the plot becomes report input. Specialized table, bias and
+replay-bundle operations remain useful where that route is not equivalent.
+
+The following is a concrete next-feature plan, provisionally for 0.2.5. It does
+not change the checked rc.6 implementation or claim that these additions already
+exist. The first implementation should make plot/report capabilities and
+recommended routes explicit, then use those routes for individual rater sheets.
+
+| Work | Delivery and completion condition |
+| --- | --- |
+| Recommended and specialist routes | Extend the existing guide and reference sections with input/output roles and precise alternatives. Mark a function `superseded` only when a tested replacement covers its supported task; retain `apa_table()`, focused bias reports and specialist exports where they have a distinct role. Distinguish recommendation from stability. The current guide's `Lifecycle` column mixes `stable`, `advanced` and `compatibility`; user level and compatibility role must be kept distinct from formal lifecycle stages without breaking existing guide consumers. |
+| Argument consistency | Prefer `title` for equivalent plot titles and `level` for an interval that is actually computed. Keep `x` for standard S3 methods and meaningful multi-input names. Keep `metric` distinct from view/style selection. Add compatible aliases only after specifying omission, explicit `NULL`, conflicting arguments and positional-call behavior. Preserve old/new numerical and display results; do not recalculate a saved interval when changing its plot. |
+| ggplot coverage | Publish and check a matrix of result class, plot type and relevant component, identifying dedicated support, generic fallback, refusal and alternative route. Existing dedicated conversions and explicit refusals are the baseline. Compare estimates, units, group ordering, intervals, unavailable rows, warnings and display controls using saved payloads. Add dedicated conversions for useful gaps; arbitrary column matching is not evidence of equivalent graphics. |
+| Purpose-based gallery | Reuse the guide and existing tutorial figures for severity, fit, category functioning, sparse-design review, features and D-study planning. Each thumbnail links to an executed example, supported objects, base/ggplot status, alternative text and a data table. Gallery entries must agree with the capability matrix; no separate competing registry is needed. |
+| Individual rater feedback | Produce one rater-scoped HTML sheet with print styling and a plain-language/researcher presentation, using reviewed saved results without automatic refitting. Include severity and its available uncertainty, rating exposure, fit, category use, selected unexpected ratings and an explicit comparison reference. Keep ordinary and extended-model diagnostic meanings distinct. Missing sections must say why; severity is not rater quality and flags do not automatically justify exclusion. Verify that another rater's or a Person's identifying details do not leak into the distributed sheet. PDF delivery follows a verified rendering route. |
+| Consistent appearance | Reuse the existing preset resolver and internal ggplot theme. Specify precedence as explicit call setting, then session option, then package default; resolve and save the chosen appearance for replay. Preserve removable titles/notes, monochrome and non-color cues, and avoid mutating the user's global ggplot theme. A public theme and global option are proposed conveniences, not currently implemented APIs. |
+
+The [lifecycle definitions](https://lifecycle.r-lib.org/articles/stages.html)
+distinguish `superseded` (a better alternative, continued support, no warning)
+from deprecation. Missing badges alone do not mean an API is unstable, and
+`deprecate_soft()` is not required simply because another route is recommended.
+Any actual deprecation needs its own migration policy and affected-call checks.
+
+Completion of the first delivery means users can find a supported operation and
+predict what it renders, not that every specialized function has been renamed.
+A later sheet delivery must be reviewed by its intended reader before claiming
+novice usability. Structural GPCM development follows the separate ownership,
+profile-interval and portable-calibration conditions above; those three topics
+are not silently bundled into the first interface release.
 
 ### First statistical work package: uncertainty in rater feedback
 
