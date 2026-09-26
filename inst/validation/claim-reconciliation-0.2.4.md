@@ -6040,3 +6040,41 @@ names are unchanged. Evidence is in
 The earlier repair commit `0b11aed9` passed the macOS CI prerequisite and
 started the four remaining environments. That run does not cover these later
 source/help changes, which require their own integrated check.
+
+## 2026-09-26: Fix the D3 integration scope after the selected-workflow review
+
+The earlier run 36232110566 for `0b11aed9` completed successfully on macOS
+release, Windows release and Ubuntu release/devel/oldrel-1. These results are
+not attributed to later commits. GitHub `main` and local `origin/main` both
+identify `82aaa318e7720dbfb466e756fc79c094df857e18` at this review.
+
+The D2 review reuses the representative saved-workflow verification, actual
+GPCM export/reopen evidence and recorded rendering checks. It does not rerun
+the diagnostic pilot, bootstrap trials or a whole-package suite. The purpose
+guide and selected route tests were run after the stricter conversion checks
+to ensure that published calls still work. The guide, workflow-output routing,
+plot-argument, co-membership and pooled-interval files all pass.
+
+Two additional tutorial paragraphs still said that slopes and steps must share
+an owner. The plain-language GPCM explanation and MML tutorial now distinguish
+MML separate ownership from the JML restriction. Their executable R chunks are
+byte-identical to the preceding commit (12 and 2 chunks respectively), so no
+numerical rerun was warranted. In addition, dedicated saved-plot converters
+could still silently accept a different `type`. One common guard now rejects
+that request before conversion; it replaces the duplicate per-view checks.
+Regression checks cover the previously unguarded extended-model and D-study
+payloads, plus the supported selected guide routes. Existing rejection tests
+now use the common explanatory message.
+
+ROADMAP fixes the D3 scope: recipient feedback, selected plot conversions and
+settings, separate-owner GPCM MML, random-rater refit reporting and necessary
+distribution/documentation corrections. D1 has an integration disposition with
+explicit approximate-inference limitations; the statistical qualification is
+still open. D2's selected local exit conditions are met, but no actual novice
+reader study or latest-tutorial browser inspection is claimed. Package-wide
+renaming, unsupported converters and new statistical/model extensions are not
+prerequisites silently added to this cycle. D4 now needs the combined source
+check and main integration; D5 and the release-version decision are separate.
+
+New logs are under `validation-results/d3-integration-scope-20260926/`.
+Earlier evidence remains in the directories recorded in the preceding entries.

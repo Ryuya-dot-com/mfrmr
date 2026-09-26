@@ -8,7 +8,8 @@
 
 * Conversion of saved core plot payloads now rejects unsupported settings
   instead of silently ignoring them, including attempted title or interval
-  changes. Create a new payload from the fit/result to change plot settings,
+  changes. All saved plot-data views also reject a new `type`, including
+  extended-model and D-study converters. Create a new payload from the fit/result to change plot settings,
   or use ggplot label controls after conversion. Complete CCC views retain
   their documented conversion-specific appearance options.
 

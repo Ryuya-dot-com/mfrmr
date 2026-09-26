@@ -40,7 +40,8 @@ as_ggplot(x, type = NULL, component = NULL, ...)
 \item{x}{An \code{mfrm_plot_data} object, or an mfrmr object with a draw-free
 plot method.}
 
-\item{type}{Optional plot type passed to \code{plot()} for a non-plot-data input.}
+\item{type}{Optional plot type passed to \code{plot()} for a non-plot-data input.
+A saved plot-data input already selects a view and rejects \code{type}.}
 
 \item{component}{Optional tabular payload component to convert.}
 

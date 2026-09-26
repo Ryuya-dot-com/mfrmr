@@ -744,7 +744,10 @@ Imagine that several teachers grade presentations on several criteria.
 - **The current mfrmr GPCM** lets you choose one box of rulers. If the box is
   `Criterion`, each criterion can have a different magnification. If the box is
   `Rater`, each rater can have a different magnification. You may choose only
-  one box, and the same box also owns the category steps.
+  one box for magnification. With MML, another box may supply the category
+  steps: for example, criteria can differ in magnification while teachers
+  differ in how they use the score categories. With JML, the same box must
+  supply both magnification and category steps.
 - **A broader generalized MFRM** can give both the task/criterion and the rater
   their own magnification knobs. In the Uto--Ueno example, the effective
   sharpness is the product of the task and rater settings. It can also model

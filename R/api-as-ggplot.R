@@ -1109,6 +1109,7 @@
 #' @param x An `mfrm_plot_data` object, or an mfrmr object with a draw-free
 #'   plot method.
 #' @param type Optional plot type passed to `plot()` for a non-plot-data input.
+#'   A saved plot-data input already selects a view and rejects `type`.
 #' @seealso [mfrmr_output_guide()] with `scope = "plots"` for selected
 #'   purpose-based routes, conversion status and alternatives.
 #' @param component Optional tabular payload component to convert.
@@ -1199,15 +1200,14 @@ as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL,
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
+  if (!is.null(type)) stop("A saved plot already selects a view. Recreate it from the fit or result to select another view.", call. = FALSE)
   if (identical(x$name, "facet_interval_methods")) {
     if (!is.null(component)) stop("Use plot_data() to select a fixed-facet table; as_ggplot() preserves the complete interval view.", call. = FALSE)
     rlang::check_dots_empty()
-    if (!is.null(type)) stop("Fixed-facet intervals have one plot type.", call. = FALSE)
     return(mfrm_gg_facet_intervals(x))
   }
   if (x$name %in% c("feature_pca_scree", "feature_pca_scores", "feature_pca_loadings")) {
     rlang::check_dots_empty()
-    if (!is.null(type)) stop("The saved PCA payload already selects a view; use as_ggplot(pca, type = ...) to select another.", call. = FALSE)
     if (!is.null(component) && !identical(component, "table")) {
       stop("Use component = 'table' for the complete PCA view, or plot_data() for other components.", call. = FALSE)
     }
@@ -1215,7 +1215,6 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   }
   if (identical(x$name, "cluster_dendrogram")) {
     rlang::check_dots_empty()
-    if (!is.null(type)) stop("The saved dendrogram already selects a view; use plot(hierarchy, type = ...) for another view.", call. = FALSE)
     if (!is.null(component) && !identical(component, "tree")) {
       stop("Use component = 'tree' for the complete dendrogram, or plot_data() for other components.", call. = FALSE)
     }
@@ -1223,7 +1222,6 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   }
   if (identical(x$name, "cluster_co_membership")) {
     rlang::check_dots_empty()
-    if (!is.null(type)) stop("The saved co-membership payload has one view.", call. = FALSE)
     if (!is.null(component) && !identical(component, "matrix")) {
       stop("Use component = 'matrix' for the complete co-membership view, or plot_data() for other components.", call. = FALSE)
     }
@@ -1231,7 +1229,6 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   }
   if (identical(x$name, "pooled_facet_intervals")) {
     rlang::check_dots_empty()
-    if (!is.null(type)) stop("The saved pooled interval payload has one view.", call. = FALSE)
     if (!is.null(component) && !identical(component, "table")) {
       stop("Use component = 'table' for the complete pooled interval view, or plot_data() for other components.", call. = FALSE)
     }
@@ -1245,7 +1242,6 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   }
   if (x$name %in% c("cluster_silhouette", "cluster_profile")) {
     rlang::check_dots_empty()
-    if (!is.null(type)) stop("The saved cluster payload already selects a view; use as_ggplot(groups, type = ...) for another.", call. = FALSE)
     allowed <- if (identical(x$name, "cluster_profile") && !is.null(x$data$matrix)) c("table", "matrix") else "table"
     if (!is.null(component) && !component %in% allowed) {
       stop("Use the default component for the complete cluster view, or plot_data() for other components.", call. = FALSE)
@@ -1298,7 +1294,6 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
       any(!names(dots) %in% conversion_args))) {
     stop("Unsupported arguments for a saved plot. Recreate the plot from its fit or result to change settings; use ggplot2::labs() for converted labels. Only complete CCC views accept slope_aes, facet_by and show_overlay.", call. = FALSE)
   }
-  if (!is.null(type)) stop("A saved plot already selects its type. Recreate it from the fit or result to select another view.", call. = FALSE)
   if (is.null(component) && identical(x$name, "fair_average") && !is.null(payload$plot_data)) {
     df <- payload$plot_data
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Y))

@@ -1,3 +1,14 @@
+test_that("saved plot types cannot be silently changed in dedicated converters", {
+  local_mocked_bindings(.require_mfrmr_ggplot2 = function() stop("unexpected conversion"))
+  for (name in c("extended_model_map", "response_diagnostics", "screening_sensitivity",
+    "extended_model_comparison", "testlet_calibration", "testlet_scores",
+    "random_rater_scores", "person_scores", "random_rater_severity",
+    "random_rater_interval_bootstrap", "multivariate_d_study")) {
+    payload <- new_mfrm_plot_data(name, list())
+    expect_error(as_ggplot(payload, type = "another_view"), "already selects a view")
+  }
+})
+
 local({
   fit <- make_toy_fit(method = "MML", maxit = 500)
   diagnostics <- make_toy_diagnostics(fit)

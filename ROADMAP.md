@@ -30,6 +30,11 @@ purpose-based plot guide, additional saved-result ggplot conversions, session
 plot defaults, random-rater bootstrap diagnostics and separate-owner GPCM MML.
 These additions have focused local evidence; they are separate from the checked
 0.2.4 candidate described below and do not inherit its platform-check results.
+Development commit `0b11aed9` passed its own
+[five-environment CI](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36232110566).
+Later interface and documentation corrections have local checks and need a new
+check of their combined source. The integration scope is fixed below; this
+does not replace the frozen candidate or select a CRAN release version.
 
 mfrmr 0.2.4 is a release candidate. It has not been released on CRAN.
 The current candidate is
@@ -93,10 +98,10 @@ statistical qualification or release approval.
 
 | Milestone | Present state | Work and exit condition |
 | --- | --- | --- |
-| D0 — Preserve and review the implemented development snapshot | Implemented locally; focused checks recorded. | Publish the current development branch, verify the remote commit, and link checks for that exact source with their current status. Preserve source/test/help changes together. CI may still be pending at this checkpoint; successful five-platform checks are required for D4 and do not qualify coverage. |
-| D1 — Evaluate separate-owner GPCM for a declared use | MML fitting, scoring, output-specific inference, matched PCM comparison, paired reference curves and saved output are connected. Independent kernels, crossed/incomplete examples and confounding rejection are checked. The fixed four-cell diagnostic pilot is complete; sampling-performance qualification remains open. | Evaluate criterion discrimination with rater-specific category steps under the design below. Close with a supported scope, an explicit limitation or a documented rejection; implementation success alone cannot close this milestone. |
-| D2 — Consolidate the delivered user workflow | Fixed-rater HTML sheets, selected plot guide, common presets and additional conversions work locally. | Reconcile recommended routes, argument names/defaults, compatibility, conversion status and saved-result behavior across the selected workflows. Complete one graduate-student-oriented walkthrough and, when a reader is available, record actual comprehension problems. Do not claim novice usability from author checks alone. |
-| D3 — Freeze the next integration scope | Not yet frozen. | Select the implemented and adequately described outputs from D1/D2; list retained approximations, unsupported combinations and deferred features. Reconcile NEWS, help, examples and capability tables. A failed research claim may be excluded without blocking useful interface improvements. |
+| D0 — Preserve and review the implemented development snapshot | Development branch published; five-environment CI succeeded for `0b11aed9`. Later corrections are tracked separately. | Preserve source/test/help changes together and associate each check with its exact source. Publishing a branch does not qualify coverage. |
+| D1 — Evaluate separate-owner GPCM for a declared use | Integration disposition made: retain the implemented MML workflow with approximate inference and explicit limitations. The diagnostic pilot is complete; sampling-performance qualification remains open. | The current cycle closes this decision with the limited scope below, not with a claim of nominal coverage. Any confirmation study needs its own target and precision decision. |
+| D2 — Consolidate the delivered user workflow | Local exit conditions met for the selected routes below: workflow/replay checks, argument compatibility, supported conversions and author-checked walkthrough. Reader testing is not claimed. | Preserve those routes and limits through the D4 package checks. New reader findings can reopen a concrete usability defect; broader cosmetic uniformity is not required for this integration. |
+| D3 — Freeze the next integration scope | Scope fixed in the table below; source, help, NEWS and capability statements reconciled for that scope. | Admit only the listed additions and necessary corrections into D4. Retain limitations and deferred features explicitly; do not expand the feature list during integration. |
 | D4 — Integrate and qualify the selected source | Pending. | Resolve source changes against `main`, check the exact resulting source on five environments, perform one batched package/replay/documentation review, and resolve failures. Archive source identity and evidence. Submission-specific checks apply to the final archive, not earlier candidates. |
 | D5 — Release and maintain | Pending a separate release decision. | Publish matching source, documentation and version metadata after the integration checks. Track actual installation, interpretation and feedback problems. Any CRAN submission remains a distinct authorized action. |
 
@@ -175,9 +180,9 @@ The fixed-rater walkthrough now connects saved results to individual sheets,
 interval figures, analyst reports and archive/reopen operations. The reporting
 guide uses the same entry points and keeps specialist manuscript tools visible.
 The executable walkthrough and existing feedback tests pass locally. This is
-an author-checked workflow, not evidence of novice comprehension. The broader
-argument/default comparison across selected plot routes and actual reader
-feedback remain open; D2 is not complete.
+an author-checked workflow, not evidence of novice comprehension. The selected
+argument/default review is complete for the integration scope below. A full
+package-wide rename and actual reader evaluation remain separate follow-up work.
 
 The primary fitted-model plot route now accepts named `level` alongside the
 existing `ci_level` spelling, rejecting simultaneous use. Saved fixed-facet
@@ -188,6 +193,39 @@ use `title = NULL`. Keep these compatibility distinctions visible instead of
 changing existing scripts silently. Selected-route regression checks cover
 actual interval widths, old/new spelling equivalence, plot-data/result/ggplot
 forwarding and saved rendering. This does not rename every specialist helper.
+
+### D3: fixed integration scope and retained limits
+
+The integration starts from the existing rc.6 functionality and adds the
+following development work. This is a source-scope decision, not a claim that
+all research extensions are complete or a decision to publish a new version.
+
+| Included workflow | Retained behavior and limit | Basis for integration |
+| --- | --- | --- |
+| Individual fixed-rater feedback | Native additive RSM/PCM sheets, plain/researcher guidance, HTML and tables; saved diagnostics and eligible individual intervals. No automatic rater-quality decision, PDF API or extended-model recipient sheet. | Saved-value and missing-input tests; identifier omission; recipient HTML persistence; analyst RDS/export replay; executed fixed-rater walkthrough. |
+| Plot discovery and saved conversion | Selected purpose guide, accessible gallery, PCA, hierarchical trees, silhouettes, feature profiles, imputation co-membership and pooled fixed-facet intervals. The guide identifies unsupported conversions and alternatives. | Route/converter checks and existing saved-result evidence. Screening-performance, univariate D-study and multivariate plan-difference ggplot conversion remain unavailable; native plots and data extraction remain usable. |
+| Plot settings and compatibility | Common session presets; eight title aliases; named `level` on ordinary fitted-model plots; explicit rejection of invalid saved-plot overrides. Existing argument positions/defaults remain intact. | Old/new equivalence, interval-width, omission/NULL/conflict, rendering and replay checks. Geometry, metric and display-view arguments keep their different meanings; specialist helpers are not universally renamed or deprecated. |
+| Separate-owner GPCM MML | One positive slope family, possibly a different step owner, existing scale identification and full-predictor slope action; connected fitting, scoring, approximate inference, matched PCM comparison, same-design resampling and reports. | Independent likelihood/derivative checks, owner identity and confounding checks, actual export/reopen checks and the fixed diagnostic pilot. No general coverage or sparse-design guarantee. JML separate owners, two slope families, portable GPCM calibration, separate-owner weighting review and general design simulation remain unsupported. |
+| Random-rater uncertainty reporting | Saved refit numerical/variance-boundary diagnostics and clearer explanation of unresolved interval endpoints. | Existing refit/report/replay tests and retained statistical evidence. No changed interval formula, general coverage qualification or automatic replacement of infinite limits. |
+| Distribution and documentation corrections | CI registry/metadata fixes, honest unavailable-PCA reporting in development checks, aligned help/NEWS/tutorial statements. | Reproduced failures and focused repairs; the earlier five-environment run and a new combined-source check under D4. |
+
+The selected output routes keep their own result objects: fixed-rater and GPCM
+reports use `mfrm_results()`, while feature, imputation and G/D-study results
+use their documented dedicated objects. `mfrmr_output_guide()` is the route
+map; wrapping every analysis in one object or converting every figure is not
+an integration requirement. The known conversion gaps are explicit exclusions,
+not completed implementations. Actual novice comprehension and the latest
+tutorial's browser appearance have not been verified; do not advertise either
+as established accessibility/usability evidence.
+
+For D4, compare the selected source with the current `main`, publish one combined
+development checkpoint and check that exact source on the five environments.
+Then integrate the reviewed source and reconcile any changed source identity;
+do not transfer results from an older commit merely because the version matches.
+Reuse the retained numerical studies and saved-workflow evidence. Repeat a
+targeted check only for a changed path or failure, and run broader checks once
+for the combined package rather than per documentation correction. A main merge,
+tag, website publication or CRAN submission is not recorded as complete here.
 
 ### Later extensions and explicit reopening conditions
 

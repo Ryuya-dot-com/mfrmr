@@ -86,7 +86,7 @@ test_that("pooled replay and display controls do not refit, repool or recalculat
   expect_identical(ggplot2::theme_get(), theme)
   expect_error(as_ggplot(p, component = "contrasts"), "plot_data")
   expect_error(as_ggplot(p, level = .95), "empty")
-  expect_error(as_ggplot(p, type = "forest"), "one view")
+  expect_error(as_ggplot(p, type = "forest"), "already selects a view")
   bad <- p; bad$data$table$DF <- NULL
   expect_error(as_ggplot(bad), "saved interval fields")
   bad <- p; bad$data$table$Lower[1] <- 4

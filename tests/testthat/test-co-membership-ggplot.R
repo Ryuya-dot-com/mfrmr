@@ -89,7 +89,7 @@ test_that("saved co-membership conversion uses saved colours and avoids new anal
   expect_identical(plot_data(plain), p$data)
   expect_error(as_ggplot(p, component = "legend"), "plot_data")
   expect_error(as_ggplot(p, ids = "001"), "empty")
-  expect_error(as_ggplot(p, type = "heatmap"), "one view")
+  expect_error(as_ggplot(p, type = "heatmap"), "already selects a view")
   bad <- p; bad$data$matrix[1, 2] <- 2
   expect_error(as_ggplot(bad), "zero-to-one matrix")
   bad <- p; bad$data$ids <- rev(bad$data$ids)
