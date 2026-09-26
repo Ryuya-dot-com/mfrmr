@@ -5139,3 +5139,47 @@ Only package-excluded records change, so the existing candidate and check
 evidence remain unchanged. Evidence, URL databases, the CRAN index, scripts,
 HTML upload responses and receipt timestamps are retained in
 `validation-results/cran-preflight-20260926/`.
+
+## 2026-09-26 — Review both current Win-builder results
+
+The user supplied the result links for the rc.6 uploads:
+[R-release](https://win-builder.r-project.org/58oV2XD8gB7Q/00check.log) and
+[R-devel](https://win-builder.r-project.org/jNhW5RFMe5gs/00check.log).
+Both run on Windows Server 2022 x64/UCRT and report **0 errors, 0 warnings,
+1 NOTE**. R-release is R 4.6.1; R-devel is 2026-09-21 r90579 (the binary identifies
+R 4.7.0). Their sole NOTE reports maintainer information and seven updates in
+six months. No calculation, API or documentation repair is requested by it;
+CRAN acceptance is not inferred from this result.
+
+**Executed scope.** Both logs pass installation, examples, the selected CRAN
+test tier, vignette rebuilds and PDF/HTML manuals. Each test log records 3,683
+passes, zero failures, zero test warnings and five skips: one fresh-process
+calibration case, three CRAN-specific GPCM omissions and one compiled-source
+contract. The fresh-process route already has the separately recorded local
+evidence; no fresh Windows execution of that skipped case is claimed. Unlike
+the September 24 result, neither log lists missing/old RTMB skips. This does
+not extend the statistical qualification of shared-rater or other model outputs.
+The test logs retain ICC/lme4 convergence and singular-fit messages despite
+their zero test-warning counts; successful package checks do not mean every
+fit encountered in tests converged. These messages are retained, not suppressed
+or presented as a new coverage guarantee.
+
+**Attribution and preservation.** Each result manifest covers ten saved result
+files: check/install logs, example source/output/PDF/timings, test driver/output
+and startup file, and the Windows ZIP. SHA256 manifests are retained. Both ZIPs
+pass integrity checks. Namespace, NEWS, all 15 installed article sources and
+the test driver match the uploaded candidate after normalizing line endings;
+the DESCRIPTION Packaged timestamp matches 2026-09-25 15:22:20 UTC. Together
+with the recorded upload identity and user-supplied notifications, these support
+attribution to archive SHA256
+`0f1f21c042512318a3b3c8ffbce246bcdab21db1d3dc2dce2cf5e091c58155e1`.
+The server does not publish a source-archive hash, so binary checks are not
+represented as an independent server-side source-hash verification.
+
+The supplied notifications give installation/check times of 128/1,538 seconds
+for R-release and 133/1,587 seconds for R-devel. Logs and binary receipts are in
+`validation-results/cran-preflight-20260926/winbuilder-R-release/` and
+`winbuilder-R-devel/`. The main preflight receipt now records reviewed results.
+ROADMAP and cran-comments replace pending status with the observed outcomes.
+Only excluded records change; no archive rebuild, repeated numerical tests,
+new release tag or CRAN submission is performed in this step.

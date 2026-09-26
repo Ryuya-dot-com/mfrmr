@@ -1,7 +1,8 @@
 # mfrmr 0.2.4 — submission preparation
 
 Preparation draft, updated September 26, 2026. This source has not been
-submitted to CRAN. Win-builder results for the current archive are pending.
+submitted to CRAN. Both current Win-builder results have been retrieved and
+reviewed: zero errors, zero warnings and one explained NOTE in each environment.
 
 ## Changes
 
@@ -41,9 +42,17 @@ are not attributed to this candidate.
   three failures were corrected and affected paths passed 516 focused
   expectations. Documentation and fresh-session checks passed separately.
   Unchanged evidence was reused; no second exhaustive pass is claimed.
-- R-release and R-devel Win-builder forms both received this same archive
-  on September 26 (Japan time), confirming its name and 6,925,015-byte size.
-  **Results are pending.** Upload receipt is not a successful check.
+- Win-builder [R-release](https://win-builder.r-project.org/58oV2XD8gB7Q/00check.log)
+  (R 4.6.1 UCRT) and [R-devel](https://win-builder.r-project.org/jNhW5RFMe5gs/00check.log)
+  (2026-09-21 r90579 UCRT) each report **0 errors, 0 warnings and 1 NOTE**.
+  Installation, examples, tests, vignette rebuilding and PDF/HTML manuals pass.
+  Each selected CRAN test suite has 3,683 passes, zero failures/warnings and
+  five skips: one fresh-process case, three deliberate CRAN skips and one
+  compiled-source case. This is not the exhaustive local suite. The logs and
+  Windows binaries are archived locally before the temporary links expire.
+  Binary metadata, namespace, NEWS, 15 article sources and the test driver
+  agree with the submitted candidate; the service does not publish its source
+  archive hash, so attribution also uses the recorded upload and user notification.
 - URL review of the archive finds no problems in 152 occurrences / 76 distinct
   references, with HTTP-status exclusions disabled.
 - The current CRAN source index (25,196 packages) lists no reverse Depends,
@@ -52,16 +61,17 @@ are not attributed to this candidate.
 
 ## NOTE explanation
 
-The local `--as-cran` NOTE reports maintainer information and seven updates
-in six months. This candidate consolidates estimation/inference corrections
+The local and both Win-builder NOTE entries report maintainer information and
+seven updates in six months. This candidate consolidates estimation/inference corrections
 and interface/reporting improvements described in NEWS. It has no remaining
 local package-check errors or warnings. The initial missing-vignette-index
 problem was corrected before freezing this archive.
 
 ## Remaining before submission
 
-Retrieve and review both current Win-builder logs, resolve any findings, and
-settle the final release/submission decision. If package content changes,
+The planned package, URL, CRAN reverse-dependency and Windows checks are
+complete; no code correction is required by these Windows results. Settle the
+final release/submission decision. If package content changes,
 identify a new archive and check the affected scope rather than attributing
 these results to changed bytes. Detailed development and reuse records are
 kept in the repository's package-excluded validation journal.
