@@ -58,6 +58,7 @@
 #' #   unexpected-response overlay break the staircase and warrant
 #' #   case-level review with `unexpected_response_table()`.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_guttman_scalogram <- function(fit,
                                    diagnostics = NULL,
@@ -66,6 +67,7 @@ plot_guttman_scalogram <- function(fit,
                                    highlight_unexpected = TRUE,
                                    preset = c("standard", "publication", "compact", "monochrome"),
                                    draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -235,11 +237,13 @@ plot_guttman_scalogram <- function(fit,
 #' #   for case-level follow-up. This is an exploratory screen; do
 #' #   not treat tail behaviour as a definitive normality test.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_residual_qq <- function(fit,
                              diagnostics = NULL,
                              preset = c("standard", "publication", "compact", "monochrome"),
                              draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -358,12 +362,14 @@ plot_residual_qq <- function(fit,
 #' #   logits are on different scales and the picture cannot be read
 #' #   as drift; see the Anchor-linking caveat in the docstring.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_rater_trajectory <- function(fits,
                                   facet = "Rater",
                                   ci_level = 0.95,
                                   preset = c("standard", "publication", "compact", "monochrome"),
                                   draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!is.list(fits) || length(fits) < 2L) {
     stop("`fits` must be a named list of at least two mfrm_fit objects.",
          call. = FALSE)
@@ -522,6 +528,7 @@ plot_rater_trajectory <- function(fits,
 #' #   negative cells = pairs systematically rank persons in opposite
 #' #   directions and are the highest-priority review cases.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_rater_agreement_heatmap <- function(fit,
                                          diagnostics = NULL,
@@ -529,6 +536,7 @@ plot_rater_agreement_heatmap <- function(fit,
                                          metric = c("exact", "correlation"),
                                          preset = c("standard", "publication", "compact", "monochrome"),
                                          draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }

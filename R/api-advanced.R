@@ -3197,6 +3197,7 @@ plot_information <- function(x,
 #'   draw = FALSE
 #' )
 #' facets_map$facets_style$settings
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_wright_unified <- function(fit,
                                 diagnostics = NULL,
@@ -3217,6 +3218,7 @@ plot_wright_unified <- function(fit,
                                 extreme_placement = c("ends", "estimate"),
                                 persons_per_star = NULL,
                                 ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an `mfrm_fit` object.", call. = FALSE)
   }
@@ -4629,11 +4631,13 @@ print.mfrm_equating_chain <- function(x, ...) {
 #' @param show_notes Logical; display graph/topology interpretation footers.
 #'   Returned notes and ordinary R warnings are unaffected. Axes, legends and
 #'   data labels remain visible; other chain views have no interpretation footer.
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_equating_chain <- function(x, y = NULL,
                                      type = c("common_anchors", "graph", "chain", "links", "anchor_removal", "offset_sensitivity"),
                                      preset = c("standard", "publication", "compact", "monochrome"),
                                      draw = TRUE, show_title = TRUE, show_notes = TRUE, ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(x, "mfrm_equating_chain")) {
     stop("`x` must be an mfrm_equating_chain object.", call. = FALSE)
   }
@@ -7160,7 +7164,7 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'
 #' @section GPCM boundary:
 #' This helper is available only for the current `GPCM` branch. It
-#' requires the package's existing `slope_facet == step_facet` contract and
+#' requires `slope_facet == step_facet` even though MML fitting permits separate owners, and
 #' should be read as an operational weighting-policy review, not as a formal
 #' validity adjudication.
 #'
@@ -7655,8 +7659,8 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     PCM = "Step thresholds vary by the designated step facet; equal discrimination fixed at 1.",
     GPCM = paste(
       "One positive relative slope is estimated for every level of one",
-      "designated slope facet; the current model requires",
-      "slope_facet == step_facet, identifies slopes with geometric mean 1,",
+      "designated slope facet; MML allows a separate step owner, whereas JML requires",
+      "slope_facet == step_facet. The model identifies slopes with geometric mean 1",
       "and does not combine criterion and rater slope blocks."
     ),
     "Ordered-response model; inspect the fitted configuration before reporting."
@@ -7906,9 +7910,9 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' The word "bounded" describes the documented model and workflow scope: the
 #' package does not implement every possible generalized partial-credit
 #' many-facet extension. It does **not** mean that finite optimizer box bounds
-#' define the estimator. The current route uses positive slopes, requires
-#' `slope_facet == step_facet`, identifies slopes on the log scale with
-#' geometric mean 1, and keeps several downstream score-side/reporting helpers
+#' define the estimator. The current route uses positive slopes, allows separate
+#' slope/step owners in MML (JML requires `slope_facet == step_facet`), identifies
+#' slopes on the log scale with geometric mean 1, and keeps several downstream score-side/reporting helpers
 #' outside the documented boundary.
 #' Model-choice ranking also requires the current selectable IC contract:
 #' q<31 fits retain raw criteria but produce a screening/review-only bundle.
@@ -7988,7 +7992,7 @@ build_model_choice_review <- function(...,
     key_warnings <- c(
       key_warnings,
       "GPCM is slope-aware: better fit is sensitivity evidence, not an automatic operational-scoring decision.",
-      "The current GPCM uses positive slopes and requires slope_facet == step_facet; output-specific limits are described separately."
+      "GPCM uses one positive slope family; MML permits separate step owners and JML requires slope_facet == step_facet. Weighting reviews and simulation/design workflows require the same owner."
     )
   }
   if (!isTRUE(basis$ic_comparable)) {

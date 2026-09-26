@@ -726,7 +726,7 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #'   from a raw bias bundle.
 #' @param plot_type Plot type, `"severity"` or `"flags"`.
 #' @param top_n Number of rows to keep in the plot data.
-#' @param main Optional plot title.
+#' @inheritParams plot_marginal_fit
 #' @param palette Optional named color overrides.
 #' @param label_angle Label angle hint for the `"flags"` plot.
 #' @param draw If `TRUE`, draw with base graphics.
@@ -765,7 +765,8 @@ plot_facet_quality_dashboard <- function(x,
                                          palette = NULL,
                                          label_angle = 45,
                                          draw = TRUE,
-                                         ...) {
+                                         ..., title = NULL) {
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   plot_type <- match.arg(tolower(as.character(plot_type[1])), c("severity", "flags"))
   top_n <- max(1L, as.integer(top_n))
 
@@ -798,7 +799,8 @@ plot_facet_quality_dashboard <- function(x,
   })
   names(thresholds) <- threshold_names
   plot_title <- main %||% paste0("Facet quality: ", bundle$facet)
-  if (!identical(bundle$interpretation_status, "ready_for_diagnostic_interpretation")) {
+  if ((missing(title) || !identical(main, "")) &&
+      !identical(bundle$interpretation_status, "ready_for_diagnostic_interpretation")) {
     plot_title <- paste("REVIEW ONLY -", plot_title)
   }
 

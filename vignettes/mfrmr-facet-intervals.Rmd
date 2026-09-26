@@ -77,6 +77,70 @@ threshold of practical importance or a rater-quality rule. Use the size of the
 difference, interval, rubric and shared rating examples together when giving
 feedback.
 
+## Prepare a sheet for one rater
+
+The development version can summarize one rater's saved results for a feedback
+conversation. An individual interval and a difference between raters answer
+different questions: attach `ordinary` here because it contains each rater's
+coefficient. A saved contrast alone cannot become an individual interval.
+
+```{r individual-sheet}
+diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+feedback_results <- mfrm_results(fit, diagnostics = diagnostics,
+  intervals = list(raters = ordinary), compute = "never")
+sheet <- mfrm_report(feedback_results, style = "rater", facet = "Rater",
+  rater = "R01", output = "html", max_cases = 5)
+sheet$report$tables$severity
+sheet$report$tables$uncertainty
+# Open sheet$path in a browser. Review before copying the HTML file for sharing.
+```
+
+The file contains scoring tendency, its saved interval, exposure, ordinary
+Infit/Outfit, category use and selected unexpected ratings. It has category-use
+bars, numerical tables, print styling and no external resources. Set
+`audience = "researcher"` for technical guidance, or `max_cases = 0` to omit
+individual cases. Page count depends on the content and print settings.
+
+The default label is "Selected rater". Other raters' identities, Person
+identifiers, task labels and original row numbers are omitted from the sheet
+and its report object. An explicit `label` will be displayed. Scores or small
+groups may still be recognizable, so review the content before sharing.
+Distribute this standalone HTML file, not the comprehensive results bundle.
+
+The sheet does not refit, recalculate uncertainty, select a warning threshold
+or decide whether a rater is good or bad. Inspect the full saved interval
+result and its numerical cautions before preparing the sheet. Missing inputs
+are explained. If multiple attached interval results contain the selected
+individual coefficient, choose one explicitly with `interval = "raters"`.
+GPCM, fitted interactions, imported fits, testlet and shared-random-rater
+models require their own model-specific reporting routes.
+
+### Save the analysis and keep a copy of the sheet
+
+The HTML path is temporary. To keep the sheet after the R session ends, copy
+the reviewed file to a location you choose. Save the complete analysis
+separately if you need to prepare another sheet later. The following example
+uses temporary paths; replace them with your own analysis and recipient-file
+paths for continuing work.
+
+```{r feedback-save-reopen}
+analysis_file <- tempfile(fileext = ".rds")
+saveRDS(feedback_results, analysis_file)
+saved_results <- readRDS(analysis_file)
+
+# Reuse the saved diagnostics and intervals for this recipient.
+saved_sheet <- mfrm_report(saved_results, style = "rater", facet = "Rater",
+  rater = "R01", output = "html", max_cases = 5)
+recipient_file <- tempfile(fileext = ".html")
+stopifnot(file.copy(saved_sheet$path, recipient_file, overwrite = FALSE))
+```
+
+The RDS file retains the fitted data and identifiers for the analyst. The
+recipient HTML contains the selected summaries described above. Copying the
+HTML does not require sending the RDS file. Reading the saved analysis and
+preparing another sheet does not rerun estimation or diagnostics; it also
+does not update an earlier analysis to reflect new ratings.
+
 ## Carry the same intervals into figures and reports
 
 Suppose the assessment team has chosen a rater difference and its interval

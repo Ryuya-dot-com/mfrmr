@@ -792,7 +792,7 @@ build_peer_review_sim_spec <- function(n_submission = 50,
 #' mechanism. Users should review and, if necessary, edit the returned
 #' specification before using it for design planning.
 #'
-#' `GPCM` fits are supported here for direct data generation
+#' `GPCM` fits with the same slope and step owner are supported here for direct data generation
 #' and parameter-recovery checks, provided that the returned simulation
 #' specification stores both a threshold table and a parallel slope table.
 #' The same fit-derived specification can feed caveated role-based design
@@ -845,6 +845,10 @@ extract_mfrm_sim_spec <- function(fit,
     stop("`fit` does not contain the prepared data needed to derive a simulation specification.", call. = FALSE)
   }
   fit_model <- as.character(fit$summary$Model[1] %||% fit$config$model %||% "RSM")
+  if (identical(fit_model, "GPCM") &&
+      !identical(fit$config$slope_facet, fit$config$step_facet)) {
+    stop("extract_mfrm_sim_spec() currently requires `slope_facet == step_facet`; use bootstrap_mfrm_gpcm() for same-design parametric resampling of a separate-owner MML fit.", call. = FALSE)
+  }
 
   facet_names <- as.character(fit$config$facet_names %||% setdiff(names(prep$levels), "Person"))
   facet_names <- facet_names[!is.na(facet_names) & nzchar(facet_names)]

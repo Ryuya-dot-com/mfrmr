@@ -52,7 +52,7 @@ test_that("slope intervals need fresh qualification and transport joint covarian
 test_that("slope qualification checks coordinates instead of stored interval flags", {
   spec <- mfrmr:::build_gpcm_slope_spec(c('a','b'),'Rater','Rater')
   fit <- list(config=list(model='GPCM',method='MML',gpcm_spec=spec,
-    slope_facet='Rater',step_facet='Rater'),opt=list(par=log(2)),
+    slope_facet='Rater',step_facet='Rater',facet_levels=list(Rater=c('a','b'))),opt=list(par=log(2)),
     slopes=data.frame(SlopeFacet=c('a','b'),Estimate=c(2,.5),LogEstimate=log(c(2,.5))))
   cv <- list(status='ok',regularized=FALSE,param_slices=list(log_slopes=1L),
     solution_information=list(status='test'))

@@ -1,3 +1,25 @@
+.mfrm_default_plot_preset <- function() {
+  preset <- getOption("mfrmr.plot_preset", "standard")
+  choices <- c("standard", "publication", "compact", "monochrome")
+  if (!is.character(preset) || length(preset) != 1L || is.na(preset) ||
+      !preset %in% choices) {
+    stop("Option `mfrmr.plot_preset` must be one of: standard, publication, compact, monochrome. Set it to NULL to restore the package default.", call. = FALSE)
+  }
+  unname(preset)
+}
+
+# Resolve the new spelling before any input processing or drawing. A blank
+# string survives legacy default-title fallbacks in renderers and converters.
+.mfrm_plot_title_alias <- function(main, title, main_missing, title_missing) {
+  if (title_missing) return(main)
+  if (!main_missing) stop("Supply only one of `title` and `main`, not both.", call. = FALSE)
+  if (is.null(title)) return("")
+  if (!is.character(title) || length(title) != 1L || is.na(title)) {
+    stop("`title` must be one character string or NULL.", call. = FALSE)
+  }
+  unname(title)
+}
+
 new_plot_legend <- function(label = character(),
                             role = character(),
                             aesthetic = character(),
@@ -930,7 +952,15 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' @param facet Optional facet name used to keep only matching facet-level rows.
 #'   When `NULL`, the plot uses the mixed top-cell table returned by the strict
 #'   marginal screen.
-#' @param main Optional custom plot title.
+#' @param main Compatibility title argument. Omitted or `NULL` keeps the default
+#'   title. Existing calls remain supported without a deprecation warning.
+#'   For new code, prefer `title`; do not supply both arguments.
+#' @param title Plot title. Omit it to keep the default, supply one character
+#'   string to replace it, or use `NULL` (or `""`) to suppress it. This changes
+#'   only the heading; numerical results, reference lines, subtitles and
+#'   interpretation notes remain. Both `main` and `title` explicitly supplied
+#'   is an error, even if equal or `NULL`. Positional legacy arguments retain
+#'   their order; use the exact name `title`.
 #' @param palette Optional named color overrides. Recognized names:
 #'   `positive`, `negative`, `flag`.
 #' @param label_angle X-axis label angle.
@@ -1004,6 +1034,7 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' # Run this command separately to inspect the second figure
 #' plot_marginal_fit(diagnostics, plot_type = "prop_diff")
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_marginal_fit <- function(x,
                               diagnostics = NULL,
@@ -1014,7 +1045,10 @@ plot_marginal_fit <- function(x,
                               palette = NULL,
                               label_angle = 45,
                               preset = c("standard", "publication", "compact", "monochrome"),
-                              draw = TRUE) {
+                              draw = TRUE,
+                              title = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   plot_type <- match.arg(tolower(plot_type), c("std_residual", "prop_diff"))
   top_n <- max(1L, as.integer(top_n))
   style <- resolve_plot_preset(preset)
@@ -1183,7 +1217,7 @@ plot_marginal_fit <- function(x,
 #' @param metric `"exact"` or `"adjacent"`.
 #' @param top_n Maximum level pairs shown.
 #' @param facet Optional facet name used to keep only matching pairwise rows.
-#' @param main Optional custom plot title.
+#' @inheritParams plot_marginal_fit
 #' @param palette Optional named color overrides. Recognized names: `ok`, `flag`.
 #' @param label_angle X-axis label angle.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
@@ -1251,6 +1285,7 @@ plot_marginal_fit <- function(x,
 #' # Optional: agreement within one score category
 #' plot_marginal_pairwise(diagnostics, metric = "adjacent")
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_marginal_pairwise <- function(x,
                                    diagnostics = NULL,
@@ -1261,7 +1296,10 @@ plot_marginal_pairwise <- function(x,
                                    palette = NULL,
                                    label_angle = 45,
                                    preset = c("standard", "publication", "compact", "monochrome"),
-                                   draw = TRUE) {
+                                   draw = TRUE,
+                                   title = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   metric <- match.arg(tolower(metric), c("exact", "adjacent"))
   top_n <- max(1L, as.integer(top_n))
   style <- resolve_plot_preset(preset)
@@ -1406,7 +1444,7 @@ plot_marginal_pairwise <- function(x,
 #' @param top_n Maximum rows used from the unexpected table.
 #' @param rule Flagging rule (`"either"` or `"both"`).
 #' @param plot_type `"scatter"` or `"severity"`.
-#' @param main Optional custom plot title.
+#' @inheritParams plot_marginal_fit
 #' @param palette Optional named color overrides (`higher`, `lower`, `bar`).
 #' @param label_angle X-axis label angle for `"severity"` bar plot.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
@@ -1491,6 +1529,7 @@ plot_marginal_pairwise <- function(x,
 #'   )
 #' }
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_unexpected <- function(x,
                             diagnostics = NULL,
@@ -1503,7 +1542,10 @@ plot_unexpected <- function(x,
                             palette = NULL,
                             label_angle = 45,
                             preset = c("standard", "publication", "compact", "monochrome"),
-                            draw = TRUE) {
+                            draw = TRUE,
+                            title = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   rule <- match.arg(tolower(rule), c("either", "both"))
   plot_type <- match.arg(tolower(plot_type), c("scatter", "severity"))
   top_n <- max(1L, as.integer(top_n))
@@ -1734,6 +1776,7 @@ plot_unexpected <- function(x,
 #'                   metric = "FairM", plot_type = "difference")
 #' # A positive gap means the observed average is higher than the model-based FairM
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_fair_average <- function(x,
                               diagnostics = NULL,
@@ -1748,6 +1791,7 @@ plot_fair_average <- function(x,
                               show_title = TRUE,
                               show_notes = TRUE,
                               ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   metric <- match.arg(metric)
   metric <- switch(metric, AdjustedAverage = "FairM", StandardizedAdjustedAverage = "FairZ", metric)
   plot_type <- match.arg(tolower(plot_type), c("difference", "scatter", "measure"))
@@ -2013,6 +2057,7 @@ plot_fair_average <- function(x,
 #'   )
 #' }
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_displacement <- function(x,
                               diagnostics = NULL,
@@ -2025,6 +2070,7 @@ plot_displacement <- function(x,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE,
                               ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   plot_type <- match.arg(tolower(plot_type), c("lollipop", "hist"))
   top_n <- max(1L, as.integer(top_n))
   if (!is.numeric(ci_level) || length(ci_level) != 1L ||
@@ -2180,7 +2226,7 @@ plot_displacement <- function(x,
 #' @param corr_warn Warning threshold for pairwise correlation.
 #' @param plot_type `"exact"`, `"corr"`, or `"difference"`.
 #' @param top_n Maximum pairs displayed for bar-style plots.
-#' @param main Optional custom plot title.
+#' @inheritParams plot_marginal_fit
 #' @param palette Optional named color overrides (`ok`, `flag`, `expected`).
 #' @param label_angle X-axis label angle for bar-style plots.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
@@ -2271,6 +2317,7 @@ plot_displacement <- function(x,
 #' plot_interrater_agreement(fit, rater_facet = "Rater", plot_type = "difference")
 #' # Positive horizontal values mean Rater1 assigned higher scores than Rater2
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_interrater_agreement <- function(x,
                                       diagnostics = NULL,
@@ -2284,7 +2331,10 @@ plot_interrater_agreement <- function(x,
                                       palette = NULL,
                                       label_angle = 45,
                                       preset = c("standard", "publication", "compact", "monochrome"),
-                                      draw = TRUE) {
+                                      draw = TRUE,
+                                      title = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   plot_type <- match.arg(tolower(plot_type), c("exact", "corr", "difference"))
   top_n <- max(1L, as.integer(top_n))
   style <- resolve_plot_preset(preset)
@@ -2436,7 +2486,7 @@ plot_interrater_agreement <- function(x,
 #' @param fixed_p_max Warning cutoff for fixed-effect chi-square p-values.
 #' @param random_p_max Warning cutoff for random-effect chi-square p-values.
 #' @param plot_type `"fixed"`, `"random"`, or `"variance"`.
-#' @param main Optional custom plot title.
+#' @inheritParams plot_marginal_fit
 #' @param palette Optional named color overrides (`fixed_ok`, `fixed_flag`,
 #' `random_ok`, `random_flag`, `variance`).
 #' @param label_angle X-axis label angle for bar-style plots.
@@ -2507,6 +2557,7 @@ plot_interrater_agreement <- function(x,
 #'   )
 #' }
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_facets_chisq <- function(x,
                               diagnostics = NULL,
@@ -2517,7 +2568,10 @@ plot_facets_chisq <- function(x,
                               palette = NULL,
                               label_angle = 45,
                               preset = c("standard", "publication", "compact", "monochrome"),
-                              draw = TRUE) {
+                              draw = TRUE,
+                              title = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   plot_type <- match.arg(tolower(plot_type), c("fixed", "random", "variance"))
   style <- resolve_plot_preset(preset)
   pal <- resolve_palette(
@@ -2749,6 +2803,7 @@ plot_facets_chisq <- function(x,
 #' qc$data$category_stats[, c("Category", "Count", "ExpectedCount")]
 #' # Use focused plots such as plot_marginal_fit(diagnostics) to investigate a panel
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_qc_dashboard <- function(fit,
                               diagnostics = NULL,
@@ -2764,6 +2819,7 @@ plot_qc_dashboard <- function(fit,
                               top_n = 20,
                               draw = TRUE,
                               preset = c("standard", "publication", "compact", "monochrome")) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
@@ -3149,7 +3205,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @param fit_range Numeric length-2 vector defining the heuristic fit-review band
 #'   shown as a shaded region (default \code{c(0.5, 1.5)}).
 #' @param top_n Maximum number of elements to plot (default 60).
-#' @param main Optional custom plot title.
+#' @inheritParams plot_marginal_fit
 #' @param palette Optional named colour vector keyed by facet name.
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param draw If \code{TRUE} (default), render the plot using base graphics.
@@ -3166,12 +3222,18 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' A shaded band between \code{fit_range[1]} and \code{fit_range[2]}
 #' highlights a common heuristic review range.
 #'
+#' `preset = "monochrome"` uses gray facet colours unless overridden with
+#' `palette`. [as_ggplot()] retains the saved radius ratios and facet colours,
+#' but uses physical point sizes rather than base graphics' plot units. It
+#' also retains the reference lines; this is not a pixel-identical rendering.
+#'
 #' Bubble radius options:
 #' \itemize{
 #'   \item \code{"SE"}: inversely proportional to standard error---larger
 #'     circles indicate more precisely estimated elements under the current
 #'     SE approximation.
-#'   \item \code{"N"}: proportional to observation count---larger
+#'   \item \code{"N"}: radius proportional to the square root of
+#'     observation count, so circle area is proportional to count---larger
 #'     circles indicate elements with more data.
 #'   \item \code{"equal"}: uniform size, useful when SE or N differences
 #'     distract from the fit pattern.
@@ -3227,6 +3289,7 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' plot_bubble(fit, diagnostics = diagnostics, view = "infit_outfit")
 #' # Here bubble size represents observation count; bands are review aids
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_bubble <- function(x,
                         diagnostics = NULL,
@@ -3240,7 +3303,10 @@ plot_bubble <- function(x,
                         main = NULL,
                         palette = NULL,
                         draw = TRUE,
-                        preset = c("standard", "publication", "compact", "monochrome")) {
+                        preset = c("standard", "publication", "compact", "monochrome"),
+                        title = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   fit_stat <- match.arg(fit_stat)
   view <- match.arg(view)
   if (is.null(bubble_size)) {
@@ -3315,6 +3381,9 @@ plot_bubble <- function(x,
     )[seq_along(unique_facets)],
     unique_facets
   )
+  if (identical(style$name, "monochrome")) {
+    default_cols <- .plot_series_colors(unique_facets, "monochrome")
+  }
   cols <- resolve_palette(palette = palette, defaults = default_cols)
   point_cols <- cols[as.character(measures$Facet)]
 

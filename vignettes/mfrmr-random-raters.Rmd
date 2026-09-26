@@ -490,6 +490,23 @@ seed, generated severity, estimate, SE and fit status. `method = "error"`
 provides unscaled-error intervals from the same draws as a comparison; it is
 not automatically a remedy when studentization fails.
 
+For newly computed bootstrap results, `$trials` also retains the optimizer
+code, numerical and information checks, Person quadrature orders and their
+likelihood/gradient differences. These help answer **why a refit could not
+supply a usable interval**. A failed refit has missing additional checks and
+its error message; a missing check does not mean success. Older saved bootstrap
+examples do not contain these extra fields. Reopening them does not reconstruct
+the missing checks or change their original intervals.
+
+Review the causes separately. Unresolved Person integration calls for a
+numerical review; an estimated variance boundary makes ordinary studentization
+unavailable; neither is a measurement of the interval's repeated-sampling
+coverage. More quadrature points, more bootstrap draws and more independently
+simulated assessments address different problems. If you compare a revised
+numerical procedure, retain the original results and specify the revision
+before examining its outcomes; do not keep retrying only failed trials until
+they succeed.
+
 If a bootstrap fit estimates zero variance, its ordinary rater SE is
 unavailable. Its generated-minus-estimated error can still be recorded, but
 its studentized error is unresolved. Failed refits are also retained. The
@@ -498,6 +515,15 @@ treats them as plus infinity. These are outer limits covering the empirical
 intervals from any completion of those unresolved errors. When too many
 replicates are unresolved, a limit is unbounded. Dropping those draws or
 simulating until a chosen number succeeds would change the reference sample.
+
+More refits do not necessarily make an unbounded interval finite. At the
+default 499 refits and 95% level, 13 unresolved studentized errors for one
+rater make both limits infinite. With 12 unresolved errors and all remaining
+errors and source values finite, the empirical limits are finite. These
+counts follow the interval calculation; they are not acceptable-failure or
+coverage thresholds. If the unresolved fraction stays above the 2.5% tail
+probability, increasing the run size still yields unbounded limits. Inspect
+the numerical and variance-boundary records before investing in more draws.
 
 ```{r bootstrap-plot, fig.width=7, fig.height=5, fig.alt="Explicit bootstrap intervals for observed rater effects. Arrowheads mark unbounded limits caused by unresolved studentized errors; all planned refits remain in the adjacent trial table."}
 plot(bootstrap_intervals)

@@ -64,6 +64,7 @@
 #' # Inspect large absolute correlations alongside shared-person counts.
 #' # Unavailable pairs are not evidence of local independence.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_local_dependence_heatmap <- function(fit,
                                           diagnostics = NULL,
@@ -71,6 +72,7 @@ plot_local_dependence_heatmap <- function(fit,
                                           min_pairs = 5L,
                                           preset = c("standard", "publication", "compact", "monochrome"),
                                           draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -245,12 +247,14 @@ plot_local_dependence_heatmap <- function(fit,
 #' #   should be read as "are facet elements distinguishable?"; values
 #' #   close to 1 mean facet means differ reliably from each other.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_reliability_snapshot <- function(fit,
                                       diagnostics = NULL,
                                       metric = c("reliability", "separation", "strata"),
                                       preset = c("standard", "publication", "compact", "monochrome"),
                                       draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -381,6 +385,7 @@ plot_reliability_snapshot <- function(fit,
 #' #   high-magnitude cells at one facet level warrant pattern review but
 #' #   do not by themselves establish scoring drift.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_residual_matrix <- function(fit,
                                  diagnostics = NULL,
@@ -388,6 +393,7 @@ plot_residual_matrix <- function(fit,
                                  top_n_persons = 40L,
                                  preset = c("standard", "publication", "compact", "monochrome"),
                                  draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -526,6 +532,7 @@ plot_residual_matrix <- function(fit,
 #' #   small-N levels. ShrinkageFactor near 1 means most of the
 #' #   movement was driven by the prior rather than the data.
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_shrinkage_funnel <- function(fit,
                                   facet = NULL,
@@ -534,6 +541,7 @@ plot_shrinkage_funnel <- function(fit,
                                   show_ci = FALSE,
                                   ci_level = 0.95,
                                   draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }

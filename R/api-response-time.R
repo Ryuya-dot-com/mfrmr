@@ -611,6 +611,7 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #'   [mfrmr_output_guide()]
 #' @concept response time
 #' @concept visual diagnostics
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_response_time_review <- function(x,
                                       type = c("distribution", "person",
@@ -621,6 +622,7 @@ plot_response_time_review <- function(x,
                                                  "compact", "monochrome"),
                                       draw = TRUE,
                                       ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(x, "mfrm_response_time_review")) {
     stop("`x` must be output from response_time_review().", call. = FALSE)
   }

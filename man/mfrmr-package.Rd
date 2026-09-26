@@ -340,15 +340,15 @@ kernel is multiplied by a positive slope \eqn{\alpha_g} for the designated
 slope-facet level \eqn{g}:
 
 \deqn{\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
-  \alpha_g(\theta_n - \delta_j - \beta_i - \tau_{gk}).}
+  \alpha_g(\theta_n - \delta_j - \beta_i - \tau_{hk}).}
 
-The current implementation requires \code{slope_facet == step_facet} and
-identifies slopes on the log scale with geometric mean 1. This makes
+MML allows a slope owner \eqn{g} distinct from the step owner \eqn{h};
+JML requires \code{slope_facet == step_facet}. Slopes are identified on the log
+scale with geometric mean 1. This makes
 \code{GPCM} a slope-aware sensitivity/extension route, not a replacement for the
 equal-weighting \code{RSM}/\code{PCM} interpretation.
-It assigns slopes and steps to the same facet. It does not jointly estimate
-the multiplicative task and rater slopes of the broader Uto--Ueno generalized
-MFRM or allow a distinct step owner. Unit slopes reduce to
+It does not jointly estimate the multiplicative task and rater slopes of
+the broader Uto--Ueno generalized MFRM. Unit slopes reduce to
 the equal-discrimination PCM kernel.
 Under default MML, an intercept-only person distribution
 \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
@@ -371,8 +371,8 @@ The implemented response-model scope is ordered categorical only.
 Binary responses are the \eqn{K = 1} special case of the same formulation,
 so they are handled through the ordinary ordered-score interface. This means
 \code{mfrmr} supports ordered binary and ordered polytomous data under \code{RSM} and
-\code{PCM}, plus a narrow \code{GPCM} branch with one designated
-\code{slope_facet} that currently must equal \code{step_facet}. Unordered
+\code{PCM}, plus \code{GPCM} with one designated \code{slope_facet} and, under MML,
+a possibly different \code{step_facet}. Unordered
 nominal/multinomial response models are outside the documented model scope,
 as are Poisson, negative-binomial, and grouped binomial-trial count-response
 families. A positive observation \code{weight} weights the conditional

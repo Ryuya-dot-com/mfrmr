@@ -324,22 +324,36 @@ build_step_curve_spec <- function(x) {
         as.character(slope_tbl$SlopeFacet)
       )
     }
-    for (lvl in ordered_levels) {
+    separate_owners <- model == "GPCM" &&
+      !identical(x$config$slope_facet, x$config$step_facet)
+    profiles <- if (separate_owners) {
+      expand.grid(StepLevel = ordered_levels,
+        SlopeLevel = x$prep$levels[[x$config$slope_facet]], stringsAsFactors = FALSE)
+    } else {
+      data.frame(StepLevel = ordered_levels, SlopeLevel = ordered_levels,
+        stringsAsFactors = FALSE)
+    }
+    profiles$CurveGroup <- if (separate_owners) make.unique(paste0(
+      step_facet, " = ", profiles$StepLevel, "; ", x$config$slope_facet,
+      " = ", profiles$SlopeLevel)) else profiles$StepLevel
+    for (i in seq_len(nrow(profiles))) {
+      lvl <- profiles$StepLevel[i]
+      group <- profiles$CurveGroup[i]
       sub <- step_tbl[as.character(step_tbl$StepFacet) == as.character(lvl), , drop = FALSE]
       if (nrow(sub) == 0) next
       ord <- order(step_index_from_label(sub$Step))
       tau <- as.numeric(sub$Estimate[ord])
       slope_val <- if (model == "GPCM") {
-        sval <- unname(slope_lookup[[as.character(lvl)]])
+        sval <- unname(slope_lookup[profiles$SlopeLevel[i]])
         if (!is.finite(sval) || sval <= 0) {
-          stop("GPCM pathway/CCC plots require finite positive slopes for every `StepFacet` level.")
+          stop("GPCM pathway/CCC plots require finite positive slopes for every slope-facet level.")
         }
         sval
       } else {
         1
       }
-      groups[[as.character(lvl)]] <- list(
-        name = as.character(lvl),
+      groups[[group]] <- list(
+        name = group,
         step_cum = c(0, cumsum(tau)),
         tau = tau,
         slope = slope_val
@@ -347,7 +361,8 @@ build_step_curve_spec <- function(x) {
       step_points <- dplyr::bind_rows(
         step_points,
         tibble::tibble(
-          CurveGroup = as.character(lvl),
+          CurveGroup = group,
+          StepLevel = as.character(lvl),
           Step = as.character(sub$Step[ord]),
           StepIndex = seq_along(tau),
           Threshold = tau,
@@ -440,7 +455,8 @@ pathway_fit_payload <- function(x,
                                 include_fit_measures = TRUE,
                                 curve_groups = character(),
                                 step_facet = NA_character_,
-                                endpoint_labels = data.frame()) {
+                                endpoint_labels = data.frame(),
+                                joint_profiles = FALSE) {
   curve_groups <- unique(as.character(curve_groups %||% character(0)))
   curve_groups <- curve_groups[nzchar(curve_groups)]
   if (!isTRUE(include_fit_measures)) {
@@ -522,7 +538,8 @@ pathway_fit_payload <- function(x,
     narrowed <- candidate_tbl[as.character(candidate_tbl$Facet) == step_facet, , drop = FALSE]
     if (nrow(narrowed) > 0L) candidate_tbl <- narrowed
   }
-  match_idx <- match(curve_groups, as.character(candidate_tbl$Level))
+  match_idx <- if (joint_profiles) rep(NA_integer_, length(curve_groups)) else
+    match(curve_groups, as.character(candidate_tbl$Level))
   curve_fit_status <- data.frame(
     CurveGroup = curve_groups,
     Facet = as.character(candidate_tbl$Facet[match_idx]),
@@ -543,7 +560,9 @@ pathway_fit_payload <- function(x,
   curve_fit_status$FitStatus[!curve_fit_status$MatchedFitRow] <- "not_matched"
   curve_fit_status$Underfit[is.na(curve_fit_status$Underfit)] <- FALSE
   curve_fit_status$Overfit[is.na(curve_fit_status$Overfit)] <- FALSE
-  curve_fit_status$ReviewReason[!curve_fit_status$MatchedFitRow] <- "No fit-measure row matched this pathway curve group."
+  curve_fit_status$ReviewReason[!curve_fit_status$MatchedFitRow] <- if (joint_profiles)
+    "A joint slope/step profile has no single-facet fit statistic; inspect fit_measures separately." else
+    "No fit-measure row matched this pathway curve group."
 
   endpoints <- as.data.frame(endpoint_labels %||% data.frame(), stringsAsFactors = FALSE)
   fit_annotations <- curve_fit_status[
@@ -2010,7 +2029,8 @@ build_pathway_map_data <- function(x,
     AnnotationType = "step_threshold",
     CurveGroup = as.character(step_df$CurveGroup),
     Facet = if (!is.na(curve_spec$step_facet) && nzchar(curve_spec$step_facet)) curve_spec$step_facet else NA_character_,
-    Level = ifelse(as.character(step_df$CurveGroup) == "Common", NA_character_, as.character(step_df$CurveGroup)),
+    Level = ifelse(as.character(step_df$CurveGroup) == "Common", NA_character_,
+      as.character(step_df$StepLevel %||% step_df$CurveGroup)),
     X = suppressWarnings(as.numeric(step_df$Threshold)),
     Y = suppressWarnings(as.numeric(step_df$PathY)),
     Label = as.character(step_df$ThresholdLabel),
@@ -2044,7 +2064,9 @@ build_pathway_map_data <- function(x,
     include_fit_measures = include_fit_measures,
     curve_groups = unique(as.character(curve_tbl$expected$CurveGroup)),
     step_facet = curve_spec$step_facet,
-    endpoint_labels = endpoint_labels
+    endpoint_labels = endpoint_labels,
+    joint_profiles = identical(x$config$model, "GPCM") &&
+      !identical(x$config$slope_facet, x$config$step_facet)
   )
   pathway_annotations <- rbind(
     step_annotations,
@@ -2582,10 +2604,7 @@ build_ccc_data <- function(x, theta_range = c(-6, 6), theta_points = 241L) {
   data.frame(
       CurveBasis = curve_spec$curve_basis,
       PredictorOffset = curve_spec$predictor_offset,
-      Description = paste(
-        "Estimated step and, for GPCM, slope parameters are retained;",
-        "additive facet main effects and fitted interactions are fixed at zero."
-      ),
+      Description = "Fitted steps (GPCM: also slopes); additive effects and interactions fixed at zero.",
       stringsAsFactors = FALSE
   )
 }
@@ -3200,7 +3219,10 @@ draw_facet_plot <- function(facet_tbl,
 #' the same colours across panels. Multiple groups or more than five categories use one legend
 #' beside the plotting area; colour presets use distinct default colours
 #' beyond eight categories. For `GPCM`, these curves retain the
-#' estimated step-facet slope; all curve families are reference-profile curves
+#' estimated slope. With separate owners, each step-level/slope-level pair is
+#' a labeled curve group. Such joint profiles have no single-facet Infit/Outfit
+#' flag; inspect `fit_measures` or `type = "fit_pathway"` separately.
+#' All curve families are reference-profile curves
 #' with additive facet main effects and fitted interactions fixed at zero; the
 #' native footer and ggplot subtitle disclose that conditioning.
 #' Expected-score pathways use the same reference profile and expose the
@@ -3288,6 +3310,7 @@ draw_facet_plot <- function(facet_tbl,
 #' wright <- plot(fit, draw = FALSE)
 #' head(wright$data$locations)
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_fit <- function(x,
                           type = NULL,
@@ -3326,6 +3349,7 @@ plot.mfrm_fit <- function(x,
                           show_title = TRUE,
                           show_notes = TRUE,
                           ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(x, "mfrm_fit")) {
     stop("`x` must be an mfrm_fit object from fit_mfrm().")
   }

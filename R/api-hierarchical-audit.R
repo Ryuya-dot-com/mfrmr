@@ -1501,6 +1501,7 @@ summary.mfrm_facet_nesting <- function(object, ...) {
 #' @param ... Reserved.
 #' @return Invisibly, the data.frame used for the plot.
 #' @seealso [facet_small_sample_review()].
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
                                           preset = c("standard",
@@ -1508,6 +1509,7 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
                                                      "compact",
                                                      "monochrome"),
                                           ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   style <- resolve_plot_preset(preset)
   tbl <- as.data.frame(x$table, stringsAsFactors = FALSE)
   if (is.null(tbl) || nrow(tbl) == 0L) {
@@ -1583,6 +1585,7 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
 #' @return Invisibly, the matrix rendered.
 #' @seealso [detect_facet_nesting()],
 #'   [analyze_hierarchical_structure()].
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_facet_nesting <- function(x,
                                     preset = c("standard",
@@ -1590,6 +1593,7 @@ plot.mfrm_facet_nesting <- function(x,
                                                "compact",
                                                "monochrome"),
                                     ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   style <- resolve_plot_preset(preset)
   pair <- as.data.frame(x$pairwise_table, stringsAsFactors = FALSE)
   if (is.null(pair) || nrow(pair) == 0L) {

@@ -8,11 +8,12 @@ mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
     "calibration", "simulation", "linking", "network", "response_time", "facets",
-    "conquest", "r", "models", "features", "imputation", "gtheory", "feedback")
+    "conquest", "r", "models", "features", "imputation", "gtheory", "feedback", "plots")
 )
 }
 \arguments{
-\item{scope}{Which rows to return. \code{"all"} returns the full guide.
+\item{scope}{Which rows to return. \code{"all"} returns the full route catalogue.
+\code{"plots"} returns a separate purpose-based plot capability table (see below).
 \code{"public"} returns the canonical six-step route for most users;
 \code{"beginner"} returns the same compact route rather than combining every
 beginner-labelled specialist row.
@@ -36,7 +37,11 @@ including their own table, plot and saving routes.
 arriving from those workflows.}
 }
 \value{
-A data.frame with one row per recommended route and columns:
+For \code{scope = "plots"}, a data.frame with \code{Question}, \code{InputClass},
+\code{PlotCall}, \code{PlotName} (the name in the saved plot data), \code{DataComponent},
+\code{GGPlot}, \code{GGPlotCall} (\code{NA} when unavailable), \code{Notes}, \code{ResultFunction}
+and \code{NextStep}.
+All other scopes return a data.frame with one row per route and columns:
 \itemize{
 \item \code{Scope}
 \item \code{Question}
@@ -91,6 +96,10 @@ Use \code{mfrmr_output_guide("feedback")} when preparing rater feedback. Start
 with the question and the fitted model: severity, response misfit and the
 accuracy of a warning rule are different quantities. A severe rater need
 not misfit, and an observed flag does not establish poor rater quality.
+For an individual native additive RSM/PCM sheet, use
+\code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")}.
+The selected sheet omits source identifiers; the comprehensive result and
+export bundle retain the original analysis.
 Use \code{mfrmr_output_guide("psychometric")} for the technical table,
 review, and reporting routes whose interpretation boundaries should be
 checked before manuscript use.
@@ -98,13 +107,39 @@ checked before manuscript use.
 
 \section{How to use this guide}{
 
-Read \code{Question} first, then open the help for a function in \code{MainFunction}.
+For route scopes, read \code{Question} first, then open the help for a function
+in \code{MainFunction}. For \code{"plots"}, use the figure instructions below.
 \code{UseWhen} describes its inputs and purpose; \code{NextStep} explains what to inspect.
 Cells containing \code{...} are outlines, not complete scripts to paste and run.
 Use \link{mfrmr_workflow_methods} for a runnable introduction and an explanation
 of function names. Inspect \code{DecisionBoundary} before interpreting a result.
 For \code{GPCM}, use \code{scope = "gpcm"} to find both the support matrix
 and the table that explains how out-of-scope routes are handled.
+}
+
+\section{Choosing a figure}{
+
+Use \code{mfrmr_output_guide("plots")} to find selected plots by purpose, input
+class and explicit plot call. This is a curated map, not an exhaustive list
+of every plot method, view or component. Unlisted routes are not necessarily
+unsupported. Existing scopes, including \code{"all"}, keep their route-table format.
+
+For linked figure previews and runnable examples, open
+\code{vignette("mfrmr-visual-diagnostics")}.
+\code{ResultFunction} names a help page for creating the required result.
+In \code{PlotCall}, replace \code{x} with the indicated result object and save the
+returned object as \code{p}. Calls use \code{draw = FALSE}; change it to \code{TRUE} to
+display the original figure. Then follow \code{GGPlotCall}, if available.
+\code{DataComponent} is for \code{\link[=plot_data]{plot_data()}} extraction; it is not automatically a
+valid or equivalent \code{component} argument to \code{\link[=as_ggplot]{as_ggplot()}}.
+
+\code{GGPlot} distinguishes \code{"dedicated"} (a converter for this plot), \code{"native"}
+(the plot method already returns ggplot), \code{"generic"} (a table-based view
+that need not reproduce the original figure), and \code{"unavailable"} (use the
+original plot or build a custom graphic from its data). ggplot routes need
+the optional ggplot2 package. Display support does not broaden the fitted
+model's statistical scope or establish interval coverage. Read \code{Notes} and
+the source function's help before interpretation.
 }
 
 \examples{
@@ -117,6 +152,9 @@ linking[, c("Question", "MainFunction", "UseWhen")]
 
 feedback <- mfrmr_output_guide("feedback")
 feedback[, c("Question", "MainFunction", "DecisionBoundary")]
+
+figures <- mfrmr_output_guide("plots")
+figures[, c("Question", "ResultFunction", "GGPlot")]
 }
 \concept{GPCM boundaries}
 \concept{reporting workflow}

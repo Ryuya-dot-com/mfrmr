@@ -47,11 +47,13 @@
 #'                 method = "MML", quad_points = 7, maxit = 30)
 #' p <- plot_threshold_ladder(fit, draw = FALSE)
 #' head(p$data$data)
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_threshold_ladder <- function(fit,
                                   highlight_disorder = TRUE,
                                   preset = c("standard", "publication", "compact", "monochrome"),
                                   draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -218,6 +220,7 @@ plot_threshold_ladder <- function(fit,
 #' # Values above 1 indicate more response variation than expected, below 1 less
 #' # The reference bands flag patterns for review, not automatic exclusion
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_person_fit <- function(fit,
                             diagnostics = NULL,
@@ -227,6 +230,7 @@ plot_person_fit <- function(fit,
                             preset = c("standard", "publication", "compact", "monochrome"),
                             draw = TRUE,
                             fit_index = c("meansquare", "loglik")) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -607,6 +611,7 @@ plot_person_fit <- function(fit,
 #' # Higher estimates mean stricter ratings with this example's default orientation
 #' # The optional magnitude bands are omitted from this first comparison
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_rater_severity_profile <- function(fit,
                                         diagnostics = NULL,
@@ -615,6 +620,7 @@ plot_rater_severity_profile <- function(fit,
                                         show_bands = TRUE,
                                         preset = c("standard", "publication", "compact", "monochrome"),
                                         draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -792,6 +798,7 @@ plot_rater_severity_profile <- function(fit,
 #' p <- plot_dif_summary(dff, draw = FALSE)
 #' head(p$data$data)
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_dif_summary <- function(x,
                              top_n = 30L,
@@ -801,6 +808,7 @@ plot_dif_summary <- function(x,
                              ci_level = NULL,
                              effect_thresholds = NULL,
                              effect_axis_label = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(x, c("mfrm_dff", "mfrm_dif"))) {
     stop("`x` must be output from analyze_dff() or analyze_dif().",
          call. = FALSE)
@@ -1047,6 +1055,7 @@ plot_dif_summary <- function(x,
 #' p <- plot_apa_figure_one(fit, draw = FALSE)
 #' names(p$data)
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_apa_figure_one <- function(fit,
                                 diagnostics = NULL,
@@ -1054,6 +1063,7 @@ plot_apa_figure_one <- function(fit,
                                 ci_level = 0.95,
                                 preset = c("standard", "publication", "compact", "monochrome"),
                                 draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }

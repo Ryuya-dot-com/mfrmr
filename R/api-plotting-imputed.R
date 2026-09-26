@@ -11,18 +11,30 @@
 #' @param ... Unused.
 #' @return Invisibly, an `mfrm_plot_data` object containing the plotted `table`,
 #'   exact contrast coefficients and inference settings. Use [plot_data()] for
-#'   custom graphics; automatic [as_ggplot()] conversion is unavailable.
+#'   custom graphics. [as_ggplot()] uses the saved pointwise MI interval
+#'   endpoints; it does not substitute normal intervals from the standard errors.
+#'   Default and `component = "table"` retain the complete interval view.
+#'   Target order, contrasts, degrees of freedom, confidence level and
+#'   complete-data information cautions remain attached through [plot_data()].
+#'   Fixed targets have open diamonds without intervals. In ggplot conversion,
+#'   infinite endpoints have arrows (their tips are display limits, not finite
+#'   bounds); missing intervals have crosses at the saved estimate. Missing
+#'   point estimates cause an error rather than being placed at zero.
+#'   Use source `title`/`subtitle` arguments or `ggplot2::labs()` to change text;
+#'   hiding headings does not remove the attached inference cautions.
 #' @details Plots use the stored pointwise multiple-imputation intervals and
 #'   preserve target order. Open diamonds identify fixed targets without an
 #'   inferential interval. A zero reference line does not define a practical
 #'   importance threshold. The plot does not refit, select significant raters,
 #'   adjust for multiplicity or turn severity differences into rater quality.
 #' @seealso [pool_mfrm_imputed()]
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_pooled <- function(x, draw = TRUE, preset = "standard",
     title = paste("Pooled", x$settings$facet, "estimates and contrasts"),
     subtitle = sprintf("%d imputations | %.0f%% pointwise MI intervals",
       x$settings$imputations, 100 * x$settings$ci_level), ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   if (!is.logical(draw) || length(draw) != 1L || is.na(draw)) {
     stop("`draw` must be TRUE or FALSE.", call. = FALSE)
@@ -60,4 +72,62 @@ plot.mfrm_pooled <- function(x, draw = TRUE, preset = "standard",
   if (!is.null(subtitle)) graphics::mtext(subtitle, side = 3, line = 0.3, cex = 0.8)
   if (any(fixed)) graphics::mtext("Open diamonds: fixed by model constraints", side = 1, line = 3, cex = 0.8)
   invisible(out)
+}
+
+.mfrmr_gg_pooled <- function(x) {
+  .require_mfrmr_ggplot2()
+  d <- x$data
+  tab <- d$table
+  required <- c("Target", "Estimate", "Lower", "Upper", "DF", "Status")
+  if (!is.data.frame(tab) || !nrow(tab) || !all(required %in% names(tab)) ||
+      any(!is.finite(tab$Estimate)) || anyNA(tab$Target) || anyNA(tab$Status) ||
+      !all(tab$Status %in% c("pooled", "fixed"))) {
+    stop("Pooled plot data lack finite estimates, saved interval fields or supported target statuses. Recreate with plot(pooled, draw = FALSE).", call. = FALSE)
+  }
+  free <- tab$Status == "pooled"
+  complete <- free & !is.na(tab$Lower) & !is.na(tab$Upper)
+  if (any(tab$Lower[complete] > tab$Upper[complete]) ||
+      any(tab$Lower[complete] == Inf | tab$Upper[complete] == -Inf)) {
+    stop("Saved pooled interval endpoints are not ordered lower to upper.", call. = FALSE)
+  }
+  tab$Y <- rev(seq_len(nrow(tab)))
+  tab$Display <- ifelse(!free, "Fixed", ifelse(!complete, "Unavailable interval",
+    ifelse(is.infinite(tab$Lower) | is.infinite(tab$Upper), "Unbounded interval", "Pooled interval")))
+  style <- resolve_plot_preset(d$preset %||% "standard")
+  endpoints <- c(0, tab$Estimate, tab$Lower[complete], tab$Upper[complete])
+  limits <- range(endpoints[is.finite(endpoints)])
+  padding <- if (diff(limits) > 0) .08 * diff(limits) else .1
+  limits <- limits + c(-padding, padding)
+  intervals <- tab[complete, , drop = FALSE]
+  intervals$Left <- pmax(limits[1], intervals$Lower)
+  intervals$Right <- pmin(limits[2], intervals$Upper)
+  p <- ggplot2::ggplot(tab, ggplot2::aes(x = .data$Estimate, y = .data$Y)) +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dashed", colour = style$grid) +
+    ggplot2::geom_segment(data = intervals, ggplot2::aes(x = .data$Left,
+      xend = .data$Right, yend = .data$Y), colour = style$accent_primary, linewidth = .7) +
+    ggplot2::geom_point(ggplot2::aes(shape = .data$Display), colour = style$accent_primary, size = 2.8) +
+    ggplot2::scale_shape_manual(values = c("Pooled interval" = 16, Fixed = 5,
+      "Unavailable interval" = 4, "Unbounded interval" = 1), name = NULL) +
+    ggplot2::scale_y_continuous(breaks = rev(seq_len(nrow(tab))), labels = tab$Target,
+      limits = c(.5, nrow(tab) + .5)) + .mfrmr_gg_theme()
+  # Arrow tips are drawing limits, never substituted confidence endpoints.
+  for (side in c("Lower", "Upper")) {
+    arrows <- intervals[is.infinite(intervals[[side]]), , drop = FALSE]
+    if (!nrow(arrows)) next
+    left <- side == "Lower"
+    arrows$End <- limits[if (left) 1 else 2]
+    arrows$Start <- arrows$End + if (left) padding / 2 else -padding / 2
+    p <- p + ggplot2::geom_segment(data = arrows,
+      ggplot2::aes(x = .data$Start, xend = .data$End, yend = .data$Y),
+      colour = style$accent_primary, linewidth = .7,
+      arrow = ggplot2::arrow(length = ggplot2::unit(.08, "inches")))
+  }
+  d$caption <- paste(c("Saved pointwise MI intervals; zero is not a practical-importance threshold.",
+    if (any(!free)) "Open diamonds: fixed targets without inferential intervals.",
+    if (any(tab$Display == "Unavailable interval")) "Crosses: unavailable intervals; inspect the saved table.",
+    if (any(tab$Display == "Unbounded interval")) "Arrows: infinite endpoints, not finite bounds."), collapse = "\n")
+  p <- .mfrmr_gg_labs(p, d, x = d$xlab, y = NULL) +
+    ggplot2::labs(alt = "Pooled facet estimates or prespecified contrasts in saved target order, with stored pointwise multiple-imputation t intervals. Open diamonds mark fixed targets, crosses mark unavailable intervals, and arrows mark infinite endpoints. No multiplicity adjustment or rater-quality classification is added.")
+  attr(p, "mfrmr_plot_data") <- x
+  p
 }

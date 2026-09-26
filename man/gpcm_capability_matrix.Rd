@@ -31,9 +31,13 @@ available.
 The table is intended for route selection before or after fitting and is
 limited to workflow availability, interpretive constraints, and the route
 to use next.
-The fitted model uses one facet for both relative discriminations and
-category steps (\code{slope_facet == step_facet}). It has one substantive ability
-dimension. These structural choices are stated separately from the
+The fitted model uses one facet for relative discriminations. MML permits
+a different facet for category steps; JML requires \code{slope_facet == step_facet}.
+It has one substantive ability dimension. Separate-owner MML supports
+fitted-object scoring, information, slope/curve uncertainty, matched PCM
+comparison and saved inference. Weighting reviews and simulation/design
+workflows still require the same owner; same-design \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}}
+supports separate owners. Numerical eligibility is not a coverage guarantee. These structural choices are stated separately from the
 availability of each output. An available probability or descriptive comparison does
 not establish eligibility for a confidence interval or model-selection rule.
 }
@@ -158,7 +162,7 @@ in \code{tam.mml.2pl(irtmodel = "GPCM.design")}. ConQuest estimates GPCM scores
 with \code{scoresfree}; its default slopes belong to combinations of facets
 (generalized items), with further grouping available through a scoring
 design. Neither construction automatically reproduces mfrmr's single
-slope/step facet and complete-predictor multiplication. See the
+slope family and complete-predictor multiplication. See the
 \href{https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html}{TAM fitting documentation}
 and \href{https://www.acer.org/files/Note_8--The_ConQuest_4_Model.pdf}{ConQuest Note 8}.
 

@@ -21,6 +21,7 @@
 #'   No fit or covariance is recalculated. Target order is preserved.
 #'   Weak-information cautions remain in the returned data and appear in the
 #'   default subtitle. Custom or omitted subtitles change display only.
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
                                       preset = "standard",
@@ -32,6 +33,7 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
     caption = if (any(x$table$Status != "available"))
       "Open diamonds: fixed targets | Crosses: unavailable selected intervals" else NULL,
     reference = 0, show_legend = TRUE, ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   if (missing(subtitle) && length(x$cautions)) subtitle <- paste(subtitle,
     "Weak information: review interval reliability.", sep = "\n")

@@ -144,9 +144,10 @@ restrictions under shared data and shared constraints:
 \itemize{
 \item \code{RSM} nested inside \code{PCM} when the \code{PCM} fit has an explicit
 \code{step_facet};
-\item \code{PCM} nested inside \code{GPCM} with the same step/slope facet, population
+\item \code{PCM} nested inside \code{GPCM} with the same step facet, population
 design, other facet/step constraints and interactions. The only additional
-parameters must be G-1 relative log-slope contrasts for G slope levels;
+parameters must be G-1 relative log-slope contrasts for G slope levels.
+The GPCM slope owner may differ from the shared step owner;
 \item same-family additive-vs-interaction comparisons when the smaller fit's
 \code{facet_interactions} set is a subset of the larger fit's set.
 }

@@ -507,7 +507,7 @@ test_that("binary scores are supported as ordered two-category responses", {
   expect_true(all(is.finite(fit_pcm$steps$Estimate)))
 })
 
-test_that("GPCM requires explicit and aligned step/slope facets", {
+test_that("GPCM requires explicit steps and JML requires aligned owners", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
 
   expect_error(
@@ -530,7 +530,7 @@ test_that("GPCM requires explicit and aligned step/slope facets", {
       c("Rater", "Task", "Criterion"),
       "Score",
       model = "GPCM",
-      method = "MML",
+      method = "JML",
       step_facet = "Criterion",
       slope_facet = "Task"
     ),

@@ -103,7 +103,7 @@ slope-facet-level redistribution signals.
 \section{GPCM boundary}{
 
 This helper is available only for the current \code{GPCM} branch. It
-requires the package's existing \code{slope_facet == step_facet} contract and
+requires \code{slope_facet == step_facet} even though MML fitting permits separate owners, and
 should be read as an operational weighting-policy review, not as a formal
 validity adjudication.
 }

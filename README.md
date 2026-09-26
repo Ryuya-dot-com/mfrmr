@@ -36,12 +36,13 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the current `0.2.4` source, including
+This README describes the `0.2.4.9000` development source, including
 portable calibration, exploratory external-feature groups, numeric PCA/k-means,
 assigned-score imputation, fixed-facet sandwich intervals, screening evaluation,
 multivariate G/D-studies, and shared random-rater and Person-specific testlet
 RSMs. See [the roadmap](https://ryuya-dot-com.github.io/mfrmr/ROADMAP.html) for supported scope and future work.
-The candidate is intended for evaluation and has not been released on CRAN.
+The development version is intended for evaluation and has not been released
+on CRAN. Its `mfrmr_output_guide("plots")` is not part of the checked rc.6 archive.
 Functions and options shown here may differ from an installed release; retain
 the installed source tag or commit and use its matching help. Earlier candidates
 also report `0.2.4`, so `packageVersion("mfrmr")` alone cannot distinguish them.
@@ -54,19 +55,17 @@ Install the published CRAN release with:
 install.packages("mfrmr")
 ```
 
-To use the examples below with this source archive, install the downloaded
-file (replace the path with its location on your computer):
+To install the downloaded 0.2.4 candidate archive, use the following command
+(replace the path with its location on your computer). Development-only
+features require the corresponding development checkout:
 
 ```r
 install.packages("path/to/mfrmr_0.2.4.tar.gz", repos = NULL, type = "source")
 ```
 
-The latest published GitHub candidate is `rc.5`. It predates
-`mfrm_cluster_pam()`, `review_mfrm_imputations()` and `category_policy`;
-their older equivalents are `mfrm_cluster()`, `mfrm_response_imputations()`
-and `keep_original`. The `"feedback"` output-guide scope also requires the
-current source. Use the current source archive or checkout for these additions.
-To install that earlier published candidate reproducibly:
+The checked GitHub candidate is `v0.2.4-rc.6`. It includes
+`mfrm_cluster_pam()`, `review_mfrm_imputations()`, `category_policy` and the
+`"feedback"` output-guide scope. To install that candidate reproducibly:
 
 ```r
 if (!requireNamespace("remotes", quietly = TRUE)) {
@@ -75,13 +74,13 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 
 remotes::install_github(
   "Ryuya-dot-com/mfrmr",
-  ref = "v0.2.4-rc.5",
+  ref = "v0.2.4-rc.6",
   build_vignettes = TRUE
 )
 ```
 
-The [release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5)
-provides the rc.5 source archive with prebuilt tutorials, its checksum and the
+The [release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.6)
+provides the rc.6 source archive with prebuilt tutorials, its checksum and the
 applicable check results. Check which revision contains a new API before using
 `ref = "main"`; that branch changes over time. A local checkout can
 also be installed with `remotes::install_local("path/to/mfrmr")`, using the
@@ -267,6 +266,10 @@ as the variation among persons. Check which quantity a table's SD represents.
 `mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]` gives a compact
 ordinary-MFRM route. The full `mfrmr_output_guide()` is a specialist reference;
 use `"models"`, `"features"`, `"imputation"` or `"gtheory"` for a focused guide.
+For figures, `mfrmr_output_guide("plots")` maps purposes to plotting and
+conversion routes. The development visual-diagnostics gallery
+links six previews to runnable examples and their numerical tables; in R, open
+`vignette("mfrmr-visual-diagnostics")`.
 See `help("mfrmr_workflow_methods")` for the supported inputs and next steps.
 
 Before adapting an example, read **Check defaults before adapting an example**
@@ -277,6 +280,14 @@ interval methods and screening bands. For example, calling
 request `method = "sandwich"` explicitly for that alternative. PCA and direct
 k-means standardize features by default. These are analysis choices, not just
 display preferences. Check the settings stored with each result.
+
+For custom figure headings, the development version adds `title` to eight
+existing diagnostic helpers, including `plot_bubble()` and
+`plot_facet_quality_dashboard()`. Use `title = "Scoring patterns"` to replace
+the heading or `title = NULL` to hide it. Existing `main` calls remain
+supported; `main = NULL` still means the default heading. Supply only one
+name. See `?mfrmr_visual_diagnostics` for the complete list and interpretation
+notes that should accompany minimal figures.
 
 ### Give feedback to raters
 
@@ -311,6 +322,26 @@ usage$facet_response_patterns
 cases <- build_misfit_casebook(fit, diagnostics = diagnostics)
 summary(cases)
 ```
+
+For one recipient, the development version also provides a standalone sheet
+from saved native additive RSM/PCM results:
+
+```r
+feedback_results <- mfrm_results(fit, diagnostics = diagnostics, compute = "never")
+sheet <- mfrm_report(feedback_results, style = "rater", facet = "Rater",
+                     rater = "R01", output = "html", max_cases = 0)
+sheet$path # Open and review, then copy this HTML file to a permanent location.
+```
+
+`audience = "researcher"` adds technical guidance. Use `max_cases = 5` to
+include selected unexpected ratings. For available fixed-facet intervals,
+attach saved `mfrm_facet_intervals()` output through `mfrm_results(intervals =
+list(raters = ci))`; the sheet never calculates missing diagnostics or
+intervals. Its default label is "Selected rater"; an explicit `label` is
+printed as supplied. The sheet omits source identifiers and the source fit,
+but recognizable rating patterns still require review before sharing.
+Distribute the standalone HTML, not the comprehensive analysis bundle.
+GPCM, interaction, testlet and random-rater models require their own reports.
 
 For a column named `Judge` or `Examiner`, pass that modeled facet name instead
 of `"Rater"`. Severity describes scoring relative to the fitted reference;
@@ -1174,6 +1205,26 @@ The separate `type = "pathway"` route displays expected scores and
 dominant-category regions across theta; `type = "fit_pathway"` displays Infit
 or Outfit against the fitted measure.
 
+### Set a default appearance for a session
+
+In the development version, plots with the common `preset` controls can share
+one default:
+
+```r
+old <- options(mfrmr.plot_preset = "monochrome")
+plot(fit, type = "wright")
+plot(fit, type = "ccc", preset = "publication")  # Override for this plot.
+options(old)  # Restore the previous session settings.
+```
+
+Choices are `"standard"`, `"publication"`, `"compact"` and `"monochrome"`.
+An explicit call takes precedence over the option; without the option the
+usual `"standard"` default applies. Supported `as_ggplot()` conversions retain
+the preset saved in their plot payload, even if the option later changes.
+Plots with separate `palette` controls retain their own settings. The option
+does not change estimates, diagnostic cutoffs or the global ggplot theme.
+See `?mfrmr_visual_diagnostics` for scope and saved-plot behavior.
+
 ### Fair Scores and figures without embedded notes
 
 `plot_fair_average()` offers observed-versus-fair (`"scatter"`),
@@ -1471,6 +1522,22 @@ plot(pca, type = "loadings", components = 1)
 plot(numeric_groups, type = "profile", feature = "ExperienceYears")
 ```
 
+The development version also supports `as_ggplot(pca, type = "scores",
+groups = numeric_groups)`, plus `"scree"` and `"loadings"`. These conversions
+retain the selected components and saved group colours and shapes. Add
+`ggplot2::labs(title = NULL, subtitle = NULL)` to omit headings; use
+`plot_data()` on the returned plot to recover the transformation and excluded
+IDs. Saved hierarchies also support `as_ggplot(hierarchy)`, preserving merge
+heights, leaf order and the requested group boxes. Imputation co-membership
+also supports `as_ggplot(imputed_groups, ids = selected_ids)`: it retains the
+all-imputation fractions on a fixed zero-to-one scale, with crosses on
+unavailable cells. Selecting IDs changes only the display. `as_ggplot(groups)`
+converts saved silhouettes; `as_ggplot(groups, type = "profile", feature =
+"ExperienceYears")` converts an original-unit numeric profile. Categorical
+profiles use the same call with a categorical feature, preserving unused levels
+and within-group proportions. These summaries add no uncertainty intervals or
+automatic quality judgments.
+
 These three numeric columns must exist in the user's rater table; the tutorial
 provides a complete fictional example. Select component and group counts for
 the question. Truncating PCA changes the distance objective, and explained
@@ -1569,6 +1636,11 @@ MML scale; every fit must qualify before pooling. For a rater difference,
 supply a named contrast matrix to `pool_mfrm_imputed()`. Its variance includes
 covariance between rater estimates, within-imputation uncertainty and
 between-imputation variation. `saveRDS()` retains the whole review and analysis.
+
+In the development version, `as_ggplot(pooled, title = NULL)` reuses the stored pointwise t
+intervals and their target order. `plot_data()` retains contrasts, degrees
+of freedom, settings and information cautions; it does not recalculate
+intervals from standard errors or infer a new confidence level.
 
 Choose a proper imputation model that reflects score categories, dependence
 and nonresponse predictors. Passing these checks does not establish MAR or
@@ -2097,7 +2169,8 @@ bootstrap diagnostics. See `help("compute_facet_icc")` for details.
 ## Model scope
 
 GPCM uses one substantive ability dimension and assigns relative
-discriminations and category steps to the same selected facet. Its model
+discriminations to one selected facet. MML allows a different facet to own
+category steps; JML requires the same owner. Its model
 structure and the availability of intervals, comparisons and downstream
 workflows are described separately. Unsupported combinations and inference
 states are reported explicitly.
@@ -2172,7 +2245,7 @@ grid-based intervals, whose posterior mass may differ from the requested level.
 | Facets | Multiple observed facet roles | The design must remain connected for the intended contrasts |
 | `RSM` | Shared step structure | The common rating-scale assumption must be substantively defensible |
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
-| `GPCM` | Documented slope-aware core with `slope_facet == step_facet`; MML estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
+| `GPCM` | One slope family; MML permits separate slope/step owners and estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
 | Latent regression | Conditional-normal, unidimensional MML population model | Person scoring requires explicit exploratory review and omits uncertainty in the fitted population parameters |
 | Diagnostics | Residual and posterior-averaged marginal screens | A flag is not a deletion, fairness, or validity decision; missing results remain unavailable |
@@ -2233,17 +2306,20 @@ coordinate is retained in `FixedLatentSDOptimizerEstimate`. Use
 `gpcm_mml_identification = "fixed_standard_normal"` only when a deliberately
 matched legacy or external comparison requires that identification.
 
-The GPCM estimates **relative discriminations and category steps for the same
-selected facet**:
+The GPCM estimates **relative discriminations for one selected facet**;
+under MML, another facet may own the category steps:
 
 $$
 \log\frac{P(Y_o=k)}{P(Y_o=k-1)}
- = \alpha_{g(o)}\{\eta_o-\tau_{g(o),k}\},
+ = \alpha_{g(o)}\{\eta_o-\tau_{h(o),k}\},
 \qquad \prod_g\alpha_g=1.
 $$
 
-Exactly one facet owns both slopes and steps, because
-`slope_facet == step_facet`. Setting all slopes to one recovers the
+Here `g` is the slope owner and `h` the step owner. MML permits, for example,
+`step_facet = "Rater", slope_facet = "Criterion"`; JML requires the same owner.
+This separates rater category use from criterion discrimination within the
+specified model. It does not estimate two slope families or prove a rater habit.
+Setting all slopes to one recovers the
 equal-discrimination PCM kernel. This is narrower than the generalized MFRM of
 [Uto and Ueno (2020)](https://doi.org/10.1007/s41237-020-00115-7), whose task
 and rater slopes enter multiplicatively as `alpha_i * alpha_r` and whose step
@@ -2399,14 +2475,14 @@ For an MFRM-based analysis, this assumes a fit with current estimation checks:
 | Saved result | Required action |
 | --- | --- |
 | Fit-summary wording | Reprint the summary. Stored calculations and missing precision evidence do not change. |
-| Generic conversions of dedicated plots | Recreate affected figures from the saved analysis with its base `plot()` method or use `plot_data()` for explicitly specified custom graphics. Previously, `as_ggplot(..., component = "table")` could discard PCA axes, MI intervals or D-study metrics; that bypass is now refused. Supported multivariate D-study scenario conversions use the default or `component = "series"`. Refitting is unnecessary, but previously saved ggplots/images are not automatically corrected. |
+| Generic conversions of dedicated plots | Recreate affected figures from the saved analysis with its base `plot()` method or use `plot_data()` for explicitly specified custom graphics. Previously, `as_ggplot(..., component = "table")` could discard PCA axes, MI intervals or D-study metrics; that bypass is now refused. Dedicated external-feature PCA and pooled MI interval conversions preserve their full views with the default or `component = "table"`; supported multivariate D-study scenario conversions use the default or `component = "series"`. Refitting is unnecessary, but previously saved ggplots/images are not automatically corrected. |
 | Shared-rater/testlet calibration bounds | Rebuild `summary(fit)`, `mfrm_results(fit)` and dependent reports from the saved fit; refitting is unnecessary. Defaults now retain estimates and approximate SEs with missing bounds. Request `confint(fit, parm = "calibration", level = .95)` or `mfrm_results(fit, calibration_intervals = "normal", calibration_level = .95)` explicitly for pointwise normal approximations with unestablished finite-sample coverage. Testlet plots accept `intervals = "normal", level = .95`. Older result bundles retain their original tables; changing display does not correct coverage. |
 | Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |
 | Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
 | ICC and design effects | Rerun `compute_facet_icc()` or `analyze_hierarchical_structure()` from the original data/settings, explicitly choosing how to handle missing values. Recreate design effects from the new ICC result's row accounting. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
 | Main-effects G/D studies | Rerun the observed-score G-study and D-study using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
 | Multivariate G/D studies | Recompute the D-study from its saved G-study to update metric-specific availability or change future counts/weights; then recreate dependent comparisons and plots. Replotting alone preserves stored values. Changed source data, a changed G-study model (including nesting), incompatible design metadata or an earlier G-study affected by the single-score MINQUE(0) or interaction-ID corrections requires a new G-study. Keep the G-study and its data for plan-comparison intervals. |
-| External-feature groups | Replot saved results for updated labels; memberships and trees are preserved. Changed features, weights, group counts or methods require new clustering, followed by a new comparison of those results. Reuse the same fitted imputation object when comparing settings across completions. Use `plot()` or `plot_data()`; automatic ggplot conversion is unsupported. |
+| External-feature groups | Replot saved results for updated labels; memberships and trees are preserved. Changed features, weights, group counts or methods require new clustering, followed by a new comparison of those results. Reuse the same fitted imputation object when comparing settings across completions. Use `plot()`, `plot_data()` or the dedicated `as_ggplot()` routes for PCA, silhouettes, numeric/categorical profiles, saved dendrograms and imputation co-membership. |
 | Shrinkage | Reapply using the original prior and explicit Person settings, then regenerate reports and replay scripts. Switching Person shrinkage off removes old adjustment columns. No MFRM refit is needed to refresh these results. |
 | Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
 | Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |

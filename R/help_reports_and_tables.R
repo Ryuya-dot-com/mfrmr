@@ -195,7 +195,8 @@ NULL
 #' columns. With no argument the function returns the full specialist catalogue,
 #' which includes tables, reports, reviews and exports. It does not analyze data.
 #'
-#' @param scope Which rows to return. `"all"` returns the full guide.
+#' @param scope Which rows to return. `"all"` returns the full route catalogue.
+#'   `"plots"` returns a separate purpose-based plot capability table (see below).
 #'   `"public"` returns the canonical six-step route for most users;
 #'   `"beginner"` returns the same compact route rather than combining every
 #'   beginner-labelled specialist row.
@@ -245,12 +246,17 @@ NULL
 #' with the question and the fitted model: severity, response misfit and the
 #' accuracy of a warning rule are different quantities. A severe rater need
 #' not misfit, and an observed flag does not establish poor rater quality.
+#' For an individual native additive RSM/PCM sheet, use
+#' `mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")`.
+#' The selected sheet omits source identifiers; the comprehensive result and
+#' export bundle retain the original analysis.
 #' Use `mfrmr_output_guide("psychometric")` for the technical table,
 #' review, and reporting routes whose interpretation boundaries should be
 #' checked before manuscript use.
 #'
 #' @section How to use this guide:
-#' Read `Question` first, then open the help for a function in `MainFunction`.
+#' For route scopes, read `Question` first, then open the help for a function
+#' in `MainFunction`. For `"plots"`, use the figure instructions below.
 #' `UseWhen` describes its inputs and purpose; `NextStep` explains what to inspect.
 #' Cells containing `...` are outlines, not complete scripts to paste and run.
 #' Use [mfrmr_workflow_methods] for a runnable introduction and an explanation
@@ -258,7 +264,34 @@ NULL
 #' For `GPCM`, use `scope = "gpcm"` to find both the support matrix
 #' and the table that explains how out-of-scope routes are handled.
 #'
-#' @return A data.frame with one row per recommended route and columns:
+#' @section Choosing a figure:
+#' Use `mfrmr_output_guide("plots")` to find selected plots by purpose, input
+#' class and explicit plot call. This is a curated map, not an exhaustive list
+#' of every plot method, view or component. Unlisted routes are not necessarily
+#' unsupported. Existing scopes, including `"all"`, keep their route-table format.
+#'
+#' For linked figure previews and runnable examples, open
+#' `vignette("mfrmr-visual-diagnostics")`.
+#' `ResultFunction` names a help page for creating the required result.
+#' In `PlotCall`, replace `x` with the indicated result object and save the
+#' returned object as `p`. Calls use `draw = FALSE`; change it to `TRUE` to
+#' display the original figure. Then follow `GGPlotCall`, if available.
+#' `DataComponent` is for [plot_data()] extraction; it is not automatically a
+#' valid or equivalent `component` argument to [as_ggplot()].
+#'
+#' `GGPlot` distinguishes `"dedicated"` (a converter for this plot), `"native"`
+#' (the plot method already returns ggplot), `"generic"` (a table-based view
+#' that need not reproduce the original figure), and `"unavailable"` (use the
+#' original plot or build a custom graphic from its data). ggplot routes need
+#' the optional ggplot2 package. Display support does not broaden the fitted
+#' model's statistical scope or establish interval coverage. Read `Notes` and
+#' the source function's help before interpretation.
+#'
+#' @return For `scope = "plots"`, a data.frame with `Question`, `InputClass`,
+#'   `PlotCall`, `PlotName` (the name in the saved plot data), `DataComponent`,
+#'   `GGPlot`, `GGPlotCall` (`NA` when unavailable), `Notes`, `ResultFunction`
+#'   and `NextStep`.
+#'   All other scopes return a data.frame with one row per route and columns:
 #' - `Scope`
 #' - `Question`
 #' - `OutputFamily`
@@ -285,6 +318,9 @@ NULL
 #'
 #' feedback <- mfrmr_output_guide("feedback")
 #' feedback[, c("Question", "MainFunction", "DecisionBoundary")]
+#'
+#' figures <- mfrmr_output_guide("plots")
+#' figures[, c("Question", "ResultFunction", "GGPlot")]
 #' @concept reporting workflow
 #' @concept route selection
 #' @concept GPCM boundaries
@@ -294,8 +330,9 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
                                          "bundles", "exports", "compatibility",
                                          "gpcm", "calibration", "simulation", "linking", "network",
                                          "response_time", "facets", "conquest", "r", "models",
-                                         "features", "imputation", "gtheory", "feedback")) {
+                                         "features", "imputation", "gtheory", "feedback", "plots")) {
   scope <- match.arg(scope)
+  if (identical(scope, "plots")) return(.mfrmr_plot_guide())
 
   out <- data.frame(
     Scope = c(
@@ -1117,8 +1154,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Inspect summary(analyses) for every completion; summary(pooled); plot(pooled); plot_data(pooled); saveRDS(pooled); write.csv(summary(pooled), ...). See vignette('mfrmr-response-imputation').",
       "Inspect source components and row usage; summary(d); plot(d); plot_data(d); as_ggplot(d) for D-study scenario plots; saveRDS(d); write.csv(summary(d), ...). See help('mfrm_multivariate_d_study')."),
     GPCMStatus = c("not_applicable", "unavailable; fixed-standard-normal RSM/PCM MML only", "not_applicable"),
-    Notes = c("Descriptive groups, not abilities, rater quality or validated latent classes. Pair the same feature imputations when comparing settings; do not pool cluster labels or PCA bases. Use dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() conversion is unavailable.",
-      "Pool eligible non-Person facet targets and full covariances only; no EAP, cluster-label or fit-statistic pooling. No unassigned-cell filling, general coverage guarantee or extended-model pooling. The pooled object uses dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() conversion is unavailable.",
+    Notes = c("Descriptive groups, not abilities, rater quality or validated latent classes. Pair the same feature imputations when comparing settings; do not pool cluster labels or PCA bases. Use dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() supports PCA scree/scores/loadings, saved dendrograms, imputation co-membership, silhouettes and numeric/categorical profiles.",
+      "Pool eligible non-Person facet targets and full covariances only; no EAP, cluster-label or fit-statistic pooling. No unassigned-cell filling, general coverage guarantee or extended-model pooling. The pooled object uses dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() preserves saved pointwise MI intervals and inference settings.",
       "Observed-score reliability is distinct from latent MFRM precision. Component admissibility and G/Phi/SEM availability remain separate. Paired plan-difference intervals require two crossed facets and explicit normal random effects; no general solver or nested intervals. Use dedicated tables and RDS saving, not mfrm_results(); difference-interval plots have no as_ggplot() conversion."),
     stringsAsFactors = FALSE
   )
@@ -1164,6 +1201,16 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials."),
     stringsAsFactors = FALSE
   )
+
+  feedback_rows <- rbind(feedback_rows, data.frame(
+    Scope = "feedback", Question = "How can I prepare a sheet for one rater?",
+    OutputFamily = "review", MainFunction = "mfrm_report()",
+    UseWhen = "Share selected saved summaries with one recipient after reviewing the assessment context.",
+    TypicalInput = "mfrm_results from a native additive RSM/PCM fit, with optional matching diagnostics and individual fixed-facet intervals.",
+    NextStep = "Use mfrm_report(res, style = 'rater', facet = 'Rater', rater = 'R01', output = 'html'). Review its path before copying the standalone HTML file. Choose audience = 'researcher' for technical guidance or max_cases = 0 to omit individual ratings.",
+    GPCMStatus = "unavailable; additive RSM/PCM only",
+    Notes = "No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.",
+    stringsAsFactors = FALSE))
 
   out <- rbind(
     public_rows, calibration_rows, entry_rows, viewer_rows, binary_rows, out, linking_rows,

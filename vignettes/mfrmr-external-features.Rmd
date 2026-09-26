@@ -297,6 +297,28 @@ plot(one_completion, type = "profile", feature = "ExperienceYears")
 plot(one_completion, type = "profile", feature = "TrainingLevel")
 ```
 
+The development version also offers dedicated ggplot conversion for these
+saved summaries. For example, remove the heading while keeping the original
+units, group sizes and interpretation note:
+
+```{r profile-ggplot, fig.width=7, fig.height=5, fig.alt="Experience in years summarized by the saved groups from one completed feature table. Circles mark means and triangles mark medians, offset vertically so equal values remain visible. Group labels give counts; no confidence intervals are shown."}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  profile_figure <- as_ggplot(one_completion, type = "profile",
+    feature = "ExperienceYears", preset = "monochrome") +
+    ggplot2::labs(title = NULL)
+  print(profile_figure)
+}
+```
+
+Use `as_ggplot(one_completion)` for the silhouette view, retaining negative
+widths and the saved overall-mean line. Use the profile call with
+`feature = "TrainingLevel"` for a categorical heatmap, including unused levels
+in their original order. The default and `component = "table"` keep the full
+view; categorical profiles also accept `component = "matrix"`. Means and
+medians are descriptive, not effect estimates or interval bounds. The slight
+vertical offsets improve visibility without changing the values. Saved
+summaries and excluded IDs remain available through `plot_data()`.
+
 The next heatmap asks which pairs remain together across imputations. For
 readability, this view explicitly selects the first 20 IDs in the input table;
 it does not recluster them, change the denominator, or represent the remaining
@@ -318,6 +340,25 @@ For a custom figure, extract the same values without drawing or refitting:
 view <- plot(analyses$ThreeGroups, ids = raters$Rater[1:5], draw = FALSE)
 plot_data(view)$matrix
 ```
+
+The development version also converts this same five-ID view to ggplot:
+
+```{r co-membership-ggplot, fig.width=7, fig.height=6, fig.alt="Co-membership fractions for the five selected rater IDs, in the saved order on both axes. The scale is fixed from zero to one; crosses mark unavailable cells, if any. Values use all supplied imputations and do not measure sampling stability."}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  co_membership_figure <- as_ggplot(view, component = "matrix") +
+    ggplot2::labs(title = NULL)
+  print(co_membership_figure)
+}
+```
+
+The default and `component = "matrix"` retain the same complete heatmap.
+For a new selection, use `as_ggplot(analyses$ThreeGroups, ids = ...)` or create
+another saved plot with `plot(..., draw = FALSE)`. A saved view keeps its
+preset and label choice even after session options change. Grey cells also
+carry crosses, so unavailable pairs remain distinct from zero in monochrome.
+`plot_data(co_membership_figure)` retains the matrix, selected IDs, excluded
+IDs and number of imputations. Hiding headings with `ggplot2::labs()` does
+not remove those records or change the meaning of the fractions.
 
 ## Compare PAM with a hierarchy
 
@@ -357,6 +398,13 @@ groups. The 120 raters are all included; ID labels are hidden by default above
 `plot_data(plot(average$analyses[[1]], draw = FALSE))$table` to inspect IDs and
 memberships in leaf order. Excluded raters retain unavailable memberships but
 have no leaves. No entities are sampled to draw the tree.
+
+In the development version, `as_ggplot(average$analyses[[1]])` converts this
+same saved tree with its group boxes, leaf order and merge heights. The default
+and `component = "tree"` retain the full view; use `plot_data()` for the
+membership table. Conversion does not refit, recut or combine trees across
+completions. Add `ggplot2::labs(title = NULL, subtitle = NULL)` to omit headings,
+while retaining the caption about what heights mean.
 
 Merge heights are linkage dissimilarities, not significance levels or branch
 support. Tied distances can produce alternative trees; the group cut uses
@@ -657,10 +705,62 @@ and its grouping together. `plot()` and `mfrm_cluster_compare()` reuse saved
 results; changing features, component counts, weights or seeds requires the
 corresponding new analysis. `mfrmr_output_guide("features")` lists the dedicated
 output routes. Use `summary()` for partition comparisons, and `plot()` or
-`plot_data()` for fitted PCA and grouping views. Automatic `as_ggplot()`
-conversion is unavailable, including when selecting a table component. A
-custom scores plot must explicitly retain both selected PC axes and its group
-labels; plotting the first numeric column alone does not reproduce that view.
+`plot_data()` for fitted PCA and grouping views.
+
+In the development version, `as_ggplot()` has dedicated conversions for PCA
+scree, scores and loadings. The scores view keeps the selected components,
+equal axis units and the saved group colours and shapes. Only included
+entities are drawn; excluded IDs and the feature transformation remain in
+`plot_data()`. This example shows the same first completion used above:
+
+```{r numeric-pca-ggplot, fig.width=8, fig.height=6, fig.alt="Scores on the first two external-feature principal components for one completed feature dataset. K-means groups use grayscale colours and different point shapes. Headings and entity labels are omitted; the saved data still identify the completion's transformation and excluded entities."}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  numeric_figure <- as_ggplot(first_numeric$pca, type = "scores",
+    groups = first_numeric, labels = FALSE, preset = "monochrome") +
+    ggplot2::labs(title = NULL, subtitle = NULL)
+  print(numeric_figure)
+  plot_data(numeric_figure)$components
+}
+```
+
+Use `type = "scree"` for explained-variance percentages and `type = "loadings"`
+for coefficients in the transformed feature space. The default and explicit
+`component = "table"` keep the same complete view. For already saved plot
+payloads, `as_ggplot()` uses their saved preset and label choice; set those
+choices when making the payload. A change of heading does not change the
+analysis. Saved dendrograms also have dedicated conversion as described above.
+Imputation co-membership also has dedicated conversion as described above.
+Silhouettes and numeric/categorical profiles also have dedicated conversion.
+All these views retain their saved summaries; use `plot_data()` for further
+custom graphics.
+
+### Reopen an analysis without repeating imputation or clustering
+
+Keep the complete imputed analysis to retain every completion, its PCA basis
+and partition, the fitted imputation model, and the co-membership summary.
+A saved plot view also retains the selected display settings. The example
+uses a temporary file; choose a permanent path to continue in a later session.
+
+```{r feature-save-reopen}
+feature_file <- tempfile(fileext = ".rds")
+feature_view <- plot(first_numeric$pca, type = "scores", groups = first_numeric,
+  labels = FALSE, preset = "monochrome", draw = FALSE)
+saveRDS(list(analysis = numeric_reduced, view = feature_view), feature_file)
+saved_features <- readRDS(feature_file)
+summary(saved_features$analysis)  # Review all completions.
+plot_data(saved_features$view)    # Inspect this first-completion view.
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  saved_figure <- as_ggplot(saved_features$view)
+}
+```
+
+Changing a session plotting option does not restyle a saved view. Create a
+new view from the saved analysis to change its preset; changing the analysis
+settings requires a new analysis. These feature results use their own
+`summary()`, `plot()` and `plot_data()` methods. They are separate from
+`mfrm_results()` and from the pooled response-score intervals described in
+`vignette("mfrmr-response-imputation")`. Saved feature files retain identifiers
+and original attributes, so review what they contain before sharing them.
 
 ## Plan for the size of the analysis
 

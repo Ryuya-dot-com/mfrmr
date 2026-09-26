@@ -8,9 +8,13 @@
 #' The table is intended for route selection before or after fitting and is
 #' limited to workflow availability, interpretive constraints, and the route
 #' to use next.
-#' The fitted model uses one facet for both relative discriminations and
-#' category steps (`slope_facet == step_facet`). It has one substantive ability
-#' dimension. These structural choices are stated separately from the
+#' The fitted model uses one facet for relative discriminations. MML permits
+#' a different facet for category steps; JML requires `slope_facet == step_facet`.
+#' It has one substantive ability dimension. Separate-owner MML supports
+#' fitted-object scoring, information, slope/curve uncertainty, matched PCM
+#' comparison and saved inference. Weighting reviews and simulation/design
+#' workflows still require the same owner; same-design [bootstrap_mfrm_gpcm()]
+#' supports separate owners. Numerical eligibility is not a coverage guarantee. These structural choices are stated separately from the
 #' availability of each output. An available probability or descriptive comparison does
 #' not establish eligibility for a confidence interval or model-selection rule.
 #'
@@ -128,7 +132,7 @@
 #' with `scoresfree`; its default slopes belong to combinations of facets
 #' (generalized items), with further grouping available through a scoring
 #' design. Neither construction automatically reproduces mfrmr's single
-#' slope/step facet and complete-predictor multiplication. See the
+#' slope family and complete-predictor multiplication. See the
 #' \href{https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html}{TAM fitting documentation}
 #' and \href{https://www.acer.org/files/Note_8--The_ConQuest_4_Model.pdf}{ConQuest Note 8}.
 #'
@@ -213,7 +217,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
   status_summary <- status_summary[status_summary$Routes > 0L, , drop = FALSE]
 
   cat("mfrmr GPCM workflow availability\n")
-  cat("One facet supplies both slopes and category steps.\n")
+  cat("One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.\n")
   cat("MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.\n\n")
   print.data.frame(status_summary, row.names = FALSE)
 
@@ -341,8 +345,8 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
     ),
     Boundary = c(
       paste(
-        "Requires an explicit step facet and currently keeps",
-        "`slope_facet == step_facet`; MML direct is the documented and verified default,",
+        "Requires an explicit step facet; MML allows a separate slope owner,",
+        "whereas JML requires `slope_facet == step_facet`. MML direct is the default,",
         "and EM/hybrid fall back to direct. Free-slope fits retain numerical",
         "estimates for review. confint(fit, parm = \"slopes\") separately checks approximate MML intervals.",
         "Explicit options add standardized slopes, comparisons, sandwich covariance and Bonferroni adjustment;",
@@ -378,6 +382,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       paste(
         "Supported with caveat because the helper is an operational review of",
         "Rasch-family equal weighting versus GPCM reweighting, not an automatic model-selection rule.",
+        "This weighting helper requires the same slope/step owner; use compare_mfrm() for separate owners.",
         "MML ranking requires ICComparable; nested = TRUE requests the separately checked PCM/GPCM equal-slope test."
       ),
       paste(
@@ -388,7 +393,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       paste(
         "Requires explicit slope-aware specifications and keeps the current",
-        "GPCM facet-role restrictions. Recovery checks are direct",
+        "same slope/step owner. Recovery checks are direct",
         "simulation/refit summaries, not design-planning or forecasting claims.",
         "`assess_mfrm_recovery()` requires user-supplied practical thresholds",
         "before RMSE or bias can be interpreted as adequate."
@@ -479,7 +484,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
     RecommendedRoute = c(
       paste(
         "Use `fit_mfrm(..., model = \"GPCM\", step_facet = ...,",
-        "slope_facet = step_facet)` and inspect `summary(fit)`."
+        "slope_facet = ...)` and inspect `summary(fit)`; separate owners require MML."
       ),
       paste(
         "Use diagnostics as screening evidence and return to direct residual,",

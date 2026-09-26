@@ -309,15 +309,15 @@
 #' slope-facet level \eqn{g}:
 #'
 #' \deqn{\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
-#'   \alpha_g(\theta_n - \delta_j - \beta_i - \tau_{gk}).}
+#'   \alpha_g(\theta_n - \delta_j - \beta_i - \tau_{hk}).}
 #'
-#' The current implementation requires `slope_facet == step_facet` and
-#' identifies slopes on the log scale with geometric mean 1. This makes
+#' MML allows a slope owner \eqn{g} distinct from the step owner \eqn{h};
+#' JML requires `slope_facet == step_facet`. Slopes are identified on the log
+#' scale with geometric mean 1. This makes
 #' `GPCM` a slope-aware sensitivity/extension route, not a replacement for the
 #' equal-weighting `RSM`/`PCM` interpretation.
-#' It assigns slopes and steps to the same facet. It does not jointly estimate
-#' the multiplicative task and rater slopes of the broader Uto--Ueno generalized
-#' MFRM or allow a distinct step owner. Unit slopes reduce to
+#' It does not jointly estimate the multiplicative task and rater slopes of
+#' the broader Uto--Ueno generalized MFRM. Unit slopes reduce to
 #' the equal-discrimination PCM kernel.
 #' Under default MML, an intercept-only person distribution
 #' \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
@@ -340,8 +340,8 @@
 #' Binary responses are the \eqn{K = 1} special case of the same formulation,
 #' so they are handled through the ordinary ordered-score interface. This means
 #' `mfrmr` supports ordered binary and ordered polytomous data under `RSM` and
-#' `PCM`, plus a narrow `GPCM` branch with one designated
-#' `slope_facet` that currently must equal `step_facet`. Unordered
+#' `PCM`, plus `GPCM` with one designated `slope_facet` and, under MML,
+#' a possibly different `step_facet`. Unordered
 #' nominal/multinomial response models are outside the documented model scope,
 #' as are Poisson, negative-binomial, and grouped binomial-trial count-response
 #' families. A positive observation `weight` weights the conditional

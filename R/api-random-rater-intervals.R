@@ -54,6 +54,33 @@
 #'   simulate a missingness mechanism or impute assigned scores. Rater contrasts,
 #'   familywise intervals and simultaneous rater classification are not provided.
 #'
+#' @section Review unresolved refits:
+#' Inspect `$trials` before interpreting the intervals. `FitReady` combines
+#' numerical and information checks; it does not certify interval coverage.
+#' New results also retain `OptimizerCode`, `NumericalReady`,
+#' `InformationPositive`, `PersonQuadratureStable`, `QuadraturePoints`, `CheckPoints`,
+#' `LogLikDifference`, `GradientDifference`, `EstimatedVarianceBoundary` and
+#' `PersonVarianceUpperBoundary` from each refit. Together with the recorded
+#' gradient and Person-variance boundary, these distinguish unresolved numerical
+#' calculations from variance boundaries and missing regular studentizers.
+#' A failed refit has missing additional check values and its recorded error; missing
+#' checks are not passes. Older saved trial tables lack these additional fields
+#' and cannot acquire them without rerunning the corresponding refits.
+#' Failed checks must not be removed, selectively retried until successful or
+#' relabeled as adequate interval coverage. Increasing Person quadrature can
+#' address integration precision but does not qualify the rater Laplace
+#' approximation, the interval method or the population assumptions.
+#'
+#' Increasing `nsim` alone does not resolve unavailable prediction errors.
+#' For example, with 499 planned refits at 95%, 13 unresolved studentized
+#' errors for one rater make both of that rater's limits infinite under the
+#' type-1 completion rule. Twelve unresolved errors leave finite empirical
+#' limits when all other errors and the source estimate/SE are finite. This
+#' describes the calculation, not a threshold establishing accurate coverage.
+#' If the unresolved fraction remains above the nominal tail probability,
+#' a larger run still has unbounded limits. Inspect causes in `$trials` before
+#' committing to more refits; do not discard unresolved draws.
+#'
 #' @return An `mfrm_random_rater_intervals` object containing the source rater
 #'   table, `intervals`, aligned error/studentized matrices, generated effects,
 #'   refitted estimates/SEs, per-trial checks, warnings/errors, seeds, model
@@ -161,12 +188,20 @@ mfrm_random_rater_bootstrap_one <- function(object, seed) {
     usable <- is.finite(se) & se > 0
     studentized[usable] <- error[usable] / se[usable]
   }
+  check <- function(name) if (is.null(fit)) NA else fit$checks[[name]] %||% NA
   list(error = error, studentized = studentized, truth = unname(generated$truth[labels]),
     estimate = estimate, se = se, trial = data.frame(Seed = seed, FitReady = ready,
       EstimatedBoundary = boundary, RaterSD = if (!is.null(fit)) fit$calibration$rater_sd else NA_real_,
       PersonSD = if (!is.null(fit)) fit$calibration$person_sd %||% 1 else NA_real_,
       EstimatedPersonVarianceBoundary = !is.null(fit) && isTRUE(fit$checks$EstimatedPersonVarianceBoundary),
       MaxGradient = if (!is.null(fit)) fit$checks$MaxGradient else NA_real_,
+      OptimizerCode = check("OptimizerCode"), NumericalReady = check("NumericalReady"),
+      InformationPositive = check("InformationPositive"),
+      PersonQuadratureStable = check("PersonQuadratureStable"),
+      QuadraturePoints = check("QuadraturePoints"), CheckPoints = check("CheckPoints"),
+      LogLikDifference = check("LogLikDifference"), GradientDifference = check("GradientDifference"),
+      EstimatedVarianceBoundary = check("EstimatedVarianceBoundary"),
+      PersonVarianceUpperBoundary = check("PersonVarianceUpperBoundary"),
       Error = error_message, Warnings = paste(unique(warnings), collapse = " | ")))
 }
 

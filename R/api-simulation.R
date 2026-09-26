@@ -1352,6 +1352,9 @@ simulation_resolve_fit_slope_facet <- function(model, slope_facet, fit_step_face
   }
   explicit <- as.character(slope_facet[1] %||% NA_character_)
   if (!is.na(explicit) && nzchar(explicit)) {
+    if (!identical(explicit, as.character(fit_step_facet[1]))) {
+      stop("Simulation workflows currently require `slope_facet == step_facet`; separate owners are available in fit_mfrm() with MML.", call. = FALSE)
+    }
     return(explicit)
   }
   as.character(fit_step_facet[1] %||% "Criterion")

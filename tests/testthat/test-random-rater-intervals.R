@@ -71,6 +71,49 @@ test_that("boundary and failed refits retain their prediction-error availability
   expect_equal(failed$truth, c(.7, -.4))
   expect_identical(failed$trial$Error, "refit failed")
   expect_identical(failed$trial$Warnings, "unresolved curvature")
+  expect_true(is.na(failed$trial$NumericalReady))
+  expect_true(is.na(failed$trial$InformationPositive))
+  expect_true(is.na(failed$trial$OptimizerCode))
+})
+
+test_that("bootstrap records distinguish numerical and information failures without changing roots", {
+  object <- bootstrap_interval_fixture()$source
+  object$input <- list(columns = list(person = "Person", rater = "Rater", score = "Score",
+    facets = NULL), score_levels = 0:1)
+  object$settings <- list(fixed_rater_sd = NULL, quad_points = 61L, maxit = 300L)
+  local_mocked_bindings(mfrm_random_rater_generate = function(...) list(
+    data = data.frame(Score = 0), truth = c(A = -.4, B = .7)))
+  candidate <- list(checks = data.frame(OptimizerCode = 0L, NumericalReady = FALSE,
+    InformationPositive = TRUE, EstimatedVarianceBoundary = FALSE,
+    EstimatedPersonVarianceBoundary = FALSE, PersonVarianceUpperBoundary = FALSE,
+    PersonQuadratureStable = FALSE,
+    MaxGradient = 1e-8, QuadraturePoints = 61L, CheckPoints = 123L,
+    LogLikDifference = 2e-5, GradientDifference = 2e-4),
+    calibration = list(rater_sd = .4, person_sd = 1.3),
+    raters = data.frame(Rater = c("B", "A"), Estimate = c(.5, -.3), PredictionSE = c(.2, .1)))
+  local_mocked_bindings(fit_mfrm_random_rater = function(...) candidate)
+  numeric_failure <- mfrm_random_rater_bootstrap_one(object, 7L)
+  expect_false(numeric_failure$trial$FitReady)
+  expect_identical(numeric_failure$trial[names(candidate$checks)], candidate$checks)
+  expect_true(all(is.na(numeric_failure$error)))
+  expect_true(all(is.na(numeric_failure$studentized)))
+  candidate$checks$NumericalReady <- TRUE
+  candidate$checks$PersonQuadratureStable <- TRUE
+  candidate$checks$InformationPositive <- FALSE
+  candidate$checks$LogLikDifference <- 1e-8
+  candidate$checks$GradientDifference <- 1e-7
+  information_failure <- mfrm_random_rater_bootstrap_one(object, 7L)
+  expect_false(information_failure$trial$FitReady)
+  expect_identical(information_failure$trial[names(candidate$checks)], candidate$checks)
+  expect_true(all(is.na(information_failure$studentized)))
+  candidate$checks$InformationPositive <- TRUE
+  ready <- mfrm_random_rater_bootstrap_one(object, 7L)
+  expect_true(ready$trial$FitReady)
+  expect_equal(ready$error, c(.2, -.1))
+  expect_equal(ready$studentized, c(1, -1))
+  path <- tempfile(fileext = ".rds"); withr::defer(unlink(path))
+  saveRDS(list(numeric_failure, information_failure, ready), path)
+  expect_identical(readRDS(path), list(numeric_failure, information_failure, ready))
 })
 
 test_that("ordinal generation preserves fixed facets, repeated identities and category labels", {

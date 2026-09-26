@@ -24,7 +24,24 @@
 #'   table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
 #'   retain the displayed IDs and the number of imputations. Use [plot_data()]
 #'   to extract this payload for custom graphics.
-#'   Automatic [as_ggplot()] conversion is not supported for these views.
+#'   [as_ggplot()] converts imputation co-membership heatmaps using the saved
+#'   matrix, ID order, label choice, colours and imputation count. The default
+#'   and `component = "matrix"` retain the complete view and its fixed
+#'   zero-to-one scale. Unavailable cells have both grey fill and crosses,
+#'   distinguishing them from zero even in monochrome. Metadata, including
+#'   excluded IDs, remain available with [plot_data()]. No values are
+#'   recomputed or renormalized when IDs are selected. Use
+#'   `ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)` to hide
+#'   annotations while retaining the source data.
+#'   Silhouette conversion retains negative widths, saved order and the overall
+#'   mean reference, with group labels independent of colour. Numeric profiles
+#'   retain original-unit means/medians and counts; circles and triangles are
+#'   offset vertically to show coincident values without adding intervals.
+#'   Categorical profiles retain the original category order, unused levels,
+#'   group counts and a fixed zero-to-one proportion scale. Default and
+#'   `component = "table"` preserve the complete selected view; categorical
+#'   profiles also accept `component = "matrix"`. These conversions do not
+#'   recluster, select groups, or estimate uncertainty.
 #' @details
 #' No model or clustering is refitted. Silhouette widths describe separation
 #' in the fitted sample, not stability or probabilities. The dashed line is
@@ -62,10 +79,12 @@
 NULL
 
 #' @rdname plot.mfrm_clusters
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
                                feature = NULL, labels = NULL, draw = TRUE,
                                preset = "standard", ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   type <- match.arg(type)
   check_cluster_plot_flags(draw, labels)
@@ -156,9 +175,11 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
 }
 
 #' @rdname plot.mfrm_clusters
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_imputed_clusters <- function(x, ids = NULL, labels = NULL, draw = TRUE,
                                        preset = "standard", ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   check_cluster_plot_flags(draw, labels)
   style <- resolve_plot_preset(preset)
@@ -222,4 +243,145 @@ draw_cluster_proportions <- function(mat, title, subtitle, style, labels, captio
     fill = key$value, bty = "n", xpd = NA, cex = 0.8)
   graphics::mtext(subtitle, side = 3, line = 0.3, cex = 0.8)
   graphics::mtext(caption, side = 1, line = if (labels) 5.5 else 2.5, cex = 0.8)
+}
+
+# Preserve the complete co-membership view, including unavailable pairs.
+.mfrmr_gg_co_membership <- function(x) {
+  .require_mfrmr_ggplot2()
+  d <- x$data
+  mat <- d$matrix
+  ids <- d$ids
+  if (!is.matrix(mat) || !is.numeric(mat) || is.complex(mat) || !length(mat) ||
+      nrow(mat) != ncol(mat) || !identical(rownames(mat), ids) ||
+      !identical(colnames(mat), ids) || anyNA(ids) || anyDuplicated(ids) ||
+      any(!is.na(mat) & (!is.finite(mat) | mat < 0 | mat > 1))) {
+    stop("Co-membership data require a square zero-to-one matrix with matching saved IDs; unavailable cells must be NA. Recreate with plot(groups, draw = FALSE).", call. = FALSE)
+  }
+  if (length(d$imputations) != 1L || !is.numeric(d$imputations) ||
+      !is.finite(d$imputations) || d$imputations < 1 || d$imputations != floor(d$imputations)) {
+    stop("Co-membership data lack the saved number of imputations.", call. = FALSE)
+  }
+  key <- d$legend
+  if (!is.data.frame(key) || !all(c("role", "value") %in% names(key)) || anyNA(key$role) ||
+      sum(key$role == "proportion") != 5L || sum(key$role == "missing") != 1L ||
+      anyNA(key$value)) {
+    stop("Co-membership data lack the saved proportion and unavailable-cell colours. Recreate with plot(groups, draw = FALSE).", call. = FALSE)
+  }
+  n <- nrow(mat)
+  tab <- expand.grid(Row = seq_len(n), Column = seq_len(n))
+  tab$Y <- n + 1L - tab$Row
+  tab$Fraction <- as.vector(mat)
+  unavailable <- tab[is.na(tab$Fraction), , drop = FALSE]
+  p <- ggplot2::ggplot(tab, ggplot2::aes(x = .data$Column, y = .data$Y)) +
+    ggplot2::geom_raster(ggplot2::aes(fill = .data$Fraction)) +
+    ggplot2::scale_fill_gradientn(colours = key$value[key$role == "proportion"],
+      values = seq(0, 1, length.out = 5), limits = c(0, 1), breaks = seq(0, 1, 0.25),
+      na.value = key$value[key$role == "missing"], name = "Fraction of\nimputations") +
+    ggplot2::scale_x_continuous(breaks = if (isTRUE(d$labels)) seq_len(n) else NULL,
+      labels = if (isTRUE(d$labels)) ids else NULL, expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(breaks = if (isTRUE(d$labels)) seq_len(n) else NULL,
+      labels = if (isTRUE(d$labels)) rev(ids) else NULL, expand = c(0, 0)) +
+    ggplot2::coord_equal() + .mfrmr_gg_theme() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5))
+  if (nrow(unavailable)) {
+    p <- p + ggplot2::geom_point(data = unavailable,
+      ggplot2::aes(shape = "Unavailable"), colour = "black", size = 2) +
+      ggplot2::scale_shape_manual(values = c(Unavailable = 4), name = NULL)
+  }
+  d$caption <- paste("Fractions use all supplied imputations; not membership probabilities or sampling stability.",
+    if (nrow(unavailable)) "Crosses mark unavailable pairs; zero means never in the same group.")
+  p <- .mfrmr_gg_labs(p, d, x = NULL, y = NULL) +
+    ggplot2::labs(alt = "Pairwise co-membership fractions on a fixed zero-to-one scale, in the saved ID order from top to bottom and left to right. Crosses mark unavailable cells. Values describe sensitivity across the supplied imputations, not membership probabilities, sampling stability or a consensus partition.")
+  attr(p, "mfrmr_plot_data") <- x
+  p
+}
+
+.mfrmr_gg_cluster_summary <- function(x) {
+  .require_mfrmr_ggplot2()
+  d <- x$data
+  tab <- d$table
+  silhouette <- identical(x$name, "cluster_silhouette")
+  categorical <- !silhouette && !is.null(d$matrix)
+  required <- if (silhouette) c("ID", "Cluster", "Silhouette") else if (categorical)
+    c("Cluster", "Feature", "Level", "Proportion") else c("Cluster", "Mean", "Median", "N")
+  if (!is.data.frame(tab) || !nrow(tab) || !all(required %in% names(tab))) {
+    stop("Cluster plot data lack the saved summary table. Recreate them with plot(groups, draw = FALSE).", call. = FALSE)
+  }
+  style <- resolve_plot_preset(d$preset %||% "standard")
+  if (silhouette) {
+    refs <- normalize_reference_lines(d$reference_lines)
+    if (!any(refs$axis == "x" & refs$role == "mean" & is.finite(refs$value), na.rm = TRUE)) {
+      stop("Silhouette data lack the saved overall-mean reference. Recreate with plot(groups, draw = FALSE).", call. = FALSE)
+    }
+    if (any(!is.finite(tab$Silhouette) | abs(tab$Silhouette) > 1) || anyNA(tab$Cluster)) {
+      stop("Saved silhouette widths must be finite and between -1 and 1.", call. = FALSE)
+    }
+    tab$Y <- nrow(tab) + 1L - seq_len(nrow(tab))
+    tab$Colour <- ifelse(tab$Cluster %% 2L == 1L, style$accent_primary, style$accent_secondary)
+    centers <- tapply(tab$Y, tab$Cluster, mean)
+    p <- ggplot2::ggplot(tab) +
+      ggplot2::geom_rect(ggplot2::aes(xmin = pmin(0, .data$Silhouette),
+        xmax = pmax(0, .data$Silhouette), ymin = .data$Y - 0.4,
+        ymax = .data$Y + 0.4, fill = .data$Colour)) +
+      ggplot2::scale_fill_identity() +
+      ggplot2::geom_vline(xintercept = 0, colour = style$grid) +
+      ggplot2::scale_x_continuous(limits = c(-1, 1)) +
+      ggplot2::scale_y_continuous(breaks = unname(centers), labels = paste("Group", names(centers)),
+        sec.axis = ggplot2::dup_axis(name = NULL,
+          breaks = if (isTRUE(d$labels)) rev(tab$Y) else NULL,
+          labels = if (isTRUE(d$labels)) rev(tab$ID) else NULL))
+    p <- .mfrmr_gg_add_references(p, d$reference_lines)
+    d$caption <- "Dashed line: saved overall mean silhouette. In-sample separation, not sampling stability or rater quality."
+    xlab <- "Silhouette width"
+    alt <- "Silhouette widths in the saved within-group order on a fixed minus-one-to-one scale. Negative widths extend left of zero. Group labels do not rely on colour; the dashed line shows the saved overall mean. Excluded entities have no widths."
+  } else if (categorical) {
+    mat <- d$matrix
+    key <- d$legend
+    if (!is.matrix(mat) || !is.numeric(mat) || !length(mat) ||
+        any(!is.finite(mat) | mat < 0 | mat > 1) ||
+        is.null(rownames(mat)) || is.null(colnames(mat)) ||
+        !is.data.frame(key) || !all(c("role", "value") %in% names(key)) ||
+        anyNA(key$role) || sum(key$role == "proportion") != 5L) {
+      stop("Categorical profiles need the saved zero-to-one matrix, group/category labels and proportion colours.", call. = FALSE)
+    }
+    grid <- expand.grid(Row = seq_len(nrow(mat)), Column = seq_len(ncol(mat)))
+    grid$Y <- nrow(mat) + 1L - grid$Row
+    grid$Proportion <- as.vector(mat)
+    p <- ggplot2::ggplot(grid, ggplot2::aes(x = .data$Column, y = .data$Y)) +
+      ggplot2::geom_tile(ggplot2::aes(fill = .data$Proportion), colour = style$grid, linewidth = 0.35) +
+      ggplot2::scale_fill_gradientn(colours = key$value[key$role == "proportion"],
+        values = seq(0, 1, length.out = 5), limits = c(0, 1), breaks = seq(0, 1, .25),
+        name = "Within-group\nproportion") +
+      ggplot2::scale_x_continuous(breaks = seq_len(ncol(mat)), labels = colnames(mat)) +
+      ggplot2::scale_y_continuous(breaks = seq_len(nrow(mat)), labels = rev(rownames(mat))) +
+      ggplot2::coord_equal()
+    d$caption <- "Within-group proportions in original category order, including unused levels. Descriptive summaries, not effects or confidence intervals."
+    xlab <- d$feature
+    alt <- "Categorical feature profiles by saved group and original category order, including unused levels. Cell values are within-group proportions on a fixed zero-to-one scale. Group labels retain sample sizes; these summaries do not show uncertainty or causal effects."
+  } else {
+    if (any(!is.finite(tab$Mean)) || any(!is.finite(tab$Median)) || anyNA(tab$Cluster) ||
+        any(!is.finite(tab$N) | tab$N <= 0)) {
+      stop("Numeric profiles need finite saved means, medians and positive counts.", call. = FALSE)
+    }
+    positions <- nrow(tab) + 1L - seq_len(nrow(tab))
+    points <- rbind(data.frame(Y = positions + .06, Value = tab$Mean, Statistic = "Mean"),
+      data.frame(Y = positions - .06, Value = tab$Median, Statistic = "Median"))
+    p <- ggplot2::ggplot(points, ggplot2::aes(x = .data$Value, y = .data$Y,
+      colour = .data$Statistic, shape = .data$Statistic)) +
+      ggplot2::geom_point(size = 2.8) +
+      ggplot2::scale_colour_manual(values = c(Mean = style$accent_primary, Median = style$accent_secondary)) +
+      ggplot2::scale_shape_manual(values = c(Mean = 16, Median = 17)) +
+      ggplot2::scale_y_continuous(breaks = rev(positions), limits = c(.5, nrow(tab) + .5),
+        labels = rev(sprintf("Group %d (n = %d)", tab$Cluster, tab$N))) +
+      ggplot2::labs(colour = "Summary", shape = "Summary")
+    d$caption <- "Means and medians in original units, offset vertically for visibility. Descriptive summaries without confidence intervals."
+    xlab <- paste(d$feature, "(original units)")
+    alt <- "Numeric feature means and medians by group, in original units. Circles and triangles distinguish summaries even in monochrome; slight vertical offsets separate coincident values. Group labels retain sample sizes. No intervals or rater-quality judgments are shown."
+  }
+  p <- .mfrmr_gg_labs(p + .mfrmr_gg_theme(), d, x = xlab, y = NULL) + ggplot2::labs(alt = alt)
+  if (categorical) p <- p + ggplot2::theme(panel.grid = ggplot2::element_blank(),
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  attr(p, "mfrmr_plot_data") <- x
+  p
 }

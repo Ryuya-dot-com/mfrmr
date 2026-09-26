@@ -14,7 +14,10 @@ mfrm_gpcm_slope_inference_check <- function(fit, covariance, allow_singleton = F
   slice <- covariance$param_slices$log_slopes
   if (!isTRUE(spec$active) || !identical(spec$identification, "sum_to_zero_log_slopes") ||
       !identical(spec$scale_reference, "geometric_mean_one") ||
-      !identical(fit$config$slope_facet, fit$config$step_facet) ||
+      !identical(spec$slope_facet, fit$config$slope_facet) ||
+      !identical(spec$step_facet, fit$config$step_facet) ||
+      !identical(as.character(spec$levels),
+        as.character(fit$config$facet_levels[[fit$config$slope_facet]])) ||
       length(spec$levels) < 2L || length(slice) != length(spec$levels) - 1L ||
       !identical(as.character(tab$SlopeFacet), as.character(spec$levels))) {
     return(refuse("The free geometric-mean-one slope coordinates and their level order must match the fit."))

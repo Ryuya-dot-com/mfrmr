@@ -59,9 +59,9 @@ versus \code{GPCM} pair.
 The word "bounded" describes the documented model and workflow scope: the
 package does not implement every possible generalized partial-credit
 many-facet extension. It does \strong{not} mean that finite optimizer box bounds
-define the estimator. The current route uses positive slopes, requires
-\code{slope_facet == step_facet}, identifies slopes on the log scale with
-geometric mean 1, and keeps several downstream score-side/reporting helpers
+define the estimator. The current route uses positive slopes, allows separate
+slope/step owners in MML (JML requires \code{slope_facet == step_facet}), identifies
+slopes on the log scale with geometric mean 1, and keeps several downstream score-side/reporting helpers
 outside the documented boundary.
 Model-choice ranking also requires the current selectable IC contract:
 q<31 fits retain raw criteria but produce a screening/review-only bundle.

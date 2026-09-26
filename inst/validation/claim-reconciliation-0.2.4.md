@@ -5231,3 +5231,705 @@ checked 0.2.4 source. Individual sheets must preserve model-specific meanings,
 available uncertainty, identifiers/privacy and readable interpretation.
 Only excluded planning records change; no package code, help, NEWS, archive,
 full suite, simulation, release tag or submission changes in this review.
+
+
+## 2026-09-26 — Start local development with purpose-based plot guidance
+
+Work continues on `development/output-guide-plots`, identified as 0.2.4.9000
+with development lifecycle and unset release dates in DESCRIPTION/CITATION.
+The rc.6 tag, archive, main branch and hosted site are unchanged. Their check
+results remain evidence only for the frozen candidate, not this development
+branch. README now distinguishes rc.6 from the new development-only scope and
+corrects its stale rc.5 installation guidance.
+
+`mfrmr_output_guide("plots")` provides 28 selected routes: 14 dedicated
+converters, two native ggplot methods, one explicit generic table view and
+11 unavailable conversions with alternatives. Each row names its input class,
+result-creation help, plot call, reusable data component and conversion call.
+The table is intentionally curated; neither all plot variants nor all
+components are certified. Public help and the existing visual-diagnostics
+tutorial explain this boundary. No estimator or renderer changed; no exported
+function was added and no existing entry was deprecated.
+
+Validation:
+
+- `test-output-guide.R` and new `test-plot-guide.R` pass without failures,
+  warnings or skips. The printed core, native GPCM, generic precision,
+  shared-rater scoring and multivariate D-study calls were executed; named
+  data components and ggplot building were checked. All 11 unavailable rows
+  refuse conversion even when given a generically convertible component.
+- The first run exposed an incorrect guide component for `fit_pathway`;
+  it now names the actual `table` component. The targeted rerun passed.
+- All 27 pre-existing scopes return data identical to the base commit's
+  implementation, not merely the same column names.
+- Updated Rd files pass `tools::checkRd()`; the output-guide help examples
+  execute. The source-truth/lifecycle check passes for 0.2.4.9000.
+- The initial source-only roxygen loader could not resolve package-local
+  links; regenerating with the loaded package namespace restored the links
+  and left changes in only the two intended Rd files.
+
+Full package checks, new simulations, hosted publication and Win-builder
+resubmission were not needed for this local guide change. The remaining
+interface milestones (complete conversion equivalence review, purpose gallery,
+argument migration, feedback sheets and style options) remain open. GPCM
+structural, profile-interval and portable-calibration work is not implemented
+by this change.
+
+
+## 2026-09-26 — Add a selected purpose-based figure gallery
+
+The local 0.2.4.9000 visual-diagnostics tutorial now provides six previews
+linked to executed examples: Wright map, fit pathway, category probabilities,
+subset coverage, external-feature dendrogram and composite D-study planning.
+Existing Wright/fit/coverage figures are reused. The added examples reuse the
+current fit, use eight explicitly fictional feature rows, and use the packaged
+MGENOVA Person-by-Task scores, respectively. They add no estimator or renderer.
+Each example shows numerical data extraction and states its interpretation
+limits. D-study G/Phi meanings and fixed-component projection uncertainty are
+kept distinct from MFRM ability inference.
+
+Gallery purpose labels and conversion status are read from the existing output
+guide, not copied into a second capability table. One subset-coverage route
+extends the selected map to 29 rows (14 dedicated, two native, two generic and
+11 unavailable). Its explicit matrix conversion omits the observation-share
+panel. Both the guide and tutorial distinguish relative observed facet-level
+counts from planned-assignment completion and from missingness mechanisms.
+
+Validation under `validation-results/plot-gallery-20260926/`:
+
+- `test-plot-guide.R` passes, including execution of the added subset-coverage
+  route and agreement between its matrix values and the generic ggplot data.
+- The modified article alone was built with examples enabled. The final build
+  completes without warnings or missing-alt messages. Initial empty thumbnail
+  alternatives were replaced with named previews. The raw-coercion warning was
+  traced to resource discovery URL-decoding a literal `%s` Markdown placeholder
+  in the source chunk; constructing the image markup without a fake URL fixes
+  it. An initial sass-cache write warning was avoided with a temporary R cache.
+- Rendered HTML checks confirm all six purpose labels/support descriptions
+  match the guide and all six extraction examples contain executed output.
+- Local headless Chrome checks pass for all six loaded images and fragment
+  destinations, nonempty thumbnail/full-figure alternatives, sequential Tab
+  navigation, visible focus, Enter activation and opening/closing the route
+  table. The unrelated pkgdown header logo is outside these figure checks;
+  this is not a whole-site accessibility certification.
+- Gallery cards have no horizontal overflow at 1280, 390 and 320 CSS pixels.
+  Desktop/mobile captures and the new full figures were visually inspected.
+  The local preview contains this article, not a rebuilt full reference site.
+
+The first six-purpose gallery is complete locally. Whole-package checks,
+repeated coverage simulations and public deployment were not performed.
+Broader converter equivalence, argument migration, individual rater sheets,
+style options and GPCM inference/structure extensions remain separate open work.
+
+
+## 2026-09-26 — Add standalone individual rater feedback
+
+This local 0.2.4.9000 interface milestone uses `mfrm_report(style = "rater")`
+on the current development branch. It does not change rc.6, estimation,
+interval formulas or their statistical qualification.
+
+The implementation selects a native additive RSM/PCM facet level explicitly
+and returns a whitelist projection: severity oriented toward lower scores,
+reference zero, exposure, saved individual fixed-facet intervals, ordinary
+Infit/Outfit, category use and selected standardized-residual cases. It accepts
+matching saved diagnostics; it never fits, diagnoses or calculates covariance.
+The individual interval is selected by its contrast vector rather than its
+label, and multiple matching attachments require an explicit choice. Arbitrary
+contrast intervals cannot be relabeled as an individual-rater interval.
+Model-coded expected scores stay on their fitted scale. Missing or unavailable
+sections remain explicit. GPCM, interactions, imported, testlet and random-rater
+models are refused by this sheet route, retaining their specific reports.
+
+HTML, Markdown, tables and the returned object omit the source fit, Person and
+rater identifiers, task labels, source row numbers and arbitrary source notes
+or attributes. The default recipient label is generic; a user-supplied label
+is intentional displayed content. Cases use sheet-local numbering. Numeric
+patterns can still permit recognition, especially in small groups: this is an
+identifier-field exclusion contract, not universal anonymization. Complete
+source notes and numerical cautions must be reviewed by the analyst before
+sharing; they are not copied into the recipient's document.
+
+Validation under `validation-results/rater-feedback-20260926/`:
+
+- `test-rater-feedback.R`: saved numerical equality, no fitting/diagnostic/CI
+  calls during projection, all output formats, source-field/attribute omission,
+  escaped HTML labels, ambiguous/wrong-target/mismatched intervals, missing and
+  unavailable inputs, recoding, effect direction, provisional source state,
+  RSM/PCM and MML/JML scope, and existing QC positional calls.
+- `test-output-guide.R`: the added individual-sheet route and existing guide
+  contracts pass; the table schema and pre-existing routes are retained.
+- The new `individual-sheet` tutorial chunk executes using the saved fitted
+  input; report Rd syntax and generated namespace are checked.
+- Headless local Chrome checks both audiences at 1280, 390 and 320 pixels,
+  table header semantics, keyboard focus, resource independence and print CSS.
+  Desktop, narrow-screen and print-CSS screenshots are inspected. The print
+  check verifies CSS layout, not browser-independent PDF pagination.
+
+A test exposed partial matching of a removed `diagnostics` field to
+`diagnostics_provenance`; exact list extraction now prevents that error.
+The initial browser harness missed a load event already delivered; its wait
+was corrected before the successful checks. Those failures were not ignored.
+No whole-package test, simulation campaign, CI, push or publication was run for
+this reporting change. PDF automation, broader model coverage and review by
+intended recipients are still open. The source and help make no claim of
+validated rater-quality classification or general interval coverage.
+
+## 2026-09-26 — Compatible plot titles and bubble conversion repair
+
+This local 0.2.4.9000 interface tranche addresses the roadmap's argument
+consistency and renderer-equivalence work. All eight exported `plot_*` helpers
+with `main` now accept `title`: marginal fit/pairwise, unexpected responses,
+interrater agreement, facet chi-square, bubble, bias interaction and facet
+quality dashboard. Existing formal argument positions and `main` behavior
+remain; `main = NULL` still selects a default heading. Explicit `title = NULL`
+or `""` suppresses it. Supplying both names fails before data processing, even
+when equal. The new argument is appended, and is exact-name-only after `...`
+in the dashboard helper. One shared resolver and inherited parameter help
+maintain the same contract. No deprecation warning or export is added.
+
+The title-free dashboard retains its stored interpretation status, source
+readiness and notes. Only the heading (including its REVIEW ONLY prefix) is
+hidden; users must keep those limitations in the figure caption or report.
+The S3 dashboard route forwards `title`. Payloads retain an empty title across
+save/load and the supported bubble ggplot conversion renders no title.
+
+Visual inspection exposed a pre-existing bubble-converter defect: it used
+constant-size points and ggplot's default colours regardless of saved radii
+and facet colours. The native monochrome preset also still selected a coloured
+facet palette. The converter now uses saved radius ratios, facet colours,
+facet order and reference lines, while the native monochrome branch uses the
+existing gray-series helper. Explicit palette overrides remain. Base and ggplot
+physical sizes differ; this is not a claim of pixel-equivalent rendering.
+The bubble help now correctly describes N-based radii as proportional to
+sqrt(N), with circle area proportional to N. No estimate, SE, interval,
+screening threshold or radius formula changed.
+
+Evidence in `validation-results/plot-title-alias-20260926/`:
+
+- `baseline.rds` captures 21 view-specific payloads before editing the eight
+  helpers. `compare-baseline.R` verifies exact equality for omitted titles,
+  custom legacy main, explicit main=NULL, new custom title, and complete
+  legacy positional calls. Formal defaults and positions are compared too.
+- `test-plot-title-alias.R` passes: all 21 views, conflicts/invalid arguments,
+  base graphics title capture, dashboard S3 forwarding and retained review
+  evidence, supported ggplot titles/save-load, and unequal N/SE radius/colour/
+  order/reference-line checks for both bubble views and all three size modes.
+- `test-as-ggplot.R` passes after the converter change. No full package test
+  or repeated estimator simulation was run.
+- The `title-controls` vignette chunk executes from saved diagnostics. The
+  eight Rd files parse and share generated title-argument descriptions.
+  Custom-title and title-free ggplot images are rendered and inspected.
+
+The first baseline harness used a diagnostics object where the unexpected
+plot requires a fit or its dedicated result; it was corrected before the
+baseline was frozen. Test-only failures also identified a legacy-only
+fixture, ggplot's deliberate empty-title-to-NULL normalization, and empty
+reference lists represented by NULL rather than numeric(0); the checks now
+use the correct inputs and representations. The final comparisons pass.
+
+Broader argument naming, global appearance settings, other converter gaps,
+extended-model individual sheets and GPCM structure/inference remain separate
+open roadmap work. The checked rc.6 source, CI, GitHub publication and CRAN
+submission are unchanged by this local tranche.
+
+### 2026-09-26 — Session defaults for common plot presets
+
+The appearance item in the interface roadmap now has a local implementation:
+`options(mfrmr.plot_preset = "publication")`. One internal resolver reads and
+validates the option at 42 direct public plotting entries and eight report
+bundle branches. Explicit arguments take precedence, including the legacy
+`preset = NULL` package-default behavior. Formal defaults and argument positions
+are unchanged. Paired comparisons now forward the parent preset to both source
+plots. The fixed defaults in saved-data renderers are deliberately unchanged.
+
+This is a plotting convenience, not new statistical inference or a universal
+theme. Existing payloads retain their resolved appearance for supported ggplot
+conversion after a session change; newly created plots use the current option.
+Plots with separate palette controls retain their own settings. The option
+does not mutate the global ggplot theme. A public theme and complete renderer
+coverage remain open work, as do GPCM structural and inference extensions.
+
+Evidence in `validation-results/plot-preset-option-20260926/`:
+
+- `baseline.rds` was saved before this implementation. Final `verify.R` and
+  `verify.log` confirm 27 default payloads remain exactly identical, and the
+  same 27 session-default outputs match explicit monochrome calls.
+- `test-plot-preset-option.R` passes. It checks missing/explicit option handling
+  at all 42 direct entries; four presets on eight representative routes;
+  explicit overrides and NULL; paired-source forwarding; saved bubble
+  save/load/ggplot data; legacy payload fallback; results/plot-data forwarding;
+  unchanged numerical tables, radii, reference lines and global theme. Its
+  mocked estimators reject unintended new fitting/diagnostic calls.
+- `session-preset` in the existing tutorial executes with a saved fit and
+  restores the prior option. Roxygen completes without warnings; all 43
+  affected help topics parse with one inherited session-default section each.
+- README, NEWS and ROADMAP describe precedence, replay behavior and limits.
+
+Initial test-harness errors used an unqualified `local_options()` and an
+unsupported `info` argument to `expect_s3_class()`. The harness now uses
+`withr::local_options()` and an inheritance assertion; the final tests pass.
+No full suite, repeated estimator simulation, CI or external submission was
+performed for this appearance-only tranche. The frozen rc.6 candidate is
+unchanged.
+
+### 2026-09-26 — Dedicated external-feature PCA ggplot conversion
+
+The next converter tranche addresses the three PCA routes in the purpose
+guide: scree, scores and loadings. A single private renderer reads saved PCA
+payloads. Default and explicit `component = "table"` conversion preserve the
+complete view; other components cannot re-enter a generic numeric-column
+fallback. The normal `as_ggplot(pca, type = ...)` route uses the existing
+plot-data adapter without adding exports or refitting PCA/clustering.
+
+Scree plots retain explained-variance percentages for all fitted components
+and distinguish retained/open symbols. Scores retain the selected axes,
+ID-aligned saved group colours/shapes and label choice. Loadings retain feature
+order, the selected component, the coefficient scale and the zero reference.
+Converted objects carry the full source payload, including transformations,
+weights, excluded IDs and units, for extraction with `plot_data()`. The preset
+comes from that saved payload, not a changed session option. Titles/subtitles
+can be removed using ggplot labs without removing the attached source evidence.
+
+Evidence in `validation-results/pca-ggplot-20260926/`:
+
+- `baseline.rds` precedes the converter change. Final `verify.R` confirms the
+  four pre-change payloads (scree, grouped reversed-axis scores, ungrouped
+  scores and second-component loadings) remain identical.
+- `test-pca-ggplot.R`, `test-plot-guide.R` and
+  `test-workflow-output-routing.R` pass. The new checks compare built graphic
+  coordinates, percentages, shapes/colours, label settings, feature order,
+  fixed axis units, explicit/default component routing, saved-data replay and
+  metadata extraction. Reordered memberships expose positional-ID errors;
+  missing axes/encoding cause errors instead of generic graphics. Mocked PCA
+  and k-means calls reject unintended refitting. A single-feature scree plot
+  builds without a line-group warning.
+- Image inspection exposed a very narrow score panel when selected components
+  have strongly unequal variance, clipping labels. The final renderer uses
+  equal displayed spans as well as equal axis units; points are unchanged.
+  Updated PCA tests pass (`tests-final-pca.log`). The final grouped score,
+  scree, loadings and title-free tutorial images were inspected.
+- The exact `numeric-pca-ggplot` tutorial chunk executes using a saved result
+  of the same shape as a single feature completion. This is an example/display
+  check, not a rerun or validation of multiple imputation. Roxygen completes
+  without warnings and changed help topics parse.
+- The guide now has 17 dedicated, two native, two generic and eight unavailable
+  selected routes. README, feature tutorial, installed help, NEWS and ROADMAP
+  distinguish the new PCA support from still unsupported partition/tree/MI
+  graphics.
+
+The first test run tried to retrieve labels from an untrained positional scale;
+its assertion now uses the built panel scale. No estimator, PCA geometry,
+clustering algorithm, uncertainty formula or public function signature changed.
+Physical sizes are not asserted equal across base and ggplot. Dense labels may
+still require `labels = FALSE`; text alternatives and colour/shape redundancy
+are not a complete accessibility certification. The checked rc.6 candidate,
+main, published site and CRAN submission are unchanged. No full suite or new
+large simulation was run for this local display change.
+
+### 2026-09-26 — Saved hierarchical dendrogram conversion
+
+The hierarchy route now has a dedicated `as_ggplot()` conversion. A private
+linear traversal of the saved hclust merges generates branches at recorded
+heights and midpoint positions. It does not compute distances, fit a new tree
+or call cutree. Leaf order, stored memberships, requested k, excluded IDs and
+label/preset choices remain attached through `plot_data()`.
+
+The default and `component = "tree"` convert the same complete view. Other
+components cannot fall back to a misleading generic table plot. Group boxes
+follow the saved contiguous membership runs, including cuts at tied heights.
+They use dashed lines to distinguish boxes from branches in monochrome. The
+cut caution appears only when the two heights bounding the selected k cut
+are equal, not simply because another pair of heights somewhere in the tree
+ties. Label omission never samples or removes leaves. Display widths and text
+sizes need not match the base renderer pixel for pixel.
+
+Evidence in `validation-results/dendrogram-ggplot-20260926/`:
+
+- `test-dendrogram-ggplot.R`, `test-plot-guide.R`, `test-cluster-plots.R` and
+  `test-workflow-output-routing.R` pass. Independent stats::as.dendrogram
+  node midpoints/member counts and heights agree with the converted branches
+  for average/complete linkages, with and without tied cuts. Tests also cover
+  zero-height trees, saved-data replay, exclusions, omitted labels, explicit
+  tree selection, malformed indices/order/groups, and rejection of generic
+  component fallbacks. Mocked clustering, hclust and cutree reject recomputation.
+- The final dendrogram-specific tests pass after the dashed-box and
+  cut-specific caution changes (`tests-final.log`). A separate tied-height
+  condition away from the selected cut verifies that no cut caution is added.
+- `verify.R` executes the exact `hierarchy-ggplot` tutorial chunk and inspects
+  the attached source payload. Eight-rater, tied four-rater, and 120-rater
+  figures render. The 120-rater check counts all 357 branch segments with
+  ID labels hidden; this is a display check, not a maximum-capacity guarantee.
+  Final figures were visually inspected for branch/box distinction, labels
+  and captions. The caption-only change does not alter heights or memberships.
+- Roxygen finishes without warnings; updated help topics parse. The guide,
+  README, both relevant tutorials, NEWS and ROADMAP describe dedicated tree
+  conversion. The 29 selected guide entries now have 18 dedicated, two native,
+  two generic and seven unavailable conversions.
+
+This completes the saved-tree conversion gap, not silhouette/profile or
+imputation co-membership conversion, pooled trees or branch-support inference.
+No public function, clustering estimator or partition-selection rule was added.
+No full suite or large estimator simulation was repeated. The frozen rc.6
+candidate, main, website and CRAN submission remain unchanged.
+
+### 2026-09-26 — Imputation co-membership ggplot conversion
+
+The dedicated co-membership renderer uses the saved matrix, ID order, legend,
+label choice and imputation count. The default and explicit `component =
+"matrix"` preserve the full fixed zero-to-one view; other components cannot
+fall back to generic graphics. Source metadata remain attached and extractable,
+including selected IDs and all excluded IDs. No imputation, clustering,
+renormalization, reordering or consensus partition is computed.
+
+Grey cells receive crosses, distinguishing unavailable pairs from zero without
+relying on colour. The caption explains the all-imputation denominator and
+separates these fractions from membership probabilities and sampling stability.
+Saved plots ignore later session preset changes. Labels, titles and captions
+can be hidden through the documented creation/ggplot routes without removing
+source records. The native plot and numerical result construction are unchanged.
+
+Evidence in `validation-results/co-membership-ggplot-20260926/`:
+
+- `test-co-membership-ggplot.R`, `test-plot-guide.R`, `test-cluster-plots.R`
+  and `test-workflow-output-routing.R` pass. The dedicated final tests also
+  pass after tightening invalid-input checks (`tests-final.log`).
+- Explicit partitions provide known fractions. Checks resolve plotted x/y
+  coordinates back to requested IDs, compare values without renormalization,
+  retain the fixed scale and imputation count, distinguish zero/NA fills and
+  NA crosses, and exercise singleton/all-unavailable views. A 51-ID view keeps
+  all 2,601 cells when default labels are hidden; this is not a capacity bound.
+- Save/load checks preserve graphics and metadata under an invalid later
+  session option, without changing the global theme or opening a device.
+  Mocked imputation/clustering functions reject unintended analysis calls.
+  Invalid matrices, missing IDs/count/legend and unsupported component
+  selection cause errors rather than misleading fallback graphics.
+- `verify.R` executes the exact new tutorial chunk using a five-ID saved-result
+  fixture. Colour, monochrome, all-unavailable and one-person images render and
+  were inspected. This verifies display and example execution, not a rerun or
+  validation of the feature-imputation model. Updated help parses and roxygen
+  completes without warnings.
+- Help, README, NEWS, feature tutorial, output guide and ROADMAP are reconciled.
+  The 29 selected guide routes now have 19 dedicated, two native, two generic
+  and six unavailable conversions. Silhouette/profile conversions and broader
+  inference/structural roadmap work remain separate.
+
+No public function or statistical procedure was added. The renderer materializes
+one row per displayed pair, so memory still grows quadratically; the raster
+layer is not a general large-data guarantee. No full suite or large simulation
+was repeated. The checked rc.6 candidate, main, website and CRAN submission
+remain unchanged.
+
+### 2026-09-26 — Silhouette and feature-profile conversion
+
+Dedicated conversion now covers the remaining selected partition views:
+silhouettes and numeric/categorical profiles. One private renderer reads saved
+summaries; default and explicit table conversion retain the complete selected
+view, with matrix selection additionally supported for categorical profiles.
+No clustering, silhouette calculation or interval estimation is performed.
+
+Silhouettes retain negative widths, row order and the saved overall-mean
+reference on a fixed [-1, 1] scale. Group labels provide non-colour identification;
+omitting entity labels does not remove widths. Numeric profiles retain means,
+medians and counts in original units. Circle/triangle symbols use small vertical
+offsets so coincident values remain visible; x values do not change. Categorical
+profiles retain unused levels, original order, group counts and a fixed [0, 1]
+scale. Cell boundaries make zero proportions visible. All source summaries,
+exclusions and interpretation metadata remain extractable after labels change.
+
+Evidence in `validation-results/cluster-summary-ggplot-20260926/`:
+
+- The new `test-cluster-summary-ggplot.R` and related plot-guide, cluster-plot
+  and workflow-routing test files pass. Final focused tests also pass after
+  layout refinement and the missing-reference guard (`tests-final.log`).
+- Built graphics are checked against saved negative widths, row order,
+  reference values, original-unit summaries/counts, category order and unused
+  zero cells. Tests cover explicit/default components, save/load, ignored
+  later session options, source extraction, missing inputs and labels hidden
+  without sampling. Mocked clustering calls reject unintended analysis.
+- PAM, k-means and hierarchy profile routes build. A k-means result fitted
+  with silhouette=FALSE still refuses a silhouette view without computing it;
+  its existing profile remains available.
+- The exact `profile-ggplot` tutorial chunk executes using a saved-result-shaped
+  fixture. Colour and monochrome profile/silhouette figures render; final
+  numeric, categorical and negative-width layouts were inspected. The QA-only
+  negative-width fixture uses a matching updated saved mean; it is not an
+  empirical algorithm result. Display assertions intentionally use a distinct
+  saved mean to prove conversion does not replace it by recomputation.
+- Updated help parses; roxygen completes without warnings. Help, README,
+  NEWS, feature tutorial and ROADMAP match the implementation.
+
+The selected guide's clustering/PCA routes now have dedicated converters.
+Across all 29 selected entries it reports 21 dedicated, two native, two generic
+and four unavailable conversions. This is not a full package plot inventory.
+Pooled-facet, screening-performance and the remaining G/D-study conversion
+families stay explicit gaps; model/inference work remains separate. No new
+public function, numerical estimator or statistical guarantee was added.
+No full suite or large simulation was repeated. This remains local development;
+the checked rc.6 candidate, main, website and CRAN submission are unchanged.
+
+### 2026-09-26 — Pooled fixed-facet MI interval conversion
+
+The selected pooled-interval route now has dedicated ggplot conversion. It
+reads the saved MI t-interval endpoints rather than recreating normal intervals
+from SEs. Target order, contrasts, DF, confidence-level settings, complete-data
+information reviews and cautions remain attached through `plot_data()`. The
+default and explicit table component retain the same full view; other
+components cannot fall back to generic graphics.
+
+Fixed targets use open diamonds without intervals. Missing interval endpoints
+use crosses at the saved estimate; missing point estimates cause an error
+rather than being placed at zero. Infinite interval endpoints use arrows whose
+tips are rendering limits, not substituted finite bounds. Original endpoint
+values and per-row cautions remain in the source table. These are converter
+behaviors; the native plot and pooling formulas have not changed. No extra
+multiplicity adjustment or classification of rater quality is implied.
+
+Evidence in `validation-results/pooled-ggplot-20260926/`:
+
+- `test-pooled-ggplot.R`, `test-plot-guide.R` and
+  `test-workflow-output-routing.R` pass. Tests distinguish a saved small-df t
+  interval from its normal approximation, preserve fixed targets and target
+  order, verify arrows for infinite endpoints and crosses for missing
+  intervals, and cover all-fixed/all-unavailable views. Save/load and display
+  controls preserve metadata under a changed session option. Mocked fitting,
+  pooling, covariance and qt calls reject unintended recalculation.
+- An initial label assertion assumed ascending breaks; it now matches labels
+  to their actual y coordinates. The display itself retained the correct order.
+- `verify.R` runs the exact new tutorial chunk using the existing
+  `response-mi-joint-20260923/pooled.rds` result from 40 imputations. Its table,
+  contrasts, settings and DF remain identical. No model or imputation rerun
+  is needed. This is replay verification, not additional coverage evidence.
+- Colour and monochrome state fixtures render, including fixed, unbounded,
+  unavailable and weak-information cases. The tutorial and state figures were
+  visually inspected. These constructed states exercise display semantics;
+  they are not new empirical results or a claim that such endpoints occurred
+  in the saved 40-imputation example.
+- Roxygen completes without warnings and changed help topics parse. README,
+  NEWS, response-imputation tutorial, installed help, output guide and ROADMAP
+  are reconciled. The README migration table's stale blanket refusal of
+  external-feature ggplot conversion is also corrected.
+
+The old refusal assertion in test-response-imputation.R now expects the
+supported ggplot class; its fitting-heavy full file was not rerun. The direct
+saved-result replay and focused tests cover the changed rendering behavior.
+No full package suite or estimator simulation was repeated. The selected guide
+now reports 22 dedicated, two native, two generic and three unavailable routes;
+screening-performance and remaining G/D-study conversions are still gaps.
+The frozen rc.6 candidate, main, website and CRAN submission are unchanged.
+
+## 2026-09-26: representative saved-workflow integration
+
+This review connects the accumulated display and reporting work before moving
+to the next statistical target. It does not add estimators or claim complete
+plot coverage. Evidence: `validation-results/workflow-integration-20260926/`.
+
+- `verify.R` reuses the existing RSM fit/diagnostics/individual-rater intervals,
+  PCA/k-means fixture and real 40-imputation response-score result. The analyst
+  RDS round trip preserves the complete results. Individual-sheet tables and
+  cautions, plain/researcher numerical agreement and fixed-facet plot data
+  remain unchanged. The exported replay script executes from its export folder
+  and reloads the same results. Copied recipient HTML remains readable after
+  removing the temporary source; source Person/rater IDs are absent.
+- Saved PCA, original-unit profiles and pooled t-interval views convert after
+  changing the session preset without changing their saved payloads. Fitting,
+  diagnosis, interval calculation, PCA, k-means and pooling entry points are
+  mocked to reject unintended recalculation during replay.
+- `tutorials.R` executes both new save/reopen tutorial chunks. A small
+  25-row, three-imputation fixture additionally checks all-completion PCA/group
+  preservation, co-membership conversion and zero changed-pair fraction after
+  reloading. Its renamed example attributes are an API fixture, not an
+  educational dataset or evidence for imputation adequacy. During replay,
+  mice/PCA/clustering entry points are blocked. No statistical simulation or
+  large fitting suite is repeated.
+- The imputation-model object's `identical()` check initially fails only for
+  formula environments: separate deserializations create separate R environment
+  references. `all.equal()` passes; all analyses, co-membership, summaries,
+  original features, imputed-cell records and settings are identical.
+  `serialization.log` isolates the formula component. There is no evidence of
+  changed estimates or classifications from this check.
+- `export-check.R` compares interval, contrast and setting CSVs with source
+  tables and report CSVs, including missing-value positions. CSV type inference
+  reads an all-missing numeric setting as logical NA; numeric comparison
+  therefore restores the source numeric type. RDS preserves the original type.
+  The initial harness also used an incorrect pooling mock name and plural
+  `profiles` plot type; these were corrected to the existing API names.
+
+The feedback help/tutorial now demonstrate copying the temporary HTML and
+reopening the analyst RDS. The feature tutorial saves the full imputed analysis
+alongside a selected first-completion view, explicitly distinguishing their
+scope and the separate pooled-response workflow. NEWS and ROADMAP reflect
+these changes. Roxygen regenerates the report help; generated trailing whitespace
+in the existing facet-interval topic is normalized. No rendering or estimation
+implementation change was required by this review. Intended-reader evaluation,
+unavailable specialized converters and statistical qualification remain open.
+
+## 2026-09-26: rater-uncertainty evidence reconciliation and refit checks
+
+The next work package remains prediction intervals for observed random-rater
+effects relative to the population mean, not fixed-panel coefficients, future
+scores, training effects or rater-quality classifications. This turn reconciles
+existing evidence and repairs missing refit records; it does not improve or
+qualify coverage. Evidence is under
+`validation-results/rater-uncertainty-review-20260926/`.
+
+`reuse.R` verifies the existing 800-dataset numerical ledger: 53 Person-
+quadrature failures (2/24/1/26 by original condition) and one further estimated
+rater-variance boundary, with all optimizer and information checks passing.
+The original finite-interval denominators are 198/176/198/174 out of 200.
+`source-check.R` compares parsed function definitions: the likelihood and
+both variance-boundary calculations match the frozen study source. Inspection
+of the fitter difference identifies an existing named `PersonQuadratureStable`
+flag and `isTRUE()` guards around the same numerical tolerances. The old and
+new quadrature decisions agree for all 800 saved finite discrepancies; this
+does not claim identical handling of hypothetical nonfinite discrepancies.
+Its qualification decisions remain unchanged. The completed eight-
+calibration, 144-comparison local-likelihood reference is reusable evidence;
+its scoped conclusion does not justify restarting it or claiming global
+Laplace accuracy.
+
+All 24 bootstrap pilot results and 2,376 saved trials replay with identical
+stored 95% studentized endpoints and no refitting. Their source ability SD is
+known and fixed at one. They do not qualify the estimated-population default.
+The methodological reference was checked at the authors' arXiv abstract
+(https://arxiv.org/abs/0806.2931): its stated scope is linear mixed models.
+This is not a new full-paper review or a theorem for the ordinal RSM.
+
+New trial records retain optimizer code, numerical/information readiness,
+quadrature/check orders, likelihood/gradient discrepancies, the separate
+rater-variance boundary and Person search-bound status. Existing root
+calculations, gates, seeds, warnings and error records are unchanged. If no
+fit returns, these additional checks are NA, not passes. Old trial records
+are not retroactively relabeled or populated from source-fit checks.
+
+The affected interval tests pass, covering numerical versus information
+failure, thrown refit errors, variance boundaries, unresolved roots,
+studentization direction, actual small refits and saved replay. An initial
+test cleanup used `on.exit()` without `add = TRUE`, overwriting mock cleanup;
+using `withr::defer()` fixes the test isolation. No production inference failure
+was inferred from that harness defect. A stored example verifies that additional
+NA historical-check fields survive results, reports, RDS and CSV; these are
+explicitly a transport fixture, not invented bootstrap measurements. Its
+interval plot remains unchanged.
+
+Help, the random-rater tutorial and NEWS explain these checks. ROADMAP now
+separates completed numerical evidence, limited known-population bootstrap
+evidence and unqualified current-population inference. It requires numerical
+policy, outer and inner precision, and a computing budget before another
+qualification study. If adequate precision is impractical, candidate status
+remains explicit and does not indefinitely postpone the scoped GPCM ownership
+work. No new coverage study, full test suite, publication or release change
+was undertaken.
+
+## 2026-09-26: interval computation decision and separated-owner GPCM preflight
+
+The nested random-rater qualification run is not started in this tranche.
+`validation-results/rater-uncertainty-budget-20260926/assess.R` calculates
+planning sensitivities from saved results, without new fits. Independent
+datasets, not individual raters within a dataset, are the Monte Carlo units.
+Using the existing normal-interval dataset SDs as planning proxies, MCSE .01
+and observed availability imply 908 planned outer datasets across four cells.
+At B = 499 this is 454,000 fits including source fits, about 874 summed hours
+using historical median elapsed-fit proxies (842--901 using lower/upper
+quartiles). These are neither confidence bounds on runtime nor a prediction
+of parallel wall time. Bootstrap-method variability and a revised quadrature
+procedure can differ, so this is not a proven minimum sample size.
+
+The existing availability gate supplies a separate best-case calculation.
+For a two-sided exact 95% binomial interval with every case available, its
+lower bound is .025^(1/N). At least N = 72 per condition is needed to reach
+.95; `binom.test()` confirms failure at 71 and success at 72. Across four
+conditions, 288 source datasets with 499 draws imply 144,000 fits, about 299
+summed median-proxy hours. This is only the availability gate, not enough
+evidence for interval coverage. No new ad hoc coverage criterion is adopted.
+
+The inner planning calculation sqrt(p(1-p)/B), p = .025, concerns the empirical
+CDF at a fixed population-tail threshold with independent, fully known draws.
+B = 499 gives probability-scale MCSE .00699; illustrative .005 and .0025
+targets imply B = 975 and 3,900. This is not endpoint MCSE in logits, which
+also depends on the error density, and unresolved roots are a separate issue.
+These sensitivity values do not prescribe a universal production B.
+
+`test-random-rater-tail-resolution.R` verifies the existing type-1 completion
+rule at B = 19, 99 and 499, including the transition from finite to infinite
+limits. At 95% and B = 499, 13 unresolved roots for one rater make both limits
+infinite; increasing B at a persistent 3% unresolved fraction remains
+unbounded. This is a constructed arithmetic check, not coverage evidence.
+The R type-1 definition was checked against the official stats manual:
+https://stat.ethz.ch/R-manual/R-devel/library/stats/html/quantile.html .
+Help, tutorial and NEWS explain the concrete consequence without treating
+the count as an acceptable-failure threshold. Outer-study failure rates are
+not assumed to equal conditional inner-bootstrap failure probabilities.
+
+Work now advances to the already scoped GPCM ownership extension. The preflight
+under `validation-results/gpcm-separated-owners-20260926/` uses six Persons,
+three raters and two criteria, both ownership directions, complete/incomplete
+crossed rosters, known standard-normal ability and fixed/adaptive 61-node MML
+integration. The parameter maps and observation indices are existing internal
+code; no public guard was removed. A separate scalar adjacent-category
+recursion integrated by R's `integrate()` checks the marginal likelihood.
+Maximum likelihood discrepancy is 2.99e-11; analytical versus finite-difference
+gradient discrepancy is 6.74e-10. Unit slopes reproduce PCM values exactly in
+these cases and nuisance gradients within 1.56e-15. The numerical regression
+is retained in `test-gpcm-separated-owner-kernels.R`; it passes. The internal
+kernel comment now distinguishes the slope and step indices explicitly.
+
+This admits further implementation work, not a public separate-owner model.
+Identification, actual fitted solutions, population-estimation routes,
+inference eligibility, prediction, saved reporting and affected specialized
+helpers remain to be connected or explicitly restricted. First admission is
+additive MML with one slope family; JML's existence/boundary machinery requires
+separate work. The frozen candidate and public model restriction are unchanged.
+Both focused test files pass, roxygen succeeds and diff whitespace checks pass.
+No full package suite, coverage simulation, hosted CI or publication was run.
+
+
+## 2026-09-26: Separate GPCM owners connected through the local MML workflow
+
+This supersedes the preceding preflight's public-guard status for the local
+0.2.4.9000 development tree only. MML now permits distinct slope/step facets;
+JML keeps the equality restriction. There is one positive, geometric-mean-one
+slope family multiplying the entire adjacent-category predictor. No estimator,
+likelihood, slope-action or population-default change was made.
+
+Output qualification now checks each role against the retained specification
+and the actual slope-level order instead of requiring role equality. PCM/GPCM
+nesting retains matching step owner, population, facet/step constraints and
+numerical checks; its degrees of freedom are slope levels minus one. Bootstrap
+replay checks both owners. General simulation/design and fit-derived simulation
+specifications explicitly refuse distinct owners, as does the existing weighting
+review; same-design `bootstrap_mfrm_gpcm()` is separately supported.
+
+The independent scalar-generated 120-person, 3-rater, 2-criterion fit yielded
+relative slopes 0.8624 and 1.1595 with eligible approximate log-Wald intervals.
+Interchanging facet names left the parameter vector unchanged within 1e-9.
+A rotating assignment retaining two raters per person yielded slopes 0.8425 and
+1.1869 with eligible approximate intervals. A confounded design with only R1/C1
+and R2/C2 was refused before optimization (rank 4/5). An additional fit using
+three rater slopes and two criterion step sets also completed with eligible
+approximate intervals (`opposite.rds`, `final-smoke.log`). This changes the fitted
+model rather than recovering the generating truth. This single-case evidence
+checks numerical behavior, not bias, coverage or general sparse-design adequacy.
+The matched free-population PCM/GPCM comparison gave LR 2.353 (rounded), df 1,
+p 0.1251; three same-design bootstrap refits completed, and new-person fitted-object
+scoring completed. No sampling-performance conclusion is drawn from three draws.
+
+A real export uncovered a shared-owner assumption in CCC/pathway construction:
+the step label was used to look up the slope. Joint step/slope profiles now
+produce explicit paired labels and correct reference probabilities. Such profiles
+do not borrow a single-facet fit flag; individual fit measures remain available
+separately. Independent scalar expected-score checks cover all six pairs.
+The corrected export has zero plot errors and preserves exact saved uncertainty
+and both owners after RDS reopening. The initial failing export is retained as
+provenance, alongside the corrected export. Native CCC panels were visually
+inspected; their footer states that additive effects and interactions are zero.
+
+Validation: focused separated-owner workflow and kernel checks, equal-owner
+inference extensions and reporting, slope-owner comparison, model choice,
+output guide, fit pathway and Wright regressions passed. LRT and uncertainty
+readiness regressions also passed. Three expensive capability-matrix tests kept
+their existing `skip_on_cran()` skips under the default local test environment;
+they were not silently counted as executed. No whole-package suite, coverage
+simulation, hosted CI, commit/push, release-tag change or CRAN submission occurred.
+Help source, generated Rd, NEWS, README, scope vignette and roadmap are updated.
+Sources: `validation-results/gpcm-separated-owners-20260926/fit/{probe.rds,
+workflow.R,workflow.log,tests.log,regression.log,reexport.R,reexport.log}`.

@@ -22,9 +22,11 @@
 #'   title and labels. Base graphics are supported; automatic ggplot conversion
 #'   is not provided for this plot.
 #' @seealso [mfrm_multivariate_d_compare()]
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem"),
                                                 draw = TRUE, preset = "standard", ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   type <- match.arg(type)
   if (!is.logical(draw) || length(draw) != 1L || is.na(draw)) stop("`draw` must be TRUE or FALSE.", call. = FALSE)

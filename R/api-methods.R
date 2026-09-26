@@ -6850,6 +6850,7 @@ plot_visual_summaries_bundle <- function(x,
 #'   )
 #' }
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
   dots <- list(...)
@@ -6937,7 +6938,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     cumulative_direction <- dots$cumulative_direction %||% "at_or_below"
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     show_cumulative_boundaries <- dots$show_cumulative_boundaries %||% TRUE
     boundary_status <- dots$boundary_status %||% "in_range"
     return(invisible(draw_category_curves_bundle(
@@ -7048,7 +7049,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     label_angle <- as.numeric(dots$label_angle %||% 45)
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     top_n <- if ("top_n" %in% names(dots)) dots$top_n else 30L
     return(invisible(draw_data_quality_bundle(
       x,
@@ -7070,7 +7071,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     label_angle <- as.numeric(dots$label_angle %||% 45)
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     top_n <- if ("top_n" %in% names(dots)) dots$top_n else 30L
     return(invisible(draw_fit_measures_bundle(
       x,
@@ -7089,7 +7090,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     label_angle <- as.numeric(dots$label_angle %||% 45)
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     ci_level <- dots$ci_level %||% NULL
     top_n <- if ("top_n" %in% names(dots)) dots$top_n else 30L
     return(invisible(draw_fit_measures_bundle(
@@ -7123,7 +7124,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     label_angle <- as.numeric(dots$label_angle %||% 45)
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     return(invisible(draw_subset_connectivity_bundle(
       x,
       type = ptype,
@@ -7142,7 +7143,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     label_angle <- as.numeric(dots$label_angle %||% 45)
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     return(invisible(draw_network_analysis_bundle(
       x,
       type = ptype,
@@ -7163,7 +7164,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     label_angle <- as.numeric(dots$label_angle %||% 45)
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     return(invisible(draw_rater_network_bundle(
       x,
       type = ptype,
@@ -7184,7 +7185,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     main <- dots$main %||% NULL
     palette <- dots$palette %||% NULL
     label_angle <- as.numeric(dots$label_angle %||% 45)
-    preset <- dots$preset %||% "standard"
+    preset <- if ("preset" %in% names(dots)) dots[["preset"]] else .mfrm_default_plot_preset()
     return(invisible(draw_halo_network_bundle(
       x,
       type = ptype,

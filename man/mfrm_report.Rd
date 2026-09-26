@@ -6,8 +6,14 @@
 \usage{
 mfrm_report(
   x,
-  style = c("qc", "apa", "validation", "reviewer", "technical"),
-  output = c("object", "markdown", "html", "tables")
+  style = c("qc", "apa", "validation", "reviewer", "technical", "rater"),
+  output = c("object", "markdown", "html", "tables"),
+  facet = NULL,
+  rater = NULL,
+  audience = c("rater", "researcher"),
+  label = NULL,
+  max_cases = 5,
+  interval = NULL
 )
 }
 \arguments{
@@ -16,15 +22,43 @@ mfrm_report(
 \item{style}{Report emphasis. \code{"qc"} is the default first-screen report.
 \code{"apa"} emphasizes manuscript wording, \code{"validation"} emphasizes the
 validity-argument boundary, \code{"reviewer"} emphasizes reviewer response
-preparation, and \code{"technical"} emphasizes appendix/reproducibility routes.}
+preparation, and \code{"technical"} emphasizes appendix/reproducibility routes.
+\code{"rater"} creates a standalone individual feedback sheet from saved
+native additive RSM/PCM results; it requires \code{facet} and \code{rater}.}
 
 \item{output}{Return format: \code{"object"} for an \code{mfrm_report} object,
 \code{"markdown"} for a character scalar, \code{"html"} for a temporary HTML file,
 or \code{"tables"} for the report's named data-frame list.}
+
+\item{facet}{For \code{style = "rater"}, the fitted non-Person facet representing
+raters, for example \code{"Rater"}. It is not inferred from the column name.}
+
+\item{rater}{For \code{style = "rater"}, one character level of \code{facet}.}
+
+\item{audience}{For a rater sheet, \code{"rater"} gives plain-language guidance;
+\code{"researcher"} adds the model, estimator and diagnostic basis. Both use
+the same saved numerical values and omit source identifiers.}
+
+\item{label}{Optional recipient-facing label for a rater sheet. The default
+is \code{"Selected rater"}; even the selected source identifier is not copied.
+Any identifying information explicitly supplied here will be displayed.}
+
+\item{max_cases}{Maximum number of saved unexpected ratings in a rater
+sheet, ordered by absolute standardized residual. Default 5; use 0 to
+omit individual cases. This is not a misfit threshold.}
+
+\item{interval}{Optional name of a saved fixed-facet interval attachment in
+\code{x$facet_intervals} for a rater sheet. The attachment must contain the
+selected individual coefficient, not just a difference involving it.
+A single matching attachment is used automatically. Multiple matching
+attachments require an explicit choice. No interval is calculated here.}
 }
 \value{
 Depending on \code{output}, an \code{mfrm_report} object, a Markdown character
 scalar, an \code{mfrm_report_html} object, or a named list of data frames.
+For \code{style = "rater"}, object output has class \code{mfrm_rater_feedback} and
+contains \code{title}, \code{label}, \code{audience}, \code{review}, \code{guidance}, \code{notes},
+\code{tables} and \code{markdown}. It does not contain the original result object.
 }
 \description{
 \code{mfrm_report()} is a report-synthesis layer for an existing
@@ -38,7 +72,8 @@ bias/DFF reporting templates, misfit/pathway reporting templates,
 linking/anchor reporting templates, ZSTD-convention table,
 evidence-boundary table, next-action table, and optional Markdown or HTML
 report.
-The object and its table list retain the exact source-fit
+Except for the individual rater sheet described below, the object and its
+table list retain the exact source-fit
 \verb{fit_readiness*} tables from \code{mfrm_results()}; report synthesis does not
 reinterpret or upgrade them. The \code{decision} table translates that same
 record into interpretation, formal-inference, reason, and next-action text.
@@ -59,7 +94,8 @@ when that reporting question is needed.
 }
 
 Report rows deliberately distinguish evidence from claims. The
-testlet and random-rater route is a smaller stored-result report: all styles
+testlet and random-rater route is a smaller stored-result report: all
+supported styles (excluding \code{"rater"})
 retain numerical checks, data usage, interval meanings and supplied
 predictions/intervals. It does not supply ordinary residual diagnostics or
 fit/APA wording templates; \code{template_index} is empty. See the model-specific
@@ -121,6 +157,55 @@ collapsed into a single pass/fail statement; bias screens are not treated
 as final fairness conclusions; pathway/misfit rows are case-review prompts;
 and drift/equating claims require multiple fitted forms or waves.
 }
+\section{Individual rater sheets}{
+
+Use \code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01", output = "html")} to create a temporary HTML sheet. Open its \verb{$path}, review
+it, and copy that file to a permanent location for distribution. HTML is
+self-contained, includes print styling and category-use bars with numerical
+tables, and does not load external resources. Page count depends on content
+and browser print settings; this is not a PDF export API.
+After reviewing the sheet, use \code{file.copy(sheet$path, recipient_file)} to
+keep it at a chosen HTML path. To prepare sheets in a later session, save
+the complete \code{res} with \code{\link[base:saveRDS]{base::saveRDS()}} and reload it with \code{\link[base:readRDS]{base::readRDS()}}.
+The RDS file retains fitted data and identifiers for the analyst; it is not
+the recipient's sheet. Reloading and reporting reuse the saved analysis
+without updating it for new ratings.
+
+The sheet includes scoring tendency (severity), exposure, available saved
+fixed-facet uncertainty, ordinary Infit/Outfit, category use and selected
+unexpected ratings. Severity is oriented so that positive values mean lower
+expected scores. Its zero is the fitted model reference, not necessarily
+the average of the other raters; custom centering and anchors matter.
+Model scores and expected scores stay on the fitted category coding. The
+category table also shows the original numeric scores when a mapping exists.
+Exposure and category percentages count retained rows without weights;
+weight sums are reported separately. Neither is planned-design completion.
+
+Supply matching \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} output to \code{\link[=mfrm_results]{mfrm_results()}} to include fit
+and unexpected ratings. Attach \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} output through
+\code{intervals = list(raters = ci)} for supported MML fixed-facet intervals.
+JML sheets can show saved descriptive diagnostics but do not gain formal
+fixed-facet intervals. Inspect the complete saved interval result and its
+numerical cautions before sharing; free-form cautions are not copied into
+the recipient's sheet. Missing sections explain the missing input. Ineligible
+source fits retain a prominent review notice. Severity is not rater quality,
+and no automatic misfit cutoff, exclusion decision or diagnostic accuracy
+claim is added. These sheets do not support GPCM, fitted interactions,
+imported fits, testlet or shared-random-rater models; use their specific
+results and reports because their effects and diagnostics differ.
+
+All four output formats use only selected numeric summaries and fixed
+explanatory text. They omit the source fit, Person identifiers, other rater
+identifiers, original row numbers, task labels and free-form source notes.
+Case numbers refer only to the displayed ordering. This prevents copying
+those identifier fields; it is not a guarantee against recognition from
+rating patterns, small groups or an explicitly supplied \code{label}. Review the
+content before sharing, and use \code{max_cases = 0} when cases are unnecessary.
+Distribute the standalone sheet, not the comprehensive results/export bundle,
+which retains the original analysis. Rater-specific arguments are rejected
+with other report styles, even when explicitly supplied as \code{NULL}.
+}
+
 \examples{
 \donttest{
 # Load the package and example ratings
@@ -144,6 +229,15 @@ report <- mfrm_report(res)
 # Read the report and the issues to address
 summary(report, view = "reader")
 report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
+
+# Select a recipient explicitly. Missing intervals are explained in the sheet.
+recipient <- as.character(fit$prep$levels$Rater[1])
+sheet <- mfrm_report(res, style = "rater", facet = "Rater",
+                     rater = recipient, output = "html", max_cases = 0)
+sheet$path
+# Review in a browser, then choose a permanent path for continuing work.
+recipient_file <- tempfile(fileext = ".html")
+stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))
 }
 }
 \seealso{

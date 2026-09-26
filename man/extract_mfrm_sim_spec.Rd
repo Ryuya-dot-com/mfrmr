@@ -64,7 +64,7 @@ claim that the fitted object perfectly recovers the true data-generating
 mechanism. Users should review and, if necessary, edit the returned
 specification before using it for design planning.
 
-\code{GPCM} fits are supported here for direct data generation
+\code{GPCM} fits with the same slope and step owner are supported here for direct data generation
 and parameter-recovery checks, provided that the returned simulation
 specification stores both a threshold table and a parallel slope table.
 The same fit-derived specification can feed caveated role-based design

@@ -2752,7 +2752,8 @@ prepare_constraint_specs <- function(prep,
 resolve_step_and_slope_facets <- function(model,
                                           step_facet,
                                           slope_facet,
-                                          facet_names) {
+                                          facet_names,
+                                          method = NULL) {
   if (identical(model, "RSM")) {
     if (!is.null(step_facet) || !is.null(slope_facet)) {
       warning(
@@ -2831,8 +2832,8 @@ resolve_step_and_slope_facets <- function(model,
          paste(facet_names, collapse = ", "), ". ",
          "Supply a valid facet name.", call. = FALSE)
   }
-  if (!identical(resolved_step, resolved_slope)) {
-    stop("The current `GPCM` branch requires `slope_facet == step_facet`.",
+  if (!identical(resolved_step, resolved_slope) && !identical(method, "MML")) {
+    stop("Separate GPCM slope and step owners require MML; this route requires `slope_facet == step_facet`.",
          call. = FALSE)
   }
 
@@ -4270,7 +4271,8 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     model = model,
     step_facet = step_facet,
     slope_facet = slope_facet,
-    facet_names = prep$facet_names
+    facet_names = prep$facet_names,
+    method = method
   )
   step_facet <- resolved_families$step_facet
   slope_facet <- resolved_families$slope_facet

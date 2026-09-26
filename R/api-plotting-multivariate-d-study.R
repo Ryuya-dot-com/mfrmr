@@ -112,10 +112,12 @@
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
 #'   print(as_ggplot(alternatives, composite = "Equal"))
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem"),
                                           score = NULL, x_var = NULL, draw = TRUE,
                                           preset = "standard", composite = NULL, ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   type <- match.arg(type)
   if (!is.logical(draw) || length(draw) != 1L || is.na(draw)) {

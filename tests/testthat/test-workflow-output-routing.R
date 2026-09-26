@@ -6,10 +6,8 @@ test_that("component selection cannot turn unsupported views into misleading bar
   }, .package = "mfrmr")
   # These tables have enough numeric/label columns for the old generic fallback
   # to draw a bar chart while discarding axes, groups, intervals or denominators.
-  views <- c("pooled_facet_intervals", "screening_performance",
-    "multivariate_d_comparison", "d_study", "cluster_silhouette", "cluster_profile",
-    "cluster_dendrogram", "cluster_co_membership", "feature_pca_scree",
-    "feature_pca_scores", "feature_pca_loadings")
+  views <- c("screening_performance",
+    "multivariate_d_comparison", "d_study")
   table <- data.frame(ID = c("A", "B"), Estimate = c(-.5, .5),
     Lower = c(-1, 0), Upper = c(0, 1), OtherAxis = c(2, -2))
   for (view in views) {
@@ -21,11 +19,11 @@ test_that("component selection cannot turn unsupported views into misleading bar
   }
   pca <- mfrm_pca(mfrm_features(data.frame(ID = letters[1:6],
     Experience = c(1,2,4,7,9,10), Training = c(2,6,3,8,4,10)), "ID", c("Experience", "Training")))
-  expect_error(as_ggplot(pca, type = "scores", component = "table"), "plot_data")
+  expect_error(as_ggplot(pca, type = "scores", component = "table"), "optional ggplot2 dependency required")
   expect_named(plot_data(pca, type = "scores")$table, c("ID", "PC1", "PC2", "Cluster"))
   pooled <- structure(list(table = transform(table, Target = ID, Status = "available"),
     settings = list(facet = "Rater", imputations = 20, ci_level = .95)), class = "mfrm_pooled")
-  expect_error(as_ggplot(pooled, component = "table"), "plot_data")
+  expect_error(as_ggplot(pooled, component = "table"), "optional ggplot2 dependency required")
   expect_identical(plot_data(pooled)$table$Lower, table$Lower)
   custom <- new_mfrm_plot_data("custom", list(table = table))
   expect_error(as_ggplot(custom), "optional ggplot2 dependency required")

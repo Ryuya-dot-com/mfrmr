@@ -6409,6 +6409,7 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #'   plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
 #' }
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_residual_pca <- function(x,
                               mode = c("overall", "facet"),
@@ -6418,6 +6419,7 @@ plot_residual_pca <- function(x,
                               top_n = 20L,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   mode <- match.arg(tolower(mode), c("overall", "facet"))
   plot_type <- match.arg(tolower(plot_type), c("scree", "parallel_scree", "parallel_excess", "loadings"))
   style <- resolve_plot_preset(preset)

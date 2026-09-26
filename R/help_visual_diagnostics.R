@@ -40,6 +40,58 @@
 #' [mfrm_calibration_score_methods]. Those displays review returned scores;
 #' they do not replace source-fit diagnostics or establish calibration fit.
 #'
+#' @section Session plot defaults:
+#' Set `options(mfrmr.plot_preset = "publication")` to choose a session default
+#' for plotting functions that expose the common `preset` argument. The
+#' supported values are `"standard"`, `"publication"`, `"compact"` and
+#' `"monochrome"`. Precedence is an explicit call argument, then the session
+#' option, then `"standard"`. For example, `preset = "standard"` overrides
+#' a session set to `"monochrome"`. Explicit `preset = NULL` retains the
+#' earlier package-default behavior; it does not read the session option.
+#' Invalid session values cause an error only when that option is needed.
+#'
+#' The category-curve, data-quality, fit-review, connectivity and network
+#' routes of `plot()` for report bundles use the same option through `...`.
+#' Plots without a common `preset` argument, including extended-model plots
+#' with their own `palette` controls, keep their own settings. This option
+#' selects a preset, not a universal theme or a guarantee that all renderers
+#' implement every appearance control identically.
+#'
+#' New plot payloads retain the resolved preset for supported saved-data
+#' rendering. Converting an existing payload with [as_ggplot()] uses its saved
+#' appearance, even after the session option changes. A call that creates a
+#' new plot from a fit or statistical result uses the current default.
+#' For a reproducible script, supply `preset` explicitly or set the option in
+#' that script. Saving only the fitted model does not save a session option.
+#' No global ggplot theme is changed.
+#'
+#' Restore previous settings with `old <- options(mfrmr.plot_preset =
+#' "monochrome")` followed by `options(old)`. Use
+#' `options(mfrmr.plot_preset = NULL)` to remove the option. The preset changes
+#' appearance, not estimates, confidence levels or diagnostic thresholds.
+#'
+#' @section Titles and compatibility:
+#' The development version adds `title` to [plot_marginal_fit()],
+#' [plot_marginal_pairwise()], [plot_unexpected()],
+#' [plot_interrater_agreement()], [plot_facets_chisq()], [plot_bubble()],
+#' [plot_bias_interaction()] and [plot_facet_quality_dashboard()]. Omission
+#' keeps the default title; `title = "Scoring patterns"` replaces it;
+#' `title = NULL` or `title = ""` suppresses it. The dashboard's S3 `plot()`
+#' method forwards these controls. Use exact argument names.
+#'
+#' Legacy `main` remains supported without warnings, and `main = NULL` keeps
+#' its original meaning: use the default heading. Supplying both `main` and
+#' `title` is an error, even when they are equal or both `NULL`. Existing
+#' positional calls retain their argument order. This is a compatible new
+#' spelling, not removal or deprecation of `main`.
+#'
+#' A title change does not alter the data, interval level, screening settings,
+#' reference lines, subtitles or interpretation notes. In stored plot payloads,
+#' an omitted heading is represented by an empty string. When hiding the
+#' heading of a review-only dashboard, retain its limitations in the figure
+#' caption or accompanying report. Use the plot guide to check ggplot support;
+#' accepting `title` does not add a converter for an unsupported plot.
+#'
 #' @section Start with the question:
 #' - "Do persons and facet levels overlap on the same logit scale?"
 #'   Use `plot(fit, type = "wright")` or [plot_wright_unified()].

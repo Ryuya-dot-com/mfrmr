@@ -308,7 +308,10 @@ than overplotted by the native renderer, and category-specific legends use
 the same colours across panels. Multiple groups or more than five categories use one legend
 beside the plotting area; colour presets use distinct default colours
 beyond eight categories. For \code{GPCM}, these curves retain the
-estimated step-facet slope; all curve families are reference-profile curves
+estimated slope. With separate owners, each step-level/slope-level pair is
+a labeled curve group. Such joint profiles have no single-facet Infit/Outfit
+flag; inspect \code{fit_measures} or \code{type = "fit_pathway"} separately.
+All curve families are reference-profile curves
 with additive facet main effects and fitted interactions fixed at zero; the
 native footer and ggplot subtitle disclose that conditioning.
 Expected-score pathways use the same reference profile and expose the
@@ -360,6 +363,37 @@ three-plot overview when preparing a FACETS-style summary.
 For a plot-selection guide and extended examples, see
 \link{mfrmr_visual_diagnostics} and
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
+\section{Session plot defaults}{
+
+Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
+for plotting functions that expose the common \code{preset} argument. The
+supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
+\code{"monochrome"}. Precedence is an explicit call argument, then the session
+option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
+a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
+earlier package-default behavior; it does not read the session option.
+Invalid session values cause an error only when that option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of \code{plot()} for report bundles use the same option through \code{...}.
+Plots without a common \code{preset} argument, including extended-model plots
+with their own \code{palette} controls, keep their own settings. This option
+selects a preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
+appearance, even after the session option changes. A call that creates a
+new plot from a fit or statistical result uses the current default.
+For a reproducible script, supply \code{preset} explicitly or set the option in
+that script. Saving only the fitted model does not save a session option.
+No global ggplot theme is changed.
+
+Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
+\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
+appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{

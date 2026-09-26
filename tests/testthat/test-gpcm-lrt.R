@@ -1,11 +1,11 @@
-gpcm_lrt_fixture <- function(owner = "Criterion") {
+gpcm_lrt_fixture <- function(owner = "Criterion", slope_owner = owner) {
   data <- expand.grid(Person = paste0("P", 1:8), Rater = paste0("R", 1:3),
                       Criterion = paste0("C", 1:4), stringsAsFactors = FALSE)
   data$Score <- (seq_len(nrow(data)) - 1L) %% 3L
   prep <- mfrmr:::prepare_mfrm_data(data, "Person", c("Rater", "Criterion"), "Score")
   lapply(c("PCM", "GPCM"), function(model) {
     config <- mfrmr:::build_estimation_config(
-      prep, model, "MML", owner, if (model == "GPCM") owner else NULL,
+      prep, model, "MML", owner, if (model == "GPCM") slope_owner else NULL,
       weight_col = NULL, positive_facets = character(0), noncenter_facet = "Person",
       dummy_facets = character(0), anchor_df = NULL, group_anchor_df = NULL,
       facet_signs = mfrmr:::build_facet_signs(prep$facet_names)$signs
@@ -167,4 +167,18 @@ test_that("weighting reviews explain a requested but unavailable test", {
     comparison, "PCM", TRUE, "not_computed")
   expect_match(contract$RecommendedUse, "Population models differ", fixed = TRUE)
   expect_false(grepl("set nested = TRUE", contract$RecommendedUse, fixed = TRUE))
+})
+
+
+test_that("separate-owner PCM nesting counts slopes rather than steps", {
+  for (owner in c("Rater","Criterion")) {
+    slope <- setdiff(c("Rater","Criterion"),owner)
+    pair <- gpcm_lrt_fixture(owner,slope)
+    audit <- audit_compare_mfrm_nesting(pair,c("PCM","GPCM"))
+    expect_true(audit$eligible)
+    expect_equal(audit$df,length(pair[[2]]$config$facet_levels[[slope]])-1L)
+    expect_match(audit$reason,paste0("slopes on facet '",slope,"'"),fixed=TRUE)
+    pair[[2]]$config$gpcm_spec$slope_facet <- owner
+    expect_false(audit_compare_mfrm_nesting(pair,c("PCM","GPCM"))$eligible)
+  }
 })

@@ -100,8 +100,16 @@ groups. Labels are shown for at most 50 included entities by default; hiding
 labels does not sample or remove entities. Excluded entities have no leaves
 but remain in the result and plot data. Silhouette and feature-profile views
 reuse \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}. Plots do not refit or choose groups.
-Automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion is not supported; use \code{plot()} for the
-stored hierarchy or \code{\link[=plot_data]{plot_data()}} to extract it for custom graphics.
+\code{\link[=as_ggplot]{as_ggplot()}} converts the stored dendrogram without refitting. The default
+and \code{component = "tree"} retain the full tree and group boxes. Leaf order,
+heights, label settings and excluded IDs are preserved. Dashed boxes differ
+from the solid tree branches even in monochrome. Box widths and
+physical text sizes can differ from base graphics. Tied heights retain the
+merge-order partition; boxes do not imply a unique horizontal height cut.
+Use \code{ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)} to remove
+headings and annotations, and \code{\link[=plot_data]{plot_data()}} to inspect the retained source
+evidence. Silhouette/profile conversions use the same dedicated summary
+renderers as \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}.
 
 Use \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}} to compare this partition with PAM or another
 linkage on the same data. For multiple imputations, use
@@ -109,6 +117,37 @@ linkage on the same data. For multiple imputations, use
 Each completion retains its own tree; no pooled tree or branch support is
 estimated. See \code{vignette("mfrmr-external-features", package = "mfrmr")}.
 }
+\section{Session plot defaults}{
+
+Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
+for plotting functions that expose the common \code{preset} argument. The
+supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
+\code{"monochrome"}. Precedence is an explicit call argument, then the session
+option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
+a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
+earlier package-default behavior; it does not read the session option.
+Invalid session values cause an error only when that option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of \code{plot()} for report bundles use the same option through \code{...}.
+Plots without a common \code{preset} argument, including extended-model plots
+with their own \code{palette} controls, keep their own settings. This option
+selects a preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
+appearance, even after the session option changes. A call that creates a
+new plot from a fit or statistical result uses the current default.
+For a reproducible script, supply \code{preset} explicitly or set the option in
+that script. Saving only the fitted model does not save a session option.
+No global ggplot theme is changed.
+
+Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
+\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
+appearance, not estimates, confidence levels or diagnostic thresholds.
+}
+
 \examples{
 if (requireNamespace("cluster", quietly = TRUE)) {
   # Fictional rater backgrounds; R7 has unrecorded experience.

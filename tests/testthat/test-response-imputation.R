@@ -210,7 +210,7 @@ local({
     expect_match(plot_data(drawing)$subtitle, "pointwise MI")
     expect_error(plot(pooled, draw = NA), "draw")
     if (requireNamespace("ggplot2", quietly = TRUE)) {
-      expect_error(as_ggplot(drawing), "pooled facet intervals")
+      expect_s3_class(as_ggplot(drawing), "ggplot")
     }
     file <- tempfile(fileext = ".pdf")
     grDevices::pdf(file)

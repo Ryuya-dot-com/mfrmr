@@ -59,6 +59,12 @@ object whose \code{plot()} method supports \code{draw = FALSE}. Base graphics re
 the default; the returned \code{ggplot} can be restyled or composed downstream.
 }
 \details{
+Bubble conversion uses the saved radii, facet colours, facet order and
+reference lines. It preserves relative circle radii, rather than replacing
+them with equal-sized points. Base circles use plot units; ggplot point
+sizes use physical units, so absolute sizes need not match across devices. Payloads lacking matching saved radii
+or facet colours must be recreated with \code{\link[=plot_bubble]{plot_bubble()}}.
+
 Dedicated conversions are provided for Wright maps, theta-to-expected-score
 pathways, fit-statistic-to-measure pathways, category characteristic curves,
 bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
@@ -85,15 +91,42 @@ For multivariate D-study plots, an explicit \code{component = "series"} keeps
 this dedicated conversion; use \code{\link[=plot_data]{plot_data()}} for other tables.
 Difference-interval plots from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} use their
 base \code{plot()} method or \code{\link[=plot_data]{plot_data()}}; automatic conversion is not supported.
-Automatic conversion of exploratory clustering plots is not supported.
-Use their \code{plot()} methods for silhouettes, feature profiles, dendrograms
-and imputation co-membership heatmaps, or \code{\link[=plot_data]{plot_data()}} for custom graphics.
+External-feature PCA scree, scores and loadings views have dedicated
+conversions. They preserve selected axes, retained-component symbols,
+saved group colours and shapes, labels and transformation metadata.
+Scores retain equal axis units; loading coefficients are not correlations.
+The default and \code{component = "table"} use the same complete PCA view.
+Use \code{ggplot2::labs(title = NULL, subtitle = NULL)} to remove headings from
+the returned ggplot. No PCA or clustering is refitted.
+External-feature dendrogram conversion retains the stored merges, heights,
+leaf order and group boxes, including tied-height cuts. The default and
+\code{component = "tree"} use the same complete view. Labels follow the saved
+setting; no tree is refitted or partition selected. Source metadata remain
+available with \code{\link[=plot_data]{plot_data()}}. Heights are not significance or branch support.
+Imputation co-membership heatmaps have dedicated conversion with the default
+or \code{component = "matrix"}. Values retain their all-imputation denominator,
+selected ID order and fixed zero-to-one scale. Unavailable cells use grey
+fill and crosses; zero is a valid fraction. The saved legend, labels and
+imputation count are reused, without recomputing or pooling partitions.
+Silhouette conversion preserves widths on a fixed minus-one-to-one scale,
+their saved order and overall-mean line. Numeric profiles preserve
+original-unit means, medians and counts, using separate symbols with slight
+vertical offsets. Categorical profiles preserve the category order, unused
+levels, group counts and within-group proportions on a zero-to-one scale.
+The default and \code{component = "table"} keep the full selected view;
+categorical profiles also accept \code{component = "matrix"}. These summaries
+do not estimate uncertainty, rater quality or sampling stability.
 For main-effects \code{mfrm_d_study} results, use the base \code{plot()} method or
 \code{\link[=plot_data]{plot_data()}} for custom graphics; automatic conversion is refused because
 generic column selection does not preserve those design comparisons.
+Pooled fixed-facet MI intervals have dedicated conversion with the default
+or \code{component = "table"}. Saved t-interval endpoints, degrees of freedom,
+contrasts and complete-data information cautions are retained, with no
+repooling or interval recalculation. Open diamonds mark fixed targets without
+intervals, crosses mark missing intervals, and arrows mark infinite bounds.
+Arrow tips are plotting limits, not replacement finite confidence limits.
 Selecting \code{component} does not enable unsupported conversions: it cannot
-preserve PCA axes, clustering membership, MI intervals or D-study differences
-through generic column selection. Use \code{\link[=plot_data]{plot_data()}} to extract the table
+preserve D-study differences through generic column selection. Use \code{\link[=plot_data]{plot_data()}} to extract the table
 and specify the axes, intervals and grouping explicitly in custom graphics.
 Other draw-free payloads use a conservative tabular
 fallback; inspect \code{\link[=plot_data_components]{plot_data_components()}} when automatic inference is not
@@ -127,4 +160,8 @@ as_ggplot(fit, type = "wright")
 as_ggplot(fit, type = "fit_pathway", include_person = TRUE)
 as_ggplot(plot(fit, type = "ccc", draw = FALSE))
 }
+}
+\seealso{
+\code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}} with \code{scope = "plots"} for selected
+purpose-based routes, conversion status and alternatives.
 }

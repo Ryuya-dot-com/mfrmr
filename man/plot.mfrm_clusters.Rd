@@ -48,7 +48,24 @@ Invisibly, an \code{mfrm_plot_data} object. Its \code{data} contains the plotted
 table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
 retain the displayed IDs and the number of imputations. Use \code{\link[=plot_data]{plot_data()}}
 to extract this payload for custom graphics.
-Automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion is not supported for these views.
+\code{\link[=as_ggplot]{as_ggplot()}} converts imputation co-membership heatmaps using the saved
+matrix, ID order, label choice, colours and imputation count. The default
+and \code{component = "matrix"} retain the complete view and its fixed
+zero-to-one scale. Unavailable cells have both grey fill and crosses,
+distinguishing them from zero even in monochrome. Metadata, including
+excluded IDs, remain available with \code{\link[=plot_data]{plot_data()}}. No values are
+recomputed or renormalized when IDs are selected. Use
+\code{ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)} to hide
+annotations while retaining the source data.
+Silhouette conversion retains negative widths, saved order and the overall
+mean reference, with group labels independent of colour. Numeric profiles
+retain original-unit means/medians and counts; circles and triangles are
+offset vertically to show coincident values without adding intervals.
+Categorical profiles retain the original category order, unused levels,
+group counts and a fixed zero-to-one proportion scale. Default and
+\code{component = "table"} preserve the complete selected view; categorical
+profiles also accept \code{component = "matrix"}. These conversions do not
+recluster, select groups, or estimate uncertainty.
 }
 \description{
 Inspect within-sample separation, individual feature profiles, or pairwise
@@ -74,6 +91,66 @@ clustering is performed. PAM is nonhierarchical and these plots do not
 provide a dendrogram. Use \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for a separate
 hierarchical analysis and its dendrogram.
 }
+\section{Session plot defaults}{
+
+Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
+for plotting functions that expose the common \code{preset} argument. The
+supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
+\code{"monochrome"}. Precedence is an explicit call argument, then the session
+option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
+a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
+earlier package-default behavior; it does not read the session option.
+Invalid session values cause an error only when that option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of \code{plot()} for report bundles use the same option through \code{...}.
+Plots without a common \code{preset} argument, including extended-model plots
+with their own \code{palette} controls, keep their own settings. This option
+selects a preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
+appearance, even after the session option changes. A call that creates a
+new plot from a fit or statistical result uses the current default.
+For a reproducible script, supply \code{preset} explicitly or set the option in
+that script. Saving only the fitted model does not save a session option.
+No global ggplot theme is changed.
+
+Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
+\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
+appearance, not estimates, confidence levels or diagnostic thresholds.
+
+
+Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
+for plotting functions that expose the common \code{preset} argument. The
+supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
+\code{"monochrome"}. Precedence is an explicit call argument, then the session
+option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
+a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
+earlier package-default behavior; it does not read the session option.
+Invalid session values cause an error only when that option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of \code{plot()} for report bundles use the same option through \code{...}.
+Plots without a common \code{preset} argument, including extended-model plots
+with their own \code{palette} controls, keep their own settings. This option
+selects a preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
+appearance, even after the session option changes. A call that creates a
+new plot from a fit or statistical result uses the current default.
+For a reproducible script, supply \code{preset} explicitly or set the option in
+that script. Saving only the fitted model does not save a session option.
+No global ggplot theme is changed.
+
+Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
+\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
+appearance, not estimates, confidence levels or diagnostic thresholds.
+}
+
 \examples{
 if (requireNamespace("cluster", quietly = TRUE)) {
   raters <- data.frame(Rater = paste0("R", 1:6),

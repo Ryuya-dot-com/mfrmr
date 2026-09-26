@@ -48,8 +48,16 @@
 #' labels does not sample or remove entities. Excluded entities have no leaves
 #' but remain in the result and plot data. Silhouette and feature-profile views
 #' reuse [plot.mfrm_clusters()]. Plots do not refit or choose groups.
-#' Automatic [as_ggplot()] conversion is not supported; use `plot()` for the
-#' stored hierarchy or [plot_data()] to extract it for custom graphics.
+#' [as_ggplot()] converts the stored dendrogram without refitting. The default
+#' and `component = "tree"` retain the full tree and group boxes. Leaf order,
+#' heights, label settings and excluded IDs are preserved. Dashed boxes differ
+#' from the solid tree branches even in monochrome. Box widths and
+#' physical text sizes can differ from base graphics. Tied heights retain the
+#' merge-order partition; boxes do not imply a unique horizontal height cut.
+#' Use `ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)` to remove
+#' headings and annotations, and [plot_data()] to inspect the retained source
+#' evidence. Silhouette/profile conversions use the same dedicated summary
+#' renderers as [plot.mfrm_clusters()].
 #'
 #' Use [mfrm_cluster_compare()] to compare this partition with PAM or another
 #' linkage on the same data. For multiple imputations, use
@@ -89,10 +97,12 @@ mfrm_cluster_hierarchical <- function(x, k, weights = NULL,
 }
 
 #' @rdname mfrm_cluster_hierarchical
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_hierarchical_clusters <- function(x, type = c("dendrogram", "silhouette", "profile"),
                                             feature = NULL, labels = NULL, draw = TRUE,
                                             preset = "standard", ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   type <- match.arg(type)
   if (type != "dendrogram") {
@@ -133,4 +143,80 @@ plot.mfrm_hierarchical_clusters <- function(x, type = c("dendrogram", "silhouett
   graphics::mtext(sprintf("Boxes: %d groups | Heights do not measure branch support", x$settings$k),
     side = 1, line = 3.5, cex = 0.8)
   invisible(out)
+}
+
+# Lay out the saved binary merges; no distances or groups are re-estimated.
+.mfrmr_gg_dendrogram <- function(x) {
+  .require_mfrmr_ggplot2()
+  d <- x$data
+  tree <- d$tree
+  n <- length(tree$order)
+  if (!inherits(tree, "hclust") || n < 2L ||
+      !identical(sort(tree$order), seq_len(n)) ||
+      !is.matrix(tree$merge) || !identical(dim(tree$merge), c(n - 1L, 2L)) ||
+      length(tree$height) != n - 1L || any(!is.finite(tree$height)) ||
+      any(tree$height < 0) || length(tree$labels) != n ||
+      !identical(d$leaf_order, tree$labels[tree$order]) ||
+      !is.data.frame(d$table) || !all(c("ID", "Cluster") %in% names(d$table)) ||
+      !identical(d$table$ID, d$leaf_order) || anyNA(d$table$Cluster)) {
+    stop("Dendrogram data lack a matching saved tree, leaf order or membership table. Recreate them with plot(hierarchy, draw = FALSE).", call. = FALSE)
+  }
+  runs <- rle(d$table$Cluster)
+  if (length(d$k) != 1L || !is.numeric(d$k) || is.na(d$k) ||
+      d$k < 2L || d$k >= n || length(runs$lengths) != d$k ||
+      anyDuplicated(runs$values)) {
+    stop("Dendrogram groups must match the saved contiguous leaf groups and group count.", call. = FALSE)
+  }
+  leaf_x <- match(seq_len(n), tree$order)
+  node_x <- numeric(n - 1L)
+  segments <- matrix(NA_real_, 3L * (n - 1L), 4L,
+    dimnames = list(NULL, c("X", "Y", "Xend", "Yend")))
+  for (i in seq_len(n - 1L)) {
+    children <- tree$merge[i, ]
+    if (anyNA(children) || any(children != as.integer(children)) ||
+        any(children == 0L | children < -n | children >= i)) {
+      stop("The saved dendrogram contains invalid merge indices.", call. = FALSE)
+    }
+    xx <- yy <- numeric(2)
+    for (j in 1:2) {
+      child <- children[j]
+      xx[j] <- if (child < 0) leaf_x[-child] else node_x[child]
+      yy[j] <- if (child < 0) 0 else tree$height[child]
+    }
+    node_x[i] <- mean(xx)
+    segments[3L * (i - 1L) + 1:3, ] <- rbind(
+      c(xx[1], yy[1], xx[1], tree$height[i]),
+      c(xx[2], yy[2], xx[2], tree$height[i]),
+      c(xx[1], tree$height[i], xx[2], tree$height[i]))
+  }
+  ends <- cumsum(runs$lengths)
+  bottom <- -0.04 * if (max(tree$height) > 0) max(tree$height) else 1
+  boxes <- data.frame(Left = c(0, utils::head(ends, -1)) + 0.65,
+    Right = ends + 0.35, Bottom = bottom,
+    Top = mean(tree$height[n - d$k + 0:1]))
+  style <- resolve_plot_preset(d$preset %||% "standard")
+  p <- ggplot2::ggplot(as.data.frame(segments)) +
+    ggplot2::geom_segment(ggplot2::aes(x = .data$X, y = .data$Y,
+      xend = .data$Xend, yend = .data$Yend), colour = style$foreground, linewidth = 0.45) +
+    ggplot2::geom_rect(data = boxes, ggplot2::aes(xmin = .data$Left,
+      xmax = .data$Right, ymin = .data$Bottom, ymax = .data$Top),
+      fill = NA, colour = style$accent_primary, linewidth = 0.55, linetype = "dashed") +
+    ggplot2::scale_x_continuous(breaks = if (isTRUE(d$labels)) seq_len(n) else NULL,
+      labels = if (isTRUE(d$labels)) d$leaf_order else NULL) +
+    ggplot2::scale_y_continuous(breaks = function(limits) {
+      ticks <- pretty(c(0, max(tree$height)))
+      ticks[ticks >= 0 & ticks <= limits[2]]
+    }) +
+    .mfrmr_gg_theme() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5))
+  caption <- sprintf("Dashed boxes: %d groups | Heights do not measure branch support", d$k)
+  if (tree$height[n - d$k] == tree$height[n - d$k + 1L]) caption <- paste0(caption,
+    "\nTied heights: boxes follow saved merge-order groups, not a unique height cut.")
+  d$caption <- caption
+  p <- .mfrmr_gg_labs(p, d, x = NULL, y = "Gower dissimilarity") +
+    ggplot2::labs(
+      alt = "Hierarchy of external features, using saved merge heights and leaf order. Dashed boxes mark the requested groups, including merge-order cuts at tied heights. Excluded entities have no leaves; heights do not measure significance or branch support.")
+  attr(p, "mfrmr_plot_data") <- x
+  p
 }

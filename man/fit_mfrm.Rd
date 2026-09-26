@@ -128,9 +128,9 @@ set of rating-scale thresholds.}
 estimates one positive slope for every level of this designated facet.
 Thus \code{slope_facet = "Criterion"} gives criterion-specific slopes, whereas
 \code{slope_facet = "Rater"} gives rater-specific slopes. The current route
-accepts exactly one slope-owning facet, requires
-\code{slope_facet == step_facet}, and cannot estimate criterion and rater slope
-blocks simultaneously. Slopes are identified on the log scale with their
+accepts exactly one slope-owning facet. MML allows a distinct \code{step_facet};
+JML requires \code{slope_facet == step_facet}. Criterion and rater slope
+blocks cannot be estimated simultaneously. Slopes are identified on the log scale with their
 geometric mean fixed to 1, so the table reports relative discrimination
 across the selected facet's levels rather than unrelated absolute weights.}
 
@@ -518,10 +518,12 @@ explains the result's status; \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} revi
 
 \section{GPCM model and inference}{
 
-One selected facet supplies both level-specific positive discriminations
-and category steps: \code{slope_facet == step_facet}. For example, selecting
-\code{Criterion} estimates a relative discrimination for each criterion; it does
-not simultaneously estimate rater discriminations. The model has one
+One selected facet supplies level-specific positive discriminations. With
+MML, a different facet may supply category steps. For example,
+\verb{slope_facet = "Criterion", step_facet = "Rater"} estimates a relative
+discrimination for each criterion and category-step contrasts for each
+rater. It does not simultaneously estimate rater discriminations. JML
+requires the same owner for both blocks. The model has one
 substantive ability dimension; its structural choices and currently
 unavailable inferential outputs are separate considerations.
 
@@ -569,11 +571,14 @@ With \code{model = "GPCM"}, the adjacent-category kernel is multiplied by
 a positive slope for the designated slope-facet level:
 
 \deqn{\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
-  \alpha_g(\eta - \tau_{g,k}),\quad \alpha_g > 0.}
+  \alpha_g(\eta - \tau_{h,k}),\quad \alpha_g > 0.}
 
-The current implementation requires \code{slope_facet == step_facet} and
-identifies slopes by a sum-to-zero constraint on log slopes, so their
-geometric mean is 1.
+Here \eqn{g} indexes the slope facet and \eqn{h} the step facet; MML permits
+these to differ. Slopes have a sum-to-zero constraint on log slopes, so
+their geometric mean is 1. Step contrasts are centered within each step
+owner, separately from facet location effects. Crossing the facets and
+observing enough categories is necessary to distinguish their effects;
+allowing separate owners does not ensure identification in a given design.
 A selected facet owns a vector rather than one common number: if there are
 \eqn{G} levels, the fit returns \eqn{G} positive slopes with \eqn{G-1} free
 log-slope contrasts. Every other facet remains additive inside \eqn{\eta}
@@ -587,8 +592,8 @@ multiplies ability while rater severity and other intercept terms remain
 unscaled. Such a formulation, including TAM multifacet \code{GPCM.design}
 constructions with separate linear intercept and slope designs, is a
 different model unless an algebraic reduction establishes equivalence.
-In this many-facet GPCM, exactly one facet supplies both
-the slope and step blocks. It is not the broader Uto--Ueno generalized MFRM,
+In this many-facet GPCM, exactly one facet supplies slopes. MML permits
+a different step owner; JML requires a shared owner. It is not the broader Uto--Ueno generalized MFRM,
 whose task and rater slopes enter multiplicatively and whose step owner must
 be stated separately. Setting every current slope to one recovers the
 package's equal-discrimination PCM kernel; it does not establish support for
@@ -854,8 +859,8 @@ Supported model/estimation combinations:
 \item \code{model = "PCM"} with a designated \code{step_facet} (defaults to first facet)
 \item \code{facet_interactions} with \code{model = "RSM"} or \code{"PCM"} for explicit
 two-way non-person facet interactions
-\item \code{model = "GPCM"} is currently implemented only for the narrow bounded
-branch with \code{slope_facet == step_facet}; \code{MML} and \code{JML} fitting, core
+\item \code{model = "GPCM"} uses one positive slope family. MML permits separate
+slope/step owners; JML requires \code{slope_facet == step_facet}. Core
 summaries, fitted-object posterior scoring, \code{\link[=compute_information]{compute_information()}},
 Wright/pathway/CCC fit plots, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, residual-PCA follow-up,
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
@@ -864,8 +869,11 @@ Wright/pathway/CCC fit plots, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, res
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=category_structure_report]{category_structure_report()}},
 \code{\link[=category_curves_report]{category_curves_report()}}, and graph/scorefile
 \code{\link[=facets_output_file_bundle]{facets_output_file_bundle()}} routes are available with score-side
-caveats. Direct simulation
-specifications and data generation are also supported through
+caveats. Separate-owner MML supports slope and curve intervals,
+same-design \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}}, and matched PCM comparison.
+\code{\link[=build_weighting_review]{build_weighting_review()}} and the following simulation/design workflows
+still require the same slope/step owner. Direct simulation specifications
+and data generation are also supported through
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, and
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} when the slope-aware generator contract is stored
 explicitly; direct recovery checks are available through

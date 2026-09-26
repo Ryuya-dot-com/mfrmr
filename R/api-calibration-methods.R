@@ -541,6 +541,7 @@ mfrmr_calibration_score_plot_table <- function(x, top_n, sort_by) {
 
 #' @rdname mfrm_calibration_score_methods
 #' @method plot mfrm_calibration_score
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_calibration_score <- function(
     x,
@@ -552,6 +553,7 @@ plot.mfrm_calibration_score <- function(
     draw = TRUE,
     preset = c("standard", "publication", "compact", "monochrome"),
     ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   mfrmr_validate_calibration_score(x)
   type <- match.arg(type)
   sort_by <- match.arg(sort_by)

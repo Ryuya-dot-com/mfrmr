@@ -4889,7 +4889,7 @@ bias_pairwise_report <- function(x,
 #'   `0.95`. The returned plot-data object gains `CI_Lower` / `CI_Upper`
 #'   / `CI_Level` columns on the `ranked_table` and `scatter_data`
 #'   elements for downstream reuse.
-#' @param main Optional plot title override.
+#' @inheritParams plot_marginal_fit
 #' @param palette Optional named color overrides (`normal`, `flag`, `hist`,
 #'   `profile`).
 #' @param label_angle Label angle hint for ranked/profile labels.
@@ -4955,6 +4955,7 @@ bias_pairwise_report <- function(x,
 #'   draw = FALSE
 #' )
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_bias_interaction <- function(x,
                                   plot = c("scatter", "ranked", "heatmap", "abs_t_hist", "facet_profile"),
@@ -4973,7 +4974,10 @@ plot_bias_interaction <- function(x,
                                   palette = NULL,
                                   label_angle = 45,
                                   preset = c("standard", "publication", "compact", "monochrome"),
-                                  draw = TRUE) {
+                                  draw = TRUE,
+                                  title = NULL) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
+  main <- .mfrm_plot_title_alias(main, title, missing(main), missing(title))
   with_legacy_name_warning_suppressed(
     plot_table13_bias(
       x = x,

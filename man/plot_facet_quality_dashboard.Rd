@@ -22,7 +22,8 @@ plot_facet_quality_dashboard(
   palette = NULL,
   label_angle = 45,
   draw = TRUE,
-  ...
+  ...,
+  title = NULL
 )
 }
 \arguments{
@@ -59,7 +60,9 @@ from a raw bias bundle.}
 
 \item{top_n}{Number of rows to keep in the plot data.}
 
-\item{main}{Optional plot title.}
+\item{main}{Compatibility title argument. Omitted or \code{NULL} keeps the default
+title. Existing calls remain supported without a deprecation warning.
+For new code, prefer \code{title}; do not supply both arguments.}
 
 \item{palette}{Optional named color overrides.}
 
@@ -68,6 +71,13 @@ from a raw bias bundle.}
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 
 \item{...}{Reserved for generic compatibility.}
+
+\item{title}{Plot title. Omit it to keep the default, supply one character
+string to replace it, or use \code{NULL} (or \code{""}) to suppress it. This changes
+only the heading; numerical results, reference lines, subtitles and
+interpretation notes remain. Both \code{main} and \code{title} explicitly supplied
+is an error, even if equal or \code{NULL}. Positional legacy arguments retain
+their order; use the exact name \code{title}.}
 }
 \value{
 A plotting-data object of class \code{mfrm_plot_data}.

@@ -295,7 +295,9 @@ mfrm_gpcm_bootstrap_generate <- function(fit, seed) {
 mfrm_gpcm_bootstrap_refit <- function(source, data) {
   args <- mfrmr_gqs_refit_arguments(source, data, source$config$estimation_control$quad_points)
   fit <- do.call(fit_mfrm, args)
-  if (!identical(mfrm_population_design(source), mfrm_population_design(fit)) ||
+  if (!identical(source$config$step_facet, fit$config$step_facet) ||
+      !identical(source$config$slope_facet, fit$config$slope_facet) ||
+      !identical(mfrm_population_design(source), mfrm_population_design(fit)) ||
       !identical(build_param_sizes(source$config), build_param_sizes(fit$config)) ||
       !identical(source$prep$levels, fit$prep$levels) ||
       !isTRUE(all.equal(source$prep$score_map, fit$prep$score_map, check.attributes = FALSE))) {

@@ -14,7 +14,8 @@ plot_marginal_fit(
   palette = NULL,
   label_angle = 45,
   preset = c("standard", "publication", "compact", "monochrome"),
-  draw = TRUE
+  draw = TRUE,
+  title = NULL
 )
 }
 \arguments{
@@ -30,7 +31,9 @@ plot_marginal_fit(
 When \code{NULL}, the plot uses the mixed top-cell table returned by the strict
 marginal screen.}
 
-\item{main}{Optional custom plot title.}
+\item{main}{Compatibility title argument. Omitted or \code{NULL} keeps the default
+title. Existing calls remain supported without a deprecation warning.
+For new code, prefer \code{title}; do not supply both arguments.}
 
 \item{palette}{Optional named color overrides. Recognized names:
 \code{positive}, \code{negative}, \code{flag}.}
@@ -41,6 +44,13 @@ marginal screen.}
 or \code{"monochrome"}).}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
+
+\item{title}{Plot title. Omit it to keep the default, supply one character
+string to replace it, or use \code{NULL} (or \code{""}) to suppress it. This changes
+only the heading; numerical results, reference lines, subtitles and
+interpretation notes remain. Both \code{main} and \code{title} explicitly supplied
+is an error, even if equal or \code{NULL}. Positional legacy arguments retain
+their order; use the exact name \code{title}.}
 }
 \value{
 A plotting-data object of class \code{mfrm_plot_data}.
@@ -92,6 +102,37 @@ marginal usage.
 For a plot-selection guide and a longer walkthrough, see
 \link{mfrmr_visual_diagnostics} and
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
+\section{Session plot defaults}{
+
+Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
+for plotting functions that expose the common \code{preset} argument. The
+supported values are \code{"standard"}, \code{"publication"}, \code{"compact"} and
+\code{"monochrome"}. Precedence is an explicit call argument, then the session
+option, then \code{"standard"}. For example, \code{preset = "standard"} overrides
+a session set to \code{"monochrome"}. Explicit \code{preset = NULL} retains the
+earlier package-default behavior; it does not read the session option.
+Invalid session values cause an error only when that option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of \code{plot()} for report bundles use the same option through \code{...}.
+Plots without a common \code{preset} argument, including extended-model plots
+with their own \code{palette} controls, keep their own settings. This option
+selects a preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with \code{\link[=as_ggplot]{as_ggplot()}} uses its saved
+appearance, even after the session option changes. A call that creates a
+new plot from a fit or statistical result uses the current default.
+For a reproducible script, supply \code{preset} explicitly or set the option in
+that script. Saving only the fitted model does not save a session option.
+No global ggplot theme is changed.
+
+Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochrome")} followed by \code{options(old)}. Use
+\code{options(mfrmr.plot_preset = NULL)} to remove the option. The preset changes
+appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{

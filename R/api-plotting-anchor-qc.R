@@ -776,6 +776,7 @@
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept linking
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 #' @examples
 #' \donttest{
@@ -803,6 +804,7 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
                               ci_level = 0.95,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               draw = TRUE, ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   type <- match.arg(type)
   style <- resolve_plot_preset(preset)
 

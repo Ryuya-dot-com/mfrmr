@@ -252,6 +252,25 @@ summary(pooled)
 plot(pooled)
 ```
 
+The development version also supports a ggplot made from these saved intervals:
+
+```{r pooled-ggplot, fig.width=7, fig.height=4, fig.alt="The saved R04-minus-R01 contrast and its pointwise multiple-imputation t interval, rendered with ggplot. Changing the title does not recalculate the interval or change its confidence level."}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  pooled_figure <- as_ggplot(pooled, title = NULL, preset = "monochrome")
+  print(pooled_figure)
+  plot_data(pooled_figure)$table[, c("Target", "Estimate", "Lower", "Upper", "DF")]
+}
+```
+
+Default and `component = "table"` conversion keep the complete interval view.
+The t interval is not replaced by a normal interval from `SE`; changing its
+level requires a new, explicit pooling call. Fixed targets are open diamonds
+without inferential intervals. Missing intervals have crosses, and infinite
+endpoints have arrows whose tips are drawing limits rather than finite bounds.
+Full contrasts, settings, degrees of freedom and information cautions remain in
+`plot_data()`, even after titles or captions are hidden. These display symbols
+do not establish interval coverage or classify rater quality.
+
 `Estimate` averages the completed-data estimates. `WithinVariance` averages
 their model-based variances; `BetweenVariance` captures their variation across
 imputations. `TotalVariance` includes both, with the finite-imputation factor
@@ -446,7 +465,8 @@ so retain the RDS alongside it. Use `mfrmr_output_guide("imputation")` for these
 dedicated output routes; a pooled result is not an `mfrm_results()` input.
 Its plot preserves the stored MI bounds. For custom graphics, extract
 `plot_data(saved)$table` and specify the estimate and both endpoints explicitly;
-`as_ggplot()` conversion is unavailable, including with an explicit component.
+`as_ggplot()` has dedicated conversion for the saved pooled interval view,
+including `component = "table"`; use `plot_data()` for other components.
 Changing the contrast or confidence
 level reuses the fits; changing the imputation model requires new completions
 and analyses. Saved objects contain response data and identifiers: choose an

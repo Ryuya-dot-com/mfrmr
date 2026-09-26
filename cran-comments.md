@@ -1,3 +1,8 @@
+# Development branch — not for submission
+
+This branch is now 0.2.4.9000. The notes below describe only the frozen
+0.2.4 rc.6 archive; its checks do not qualify the new development changes.
+
 # mfrmr 0.2.4 — submission preparation
 
 Preparation draft, updated September 26, 2026. This source has not been

@@ -107,6 +107,7 @@
 #' head(paired$data$differences)
 #' # Differences are PCM minus RSM; no difference SE or significance test is computed
 #' }
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
                               view = c("comparison", "difference"),
@@ -115,6 +116,7 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
                               theta_range = c(-6, 6), theta_points = 241L,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               show_title = TRUE, show_notes = TRUE, draw = TRUE) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   type <- match.arg(type); view <- match.arg(view); panel <- match.arg(panel)
   preset <- match.arg(preset)
   fits <- list(reference, comparison)
@@ -176,7 +178,8 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
     "A selected curve group is missing in one fit; explicitly select groups present in both fits.", call. = FALSE)
   selected <- selection[match(curve_groups, selection$CurveGroup), , drop = FALSE]
   source <- lapply(fits, function(f) plot(f, type = type, draw = FALSE,
-    top_n = Inf, show_ci = FALSE, theta_range = theta_range, theta_points = theta_points))
+    top_n = Inf, show_ci = FALSE, theta_range = theta_range, theta_points = theta_points,
+    preset = preset))
   tagged <- function(tables) dplyr::bind_rows(lapply(seq_along(tables), function(i) {
     t <- tables[[i]]; t$Fit <- rep(labels[i], nrow(t)); t
   }))

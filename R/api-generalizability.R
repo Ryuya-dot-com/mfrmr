@@ -806,6 +806,7 @@ print.mfrm_d_study <- function(x, ...) {
 #' #      metric = "Phi", panel_by = "n_Occasion")
 #' # With residual_scaling = "sensitivity", use
 #' # panel_grid = c("n_Occasion", "ResidualScaling") instead.
+#' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_d_study <- function(x,
                               y = NULL,
@@ -821,6 +822,7 @@ plot.mfrm_d_study <- function(x,
                               palette = NULL,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               ...) {
+  if (missing(preset)) preset <- .mfrm_default_plot_preset()
   validate_gtheory_output(x)
   type <- match.arg(type)
   projection_note <- if (!identical(attr(x, "identification_status"), "identified")) {

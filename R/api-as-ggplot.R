@@ -598,11 +598,30 @@
     xlab <- "Measure (logits)"
     ylab <- paste0(stat, " MnSq")
   }
+  radius <- as.numeric(payload$radius)
+  if (length(radius) != nrow(tbl) || any(!is.finite(radius) | radius < 0)) {
+    stop("Saved bubble radii must match the table. Recreate the payload with plot_bubble(..., draw = FALSE).", call. = FALSE)
+  }
+  # ggplot point sizes use physical units, while base circles use plot units.
+  # Preserve the saved radius ratios; a native maximum of .15 maps to 6 mm.
+  tbl$.diameter <- 40 * radius
   tbl <- tbl[is.finite(tbl$.x) & is.finite(tbl$.y), , drop = FALSE]
+  facets <- unique(as.character(tbl$Facet))
+  legend <- payload$legend
+  if (!is.data.frame(legend) || !all(c("role", "label", "value") %in% names(legend))) {
+    stop("Saved bubble facet colours are unavailable. Recreate the payload with plot_bubble(..., draw = FALSE).", call. = FALSE)
+  }
+  legend <- legend[legend$role == "facet", , drop = FALSE]
+  at <- match(facets, legend$label)
+  if (anyNA(at)) stop("Saved bubble facet colours do not cover the table.", call. = FALSE)
+  colours <- stats::setNames(as.character(legend$value[at]), facets)
+  tbl$Facet <- factor(as.character(tbl$Facet), levels = facets)
   p <- ggplot2::ggplot(
     tbl,
     ggplot2::aes(x = .data$.x, y = .data$.y, colour = .data$Facet)
-  ) + ggplot2::geom_point(size = 2.6, alpha = 0.7) + .mfrmr_gg_theme()
+  ) + ggplot2::geom_point(ggplot2::aes(size = .data$.diameter), alpha = 0.7) +
+    ggplot2::scale_size_identity() +
+    ggplot2::scale_colour_manual(values = colours, breaks = facets) + .mfrmr_gg_theme()
   p <- .mfrmr_gg_add_references(p, payload$reference_lines)
   .mfrmr_gg_labs(p, payload, x = xlab, y = ylab, fallback = "Bubble chart")
 }
@@ -997,6 +1016,12 @@
 #' object whose `plot()` method supports `draw = FALSE`. Base graphics remain
 #' the default; the returned `ggplot` can be restyled or composed downstream.
 #'
+#' Bubble conversion uses the saved radii, facet colours, facet order and
+#' reference lines. It preserves relative circle radii, rather than replacing
+#' them with equal-sized points. Base circles use plot units; ggplot point
+#' sizes use physical units, so absolute sizes need not match across devices. Payloads lacking matching saved radii
+#' or facet colours must be recreated with [plot_bubble()].
+#'
 #' Dedicated conversions are provided for Wright maps, theta-to-expected-score
 #' pathways, fit-statistic-to-measure pathways, category characteristic curves,
 #' bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
@@ -1023,15 +1048,42 @@
 #' this dedicated conversion; use [plot_data()] for other tables.
 #' Difference-interval plots from [mfrm_multivariate_d_compare()] use their
 #' base `plot()` method or [plot_data()]; automatic conversion is not supported.
-#' Automatic conversion of exploratory clustering plots is not supported.
-#' Use their `plot()` methods for silhouettes, feature profiles, dendrograms
-#' and imputation co-membership heatmaps, or [plot_data()] for custom graphics.
+#' External-feature PCA scree, scores and loadings views have dedicated
+#' conversions. They preserve selected axes, retained-component symbols,
+#' saved group colours and shapes, labels and transformation metadata.
+#' Scores retain equal axis units; loading coefficients are not correlations.
+#' The default and `component = "table"` use the same complete PCA view.
+#' Use `ggplot2::labs(title = NULL, subtitle = NULL)` to remove headings from
+#' the returned ggplot. No PCA or clustering is refitted.
+#' External-feature dendrogram conversion retains the stored merges, heights,
+#' leaf order and group boxes, including tied-height cuts. The default and
+#' `component = "tree"` use the same complete view. Labels follow the saved
+#' setting; no tree is refitted or partition selected. Source metadata remain
+#' available with [plot_data()]. Heights are not significance or branch support.
+#' Imputation co-membership heatmaps have dedicated conversion with the default
+#' or `component = "matrix"`. Values retain their all-imputation denominator,
+#' selected ID order and fixed zero-to-one scale. Unavailable cells use grey
+#' fill and crosses; zero is a valid fraction. The saved legend, labels and
+#' imputation count are reused, without recomputing or pooling partitions.
+#' Silhouette conversion preserves widths on a fixed minus-one-to-one scale,
+#' their saved order and overall-mean line. Numeric profiles preserve
+#' original-unit means, medians and counts, using separate symbols with slight
+#' vertical offsets. Categorical profiles preserve the category order, unused
+#' levels, group counts and within-group proportions on a zero-to-one scale.
+#' The default and `component = "table"` keep the full selected view;
+#' categorical profiles also accept `component = "matrix"`. These summaries
+#' do not estimate uncertainty, rater quality or sampling stability.
 #' For main-effects `mfrm_d_study` results, use the base `plot()` method or
 #' [plot_data()] for custom graphics; automatic conversion is refused because
 #' generic column selection does not preserve those design comparisons.
+#' Pooled fixed-facet MI intervals have dedicated conversion with the default
+#' or `component = "table"`. Saved t-interval endpoints, degrees of freedom,
+#' contrasts and complete-data information cautions are retained, with no
+#' repooling or interval recalculation. Open diamonds mark fixed targets without
+#' intervals, crosses mark missing intervals, and arrows mark infinite bounds.
+#' Arrow tips are plotting limits, not replacement finite confidence limits.
 #' Selecting `component` does not enable unsupported conversions: it cannot
-#' preserve PCA axes, clustering membership, MI intervals or D-study differences
-#' through generic column selection. Use [plot_data()] to extract the table
+#' preserve D-study differences through generic column selection. Use [plot_data()] to extract the table
 #' and specify the axes, intervals and grouping explicitly in custom graphics.
 #' Other draw-free payloads use a conservative tabular
 #' fallback; inspect [plot_data_components()] when automatic inference is not
@@ -1057,6 +1109,8 @@
 #' @param x An `mfrm_plot_data` object, or an mfrmr object with a draw-free
 #'   plot method.
 #' @param type Optional plot type passed to `plot()` for a non-plot-data input.
+#' @seealso [mfrmr_output_guide()] with `scope = "plots"` for selected
+#'   purpose-based routes, conversion status and alternatives.
 #' @param component Optional tabular payload component to convert.
 #' @param ... Arguments passed to the draw-free plot method. CCC conversion
 #'   additionally accepts `slope_aes`, `facet_by`, and `show_overlay`.
@@ -1145,17 +1199,52 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     if (!is.null(type)) stop("Fixed-facet intervals have one plot type.", call. = FALSE)
     return(mfrm_gg_facet_intervals(x))
   }
-  if (x$name %in% c("pooled_facet_intervals", "screening_performance")) {
-    stop("Use plot() for pooled facet intervals, screening performance, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
+  if (x$name %in% c("feature_pca_scree", "feature_pca_scores", "feature_pca_loadings")) {
+    rlang::check_dots_empty()
+    if (!is.null(type)) stop("The saved PCA payload already selects a view; use as_ggplot(pca, type = ...) to select another.", call. = FALSE)
+    if (!is.null(component) && !identical(component, "table")) {
+      stop("Use component = 'table' for the complete PCA view, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_feature_pca(x))
+  }
+  if (identical(x$name, "cluster_dendrogram")) {
+    rlang::check_dots_empty()
+    if (!is.null(type)) stop("The saved dendrogram already selects a view; use plot(hierarchy, type = ...) for another view.", call. = FALSE)
+    if (!is.null(component) && !identical(component, "tree")) {
+      stop("Use component = 'tree' for the complete dendrogram, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_dendrogram(x))
+  }
+  if (identical(x$name, "cluster_co_membership")) {
+    rlang::check_dots_empty()
+    if (!is.null(type)) stop("The saved co-membership payload has one view.", call. = FALSE)
+    if (!is.null(component) && !identical(component, "matrix")) {
+      stop("Use component = 'matrix' for the complete co-membership view, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_co_membership(x))
+  }
+  if (identical(x$name, "pooled_facet_intervals")) {
+    rlang::check_dots_empty()
+    if (!is.null(type)) stop("The saved pooled interval payload has one view.", call. = FALSE)
+    if (!is.null(component) && !identical(component, "table")) {
+      stop("Use component = 'table' for the complete pooled interval view, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_pooled(x))
+  }
+  if (identical(x$name, "screening_performance")) {
+    stop("Use plot() for screening performance, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
   }
   if (identical(x$name, "multivariate_d_comparison")) {
     stop("Use plot() for D-study difference intervals, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
   }
-  if (x$name %in% c("cluster_silhouette", "cluster_profile",
-                    "cluster_dendrogram", "cluster_co_membership",
-                    "feature_pca_scree", "feature_pca_scores", "feature_pca_loadings")) {
-    stop("Automatic ggplot conversion is not available for exploratory clustering plots. ",
-      "Use plot(x) to preserve the selected view, or plot_data() for custom graphics.", call. = FALSE)
+  if (x$name %in% c("cluster_silhouette", "cluster_profile")) {
+    rlang::check_dots_empty()
+    if (!is.null(type)) stop("The saved cluster payload already selects a view; use as_ggplot(groups, type = ...) for another.", call. = FALSE)
+    allowed <- if (identical(x$name, "cluster_profile") && !is.null(x$data$matrix)) c("table", "matrix") else "table"
+    if (!is.null(component) && !component %in% allowed) {
+      stop("Use the default component for the complete cluster view, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_cluster_summary(x))
   }
   if (identical(x$name, "d_study")) {
     stop("Automatic ggplot conversion is not available for mfrm_d_study plots. ",
