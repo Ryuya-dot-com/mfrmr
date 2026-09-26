@@ -182,10 +182,11 @@ restrictions under shared data and shared constraints:
 - `RSM` nested inside `PCM` when the `PCM` fit has an explicit
   `step_facet`;
 
-- `PCM` nested inside `GPCM` with the same step/slope facet, population
+- `PCM` nested inside `GPCM` with the same step facet, population
   design, other facet/step constraints and interactions. The only
   additional parameters must be G-1 relative log-slope contrasts for G
-  slope levels;
+  slope levels. The GPCM slope owner may differ from the shared step
+  owner;
 
 - same-family additive-vs-interaction comparisons when the smaller fit's
   `facet_interactions` set is a subset of the larger fit's set.

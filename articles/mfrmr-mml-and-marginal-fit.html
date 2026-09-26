@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>MML estimation and marginal-fit diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-mml-and-marginal-fit.Rmd</code></div>
     </div>
 
@@ -458,9 +458,15 @@ status and recommended alternative for each helper group.</p>
 <div class="section level2">
 <h2 id="gpcm-model-and-inference-limits">GPCM model and inference limits<a class="anchor" aria-label="anchor" href="#gpcm-model-and-inference-limits"></a>
 </h2>
-<p>One selected facet supplies both positive relative discriminations
-and category steps: <code>slope_facet == step_facet</code>. It does not
-mean that task and rater discriminations are jointly estimated.</p>
+<p>One selected facet supplies positive relative discriminations. With
+MML, another facet may supply category steps: for example,
+<code>slope_facet = "Criterion", step_facet = "Rater"</code> combines
+criterion discrimination with rater-specific category use. JML still
+requires <code>slope_facet == step_facet</code>. Neither route jointly
+estimates task and rater discriminations. Separate-owner weighting
+reviews and general simulation/design workflows remain unavailable;
+same-design <code><a href="../reference/bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm()</a></code> preserves both
+owners.</p>
 <p>Numerical fitting and descriptive sensitivity analysis are available.
 <code>confint(fit, parm = "slopes")</code> separately checks approximate
 pointwise MML relative-slope intervals. MML IC ranking uses separate

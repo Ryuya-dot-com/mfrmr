@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot strict pairwise local-dependence follow-up using base R</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
       <div class="d-none name"><code>plot_marginal_pairwise.Rd</code></div>
     </div>
 
@@ -66,7 +66,8 @@
 <span>  palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label_angle <span class="op">=</span> <span class="fl">45</span>,</span>
 <span>  preset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"standard"</span>, <span class="st">"publication"</span>, <span class="st">"compact"</span>, <span class="st">"monochrome"</span><span class="op">)</span>,</span>
-<span>  draw <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -95,7 +96,9 @@
 
 
 <dt id="arg-main">main<a class="anchor" aria-label="anchor" href="#arg-main"></a></dt>
-<dd><p>Optional custom plot title.</p></dd>
+<dd><p>Compatibility title argument. Omitted or <code>NULL</code> keeps the default
+title. Existing calls remain supported without a deprecation warning.
+For new code, prefer <code>title</code>; do not supply both arguments.</p></dd>
 
 
 <dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a></dt>
@@ -112,6 +115,15 @@
 
 <dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
 <dd><p>If <code>TRUE</code>, draw with base graphics.</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Plot title. Omit it to keep the default, supply one character
+string to replace it, or use <code>NULL</code> (or <code>""</code>) to suppress it. This changes
+only the heading; numerical results, reference lines, subtitles and
+interpretation notes remain. Both <code>main</code> and <code>title</code> explicitly supplied
+is an error, even if equal or <code>NULL</code>. Positional legacy arguments retain
+their order; use the exact name <code>title</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -160,6 +172,35 @@ interpretation before making claims.</p></li>
 <p>For a plot-selection guide and a longer walkthrough, see
 <a href="mfrmr_visual_diagnostics.html">mfrmr_visual_diagnostics</a> and
 <code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics", package = "mfrmr")</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="session-plot-defaults">Session plot defaults<a class="anchor" aria-label="anchor" href="#session-plot-defaults"></a></h2>
+
+
+<p>Set <code>options(mfrmr.plot_preset = "publication")</code> to choose a session default
+for plotting functions that expose the common <code>preset</code> argument. The
+supported values are <code>"standard"</code>, <code>"publication"</code>, <code>"compact"</code> and
+<code>"monochrome"</code>. Precedence is an explicit call argument, then the session
+option, then <code>"standard"</code>. For example, <code>preset = "standard"</code> overrides
+a session set to <code>"monochrome"</code>. Explicit <code>preset = NULL</code> retains the
+earlier package-default behavior; it does not read the session option.
+Invalid session values cause an error only when that option is needed.</p>
+<p>The category-curve, data-quality, fit-review, connectivity and network
+routes of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for report bundles use the same option through <code>...</code>.
+Plots without a common <code>preset</code> argument, including extended-model plots
+with their own <code>palette</code> controls, keep their own settings. This option
+selects a preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.</p>
+<p>New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with <code><a href="as_ggplot.html">as_ggplot()</a></code> uses its saved
+appearance, even after the session option changes. A call that creates a
+new plot from a fit or statistical result uses the current default.
+For a reproducible script, supply <code>preset</code> explicitly or set the option in
+that script. Saving only the fitted model does not save a session option.
+No global ggplot theme is changed.</p>
+<p>Restore previous settings with <code>old &lt;- options(mfrmr.plot_preset = "monochrome")</code> followed by <code>options(old)</code>. Use
+<code>options(mfrmr.plot_preset = NULL)</code> to remove the option. The preset changes
+appearance, not estimates, confidence levels or diagnostic thresholds.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

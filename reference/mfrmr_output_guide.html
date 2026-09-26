@@ -13,7 +13,7 @@ which includes tables, reports, reviews and exports. It does not analyze data.'>
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ which includes tables, reports, reviews and exports. It does not analyze data.'>
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Choose an mfrmr output helper by user goal</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
       <div class="d-none name"><code>mfrmr_output_guide.Rd</code></div>
     </div>
 
@@ -69,7 +69,7 @@ which includes tables, reports, reviews and exports. It does not analyze data.</
 <span>  scope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"public"</span>, <span class="st">"beginner"</span>, <span class="st">"psychometric"</span>, <span class="st">"entry"</span>, <span class="st">"viewer"</span>, <span class="st">"binary"</span>,</span>
 <span>    <span class="st">"tables"</span>, <span class="st">"reports"</span>, <span class="st">"reviews"</span>, <span class="st">"bundles"</span>, <span class="st">"exports"</span>, <span class="st">"compatibility"</span>, <span class="st">"gpcm"</span>,</span>
 <span>    <span class="st">"calibration"</span>, <span class="st">"simulation"</span>, <span class="st">"linking"</span>, <span class="st">"network"</span>, <span class="st">"response_time"</span>, <span class="st">"facets"</span>,</span>
-<span>    <span class="st">"conquest"</span>, <span class="st">"r"</span>, <span class="st">"models"</span>, <span class="st">"features"</span>, <span class="st">"imputation"</span>, <span class="st">"gtheory"</span>, <span class="st">"feedback"</span><span class="op">)</span></span>
+<span>    <span class="st">"conquest"</span>, <span class="st">"r"</span>, <span class="st">"models"</span>, <span class="st">"features"</span>, <span class="st">"imputation"</span>, <span class="st">"gtheory"</span>, <span class="st">"feedback"</span>, <span class="st">"plots"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -78,7 +78,8 @@ which includes tables, reports, reviews and exports. It does not analyze data.</
 
 
 <dl><dt id="arg-scope">scope<a class="anchor" aria-label="anchor" href="#arg-scope"></a></dt>
-<dd><p>Which rows to return. <code>"all"</code> returns the full guide.
+<dd><p>Which rows to return. <code>"all"</code> returns the full route catalogue.
+<code>"plots"</code> returns a separate purpose-based plot capability table (see below).
 <code>"public"</code> returns the canonical six-step route for most users;
 <code>"beginner"</code> returns the same compact route rather than combining every
 beginner-labelled specialist row.
@@ -104,7 +105,11 @@ arriving from those workflows.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data.frame with one row per recommended route and columns:</p><ul><li><p><code>Scope</code></p></li>
+    <p>For <code>scope = "plots"</code>, a data.frame with <code>Question</code>, <code>InputClass</code>,
+<code>PlotCall</code>, <code>PlotName</code> (the name in the saved plot data), <code>DataComponent</code>,
+<code>GGPlot</code>, <code>GGPlotCall</code> (<code>NA</code> when unavailable), <code>Notes</code>, <code>ResultFunction</code>
+and <code>NextStep</code>.
+All other scopes return a data.frame with one row per route and columns:</p><ul><li><p><code>Scope</code></p></li>
 <li><p><code>Question</code></p></li>
 <li><p><code>OutputFamily</code></p></li>
 <li><p><code>Lifecycle</code></p></li>
@@ -150,6 +155,10 @@ Use <code>mfrmr_output_guide("feedback")</code> when preparing rater feedback. S
 with the question and the fitted model: severity, response misfit and the
 accuracy of a warning rule are different quantities. A severe rater need
 not misfit, and an observed flag does not establish poor rater quality.
+For an individual native additive RSM/PCM sheet, use
+<code>mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")</code>.
+The selected sheet omits source identifiers; the comprehensive result and
+export bundle retain the original analysis.
 Use <code>mfrmr_output_guide("psychometric")</code> for the technical table,
 review, and reporting routes whose interpretation boundaries should be
 checked before manuscript use.</p>
@@ -158,13 +167,38 @@ checked before manuscript use.</p>
     <h2 id="how-to-use-this-guide">How to use this guide<a class="anchor" aria-label="anchor" href="#how-to-use-this-guide"></a></h2>
 
 
-<p>Read <code>Question</code> first, then open the help for a function in <code>MainFunction</code>.
+<p>For route scopes, read <code>Question</code> first, then open the help for a function
+in <code>MainFunction</code>. For <code>"plots"</code>, use the figure instructions below.
 <code>UseWhen</code> describes its inputs and purpose; <code>NextStep</code> explains what to inspect.
 Cells containing <code>...</code> are outlines, not complete scripts to paste and run.
 Use <a href="mfrmr_workflow_methods.html">mfrmr_workflow_methods</a> for a runnable introduction and an explanation
 of function names. Inspect <code>DecisionBoundary</code> before interpreting a result.
 For <code>GPCM</code>, use <code>scope = "gpcm"</code> to find both the support matrix
 and the table that explains how out-of-scope routes are handled.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="choosing-a-figure">Choosing a figure<a class="anchor" aria-label="anchor" href="#choosing-a-figure"></a></h2>
+
+
+<p>Use <code>mfrmr_output_guide("plots")</code> to find selected plots by purpose, input
+class and explicit plot call. This is a curated map, not an exhaustive list
+of every plot method, view or component. Unlisted routes are not necessarily
+unsupported. Existing scopes, including <code>"all"</code>, keep their route-table format.</p>
+<p>For linked figure previews and runnable examples, open
+<code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics")</a></code>.
+<code>ResultFunction</code> names a help page for creating the required result.
+In <code>PlotCall</code>, replace <code>x</code> with the indicated result object and save the
+returned object as <code>p</code>. Calls use <code>draw = FALSE</code>; change it to <code>TRUE</code> to
+display the original figure. Then follow <code>GGPlotCall</code>, if available.
+<code>DataComponent</code> is for <code><a href="plot_data.html">plot_data()</a></code> extraction; it is not automatically a
+valid or equivalent <code>component</code> argument to <code><a href="as_ggplot.html">as_ggplot()</a></code>.</p>
+<p><code>GGPlot</code> distinguishes <code>"dedicated"</code> (a converter for this plot), <code>"native"</code>
+(the plot method already returns ggplot), <code>"generic"</code> (a table-based view
+that need not reproduce the original figure), and <code>"unavailable"</code> (use the
+original plot or build a custom graphic from its data). ggplot routes need
+the optional ggplot2 package. Display support does not broaden the fitted
+model's statistical scope or establish interval coverage. Read <code>Notes</code> and
+the source function's help before interpretation.</p>
     </div>
 
     <div class="section level2">
@@ -220,18 +254,84 @@ and the table that explains how out-of-scope routes are handled.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 84             Which rating patterns need review under a shared-rater or testlet model?</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 85               How uncertain is an observed rater's severity in a shared-rater model?</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 86             How often does a warning rule flag unaffected or detect affected raters?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87                                             How can I prepare a sheet for one rater?</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                  MainFunction</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 82                                     mfrm_facet_intervals()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 83                                       fit_measures_table()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 84                                mfrm_response_diagnostics()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 85                   confint(); mfrm_random_rater_intervals()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 86 mfrm_screening_performance(); mfrm_screening_sensitivity()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87                                              mfrm_report()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                        DecisionBoundary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 82                                              Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 83                            Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 84                                                                                       Posterior predictive Infit/Outfit are descriptive and differ from ordinary plug-in indices. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 85 Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 86                         Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87                                      No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">figures</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"plots"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">figures</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"ResultFunction"</span>, <span class="st">"GGPlot"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Question</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             Compare persons, facet levels and category steps</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                          Show expected scores across ability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                   Review severity together with response fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                 Inspect category functioning</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           Compare fixed-rater estimates and interval methods</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                  Show GPCM slope uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7             Show GPCM probability or information uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8              Compare observed raters in a shared-rater model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                        Inspect testlet-model facet estimates</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10  Review conditional Person scores from a shared-rater model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11       Review conditional Person scores from a testlet model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                 Review response fit under an extended model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                 Compare ordinary and extended model results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14       Compare screening rules across known-truth conditions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                 Show screening performance with uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16 Show pooled fixed-facet intervals after multiple imputation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17               Inspect separation of external-feature groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                  Describe an external feature within groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19              Inspect a hierarchy of external-feature groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20          Inspect group stability across feature imputations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21      Choose how many external-feature components to inspect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22              Locate entities on external-feature components</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23               Identify features contributing to a component</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24            Plan facet counts with an observed-score D-study</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25      Plan reliability for a multivariate score or composite</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26              Plan absolute or relative error in score units</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27         Compare D-study scenarios with difference intervals</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28             Inspect observed coverage across rating subsets</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29                   Customize the underlying precision values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 ResultFunction      GGPlot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                     fit_mfrm   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                     fit_mfrm   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                     fit_mfrm   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                     fit_mfrm   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         mfrm_facet_intervals   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6             confint.mfrm_fit      native</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7         mfrm_curve_intervals      native</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        fit_mfrm_random_rater   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9             fit_mfrm_testlet   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10     score_mfrm_random_rater   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11        predict.mfrm_testlet   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12   mfrm_response_diagnostics   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                compare_mfrm   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14  mfrm_screening_sensitivity   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15  mfrm_screening_performance unavailable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16           pool_mfrm_imputed   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                mfrm_cluster   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                mfrm_cluster   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19   mfrm_cluster_hierarchical   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20        mfrm_cluster_imputed   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                    mfrm_pca   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                    mfrm_pca   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                    mfrm_pca   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                mfrm_d_study unavailable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25   mfrm_multivariate_d_study   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26   mfrm_multivariate_d_study   dedicated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27 mfrm_multivariate_d_compare unavailable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28  subset_connectivity_report     generic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29         compute_information     generic</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

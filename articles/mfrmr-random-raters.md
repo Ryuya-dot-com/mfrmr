@@ -733,6 +733,24 @@ estimate, SE and fit status. `method = "error"` provides unscaled-error
 intervals from the same draws as a comparison; it is not automatically a
 remedy when studentization fails.
 
+For newly computed bootstrap results, `$trials` also retains the
+optimizer code, numerical and information checks, Person quadrature
+orders and their likelihood/gradient differences. These help answer
+**why a refit could not supply a usable interval**. A failed refit has
+missing additional checks and its error message; a missing check does
+not mean success. Older saved bootstrap examples do not contain these
+extra fields. Reopening them does not reconstruct the missing checks or
+change their original intervals.
+
+Review the causes separately. Unresolved Person integration calls for a
+numerical review; an estimated variance boundary makes ordinary
+studentization unavailable; neither is a measurement of the interval’s
+repeated-sampling coverage. More quadrature points, more bootstrap draws
+and more independently simulated assessments address different problems.
+If you compare a revised numerical procedure, retain the original
+results and specify the revision before examining its outcomes; do not
+keep retrying only failed trials until they succeed.
+
 If a bootstrap fit estimates zero variance, its ordinary rater SE is
 unavailable. Its generated-minus-estimated error can still be recorded,
 but its studentized error is unresolved. Failed refits are also
@@ -742,6 +760,16 @@ covering the empirical intervals from any completion of those unresolved
 errors. When too many replicates are unresolved, a limit is unbounded.
 Dropping those draws or simulating until a chosen number succeeds would
 change the reference sample.
+
+More refits do not necessarily make an unbounded interval finite. At the
+default 499 refits and 95% level, 13 unresolved studentized errors for
+one rater make both limits infinite. With 12 unresolved errors and all
+remaining errors and source values finite, the empirical limits are
+finite. These counts follow the interval calculation; they are not
+acceptable-failure or coverage thresholds. If the unresolved fraction
+stays above the 2.5% tail probability, increasing the run size still
+yields unbounded limits. Inspect the numerical and variance-boundary
+records before investing in more draws.
 
 ``` r
 
@@ -761,9 +789,18 @@ bootstrap_intervals$trials[
 #>          Seed FitReady EstimatedBoundary   RaterSD  PersonSD
 #> 12 1457296021     TRUE              TRUE 0.0000000 0.9208276
 #> 13 1325607976    FALSE             FALSE 0.1441794 1.2522326
-#>    EstimatedPersonVarianceBoundary  MaxGradient Error
-#> 12                           FALSE 7.323867e-05      
-#> 13                           FALSE 5.215741e-05      
+#>    EstimatedPersonVarianceBoundary  MaxGradient OptimizerCode NumericalReady
+#> 12                           FALSE 7.323867e-05             0           TRUE
+#> 13                           FALSE 5.215741e-05             0          FALSE
+#>    InformationPositive PersonQuadratureStable QuadraturePoints CheckPoints
+#> 12                TRUE                   TRUE              121         243
+#> 13                TRUE                  FALSE              121         243
+#>    LogLikDifference GradientDifference EstimatedVarianceBoundary
+#> 12     1.150966e-09       4.168424e-08                      TRUE
+#> 13     5.624900e-06       1.177880e-04                     FALSE
+#>    PersonVarianceUpperBoundary Error
+#> 12                       FALSE      
+#> 13                       FALSE      
 #>                                                                                                                                                                                                   Warnings
 #> 12                                                                                                                                                                                                        
 #> 13 Numerical or information checks require review; regular intervals are unavailable. Inspect $checks. Person quadrature is not stable. Refit with a larger `quad_points` (up to 241) and recheck $checks.

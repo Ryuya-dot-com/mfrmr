@@ -351,9 +351,15 @@ for the status and recommended alternative for each helper group.
 
 ## GPCM model and inference limits
 
-One selected facet supplies both positive relative discriminations and
-category steps: `slope_facet == step_facet`. It does not mean that task
-and rater discriminations are jointly estimated.
+One selected facet supplies positive relative discriminations. With MML,
+another facet may supply category steps: for example,
+`slope_facet = "Criterion", step_facet = "Rater"` combines criterion
+discrimination with rater-specific category use. JML still requires
+`slope_facet == step_facet`. Neither route jointly estimates task and
+rater discriminations. Separate-owner weighting reviews and general
+simulation/design workflows remain unavailable; same-design
+[`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+preserves both owners.
 
 Numerical fitting and descriptive sensitivity analysis are available.
 `confint(fit, parm = "slopes")` separately checks approximate pointwise

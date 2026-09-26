@@ -135,9 +135,9 @@ statistic is not a jointly estimated free-slope GPCM counterpart.
 ## GPCM boundary
 
 This helper is available only for the current `GPCM` branch. It requires
-the package's existing `slope_facet == step_facet` contract and should
-be read as an operational weighting-policy review, not as a formal
-validity adjudication.
+`slope_facet == step_facet` even though MML fitting permits separate
+owners, and should be read as an operational weighting-policy review,
+not as a formal validity adjudication.
 
 ## See also
 

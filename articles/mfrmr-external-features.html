@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Exploring person, rater, and task attributes</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-external-features.Rmd" class="external-link"><code>vignettes/mfrmr-external-features.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-external-features.Rmd" class="external-link"><code>vignettes/mfrmr-external-features.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-external-features.Rmd</code></div>
     </div>
 
@@ -568,13 +568,34 @@ descriptions of this completion only.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">one_completion</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"TrainingLevel"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-external-features_files/figure-html/profiles-2.png" class="r-plt" alt="Proportions of ordered training levels within each descriptive rater group. These profiles describe one imputed table, not effects of training." width="672"></p>
+<p>The development version also offers dedicated ggplot conversion for
+these saved summaries. For example, remove the heading while keeping the
+original units, group sizes and interpretation note:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">profile_figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">one_completion</span>, type <span class="op">=</span> <span class="st">"profile"</span>,</span>
+<span>    feature <span class="op">=</span> <span class="st">"ExperienceYears"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">profile_figure</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><img src="mfrmr-external-features_files/figure-html/profile-ggplot-1.png" class="r-plt" alt="Experience in years summarized by the saved groups from one completed feature table. Circles mark means and triangles mark medians, offset vertically so equal values remain visible. Group labels give counts; no confidence intervals are shown." width="672"></p>
+<p>Use <code>as_ggplot(one_completion)</code> for the silhouette view,
+retaining negative widths and the saved overall-mean line. Use the
+profile call with <code>feature = "TrainingLevel"</code> for a
+categorical heatmap, including unused levels in their original order.
+The default and <code>component = "table"</code> keep the full view;
+categorical profiles also accept <code>component = "matrix"</code>.
+Means and medians are descriptive, not effect estimates or interval
+bounds. The slight vertical offsets improve visibility without changing
+the values. Saved summaries and excluded IDs remain available through
+<code><a href="../reference/plot_data.html">plot_data()</a></code>.</p>
 <p>The next heatmap asks which pairs remain together across imputations.
 For readability, this view explicitly selects the first 20 IDs in the
 input table; it does not recluster them, change the denominator, or
 represent the remaining pairs. Omit <code>ids</code> to display all
 raters. By default, ID labels are hidden above 50 displayed entities;
 the data are never sampled automatically.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">analyses</span><span class="op">$</span><span class="va">ThreeGroups</span>, ids <span class="op">=</span> <span class="va">raters</span><span class="op">$</span><span class="va">Rater</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-external-features_files/figure-html/co-membership-1.png" class="r-plt" alt="Pairwise co-membership proportions across imputations for the first twenty rater IDs. The scale runs from zero to one; unavailable pairs are grey. These proportions are imputation sensitivity, not sampling stability." width="672"></p>
 <p>The colour scale always runs from zero to one. Grey denotes
@@ -584,7 +605,7 @@ consensus partition or a hierarchy, and it does not measure stability
 under new samples of raters.</p>
 <p>For a custom figure, extract the same values without drawing or
 refitting:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">view</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">analyses</span><span class="op">$</span><span class="va">ThreeGroups</span>, ids <span class="op">=</span> <span class="va">raters</span><span class="op">$</span><span class="va">Rater</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">view</span><span class="op">)</span><span class="op">$</span><span class="va">matrix</span></span>
 <span><span class="co">#&gt;      R001 R002 R003 R004 R005</span></span>
@@ -593,6 +614,26 @@ refitting:</p>
 <span><span class="co">#&gt; R003  0.2  0.4  1.0  0.0  0.0</span></span>
 <span><span class="co">#&gt; R004  0.0  0.4  0.0  1.0  1.0</span></span>
 <span><span class="co">#&gt; R005  0.0  0.4  0.0  1.0  1.0</span></span></code></pre></div>
+<p>The development version also converts this same five-ID view to
+ggplot:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">co_membership_figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">view</span>, component <span class="op">=</span> <span class="st">"matrix"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">co_membership_figure</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><img src="mfrmr-external-features_files/figure-html/co-membership-ggplot-1.png" class="r-plt" alt="Co-membership fractions for the five selected rater IDs, in the saved order on both axes. The scale is fixed from zero to one; crosses mark unavailable cells, if any. Values use all supplied imputations and do not measure sampling stability." width="672"></p>
+<p>The default and <code>component = "matrix"</code> retain the same
+complete heatmap. For a new selection, use
+<code>as_ggplot(analyses$ThreeGroups, ids = ...)</code> or create
+another saved plot with <code>plot(..., draw = FALSE)</code>. A saved
+view keeps its preset and label choice even after session options
+change. Grey cells also carry crosses, so unavailable pairs remain
+distinct from zero in monochrome.
+<code>plot_data(co_membership_figure)</code> retains the matrix,
+selected IDs, excluded IDs and number of imputations. Hiding headings
+with <code><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggplot2::labs()</a></code> does not remove those records or
+change the meaning of the fractions.</p>
 </div>
 <div class="section level2">
 <h2 id="compare-pam-with-a-hierarchy">Compare PAM with a hierarchy<a class="anchor" aria-label="anchor" href="#compare-pam-with-a-hierarchy"></a>
@@ -606,7 +647,7 @@ not automatically identify it.</p>
 <p>For multiply imputed features, reuse the same model and eligible
 cells. This holds the completed tables fixed while changing the grouping
 method.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">average</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_imputed.html">mfrm_cluster_imputed</a></span><span class="op">(</span><span class="va">features</span>, <span class="va">model</span>, <span class="va">eligible</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"hierarchical"</span>, linkage <span class="op">=</span> <span class="st">"average"</span><span class="op">)</span></span>
 <span><span class="va">complete</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_imputed.html">mfrm_cluster_imputed</a></span><span class="op">(</span><span class="va">features</span>, <span class="va">model</span>, <span class="va">eligible</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -677,7 +718,7 @@ the supplied choices; they do not select a preferred algorithm or
 establish true rater types. Substantively different profiles or very
 small groups deserve inspection even when the overall pair agreement is
 high.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">average</span><span class="op">$</span><span class="va">analyses</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-external-features_files/figure-html/dendrogram-1.png" class="r-plt" alt="Average-linkage hierarchy from Gower dissimilarities in one completed rater-feature table. Boxes mark three groups; all 120 raters are included. Heights are dissimilarities, not significance or branch support." width="672"></p>
 <p>This is the full tree for <strong>one completion</strong>, with boxes
@@ -688,6 +729,14 @@ automatically. Use
 to inspect IDs and memberships in leaf order. Excluded raters retain
 unavailable memberships but have no leaves. No entities are sampled to
 draw the tree.</p>
+<p>In the development version,
+<code>as_ggplot(average$analyses[[1]])</code> converts this same saved
+tree with its group boxes, leaf order and merge heights. The default and
+<code>component = "tree"</code> retain the full view; use
+<code><a href="../reference/plot_data.html">plot_data()</a></code> for the membership table. Conversion does not
+refit, recut or combine trees across completions. Add
+<code>ggplot2::labs(title = NULL, subtitle = NULL)</code> to omit
+headings, while retaining the caption about what heights mean.</p>
 <p>Merge heights are linkage dissimilarities, not significance levels or
 branch support. Tied distances can produce alternative trees; the group
 cut uses merge order, so a unique horizontal cutting height may not
@@ -769,7 +818,7 @@ tasks. It uses the existing rater partition from <strong>one completed
 table</strong> only to illustrate joining by ID. The other two tables
 have no missing attributes. The group counts are illustrative choices,
 not estimated numbers of types.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">7241</span><span class="op">)</span></span>
 <span><span class="va">persons</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"P%03d"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">240</span><span class="op">)</span>,</span>
@@ -792,7 +841,7 @@ two distinct raters. The full Person-by-Rater-by-Task cross-product is
 not the assignment roster. Random scores below are placeholders for
 demonstrating coverage; they provide no evidence about achievement,
 rater effects, or model fit.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">assignments</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">persons</span><span class="op">$</span><span class="va">Person</span>, <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">tasks</span><span class="op">$</span><span class="va">Task</span>, <span class="fl">3</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">task</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Person <span class="op">=</span> <span class="va">id</span>, Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">raters</span><span class="op">$</span><span class="va">Rater</span>, <span class="fl">2</span><span class="op">)</span>, Task <span class="op">=</span> <span class="va">task</span><span class="op">)</span></span>
@@ -841,7 +890,7 @@ position in a feature table is not an ID. The check stops this
 illustration if an ID is unknown or an entity has no classification. In
 an analysis allowing omitted entities, report their unclassified ratings
 separately rather than silently dropping them.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rating_key</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"Rater"</span>, <span class="st">"Task"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated</a></span><span class="op">(</span><span class="va">assignments</span><span class="op">[</span><span class="va">rating_key</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>          <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated</a></span><span class="op">(</span><span class="va">ratings</span><span class="op">[</span><span class="va">rating_key</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
@@ -1027,7 +1076,7 @@ analyses. Workshop hours remain a predictor in that model whether or not
 they are selected for clustering. These numeric selections answer a
 different question from the mixed-background groups above; specialty and
 training level are not numeric inputs to this PCA.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">numeric_names</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ExperienceYears"</span>, <span class="st">"AnnualRatings"</span>, <span class="st">"WorkshopHours"</span><span class="op">)</span></span>
 <span><span class="va">numeric_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">raters</span>, <span class="st">"Rater"</span>, <span class="va">numeric_names</span><span class="op">)</span></span>
 <span><span class="va">numeric_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_imputed.html">mfrm_cluster_imputed</a></span><span class="op">(</span><span class="va">numeric_review</span>, <span class="va">model</span>,</span>
@@ -1084,7 +1133,7 @@ test that one analysis is better. The default 25 random starts and fixed
 seed make this execution reproducible, but do not prove a global
 optimum. Assess another seed separately if initialization sensitivity
 matters.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">first_numeric</span> <span class="op">&lt;-</span> <span class="va">numeric_reduced</span><span class="op">$</span><span class="va">analyses</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Component  Variance Proportion Cumulative Retained</span></span>
@@ -1098,13 +1147,13 @@ matters.</p>
 <span><span class="co">#&gt; WorkshopHours   -0.7002163 -0.006324086</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span><span class="op">)</span>  <span class="co"># The full explained-variance table, including omitted PCs.</span></span></code></pre></div>
 <p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-1.png" class="r-plt" alt="Explained-variance scree plot for numeric rater features in one completion. Filled points identify retained components and open points identify omitted components." width="768"></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scores"</span>, groups <span class="op">=</span> <span class="va">first_numeric</span>, labels <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-2.png" class="r-plt" alt="Scores on the first two principal components, with descriptive k-means groups distinguished by colour and point shape. This projection is not a latent ability or rater-quality scale." width="768"></p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"loadings"</span>, components <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-3.png" class="r-plt" alt="First-component loadings for the transformed numeric rater features. Their signs are arbitrary and the coefficients are not original-unit correlations." width="768"></p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span>, type <span class="op">=</span> <span class="st">"profile"</span>, feature <span class="op">=</span> <span class="st">"ExperienceYears"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-external-features_files/figure-html/numeric-pca-views-4.png" class="r-plt" alt="Experience in years summarized by the k-means groups fitted in the retained principal-component space. The original-unit profile describes this completion only." width="768"></p>
 <p>The first-completion score plot annotates a two-dimensional
@@ -1136,11 +1185,245 @@ features, component counts, weights or seeds requires the corresponding
 new analysis. <code>mfrmr_output_guide("features")</code> lists the
 dedicated output routes. Use <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for partition
 comparisons, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> or <code><a href="../reference/plot_data.html">plot_data()</a></code> for
-fitted PCA and grouping views. Automatic <code><a href="../reference/as_ggplot.html">as_ggplot()</a></code>
-conversion is unavailable, including when selecting a table component. A
-custom scores plot must explicitly retain both selected PC axes and its
-group labels; plotting the first numeric column alone does not reproduce
-that view.</p>
+fitted PCA and grouping views.</p>
+<p>In the development version, <code><a href="../reference/as_ggplot.html">as_ggplot()</a></code> has dedicated
+conversions for PCA scree, scores and loadings. The scores view keeps
+the selected components, equal axis units and the saved group colours
+and shapes. Only included entities are drawn; excluded IDs and the
+feature transformation remain in <code><a href="../reference/plot_data.html">plot_data()</a></code>. This example
+shows the same first completion used above:</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">numeric_figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scores"</span>,</span>
+<span>    groups <span class="op">=</span> <span class="va">first_numeric</span>, labels <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="cn">NULL</span>, subtitle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">numeric_figure</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">numeric_figure</span><span class="op">)</span><span class="op">$</span><span class="va">components</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><img src="mfrmr-external-features_files/figure-html/numeric-pca-ggplot-1.png" class="r-plt" alt="Scores on the first two external-feature principal components for one completed feature dataset. K-means groups use grayscale colours and different point shapes. Headings and entity labels are omitted; the saved data still identify the completion's transformation and excluded entities." width="768"></p>
+<pre><code><span><span class="co">#&gt; [1] 1 2</span></span></code></pre>
+<p>Use <code>type = "scree"</code> for explained-variance percentages
+and <code>type = "loadings"</code> for coefficients in the transformed
+feature space. The default and explicit <code>component = "table"</code>
+keep the same complete view. For already saved plot payloads,
+<code><a href="../reference/as_ggplot.html">as_ggplot()</a></code> uses their saved preset and label choice; set
+those choices when making the payload. A change of heading does not
+change the analysis. Saved dendrograms also have dedicated conversion as
+described above. Imputation co-membership also has dedicated conversion
+as described above. Silhouettes and numeric/categorical profiles also
+have dedicated conversion. All these views retain their saved summaries;
+use <code><a href="../reference/plot_data.html">plot_data()</a></code> for further custom graphics.</p>
+<div class="section level3">
+<h3 id="reopen-an-analysis-without-repeating-imputation-or-clustering">Reopen an analysis without repeating imputation or clustering<a class="anchor" aria-label="anchor" href="#reopen-an-analysis-without-repeating-imputation-or-clustering"></a>
+</h3>
+<p>Keep the complete imputed analysis to retain every completion, its
+PCA basis and partition, the fitted imputation model, and the
+co-membership summary. A saved plot view also retains the selected
+display settings. The example uses a temporary file; choose a permanent
+path to continue in a later session.</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">feature_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".rds"</span><span class="op">)</span></span>
+<span><span class="va">feature_view</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">first_numeric</span><span class="op">$</span><span class="va">pca</span>, type <span class="op">=</span> <span class="st">"scores"</span>, groups <span class="op">=</span> <span class="va">first_numeric</span>,</span>
+<span>  labels <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>analysis <span class="op">=</span> <span class="va">numeric_reduced</span>, view <span class="op">=</span> <span class="va">feature_view</span><span class="op">)</span>, <span class="va">feature_file</span><span class="op">)</span></span>
+<span><span class="va">saved_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">feature_file</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">saved_features</span><span class="op">$</span><span class="va">analysis</span><span class="op">)</span>  <span class="co"># Review all completions.</span></span>
+<span><span class="co">#&gt;   Imputation Included Excluded MeanSilhouette</span></span>
+<span><span class="co">#&gt; 1          1      120        0      0.4118746</span></span>
+<span><span class="co">#&gt; 2          2      120        0      0.4118474</span></span>
+<span><span class="co">#&gt; 3          3      120        0      0.3786295</span></span>
+<span><span class="co">#&gt; 4          4      120        0      0.3871943</span></span>
+<span><span class="co">#&gt; 5          5      120        0      0.3811840</span></span>
+<span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">saved_features</span><span class="op">$</span><span class="va">view</span><span class="op">)</span>    <span class="co"># Inspect this first-completion view.</span></span>
+<span><span class="co">#&gt; $table</span></span>
+<span><span class="co">#&gt;       ID         PC1          PC2 Cluster</span></span>
+<span><span class="co">#&gt; 1   R001  0.87634235  0.733479843       2</span></span>
+<span><span class="co">#&gt; 2   R002  2.26336239 -0.969851454       1</span></span>
+<span><span class="co">#&gt; 3   R003 -1.03369410 -0.747832237       3</span></span>
+<span><span class="co">#&gt; 4   R004  0.31282340 -1.328179610       1</span></span>
+<span><span class="co">#&gt; 5   R005 -1.09352767  0.160883647       3</span></span>
+<span><span class="co">#&gt; 6   R006  0.81518883 -1.798216746       1</span></span>
+<span><span class="co">#&gt; 7   R007 -0.80140952  0.453468531       3</span></span>
+<span><span class="co">#&gt; 8   R008  0.76120416  0.756505024       2</span></span>
+<span><span class="co">#&gt; 9   R009 -0.89540056  1.259120586       3</span></span>
+<span><span class="co">#&gt; 10  R010  0.18137681  0.425836679       2</span></span>
+<span><span class="co">#&gt; 11  R011 -1.57542512 -0.415843745       3</span></span>
+<span><span class="co">#&gt; 12  R012  0.28759049  0.447101980       2</span></span>
+<span><span class="co">#&gt; 13  R013 -2.13099007  0.051149385       3</span></span>
+<span><span class="co">#&gt; 14  R014 -1.07150264  0.300792002       3</span></span>
+<span><span class="co">#&gt; 15  R015 -0.79592341 -0.495630537       3</span></span>
+<span><span class="co">#&gt; 16  R016  1.06924913  1.895353435       2</span></span>
+<span><span class="co">#&gt; 17  R017  0.31489989  1.070143764       2</span></span>
+<span><span class="co">#&gt; 18  R018 -0.61241972 -0.192779197       3</span></span>
+<span><span class="co">#&gt; 19  R019  0.47751548 -0.989263769       1</span></span>
+<span><span class="co">#&gt; 20  R020  0.62555830 -0.840354187       1</span></span>
+<span><span class="co">#&gt; 21  R021  0.42955400 -0.024721049       1</span></span>
+<span><span class="co">#&gt; 22  R022 -0.53234977  0.274006878       3</span></span>
+<span><span class="co">#&gt; 23  R023 -0.19051687 -1.773355422       1</span></span>
+<span><span class="co">#&gt; 24  R024  1.04252312 -0.814539579       1</span></span>
+<span><span class="co">#&gt; 25  R025 -0.68597143 -0.840850895       3</span></span>
+<span><span class="co">#&gt; 26  R026  0.23869502 -0.156548442       1</span></span>
+<span><span class="co">#&gt; 27  R027 -0.88601398 -0.310073756       3</span></span>
+<span><span class="co">#&gt; 28  R028  2.37019247  1.820995805       2</span></span>
+<span><span class="co">#&gt; 29  R029 -0.34587530  0.915407863       2</span></span>
+<span><span class="co">#&gt; 30  R030  0.78440032  1.172184883       2</span></span>
+<span><span class="co">#&gt; 31  R031  1.03495506 -1.470972831       1</span></span>
+<span><span class="co">#&gt; 32  R032 -1.36041835 -0.152873822       3</span></span>
+<span><span class="co">#&gt; 33  R033  0.32944281  0.813178588       2</span></span>
+<span><span class="co">#&gt; 34  R034  1.00602464 -1.904821679       1</span></span>
+<span><span class="co">#&gt; 35  R035 -0.25114660  0.394754494       3</span></span>
+<span><span class="co">#&gt; 36  R036 -0.45311017 -0.497935040       3</span></span>
+<span><span class="co">#&gt; 37  R037 -0.75945359  0.187692339       3</span></span>
+<span><span class="co">#&gt; 38  R038  0.47899202 -0.854941661       1</span></span>
+<span><span class="co">#&gt; 39  R039  0.05965514  1.480370614       2</span></span>
+<span><span class="co">#&gt; 40  R040 -1.14162145  0.389001993       3</span></span>
+<span><span class="co">#&gt; 41  R041  0.60452459  1.401849050       2</span></span>
+<span><span class="co">#&gt; 42  R042  1.04430511  0.139651084       1</span></span>
+<span><span class="co">#&gt; 43  R043 -0.76240240  1.484568234       2</span></span>
+<span><span class="co">#&gt; 44  R044 -1.15311864 -0.054295210       3</span></span>
+<span><span class="co">#&gt; 45  R045  0.75634109  1.324083832       2</span></span>
+<span><span class="co">#&gt; 46  R046  1.09306279 -0.161649766       1</span></span>
+<span><span class="co">#&gt; 47  R047  0.07235875 -0.544703673       1</span></span>
+<span><span class="co">#&gt; 48  R048 -0.69654559 -0.053008749       3</span></span>
+<span><span class="co">#&gt; 49  R049 -0.02245593 -1.244927976       1</span></span>
+<span><span class="co">#&gt; 50  R050  0.93170546  0.074777829       1</span></span>
+<span><span class="co">#&gt; 51  R051 -1.80249480  0.073327838       3</span></span>
+<span><span class="co">#&gt; 52  R052 -0.19848423 -0.883757420       1</span></span>
+<span><span class="co">#&gt; 53  R053 -1.00783264 -1.774789239       3</span></span>
+<span><span class="co">#&gt; 54  R054 -1.51150814  0.834154237       3</span></span>
+<span><span class="co">#&gt; 55  R055 -1.72709711  0.299724379       3</span></span>
+<span><span class="co">#&gt; 56  R056  0.52351515 -0.801657065       1</span></span>
+<span><span class="co">#&gt; 57  R057 -1.21682284 -0.476835993       3</span></span>
+<span><span class="co">#&gt; 58  R058 -0.38239696 -0.413306564       3</span></span>
+<span><span class="co">#&gt; 59  R059 -0.22486385  0.418509730       3</span></span>
+<span><span class="co">#&gt; 60  R060  0.45056336 -0.147045448       1</span></span>
+<span><span class="co">#&gt; 61  R061 -1.04102070  0.791468885       3</span></span>
+<span><span class="co">#&gt; 62  R062  1.21344568 -1.406872487       1</span></span>
+<span><span class="co">#&gt; 63  R063 -0.35565333 -0.517461973       3</span></span>
+<span><span class="co">#&gt; 64  R064  2.51360935  1.245062557       2</span></span>
+<span><span class="co">#&gt; 65  R065  0.13952449  0.059760071       1</span></span>
+<span><span class="co">#&gt; 66  R066 -0.65968317  0.312749190       3</span></span>
+<span><span class="co">#&gt; 67  R067  1.44350811  0.077931116       1</span></span>
+<span><span class="co">#&gt; 68  R068  0.20186672 -0.908138211       1</span></span>
+<span><span class="co">#&gt; 69  R069  1.22672484 -0.970702572       1</span></span>
+<span><span class="co">#&gt; 70  R070  0.33452532 -1.116727288       1</span></span>
+<span><span class="co">#&gt; 71  R071 -0.06746429  0.949576911       2</span></span>
+<span><span class="co">#&gt; 72  R072 -0.46291132 -0.246601301       3</span></span>
+<span><span class="co">#&gt; 73  R073  0.98033514  1.563890667       2</span></span>
+<span><span class="co">#&gt; 74  R074 -0.90099583  0.748909655       3</span></span>
+<span><span class="co">#&gt; 75  R075 -1.28376361 -0.352464006       3</span></span>
+<span><span class="co">#&gt; 76  R076 -0.73869784 -0.109109064       3</span></span>
+<span><span class="co">#&gt; 77  R077 -1.46579073  0.440324713       3</span></span>
+<span><span class="co">#&gt; 78  R078  1.21837159 -0.030687999       1</span></span>
+<span><span class="co">#&gt; 79  R079 -1.33886639  0.213566646       3</span></span>
+<span><span class="co">#&gt; 80  R080  0.63469555 -1.018505422       1</span></span>
+<span><span class="co">#&gt; 81  R081  2.62371250 -0.652139161       1</span></span>
+<span><span class="co">#&gt; 82  R082  0.70701336 -0.667332623       1</span></span>
+<span><span class="co">#&gt; 83  R083 -0.58567728  2.061376558       2</span></span>
+<span><span class="co">#&gt; 84  R084  1.03418087  1.423846740       2</span></span>
+<span><span class="co">#&gt; 85  R085 -0.12051389 -1.131091144       1</span></span>
+<span><span class="co">#&gt; 86  R086 -0.88207509  1.210837203       3</span></span>
+<span><span class="co">#&gt; 87  R087 -2.26769787  0.599146619       3</span></span>
+<span><span class="co">#&gt; 88  R088  0.20287691 -0.814432355       1</span></span>
+<span><span class="co">#&gt; 89  R089  1.32192543  0.640423109       2</span></span>
+<span><span class="co">#&gt; 90  R090  1.01944279 -1.960693706       1</span></span>
+<span><span class="co">#&gt; 91  R091 -0.08992824  1.611686791       2</span></span>
+<span><span class="co">#&gt; 92  R092  0.26373044  0.104604625       1</span></span>
+<span><span class="co">#&gt; 93  R093 -0.18444850 -0.528358653       3</span></span>
+<span><span class="co">#&gt; 94  R094  1.99671866  1.080652348       2</span></span>
+<span><span class="co">#&gt; 95  R095 -1.01211899 -1.104277393       3</span></span>
+<span><span class="co">#&gt; 96  R096 -1.05661892  0.042188288       3</span></span>
+<span><span class="co">#&gt; 97  R097  1.22487338 -0.717554314       1</span></span>
+<span><span class="co">#&gt; 98  R098  0.18022881 -1.534138400       1</span></span>
+<span><span class="co">#&gt; 99  R099  0.06919171  0.717506076       2</span></span>
+<span><span class="co">#&gt; 100 R100 -0.77556573  0.317924051       3</span></span>
+<span><span class="co">#&gt; 101 R101 -0.75745768 -1.350288915       3</span></span>
+<span><span class="co">#&gt; 102 R102  1.34228980  0.225511381       1</span></span>
+<span><span class="co">#&gt; 103 R103 -1.47969295 -0.575642893       3</span></span>
+<span><span class="co">#&gt; 104 R104  0.60310652 -1.238183726       1</span></span>
+<span><span class="co">#&gt; 105 R105 -2.58197881  0.223020060       3</span></span>
+<span><span class="co">#&gt; 106 R106  1.66996020 -0.822511261       1</span></span>
+<span><span class="co">#&gt; 107 R107 -1.28224072  0.258722755       3</span></span>
+<span><span class="co">#&gt; 108 R108  0.53167765  0.988932604       2</span></span>
+<span><span class="co">#&gt; 109 R109 -0.25556529 -0.632475987       3</span></span>
+<span><span class="co">#&gt; 110 R110 -0.14063557  1.043879695       2</span></span>
+<span><span class="co">#&gt; 111 R111  0.07741817  0.170911976       3</span></span>
+<span><span class="co">#&gt; 112 R112  0.10968210  1.615779522       2</span></span>
+<span><span class="co">#&gt; 113 R113 -1.47919119  0.566102169       3</span></span>
+<span><span class="co">#&gt; 114 R114  1.29771483 -0.473164766       1</span></span>
+<span><span class="co">#&gt; 115 R115 -0.74054930  0.144039195       3</span></span>
+<span><span class="co">#&gt; 116 R116  2.26200482  4.011819347       2</span></span>
+<span><span class="co">#&gt; 117 R117 -0.23315983  0.249806850       3</span></span>
+<span><span class="co">#&gt; 118 R118  1.42118981 -1.941785212       1</span></span>
+<span><span class="co">#&gt; 119 R119 -0.30659021  0.001105732       3</span></span>
+<span><span class="co">#&gt; 120 R120  0.76787906 -0.808235062       1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $components</span></span>
+<span><span class="co">#&gt; [1] 1 2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $encoding</span></span>
+<span><span class="co">#&gt;   Cluster  Colour Shape</span></span>
+<span><span class="co">#&gt; 1       1 #1F1F1F    16</span></span>
+<span><span class="co">#&gt; 2       2 #686868    17</span></span>
+<span><span class="co">#&gt; 3       3 #8C8C8C    15</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $transformation</span></span>
+<span><span class="co">#&gt;           Feature  Center    Divisor WeightFactor</span></span>
+<span><span class="co">#&gt; 1 ExperienceYears  16.950   8.824003            1</span></span>
+<span><span class="co">#&gt; 2   AnnualRatings 313.150 206.610975            1</span></span>
+<span><span class="co">#&gt; 3   WorkshopHours  35.975  23.124603            1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $weights</span></span>
+<span><span class="co">#&gt; ExperienceYears   AnnualRatings   WorkshopHours </span></span>
+<span><span class="co">#&gt;               1               1               1 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $scale</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $excluded_ids</span></span>
+<span><span class="co">#&gt; character(0)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $title</span></span>
+<span><span class="co">#&gt; [1] "Principal component scores"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $subtitle</span></span>
+<span><span class="co">#&gt; [1] "Included: 120 | Excluded: 0 | Retained components: 2 | Sample-SD scaling"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $xlab</span></span>
+<span><span class="co">#&gt; [1] "PC1 (37.5% of transformed variance)"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $ylab</span></span>
+<span><span class="co">#&gt; [1] "PC2 (33.2% of transformed variance)"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $labels</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $preset</span></span>
+<span><span class="co">#&gt; [1] "monochrome"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $plot_name</span></span>
+<span><span class="co">#&gt; [1] "feature_pca_scores"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $legend</span></span>
+<span><span class="co">#&gt; [1] label     role      aesthetic value    </span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $reference_lines</span></span>
+<span><span class="co">#&gt; [1] axis     value    label    linetype role    </span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">saved_figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">saved_features</span><span class="op">$</span><span class="va">view</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>Changing a session plotting option does not restyle a saved view.
+Create a new view from the saved analysis to change its preset; changing
+the analysis settings requires a new analysis. These feature results use
+their own <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and
+<code><a href="../reference/plot_data.html">plot_data()</a></code> methods. They are separate from
+<code><a href="../reference/mfrm_results.html">mfrm_results()</a></code> and from the pooled response-score intervals
+described in <code><a href="../articles/mfrmr-response-imputation.html">vignette("mfrmr-response-imputation")</a></code>. Saved
+feature files retain identifiers and original attributes, so review what
+they contain before sharing them.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="plan-for-the-size-of-the-analysis">Plan for the size of the analysis<a class="anchor" aria-label="anchor" href="#plan-for-the-size-of-the-analysis"></a>

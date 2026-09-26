@@ -451,6 +451,6 @@ s_sig$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <int>        <int>          <int>         <int>          <dbl>
-#> 1       1            1              1             0          0.943
+#> 1       1            1              1             0          0.996
 # }
 ```

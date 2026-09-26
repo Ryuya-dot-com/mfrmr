@@ -43,7 +43,8 @@ plot(
   persons_per_star = NULL,
   show_title = TRUE,
   show_notes = TRUE,
-  ...
+  ...,
+  level = NULL
 )
 ```
 
@@ -265,6 +266,13 @@ plot(
 
   Additional arguments ignored for S3 compatibility.
 
+- level:
+
+  Named alternative to `ci_level`, a single number strictly between 0
+  and 1. Supply only one of these names, even when equal. Both omitted
+  retain 0.95. This controls the fitted-model plot intervals; attached
+  interval results retain the level chosen when they were computed.
+
 ## Value
 
 Invisibly, an `mfrm_plot_data` object (default and for any single
@@ -393,23 +401,26 @@ groups are faceted rather than overplotted by the native renderer, and
 category-specific legends use the same colours across panels. Multiple
 groups or more than five categories use one legend beside the plotting
 area; colour presets use distinct default colours beyond eight
-categories. For `GPCM`, these curves retain the estimated step-facet
-slope; all curve families are reference-profile curves with additive
-facet main effects and fitted interactions fixed at zero; the native
-footer and ggplot subtitle disclose that conditioning. Expected-score
-pathways use the same reference profile and expose the same
-`curve_basis` table. These curves do not average over the observed rater
-assignments or show a particular fitted interaction cell. The draw-free
-`curve_basis`, `CurveBasis`, and `PredictorOffset` fields make that
-conditioning explicit. `type = "ccc_surface"` or
-`type = "category_surface"` returns 3D-ready category-probability
-surface data for external rendering; it deliberately does not add a
-plotly/rgl dependency or replace the 2D CCC/pathway reporting figures.
-The returned object includes `category_support`, `interpretation_guide`,
-and `reporting_policy` tables so retained zero-frequency categories and
-manuscript-use boundaries remain visible to beginners. The remaining
-types (`"facet"`, `"person"`, `"step"`, `"shrinkage"`) provide compact
-location-specific displays.
+categories. For `GPCM`, these curves retain the estimated slope. With
+separate owners, each step-level/slope-level pair is a labeled curve
+group. Such joint profiles have no single-facet Infit/Outfit flag;
+inspect `fit_measures` or `type = "fit_pathway"` separately. All curve
+families are reference-profile curves with additive facet main effects
+and fitted interactions fixed at zero; the native footer and ggplot
+subtitle disclose that conditioning. Expected-score pathways use the
+same reference profile and expose the same `curve_basis` table. These
+curves do not average over the observed rater assignments or show a
+particular fitted interaction cell. The draw-free `curve_basis`,
+`CurveBasis`, and `PredictorOffset` fields make that conditioning
+explicit. `type = "ccc_surface"` or `type = "category_surface"` returns
+3D-ready category-probability surface data for external rendering; it
+deliberately does not add a plotly/rgl dependency or replace the 2D
+CCC/pathway reporting figures. The returned object includes
+`category_support`, `interpretation_guide`, and `reporting_policy`
+tables so retained zero-frequency categories and manuscript-use
+boundaries remain visible to beginners. The remaining types (`"facet"`,
+`"person"`, `"step"`, `"shrinkage"`) provide compact location-specific
+displays.
 
 ## Graphics layout
 
@@ -448,6 +459,41 @@ For a plot-selection guide and extended examples, see
 [mfrmr_visual_diagnostics](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
 and
 [`vignette("mfrmr-visual-diagnostics", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+
+## Session plot defaults
+
+Set `options(mfrmr.plot_preset = "publication")` to choose a session
+default for plotting functions that expose the common `preset` argument.
+The supported values are `"standard"`, `"publication"`, `"compact"` and
+`"monochrome"`. Precedence is an explicit call argument, then the
+session option, then `"standard"`. For example, `preset = "standard"`
+overrides a session set to `"monochrome"`. Explicit `preset = NULL`
+retains the earlier package-default behavior; it does not read the
+session option. Invalid session values cause an error only when that
+option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+report bundles use the same option through `...`. Plots without a common
+`preset` argument, including extended-model plots with their own
+`palette` controls, keep their own settings. This option selects a
+preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+uses its saved appearance, even after the session option changes. A call
+that creates a new plot from a fit or statistical result uses the
+current default. For a reproducible script, supply `preset` explicitly
+or set the option in that script. Saving only the fitted model does not
+save a session option. No global ggplot theme is changed.
+
+Restore previous settings with
+`old <- options(mfrmr.plot_preset = "monochrome")` followed by
+`options(old)`. Use `options(mfrmr.plot_preset = NULL)` to remove the
+option. The preset changes appearance, not estimates, confidence levels
+or diagnostic thresholds.
 
 ## See also
 

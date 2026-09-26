@@ -581,7 +581,7 @@ facets_feature_coverage()
 #> 52                                                            Binary ordered scores are available as the two-category special case of the current ordered-response kernel.
 #> 53 A positive numeric observation weight multiplies that row's conditional ordered-category likelihood contribution and can represent a defensible row-replication weight.
 #> 54                                                                                                       The current public estimator and score routes are unidimensional.
-#> 55                                                                                                 The current public GPCM route requires slope_facet to equal step_facet.
+#> 55                                                                        JML requires slope_facet to equal step_facet; MML permits separate owners with one slope family.
 #> 56                                                  FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.
 #>                                                                                                                                                                                                                                                                                                                                                        Limitation
 #> 1                                                                                                                                                                                                                                                                                                                        Not an exact FACETS line-printer layout.
@@ -975,7 +975,7 @@ facets_feature_coverage("not_implemented")
 #> 51                                                     The current RSM, PCM, and GPCM routes model ordered category probabilities only.
 #> 52                         Binary ordered scores are available as the two-category special case of the current ordered-response kernel.
 #> 54                                                                    The current public estimator and score routes are unidimensional.
-#> 55                                                              The current public GPCM route requires slope_facet to equal step_facet.
+#> 55                                     JML requires slope_facet to equal step_facet; MML permits separate owners with one slope family.
 #> 56               FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.
 #>                                                                                                                                                                                                Limitation
 #> 38                                                                                                                                                     Would require a separate Winsteps output contract.

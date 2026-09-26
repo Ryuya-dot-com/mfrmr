@@ -90,8 +90,8 @@ summary(out)
 #>   Components: 6
 #> 
 #> Specification header
-#>       Engine   Title DataFile OutputFile Model Method
-#>  mfrmr 0.2.4 Toy run                       RSM    MML
+#>            Engine   Title DataFile OutputFile Model Method
+#>  mfrmr 0.2.4.9000 Toy run                       RSM    MML
 #> 
 #> Specification rows: data_spec
 #>           Setting  Value

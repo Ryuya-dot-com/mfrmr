@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,32 +77,277 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Visual Diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-visual-diagnostics.Rmd</code></div>
     </div>
 
     
     
-<p>This vignette is a compact map of the main base-R diagnostics in
-<code>mfrmr</code>. It is organized around four practical questions:</p>
+<p>This vignette connects figures to questions about fitted ratings,
+external attributes and observed-score planning. It is organized around
+six practical questions:</p>
 <ul>
 <li>How well do persons, facet levels, and categories target each
 other?</li>
 <li>Which observations or levels look locally unstable?</li>
 <li>Is the design linked well enough across subsets or forms?</li>
 <li>Where do residual structure and interaction screens point next?</li>
+<li>How can external attributes describe groups of raters?</li>
+<li>How could changing the number of tasks affect an observed-score
+composite?</li>
 </ul>
-<p>All examples use packaged data and
-<code>preset = "publication"</code> so the same code is suitable for
-manuscript-oriented graphics.</p>
+<p>Model examples use packaged data; the feature hierarchy uses eight
+fictional raters. The <code>"publication"</code> and
+<code>"monochrome"</code> presets illustrate reusable styles, including
+views that remain interpretable without colour.</p>
 <p>If you are selecting figures for a report, use
 <code><a href="../reference/reporting_checklist.html">reporting_checklist()</a></code> before or alongside this vignette.
 Its <code>"Visual Displays"</code> rows now mirror the public plotting
 family shown here.</p>
 <div class="section level2">
+<h2 id="find-a-figure-by-purpose">Find a figure by purpose<a class="anchor" aria-label="anchor" href="#find-a-figure-by-purpose"></a>
+</h2>
+<p>Use the plot guide before choosing a specialized function. It
+includes rater feedback, category curves, external-feature groups and
+G/D-study planning.</p>
+<p>Open a preview for the full figure, interpretation and the values
+used to draw it. These are different questions: a severe rater need not
+misfit; feature groups describe backgrounds; a D-study plans an
+observed-score measurement.</p>
+<style>
+.mfrmr-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.mfrmr-gallery-card { border: 1px solid #737373; border-radius: .4rem; padding: .85rem; background: #fff; color: #202020; min-width: 0; }
+.mfrmr-gallery-card a { display: block; color: #164f78; text-decoration: underline; text-underline-offset: .15em; }
+.mfrmr-gallery-card a:focus-visible { outline: 3px solid #164f78; outline-offset: 4px; }
+.mfrmr-gallery-card img { display: block; width: 100%; height: auto; margin: 0 0 .65rem; }
+.mfrmr-gallery-card p:last-child { margin-bottom: 0; }
+@media print { .mfrmr-gallery { display: block; } .mfrmr-gallery-card { break-inside: avoid; margin-bottom: 1rem; } }
+</style>
+<div class="mfrmr-gallery">
+<div class="mfrmr-gallery-card">
+<p><a href="#figure-wright"><img src="mfrmr-visual-diagnostics_files/figure-html/wright-1.png" loading="lazy" alt="Wright map preview"><strong>Compare persons,
+facet levels and category steps</strong></a></p>
+<p>Base R and dedicated ggplot conversion</p>
+</div>
+<div class="mfrmr-gallery-card">
+<p><a href="#figure-fit-pathway"><img src="mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png" loading="lazy" alt="Infit versus location preview"><strong>Review
+severity together with response fit</strong></a></p>
+<p>Base R and dedicated ggplot conversion</p>
+</div>
+<div class="mfrmr-gallery-card">
+<p><a href="#figure-category-curves"><img src="mfrmr-visual-diagnostics_files/figure-html/category-curves-1.png" loading="lazy" alt="Category probability curves preview"><strong>Inspect category functioning</strong></a></p>
+<p>Base R and dedicated ggplot conversion</p>
+</div>
+<div class="mfrmr-gallery-card">
+<p><a href="#figure-linking"><img src="mfrmr-visual-diagnostics_files/figure-html/linking-1.png" loading="lazy" alt="Subset coverage preview"><strong>Inspect observed
+coverage across rating subsets</strong></a></p>
+<p>Base R; ggplot offers a different, table-based view</p>
+</div>
+<div class="mfrmr-gallery-card">
+<p><a href="#figure-feature-hierarchy"><img src="mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.png" loading="lazy" alt="Feature dendrogram preview"><strong>Inspect a
+hierarchy of external-feature groups</strong></a></p>
+<p>Base R and dedicated ggplot conversion</p>
+</div>
+<div class="mfrmr-gallery-card">
+<p><a href="#figure-d-study-planning"><img src="mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.png" loading="lazy" alt="D-study coefficient curves preview"><strong>Plan
+reliability for a multivariate score or composite</strong></a></p>
+<p>Base R and dedicated ggplot conversion</p>
+</div>
+</div>
+<details><summary>
+Browse all selected plot routes
+</summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">figures</span> <span class="op">&lt;-</span> <span class="fu">mfrmr</span><span class="fu">::</span><span class="fu"><a href="../reference/mfrmr_output_guide.html">mfrmr_output_guide</a></span><span class="op">(</span><span class="st">"plots"</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">figures</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"ResultFunction"</span>, <span class="st">"GGPlot"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="60%">
+<col width="28%">
+<col width="12%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Question</th>
+<th align="left">ResultFunction</th>
+<th align="left">GGPlot</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Compare persons, facet levels and category steps</td>
+<td align="left">fit_mfrm</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Show expected scores across ability</td>
+<td align="left">fit_mfrm</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Review severity together with response fit</td>
+<td align="left">fit_mfrm</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Inspect category functioning</td>
+<td align="left">fit_mfrm</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Compare fixed-rater estimates and interval methods</td>
+<td align="left">mfrm_facet_intervals</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Show GPCM slope uncertainty</td>
+<td align="left">confint.mfrm_fit</td>
+<td align="left">native</td>
+</tr>
+<tr class="odd">
+<td align="left">Show GPCM probability or information uncertainty</td>
+<td align="left">mfrm_curve_intervals</td>
+<td align="left">native</td>
+</tr>
+<tr class="even">
+<td align="left">Compare observed raters in a shared-rater model</td>
+<td align="left">fit_mfrm_random_rater</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Inspect testlet-model facet estimates</td>
+<td align="left">fit_mfrm_testlet</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Review conditional Person scores from a shared-rater
+model</td>
+<td align="left">score_mfrm_random_rater</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Review conditional Person scores from a testlet
+model</td>
+<td align="left">predict.mfrm_testlet</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Review response fit under an extended model</td>
+<td align="left">mfrm_response_diagnostics</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Compare ordinary and extended model results</td>
+<td align="left">compare_mfrm</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Compare screening rules across known-truth
+conditions</td>
+<td align="left">mfrm_screening_sensitivity</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Show screening performance with uncertainty</td>
+<td align="left">mfrm_screening_performance</td>
+<td align="left">unavailable</td>
+</tr>
+<tr class="even">
+<td align="left">Show pooled fixed-facet intervals after multiple
+imputation</td>
+<td align="left">pool_mfrm_imputed</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Inspect separation of external-feature groups</td>
+<td align="left">mfrm_cluster</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Describe an external feature within groups</td>
+<td align="left">mfrm_cluster</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Inspect a hierarchy of external-feature groups</td>
+<td align="left">mfrm_cluster_hierarchical</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Inspect group stability across feature imputations</td>
+<td align="left">mfrm_cluster_imputed</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Choose how many external-feature components to
+inspect</td>
+<td align="left">mfrm_pca</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Locate entities on external-feature components</td>
+<td align="left">mfrm_pca</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Identify features contributing to a component</td>
+<td align="left">mfrm_pca</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Plan facet counts with an observed-score D-study</td>
+<td align="left">mfrm_d_study</td>
+<td align="left">unavailable</td>
+</tr>
+<tr class="odd">
+<td align="left">Plan reliability for a multivariate score or
+composite</td>
+<td align="left">mfrm_multivariate_d_study</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="even">
+<td align="left">Plan absolute or relative error in score units</td>
+<td align="left">mfrm_multivariate_d_study</td>
+<td align="left">dedicated</td>
+</tr>
+<tr class="odd">
+<td align="left">Compare D-study scenarios with difference
+intervals</td>
+<td align="left">mfrm_multivariate_d_compare</td>
+<td align="left">unavailable</td>
+</tr>
+<tr class="even">
+<td align="left">Inspect observed coverage across rating subsets</td>
+<td align="left">subset_connectivity_report</td>
+<td align="left">generic</td>
+</tr>
+<tr class="odd">
+<td align="left">Customize the underlying precision values</td>
+<td align="left">compute_information</td>
+<td align="left">generic</td>
+</tr>
+</tbody>
+</table></details><p>Open the help for <code>ResultFunction</code> if you have not created
+the required result. Choose a row and read <code>PlotCall</code>,
+<code>GGPlotCall</code>, <code>DataComponent</code> and
+<code>Notes</code>. Replace <code>x</code> in <code>PlotCall</code> with
+the indicated result, and save its return value as <code>p</code>. The
+call uses <code>draw = FALSE</code> to prepare the figure without
+opening a window. Change it to <code>TRUE</code> to display it, or
+follow <code>GGPlotCall</code> to customize it with ggplot2. A data
+component is a table to inspect; passing that component to
+<code><a href="../reference/as_ggplot.html">as_ggplot()</a></code> may produce a different view from the full
+figure.</p>
+<p><code>dedicated</code> means there is a converter for the figure;
+<code>native</code> means the plot already returns ggplot.
+<code>generic</code> describes a table-based graphic that need not
+reproduce the original layout or annotations. <code>unavailable</code>
+still allows the original plot and custom graphics from
+<code>plot_data(p)</code>. This is a selected map, not a claim that
+every plot or component has been covered. Graphical support does not
+extend the model’s statistical assumptions.</p>
+</div>
+<div class="section level2">
 <h2 id="minimal-setup">Minimal setup<a class="anchor" aria-label="anchor" href="#minimal-setup"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span>
@@ -147,10 +392,13 @@ family shown here.</p>
 <div class="section level2">
 <h2 id="targeting-and-scale-structure">1. Targeting and scale structure<a class="anchor" aria-label="anchor" href="#targeting-and-scale-structure"></a>
 </h2>
+<div class="section level3">
+<h3 id="figure-wright">Wright map<a class="anchor" aria-label="anchor" href="#figure-wright"></a>
+</h3>
 <p>Use the Wright map first when you want one shared logit view of
 persons, facet levels, and step thresholds.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">wright</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/wright-1.png" class="r-plt" alt="Wright map of person abilities, facet levels and category steps on the fitted logit scale, with requested uncertainty intervals. Higher facet locations indicate stricter scoring or greater difficulty." width="672"></p>
 <p>Interpretation:</p>
 <ul>
@@ -161,6 +409,25 @@ the right.</li>
 estimate the relevant pairwise contrast directly before claiming that
 two levels are separated or indistinguishable.</li>
 </ul>
+<p>The locations used in the figure remain available as a table:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">wright</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 37</span></span></span>
+<span><span class="co">#&gt;   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   StepIndex &lt;int&gt;, BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   OriginalEstimate &lt;dbl&gt;, BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   DisplayEstimate &lt;dbl&gt;, DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   OriginalCI_Upper &lt;dbl&gt;, DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, …</span></span></span></code></pre></div>
 <p>The native view above remains the recommended analytic figure because
 it keeps facet uncertainty and fitted step locations visible. For a
 closer FACETS-facing handoff, switch the renderer and leave
@@ -170,7 +437,7 @@ coordinates do not change.</p>
 are displaced for collision avoidance, with leader lines back to the
 fitted points. Step thresholds form one vertical ladder and their labels
 include the fitted transition logits.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"wright"</span>,</span>
@@ -193,7 +460,7 @@ uncertainty extension. Use <code>draw = FALSE</code> and inspect the
 ggplot2 or another graphics system.</p>
 <p>Next, use the pathway map when you want to see how expected scores
 progress across theta.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"pathway"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/pathway-1.png" class="r-plt" alt="Pathway display of fitted response probabilities across ability, separated by display layer. It shows model predictions rather than tests of rater bias." width="672"></p>
 <p>Interpretation:</p>
@@ -203,11 +470,15 @@ progress across theta.</p>
 govern the score.</li>
 <li>Flat or compressed regions suggest weaker category separation.</li>
 </ul>
+</div>
+<div class="section level3">
+<h3 id="figure-fit-pathway">Fit pathway<a class="anchor" aria-label="anchor" href="#figure-fit-pathway"></a>
+</h3>
 <p>The expected-score pathway is not a fit pathway. To review measure
 against Infit, place Infit on the horizontal axis and include person
 rows explicitly:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_pathway</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"fit_pathway"</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
@@ -229,12 +500,157 @@ metadata.</li>
 <li>Treat displaced or flagged rows as review prompts, not automatic
 exclusions.</li>
 </ul>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">fit_pathway</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        Facet        Level    Measure        SE     CI_Lower    CI_Upper</span></span>
+<span><span class="co">#&gt; 55 Criterion      Content -0.3441471 0.1110060 -0.561714733 -0.12657937</span></span>
+<span><span class="co">#&gt; 56 Criterion     Language  0.1204520 0.1093843 -0.093937224  0.33484130</span></span>
+<span><span class="co">#&gt; 57 Criterion Organization  0.2236950 0.1103080  0.007495279  0.43989475</span></span>
+<span><span class="co">#&gt; 5     Person         P005 -0.1749607 0.4416568 -1.040592055  0.69067075</span></span>
+<span><span class="co">#&gt; 6     Person         P006  0.6768100 0.5261392 -0.354403760  1.70802383</span></span>
+<span><span class="co">#&gt; 7     Person         P007 -0.9630394 0.4541031 -1.853065098 -0.07301365</span></span>
+<span><span class="co">#&gt;    CI_Level  N     Infit    Outfit  InfitZSTD  OutfitZSTD  DF_Infit DF_Outfit</span></span>
+<span><span class="co">#&gt; 55     0.95 94 0.7295356 0.7428322 -1.5566485 -1.89173498 58.455401        94</span></span>
+<span><span class="co">#&gt; 56     0.95 94 0.8547918 0.8231355 -0.7605703 -1.24336119 57.903717        94</span></span>
+<span><span class="co">#&gt; 57     0.95 94 1.0155312 1.0063885  0.1449582  0.09232621 57.174573        94</span></span>
+<span><span class="co">#&gt; 5      0.95  6 0.5638368 0.5789733 -0.5395357 -0.67290311  4.317881         6</span></span>
+<span><span class="co">#&gt; 6      0.95  5 0.4878576 0.5027572 -0.4606940 -0.76083829  2.731153         5</span></span>
+<span><span class="co">#&gt; 7      0.95  6 0.3851674 0.3834114 -0.9177989 -1.22881869  3.987010         6</span></span>
+<span><span class="co">#&gt;    DF_Infit_ENGINE DF_Outfit_ENGINE DF_Infit_FACETS DF_Outfit_FACETS</span></span>
+<span><span class="co">#&gt; 55       58.455401               94              NA               NA</span></span>
+<span><span class="co">#&gt; 56       57.903717               94              NA               NA</span></span>
+<span><span class="co">#&gt; 57       57.174573               94              NA               NA</span></span>
+<span><span class="co">#&gt; 5         4.317881                6              NA               NA</span></span>
+<span><span class="co">#&gt; 6         2.731153                5              NA               NA</span></span>
+<span><span class="co">#&gt; 7         3.987010                6              NA               NA</span></span>
+<span><span class="co">#&gt;    InfitZSTD_ENGINE OutfitZSTD_ENGINE InfitZSTD_FACETS OutfitZSTD_FACETS</span></span>
+<span><span class="co">#&gt; 55       -1.5566485       -1.89173498               NA                NA</span></span>
+<span><span class="co">#&gt; 56       -0.7605703       -1.24336119               NA                NA</span></span>
+<span><span class="co">#&gt; 57        0.1449582        0.09232621               NA                NA</span></span>
+<span><span class="co">#&gt; 5        -0.5395357       -0.67290311               NA                NA</span></span>
+<span><span class="co">#&gt; 6        -0.4606940       -0.76083829               NA                NA</span></span>
+<span><span class="co">#&gt; 7        -0.9177989       -1.22881869               NA                NA</span></span>
+<span><span class="co">#&gt;    FitDfMethod FitZSTDTransform   InfitBand  OutfitBand InfitZSTDBand</span></span>
+<span><span class="co">#&gt; 55      engine  Wilson-Hilferty within_band within_band   within_band</span></span>
+<span><span class="co">#&gt; 56      engine  Wilson-Hilferty within_band within_band   within_band</span></span>
+<span><span class="co">#&gt; 57      engine  Wilson-Hilferty within_band within_band   within_band</span></span>
+<span><span class="co">#&gt; 5       engine  Wilson-Hilferty within_band within_band   within_band</span></span>
+<span><span class="co">#&gt; 6       engine  Wilson-Hilferty     overfit within_band   within_band</span></span>
+<span><span class="co">#&gt; 7       engine  Wilson-Hilferty     overfit     overfit   within_band</span></span>
+<span><span class="co">#&gt;    OutfitZSTDBand Underfit Overfit   FitStatus ScreenComplete ZSTDOnly</span></span>
+<span><span class="co">#&gt; 55    within_band    FALSE   FALSE within_band           TRUE    FALSE</span></span>
+<span><span class="co">#&gt; 56    within_band    FALSE   FALSE within_band           TRUE    FALSE</span></span>
+<span><span class="co">#&gt; 57    within_band    FALSE   FALSE within_band           TRUE    FALSE</span></span>
+<span><span class="co">#&gt; 5     within_band    FALSE   FALSE within_band           TRUE    FALSE</span></span>
+<span><span class="co">#&gt; 6     within_band    FALSE    TRUE     overfit           TRUE    FALSE</span></span>
+<span><span class="co">#&gt; 7     within_band    FALSE    TRUE     overfit           TRUE    FALSE</span></span>
+<span><span class="co">#&gt;                       ReviewReason MaxAbsZSTD MaxMnSqDistance</span></span>
+<span><span class="co">#&gt; 55     Within selected review band  1.8917350       0.2704644</span></span>
+<span><span class="co">#&gt; 56     Within selected review band  1.2433612       0.1768645</span></span>
+<span><span class="co">#&gt; 57     Within selected review band  0.1449582       0.0155312</span></span>
+<span><span class="co">#&gt; 5      Within selected review band  0.6729031       0.4361632</span></span>
+<span><span class="co">#&gt; 6                   Infit MnSq low  0.7608383       0.5121424</span></span>
+<span><span class="co">#&gt; 7  Infit MnSq low; Outfit MnSq low  1.2288187       0.6165886</span></span>
+<span><span class="co">#&gt;    InfitZSTDDiff_FACETS_minus_ENGINE OutfitZSTDDiff_FACETS_minus_ENGINE</span></span>
+<span><span class="co">#&gt; 55                                NA                                 NA</span></span>
+<span><span class="co">#&gt; 56                                NA                                 NA</span></span>
+<span><span class="co">#&gt; 57                                NA                                 NA</span></span>
+<span><span class="co">#&gt; 5                                 NA                                 NA</span></span>
+<span><span class="co">#&gt; 6                                 NA                                 NA</span></span>
+<span><span class="co">#&gt; 7                                 NA                                 NA</span></span>
+<span><span class="co">#&gt;    MaxAbsZSTDDiff_FACETS_vs_ENGINE MaxAbsLogDFRatio_ENGINE_over_FACETS</span></span>
+<span><span class="co">#&gt; 55                              NA                                  NA</span></span>
+<span><span class="co">#&gt; 56                              NA                                  NA</span></span>
+<span><span class="co">#&gt; 57                              NA                                  NA</span></span>
+<span><span class="co">#&gt; 5                               NA                                  NA</span></span>
+<span><span class="co">#&gt; 6                               NA                                  NA</span></span>
+<span><span class="co">#&gt; 7                               NA                                  NA</span></span>
+<span><span class="co">#&gt;    MaxDFRelativeDifference_ENGINE_vs_FACETS EngineFlagAbsZ FacetsStyleFlagAbsZ</span></span>
+<span><span class="co">#&gt; 55                                       NA          FALSE               FALSE</span></span>
+<span><span class="co">#&gt; 56                                       NA          FALSE               FALSE</span></span>
+<span><span class="co">#&gt; 57                                       NA          FALSE               FALSE</span></span>
+<span><span class="co">#&gt; 5                                        NA          FALSE               FALSE</span></span>
+<span><span class="co">#&gt; 6                                        NA          FALSE               FALSE</span></span>
+<span><span class="co">#&gt; 7                                        NA          FALSE               FALSE</span></span>
+<span><span class="co">#&gt;    FlagChangedByDf DfSensitivityStatus                  SE_Method PrecisionTier</span></span>
+<span><span class="co">#&gt; 55           FALSE       not_available Observed information (MML)   model_based</span></span>
+<span><span class="co">#&gt; 56           FALSE       not_available Observed information (MML)   model_based</span></span>
+<span><span class="co">#&gt; 57           FALSE       not_available Observed information (MML)   model_based</span></span>
+<span><span class="co">#&gt; 5            FALSE       not_available         Posterior SD (EAP)   model_based</span></span>
+<span><span class="co">#&gt; 6            FALSE       not_available         Posterior SD (EAP)   model_based</span></span>
+<span><span class="co">#&gt; 7            FALSE       not_available         Posterior SD (EAP)   model_based</span></span>
+<span><span class="co">#&gt;    SupportsFormalInference             SEUse</span></span>
+<span><span class="co">#&gt; 55                    TRUE primary_reporting</span></span>
+<span><span class="co">#&gt; 56                    TRUE primary_reporting</span></span>
+<span><span class="co">#&gt; 57                    TRUE primary_reporting</span></span>
+<span><span class="co">#&gt; 5                     TRUE primary_reporting</span></span>
+<span><span class="co">#&gt; 6                     TRUE primary_reporting</span></span>
+<span><span class="co">#&gt; 7                     TRUE primary_reporting</span></span>
+<span><span class="co">#&gt;                                CIBasis             CIUse Converged</span></span>
+<span><span class="co">#&gt; 55 Normal interval from model-based SE primary_reporting      TRUE</span></span>
+<span><span class="co">#&gt; 56 Normal interval from model-based SE primary_reporting      TRUE</span></span>
+<span><span class="co">#&gt; 57 Normal interval from model-based SE primary_reporting      TRUE</span></span>
+<span><span class="co">#&gt; 5  Normal interval from model-based SE primary_reporting      TRUE</span></span>
+<span><span class="co">#&gt; 6  Normal interval from model-based SE primary_reporting      TRUE</span></span>
+<span><span class="co">#&gt; 7  Normal interval from model-based SE primary_reporting      TRUE</span></span>
+<span><span class="co">#&gt;               CI_Method                     CILabel  FitValue ElementType</span></span>
+<span><span class="co">#&gt; 55 Normal approximation Model-based normal interval 0.7295356 Facet level</span></span>
+<span><span class="co">#&gt; 56 Normal approximation Model-based normal interval 0.8547918 Facet level</span></span>
+<span><span class="co">#&gt; 57 Normal approximation Model-based normal interval 1.0155312 Facet level</span></span>
+<span><span class="co">#&gt; 5  Normal approximation Model-based normal interval 0.5638368      Person</span></span>
+<span><span class="co">#&gt; 6  Normal approximation Model-based normal interval 0.4878576      Person</span></span>
+<span><span class="co">#&gt; 7  Normal approximation Model-based normal interval 0.3851674      Person</span></span>
+<span><span class="co">#&gt;    FitScale FitStatistic FitColumn FitDistance Flagged FitDirection</span></span>
+<span><span class="co">#&gt; 55     mnsq        Infit     Infit   0.2704644   FALSE  within_band</span></span>
+<span><span class="co">#&gt; 56     mnsq        Infit     Infit   0.1452082   FALSE  within_band</span></span>
+<span><span class="co">#&gt; 57     mnsq        Infit     Infit   0.0155312   FALSE  within_band</span></span>
+<span><span class="co">#&gt; 5      mnsq        Infit     Infit   0.4361632   FALSE  within_band</span></span>
+<span><span class="co">#&gt; 6      mnsq        Infit     Infit   0.5121424    TRUE      overfit</span></span>
+<span><span class="co">#&gt; 7      mnsq        Infit     Infit   0.6148326    TRUE      overfit</span></span>
+<span><span class="co">#&gt;           Panel Shape    LabelText</span></span>
+<span><span class="co">#&gt; 55 All elements    21      Content</span></span>
+<span><span class="co">#&gt; 56 All elements    21     Language</span></span>
+<span><span class="co">#&gt; 57 All elements    21 Organization</span></span>
+<span><span class="co">#&gt; 5  All elements    15             </span></span>
+<span><span class="co">#&gt; 6  All elements    15         P006</span></span>
+<span><span class="co">#&gt; 7  All elements    15         P007</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="figure-category-curves">Category probabilities<a class="anchor" aria-label="anchor" href="#figure-category-curves"></a>
+</h3>
+<p>Category curves ask which ordered score is most probable at each
+ability. They complement the expected-score pathway: a single expected
+score can hide which categories contribute to it.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">category_curves</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"ccc"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/category-curves-1.png" class="r-plt" alt="Predicted category probabilities across ability for the fitted rating scale. Line patterns and colours identify categories; the curves use a reference profile with other additive facet effects fixed at zero." width="672"></p>
+<p>These are reference-profile probabilities, not observed category
+frequencies or uncertainty bands. For PCM/GPCM, select and interpret the
+relevant step/slope owner. A rarely dominant category is a reason to
+inspect counts and rubric meaning, not automatic evidence that
+categories should be merged.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">category_curves</span>, component <span class="op">=</span> <span class="st">"probabilities"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 13</span></span></span>
+<span><span class="co">#&gt;   Theta Probability ExpectedScore ScoreVariance Information CategoryInformation</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> -<span style="color: #BB0000;">6</span>          0.992          1.01       0.008<span style="text-decoration: underline;">35</span>     0.008<span style="text-decoration: underline;">35</span>           0.000<span style="text-decoration: underline;">069</span>7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> -<span style="color: #BB0000;">5.95</span>       0.991          1.01       0.008<span style="text-decoration: underline;">78</span>     0.008<span style="text-decoration: underline;">78</span>           0.000<span style="text-decoration: underline;">077</span>0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> -<span style="color: #BB0000;">5.9</span>        0.991          1.01       0.009<span style="text-decoration: underline;">22</span>     0.009<span style="text-decoration: underline;">22</span>           0.000<span style="text-decoration: underline;">085</span>0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> -<span style="color: #BB0000;">5.85</span>       0.990          1.01       0.009<span style="text-decoration: underline;">69</span>     0.009<span style="text-decoration: underline;">69</span>           0.000<span style="text-decoration: underline;">093</span>9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> -<span style="color: #BB0000;">5.8</span>        0.990          1.01       0.010<span style="text-decoration: underline;">2</span>      0.010<span style="text-decoration: underline;">2</span>            0.000<span style="text-decoration: underline;">104</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> -<span style="color: #BB0000;">5.75</span>       0.989          1.01       0.010<span style="text-decoration: underline;">7</span>      0.010<span style="text-decoration: underline;">7</span>            0.000<span style="text-decoration: underline;">114</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 7 more variables: CategoryInformationShare &lt;dbl&gt;, Slope &lt;dbl&gt;, Model &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   Category &lt;chr&gt;, CurveGroup &lt;chr&gt;, CurveBasis &lt;chr&gt;, PredictorOffset &lt;dbl&gt;</span></span></span>
+<span><span class="co"># Optional customization without refitting:</span></span>
+<span><span class="co"># as_ggplot(category_curves)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="local-response-and-level-issues">2. Local response and level issues<a class="anchor" aria-label="anchor" href="#local-response-and-level-issues"></a>
 </h2>
 <p>Unexpected-response screening is useful for case-level review.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_unexpected.html">plot_unexpected</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
@@ -253,7 +669,7 @@ informative than a single extreme point.</li>
 </ul>
 <p>Displacement focuses on level movement rather than individual
 responses.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_displacement.html">plot_displacement</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  diagnostics <span class="op">=</span> <span class="va">diag</span>,</span>
@@ -278,7 +694,7 @@ the legacy and strict branches stay visible side by side. The chunk
 below uses compact quadrature for a shorter runtime; final reporting
 should be based on a refit with the package default or a higher
 quadrature setting.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">toy</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -328,20 +744,40 @@ supports the strict branch before routing figures into a report.</li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="linking-and-coverage">3. Linking and coverage<a class="anchor" aria-label="anchor" href="#linking-and-coverage"></a>
+<h2 id="figure-linking">3. Linking and coverage<a class="anchor" aria-label="anchor" href="#figure-linking"></a>
 </h2>
 <p>When the design may be incomplete or spread across subsets, inspect
 the coverage matrix before interpreting cross-subset contrasts.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_connectivity_report.html">subset_connectivity_report</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc</span>, type <span class="op">=</span> <span class="st">"design_matrix"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mfrmr-visual-diagnostics_files/figure-html/linking-1.png" class="r-plt" alt="Observed connections across rating-design subsets. Separate blocks identify a need to examine linking before comparing locations across subsets." width="672"></p>
-<p>Interpretation:</p>
-<ul>
-<li>Sparse rows or columns indicate weak subset coverage.</li>
-<li>Facets with low overlap are weaker anchors for cross-subset
-comparisons.</li>
-</ul>
+<span><span class="va">coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc</span>, type <span class="op">=</span> <span class="st">"design_matrix"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/linking-1.png" class="r-plt" alt="Observation shares above a matrix of relative facet-level coverage across observed subsets. Matrix cells compare each subset with the largest observed count for that facet; they are not completion rates for planned assignments." width="672"></p>
+<p>The cells divide each subset’s observed number of facet levels by the
+largest such count for that facet among the observed subsets. They do
+not show the proportion of planned ratings that were completed. A single
+connected subset can therefore have coverage values of one even with a
+sparse rating design. Low relative counts invite a closer assignment
+review; they do not alone establish weak linking, informative
+missingness, or random missingness.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">coverage</span>, component <span class="op">=</span> <span class="st">"matrix"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           1</span></span>
+<span><span class="co">#&gt; Criterion 1</span></span>
+<span><span class="co">#&gt; Person    1</span></span>
+<span><span class="co">#&gt; Rater     1</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">coverage</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 9</span></span></span>
+<span><span class="co">#&gt;   Subset Facet    LevelsN Levels Observations ObservationPercent Ruler MaxLevels</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 1      Criteri…       3 Conte…          282                100 [===…         3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 1      Person        48 P001,…          282                100 [===…        48</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 1      Rater          6 R01, …          282                100 [===…         6</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: CoverageRatio &lt;dbl&gt;</span></span></span>
+<span><span class="co"># Only the matrix is converted; the observation-share panel is not included.</span></span>
+<span><span class="co"># as_ggplot(coverage, component = "matrix")</span></span></code></pre></div>
+<p>Compare an explicit assignment roster with observed ratings when
+distinguishing unassigned cells from missing assigned scores. Neither
+should be coded as zero.</p>
 <p>Keep three uses of <em>network</em> separate.
 <code><a href="../reference/mfrm_network_analysis.html">mfrm_network_analysis()</a></code> analyzes the
 assignment/co-observation graph and can expose disconnected measurement
@@ -353,7 +789,7 @@ statistics are graph-theoretic quantities, not rating-scale central
 tendency, MFRM severity logits, or causal halo evidence.</p>
 <p>If you are working across administrations, follow up with
 anchor-drift plots:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">drift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_anchor_drift.html">detect_anchor_drift</a></span><span class="op">(</span><span class="va">current_fit</span>, baseline <span class="op">=</span> <span class="va">baseline_anchors</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_anchor_drift.html">plot_anchor_drift</a></span><span class="op">(</span><span class="va">drift</span>, type <span class="op">=</span> <span class="st">"heatmap"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -361,7 +797,7 @@ anchor-drift plots:</p>
 <h2 id="residual-structure-and-interaction-screens">4. Residual structure and interaction screens<a class="anchor" aria-label="anchor" href="#residual-structure-and-interaction-screens"></a>
 </h2>
 <p>Residual PCA is a follow-up layer after the main fit screen.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diag_pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"both"</span>, pca_max_factors <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag_pca</span>, mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span>
@@ -398,7 +834,7 @@ follow-up.</li>
 component of interest.</li>
 </ul>
 <p>For interaction screening, use the packaged bias example.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bias_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
@@ -437,10 +873,10 @@ or print workflow needs grayscale output. For journal figures, teaching
 material, dashboards, or lab-specific styles, use
 <code>draw = FALSE</code> and the plot-data accessors instead of editing
 screenshots.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png" class="r-plt" alt="Monochrome Wright map of person, facet and step locations on the common logit scale. The accompanying code extracts the plotted locations for custom displays." width="672"></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">wright_payload</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_data_components.html">plot_data_components</a></span><span class="op">(</span><span class="va">wright_payload</span><span class="op">)</span></span>
@@ -608,7 +1044,7 @@ screenshots.</p>
 <span><span class="co">#&gt; 6 expected_score     Common -5.75 1.010755</span></span></code></pre></div>
 <p>When you build a custom figure, keep the helper’s guidance tables
 with the plot data:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">wright_payload</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "wright_style"          "renderer"              "visual_contract"      </span></span>
 <span><span class="co">#&gt;  [4] "person"                "person_exclusions"     "person_hist"          </span></span>
@@ -629,6 +1065,78 @@ They let you change colors, labels, panels, or rendering technology
 while preserving the same measurement scale, reference lines, caveats,
 and reporting role used by the package-native plot.</p>
 <div class="section level3">
+<h3 id="set-an-appearance-once-for-several-plots">Set an appearance once for several plots<a class="anchor" aria-label="anchor" href="#set-an-appearance-once-for-several-plots"></a>
+</h3>
+<p>Use <code>options(mfrmr.plot_preset = "monochrome")</code> to set a
+common default in the development version. This example restores the
+previous option when it ends:</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">local</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">old</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>mfrmr.plot_preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"ccc"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">special</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"ccc"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>session_default <span class="op">=</span> <span class="va">saved</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span>, explicit_override <span class="op">=</span> <span class="va">special</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">preset</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   session_default explicit_override </span></span>
+<span><span class="co">#&gt;      "monochrome"     "publication"</span></span></code></pre></div>
+<p>The choices are <code>"standard"</code>, <code>"publication"</code>,
+<code>"compact"</code> and <code>"monochrome"</code>. Explicit
+<code>preset</code> wins over the option; omitting both retains
+<code>"standard"</code>. Explicit <code>preset = NULL</code> also
+selects the package default. Remove the session setting with
+<code>options(mfrmr.plot_preset = NULL)</code>.</p>
+<p>A supported <code>as_ggplot(saved)</code> conversion uses the saved
+preset, whereas a new <code>plot(fit, ...)</code> call uses the current
+option. Set the option in a script or use explicit arguments to
+reproduce its appearance in another session. This applies to the common
+preset controls, including category, coverage and network report plots.
+Extended-model plots with separate <code>palette</code> controls retain
+their own settings. It does not change estimates, confidence levels,
+screening thresholds or the user’s global ggplot theme.</p>
+</div>
+<div class="section level3">
+<h3 id="use-a-common-title-argument">Use a common title argument<a class="anchor" aria-label="anchor" href="#use-a-common-title-argument"></a>
+</h3>
+<p>In the development version, eight existing helpers accept
+<code>title</code>: <code><a href="../reference/plot_marginal_fit.html">plot_marginal_fit()</a></code>,
+<code><a href="../reference/plot_marginal_pairwise.html">plot_marginal_pairwise()</a></code>, <code><a href="../reference/plot_unexpected.html">plot_unexpected()</a></code>,
+<code><a href="../reference/plot_interrater_agreement.html">plot_interrater_agreement()</a></code>,
+<code><a href="../reference/plot_facets_chisq.html">plot_facets_chisq()</a></code>, <code><a href="../reference/plot_bubble.html">plot_bubble()</a></code>,
+<code><a href="../reference/plot_bias_interaction.html">plot_bias_interaction()</a></code> and
+<code><a href="../reference/plot_facet_quality_dashboard.html">plot_facet_quality_dashboard()</a></code>.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_bubble.html">plot_bubble</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, view <span class="op">=</span> <span class="st">"infit_outfit"</span>,</span>
+<span>                     title <span class="op">=</span> <span class="cn">NULL</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">plain</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/title-controls-1.png" class="r-plt" alt="Infit and Outfit mean squares for fitted facet levels, with the title omitted. Bubble sizes reflect rating counts; reference lines and the saved descriptive review band remain unchanged." width="672"></p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Reuse the saved values, screening references and interval settings.</span></span>
+<span><span class="va">plain</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">reference_lines</span></span>
+<span><span class="co">#&gt;   axis value                 label linetype      role</span></span>
+<span><span class="co">#&gt; 1    h   0.5 Lower fit review band   dashed threshold</span></span>
+<span><span class="co">#&gt; 2    h   1.0          Ideal Outfit   dashed reference</span></span>
+<span><span class="co">#&gt; 3    h   1.5 Upper fit review band   dashed threshold</span></span>
+<span><span class="co">#&gt; 4    v   0.5 Lower fit review band   dashed threshold</span></span>
+<span><span class="co">#&gt; 5    v   1.0           Ideal Infit   dashed reference</span></span>
+<span><span class="co">#&gt; 6    v   1.5 Upper fit review band   dashed threshold</span></span></code></pre></div>
+<p>Omit <code>title</code> for the default heading, supply
+<code>title = "Scoring patterns"</code> to replace it, or use
+<code>title = NULL</code> (or <code>""</code>) to hide it. This does not
+remove subtitles, legends, screening settings or interpretation notes.
+The dashboard method also accepts
+<code>plot(dashboard, title = NULL)</code>. Keep review-only limitations
+in the figure caption or accompanying report if its heading is
+hidden.</p>
+<p>Existing <code>main</code> calls and positional arguments still work
+without deprecation warnings. <code>main = NULL</code> retains its
+earlier meaning of “use the default heading”. Do not supply both
+<code>main</code> and <code>title</code>, even with the same value.
+These aliases do not imply that every plot has an
+<code><a href="../reference/as_ggplot.html">as_ggplot()</a></code> converter; consult
+<code>mfrmr_output_guide("plots")</code> for the supported route.</p>
+</div>
+<div class="section level3">
 <h3 id="fair-scores-and-annotations-outside-the-figure">Fair Scores and annotations outside the figure<a class="anchor" aria-label="anchor" href="#fair-scores-and-annotations-outside-the-figure"></a>
 </h3>
 <p>Use <code>plot_type = "measure"</code> to relate measures to fair
@@ -638,7 +1146,7 @@ measures; FairZ uses zero reference measures. FairZ is an expected score
 on the internal score scale, not a z-score. Observed-minus-fair gaps
 also reflect assignment and person mix, so they do not by themselves
 establish rater bias.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_fair</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_fair_average.html">plot_fair_average</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, metric <span class="op">=</span> <span class="st">"FairZ"</span>,</span>
 <span>  plot_type <span class="op">=</span> <span class="st">"measure"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span>,</span>
@@ -724,7 +1232,7 @@ separately from the MFRM likelihood. Rapid and slow response-time flags
 are descriptive quality-control prompts; they do not change measures and
 should not be treated as proof of disengagement, cheating, or
 speededness.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">toy_rt</span> <span class="op">&lt;-</span> <span class="va">toy</span></span>
 <span><span class="va">toy_rt</span><span class="op">$</span><span class="va">ResponseTime</span> <span class="op">&lt;-</span> <span class="fl">12</span> <span class="op">+</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy_rt</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">7</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">toy_rt</span><span class="op">$</span><span class="va">Score</span><span class="op">)</span></span>
@@ -779,7 +1287,7 @@ speededness.</p>
 <span><span class="co">#&gt; - Score-level summaries are descriptive and should not be read as response-time model parameters.</span></span>
 <span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png" class="r-plt" alt="Distribution of synthetic response times with selected lower and upper quantile screens. These thresholds describe this example and do not diagnose careless responding." width="672"></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"person"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png" class="r-plt" alt="Person-level summaries of synthetic response times. Compare flagged patterns with their rating counts and context before drawing substantive conclusions." width="672"></p>
 <p>Interpretation:</p>
@@ -801,7 +1309,7 @@ large raw severity estimate can be a noisy estimate rather than a stable
 facet signal. The shrinkage funnel shows how far empirical-Bayes pooling
 moved each level toward the facet mean and whether the uncertainty
 remains wide after pooling.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_eb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_empirical_bayes_shrinkage.html">apply_empirical_bayes_shrinkage</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">shrink</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_shrinkage_funnel.html">plot_shrinkage_funnel</a></span><span class="op">(</span></span>
@@ -851,11 +1359,115 @@ bias, fit, or validity claims.</li>
 </div>
 </div>
 <div class="section level2">
+<h2 id="attributes-and-assessment-planning">7. Attributes and assessment planning<a class="anchor" aria-label="anchor" href="#attributes-and-assessment-planning"></a>
+</h2>
+<div class="section level3">
+<h3 id="figure-feature-hierarchy">External-feature hierarchy<a class="anchor" aria-label="anchor" href="#figure-feature-hierarchy"></a>
+</h3>
+<p>A hierarchy can summarize raters’ backgrounds before discussing
+training. These eight fictional raters illustrate the mechanics; their
+groups are not estimates of severity, ability or rater quality. Choose
+attributes and their coding for the substantive question before
+interpreting a tree.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">backgrounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"R"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>,</span>
+<span>  Years <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span>, <span class="fl">10</span>, <span class="fl">12</span>, <span class="fl">15</span><span class="op">)</span>,</span>
+<span>  Training <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">ordered</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Basic"</span>, <span class="st">"Basic"</span>, <span class="st">"Advanced"</span>, <span class="st">"Basic"</span>,</span>
+<span>    <span class="st">"Advanced"</span>, <span class="st">"Advanced"</span>, <span class="st">"Specialist"</span>, <span class="st">"Specialist"</span><span class="op">)</span>,</span>
+<span>    levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Basic"</span>, <span class="st">"Advanced"</span>, <span class="st">"Specialist"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">backgrounds</span>, <span class="st">"Rater"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Years"</span>, <span class="st">"Training"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">hierarchy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">3</span>, linkage <span class="op">=</span> <span class="st">"average"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hierarchy_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">hierarchy</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.png" class="r-plt" alt="Average-linkage dendrogram for eight fictional raters, based on Gower dissimilarities in experience and ordered training level. Labelled leaves identify raters and boxes show the requested three groups; heights are dissimilarities, not significance levels." width="672"></p>
+<p>Three groups were requested; the diagram does not select that number
+or establish that the groups are real. Feature weights, coding and
+linkage can change the branches. The full tree and memberships in leaf
+order are available for inspection. The development version supports
+both the base plot and a dedicated ggplot conversion of this saved
+tree.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">hierarchy_plot</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   ID Cluster Silhouette</span></span>
+<span><span class="co">#&gt; 7 R7       3  0.7428571</span></span>
+<span><span class="co">#&gt; 8 R8       3  0.7954545</span></span>
+<span><span class="co">#&gt; 4 R4       1  0.5344828</span></span>
+<span><span class="co">#&gt; 1 R1       1  0.7750000</span></span>
+<span><span class="co">#&gt; 2 R2       1  0.7972973</span></span>
+<span><span class="co">#&gt; 3 R3       2  0.4642857</span></span>
+<span><span class="co">#&gt; 5 R5       2  0.7500000</span></span>
+<span><span class="co">#&gt; 6 R6       2  0.6190476</span></span>
+<span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">hierarchy_plot</span>, component <span class="op">=</span> <span class="st">"tree"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">hierarchy_figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">hierarchy_plot</span>, component <span class="op">=</span> <span class="st">"tree"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="cn">NULL</span>, subtitle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">hierarchy_figure</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/hierarchy-ggplot-1.png" class="r-plt" alt="The same saved hierarchy of eight fictional raters rendered with ggplot. Leaf order, Gower merge heights and the three group boxes are unchanged. The caption explains that heights are not branch support." width="768"></p>
+<p>The conversion keeps the saved label setting and preset. Use
+<code>labels = FALSE</code> when creating a crowded tree to hide IDs
+without removing leaves. Where heights tie, boxes follow the stored
+merge-order groups; they need not correspond to a unique horizontal
+height cut. Removing titles or captions with
+<code><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggplot2::labs()</a></code> leaves the tree and memberships in
+<code><a href="../reference/plot_data.html">plot_data()</a></code>.</p>
+<p>For imputed features, group comparisons and PCA, continue with <a href="mfrmr-external-features.html">Exploring person, rater, and task
+attributes</a>.</p>
+</div>
+<div class="section level3">
+<h3 id="figure-d-study-planning">D-study planning<a class="anchor" aria-label="anchor" href="#figure-d-study-planning"></a>
+</h3>
+<p>A D-study asks how a specified measurement design would perform if we
+changed facet counts. The packaged MGENOVA manual example has two
+scores, V and W, observed for Persons crossed with Tasks. Here the
+target is their equal-weight composite. There is no rater facet in this
+example.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"mgenova-table12.csv"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">gstudy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy</a></span><span class="op">(</span><span class="va">tasks</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="st">"W"</span><span class="op">)</span>, rater <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="va">planned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_multivariate_d_study.html">mfrm_multivariate_d_study</a></span><span class="op">(</span><span class="va">gstudy</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Tasks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span>, weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>V <span class="op">=</span> <span class="fl">0.5</span>, W <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">planning_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">planned</span>, type <span class="op">=</span> <span class="st">"coefficients"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.png" class="r-plt" alt="G and Phi coefficients for an equally weighted V and W composite at three, six and twelve planned Tasks. Separate panels distinguish relative and absolute decisions; points identify requested designs, and lines guide the eye." width="672"></p>
+<p>G concerns relative comparisons among Persons; Phi concerns absolute
+score interpretation. More tasks reduce the modeled task-related error
+while holding the estimated covariance components and composite weights
+fixed. These are observed-score projections, not MFRM ability
+reliability or a guarantee for a new task population. Uncertainty in the
+estimated components is omitted.</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">planning_plot</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Scenario Tasks      Kind     Score UniverseVariance RelativeErrorVariance</span></span>
+<span><span class="co">#&gt; 3        1     3 Composite Composite        0.3438889            0.34987654</span></span>
+<span><span class="co">#&gt; 6        2     6 Composite Composite        0.3438889            0.17493827</span></span>
+<span><span class="co">#&gt; 9        3    12 Composite Composite        0.3438889            0.08746914</span></span>
+<span><span class="co">#&gt;   AbsoluteErrorVariance         G       Phi RelativeSEM AbsoluteSEM    Status</span></span>
+<span><span class="co">#&gt; 3             0.4205556 0.4956847 0.4498547   0.5915036   0.6485025 Available</span></span>
+<span><span class="co">#&gt; 6             0.2102778 0.6628198 0.6205514   0.4182562   0.4585605 Available</span></span>
+<span><span class="co">#&gt; 9             0.1051389 0.7972238 0.7658521   0.2957518   0.3242513 Available</span></span>
+<span><span class="co">#&gt;     GStatus PhiStatus RelativeSEMStatus AbsoluteSEMStatus ComponentPSD</span></span>
+<span><span class="co">#&gt; 3 Available Available         Available         Available         TRUE</span></span>
+<span><span class="co">#&gt; 6 Available Available         Available         Available         TRUE</span></span>
+<span><span class="co">#&gt; 9 Available Available         Available         Available         TRUE</span></span>
+<span><span class="co"># Customizable conversion of this selected score/composite:</span></span>
+<span><span class="co"># as_ggplot(planning_plot)</span></span>
+<span><span class="co"># Error in score units is a different view:</span></span>
+<span><span class="co"># plot(planned, type = "sem")</span></span></code></pre></div>
+<p>Use <code><a href="../reference/mfrm_multivariate_d_study.html">?mfrm_multivariate_d_study</a></code> for score/composite
+selection and supported crossed or nested designs. An ordinary
+<code>mfrm_d_study</code> object has its own base plot; its automatic
+ggplot conversion is currently unavailable.</p>
+</div>
+</div>
+<div class="section level2">
 <h2 id="portable-score-batch-review">Portable score-batch review<a class="anchor" aria-label="anchor" href="#portable-score-batch-review"></a>
 </h2>
 <p>A batch returned by <code><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code> is not a
 fitted-model diagnostic object. Review it through its own methods:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"interval"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"precision"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>

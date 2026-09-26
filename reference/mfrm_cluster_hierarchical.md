@@ -133,13 +133,20 @@ default; hiding labels does not sample or remove entities. Excluded
 entities have no leaves but remain in the result and plot data.
 Silhouette and feature-profile views reuse
 [`plot.mfrm_clusters()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_clusters.md).
-Plots do not refit or choose groups. Automatic
+Plots do not refit or choose groups.
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-conversion is not supported; use
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) for the stored
-hierarchy or
+converts the stored dendrogram without refitting. The default and
+`component = "tree"` retain the full tree and group boxes. Leaf order,
+heights, label settings and excluded IDs are preserved. Dashed boxes
+differ from the solid tree branches even in monochrome. Box widths and
+physical text sizes can differ from base graphics. Tied heights retain
+the merge-order partition; boxes do not imply a unique horizontal height
+cut. Use `ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)`
+to remove headings and annotations, and
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
-to extract it for custom graphics.
+to inspect the retained source evidence. Silhouette/profile conversions
+use the same dedicated summary renderers as
+[`plot.mfrm_clusters()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_clusters.md).
 
 Use
 [`mfrm_cluster_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_cluster_compare.md)
@@ -149,6 +156,41 @@ For multiple imputations, use
 Each completion retains its own tree; no pooled tree or branch support
 is estimated. See
 [`vignette("mfrmr-external-features", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md).
+
+## Session plot defaults
+
+Set `options(mfrmr.plot_preset = "publication")` to choose a session
+default for plotting functions that expose the common `preset` argument.
+The supported values are `"standard"`, `"publication"`, `"compact"` and
+`"monochrome"`. Precedence is an explicit call argument, then the
+session option, then `"standard"`. For example, `preset = "standard"`
+overrides a session set to `"monochrome"`. Explicit `preset = NULL`
+retains the earlier package-default behavior; it does not read the
+session option. Invalid session values cause an error only when that
+option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+report bundles use the same option through `...`. Plots without a common
+`preset` argument, including extended-model plots with their own
+`palette` controls, keep their own settings. This option selects a
+preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+uses its saved appearance, even after the session option changes. A call
+that creates a new plot from a fit or statistical result uses the
+current default. For a reproducible script, supply `preset` explicitly
+or set the option in that script. Saving only the fitted model does not
+save a session option. No global ggplot theme is changed.
+
+Restore previous settings with
+`old <- options(mfrmr.plot_preset = "monochrome")` followed by
+`options(old)`. Use `options(mfrmr.plot_preset = NULL)` to remove the
+option. The preset changes appearance, not estimates, confidence levels
+or diagnostic thresholds.
 
 ## References
 

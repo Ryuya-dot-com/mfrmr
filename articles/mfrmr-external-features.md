@@ -494,6 +494,37 @@ plot(one_completion, type = "profile", feature = "TrainingLevel")
 group. These profiles describe one imputed table, not effects of
 training.](mfrmr-external-features_files/figure-html/profiles-2.png)
 
+The development version also offers dedicated ggplot conversion for
+these saved summaries. For example, remove the heading while keeping the
+original units, group sizes and interpretation note:
+
+``` r
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  profile_figure <- as_ggplot(one_completion, type = "profile",
+    feature = "ExperienceYears", preset = "monochrome") +
+    ggplot2::labs(title = NULL)
+  print(profile_figure)
+}
+```
+
+![Experience in years summarized by the saved groups from one completed
+feature table. Circles mark means and triangles mark medians, offset
+vertically so equal values remain visible. Group labels give counts; no
+confidence intervals are
+shown.](mfrmr-external-features_files/figure-html/profile-ggplot-1.png)
+
+Use `as_ggplot(one_completion)` for the silhouette view, retaining
+negative widths and the saved overall-mean line. Use the profile call
+with `feature = "TrainingLevel"` for a categorical heatmap, including
+unused levels in their original order. The default and
+`component = "table"` keep the full view; categorical profiles also
+accept `component = "matrix"`. Means and medians are descriptive, not
+effect estimates or interval bounds. The slight vertical offsets improve
+visibility without changing the values. Saved summaries and excluded IDs
+remain available through
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
 The next heatmap asks which pairs remain together across imputations.
 For readability, this view explicitly selects the first 20 IDs in the
 input table; it does not recluster them, change the denominator, or
@@ -531,6 +562,34 @@ plot_data(view)$matrix
 #> R004  0.0  0.4  0.0  1.0  1.0
 #> R005  0.0  0.4  0.0  1.0  1.0
 ```
+
+The development version also converts this same five-ID view to ggplot:
+
+``` r
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  co_membership_figure <- as_ggplot(view, component = "matrix") +
+    ggplot2::labs(title = NULL)
+  print(co_membership_figure)
+}
+```
+
+![Co-membership fractions for the five selected rater IDs, in the saved
+order on both axes. The scale is fixed from zero to one; crosses mark
+unavailable cells, if any. Values use all supplied imputations and do
+not measure sampling
+stability.](mfrmr-external-features_files/figure-html/co-membership-ggplot-1.png)
+
+The default and `component = "matrix"` retain the same complete heatmap.
+For a new selection, use `as_ggplot(analyses$ThreeGroups, ids = ...)` or
+create another saved plot with `plot(..., draw = FALSE)`. A saved view
+keeps its preset and label choice even after session options change.
+Grey cells also carry crosses, so unavailable pairs remain distinct from
+zero in monochrome. `plot_data(co_membership_figure)` retains the
+matrix, selected IDs, excluded IDs and number of imputations. Hiding
+headings with
+[`ggplot2::labs()`](https://ggplot2.tidyverse.org/reference/labs.html)
+does not remove those records or change the meaning of the fractions.
 
 ## Compare PAM with a hierarchy
 
@@ -639,6 +698,15 @@ automatically. Use
 IDs and memberships in leaf order. Excluded raters retain unavailable
 memberships but have no leaves. No entities are sampled to draw the
 tree.
+
+In the development version, `as_ggplot(average$analyses[[1]])` converts
+this same saved tree with its group boxes, leaf order and merge heights.
+The default and `component = "tree"` retain the full view; use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for the membership table. Conversion does not refit, recut or combine
+trees across completions. Add
+`ggplot2::labs(title = NULL, subtitle = NULL)` to omit headings, while
+retaining the caption about what heights mean.
 
 Merge heights are linkage dissimilarities, not significance levels or
 branch support. Tied distances can produce alternative trees; the group
@@ -1098,12 +1166,266 @@ seeds requires the corresponding new analysis.
 comparisons, and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) or
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
-for fitted PCA and grouping views. Automatic
+for fitted PCA and grouping views.
+
+In the development version,
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-conversion is unavailable, including when selecting a table component. A
-custom scores plot must explicitly retain both selected PC axes and its
-group labels; plotting the first numeric column alone does not reproduce
-that view.
+has dedicated conversions for PCA scree, scores and loadings. The scores
+view keeps the selected components, equal axis units and the saved group
+colours and shapes. Only included entities are drawn; excluded IDs and
+the feature transformation remain in
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+This example shows the same first completion used above:
+
+``` r
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  numeric_figure <- as_ggplot(first_numeric$pca, type = "scores",
+    groups = first_numeric, labels = FALSE, preset = "monochrome") +
+    ggplot2::labs(title = NULL, subtitle = NULL)
+  print(numeric_figure)
+  plot_data(numeric_figure)$components
+}
+```
+
+![Scores on the first two external-feature principal components for one
+completed feature dataset. K-means groups use grayscale colours and
+different point shapes. Headings and entity labels are omitted; the
+saved data still identify the completion's transformation and excluded
+entities.](mfrmr-external-features_files/figure-html/numeric-pca-ggplot-1.png)
+
+    #> [1] 1 2
+
+Use `type = "scree"` for explained-variance percentages and
+`type = "loadings"` for coefficients in the transformed feature space.
+The default and explicit `component = "table"` keep the same complete
+view. For already saved plot payloads,
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+uses their saved preset and label choice; set those choices when making
+the payload. A change of heading does not change the analysis. Saved
+dendrograms also have dedicated conversion as described above.
+Imputation co-membership also has dedicated conversion as described
+above. Silhouettes and numeric/categorical profiles also have dedicated
+conversion. All these views retain their saved summaries; use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for further custom graphics.
+
+### Reopen an analysis without repeating imputation or clustering
+
+Keep the complete imputed analysis to retain every completion, its PCA
+basis and partition, the fitted imputation model, and the co-membership
+summary. A saved plot view also retains the selected display settings.
+The example uses a temporary file; choose a permanent path to continue
+in a later session.
+
+``` r
+
+feature_file <- tempfile(fileext = ".rds")
+feature_view <- plot(first_numeric$pca, type = "scores", groups = first_numeric,
+  labels = FALSE, preset = "monochrome", draw = FALSE)
+saveRDS(list(analysis = numeric_reduced, view = feature_view), feature_file)
+saved_features <- readRDS(feature_file)
+summary(saved_features$analysis)  # Review all completions.
+#>   Imputation Included Excluded MeanSilhouette
+#> 1          1      120        0      0.4118746
+#> 2          2      120        0      0.4118474
+#> 3          3      120        0      0.3786295
+#> 4          4      120        0      0.3871943
+#> 5          5      120        0      0.3811840
+plot_data(saved_features$view)    # Inspect this first-completion view.
+#> $table
+#>       ID         PC1          PC2 Cluster
+#> 1   R001  0.87634235  0.733479843       2
+#> 2   R002  2.26336239 -0.969851454       1
+#> 3   R003 -1.03369410 -0.747832237       3
+#> 4   R004  0.31282340 -1.328179610       1
+#> 5   R005 -1.09352767  0.160883647       3
+#> 6   R006  0.81518883 -1.798216746       1
+#> 7   R007 -0.80140952  0.453468531       3
+#> 8   R008  0.76120416  0.756505024       2
+#> 9   R009 -0.89540056  1.259120586       3
+#> 10  R010  0.18137681  0.425836679       2
+#> 11  R011 -1.57542512 -0.415843745       3
+#> 12  R012  0.28759049  0.447101980       2
+#> 13  R013 -2.13099007  0.051149385       3
+#> 14  R014 -1.07150264  0.300792002       3
+#> 15  R015 -0.79592341 -0.495630537       3
+#> 16  R016  1.06924913  1.895353435       2
+#> 17  R017  0.31489989  1.070143764       2
+#> 18  R018 -0.61241972 -0.192779197       3
+#> 19  R019  0.47751548 -0.989263769       1
+#> 20  R020  0.62555830 -0.840354187       1
+#> 21  R021  0.42955400 -0.024721049       1
+#> 22  R022 -0.53234977  0.274006878       3
+#> 23  R023 -0.19051687 -1.773355422       1
+#> 24  R024  1.04252312 -0.814539579       1
+#> 25  R025 -0.68597143 -0.840850895       3
+#> 26  R026  0.23869502 -0.156548442       1
+#> 27  R027 -0.88601398 -0.310073756       3
+#> 28  R028  2.37019247  1.820995805       2
+#> 29  R029 -0.34587530  0.915407863       2
+#> 30  R030  0.78440032  1.172184883       2
+#> 31  R031  1.03495506 -1.470972831       1
+#> 32  R032 -1.36041835 -0.152873822       3
+#> 33  R033  0.32944281  0.813178588       2
+#> 34  R034  1.00602464 -1.904821679       1
+#> 35  R035 -0.25114660  0.394754494       3
+#> 36  R036 -0.45311017 -0.497935040       3
+#> 37  R037 -0.75945359  0.187692339       3
+#> 38  R038  0.47899202 -0.854941661       1
+#> 39  R039  0.05965514  1.480370614       2
+#> 40  R040 -1.14162145  0.389001993       3
+#> 41  R041  0.60452459  1.401849050       2
+#> 42  R042  1.04430511  0.139651084       1
+#> 43  R043 -0.76240240  1.484568234       2
+#> 44  R044 -1.15311864 -0.054295210       3
+#> 45  R045  0.75634109  1.324083832       2
+#> 46  R046  1.09306279 -0.161649766       1
+#> 47  R047  0.07235875 -0.544703673       1
+#> 48  R048 -0.69654559 -0.053008749       3
+#> 49  R049 -0.02245593 -1.244927976       1
+#> 50  R050  0.93170546  0.074777829       1
+#> 51  R051 -1.80249480  0.073327838       3
+#> 52  R052 -0.19848423 -0.883757420       1
+#> 53  R053 -1.00783264 -1.774789239       3
+#> 54  R054 -1.51150814  0.834154237       3
+#> 55  R055 -1.72709711  0.299724379       3
+#> 56  R056  0.52351515 -0.801657065       1
+#> 57  R057 -1.21682284 -0.476835993       3
+#> 58  R058 -0.38239696 -0.413306564       3
+#> 59  R059 -0.22486385  0.418509730       3
+#> 60  R060  0.45056336 -0.147045448       1
+#> 61  R061 -1.04102070  0.791468885       3
+#> 62  R062  1.21344568 -1.406872487       1
+#> 63  R063 -0.35565333 -0.517461973       3
+#> 64  R064  2.51360935  1.245062557       2
+#> 65  R065  0.13952449  0.059760071       1
+#> 66  R066 -0.65968317  0.312749190       3
+#> 67  R067  1.44350811  0.077931116       1
+#> 68  R068  0.20186672 -0.908138211       1
+#> 69  R069  1.22672484 -0.970702572       1
+#> 70  R070  0.33452532 -1.116727288       1
+#> 71  R071 -0.06746429  0.949576911       2
+#> 72  R072 -0.46291132 -0.246601301       3
+#> 73  R073  0.98033514  1.563890667       2
+#> 74  R074 -0.90099583  0.748909655       3
+#> 75  R075 -1.28376361 -0.352464006       3
+#> 76  R076 -0.73869784 -0.109109064       3
+#> 77  R077 -1.46579073  0.440324713       3
+#> 78  R078  1.21837159 -0.030687999       1
+#> 79  R079 -1.33886639  0.213566646       3
+#> 80  R080  0.63469555 -1.018505422       1
+#> 81  R081  2.62371250 -0.652139161       1
+#> 82  R082  0.70701336 -0.667332623       1
+#> 83  R083 -0.58567728  2.061376558       2
+#> 84  R084  1.03418087  1.423846740       2
+#> 85  R085 -0.12051389 -1.131091144       1
+#> 86  R086 -0.88207509  1.210837203       3
+#> 87  R087 -2.26769787  0.599146619       3
+#> 88  R088  0.20287691 -0.814432355       1
+#> 89  R089  1.32192543  0.640423109       2
+#> 90  R090  1.01944279 -1.960693706       1
+#> 91  R091 -0.08992824  1.611686791       2
+#> 92  R092  0.26373044  0.104604625       1
+#> 93  R093 -0.18444850 -0.528358653       3
+#> 94  R094  1.99671866  1.080652348       2
+#> 95  R095 -1.01211899 -1.104277393       3
+#> 96  R096 -1.05661892  0.042188288       3
+#> 97  R097  1.22487338 -0.717554314       1
+#> 98  R098  0.18022881 -1.534138400       1
+#> 99  R099  0.06919171  0.717506076       2
+#> 100 R100 -0.77556573  0.317924051       3
+#> 101 R101 -0.75745768 -1.350288915       3
+#> 102 R102  1.34228980  0.225511381       1
+#> 103 R103 -1.47969295 -0.575642893       3
+#> 104 R104  0.60310652 -1.238183726       1
+#> 105 R105 -2.58197881  0.223020060       3
+#> 106 R106  1.66996020 -0.822511261       1
+#> 107 R107 -1.28224072  0.258722755       3
+#> 108 R108  0.53167765  0.988932604       2
+#> 109 R109 -0.25556529 -0.632475987       3
+#> 110 R110 -0.14063557  1.043879695       2
+#> 111 R111  0.07741817  0.170911976       3
+#> 112 R112  0.10968210  1.615779522       2
+#> 113 R113 -1.47919119  0.566102169       3
+#> 114 R114  1.29771483 -0.473164766       1
+#> 115 R115 -0.74054930  0.144039195       3
+#> 116 R116  2.26200482  4.011819347       2
+#> 117 R117 -0.23315983  0.249806850       3
+#> 118 R118  1.42118981 -1.941785212       1
+#> 119 R119 -0.30659021  0.001105732       3
+#> 120 R120  0.76787906 -0.808235062       1
+#> 
+#> $components
+#> [1] 1 2
+#> 
+#> $encoding
+#>   Cluster  Colour Shape
+#> 1       1 #1F1F1F    16
+#> 2       2 #686868    17
+#> 3       3 #8C8C8C    15
+#> 
+#> $transformation
+#>           Feature  Center    Divisor WeightFactor
+#> 1 ExperienceYears  16.950   8.824003            1
+#> 2   AnnualRatings 313.150 206.610975            1
+#> 3   WorkshopHours  35.975  23.124603            1
+#> 
+#> $weights
+#> ExperienceYears   AnnualRatings   WorkshopHours 
+#>               1               1               1 
+#> 
+#> $scale
+#> [1] TRUE
+#> 
+#> $excluded_ids
+#> character(0)
+#> 
+#> $title
+#> [1] "Principal component scores"
+#> 
+#> $subtitle
+#> [1] "Included: 120 | Excluded: 0 | Retained components: 2 | Sample-SD scaling"
+#> 
+#> $xlab
+#> [1] "PC1 (37.5% of transformed variance)"
+#> 
+#> $ylab
+#> [1] "PC2 (33.2% of transformed variance)"
+#> 
+#> $labels
+#> [1] FALSE
+#> 
+#> $preset
+#> [1] "monochrome"
+#> 
+#> $plot_name
+#> [1] "feature_pca_scores"
+#> 
+#> $legend
+#> [1] label     role      aesthetic value    
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $reference_lines
+#> [1] axis     value    label    linetype role    
+#> <0 rows> (or 0-length row.names)
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  saved_figure <- as_ggplot(saved_features$view)
+}
+```
+
+Changing a session plotting option does not restyle a saved view. Create
+a new view from the saved analysis to change its preset; changing the
+analysis settings requires a new analysis. These feature results use
+their own [`summary()`](https://rdrr.io/r/base/summary.html),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+methods. They are separate from
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+and from the pooled response-score intervals described in
+[`vignette("mfrmr-response-imputation")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-response-imputation.md).
+Saved feature files retain identifiers and original attributes, so
+review what they contain before sharing them.
 
 ## Plan for the size of the analysis
 

@@ -1,9 +1,9 @@
 # GPCM scope and current limitations
 
 `mfrmr` includes a Generalized Partial Credit Model (GPCM; Muraki 1992)
-in which one selected facet supplies both level-specific discriminations
-and category steps. Fitting is available under the documented
-constraints. MML information criteria can be compared when the
+in which one selected facet supplies level-specific discriminations. MML
+permits a different facet to supply category steps; JML requires a
+shared owner. MML information criteria can be compared when the
 likelihood and local-solution checks pass.
 `confint(fit, parm = "slopes")` provides approximate relative-slope
 intervals when its MML checks pass. Explicit options add standardized
@@ -789,12 +789,13 @@ The phrase *generalized many-facet Rasch model* is broader and is not a
 unique synonym for this implementation. For example, Uto and Ueno (2020,
 equation 9) use multiplicative task and rater slope blocks,
 $`\alpha_i\alpha_r`$, together with rater severity and rater-specific
-steps. By contrast, the current mfrmr GPCM requires one facet to own
-both the slope and step blocks: `slope_facet == step_facet`. It does not
-jointly estimate task and rater slopes, decouple the slope owner from
-the step owner, or introduce a multidimensional ability vector. The
-implementation therefore estimates **relative discriminations and
-category steps for the same selected facet**.
+steps. The current mfrmr GPCM estimates one slope family. MML can
+separate the slope owner from the step owner; JML requires
+`slope_facet == step_facet`. It does not jointly estimate task and rater
+slopes or introduce a multidimensional ability vector. Selecting
+criterion slopes and rater steps therefore remains a restricted
+many-facet GPCM, with the entire adjacent-category predictor multiplied
+by the selected criterion slope.
 
 A rater-owned fit is close to a restricted Uto–Ueno form after
 suppressing the task-slope block, provided the remaining step and
@@ -817,7 +818,7 @@ because their geometric mean is fixed to one.
 |----|----|----|
 | `step_facet = "Criterion"`, `slope_facet = "Criterion"` | Each criterion has its own relative discrimination and criterion-specific steps. | Supported; inference availability is listed above. |
 | `step_facet = "Rater"`, `slope_facet = "Rater"` | Each rater has its own model-conditional relative discrimination and rater-specific steps. | Code-supported with rater-interpretation caveats; a slope is not automatically evidence of rater consistency. |
-| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in the current package. |
+| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Supported with MML; one slope family and existing output-specific inference checks. JML, weighting reviews and simulation/design workflows are unavailable for this structure. |
 | Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in the current package; this is closer to a multiplicative generalized-MFRM extension. |
 
 Every facet that is not selected remains an additive location term
@@ -827,6 +828,54 @@ discrimination parameter. The criterion slope nevertheless scales that
 rater-severity contribution because the contribution is inside $`\eta`$.
 “No separate rater slope” and “rater severity is unscaled” are therefore
 not the same statement.
+
+### Criterion discrimination with rater-specific category use
+
+Suppose several raters score each performance on several rubric
+criteria. Use `step_facet` for **whose category transitions may differ**
+and `slope_facet` for **whose responses may distinguish ability more
+sharply**. These are distinct questions from overall rater severity,
+which remains a location effect.
+
+``` r
+
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "GPCM", method = "MML",
+  step_facet = "Rater", slope_facet = "Criterion")
+slopes <- confint(fit)
+grid <- expand.grid(Theta = seq(-2, 2, length.out = 21),
+                    Rater = "R01", Criterion = "C01") # use your fitted labels
+curves <- mfrm_curve_intervals(fit, grid)
+plot(curves, title = NULL, subtitle = NULL)
+results <- mfrm_results(fit, intervals = list(slopes = slopes, curves = curves),
+                        include = c("fit", "plots"), compute = "never")
+saveRDS(results, "criterion-slopes-rater-steps.rds")
+mfrm_report(readRDS("criterion-slopes-rater-steps.rds"))
+```
+
+Relative slopes have geometric mean one. Step contrasts are centered
+within each rater, separately from severity. Adequate crossing and
+category use are needed to distinguish these effects; a sparse or
+confounded design can leave intervals unavailable. A large slope or
+unusual step is not, by itself, a rater-quality or training diagnosis.
+The numerical workflow checks do not establish finite-sample coverage
+for this new structure.
+
+For a PCM comparison, keep the same data, rater steps, constraints and
+population model; the GPCM adds one fewer slope contrast than there are
+criteria. The default GPCM estimates a population mean and variance,
+whereas default PCM fixes its population, so defaults alone do not form
+that matched comparison. Follow the matched population example earlier
+in this vignette. Existing likelihood and local-information checks still
+apply.
+[`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+preserves both owners and the observed assignment for parametric
+resampling; this is not a new-design simulation.
+[`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md),
+[`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md)
+and the simulation/design workflows still require a shared owner.
+Portable GPCM calibration and simultaneous rater/criterion slope
+families remain unavailable.
 
 ### An explanation for a high-school reader
 
@@ -839,8 +888,11 @@ Imagine that several teachers grade presentations on several criteria.
 - **The current mfrmr GPCM** lets you choose one box of rulers. If the
   box is `Criterion`, each criterion can have a different magnification.
   If the box is `Rater`, each rater can have a different magnification.
-  You may choose only one box, and the same box also owns the category
-  steps.
+  You may choose only one box for magnification. With MML, another box
+  may supply the category steps: for example, criteria can differ in
+  magnification while teachers differ in how they use the score
+  categories. With JML, the same box must supply both magnification and
+  category steps.
 - **A broader generalized MFRM** can give both the task/criterion and
   the rater their own magnification knobs. In the Uto–Ueno example, the
   effective sharpness is the product of the task and rater settings. It
@@ -1080,7 +1132,7 @@ deliberately compact; subset by status to inspect a focused set of rows.
 library(mfrmr)
 gpcm_capability_matrix("supported")[, c("Area", "Status")]
 #> mfrmr GPCM workflow availability
-#> One facet supplies both slopes and category steps.
+#> One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.
 #> MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.
 #> 
 #>     Status Routes
@@ -1099,7 +1151,7 @@ gpcm_capability_matrix("supported")[, c("Area", "Status")]
 
 gpcm_capability_matrix("supported_with_caveat")[, c("Area", "Status")]
 #> mfrmr GPCM workflow availability
-#> One facet supplies both slopes and category steps.
+#> One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.
 #> MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.
 #> 
 #>                 Status Routes
@@ -1126,7 +1178,7 @@ gpcm_capability_matrix("supported_with_caveat")[, c("Area", "Status")]
 
 gpcm_capability_matrix("blocked")[, c("Area", "Status", "RecommendedRoute")]
 #> mfrmr GPCM workflow availability
-#> One facet supplies both slopes and category steps.
+#> One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.
 #> MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.
 #> 
 #>   Status Routes
@@ -1144,7 +1196,7 @@ gpcm_capability_matrix("blocked")[, c("Area", "Status", "RecommendedRoute")]
 
 gpcm_capability_matrix("deferred")[, c("Area", "Status", "Boundary", "RecommendedRoute")]
 #> mfrmr GPCM workflow availability
-#> One facet supplies both slopes and category steps.
+#> One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.
 #> MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.
 #> 
 #>    Status Routes
@@ -1224,7 +1276,7 @@ these programs the same model.
 
 | Route | Where slopes are assigned | Relationship to current mfrmr |
 |----|----|----|
-| `mfrmr::fit_mfrm(model = "GPCM")` | One selected facet supplies positive relative slopes and steps. | Each slope multiplies the complete adjacent-category predictor. |
+| `mfrmr::fit_mfrm(model = "GPCM")` | One selected facet supplies positive relative slopes. MML permits a different step owner; JML requires the same owner. | Each slope multiplies the complete adjacent-category predictor. |
 | TAM `tam.mml.2pl()` | Item slopes, shared slope groups or a design `E`; Example 14c combines this with a facet intercept design `A`. | The example has slopes on ability and separately additive facet intercepts. `tam.mml.mfr()` alone does not estimate slopes. |
 | ConQuest `scoresfree` | By default, one slope for each generalized item, meaning a combination of facets; a `C` design can constrain sharing. | Sharing slopes by criterion still does not impose their products with estimated rater effects in the intercept design. |
 
@@ -1472,8 +1524,9 @@ The following `GPCM` routes are documented and verified within the
 stated constraints:
 
 - **Fitting and core summaries** via
-  `fit_mfrm(model = "GPCM", step_facet = ...)`. The documented default
-  keeps `slope_facet == step_facet`, with the direct `MML` engine.
+  `fit_mfrm(model = "GPCM", step_facet = ...)`, with the direct `MML`
+  engine. Omitting `slope_facet` keeps the step owner; naming another
+  facet separates the two owners in MML.
 - **Posterior scoring and information** via
   [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md),
   [`sample_mfrm_plausible_values()`](https://ryuya-dot-com.github.io/mfrmr/reference/sample_mfrm_plausible_values.md),

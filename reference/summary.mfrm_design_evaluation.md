@@ -122,7 +122,7 @@ s$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <int>        <int>          <int>         <int>          <dbl>
-#> 1       2            2              2             1          0.910
+#> 1       2            2              2             1          0.943
 head(s$design_summary)
 #> # A tibble: 6 × 50
 #>   design_id Facet   n_person n_rater n_criterion raters_per_person AvailableReps

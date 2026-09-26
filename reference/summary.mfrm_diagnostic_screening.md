@@ -233,8 +233,8 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1         1
 #>        Criterion       10       2           2                 2    1         1
 #>  ConvergenceRate MeanElapsedSec MeanLegacyMeanAbsZ MeanLegacyFlaggedLevels
-#>                0          1.051              0.589                       0
-#>                0          1.053              0.563                       0
+#>                0          1.063              0.589                       0
+#>                0          1.081              0.563                       0
 #>  LegacyAnyFlagRate MeanMarginalOverallRMSD MeanMarginalMaxAbsStdResidual
 #>                  0                   0.002                         0.050
 #>                  0                   0.046                         1.705
@@ -253,8 +253,8 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1
 #>        Criterion       10       2           2                 2    1
 #>  MeanElapsedSec McseElapsedSec MeanElapsedSecPer100Obs LegacyAnyFlagRate
-#>           1.051             NA                   2.628                 0
-#>           1.053             NA                   2.632                 0
+#>           1.063             NA                   2.657                 0
+#>           1.081             NA                   2.703                 0
 #>  McseLegacyAnyFlagRate MarginalAnyFlagRate McseMarginalAnyFlagRate
 #>                     NA                   1                      NA
 #>                     NA                   1                      NA

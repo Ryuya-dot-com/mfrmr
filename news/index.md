@@ -1,5 +1,163 @@
 # Changelog
 
+## mfrmr 0.2.4.9000 (development version)
+
+- Ordinary fitted-model plots now accept named `level` as an alternative
+  to `ci_level`, also through results and ggplot entry points.
+  Previously `level` could be silently ignored. Supplying both names is
+  an error; the default remains 0.95 and old positional calls retain
+  their meanings. Saved interval results retain their original
+  confidence level.
+
+- Conversion of saved core plot payloads now rejects unsupported
+  settings instead of silently ignoring them, including attempted title
+  or interval changes. All saved plot-data views also reject a new
+  `type`, including extended-model and D-study converters. Create a new
+  payload from the fit/result to change plot settings, or use ggplot
+  label controls after conversion. Complete CCC views retain their
+  documented conversion-specific appearance options.
+
+- The reporting guide now starts from saved results, figures, reports
+  and analyst archives, with specialist manuscript tools described
+  separately. The fixed-rater tutorial explains report-purpose and
+  output-format defaults, explicitly selects a saved interval for
+  recipient sheets, and demonstrates exporting and reopening an analysis
+  without recalculating its intervals. Export presets select files;
+  plotting presets select appearance.
+
+- GPCM MML now allows different slope and step facets, for example
+  criterion discrimination with rater-specific category steps. One slope
+  family retains geometric-mean-one identification and multiplies the
+  entire adjacent-category predictor. Fitted-object scoring,
+  information, eligible slope/curve intervals, matched PCM comparison,
+  same-design bootstrap, and saved results preserve both owners. CCC and
+  expected-score pathway plots show labeled step/slope pairs;
+  single-facet fit flags are not assigned to those joint profiles. JML,
+  weighting reviews and simulation/design workflows still require a
+  shared owner. This extension does not establish finite-sample coverage
+  or provide portable GPCM calibration or simultaneous criterion/rater
+  slope families.
+
+- Random-rater interval help now explains why increasing bootstrap size
+  alone cannot resolve unbounded limits: at 95% with 499 planned draws,
+  13 unresolved studentized errors for a rater make both endpoints
+  infinite. This describes the existing failure-preserving rule, not a
+  new acceptable-failure threshold or a coverage guarantee.
+
+- Random-rater bootstrap trial records now retain the optimizer code,
+  numerical/information checks, Person quadrature orders and
+  discrepancies, and separate variance-boundary checks. Missing check
+  values remain missing when a refit fails. These records carry through
+  existing result tables, reports and exports, helping distinguish
+  numerical problems from interval performance. Interval formulas,
+  eligibility rules and saved older results are unchanged; additional
+  historical checks cannot be reconstructed by reopening an old result.
+
+- The feedback and external-feature tutorials now show how to save and
+  reopen analyses and retain a reviewed HTML sheet. They distinguish the
+  recipient’s standalone sheet from analyst archives, and a
+  single-completion PCA view from the full imputed analysis. Saved
+  results reuse their original estimates and display choices; reopening
+  does not update them for new data.
+
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  now converts pooled fixed-facet multiple-imputation intervals. It uses
+  saved t-interval endpoints, preserving target order, contrasts,
+  degrees of freedom and complete-data information cautions. Fixed
+  targets have no inferential interval; missing intervals use crosses
+  and infinite bounds use arrows. Default and explicit table conversion
+  retain the full view, without refitting, repooling or recalculating
+  confidence limits.
+
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  now converts silhouette and numeric/categorical feature-profile views.
+  Silhouettes preserve negative widths, saved order and the overall mean
+  line. Numeric profiles retain original-unit means, medians and counts,
+  with separate symbols and small vertical offsets. Categorical profiles
+  retain group counts, unused levels and original level order on a fixed
+  proportion scale. Default and explicit table conversion preserve the
+  complete view; source data remain extractable. No groups or intervals
+  are estimated.
+
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  now converts imputation co-membership heatmaps with the saved ID
+  order, all-imputation fractions and a fixed zero-to-one scale. Grey
+  fill plus crosses distinguish unavailable pairs from zero. Default and
+  explicit `component = "matrix"` retain the same view; imputation
+  count, exclusions, selected IDs and source values remain available
+  through
+  [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+  Selecting IDs or hiding labels does not renormalize or sample values.
+
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  now converts saved external-feature dendrograms. Merge heights, leaf
+  order, requested group boxes and label settings are retained,
+  including tied-height cuts and excluded-ID records. The default and
+  `component = "tree"` use the same complete view. No clustering or
+  partition is recomputed; heights do not measure significance or branch
+  support.
+
+- [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+  now converts external-feature PCA scree, scores and loadings views
+  using saved components, group colours/shapes and label settings. Scree
+  plots distinguish retained components, scores keep equal axis units,
+  and loadings keep feature order and the zero reference. The default
+  and `component = "table"` use the same dedicated view; transformation
+  metadata and excluded IDs remain available through
+  [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+  No PCA or grouping is refitted.
+
+- `options(mfrmr.plot_preset = "publication")` now sets the session
+  default for plots using the common preset controls. Explicit call
+  settings take precedence; removing the option restores `"standard"`.
+  Supported conversions of saved plot payloads retain their saved preset
+  when the option changes. Plots with separate palette controls keep
+  their own settings. Estimates, intervals, screening thresholds and the
+  global ggplot theme are unchanged.
+
+- Bubble-chart ggplot conversion now uses saved circle radii, facet
+  colours and facet order instead of equal-sized points and a new
+  default palette. The native bubble plot also honours the monochrome
+  preset; explicit palette overrides remain supported. Relative radii
+  and reference lines are retained, while physical sizes can differ
+  between base graphics and ggplot.
+
+- Eight existing plotting helpers now accept `title` alongside the
+  supported legacy `main` spelling: marginal fit/pairwise, unexpected
+  responses, interrater agreement, facet chi-square, bubble, bias
+  interaction and facet dashboard plots. `title = NULL` suppresses the
+  heading; omission and legacy `main = NULL` retain the default.
+  Supplying both names is an error. Existing positional calls, numerical
+  data, screening settings and interpretation notes remain unchanged.
+  See
+  [`?mfrmr_visual_diagnostics`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+  for the exact routes.
+
+- `mfrm_report(..., style = "rater")` now prepares an individual
+  feedback sheet from saved native additive RSM/PCM results. HTML
+  includes category-use bars, numerical tables and print styling;
+  plain-language and researcher presentations share the same selected
+  values. Missing diagnostics and individual intervals are explained
+  without new calculations. All four output formats omit the source fit
+  and source identifiers. Rater selection and ambiguous interval choices
+  are explicit; fit statistics do not trigger automatic quality labels
+  or exclusion.
+
+- The visual-diagnostics tutorial now offers six linked figure previews
+  with accessible labels, executed examples and data-extraction code.
+  The gallery uses the plot guide for purposes and ggplot support,
+  including a new subset coverage route. Coverage help distinguishes
+  relative observed facet-level counts from completion of planned
+  assignments. External-feature trees and composite D-study planning
+  have compact examples with interpretation limits.
+
+- `mfrmr_output_guide("plots")` now maps selected figure purposes to
+  result classes, plot calls, reusable data and ggplot routes. It
+  distinguishes dedicated converters, plots that already return ggplot,
+  generic table views and unavailable conversions with alternatives.
+  Existing guide scopes retain their table format. This adds guidance;
+  estimators and renderers are unchanged.
+
 ## mfrmr 0.2.4
 
 Unreleased release candidate. This version combines reusable calibration

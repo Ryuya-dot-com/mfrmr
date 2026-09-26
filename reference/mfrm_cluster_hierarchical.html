@@ -9,7 +9,7 @@ it into a chosen number of groups, and inspect the retained dendrogram."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,7 +48,7 @@ it into a chosen number of groups, and inspect the retained dendrogram."><meta p
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Hierarchical grouping of external features</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-hierarchical-clustering.R" class="external-link"><code>R/api-hierarchical-clustering.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-hierarchical-clustering.R" class="external-link"><code>R/api-hierarchical-clustering.R</code></a></small>
       <div class="d-none name"><code>mfrm_cluster_hierarchical.Rd</code></div>
     </div>
 
@@ -176,13 +176,50 @@ groups. Labels are shown for at most 50 included entities by default; hiding
 labels does not sample or remove entities. Excluded entities have no leaves
 but remain in the result and plot data. Silhouette and feature-profile views
 reuse <code><a href="plot.mfrm_clusters.html">plot.mfrm_clusters()</a></code>. Plots do not refit or choose groups.
-Automatic <code><a href="as_ggplot.html">as_ggplot()</a></code> conversion is not supported; use <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for the
-stored hierarchy or <code><a href="plot_data.html">plot_data()</a></code> to extract it for custom graphics.</p>
+<code><a href="as_ggplot.html">as_ggplot()</a></code> converts the stored dendrogram without refitting. The default
+and <code>component = "tree"</code> retain the full tree and group boxes. Leaf order,
+heights, label settings and excluded IDs are preserved. Dashed boxes differ
+from the solid tree branches even in monochrome. Box widths and
+physical text sizes can differ from base graphics. Tied heights retain the
+merge-order partition; boxes do not imply a unique horizontal height cut.
+Use <code>ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)</code> to remove
+headings and annotations, and <code><a href="plot_data.html">plot_data()</a></code> to inspect the retained source
+evidence. Silhouette/profile conversions use the same dedicated summary
+renderers as <code><a href="plot.mfrm_clusters.html">plot.mfrm_clusters()</a></code>.</p>
 <p>Use <code><a href="mfrm_cluster_compare.html">mfrm_cluster_compare()</a></code> to compare this partition with PAM or another
 linkage on the same data. For multiple imputations, use
 <code>mfrm_cluster_imputed(..., method = "hierarchical", linkage = "average")</code>.
 Each completion retains its own tree; no pooled tree or branch support is
 estimated. See <code><a href="../articles/mfrmr-external-features.html">vignette("mfrmr-external-features", package = "mfrmr")</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="session-plot-defaults">Session plot defaults<a class="anchor" aria-label="anchor" href="#session-plot-defaults"></a></h2>
+
+
+<p>Set <code>options(mfrmr.plot_preset = "publication")</code> to choose a session default
+for plotting functions that expose the common <code>preset</code> argument. The
+supported values are <code>"standard"</code>, <code>"publication"</code>, <code>"compact"</code> and
+<code>"monochrome"</code>. Precedence is an explicit call argument, then the session
+option, then <code>"standard"</code>. For example, <code>preset = "standard"</code> overrides
+a session set to <code>"monochrome"</code>. Explicit <code>preset = NULL</code> retains the
+earlier package-default behavior; it does not read the session option.
+Invalid session values cause an error only when that option is needed.</p>
+<p>The category-curve, data-quality, fit-review, connectivity and network
+routes of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for report bundles use the same option through <code>...</code>.
+Plots without a common <code>preset</code> argument, including extended-model plots
+with their own <code>palette</code> controls, keep their own settings. This option
+selects a preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.</p>
+<p>New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with <code><a href="as_ggplot.html">as_ggplot()</a></code> uses its saved
+appearance, even after the session option changes. A call that creates a
+new plot from a fit or statistical result uses the current default.
+For a reproducible script, supply <code>preset</code> explicitly or set the option in
+that script. Saving only the fitted model does not save a session option.
+No global ggplot theme is changed.</p>
+<p>Restore previous settings with <code>old &lt;- options(mfrmr.plot_preset = "monochrome")</code> followed by <code>options(old)</code>. Use
+<code>options(mfrmr.plot_preset = NULL)</code> to remove the option. The preset changes
+appearance, not estimates, confidence levels or diagnostic thresholds.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

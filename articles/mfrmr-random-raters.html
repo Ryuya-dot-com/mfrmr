@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Shared random raters: feedback and replacement raters</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-random-raters.Rmd" class="external-link"><code>vignettes/mfrmr-random-raters.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-random-raters.Rmd" class="external-link"><code>vignettes/mfrmr-random-raters.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-random-raters.Rmd</code></div>
     </div>
 
@@ -799,6 +799,22 @@ adequate production interval analysis. The result records
 severity, estimate, SE and fit status. <code>method = "error"</code>
 provides unscaled-error intervals from the same draws as a comparison;
 it is not automatically a remedy when studentization fails.</p>
+<p>For newly computed bootstrap results, <code>$trials</code> also
+retains the optimizer code, numerical and information checks, Person
+quadrature orders and their likelihood/gradient differences. These help
+answer <strong>why a refit could not supply a usable interval</strong>.
+A failed refit has missing additional checks and its error message; a
+missing check does not mean success. Older saved bootstrap examples do
+not contain these extra fields. Reopening them does not reconstruct the
+missing checks or change their original intervals.</p>
+<p>Review the causes separately. Unresolved Person integration calls for
+a numerical review; an estimated variance boundary makes ordinary
+studentization unavailable; neither is a measurement of the interval’s
+repeated-sampling coverage. More quadrature points, more bootstrap draws
+and more independently simulated assessments address different problems.
+If you compare a revised numerical procedure, retain the original
+results and specify the revision before examining its outcomes; do not
+keep retrying only failed trials until they succeed.</p>
 <p>If a bootstrap fit estimates zero variance, its ordinary rater SE is
 unavailable. Its generated-minus-estimated error can still be recorded,
 but its studentized error is unresolved. Failed refits are also
@@ -808,6 +824,15 @@ covering the empirical intervals from any completion of those unresolved
 errors. When too many replicates are unresolved, a limit is unbounded.
 Dropping those draws or simulating until a chosen number succeeds would
 change the reference sample.</p>
+<p>More refits do not necessarily make an unbounded interval finite. At
+the default 499 refits and 95% level, 13 unresolved studentized errors
+for one rater make both limits infinite. With 12 unresolved errors and
+all remaining errors and source values finite, the empirical limits are
+finite. These counts follow the interval calculation; they are not
+acceptable-failure or coverage thresholds. If the unresolved fraction
+stays above the 2.5% tail probability, increasing the run size still
+yields unbounded limits. Inspect the numerical and variance-boundary
+records before investing in more draws.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bootstrap_intervals</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-random-raters_files/figure-html/bootstrap-plot-1.png" class="r-plt" alt="Explicit bootstrap intervals for observed rater effects. Arrowheads mark unbounded limits caused by unresolved studentized errors; all planned refits remain in the adjacent trial table." width="672"></p>
@@ -818,9 +843,18 @@ change the reference sample.</p>
 <span><span class="co">#&gt;          Seed FitReady EstimatedBoundary   RaterSD  PersonSD</span></span>
 <span><span class="co">#&gt; 12 1457296021     TRUE              TRUE 0.0000000 0.9208276</span></span>
 <span><span class="co">#&gt; 13 1325607976    FALSE             FALSE 0.1441794 1.2522326</span></span>
-<span><span class="co">#&gt;    EstimatedPersonVarianceBoundary  MaxGradient Error</span></span>
-<span><span class="co">#&gt; 12                           FALSE 7.323867e-05      </span></span>
-<span><span class="co">#&gt; 13                           FALSE 5.215741e-05      </span></span>
+<span><span class="co">#&gt;    EstimatedPersonVarianceBoundary  MaxGradient OptimizerCode NumericalReady</span></span>
+<span><span class="co">#&gt; 12                           FALSE 7.323867e-05             0           TRUE</span></span>
+<span><span class="co">#&gt; 13                           FALSE 5.215741e-05             0          FALSE</span></span>
+<span><span class="co">#&gt;    InformationPositive PersonQuadratureStable QuadraturePoints CheckPoints</span></span>
+<span><span class="co">#&gt; 12                TRUE                   TRUE              121         243</span></span>
+<span><span class="co">#&gt; 13                TRUE                  FALSE              121         243</span></span>
+<span><span class="co">#&gt;    LogLikDifference GradientDifference EstimatedVarianceBoundary</span></span>
+<span><span class="co">#&gt; 12     1.150966e-09       4.168424e-08                      TRUE</span></span>
+<span><span class="co">#&gt; 13     5.624900e-06       1.177880e-04                     FALSE</span></span>
+<span><span class="co">#&gt;    PersonVarianceUpperBoundary Error</span></span>
+<span><span class="co">#&gt; 12                       FALSE      </span></span>
+<span><span class="co">#&gt; 13                       FALSE      </span></span>
 <span><span class="co">#&gt;                                                                                                                                                                                                   Warnings</span></span>
 <span><span class="co">#&gt; 12                                                                                                                                                                                                        </span></span>
 <span><span class="co">#&gt; 13 Numerical or information checks require review; regular intervals are unavailable. Inspect $checks. Person quadrature is not stable. Refit with a larger `quad_points` (up to 241) and recheck $checks.</span></span>

@@ -7,12 +7,13 @@ Each data row is one rating. Supply its column names with `person`,
 `facets`, and `score`, as in the complete example below. The default is
 `method = "MML"` (marginal maximum likelihood). The `RSM` / `PCM`
 branches are the package's many-facet Rasch-family reference route.
-`GPCM` adds positive, level-specific discriminations to one facet, which
-must also supply its category steps. See "GPCM model and inference"
-below for the current limits on uncertainty and comparisons. In the
-example, `toy` stores the data and `fit` stores the fitted model. Quoted
-column names such as `"Person"` must match the data, including case. For
-your own CSV, see the "Use your own CSV" section of
+`GPCM` adds positive, level-specific discriminations to one facet. MML
+permits a different facet to supply category steps; JML requires the
+same facet for both roles. See "GPCM model and inference" below for the
+current limits on uncertainty and comparisons. In the example, `toy`
+stores the data and `fit` stores the fitted model. Quoted column names
+such as `"Person"` must match the data, including case. For your own
+CSV, see the "Use your own CSV" section of
 [`vignette("mfrmr-workflow", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-workflow.md).
 If the vignette is not installed,
 [mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
@@ -184,12 +185,12 @@ fit_mfrm(
   for every level of this designated facet. Thus
   `slope_facet = "Criterion"` gives criterion-specific slopes, whereas
   `slope_facet = "Rater"` gives rater-specific slopes. The current route
-  accepts exactly one slope-owning facet, requires
-  `slope_facet == step_facet`, and cannot estimate criterion and rater
-  slope blocks simultaneously. Slopes are identified on the log scale
-  with their geometric mean fixed to 1, so the table reports relative
-  discrimination across the selected facet's levels rather than
-  unrelated absolute weights.
+  accepts exactly one slope-owning facet. MML allows a distinct
+  `step_facet`; JML requires `slope_facet == step_facet`. Criterion and
+  rater slope blocks cannot be estimated simultaneously. Slopes are
+  identified on the log scale with their geometric mean fixed to 1, so
+  the table reports relative discrimination across the selected facet's
+  levels rather than unrelated absolute weights.
 
 - facet_interactions:
 
@@ -651,12 +652,14 @@ distinguishing facet before fitting.
 
 ## GPCM model and inference
 
-One selected facet supplies both level-specific positive discriminations
-and category steps: `slope_facet == step_facet`. For example, selecting
-`Criterion` estimates a relative discrimination for each criterion; it
-does not simultaneously estimate rater discriminations. The model has
-one substantive ability dimension; its structural choices and currently
-unavailable inferential outputs are separate considerations.
+One selected facet supplies level-specific positive discriminations.
+With MML, a different facet may supply category steps. For example,
+`slope_facet = "Criterion", step_facet = "Rater"` estimates a relative
+discrimination for each criterion and category-step contrasts for each
+rater. It does not simultaneously estimate rater discriminations. JML
+requires the same owner for both blocks. The model has one substantive
+ability dimension; its structural choices and currently unavailable
+inferential outputs are separate considerations.
 
 Free-slope fits retain numerical estimates for review.
 [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
@@ -706,33 +709,38 @@ With `model = "GPCM"`, the adjacent-category kernel is multiplied by a
 positive slope for the designated slope-facet level:
 
 \$\$\ln\frac{P(X\_{nij} = k)}{P(X\_{nij} = k-1)} = \alpha_g(\eta -
-\tau\_{g,k}),\quad \alpha_g \> 0.\$\$
+\tau\_{h,k}),\quad \alpha_g \> 0.\$\$
 
-The current implementation requires `slope_facet == step_facet` and
-identifies slopes by a sum-to-zero constraint on log slopes, so their
-geometric mean is 1. A selected facet owns a vector rather than one
-common number: if there are \\G\\ levels, the fit returns \\G\\ positive
-slopes with \\G-1\\ free log-slope contrasts. Every other facet remains
-additive inside \\\eta\\ and receives no separate slope. Selecting a
-rater facet is therefore a different restricted model from selecting a
-criterion or task facet. The placement of the slope is part of the model
-identity: it multiplies the complete adjacent-category predictor,
-including the person coordinate, all additive facet locations and fitted
-facet interactions inside \\\eta\\, and the owned step. It is not a
+Here \\g\\ indexes the slope facet and \\h\\ the step facet; MML permits
+these to differ. Slopes have a sum-to-zero constraint on log slopes, so
+their geometric mean is 1. Step contrasts are centered within each step
+owner, separately from facet location effects. Crossing the facets and
+observing enough categories is necessary to distinguish their effects;
+allowing separate owners does not ensure identification in a given
+design. A selected facet owns a vector rather than one common number: if
+there are \\G\\ levels, the fit returns \\G\\ positive slopes with
+\\G-1\\ free log-slope contrasts. Every other facet remains additive
+inside \\\eta\\ and receives no separate slope. Selecting a rater facet
+is therefore a different restricted model from selecting a criterion or
+task facet. The placement of the slope is part of the model identity: it
+multiplies the complete adjacent-category predictor, including the
+person coordinate, all additive facet locations and fitted facet
+interactions inside \\\eta\\, and the owned step. It is not a
 loading-only formulation in which the slope multiplies ability while
 rater severity and other intercept terms remain unscaled. Such a
 formulation, including TAM multifacet `GPCM.design` constructions with
 separate linear intercept and slope designs, is a different model unless
 an algebraic reduction establishes equivalence. In this many-facet GPCM,
-exactly one facet supplies both the slope and step blocks. It is not the
-broader Uto–Ueno generalized MFRM, whose task and rater slopes enter
-multiplicatively and whose step owner must be stated separately. Setting
-every current slope to one recovers the package's equal-discrimination
-PCM kernel; it does not establish support for the omitted second slope
-block, multidimensional traits, or response-style parameters. Under the
-default `gpcm_mml_identification = "free_population"` branch, the
-population standard deviation carries the common discrimination scale
-while the geometric-mean-one slopes describe relative discrimination.
+exactly one facet supplies slopes. MML permits a different step owner;
+JML requires a shared owner. It is not the broader Uto–Ueno generalized
+MFRM, whose task and rater slopes enter multiplicatively and whose step
+owner must be stated separately. Setting every current slope to one
+recovers the package's equal-discrimination PCM kernel; it does not
+establish support for the omitted second slope block, multidimensional
+traits, or response-style parameters. Under the default
+`gpcm_mml_identification = "free_population"` branch, the population
+standard deviation carries the common discrimination scale while the
+geometric-mean-one slopes describe relative discrimination.
 Equivalently, on a standardized latent variable the absolute slopes are
 \\\sigma\alpha_g\\. Under
 `gpcm_mml_identification = "fixed_standard_normal"`, both the population
@@ -1008,8 +1016,8 @@ Supported model/estimation combinations:
 - `facet_interactions` with `model = "RSM"` or `"PCM"` for explicit
   two-way non-person facet interactions
 
-- `model = "GPCM"` is currently implemented only for the narrow bounded
-  branch with `slope_facet == step_facet`; `MML` and `JML` fitting, core
+- `model = "GPCM"` uses one positive slope family. MML permits separate
+  slope/step owners; JML requires `slope_facet == step_facet`. Core
   summaries, fitted-object posterior scoring,
   [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md),
   Wright/pathway/CCC fit plots,
@@ -1026,8 +1034,14 @@ Supported model/estimation combinations:
   [`category_curves_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_curves_report.md),
   and graph/scorefile
   [`facets_output_file_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_output_file_bundle.md)
-  routes are available with score-side caveats. Direct simulation
-  specifications and data generation are also supported through
+  routes are available with score-side caveats. Separate-owner MML
+  supports slope and curve intervals, same-design
+  [`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md),
+  and matched PCM comparison.
+  [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
+  and the following simulation/design workflows still require the same
+  slope/step owner. Direct simulation specifications and data generation
+  are also supported through
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md),
   [`extract_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/extract_mfrm_sim_spec.md),
   and

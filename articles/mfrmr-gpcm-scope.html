@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,17 +77,17 @@
       <img src="../logo.png" class="logo" alt=""><h1>GPCM scope and current limitations</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-gpcm-scope.Rmd</code></div>
     </div>
 
     
     
 <p><code>mfrmr</code> includes a Generalized Partial Credit Model (GPCM;
-Muraki 1992) in which one selected facet supplies both level-specific
-discriminations and category steps. Fitting is available under the
-documented constraints. MML information criteria can be compared when
-the likelihood and local-solution checks pass.
+Muraki 1992) in which one selected facet supplies level-specific
+discriminations. MML permits a different facet to supply category steps;
+JML requires a shared owner. MML information criteria can be compared
+when the likelihood and local-solution checks pass.
 <code>confint(fit, parm = "slopes")</code> provides approximate
 relative-slope intervals when its MML checks pass. Explicit options add
 standardized slopes, specified comparisons, independent-cluster
@@ -1062,13 +1062,14 @@ equal-discrimination PCM kernel.</p>
 is not a unique synonym for this implementation. For example, Uto and
 Ueno (2020, equation 9) use multiplicative task and rater slope blocks,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mi>i</mi></msub><msub><mi>α</mi><mi>r</mi></msub></mrow><annotation encoding="application/x-tex">\alpha_i\alpha_r</annotation></semantics></math>,
-together with rater severity and rater-specific steps. By contrast, the
-current mfrmr GPCM requires one facet to own both the slope and step
-blocks: <code>slope_facet == step_facet</code>. It does not jointly
-estimate task and rater slopes, decouple the slope owner from the step
-owner, or introduce a multidimensional ability vector. The
-implementation therefore estimates <strong>relative discriminations and
-category steps for the same selected facet</strong>.</p>
+together with rater severity and rater-specific steps. The current mfrmr
+GPCM estimates one slope family. MML can separate the slope owner from
+the step owner; JML requires <code>slope_facet == step_facet</code>. It
+does not jointly estimate task and rater slopes or introduce a
+multidimensional ability vector. Selecting criterion slopes and rater
+steps therefore remains a restricted many-facet GPCM, with the entire
+adjacent-category predictor multiplied by the selected criterion
+slope.</p>
 <p>A rater-owned fit is close to a restricted Uto–Ueno form after
 suppressing the task-slope block, provided the remaining step and
 identification contracts are also aligned. A criterion-owned fit instead
@@ -1124,7 +1125,9 @@ automatically evidence of rater consistency.</td>
 <tr class="odd">
 <td>Criterion steps with rater slopes, or conversely</td>
 <td>Slope owner and step owner differ.</td>
-<td>Unsupported in the current package.</td>
+<td>Supported with MML; one slope family and existing output-specific
+inference checks. JML, weighting reviews and simulation/design workflows
+are unavailable for this structure.</td>
 </tr>
 <tr class="even">
 <td>Criterion slopes and rater slopes together</td>
@@ -1146,6 +1149,48 @@ because the contribution is inside
 not the same statement.</p>
 </div>
 <div class="section level3">
+<h3 id="criterion-discrimination-with-rater-specific-category-use">Criterion discrimination with rater-specific category use<a class="anchor" aria-label="anchor" href="#criterion-discrimination-with-rater-specific-category-use"></a>
+</h3>
+<p>Suppose several raters score each performance on several rubric
+criteria. Use <code>step_facet</code> for <strong>whose category
+transitions may differ</strong> and <code>slope_facet</code> for
+<strong>whose responses may distinguish ability more sharply</strong>.
+These are distinct questions from overall rater severity, which remains
+a location effect.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">ratings</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"GPCM"</span>, method <span class="op">=</span> <span class="st">"MML"</span>,</span>
+<span>  step_facet <span class="op">=</span> <span class="st">"Rater"</span>, slope_facet <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
+<span><span class="va">slopes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>Theta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">21</span><span class="op">)</span>,</span>
+<span>                    Rater <span class="op">=</span> <span class="st">"R01"</span>, Criterion <span class="op">=</span> <span class="st">"C01"</span><span class="op">)</span> <span class="co"># use your fitted labels</span></span>
+<span><span class="va">curves</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_curve_intervals.html">mfrm_curve_intervals</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">grid</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">curves</span>, title <span class="op">=</span> <span class="cn">NULL</span>, subtitle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_results.html">mfrm_results</a></span><span class="op">(</span><span class="va">fit</span>, intervals <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>slopes <span class="op">=</span> <span class="va">slopes</span>, curves <span class="op">=</span> <span class="va">curves</span><span class="op">)</span>,</span>
+<span>                        include <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fit"</span>, <span class="st">"plots"</span><span class="op">)</span>, compute <span class="op">=</span> <span class="st">"never"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">results</span>, <span class="st">"criterion-slopes-rater-steps.rds"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mfrm_report.html">mfrm_report</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"criterion-slopes-rater-steps.rds"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Relative slopes have geometric mean one. Step contrasts are centered
+within each rater, separately from severity. Adequate crossing and
+category use are needed to distinguish these effects; a sparse or
+confounded design can leave intervals unavailable. A large slope or
+unusual step is not, by itself, a rater-quality or training diagnosis.
+The numerical workflow checks do not establish finite-sample coverage
+for this new structure.</p>
+<p>For a PCM comparison, keep the same data, rater steps, constraints
+and population model; the GPCM adds one fewer slope contrast than there
+are criteria. The default GPCM estimates a population mean and variance,
+whereas default PCM fixes its population, so defaults alone do not form
+that matched comparison. Follow the matched population example earlier
+in this vignette. Existing likelihood and local-information checks still
+apply. <code><a href="../reference/bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm()</a></code> preserves both owners and the
+observed assignment for parametric resampling; this is not a new-design
+simulation. <code><a href="../reference/build_weighting_review.html">build_weighting_review()</a></code>,
+<code><a href="../reference/extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code> and the simulation/design workflows
+still require a shared owner. Portable GPCM calibration and simultaneous
+rater/criterion slope families remain unavailable.</p>
+</div>
+<div class="section level3">
 <h3 id="an-explanation-for-a-high-school-reader">An explanation for a high-school reader<a class="anchor" aria-label="anchor" href="#an-explanation-for-a-high-school-reader"></a>
 </h3>
 <p>Imagine that several teachers grade presentations on several
@@ -1160,8 +1205,11 @@ probabilities at the same basic sharpness everywhere.</li>
 <strong>The current mfrmr GPCM</strong> lets you choose one box of
 rulers. If the box is <code>Criterion</code>, each criterion can have a
 different magnification. If the box is <code>Rater</code>, each rater
-can have a different magnification. You may choose only one box, and the
-same box also owns the category steps.</li>
+can have a different magnification. You may choose only one box for
+magnification. With MML, another box may supply the category steps: for
+example, criteria can differ in magnification while teachers differ in
+how they use the score categories. With JML, the same box must supply
+both magnification and category steps.</li>
 <li>
 <strong>A broader generalized MFRM</strong> can give both the
 task/criterion and the rater their own magnification knobs. In the
@@ -1261,7 +1309,7 @@ boundaries, and the weighting review.</li>
 <code>Score</code> columns. Fit the same estimated-normal population in
 both models; <code>~1</code> estimates its mean and variance without
 covariates.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">persons</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">fit_pcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">dat</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
@@ -1513,11 +1561,11 @@ drawn from <code>supported</code>, <code>supported_with_caveat</code>,
 <code>RecommendedRoute</code> for the route to use next. The default
 print is deliberately compact; subset by status to inspect a focused set
 of rows.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
-<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.</span></span>
 <span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     Status Routes</span></span>
@@ -1530,10 +1578,10 @@ of rows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported_with_caveat"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
-<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.</span></span>
 <span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                 Status Routes</span></span>
@@ -1554,10 +1602,10 @@ of rows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"blocked"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
-<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.</span></span>
 <span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Status Routes</span></span>
@@ -1569,10 +1617,10 @@ of rows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"deferred"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"Boundary"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr GPCM workflow availability</span></span>
-<span><span class="co">#&gt; One facet supplies both slopes and category steps.</span></span>
+<span><span class="co">#&gt; One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.</span></span>
 <span><span class="co">#&gt; MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    Status Routes</span></span>
@@ -1663,7 +1711,8 @@ these programs the same model.</p>
 <tbody>
 <tr class="odd">
 <td><code>mfrmr::fit_mfrm(model = "GPCM")</code></td>
-<td>One selected facet supplies positive relative slopes and steps.</td>
+<td>One selected facet supplies positive relative slopes. MML permits a
+different step owner; JML requires the same owner.</td>
 <td>Each slope multiplies the complete adjacent-category predictor.</td>
 </tr>
 <tr class="even">
@@ -1950,9 +1999,9 @@ within the stated constraints:</p>
 <ul>
 <li>
 <strong>Fitting and core summaries</strong> via
-<code>fit_mfrm(model = "GPCM", step_facet = ...)</code>. The documented
-default keeps <code>slope_facet == step_facet</code>, with the direct
-<code>MML</code> engine.</li>
+<code>fit_mfrm(model = "GPCM", step_facet = ...)</code>, with the direct
+<code>MML</code> engine. Omitting <code>slope_facet</code> keeps the
+step owner; naming another facet separates the two owners in MML.</li>
 <li>
 <strong>Posterior scoring and information</strong> via
 <code><a href="../reference/predict_mfrm_units.html">predict_mfrm_units()</a></code>,
@@ -2117,7 +2166,7 @@ block that supports a <code>GPCM</code> fit. This example uses compact
 quadrature and iteration settings for a shorter runtime; for substantive
 analysis, rerun with the package default or a higher quadrature setting
 and a larger recovery design.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span>
 <span></span>

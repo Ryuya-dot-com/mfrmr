@@ -23,7 +23,8 @@ plot_facet_quality_dashboard(
   palette = NULL,
   label_angle = 45,
   draw = TRUE,
-  ...
+  ...,
+  title = NULL
 )
 ```
 
@@ -94,7 +95,9 @@ plot_facet_quality_dashboard(
 
 - main:
 
-  Optional plot title.
+  Compatibility title argument. Omitted or `NULL` keeps the default
+  title. Existing calls remain supported without a deprecation warning.
+  For new code, prefer `title`; do not supply both arguments.
 
 - palette:
 
@@ -111,6 +114,15 @@ plot_facet_quality_dashboard(
 - ...:
 
   Reserved for generic compatibility.
+
+- title:
+
+  Plot title. Omit it to keep the default, supply one character string
+  to replace it, or use `NULL` (or `""`) to suppress it. This changes
+  only the heading; numerical results, reference lines, subtitles and
+  interpretation notes remain. Both `main` and `title` explicitly
+  supplied is an error, even if equal or `NULL`. Positional legacy
+  arguments retain their order; use the exact name `title`.
 
 ## Value
 

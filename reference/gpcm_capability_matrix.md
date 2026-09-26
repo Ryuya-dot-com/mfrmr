@@ -6,12 +6,19 @@ not available.
 
 The table is intended for route selection before or after fitting and is
 limited to workflow availability, interpretive constraints, and the
-route to use next. The fitted model uses one facet for both relative
-discriminations and category steps (`slope_facet == step_facet`). It has
-one substantive ability dimension. These structural choices are stated
-separately from the availability of each output. An available
-probability or descriptive comparison does not establish eligibility for
-a confidence interval or model-selection rule.
+route to use next. The fitted model uses one facet for relative
+discriminations. MML permits a different facet for category steps; JML
+requires `slope_facet == step_facet`. It has one substantive ability
+dimension. Separate-owner MML supports fitted-object scoring,
+information, slope/curve uncertainty, matched PCM comparison and saved
+inference. Weighting reviews and simulation/design workflows still
+require the same owner; same-design
+[`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+supports separate owners. Numerical eligibility is not a coverage
+guarantee. These structural choices are stated separately from the
+availability of each output. An available probability or descriptive
+comparison does not establish eligibility for a confidence interval or
+model-selection rule.
 
 ## Usage
 
@@ -190,7 +197,7 @@ grouped slopes in `tam.mml.2pl(irtmodel = "GPCM.design")`. ConQuest
 estimates GPCM scores with `scoresfree`; its default slopes belong to
 combinations of facets (generalized items), with further grouping
 available through a scoring design. Neither construction automatically
-reproduces mfrmr's single slope/step facet and complete-predictor
+reproduces mfrmr's single slope family and complete-predictor
 multiplication. See the [TAM fitting
 documentation](https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html)
 and [ConQuest Note
@@ -257,7 +264,7 @@ interpretation.
 ``` r
 gpcm_capability_matrix()
 #> mfrmr GPCM workflow availability
-#> One facet supplies both slopes and category steps.
+#> One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.
 #> MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.
 #> 
 #>                 Status Routes
@@ -283,7 +290,7 @@ gpcm_capability_matrix()
 #> Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.
 gpcm_capability_matrix("supported")
 #> mfrmr GPCM workflow availability
-#> One facet supplies both slopes and category steps.
+#> One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.
 #> MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.
 #> 
 #>     Status Routes
@@ -298,7 +305,7 @@ gpcm_capability_matrix("supported")
 #> Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.
 gpcm_capability_matrix("blocked")
 #> mfrmr GPCM workflow availability
-#> One facet supplies both slopes and category steps.
+#> One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.
 #> MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.
 #> 
 #>   Status Routes

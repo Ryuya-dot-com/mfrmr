@@ -10,64 +10,90 @@ review](#before-cran-submission-interface-and-gpcm-review). The
 subsequent [GPCM inference
 audit](#gpcm-inference-follow-up-after-local-integration) now includes
 the approved inference extensions and population-replay correction.
-These are local changes after the frozen archive, which retains only its
-own recorded check results. The retained GPCM inference outputs now have
-explicit release dispositions: approximate methods remain available,
-while adverse coverage results and unqualified stronger claims remain
-visible. M5 local archive integration is complete for the September 26
-successor; M6 platform checking and publication remain open. For the
-current completion order, start with [Remaining work for the current
-source](#remaining-work-for-the-current-source). For work after 0.2.4,
-start with [Post-release priorities](#post-release-priorities). That
-section distinguishes ongoing maintenance, the next development focus
-and extensions that need a further scope decision.
+These changes are integrated into `main` at
+[`6f541bfa`](https://github.com/Ryuya-dot-com/mfrmr/commit/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7).
+Earlier candidate archives retain only their own recorded check results.
+The retained GPCM inference outputs now have explicit release
+dispositions: approximate methods remain available, while adverse
+coverage results and unqualified stronger claims remain visible. M5
+local archive integration is complete for the September 26 successor.
+Its five-platform checks, `main` integration, website update and
+matching rc.6 tagged assets are verified. M6 candidate publication is
+complete; a final release decision and CRAN submission remain separate.
+For the frozen rc.6 completion record, see [Remaining work for the
+current source](#remaining-work-for-the-current-source). For the current
+development order, start with [Active development
+milestones](#active-development-milestones). For work after 0.2.4, start
+with [Post-release priorities](#post-release-priorities). That section
+distinguishes ongoing maintenance, the next development focus and
+extensions that need a further scope decision.
 
 ## Current releases
 
-mfrmr 0.2.4 is a release candidate. It has not been released on CRAN;
-the final release decision is separate from integrating the source. The
-expanded candidate includes numeric-feature analysis, assigned-score
-imputation, fixed-facet intervals, screening evaluation, and shared
-random-rater and Person-specific testlet workflows alongside the
-existing calibration and G/D-study functions. Its implementation and
-help have passed [five-environment package
-checks](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35948657009).
+mfrmr 0.2.4.9000 is under development and has not been released. The
+development branch includes individual fixed-rater feedback sheets, a
+purpose-based plot guide, additional saved-result ggplot conversions,
+session plot defaults, random-rater bootstrap diagnostics and
+separate-owner GPCM MML. These additions have focused local evidence;
+they are separate from the checked 0.2.4 candidate described below and
+do not inherit its platform-check results. Development commit `0b11aed9`
+passed its own [five-environment
+CI](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36232110566).
+Later interface and documentation corrections have local checks and need
+a new check of their combined source. The integration scope is fixed
+below; this does not replace the frozen candidate or select a CRAN
+release version.
 
-The expanded candidate is integrated into `main` and published as
-[`v0.2.4-rc.5`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.5).
-Its downloadable archive and checksum have been verified after
-publication, and the [website](https://ryuya-dot-com.github.io/mfrmr/)
-provides corresponding help and executed tutorials. This candidate
-corrects missing figure descriptions and computation-skipped tutorial
-output found during rc.4 publication review. All fifteen tutorials now
-have executed output in the archive, with 68 described figures. The
-release notes identify the checked implementation and the separately
-verified documentation updates. Earlier candidates remain available as
-unchanged evaluation snapshots. Use the source tag or commit and
-matching installed help to identify functionality: earlier candidates
-also report package version `0.2.4`.
+mfrmr 0.2.4 is a release candidate. It has not been released on CRAN.
+The current candidate is
+[`v0.2.4-rc.6`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.6).
+It combines reusable calibration, external-feature analysis,
+assigned-score imputation, fixed-facet intervals, rater-feedback tools,
+multivariate observed-score G/D studies and the documented
+shared-rater/testlet workflows with the latest GPCM inference and API
+improvements.
 
-This candidate includes clearer help on function names, defaults and
-choosing an analysis. Seven extended-model examples use saved synthetic
-results so users can inspect summaries and figures quickly; complete
-recalculation instructions remain available. Examples, tutorials and the
-manual have been checked, and problems found during those checks have
-been corrected. Cross-platform package checks do not establish
-statistical performance beyond the stated scope or constitute CRAN
-acceptance.
+The tag points to `a7529b73`, which adds only package-excluded result
+records to implementation commit `6f541bfa`. The implementation passes
+[all five CI
+environments](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335441):
+macOS/R-release, Windows/R-release and Ubuntu/R-release, R-devel and
+R-oldrel-1. Every package check reports `Status: OK`;
+international-input and saved-result portability checks also pass. These
+are ordinary package checks, not five new exhaustive or `--as-cran`
+runs.
 
-The subsequent R-release Win-builder check of the URL-corrected source
-has zero errors, zero warnings and one NOTE about update frequency and
-maintainer information. A revised API/GPCM snapshot has since passed
-local checks and was sent for Windows checking. That upload is an
-earlier development snapshot. The initial API and GPCM inference changes
-were consolidated in a locally checked archive, as recorded under M5
-below. The additional inference targets described below postdate that
-archive. The September 26 successor has now completed local integrated
-checks, including repairs found in the full packaged test suite. It has
-not received successor five-environment CI or Windows checks. Passing
-package checks does not establish statistical performance beyond the
-stated scope.
+The attached source archive and SHA256 were verified by downloading both
+after publication. The archive includes 15 matching tutorials and 72
+figures with alternative text. Its local checks combine the initial
+exhaustive check, focused repairs and complementary checks described
+under M5; they are not represented as another exhaustive run. The
+archive SHA256 is
+`0f1f21c042512318a3b3c8ffbce246bcdab21db1d3dc2dce2cf5e091c58155e1`.
+
+The matching [website
+build](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335057)
+and [Pages
+deployment](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36159750653)
+succeed. Published help and tutorial source links identify `6f541bfa`.
+Seven extended-model examples use saved synthetic results for quick
+inspection; complete recalculation instructions remain available. The
+GPCM guide retains known adverse coverage results and distinguishes
+numerical availability from statistical accuracy.
+
+Earlier candidates, including rc.5, remain unchanged evaluation
+snapshots. They also report package version `0.2.4`; retain the exact
+tag or archive checksum with saved analyses. Earlier Win-builder checks
+refer to their uploaded sources. The same rc.6 archive has now completed
+Win-builder checks for R-release and R-devel: both have zero errors,
+zero warnings and one NOTE about maintainer information and update
+frequency. Examples, tests, vignette rebuilding and manuals pass; the
+logs and binaries have been preserved locally. URL review found no
+problems, and the current CRAN index lists no reverse dependencies in
+the five dependency categories. No CRAN submission has been made.
+Candidate publication, a final release decision and CRAN acceptance
+remain separate; successful package checks do not establish general
+statistical guarantees.
 
 | Workflow | Current position | Role in the planned 0.2.4 |
 |----|----|----|
@@ -75,6 +101,193 @@ stated scope.
 | External-feature clustering and imputation sensitivity | Included in the candidate, including hierarchical trees, plots and setting comparisons. | Preserve descriptive interpretation and paired imputation comparisons. |
 | Multivariate observed-score G/D studies | Crossed/nested point projections and explicit normal-theory intervals for prespecified two-crossed-facet plan differences are included. | Preserve the supported designs, uncertainty assumptions and metric-specific availability. |
 | Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are included in the baseline. Shared-rater and testlet RSMs are included for their bounded conditional/descriptive scope; broader inference remains unqualified. | Retain the G/D-study and two RSM workflows specified below; the matching candidate, archive and help are published. |
+
+## Active development milestones
+
+This section is the current execution order for `0.2.4.9000`,
+provisionally leading to the next feature release. It supersedes older
+forward-looking sentences in the historical work-package discussions
+below. It does not merge these additions into `main`, replace rc.6, or
+decide a CRAN release version. GitHub publication of a development
+commit is a reviewable checkpoint, not a statistical qualification or
+release approval.
+
+| Milestone | Present state | Work and exit condition |
+|----|----|----|
+| D0 — Preserve and review the implemented development snapshot | Development branch published; five-environment CI succeeded for `0b11aed9`. Later corrections are tracked separately. | Preserve source/test/help changes together and associate each check with its exact source. Publishing a branch does not qualify coverage. |
+| D1 — Evaluate separate-owner GPCM for a declared use | Integration disposition made: retain the implemented MML workflow with approximate inference and explicit limitations. The diagnostic pilot is complete; sampling-performance qualification remains open. | The current cycle closes this decision with the limited scope below, not with a claim of nominal coverage. Any confirmation study needs its own target and precision decision. |
+| D2 — Consolidate the delivered user workflow | Local exit conditions met for the selected routes below: workflow/replay checks, argument compatibility, supported conversions and author-checked walkthrough. Reader testing is not claimed. | Preserve those routes and limits through the D4 package checks. New reader findings can reopen a concrete usability defect; broader cosmetic uniformity is not required for this integration. |
+| D3 — Freeze the next integration scope | Scope fixed in the table below; source, help, NEWS and capability statements reconciled for that scope. | Admit only the listed additions and necessary corrections into D4. Retain limitations and deferred features explicitly; do not expand the feature list during integration. |
+| D4 — Integrate and qualify the selected source | Integration prepared against `main` at `82aaa318`; combined-source checks are in progress. Entry-page GPCM descriptions and selected site pages have been reviewed locally. | Resolve source changes against `main`, check the exact resulting source on five environments, perform one batched package/replay/documentation review, and resolve failures. Archive source identity and evidence. Submission-specific checks apply to the final archive, not earlier candidates. |
+| D5 — Release and maintain | Pending a separate release decision. | Publish matching source, documentation and version metadata after the integration checks. Track actual installation, interpretation and feedback problems. Any CRAN submission remains a distinct authorized action. |
+
+D0 is the endpoint of the present commit/push request: the roadmap and
+current implementation are saved together and the remote source is
+verified. A newly started CI run is reported as pending until it
+completes. D1–D5 are not marked complete by publishing the branch, nor
+does their numbering require repeating completed evidence.
+
+### D1: the next statistical question and a bounded evaluation
+
+The question is whether criterion discrimination and rater-specific
+category use can be estimated and reported usefully when raters share
+performances but the assignment is incomplete. Keep one positive slope
+family, centered step contrasts, the existing complete-predictor slope
+action and the default estimated normal population. JML, two
+simultaneous slope families and portable calibration are outside this
+evaluation.
+
+1.  **Fix targets and the data-generating model first.** Specify
+    relative slopes, step contrasts and prespecified rating-context
+    probabilities separately. Use the independent scalar generator
+    already checked against the likelihood. Declare the category
+    structure, links between raters, true parameters and intended
+    interpretation before generating results. Do not equate slope
+    discrimination with rater quality or category use with a causal
+    training effect.
+2.  **Start with a small, interpretable pilot.** Use complete versus
+    connected incomplete assignments at two sample sizes, keeping the
+    generating model otherwise fixed. At most 40 datasets per cell are a
+    diagnostic pilot, not a coverage qualification. Include
+    deterministic confounded-design rejection and both owner-order
+    kernel checks from existing tests rather than simulating those
+    failures repeatedly. Measure fitting, inference and storage costs
+    before choosing a confirmation budget; no nested bootstrap grid
+    starts automatically.
+3.  **Keep every planned dataset in the accounting.** Report
+    convergence, identification, quadrature/information eligibility,
+    bias/RMSE, interval width, unconditional availability and coverage
+    with Monte Carlo uncertainty. Show conditional-on-availability
+    coverage separately. Calibration-probability and relative-slope
+    intervals are distinct targets. A matched PCM comparison must
+    preserve step ownership, population and constraints; null-test
+    calibration requires a separately declared unit-slope condition.
+4.  **Make a decision before adding conditions.** Repair a reproduced
+    numerical defect, narrow the usable scope, or register a
+    confirmation study with sample size derived from the desired Monte
+    Carlo precision and a measured budget. Preserve adverse results. Do
+    not claim nominal coverage from the pilot, or broaden the grid
+    merely to explain earlier runs. Existing small-sample GPCM
+    undercoverage remains relevant caution, not evidence for this new
+    structure.
+
+The first four-cell pilot is complete. In the correctly specified model,
+all planned fits and target intervals were available. Removing one of
+three raters per Person widened the slope intervals by about 45–53%; no
+estimator defect was reproduced. The small repeated-sampling check does
+not establish 95% coverage: even perfect coverage in a cell of 20
+datasets has a 95% Monte Carlo lower bound near 83%. See the [pilot
+result and cost
+review](https://ryuya-dot-com.github.io/mfrmr/inst/validation/gpcm-separated-owner-pilot-record-20260926.md).
+Do not repeat that pilot. A confirmation study needs an explicit target
+and precision decision; D2 can proceed while stronger interval claims
+remain open.
+
+General simulation/design APIs and dedicated weighting reviews should be
+extended only after the role semantics, replay and intended decision are
+clear. Until then they explicitly refuse separate owners; same-design
+parametric resampling through
+[`bootstrap_mfrm_gpcm()`](https://ryuya-dot-com.github.io/mfrmr/reference/bootstrap_mfrm_gpcm.md)
+is already connected.
+
+### D2: compatibility and delivery decisions
+
+Use
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+for retaining analysis outputs,
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html)/[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+for views of the appropriate result,
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+for reports and
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+for an analyst bundle. These are coordinated operations, not a mandatory
+linear pipeline or replacements for every specialist function. Keep the
+individual recipient sheet distinct from an analyst archive.
+
+Inventory the relevant arguments by meaning before renaming them: plot
+geometry, metric and display view are not all interchangeable `type`
+arguments. Add aliases only with tests for old/new equivalence,
+conflicts, omitted arguments, NULL and saved replay. Mark a function
+superseded only when its replacement covers its actual task. Extend the
+plot conversion inventory when a user workflow exposes a gap; exhaustive
+conversion is not a prerequisite to a useful release.
+
+The fixed-rater walkthrough now connects saved results to individual
+sheets, interval figures, analyst reports and archive/reopen operations.
+The reporting guide uses the same entry points and keeps specialist
+manuscript tools visible. The executable walkthrough and existing
+feedback tests pass locally. This is an author-checked workflow, not
+evidence of novice comprehension. The selected argument/default review
+is complete for the integration scope below. A full package-wide rename
+and actual reader evaluation remain separate follow-up work.
+
+The primary fitted-model plot route now accepts named `level` alongside
+the existing `ci_level` spelling, rejecting simultaneous use. Saved
+fixed-facet intervals retain their computed level; saved core plot
+conversion rejects unsupported settings rather than silently ignoring
+them. Source help explains why ordinary fitted plots use
+`show_title = FALSE`, while newer interval plots use `title = NULL`.
+Keep these compatibility distinctions visible instead of changing
+existing scripts silently. Selected-route regression checks cover actual
+interval widths, old/new spelling equivalence, plot-data/result/ggplot
+forwarding and saved rendering. This does not rename every specialist
+helper.
+
+### D3: fixed integration scope and retained limits
+
+The integration starts from the existing rc.6 functionality and adds the
+following development work. This is a source-scope decision, not a claim
+that all research extensions are complete or a decision to publish a new
+version.
+
+| Included workflow | Retained behavior and limit | Basis for integration |
+|----|----|----|
+| Individual fixed-rater feedback | Native additive RSM/PCM sheets, plain/researcher guidance, HTML and tables; saved diagnostics and eligible individual intervals. No automatic rater-quality decision, PDF API or extended-model recipient sheet. | Saved-value and missing-input tests; identifier omission; recipient HTML persistence; analyst RDS/export replay; executed fixed-rater walkthrough. |
+| Plot discovery and saved conversion | Selected purpose guide, accessible gallery, PCA, hierarchical trees, silhouettes, feature profiles, imputation co-membership and pooled fixed-facet intervals. The guide identifies unsupported conversions and alternatives. | Route/converter checks and existing saved-result evidence. Screening-performance, univariate D-study and multivariate plan-difference ggplot conversion remain unavailable; native plots and data extraction remain usable. |
+| Plot settings and compatibility | Common session presets; eight title aliases; named `level` on ordinary fitted-model plots; explicit rejection of invalid saved-plot overrides. Existing argument positions/defaults remain intact. | Old/new equivalence, interval-width, omission/NULL/conflict, rendering and replay checks. Geometry, metric and display-view arguments keep their different meanings; specialist helpers are not universally renamed or deprecated. |
+| Separate-owner GPCM MML | One positive slope family, possibly a different step owner, existing scale identification and full-predictor slope action; connected fitting, scoring, approximate inference, matched PCM comparison, same-design resampling and reports. | Independent likelihood/derivative checks, owner identity and confounding checks, actual export/reopen checks and the fixed diagnostic pilot. No general coverage or sparse-design guarantee. JML separate owners, two slope families, portable GPCM calibration, separate-owner weighting review and general design simulation remain unsupported. |
+| Random-rater uncertainty reporting | Saved refit numerical/variance-boundary diagnostics and clearer explanation of unresolved interval endpoints. | Existing refit/report/replay tests and retained statistical evidence. No changed interval formula, general coverage qualification or automatic replacement of infinite limits. |
+| Distribution and documentation corrections | CI registry/metadata fixes, honest unavailable-PCA reporting in development checks, aligned help/NEWS/tutorial statements. | Reproduced failures and focused repairs; the earlier five-environment run and a new combined-source check under D4. |
+
+The selected output routes keep their own result objects: fixed-rater
+and GPCM reports use
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),
+while feature, imputation and G/D-study results use their documented
+dedicated objects.
+[`mfrmr_output_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_output_guide.md)
+is the route map; wrapping every analysis in one object or converting
+every figure is not an integration requirement. The known conversion
+gaps are explicit exclusions, not completed implementations. Actual
+novice comprehension and the latest tutorial’s browser appearance have
+not been verified; do not advertise either as established
+accessibility/usability evidence.
+
+For D4, compare the selected source with the current `main`, publish one
+combined development checkpoint and check that exact source on the five
+environments. Then integrate the reviewed source and reconcile any
+changed source identity; do not transfer results from an older commit
+merely because the version matches. Reuse the retained numerical studies
+and saved-workflow evidence. Repeat a targeted check only for a changed
+path or failure, and run broader checks once for the combined package
+rather than per documentation correction. A main merge, tag, website
+publication or CRAN submission is not recorded as complete here.
+
+### Later extensions and explicit reopening conditions
+
+| Candidate | Dependency and decision before work resumes |
+|----|----|
+| Shared-rater interval qualification | The current bootstrap remains a candidate. Reopen only after a concrete numerical/method improvement, a justified narrower target or a feasible measured computation plan. Reuse the 800-dataset review and retained draws. More inner draws alone do not repair unavailable tails. |
+| GPCM profile-likelihood intervals | Define the relative or standardized target, nuisance reoptimization, boundary/multimodality handling and cost. Compare with existing Wald behavior under a declared design. Do not assume a profile fixes misspecification or the observed probability-interval undercoverage. |
+| Portable GPCM calibration | Freeze slope/step ownership, identification, category/facet maps, population and anchor metadata; verify held-calibration scoring and save/load compatibility, including rejection of incompatible inputs. A live fitted-object scorer is not a portable artifact. |
+| G/D-study planning extensions | Begin with a concrete task-versus-rater allocation decision using existing cost/scenario tools. A new nested-plan interval or general structure requires its own target, identification and evidence; observed-score G-theory remains distinct from latent MFRM. |
+| Random-effects/testlet extensions | Admit a specific practical need and define the joint likelihood, effect sharing, diagnostic meaning and maintenance burden before adding covariance or slope blocks. Existing numerical support does not qualify new uncertainty. |
+| Multidimensional MFRM | Remains deferred until dimensions, loadings, covariance identification and scoring/reporting decisions are agreed. It is not a dependency for D0–D5. |
+
+At D3, unresolved research claims may remain documented limitations;
+broken supported routes, silent owner changes, misleading uncertainty
+labels and incompatible saved outputs must be repaired. Stop this
+development cycle at the selected D4/D5 scope, not when every research
+candidate has been implemented.
 
 ## Purpose and priorities
 
@@ -119,8 +332,9 @@ The following is the retained candidate scope. These public workflows
 have completed local integration, cross-platform package checks and
 GitHub publication verification. Completion of the previously published
 candidate alone did not establish this expanded scope. The interface and
-GPCM review below is a further pre-submission requirement; its local
-API, summary and guidance changes are not in the published candidate.
+GPCM review below is a further pre-submission requirement; its API,
+summary and guidance changes are now in `main` and rc.6. They were not
+in the rc.5 candidate.
 
 | Included in 0.2.4 | Outcome required before release | Explicit boundary |
 |----|----|----|
@@ -188,7 +402,7 @@ freeze.
 | M3 — Qualified model workflows | Numerical and statistical evidence supports the retained model outputs under declared conditions; adverse results remain visible. | Release disposition settled for the retained approximate outputs, as specified below. This is not a finding that every nominal interval has adequate coverage: probability families show substantial undercoverage, and bootstrap repeated-dataset accuracy remains unqualified. The agreed APIs remain available with those limits; no improved-coverage claim or new interval method is included. Earlier shared-rater/testlet restrictions remain in force. |
 | M4 — User and maintenance integration | Representative workflows, defaults, warnings, figures, exports and help agree on the same source. | Changed GPCM paths and common-MML consumers have focused evidence. Actual weak/unavailable/unbounded interval displays, Markdown reasons and CSV/RDS replay now pass representative review. The current-source educational assessment-to-feedback walkthrough is complete, including its precision-decision repair and optional saved-result branches. Independent novice usability testing has not been performed. |
 | M5 — Local completion | Freeze one source/archive after M1–M4; run applicable integrated checks and resolve failures. | Complete locally for the September 26 successor. The initial full suite found three failures, all repaired and checked with 516 focused expectations. Source-documentation and fresh-session complements pass; the final archive passes 0 errors / 0 warnings / 1 maintainer/update-frequency NOTE. Full tests/examples/manuals were not repeated: the exact repair delta and reusable evidence are recorded in the [integration record](https://ryuya-dot-com.github.io/mfrmr/inst/validation/claim-reconciliation-0.2.4.html#2026-09-26--complete-local-integration-of-the-retained-inference-scope). |
-| M6 — Public release | The same successor source passes applicable platform checks and has matching main/release assets/help/site. | Open for the current source. The recorded rc.5 publication and Windows uploads do not validate the subsequent changes. CRAN submission and acceptance are separate. |
+| M6 — Public release | The same successor source passes applicable platform checks and has matching main/release assets/help/site. | Candidate publication complete for rc.6: all five platform checks pass, matching help/tutorials are deployed, and the tagged archive/checksum are verified after download. Final release and submission decisions remain separate. Earlier Win-builder uploads retain their original source identity. |
 
 M1 workflow finishing and M2 read-only model/statistical decisions can
 progress together. M2 precedes new confirmation work; M3 and M4 precede
@@ -229,17 +443,19 @@ analyses](https://ryuya-dot-com.github.io/mfrmr/README.html#updating-saved-analy
 and
 [`vignette("mfrmr-portable-calibration", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-portable-calibration.md).
 
-## Current local implementation and remaining evidence
+## Current implementation and remaining evidence
 
 The table below records current capability and statistical limits. The
 release scope and milestones above set the completion conditions. The
 September 26 successor completes M5 locally. Evidence is reused only for
 unchanged source and matching scope, with the exact repair delta
-recorded. Successor platform checks and public release remain pending.
+recorded. This implementation is now in `main`; its five-platform checks
+and website deployment pass. The matching rc.6 tag and downloadable
+archive are verified.
 
 | Workstream | Current status and completion condition |
 |----|----|
-| Numeric k-means/PCA | Implemented and checked locally with explicit geometry, component selection, paired feature imputations, plots, comparisons and executed help examples. Included in GitHub rc.5; the later recommended PAM name and guidance remain local. Group validity and inferential guarantees are not established. |
+| Numeric k-means/PCA | Implemented and checked locally with explicit geometry, component selection, paired feature imputations, plots, comparisons and executed help examples. Included in GitHub rc.5; the later recommended PAM name and guidance are included in rc.6. Group validity and inferential guarantees are not established. |
 | Assigned-response multiple imputation | Implemented and checked locally for reviewed supplied imputations and fixed-standard-normal RSM/PCM MML analyses. Event eligibility, assignment, categories and observed evidence are preserved; eligible non-person facet targets use covariance-aware Rubin pooling. The joint-RSM tutorial includes forty posterior predictive completions, shared Person draws, calibration uncertainty, sampling diagnostics, category probabilities and a separate lower-score assumption. In its 30-missing-score example, direct observed-score MML and MI contrasts are 0.463 and 0.468 logits; the lower-score assumption gives 0.667 logits. All eighty completed-data fits are eligible. A paired 200-dataset comparison now adds bounded evidence: under the tested MAR design, MI coverage is 96.5% among 198 available intervals (95% Monte Carlo bounds 92.9–98.6%); two posteriors miss the sampling-diagnostic threshold. Under low-score-dependent MNAR, coverage is 26.0% with +0.574-logit bias despite a similar missing fraction near 14%. The planned comparison is complete. Preserve this scope through integration; proper imputer priors versus MML moments remain an approximation, and arbitrary imputers/designs or general coverage are not qualified. EAP pooling and other model families remain outside this route. |
 | Robust intervals and coverage | A one-way sandwich API is implemented and checked locally for fixed-facet RSM/PCM MML estimates and contrasts, using persons or declared larger independent clusters. Help, plots, independent derivative checks and a 1,600-dataset bounded comparison are complete. All intervals were available; generating-truth coverage still fell to 87% in the joint skewed/sparse scenario. The method targets the working model’s limiting parameter and does not remove misspecification bias. This bounded target, its public interpretation and local integration are complete. Small-cluster, multiway/crossed, G/D-study and variance-boundary extensions remain later work. |
 | Rater diagnostic accuracy | A planned-roster API, plot and tutorial are implemented locally, with unavailable outcomes retained and per-target/family rates distinguished. A prespecified 1,000-trial matched-budget study reused 200 results and fitted 800 new datasets. The tested Infit/Outfit union detected only 6/100 and 2/100 contaminated-rater cases under two sparse assignments; false-family flags were 0/100 except 1/100 in one missingness condition. All screens were computable, but three fits required category-support review. Threshold calibration, other departures including differential rater functioning, and broader accuracy remain open. Flagging alone does not justify rater exclusion. |
@@ -284,7 +500,7 @@ excluded from the scope do not hold up these repairs.
 | Reconcile changed bootstrap results | Provenance reconciliation and output repair complete (M2/M4) | The original object has 408 admitted / 91 unresolved; the assembled category-case reanalysis has 470 / 29. Seeds and all 62 replaced rows match their retained records. Two later finite repairs remain separate. Reanalysis history now follows print, intervals and report tables. | Neither saved object is a full run of the current estimator. Preserve both unchanged; do not claim 472 accepted or current-procedure bootstrap performance. A complete new bootstrap is needed only to make a corresponding new performance claim; repeated-dataset coverage remains unqualified. |
 | Assessment-to-feedback and planning workflows | Current-source educational walkthrough complete; author integration review (M4) | The 282-rating educational example runs from rubric/assignment review through RSM MML, diagnostics, feedback, figures, report/export and RDS reload. Saved precision now reaches result/report decisions correctly. Existing PCA/group/MI and complete/incomplete D-study outputs retain matching summaries and plot data without refitting. Earlier extended-model evidence is retained. | Preserve the explicit category choice, session-dependent screening explanation and dedicated branch routes during final integration. This is author review, not a novice-reader study, coverage validation or fresh qualification of every model/option. See the assessment-workflow record below. |
 | Current-source help and local archive | Complete locally (M5) | The September 26 archive has executed/replayed updates for three articles, twelve unchanged article outputs, 72 described figures and a verified 15-entry vignette index. The full test findings and focused repairs are reconciled; the final archive passes its applicable checks with one maintainer/update-frequency NOTE. | Preserve the frozen source and its evidence. Any later runtime change needs impact-specific checks; the earlier CI/Windows snapshots do not validate this archive. |
-| Successor CI, Windows and publication | Required public handoff (M6), after local completion | Earlier published/check snapshots are recorded above. | Use the frozen successor source for applicable platform checks and matching release artifacts. Keep final publication, CRAN submission and CRAN acceptance distinct. Current local work does not initiate external publication. |
+| Successor CI, Windows and publication | Candidate handoff (M6) and planned submission checks complete | `6f541bfa` passes all five CI environments, including Windows/R-release. Matching website deployment and rc.6 assets are verified. Both current Win-builder logs are reviewed: zero errors/warnings and one maintainer/update-frequency NOTE each. URL and CRAN reverse-dependency checks are complete. | Settle the final release/submission decision using the checked source/archive. Earlier Win-builder results retain their original source identity. CRAN submission and acceptance remain distinct. |
 
 The claim/evidence mapping is now recorded in the [retained-claims
 review](https://ryuya-dot-com.github.io/mfrmr/inst/validation/claim-reconciliation-0.2.4.html#2026-09-25--map-retained-claims-to-evidence-and-audit-changed-admissions).
@@ -398,8 +614,8 @@ decision. The broad grid and nested study remain unexecuted. General
 guarantees were already outside the stated scope; no agreed API is being
 moved to another release.
 
-**M5 is complete locally; next is M6 on the frozen successor.** The
-final archive SHA256 is
+**M5 and M6 candidate publication are complete for rc.6.** The final
+archive SHA256 is
 `0f1f21c042512318a3b3c8ffbce246bcdab21db1d3dc2dce2cf5e091c58155e1`. The
 initial full suite passed 23,290 expectations and found three failures;
 these are repaired, with 516 focused expectations passing. The final
@@ -412,10 +628,11 @@ documentation and fresh-session checks complement the installed suite;
 32 repository-research skips retain their existing scope.
 
 Do not repeat the 100 matched refits, 800-fit reanalysis or full suite
-without a relevant change or failure. Successor platform/Windows checks,
-publication and CRAN submission remain separate; the completed local
-work initiates none of them. Probability undercoverage and unqualified
-bootstrap sampling claims remain as stated in the release dispositions.
+without a relevant change or failure. The five-platform run and website
+deployment were separately authorized after local completion. Tagged
+release publication, Win-builder upload and CRAN submission remain
+separate. Probability undercoverage and unqualified bootstrap sampling
+claims remain as stated in the release dispositions.
 
 The common-MML consumer repair remains supported by its focused checks;
 those checks do not establish weak-information frequency or sampling
@@ -467,12 +684,12 @@ remain compatible.
 The completion order is now the [current-source
 register](#remaining-work-for-the-current-source): retain the completed
 common-MML consumer checks and registered protocol, reuse the completed
-engineering, changed-inference and supported-workflow reviews and the
-completed M5 archive checks, then check the same successor on the
-required platforms under M6. A single dataset with many bootstrap refits
-is not a repeated-dataset coverage study. Changing the point estimator
-requires paired evidence of benefit and a documented target change; it
-is not an automatic response to one low-coverage cell.
+engineering, changed-inference and supported-workflow reviews, M5
+archive checks and the completed five-platform checks and candidate
+publication under M6. A single dataset with many bootstrap refits is not
+a repeated-dataset coverage study. Changing the point estimator requires
+paired evidence of benefit and a documented target change; it is not an
+automatic response to one low-coverage cell.
 
 The release dispositions above settle the retained approximate APIs;
 stronger statistical performance claims remain unqualified. The focused
@@ -530,11 +747,12 @@ their tested conditions. The subsequent common-MML consumer review
 repairs warning propagation. Those repairs alone did not establish
 sampling qualification or workflow completion; the later release
 dispositions, representative output checks and M5 integration above
-supply the separate release decisions. M6 remains open. The earlier
-sequence of repeated case investigations is superseded by that register.
-A new general boundary estimator is not inferred from finding an
-unavailable interval; the demonstrated refusal/output behavior and
-remaining statistical limits remain in force.
+supply the separate release decisions. M6 candidate publication is
+verified for rc.6. The earlier sequence of repeated case investigations
+is superseded by that register. A new general boundary estimator is not
+inferred from finding an unavailable interval; the demonstrated
+refusal/output behavior and remaining statistical limits remain in
+force.
 
 ## Rater feedback across application areas
 
@@ -820,7 +1038,7 @@ undecided; this deferral does not imply implementation or completion.
 | Area | Current restriction or trigger for further work |
 |----|----|
 | RSM/PCM | Preserve the supported fitted-model workflows and fixed-normal MML portable scope. Extend only with matching identification and uncertainty evidence. |
-| GPCM | A selected facet owns slopes and steps. MML IC ranking, the matched PCM/GPCM LRT and approximate relative-slope intervals have separate checks; see G1–G3 below. Small incomplete designs retain coverage/precision limits. JML intervals, additional slope structures and portable GPCM remain separate work. |
+| GPCM | The frozen rc.6 uses one shared slope/step owner; development MML also permits separate owners with one slope family. MML IC ranking, the matched PCM/GPCM LRT and approximate relative-slope intervals have separate checks; see G1–G3 below. Small incomplete designs retain coverage/precision limits. JML intervals, additional slope structures and portable GPCM remain separate work. |
 | JML | Uncorrected estimates retain infinite extreme Persons; optional display replacements do not change primary estimates. SEs and normal bands remain exploratory. A correction or portable JML needs a separate method decision. |
 | Estimated populations and Fair Scores | Existing conditional/diagnostic output retains its limits. New population intervals, omnibus DRF inference or inferential FairZ methods require their own target and evidence. Inclusion requires a specific stage-2/3 scope decision; the new release order does not itself qualify them. |
 | Multiple observed scales | Require explicit scale identifiers and a concrete separate-scale use case. Do not silently pool or link scales. Inclusion requires a specified model-extension scope. |
@@ -894,9 +1112,10 @@ Category policy and actual score recoding remain distinct, including
 unknown metadata in older objects. The feedback guide and GPCM inference
 decisions are included in the checked archive. The M5 record identifies
 the full run, test repairs and reused results; older Windows checks do
-not validate this successor. M6 platform checking and publication remain
-open. Package checks do not turn restricted outputs into universal
-statistical guarantees.
+not validate this successor. Its five-platform CI now passes, its
+website is updated and its rc.6 tagged assets are verified under M6.
+Package checks do not turn restricted outputs into universal statistical
+guarantees.
 
 ## GPCM: specific restrictions and their exit conditions
 
@@ -935,7 +1154,79 @@ these implementations.
 | 0.2.4 pre-submission integration | Readers can distinguish model structure, estimation checks, uncertainty, scoring and diagnostic availability. | Fit help, tutorial, capability table, summaries and comparisons agree on the current behavior. No claim that a new name unlocks an unavailable interval or prediction. |
 | 0.2.4 existing-model inference | The current single-facet GPCM provides MML IC comparison, a matched PCM/GPCM LRT and approximate relative-slope intervals for eligible fits. | Complete G1–G3, propagate their separate decisions through summaries, weighting reviews, plots and saved output, and reconcile help/examples/NEWS. Reuse existing numerical evidence and run only missing target-specific checks. JML inference and additional slope structures remain separate. |
 | First structural extension | For example, criterion-specific discrimination with rater-specific category steps, using one slope family. | Specify separate slope/step roles and identifiable data patterns; recover the current model when roles coincide and PCM at unit slopes. Verify probabilities, derivatives, parameter maps, numerical behavior, uncertainty and the retained scoring/reporting paths. This removes the equality restriction only for the admitted scope. |
+| Next inference candidate | Profile-likelihood intervals for a prespecified GPCM MML slope target, with a profile plot and comparison to its Wald interval. | Reoptimize nuisance parameters subject to the existing identification constraints. Retain failed searches, unbounded endpoints and numerical/integration diagnostics. Qualify coverage, interval availability and computing cost for the chosen target; superiority over Wald or lower cost than bootstrap is not assumed. |
+| Operational GPCM extension | Save a reviewed GPCM calibration and score new Persons without refitting that calibration. | Carry slopes and their owner, steps and their owner, category coding, population/scoring reference, anchors, constraints and schema version. Match supported in-fit versus saved-calibration scores, fresh-session replay and explicit rejection of incompatible new data. Conditional scoring and calibration uncertainty remain distinct. |
 | Further model proposals | Simultaneous task/rater slope families, moderated effects or other structures. | A separate substantive need, constraints separating the effects, informative designs, matched numerical/statistical evidence and useful output. These proposals are not prerequisites for completing the preceding stages. |
+
+Separate slope/step ownership still uses one slope family; it does not
+estimate rater and criterion slopes simultaneously. Its first
+implementation should keep the current full-predictor slope action
+unchanged. Rater-specific steps describe category use conditional on
+that model, not an automatic diagnosis of a rater’s habit. Rater
+location and step contrasts need separate identification, adequate
+crossing and category support, especially in incomplete designs.
+
+The September 26 numerical verification checks two slope levels versus
+three step levels and the reversed ownership, complete and incomplete
+crossed rosters, and fixed/adaptive MML integration. Direct scalar
+category recursion and independent R integration agree with the marginal
+likelihood; analytical gradients agree with finite differences, and unit
+slopes reproduce PCM values and nuisance gradients. These are checks at
+specified parameter points with a known standard-normal ability
+distribution, not fitting, identification, recovery, interval
+qualification or a newly available public model.
+
+The September 26 local development implementation now admits separate
+owners for additive **MML**, with one positive slope family,
+geometric-mean-one identification and unchanged full-predictor slope
+action. Estimation, fitted-object scoring, information, eligible
+slope/curve intervals, matched PCM comparison, same-design parametric
+bootstrap, saved inference and exports preserve both owners. CCC and
+expected-score pathways show every step/slope pair; the joint profiles
+do not inherit a single-facet Infit flag. The fit-versus-measure pathway
+retains its separate individual-facet diagnostics.
+
+The fitted checks cover 120 persons, three step-owning raters and two
+slope-owning criteria; an interchange of facet names preserves the
+likelihood and parameter vector. A rotating two-rater assignment also
+yields a numerical solution and eligible approximate slope intervals. A
+perfectly confounded rater/criterion assignment is rejected before
+optimization (rank 4/5). A matched free-population PCM comparison adds
+one slope contrast, not two step contrasts. Three parametric bootstrap
+refits preserve the structure; these are integration checks, not
+resampling-accuracy evidence. Existing equal-owner inference,
+comparison, reporting and plot regressions remain intact.
+
+**Completion boundary for this tranche:** the connected local MML
+workflow and its help/NEWS are implemented. JML, dedicated weighting
+reviews and general simulation/design helpers explicitly retain the
+same-owner restriction. No claim of finite-sample coverage, general
+identification under arbitrary sparse designs, global optimum
+certification or equivalence to unrestricted generalized MFRM follows.
+Evidence is in `validation-results/gpcm-separated-owners-20260926/fit/`
+and the claim ledger. This is development-version work; the frozen 0.2.4
+candidate is unchanged.
+
+**Next admission milestone:** assess separate-owner estimation under a
+small, predeclared set of practically relevant crossed/incomplete
+designs, distinguishing convergence, information availability, parameter
+recovery and interval coverage. Choose simulation size from the decision
+and Monte Carlo precision, reuse the present kernels/fixtures, and stop
+if identification fails. Extending general simulation/design APIs or
+recommending operational use requires this evidence; a new profile
+interval or portable calibration is a separate milestone. Do not launch
+a large factorial experiment merely because the model now fits.
+
+Profile likelihood is a candidate method, not an established repair for
+the observed probability-interval undercoverage. A relative slope, a
+population-standardized slope and a category probability are different
+targets; improving one interval does not qualify the others. Model
+misspecification and nonregular cases are not repaired by replacing a
+Wald interval with an ordinary likelihood-ratio cutoff. The existing
+likelihood and derivatives can be reused, but the joint information
+matrix alone does not produce a profile. Numerical search reliability
+and time must be measured, as discussed by [Fischer and
+Lewis](https://doi.org/10.1007/s11222-021-10012-y).
 
 Qualification must match the output: a parameter interval, a predictive
 quantity and an information-criterion comparison do not have identical
@@ -1022,7 +1313,8 @@ these stated outputs. That earlier source completed M5 local
 integration, with the full-run findings repaired and a frozen successor
 archive checked. The integration record distinguishes the initial full
 run from focused repairs and content-identical reuse. Earlier
-Win-builder results cannot validate this archive; M6 remains open.
+Win-builder results cannot validate this archive; current-source CI and
+rc.6 publication are verified separately under M6.
 
 Portable GPCM calibration is a separate lifecycle extension: it must
 retain slopes, steps, population/scoring reference, anchors and
@@ -1106,7 +1398,7 @@ extension.
 
 | Horizon | Outcome | Release boundary |
 |----|----|----|
-| 0.2.4 | Finish the pre-submission API/GPCM review, publish and maintain the retained assessment workflows. | GitHub rc.5 publication is verified. The September 26 successor completes M5 for the retained GPCM inference extensions and reporting workflows, with approximate-output limits explicit. New platform checks and publication remain open. Windows results belong to their uploaded snapshots. CRAN review and acceptance remain separate. |
+| 0.2.4 | Finish the pre-submission API/GPCM review, publish and maintain the retained assessment workflows. | rc.6 candidate publication is verified: the successor completes M5, is in `main`, passes five-platform CI and has matching help/tutorials and downloaded release assets. Approximate-output limits remain explicit. Final release/submission decisions remain separate; earlier Win-builder results belong to their uploaded snapshots. CRAN acceptance is not implied. |
 | Maintenance releases, if needed | Correct reproducible calculation, interpretation, installation or compatibility defects. | Preserve supported behavior where possible; identify affected versions, explain any changed result and provide recovery or migration instructions. Research extensions do not delay necessary repairs. |
 | Next feature release, provisionally 0.2.5 | Improve rater feedback where qualified and address actual post-release API experience. | Build on the interface and GPCM scope decisions completed before 0.2.4 submission. Keep compatible transitions; admit additional inference or model scope only with its own evidence. |
 | Subsequent feature releases | Extend assessment planning and the retained models for concrete decisions. | Assess the GPCM slope action and slope/step ownership separately, using the ConQuest/TAM model decisions above. Neither waits for multidimensional MFRM or full software parity. Each admitted extension has its own release scope; not every candidate belongs in 0.2.5. |
@@ -1193,6 +1485,205 @@ universal wrapper is not a substitute for clearer existing entries.
 Reuse current tutorials and improve them around actual reader failures
 rather than adding a parallel set of guides.
 
+### Next interface and feedback delivery
+
+The September 26 rc.6 baseline review confirms 208 exports, 35 `plot_*`
+names and 44 registered
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods. Among
+the 35 names, first arguments are `x` (20), `fit` (13), `fits` (1) and
+`reference` (1); eight expose `main`, none expose `title`, ten expose
+`ci_level`, and 28 expose `preset`. Two of these 35 names are the
+extraction helpers
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+and
+[`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md),
+so these counts are not a count of distinct figure types. Counts
+describe the reviewed source, not a target for reducing exports.
+
+The recommended results/report/export route, beginner/feedback guide and
+primary-versus-specialist pkgdown sections already exist. They need a
+clearer task-based presentation. `plot(res)`, `mfrm_report(res)` and
+`export_mfrm_results(res)` consume the same saved results object; they
+are not a pipe in which the plot becomes report input. Specialized
+table, bias and replay-bundle operations remain useful where that route
+is not equivalent.
+
+The following is a concrete next-feature plan, provisionally for 0.2.5.
+It does not change the checked rc.6 implementation. The progress note
+below distinguishes local additions from the remaining work. The first
+implementation should make plot/report capabilities and recommended
+routes explicit, then use those routes for individual rater sheets.
+
+| Work | Delivery and completion condition |
+|----|----|
+| Recommended and specialist routes | Extend the existing guide and reference sections with input/output roles and precise alternatives. Mark a function `superseded` only when a tested replacement covers its supported task; retain [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md), focused bias reports and specialist exports where they have a distinct role. Distinguish recommendation from stability. The current guide’s `Lifecycle` column mixes `stable`, `advanced` and `compatibility`; user level and compatibility role must be kept distinct from formal lifecycle stages without breaking existing guide consumers. |
+| Argument consistency | Prefer `title` for equivalent plot titles and `level` for an interval that is actually computed. Keep `x` for standard S3 methods and meaningful multi-input names. Keep `metric` distinct from view/style selection. Add compatible aliases only after specifying omission, explicit `NULL`, conflicting arguments and positional-call behavior. Preserve old/new numerical and display results; do not recalculate a saved interval when changing its plot. |
+| ggplot coverage | Publish and check a matrix of result class, plot type and relevant component, identifying dedicated support, generic fallback, refusal and alternative route. Existing dedicated conversions and explicit refusals are the baseline. Compare estimates, units, group ordering, intervals, unavailable rows, warnings and display controls using saved payloads. Add dedicated conversions for useful gaps; arbitrary column matching is not evidence of equivalent graphics. |
+| Purpose-based gallery | Reuse the guide and existing tutorial figures for severity, fit, category functioning, sparse-design review, features and D-study planning. Each thumbnail links to an executed example, supported objects, base/ggplot status, alternative text and a data table. Gallery entries must agree with the capability matrix; no separate competing registry is needed. |
+| Individual rater feedback | Produce one rater-scoped HTML sheet with print styling and a plain-language/researcher presentation, using reviewed saved results without automatic refitting. Include severity and its available uncertainty, rating exposure, fit, category use, selected unexpected ratings and an explicit comparison reference. Keep ordinary and extended-model diagnostic meanings distinct. Missing sections must say why; severity is not rater quality and flags do not automatically justify exclusion. Verify that another rater’s or a Person’s identifying details do not leak into the distributed sheet. PDF delivery follows a verified rendering route. |
+| Consistent appearance | Reuse the existing preset resolver and internal ggplot theme. Specify precedence as explicit call setting, then session option, then package default; resolve and save the chosen appearance for replay. Preserve removable titles/notes, monochrome and non-color cues, and avoid mutating the user’s global ggplot theme. The session option is now implemented locally for common-preset routes, as detailed below. A public theme remains a separate proposed convenience. |
+
+Local development progress (0.2.4.9000): `mfrmr_output_guide("plots")`
+now provides 29 selected purpose-based routes with result-creation help,
+exact plot calls, data components, conversion status and alternatives.
+Existing guide scopes retain their format. The visual-diagnostics
+tutorial and help use the same guide. The tutorial now includes six
+linked previews for scale location, response fit, categories, subset
+coverage, feature hierarchies and composite D-study planning. Each leads
+to an executed example and numerical data; labels and conversion status
+come from the guide. Keyboard navigation, image alternatives and
+narrow-screen layout are checked locally. This completes the first
+selected gallery, not a complete conversion inventory or argument
+migration. Dedicated converter equivalence across all views, components
+and display controls remains part of the completion conditions above.
+
+The first individual-sheet implementation is now available locally
+through `mfrm_report(..., style = "rater")`, without a new exported
+entry point. Its scope is native additive RSM/PCM results, with explicit
+facet/rater selection, optional saved individual fixed-facet intervals,
+and plain-language or researcher presentation. HTML, Markdown, tables
+and the standalone object exclude the source fit, source row identifiers
+and other people’s identifying fields. Matching interval contrasts and
+saved diagnostics are checked before projection; multiple matching
+interval attachments require a choice. Category coding, weights, model
+reference and missing sections remain explicit. Tests cover numerical
+reuse, selection, missing inputs, unsupported models and source
+identifier/attribute leakage. The example chunk executes, and local
+browser checks cover narrow screens, table semantics, visible keyboard
+focus and print CSS. This is not a general deidentification guarantee or
+a recipient usability study. PDF export, extended-model sheets and
+intended-reader evaluation remain open; the checked rc.6 candidate is
+unchanged.
+
+The first argument-consistency change is also implemented locally: the
+eight `plot_*` helpers that expose `main` now also accept `title`. They
+cover marginal fit/pairwise, unexpected responses, interrater agreement,
+facet chi-square, bubble, bias interaction and facet dashboard plots. A
+shared resolver and inherited help define omission, explicit `NULL` and
+conflicts. `main` is still supported without deprecation; its `NULL`
+default meaning and all legacy positional calls are preserved.
+`title = NULL` suppresses the heading. The 21 view-specific payloads
+match their saved pre-change defaults, custom-main and positional-call
+baselines. Targeted tests also check actual base rendering, dashboard S3
+forwarding, remaining review notes and supported ggplot replay. The new
+tutorial example executes from saved diagnostics. This completes the
+first title-alias group, not the broader `level`/view-argument or
+appearance integration. An added title argument does not imply new
+ggplot coverage.
+
+Visual inspection of that example exposed a separate existing
+bubble-converter error: it replaced saved radii with a constant point
+size and discarded saved facet colours. Conversion now retains radius
+ratios, colours, facet order and reference lines; the native monochrome
+preset also selects gray colours. Unequal-count/SE tests distinguish
+radius from area scaling, and the help now correctly states that
+count-based circle area (not radius) is proportional to count. Physical
+sizes differ between rendering systems; this is not a claim of complete
+visual equivalence across all plot families.
+
+Session appearance defaults are now implemented locally through
+`options(mfrmr.plot_preset = "publication")`. Explicit settings take
+precedence; the unset default remains `"standard"`. The 42 direct
+common-preset entries and eight report-bundle forwarding branches use
+the shared resolver. Paired plots forward the resolved parent choice to
+both sources. Saved plot payloads retain their preset for supported
+conversion, without consulting a changed session option or changing the
+global ggplot theme. The 27 pre-change default payloads remain
+identical. Targeted checks cover option validation, all four presets,
+explicit overrides, saved-payload conversion and forwarding from
+results. This completes the session-option part of appearance
+integration. A public theme, plots with their own palette controls, and
+full converter equivalence remain separate; the checked rc.6 candidate
+is unchanged.
+
+The first additional converter family is implemented locally for the
+three external-feature PCA views: scree, scores and loadings. Dedicated
+conversion preserves the selected components, equal score-axis units,
+retained-component symbols, feature order and saved group
+colours/shapes. It retains excluded IDs and transformation metadata
+through
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+and does not refit PCA or clustering. Both default and explicit table
+conversion use the complete view; other components cannot bypass it.
+This addresses the PCA gap, not all cluster plots or the full plot
+inventory.
+
+Saved external-feature dendrogram conversion is now also implemented
+locally. It uses recorded binary merges and heights, preserves leaf
+order and group boxes, and retains exclusions and label/preset choices.
+Tied-height cuts follow saved memberships rather than a new horizontal
+threshold. Tests compare the layout with stats dendrogram midpoints and
+heights for both supported linkages, and check ties, zero-height trees,
+replay and refusal of misleading component selection. No clustering or
+recutting is performed. The purpose guide includes this dedicated
+conversion.
+
+Imputation co-membership conversion is now also implemented locally.
+Saved fractions calculated over all imputations, requested ID order,
+labels and zero-to-one scale are retained. Unavailable cells use both
+grey fill and crosses. Selection does not renormalize values; hiding
+labels does not sample cells. Matrix/source metadata, including
+exclusions, remain extractable from the ggplot. Tests cover ordering,
+selection, unavailable/zero cells, singleton and all-unavailable views,
+save/load, and unchanged global settings. The purpose guide includes
+this dedicated conversion.
+
+Silhouettes and numeric/categorical partition profiles now also have
+dedicated conversion. Silhouettes retain negative widths, saved order
+and overall-mean references; group labels do not depend on colour.
+Numeric profiles retain original-unit means/medians and counts, with
+slight vertical offsets to show coincident summaries. Categorical
+profiles retain unused levels, original order, group counts and the
+fixed zero-to-one scale. Neither clustering nor uncertainty is
+recomputed. The selected guide’s clustering/PCA conversion gaps are now
+covered. This is not the full package plot inventory.
+
+Pooled-facet interval conversion is now also implemented locally: saved
+MI t-interval endpoints, target order, contrast coefficients, degrees of
+freedom and information cautions are retained without repooling. Fixed
+targets have no intervals; unbounded endpoints and unavailable intervals
+receive explicit symbols. Default/table conversion cannot fall back to
+generic bars. Tests include small-df t intervals, fixed targets,
+infinite/missing endpoints and replay with interval-calculation calls
+blocked. The selected guide now has 22 dedicated, two native, two
+generic and three unavailable routes. Screening-performance plots and
+the two remaining G/D-study conversion families remain explicit gaps;
+the model/inference roadmap is separate from this display work.
+
+The representative local workflow integration review now connects saved
+fixed-rater results, individual sheets, interval figures, analyst
+exports and exported replay scripts. It also checks PCA/group views, a
+small completed feature-imputation workflow and an existing
+40-imputation response-score interval result after save/load. Reporting
+and conversion reuse saved values without estimation calls. Tutorials
+now distinguish recipient HTML from the analyst’s RDS, and a
+first-completion view from all completed feature analyses. This closes
+that connection check, not the full interface or release review:
+intended-reader evaluation, remaining specialized plot conversions and
+the statistical work packages remain open. The rater-uncertainty
+evidence/budget review is complete for this tranche and separate-owner
+GPCM MML is now connected locally. The next substantive priority is D1
+statistical evaluation above; additional converters are not an automatic
+prerequisite. Rater-interval qualification resumes only under its stated
+triggers. Evidence is recorded in the [validation
+record](https://ryuya-dot-com.github.io/mfrmr/inst/validation/claim-reconciliation-0.2.4.md).
+
+The [lifecycle
+definitions](https://lifecycle.r-lib.org/articles/stages.html)
+distinguish `superseded` (a better alternative, continued support, no
+warning) from deprecation. Missing badges alone do not mean an API is
+unstable, and `deprecate_soft()` is not required simply because another
+route is recommended. Any actual deprecation needs its own migration
+policy and affected-call checks.
+
+Completion of the first delivery means users can find a supported
+operation and predict what it renders, not that every specialized
+function has been renamed. A later sheet delivery must be reviewed by
+its intended reader before claiming novice usability. Further GPCM
+development follows the separate-owner qualification, profile-interval
+and portable-calibration conditions above; those three topics are not
+silently bundled into the first interface release.
+
 ### First statistical work package: uncertainty in rater feedback
 
 The first target is an interval for an **observed rater’s latent
@@ -1217,6 +1708,64 @@ pilot also remains limited: its outer sample and 99 draws per fit were
 too small for a precise coverage decision, and its original population
 specification must be respected when reusing the results. It is evidence
 to plan from, not a reason to repeat the same small pilot.
+
+The September 26 evidence review separates three completed observations:
+
+| Evidence | Reusable conclusion | Decision it does not support |
+|----|----|----|
+| 800 estimated-ability-population datasets | The saved accounting reproduces 53 unresolved Person-quadrature checks and one further estimated rater-variance boundary; all optimizer and information checks passed. | Raising quadrature or ignoring unavailable cases has not demonstrated better interval coverage. |
+| Eight saved-calibration likelihood comparisons, completed earlier | The 144 planned local comparisons met their declared tolerance, including reference uncertainty. Reuse this result. | It is not an exact-MLE, variance-boundary, whole-profile or repeated-sampling guarantee; do not restart the same comparison by default. |
+| 24 known-ability-population bootstrap datasets, 2,376 retained refits | Saved endpoints replay unchanged. The method and failure-preserving calculation are available for development. | These are not qualification data for the current estimated-ability-population default. Missing historical refit checks cannot be inferred from a generic failure flag. |
+
+New bootstrap results now retain numerical, information and quadrature
+checks in each trial record and carry them through existing reports and
+exports. This closes an evidence-recording gap without altering the
+estimator, studentization, interval endpoints or qualification decision.
+The current milestone is target definition and evidence reconciliation,
+with method qualification still open.
+
+Before the next qualification run, specify a fixed numerical-resolution
+procedure, estimated/fixed population choices, outer-study precision and
+bootstrap-tail precision, and a computation budget. Apply the declared
+procedure to all planned cases; preserve original results if it revises
+an earlier numerical procedure. Numerical development on these saved
+cases is not independent confirmation. Do not retry failed cases until
+they pass or transfer the known-population pilot’s favorable rates to
+the new default. If the required precision is impractical within the
+chosen budget, retain explicit candidate status and move to the already
+scoped GPCM ownership work; an open research guarantee must not
+indefinitely block maintenance or the rest of the roadmap.
+Recipient-sheet support for this model still requires its own
+target-specific presentation and reader review.
+
+**Current computation decision (September 26).** Do not start the nested
+qualification study in this local tranche. At 499 bootstrap draws, the
+saved normal-interval between-dataset variability and observed
+availability imply about 908 planned datasets across the four conditions
+for an illustrative coverage MCSE of one percentage point: about 454,000
+fits, including sources. Historical median elapsed-fit proxies sum to
+about 874 hours. This is a planning sensitivity, not a predicted wall
+time or a proven bootstrap sample requirement; bootstrap variability and
+numerical settings can differ.
+
+Even ignoring the coverage-precision requirement, the existing
+availability criterion needs at least 72 independent datasets per
+condition if every one succeeds: only then does a two-sided exact 95%
+lower bound reach 95%. Four conditions at B = 499 already imply 144,000
+fits (about 299 summed proxy hours). That best-case availability count
+is not enough to qualify coverage. Increasing B improves empirical-tail
+resolution but does not resolve persistently missing roots: at 95% and B
+= 499, 13 unresolved roots for a rater make both limits infinite. Outer
+failure proportions cannot be substituted for inner-bootstrap failure
+probabilities. Calculations and assumptions are retained in
+`validation-results/rater-uncertainty-budget-20260926/`.
+
+The next work is the scoped GPCM ownership extension above. Reopen
+random-rater qualification when a specific numerical/method change, a
+justified narrower use case or a feasible computing plan can change this
+decision. Retain the candidate method and its adverse/limited evidence;
+do not relabel this disposition as completion of the
+interval-qualification milestone.
 
 Evaluation must retain failed fits and unavailable or unbounded
 intervals. Report coverage among all returned intervals and among finite
@@ -1267,11 +1816,13 @@ model scope does not expand automatically.
 
 ## Milestones after 0.2.4
 
-These milestones apply to a selected work package. Maintenance can
-proceed alongside it; a blocked research result must not hold necessary
-fixes hostage. Help, examples and output design develop alongside the
-method; milestone 4 is their final integration review, not a reason to
-postpone them until computation is finished.
+The numbered items below are a reusable review process for a selected
+work package. The D0–D5 table above gives the current execution order
+and status. These review steps apply to a selected work package.
+Maintenance can proceed alongside it; a blocked research result must not
+hold necessary fixes hostage. Help, examples and output design develop
+alongside the method; milestone 4 is their final integration review, not
+a reason to postpone them until computation is finished.
 
 | Milestone | Reviewable outcome | Decision |
 |----|----|----|

@@ -13,7 +13,7 @@ mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
     "calibration", "simulation", "linking", "network", "response_time", "facets",
-    "conquest", "r", "models", "features", "imputation", "gtheory", "feedback")
+    "conquest", "r", "models", "features", "imputation", "gtheory", "feedback", "plots")
 )
 ```
 
@@ -21,31 +21,37 @@ mfrmr_output_guide(
 
 - scope:
 
-  Which rows to return. `"all"` returns the full guide. `"public"`
-  returns the canonical six-step route for most users; `"beginner"`
-  returns the same compact route rather than combining every
-  beginner-labelled specialist row. `"entry"` returns the recommended
-  first-screen routes. `"viewer"` returns local-viewer routes built
-  around `mfrm_results(include = ...)`. `"binary"` returns the
-  two-category person-item Rasch route and checks. Other values filter
-  to one output family or to `GPCM`-relevant routes. `"linking"` returns
-  anchor, drift, and equating route rows. `"calibration"` returns the
-  portable fixed-calibration lifecycle and artifact-only scoring route.
-  `"simulation"` and `"network"` return advanced design-review rows.
-  `"response_time"` returns descriptive response-time QC rows.
-  `"models"` compares fixed-facet, shared-rater and Person-specific
-  testlet workflows, including their distinct prediction and reporting
-  boundaries. `"feedback"` distinguishes fixed-rater uncertainty,
-  unexpected rating patterns, shared-rater uncertainty and screening
-  accuracy with known truth. `"features"`, `"imputation"` and
-  `"gtheory"` show exploratory attributes, assigned-score multiple
-  imputation and observed-score G/D-study workflows, including their own
-  table, plot and saving routes. `"facets"`, `"conquest"`, and `"r"`
-  return user-pathway rows for people arriving from those workflows.
+  Which rows to return. `"all"` returns the full route catalogue.
+  `"plots"` returns a separate purpose-based plot capability table (see
+  below). `"public"` returns the canonical six-step route for most
+  users; `"beginner"` returns the same compact route rather than
+  combining every beginner-labelled specialist row. `"entry"` returns
+  the recommended first-screen routes. `"viewer"` returns local-viewer
+  routes built around `mfrm_results(include = ...)`. `"binary"` returns
+  the two-category person-item Rasch route and checks. Other values
+  filter to one output family or to `GPCM`-relevant routes. `"linking"`
+  returns anchor, drift, and equating route rows. `"calibration"`
+  returns the portable fixed-calibration lifecycle and artifact-only
+  scoring route. `"simulation"` and `"network"` return advanced
+  design-review rows. `"response_time"` returns descriptive
+  response-time QC rows. `"models"` compares fixed-facet, shared-rater
+  and Person-specific testlet workflows, including their distinct
+  prediction and reporting boundaries. `"feedback"` distinguishes
+  fixed-rater uncertainty, unexpected rating patterns, shared-rater
+  uncertainty and screening accuracy with known truth. `"features"`,
+  `"imputation"` and `"gtheory"` show exploratory attributes,
+  assigned-score multiple imputation and observed-score G/D-study
+  workflows, including their own table, plot and saving routes.
+  `"facets"`, `"conquest"`, and `"r"` return user-pathway rows for
+  people arriving from those workflows.
 
 ## Value
 
-A data.frame with one row per recommended route and columns:
+For `scope = "plots"`, a data.frame with `Question`, `InputClass`,
+`PlotCall`, `PlotName` (the name in the saved plot data),
+`DataComponent`, `GGPlot`, `GGPlotCall` (`NA` when unavailable),
+`Notes`, `ResultFunction` and `NextStep`. All other scopes return a
+data.frame with one row per route and columns:
 
 - `Scope`
 
@@ -114,21 +120,55 @@ Use `mfrmr_output_guide("feedback")` when preparing rater feedback.
 Start with the question and the fitted model: severity, response misfit
 and the accuracy of a warning rule are different quantities. A severe
 rater need not misfit, and an observed flag does not establish poor
-rater quality. Use `mfrmr_output_guide("psychometric")` for the
-technical table, review, and reporting routes whose interpretation
-boundaries should be checked before manuscript use.
+rater quality. For an individual native additive RSM/PCM sheet, use
+`mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")`. The
+selected sheet omits source identifiers; the comprehensive result and
+export bundle retain the original analysis. Use
+`mfrmr_output_guide("psychometric")` for the technical table, review,
+and reporting routes whose interpretation boundaries should be checked
+before manuscript use.
 
 ## How to use this guide
 
-Read `Question` first, then open the help for a function in
-`MainFunction`. `UseWhen` describes its inputs and purpose; `NextStep`
-explains what to inspect. Cells containing `...` are outlines, not
-complete scripts to paste and run. Use
+For route scopes, read `Question` first, then open the help for a
+function in `MainFunction`. For `"plots"`, use the figure instructions
+below. `UseWhen` describes its inputs and purpose; `NextStep` explains
+what to inspect. Cells containing `...` are outlines, not complete
+scripts to paste and run. Use
 [mfrmr_workflow_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
 for a runnable introduction and an explanation of function names.
 Inspect `DecisionBoundary` before interpreting a result. For `GPCM`, use
 `scope = "gpcm"` to find both the support matrix and the table that
 explains how out-of-scope routes are handled.
+
+## Choosing a figure
+
+Use `mfrmr_output_guide("plots")` to find selected plots by purpose,
+input class and explicit plot call. This is a curated map, not an
+exhaustive list of every plot method, view or component. Unlisted routes
+are not necessarily unsupported. Existing scopes, including `"all"`,
+keep their route-table format.
+
+For linked figure previews and runnable examples, open
+[`vignette("mfrmr-visual-diagnostics")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md).
+`ResultFunction` names a help page for creating the required result. In
+`PlotCall`, replace `x` with the indicated result object and save the
+returned object as `p`. Calls use `draw = FALSE`; change it to `TRUE` to
+display the original figure. Then follow `GGPlotCall`, if available.
+`DataComponent` is for
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+extraction; it is not automatically a valid or equivalent `component`
+argument to
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md).
+
+`GGPlot` distinguishes `"dedicated"` (a converter for this plot),
+`"native"` (the plot method already returns ggplot), `"generic"` (a
+table-based view that need not reproduce the original figure), and
+`"unavailable"` (use the original plot or build a custom graphic from
+its data). ggplot routes need the optional ggplot2 package. Display
+support does not broaden the fitted model's statistical scope or
+establish interval coverage. Read `Notes` and the source function's help
+before interpretation.
 
 ## Examples
 
@@ -184,16 +224,82 @@ feedback[, c("Question", "MainFunction", "DecisionBoundary")]
 #> 84             Which rating patterns need review under a shared-rater or testlet model?
 #> 85               How uncertain is an observed rater's severity in a shared-rater model?
 #> 86             How often does a warning rule flag unaffected or detect affected raters?
+#> 87                                             How can I prepare a sheet for one rater?
 #>                                                  MainFunction
 #> 82                                     mfrm_facet_intervals()
 #> 83                                       fit_measures_table()
 #> 84                                mfrm_response_diagnostics()
 #> 85                   confint(); mfrm_random_rater_intervals()
 #> 86 mfrm_screening_performance(); mfrm_screening_sensitivity()
+#> 87                                              mfrm_report()
 #>                                                                                                                                                                                                                                                                        DecisionBoundary
 #> 82                                              Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.
 #> 83                            Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.
 #> 84                                                                                       Posterior predictive Infit/Outfit are descriptive and differ from ordinary plug-in indices. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.
 #> 85 Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.
 #> 86                         Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.
+#> 87                                      No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.
+
+figures <- mfrmr_output_guide("plots")
+figures[, c("Question", "ResultFunction", "GGPlot")]
+#>                                                       Question
+#> 1             Compare persons, facet levels and category steps
+#> 2                          Show expected scores across ability
+#> 3                   Review severity together with response fit
+#> 4                                 Inspect category functioning
+#> 5           Compare fixed-rater estimates and interval methods
+#> 6                                  Show GPCM slope uncertainty
+#> 7             Show GPCM probability or information uncertainty
+#> 8              Compare observed raters in a shared-rater model
+#> 9                        Inspect testlet-model facet estimates
+#> 10  Review conditional Person scores from a shared-rater model
+#> 11       Review conditional Person scores from a testlet model
+#> 12                 Review response fit under an extended model
+#> 13                 Compare ordinary and extended model results
+#> 14       Compare screening rules across known-truth conditions
+#> 15                 Show screening performance with uncertainty
+#> 16 Show pooled fixed-facet intervals after multiple imputation
+#> 17               Inspect separation of external-feature groups
+#> 18                  Describe an external feature within groups
+#> 19              Inspect a hierarchy of external-feature groups
+#> 20          Inspect group stability across feature imputations
+#> 21      Choose how many external-feature components to inspect
+#> 22              Locate entities on external-feature components
+#> 23               Identify features contributing to a component
+#> 24            Plan facet counts with an observed-score D-study
+#> 25      Plan reliability for a multivariate score or composite
+#> 26              Plan absolute or relative error in score units
+#> 27         Compare D-study scenarios with difference intervals
+#> 28             Inspect observed coverage across rating subsets
+#> 29                   Customize the underlying precision values
+#>                 ResultFunction      GGPlot
+#> 1                     fit_mfrm   dedicated
+#> 2                     fit_mfrm   dedicated
+#> 3                     fit_mfrm   dedicated
+#> 4                     fit_mfrm   dedicated
+#> 5         mfrm_facet_intervals   dedicated
+#> 6             confint.mfrm_fit      native
+#> 7         mfrm_curve_intervals      native
+#> 8        fit_mfrm_random_rater   dedicated
+#> 9             fit_mfrm_testlet   dedicated
+#> 10     score_mfrm_random_rater   dedicated
+#> 11        predict.mfrm_testlet   dedicated
+#> 12   mfrm_response_diagnostics   dedicated
+#> 13                compare_mfrm   dedicated
+#> 14  mfrm_screening_sensitivity   dedicated
+#> 15  mfrm_screening_performance unavailable
+#> 16           pool_mfrm_imputed   dedicated
+#> 17                mfrm_cluster   dedicated
+#> 18                mfrm_cluster   dedicated
+#> 19   mfrm_cluster_hierarchical   dedicated
+#> 20        mfrm_cluster_imputed   dedicated
+#> 21                    mfrm_pca   dedicated
+#> 22                    mfrm_pca   dedicated
+#> 23                    mfrm_pca   dedicated
+#> 24                mfrm_d_study unavailable
+#> 25   mfrm_multivariate_d_study   dedicated
+#> 26   mfrm_multivariate_d_study   dedicated
+#> 27 mfrm_multivariate_d_compare unavailable
+#> 28  subset_connectivity_report     generic
+#> 29         compute_information     generic
 ```

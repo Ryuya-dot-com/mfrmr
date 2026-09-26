@@ -90,6 +90,103 @@ is not a threshold of practical importance or a rater-quality rule. Use
 the size of the difference, interval, rubric and shared rating examples
 together when giving feedback.
 
+## Prepare a sheet for one rater
+
+The functions below answer different practical questions. You can make a
+figure or a report directly from saved results; neither is required
+before saving the analysis.
+
+| What do you need? | Function and returned object |
+|----|----|
+| Retain the fit, diagnostics and chosen intervals together | [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md) returns the analysis object. |
+| Show a saved interval | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws it; [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md) returns a supported ggplot view. |
+| Read an analyst report | [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md) returns a quality-control report by default. |
+| Prepare one recipient’s sheet | `mfrm_report(..., style = "rater", output = "html")` returns a temporary file path and its content. |
+| Save the complete analysis for later work | [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) writes one R object; [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md) writes a folder of selected outputs. |
+
+The development version can summarize one rater’s saved results for a
+feedback conversation. An individual interval and a difference between
+raters answer different questions: attach `ordinary` here because it
+contains each rater’s coefficient. A saved contrast alone cannot become
+an individual interval.
+
+``` r
+
+diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+feedback_results <- mfrm_results(fit, diagnostics = diagnostics,
+  intervals = list(raters = ordinary), compute = "never")
+sheet <- mfrm_report(feedback_results, style = "rater", facet = "Rater",
+  rater = "R01", interval = "raters", output = "html", max_cases = 5)
+sheet$report$tables$severity
+#>     Severity Reference
+#> 1 -0.1838153         0
+sheet$report$tables$uncertainty
+#>   Level      Lower       Upper Method Available
+#> 1  0.95 -0.3447116 -0.02291895  model      TRUE
+# Open sheet$path in a browser. Review before copying the HTML file for sharing.
+```
+
+The file contains scoring tendency, its saved interval, exposure,
+ordinary Infit/Outfit, category use and selected unexpected ratings. It
+has category-use bars, numerical tables, print styling and no external
+resources. Set `audience = "researcher"` for technical guidance, or
+`max_cases = 0` to omit individual cases. Page count depends on the
+content and print settings.
+
+Choose `style` for the report’s purpose and `output` for its format.
+Omitting `style` produces an analyst report, and omitting `output`
+returns an R object without creating an HTML file. Neither
+`audience = "researcher"` nor `output = "html"` selects a different
+interval method or confidence level: those choices belong to the earlier
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+call. The default sheet includes up to five unexpected ratings; set
+`max_cases = 0` explicitly if the conversation only needs aggregate
+summaries.
+
+The default label is “Selected rater”. Other raters’ identities, Person
+identifiers, task labels and original row numbers are omitted from the
+sheet and its report object. An explicit `label` will be displayed.
+Scores or small groups may still be recognizable, so review the content
+before sharing. Distribute this standalone HTML file, not the
+comprehensive results bundle.
+
+The sheet does not refit, recalculate uncertainty, select a warning
+threshold or decide whether a rater is good or bad. Inspect the full
+saved interval result and its numerical cautions before preparing the
+sheet. Missing inputs are explained. If multiple attached interval
+results contain the selected individual coefficient, choose one
+explicitly with `interval = "raters"`. GPCM, fitted interactions,
+imported fits, testlet and shared-random-rater models require their own
+model-specific reporting routes.
+
+### Save the analysis and keep a copy of the sheet
+
+The HTML path is temporary. To keep the sheet after the R session ends,
+copy the reviewed file to a location you choose. Save the complete
+analysis separately if you need to prepare another sheet later. The
+following example uses temporary paths; replace them with your own
+analysis and recipient-file paths for continuing work.
+
+``` r
+
+analysis_file <- tempfile(fileext = ".rds")
+saveRDS(feedback_results, analysis_file)
+saved_results <- readRDS(analysis_file)
+
+# Reuse the saved diagnostics and intervals for this recipient.
+saved_sheet <- mfrm_report(saved_results, style = "rater", facet = "Rater",
+  rater = "R01", interval = "raters", output = "html", max_cases = 5)
+recipient_file <- tempfile(fileext = ".html")
+stopifnot(file.copy(saved_sheet$path, recipient_file, overwrite = FALSE))
+```
+
+The RDS file retains the fitted data and identifiers for the analyst.
+The recipient HTML contains the selected summaries described above.
+Copying the HTML does not require sending the RDS file. Reading the
+saved analysis and preparing another sheet does not rerun estimation or
+diagnostics; it also does not update an earlier analysis to reflect new
+ratings.
+
 ## Carry the same intervals into figures and reports
 
 Suppose the assessment team has chosen a rater difference and its
@@ -166,6 +263,42 @@ covariance. The settings, contrast coefficients and cluster mapping are
 retained alongside the interval table. These saved objects contain
 fitted data and participant identifiers; follow the export function’s
 data-handling guidance before sharing them.
+
+For an analyst archive with tables, a report and reload instructions,
+select the components explicitly. `include` controls files written by
+the exporter; it does not compute missing analysis components. The
+folder below retains participant data, which is why this example
+explicitly acknowledges it.
+
+``` r
+
+archive <- export_mfrm_results(feedback_results,
+  output_dir = tempfile("rater-analysis-"),
+  include = c("tables", "report", "replay", "manifest"),
+  acknowledge_sensitive = TRUE)
+# Count files by format; inspect archive$written_files for the full index.
+table(archive$written_files$Format)
+#> 
+#>  csv html   md    R  rds 
+#>  153    1    1    1    1
+archive$plot_errors
+#> [1] Plot  Error
+#> <0 rows> (or 0-length row.names)
+saved_file <- archive$written_files$Path[
+  archive$written_files$Component == "results_rds"]
+reopened <- readRDS(saved_file)
+stopifnot(identical(reopened$facet_intervals, feedback_results$facet_intervals))
+```
+
+Replay also writes the RDS here because the results contain saved
+intervals. No plots are requested in this example. Add `"plots"` to
+export available figures, or use `preset = "starter"` for the fuller
+archive. This export `preset` selects file contents; a plotting `preset`
+such as `"monochrome"` selects appearance. An empty `plot_errors` table
+only confirms that no requested plot failed, not that a figure was
+requested or that the statistical analysis is valid. The report in this
+archive is the analyst report; use the standalone recipient file created
+above for the feedback conversation.
 
 This route also works for PCM, whose step structure is declared when
 fitting:

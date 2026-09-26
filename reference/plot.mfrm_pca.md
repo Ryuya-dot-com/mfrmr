@@ -75,9 +75,17 @@ selected components, group colour/shape encoding, excluded IDs and axis
 meanings. Scree data retain the full variance table, including
 components not used for clustering.
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
-extracts these values. Automatic
+extracts these values.
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-conversion is unavailable; the extracted table supports custom graphics.
+converts all three views using their saved axes and encodings;
+`component = "table"` retains the complete view. Excluded IDs and
+transformation metadata remain attached. Use
+`ggplot2::labs(title = NULL, subtitle = NULL)` to hide headings in the
+returned ggplot. Labels follow the saved `labels` setting; no entities
+are sampled when labels are hidden. Physical text and point sizes can
+differ between base graphics and ggplot. Converted scores use equal axis
+units and equal displayed spans to avoid a narrow panel when the
+selected components explain very different amounts of variation.
 
 ## Details
 
@@ -87,6 +95,41 @@ space; they are not original-unit correlations. A two-component scores
 view omits other directions, so apparent overlap or separation is only a
 projection. No confidence region, group validity or rater-quality
 judgment is implied.
+
+## Session plot defaults
+
+Set `options(mfrmr.plot_preset = "publication")` to choose a session
+default for plotting functions that expose the common `preset` argument.
+The supported values are `"standard"`, `"publication"`, `"compact"` and
+`"monochrome"`. Precedence is an explicit call argument, then the
+session option, then `"standard"`. For example, `preset = "standard"`
+overrides a session set to `"monochrome"`. Explicit `preset = NULL`
+retains the earlier package-default behavior; it does not read the
+session option. Invalid session values cause an error only when that
+option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+report bundles use the same option through `...`. Plots without a common
+`preset` argument, including extended-model plots with their own
+`palette` controls, keep their own settings. This option selects a
+preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+uses its saved appearance, even after the session option changes. A call
+that creates a new plot from a fit or statistical result uses the
+current default. For a reproducible script, supply `preset` explicitly
+or set the option in that script. Saving only the fitted model does not
+save a session option. No global ggplot theme is changed.
+
+Restore previous settings with
+`old <- options(mfrmr.plot_preset = "monochrome")` followed by
+`options(old)`. Use `options(mfrmr.plot_preset = NULL)` to remove the
+option. The preset changes appearance, not estimates, confidence levels
+or diagnostic thresholds.
 
 ## See also
 

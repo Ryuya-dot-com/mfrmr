@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot a facet-quality dashboard</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
       <div class="d-none name"><code>plot_facet_quality_dashboard.Rd</code></div>
     </div>
 
@@ -74,7 +74,8 @@
 <span>  palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label_angle <span class="op">=</span> <span class="fl">45</span>,</span>
 <span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -142,7 +143,9 @@ from a raw bias bundle.</p></dd>
 
 
 <dt id="arg-main">main<a class="anchor" aria-label="anchor" href="#arg-main"></a></dt>
-<dd><p>Optional plot title.</p></dd>
+<dd><p>Compatibility title argument. Omitted or <code>NULL</code> keeps the default
+title. Existing calls remain supported without a deprecation warning.
+For new code, prefer <code>title</code>; do not supply both arguments.</p></dd>
 
 
 <dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a></dt>
@@ -159,6 +162,15 @@ from a raw bias bundle.</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Reserved for generic compatibility.</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Plot title. Omit it to keep the default, supply one character
+string to replace it, or use <code>NULL</code> (or <code>""</code>) to suppress it. This changes
+only the heading; numerical results, reference lines, subtitles and
+interpretation notes remain. Both <code>main</code> and <code>title</code> explicitly supplied
+is an error, even if equal or <code>NULL</code>. Positional legacy arguments retain
+their order; use the exact name <code>title</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -9,7 +9,7 @@ refit the same RSM, and retain prediction errors for every planned replicate."><
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,7 +48,7 @@ refit the same RSM, and retain prediction errors for every planned replicate."><
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Bootstrap prediction intervals for observed random raters</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-random-rater-intervals.R" class="external-link"><code>R/api-random-rater-intervals.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-random-rater-intervals.R" class="external-link"><code>R/api-random-rater-intervals.R</code></a></small>
       <div class="d-none name"><code>mfrm_random_rater_intervals.Rd</code></div>
     </div>
 
@@ -163,6 +163,35 @@ The fit's normal-population and assignment assumptions remain essential.
 Omitted scores stay omitted; this conditions on analyzed rows and does not
 simulate a missingness mechanism or impute assigned scores. Rater contrasts,
 familywise intervals and simultaneous rater classification are not provided.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="review-unresolved-refits">Review unresolved refits<a class="anchor" aria-label="anchor" href="#review-unresolved-refits"></a></h2>
+
+
+<p>Inspect <code>$trials</code> before interpreting the intervals. <code>FitReady</code> combines
+numerical and information checks; it does not certify interval coverage.
+New results also retain <code>OptimizerCode</code>, <code>NumericalReady</code>,
+<code>InformationPositive</code>, <code>PersonQuadratureStable</code>, <code>QuadraturePoints</code>, <code>CheckPoints</code>,
+<code>LogLikDifference</code>, <code>GradientDifference</code>, <code>EstimatedVarianceBoundary</code> and
+<code>PersonVarianceUpperBoundary</code> from each refit. Together with the recorded
+gradient and Person-variance boundary, these distinguish unresolved numerical
+calculations from variance boundaries and missing regular studentizers.
+A failed refit has missing additional check values and its recorded error; missing
+checks are not passes. Older saved trial tables lack these additional fields
+and cannot acquire them without rerunning the corresponding refits.
+Failed checks must not be removed, selectively retried until successful or
+relabeled as adequate interval coverage. Increasing Person quadrature can
+address integration precision but does not qualify the rater Laplace
+approximation, the interval method or the population assumptions.</p>
+<p>Increasing <code>nsim</code> alone does not resolve unavailable prediction errors.
+For example, with 499 planned refits at 95%, 13 unresolved studentized
+errors for one rater make both of that rater's limits infinite under the
+type-1 completion rule. Twelve unresolved errors leave finite empirical
+limits when all other errors and the source estimate/SE are finite. This
+describes the calculation, not a threshold establishing accurate coverage.
+If the unresolved fraction remains above the nominal tail probability,
+a larger run still has unbounded limits. Inspect causes in <code>$trials</code> before
+committing to more refits; do not discard unresolved draws.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

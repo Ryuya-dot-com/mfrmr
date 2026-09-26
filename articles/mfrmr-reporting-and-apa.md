@@ -995,7 +995,7 @@ citation("mfrmr")
 #> To cite mfrmr in publications, use:
 #> 
 #>   Komuro R (2026). _mfrmr: Estimation and Diagnostics for Many-Facet
-#>   Measurement Models_. R package version 0.2.4,
+#>   Measurement Models_. R package version 0.2.4.9000,
 #>   <https://ryuya-dot-com.github.io/mfrmr/>.
 #> 
 #> A BibTeX entry for LaTeX users is
@@ -1004,7 +1004,7 @@ citation("mfrmr")
 #>     title = {{mfrmr}: Estimation and Diagnostics for Many-Facet Measurement Models},
 #>     author = {Ryuya Komuro},
 #>     year = {2026},
-#>     note = {R package version 0.2.4},
+#>     note = {R package version 0.2.4.9000},
 #>     url = {https://ryuya-dot-com.github.io/mfrmr/},
 #>   }
 citation()
@@ -1075,7 +1075,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] mfrmr_0.2.4
+#> [1] mfrmr_0.2.4.9000
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] Matrix_1.7-5      jsonlite_2.0.0    dplyr_1.2.1       compiler_4.6.1   

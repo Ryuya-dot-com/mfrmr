@@ -360,6 +360,37 @@ interval incorporating within- and between-imputation covariance. The
 result is conditional on the supplied imputations and analysis
 assumptions.](mfrmr-response-imputation_files/figure-html/pooled-plot-1.png)
 
+The development version also supports a ggplot made from these saved
+intervals:
+
+``` r
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  pooled_figure <- as_ggplot(pooled, title = NULL, preset = "monochrome")
+  print(pooled_figure)
+  plot_data(pooled_figure)$table[, c("Target", "Estimate", "Lower", "Upper", "DF")]
+}
+```
+
+![The saved R04-minus-R01 contrast and its pointwise multiple-imputation
+t interval, rendered with ggplot. Changing the title does not
+recalculate the interval or change its confidence
+level.](mfrmr-response-imputation_files/figure-html/pooled-ggplot-1.png)
+
+    #>          Target  Estimate     Lower     Upper       DF
+    #> 1 R04 minus R01 0.4681867 0.1824438 0.7539296 2284.941
+
+Default and `component = "table"` conversion keep the complete interval
+view. The t interval is not replaced by a normal interval from `SE`;
+changing its level requires a new, explicit pooling call. Fixed targets
+are open diamonds without inferential intervals. Missing intervals have
+crosses, and infinite endpoints have arrows whose tips are drawing
+limits rather than finite bounds. Full contrasts, settings, degrees of
+freedom and information cautions remain in
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md),
+even after titles or captions are hidden. These display symbols do not
+establish interval coverage or classify rater quality.
+
 `Estimate` averages the completed-data estimates. `WithinVariance`
 averages their model-based variances; `BetweenVariance` captures their
 variation across imputations. `TotalVariance` includes both, with the
@@ -584,11 +615,13 @@ input. Its plot preserves the stored MI bounds. For custom graphics,
 extract `plot_data(saved)$table` and specify the estimate and both
 endpoints explicitly;
 [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
-conversion is unavailable, including with an explicit component.
-Changing the contrast or confidence level reuses the fits; changing the
-imputation model requires new completions and analyses. Saved objects
-contain response data and identifiers: choose an appropriate storage
-location when using real assessments.
+has dedicated conversion for the saved pooled interval view, including
+`component = "table"`; use
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+for other components. Changing the contrast or confidence level reuses
+the fits; changing the imputation model requires new completions and
+analyses. Saved objects contain response data and identifiers: choose an
+appropriate storage location when using real assessments.
 
 ## References
 

@@ -3,7 +3,8 @@
 `mfrmr` provides estimation, diagnostics, and reporting utilities for
 many-facet ordered-response measurement models: the Rasch-family `RSM` /
 `PCM` route and a `GPCM` extension in which one selected facet supplies
-level-specific discriminations and category steps.
+level-specific discriminations. MML permits a different facet to supply
+category steps; JML requires the same facet for both roles.
 [`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
 supplies approximate relative-slope intervals for eligible MML fits;
 model ranking and matched PCM/GPCM tests use separate checks in
@@ -117,6 +118,8 @@ After the basic route above:
   and
   [`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
   is available when the specification carries both thresholds and slopes
+  with the same owner; general simulation/design workflows do not
+  support separate owners
 
 - slope-aware
   [`fair_average_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fair_average_table.md)
@@ -499,16 +502,16 @@ kernel is multiplied by a positive slope \\\alpha_g\\ for the designated
 slope-facet level \\g\\:
 
 \$\$\ln\frac{P(X\_{nij} = k)}{P(X\_{nij} = k-1)} = \alpha_g(\theta_n -
-\delta_j - \beta_i - \tau\_{gk}).\$\$
+\delta_j - \beta_i - \tau\_{hk}).\$\$
 
-The current implementation requires `slope_facet == step_facet` and
-identifies slopes on the log scale with geometric mean 1. This makes
-`GPCM` a slope-aware sensitivity/extension route, not a replacement for
-the equal-weighting `RSM`/`PCM` interpretation. It assigns slopes and
-steps to the same facet. It does not jointly estimate the multiplicative
-task and rater slopes of the broader Uto–Ueno generalized MFRM or allow
-a distinct step owner. Unit slopes reduce to the equal-discrimination
-PCM kernel. Under default MML, an intercept-only person distribution
+MML allows a slope owner \\g\\ distinct from the step owner \\h\\; JML
+requires `slope_facet == step_facet`. Slopes are identified on the log
+scale with geometric mean 1. This makes `GPCM` a slope-aware
+sensitivity/extension route, not a replacement for the equal-weighting
+`RSM`/`PCM` interpretation. It does not jointly estimate the
+multiplicative task and rater slopes of the broader Uto–Ueno generalized
+MFRM. Unit slopes reduce to the equal-discrimination PCM kernel. Under
+default MML, an intercept-only person distribution
 \\N(\beta_0,\sigma^2)\\ is estimated. The geometric-mean-one slopes are
 relative discriminations and \\\sigma\alpha_g\\ are their equivalent
 fixed-latent-standard-deviation values, so the conventional common
@@ -529,8 +532,8 @@ The implemented response-model scope is ordered categorical only. Binary
 responses are the \\K = 1\\ special case of the same formulation, so
 they are handled through the ordinary ordered-score interface. This
 means `mfrmr` supports ordered binary and ordered polytomous data under
-`RSM` and `PCM`, plus a narrow `GPCM` branch with one designated
-`slope_facet` that currently must equal `step_facet`. Unordered
+`RSM` and `PCM`, plus `GPCM` with one designated `slope_facet` and,
+under MML, a possibly different `step_facet`. Unordered
 nominal/multinomial response models are outside the documented model
 scope, as are Poisson, negative-binomial, and grouped binomial-trial
 count-response families. A positive observation `weight` weights the

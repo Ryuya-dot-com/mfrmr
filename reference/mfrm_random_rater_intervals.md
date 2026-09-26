@@ -120,6 +120,36 @@ analyzed rows and does not simulate a missingness mechanism or impute
 assigned scores. Rater contrasts, familywise intervals and simultaneous
 rater classification are not provided.
 
+## Review unresolved refits
+
+Inspect `$trials` before interpreting the intervals. `FitReady` combines
+numerical and information checks; it does not certify interval coverage.
+New results also retain `OptimizerCode`, `NumericalReady`,
+`InformationPositive`, `PersonQuadratureStable`, `QuadraturePoints`,
+`CheckPoints`, `LogLikDifference`, `GradientDifference`,
+`EstimatedVarianceBoundary` and `PersonVarianceUpperBoundary` from each
+refit. Together with the recorded gradient and Person-variance boundary,
+these distinguish unresolved numerical calculations from variance
+boundaries and missing regular studentizers. A failed refit has missing
+additional check values and its recorded error; missing checks are not
+passes. Older saved trial tables lack these additional fields and cannot
+acquire them without rerunning the corresponding refits. Failed checks
+must not be removed, selectively retried until successful or relabeled
+as adequate interval coverage. Increasing Person quadrature can address
+integration precision but does not qualify the rater Laplace
+approximation, the interval method or the population assumptions.
+
+Increasing `nsim` alone does not resolve unavailable prediction errors.
+For example, with 499 planned refits at 95%, 13 unresolved studentized
+errors for one rater make both of that rater's limits infinite under the
+type-1 completion rule. Twelve unresolved errors leave finite empirical
+limits when all other errors and the source estimate/SE are finite. This
+describes the calculation, not a threshold establishing accurate
+coverage. If the unresolved fraction remains above the nominal tail
+probability, a larger run still has unbounded limits. Inspect causes in
+`$trials` before committing to more refits; do not discard unresolved
+draws.
+
 ## References
 
 Chatterjee, S., Lahiri, P. and Li, H. (2008). Parametric bootstrap

@@ -1,20 +1,132 @@
 # mfrmr Visual Diagnostics
 
-This vignette is a compact map of the main base-R diagnostics in
-`mfrmr`. It is organized around four practical questions:
+This vignette connects figures to questions about fitted ratings,
+external attributes and observed-score planning. It is organized around
+six practical questions:
 
 - How well do persons, facet levels, and categories target each other?
 - Which observations or levels look locally unstable?
 - Is the design linked well enough across subsets or forms?
 - Where do residual structure and interaction screens point next?
+- How can external attributes describe groups of raters?
+- How could changing the number of tasks affect an observed-score
+  composite?
 
-All examples use packaged data and `preset = "publication"` so the same
-code is suitable for manuscript-oriented graphics.
+Model examples use packaged data; the feature hierarchy uses eight
+fictional raters. The `"publication"` and `"monochrome"` presets
+illustrate reusable styles, including views that remain interpretable
+without colour.
 
 If you are selecting figures for a report, use
 [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
 before or alongside this vignette. Its `"Visual Displays"` rows now
 mirror the public plotting family shown here.
+
+## Find a figure by purpose
+
+Use the plot guide before choosing a specialized function. It includes
+rater feedback, category curves, external-feature groups and G/D-study
+planning.
+
+Open a preview for the full figure, interpretation and the values used
+to draw it. These are different questions: a severe rater need not
+misfit; feature groups describe backgrounds; a D-study plans an
+observed-score measurement.
+
+[![Wright map
+preview](mfrmr-visual-diagnostics_files/figure-html/wright-1.png)**Compare
+persons, facet levels and category steps**](#figure-wright)
+
+Base R and dedicated ggplot conversion
+
+[![Infit versus location
+preview](mfrmr-visual-diagnostics_files/figure-html/fit-pathway-1.png)**Review
+severity together with response fit**](#figure-fit-pathway)
+
+Base R and dedicated ggplot conversion
+
+[![Category probability curves
+preview](mfrmr-visual-diagnostics_files/figure-html/category-curves-1.png)**Inspect
+category functioning**](#figure-category-curves)
+
+Base R and dedicated ggplot conversion
+
+[![Subset coverage
+preview](mfrmr-visual-diagnostics_files/figure-html/linking-1.png)**Inspect
+observed coverage across rating subsets**](#figure-linking)
+
+Base R; ggplot offers a different, table-based view
+
+[![Feature dendrogram
+preview](mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.png)**Inspect
+a hierarchy of external-feature groups**](#figure-feature-hierarchy)
+
+Base R and dedicated ggplot conversion
+
+[![D-study coefficient curves
+preview](mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.png)**Plan
+reliability for a multivariate score or
+composite**](#figure-d-study-planning)
+
+Base R and dedicated ggplot conversion
+
+Browse all selected plot routes
+
+``` r
+
+figures <- mfrmr::mfrmr_output_guide("plots")
+knitr::kable(figures[, c("Question", "ResultFunction", "GGPlot")])
+```
+
+| Question | ResultFunction | GGPlot |
+|:---|:---|:---|
+| Compare persons, facet levels and category steps | fit_mfrm | dedicated |
+| Show expected scores across ability | fit_mfrm | dedicated |
+| Review severity together with response fit | fit_mfrm | dedicated |
+| Inspect category functioning | fit_mfrm | dedicated |
+| Compare fixed-rater estimates and interval methods | mfrm_facet_intervals | dedicated |
+| Show GPCM slope uncertainty | confint.mfrm_fit | native |
+| Show GPCM probability or information uncertainty | mfrm_curve_intervals | native |
+| Compare observed raters in a shared-rater model | fit_mfrm_random_rater | dedicated |
+| Inspect testlet-model facet estimates | fit_mfrm_testlet | dedicated |
+| Review conditional Person scores from a shared-rater model | score_mfrm_random_rater | dedicated |
+| Review conditional Person scores from a testlet model | predict.mfrm_testlet | dedicated |
+| Review response fit under an extended model | mfrm_response_diagnostics | dedicated |
+| Compare ordinary and extended model results | compare_mfrm | dedicated |
+| Compare screening rules across known-truth conditions | mfrm_screening_sensitivity | dedicated |
+| Show screening performance with uncertainty | mfrm_screening_performance | unavailable |
+| Show pooled fixed-facet intervals after multiple imputation | pool_mfrm_imputed | dedicated |
+| Inspect separation of external-feature groups | mfrm_cluster | dedicated |
+| Describe an external feature within groups | mfrm_cluster | dedicated |
+| Inspect a hierarchy of external-feature groups | mfrm_cluster_hierarchical | dedicated |
+| Inspect group stability across feature imputations | mfrm_cluster_imputed | dedicated |
+| Choose how many external-feature components to inspect | mfrm_pca | dedicated |
+| Locate entities on external-feature components | mfrm_pca | dedicated |
+| Identify features contributing to a component | mfrm_pca | dedicated |
+| Plan facet counts with an observed-score D-study | mfrm_d_study | unavailable |
+| Plan reliability for a multivariate score or composite | mfrm_multivariate_d_study | dedicated |
+| Plan absolute or relative error in score units | mfrm_multivariate_d_study | dedicated |
+| Compare D-study scenarios with difference intervals | mfrm_multivariate_d_compare | unavailable |
+| Inspect observed coverage across rating subsets | subset_connectivity_report | generic |
+| Customize the underlying precision values | compute_information | generic |
+
+Open the help for `ResultFunction` if you have not created the required
+result. Choose a row and read `PlotCall`, `GGPlotCall`, `DataComponent`
+and `Notes`. Replace `x` in `PlotCall` with the indicated result, and
+save its return value as `p`. The call uses `draw = FALSE` to prepare
+the figure without opening a window. Change it to `TRUE` to display it,
+or follow `GGPlotCall` to customize it with ggplot2. A data component is
+a table to inspect; passing that component to
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+may produce a different view from the full figure.
+
+`dedicated` means there is a converter for the figure; `native` means
+the plot already returns ggplot. `generic` describes a table-based
+graphic that need not reproduce the original layout or annotations.
+`unavailable` still allows the original plot and custom graphics from
+`plot_data(p)`. This is a selected map, not a claim that every plot or
+component has been covered. Graphical support does not extend the
+model’s statistical assumptions.
 
 ## Minimal setup
 
@@ -64,12 +176,14 @@ subset(
 
 ## 1. Targeting and scale structure
 
+### Wright map
+
 Use the Wright map first when you want one shared logit view of persons,
 facet levels, and step thresholds.
 
 ``` r
 
-plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
+wright <- plot(fit, type = "wright", preset = "publication", show_ci = TRUE)
 ```
 
 ![Wright map of person abilities, facet levels and category steps on the
@@ -85,6 +199,29 @@ Interpretation:
 - Wide overlap in marginal confidence whiskers suggests imprecision;
   estimate the relevant pairwise contrast directly before claiming that
   two levels are separated or indistinguishable.
+
+The locations used in the figure remain available as a table:
+
+``` r
+
+head(plot_data(wright, component = "locations"))
+#> # A tibble: 6 × 37
+#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
+#> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
+#> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
+#> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
+#> #   StepIndex <int>, BoundarySeparated <lgl>, XBase <dbl>, X <dbl>,
+#> #   OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
+#> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
+#> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
+```
 
 The native view above remains the recommended analytic figure because it
 keeps facet uncertainty and fitted step locations visible. For a closer
@@ -144,13 +281,15 @@ Interpretation:
   govern the score.
 - Flat or compressed regions suggest weaker category separation.
 
+### Fit pathway
+
 The expected-score pathway is not a fit pathway. To review measure
 against Infit, place Infit on the horizontal axis and include person
 rows explicitly:
 
 ``` r
 
-plot(
+fit_pathway <- plot(
   fit,
   type = "fit_pathway",
   diagnostics = diag,
@@ -177,6 +316,163 @@ Interpretation:
   metadata.
 - Treat displaced or flagged rows as review prompts, not automatic
   exclusions.
+
+``` r
+
+head(plot_data(fit_pathway, component = "table"))
+#>        Facet        Level    Measure        SE     CI_Lower    CI_Upper
+#> 55 Criterion      Content -0.3441471 0.1110060 -0.561714733 -0.12657937
+#> 56 Criterion     Language  0.1204520 0.1093843 -0.093937224  0.33484130
+#> 57 Criterion Organization  0.2236950 0.1103080  0.007495279  0.43989475
+#> 5     Person         P005 -0.1749607 0.4416568 -1.040592055  0.69067075
+#> 6     Person         P006  0.6768100 0.5261392 -0.354403760  1.70802383
+#> 7     Person         P007 -0.9630394 0.4541031 -1.853065098 -0.07301365
+#>    CI_Level  N     Infit    Outfit  InfitZSTD  OutfitZSTD  DF_Infit DF_Outfit
+#> 55     0.95 94 0.7295356 0.7428322 -1.5566485 -1.89173498 58.455401        94
+#> 56     0.95 94 0.8547918 0.8231355 -0.7605703 -1.24336119 57.903717        94
+#> 57     0.95 94 1.0155312 1.0063885  0.1449582  0.09232621 57.174573        94
+#> 5      0.95  6 0.5638368 0.5789733 -0.5395357 -0.67290311  4.317881         6
+#> 6      0.95  5 0.4878576 0.5027572 -0.4606940 -0.76083829  2.731153         5
+#> 7      0.95  6 0.3851674 0.3834114 -0.9177989 -1.22881869  3.987010         6
+#>    DF_Infit_ENGINE DF_Outfit_ENGINE DF_Infit_FACETS DF_Outfit_FACETS
+#> 55       58.455401               94              NA               NA
+#> 56       57.903717               94              NA               NA
+#> 57       57.174573               94              NA               NA
+#> 5         4.317881                6              NA               NA
+#> 6         2.731153                5              NA               NA
+#> 7         3.987010                6              NA               NA
+#>    InfitZSTD_ENGINE OutfitZSTD_ENGINE InfitZSTD_FACETS OutfitZSTD_FACETS
+#> 55       -1.5566485       -1.89173498               NA                NA
+#> 56       -0.7605703       -1.24336119               NA                NA
+#> 57        0.1449582        0.09232621               NA                NA
+#> 5        -0.5395357       -0.67290311               NA                NA
+#> 6        -0.4606940       -0.76083829               NA                NA
+#> 7        -0.9177989       -1.22881869               NA                NA
+#>    FitDfMethod FitZSTDTransform   InfitBand  OutfitBand InfitZSTDBand
+#> 55      engine  Wilson-Hilferty within_band within_band   within_band
+#> 56      engine  Wilson-Hilferty within_band within_band   within_band
+#> 57      engine  Wilson-Hilferty within_band within_band   within_band
+#> 5       engine  Wilson-Hilferty within_band within_band   within_band
+#> 6       engine  Wilson-Hilferty     overfit within_band   within_band
+#> 7       engine  Wilson-Hilferty     overfit     overfit   within_band
+#>    OutfitZSTDBand Underfit Overfit   FitStatus ScreenComplete ZSTDOnly
+#> 55    within_band    FALSE   FALSE within_band           TRUE    FALSE
+#> 56    within_band    FALSE   FALSE within_band           TRUE    FALSE
+#> 57    within_band    FALSE   FALSE within_band           TRUE    FALSE
+#> 5     within_band    FALSE   FALSE within_band           TRUE    FALSE
+#> 6     within_band    FALSE    TRUE     overfit           TRUE    FALSE
+#> 7     within_band    FALSE    TRUE     overfit           TRUE    FALSE
+#>                       ReviewReason MaxAbsZSTD MaxMnSqDistance
+#> 55     Within selected review band  1.8917350       0.2704644
+#> 56     Within selected review band  1.2433612       0.1768645
+#> 57     Within selected review band  0.1449582       0.0155312
+#> 5      Within selected review band  0.6729031       0.4361632
+#> 6                   Infit MnSq low  0.7608383       0.5121424
+#> 7  Infit MnSq low; Outfit MnSq low  1.2288187       0.6165886
+#>    InfitZSTDDiff_FACETS_minus_ENGINE OutfitZSTDDiff_FACETS_minus_ENGINE
+#> 55                                NA                                 NA
+#> 56                                NA                                 NA
+#> 57                                NA                                 NA
+#> 5                                 NA                                 NA
+#> 6                                 NA                                 NA
+#> 7                                 NA                                 NA
+#>    MaxAbsZSTDDiff_FACETS_vs_ENGINE MaxAbsLogDFRatio_ENGINE_over_FACETS
+#> 55                              NA                                  NA
+#> 56                              NA                                  NA
+#> 57                              NA                                  NA
+#> 5                               NA                                  NA
+#> 6                               NA                                  NA
+#> 7                               NA                                  NA
+#>    MaxDFRelativeDifference_ENGINE_vs_FACETS EngineFlagAbsZ FacetsStyleFlagAbsZ
+#> 55                                       NA          FALSE               FALSE
+#> 56                                       NA          FALSE               FALSE
+#> 57                                       NA          FALSE               FALSE
+#> 5                                        NA          FALSE               FALSE
+#> 6                                        NA          FALSE               FALSE
+#> 7                                        NA          FALSE               FALSE
+#>    FlagChangedByDf DfSensitivityStatus                  SE_Method PrecisionTier
+#> 55           FALSE       not_available Observed information (MML)   model_based
+#> 56           FALSE       not_available Observed information (MML)   model_based
+#> 57           FALSE       not_available Observed information (MML)   model_based
+#> 5            FALSE       not_available         Posterior SD (EAP)   model_based
+#> 6            FALSE       not_available         Posterior SD (EAP)   model_based
+#> 7            FALSE       not_available         Posterior SD (EAP)   model_based
+#>    SupportsFormalInference             SEUse
+#> 55                    TRUE primary_reporting
+#> 56                    TRUE primary_reporting
+#> 57                    TRUE primary_reporting
+#> 5                     TRUE primary_reporting
+#> 6                     TRUE primary_reporting
+#> 7                     TRUE primary_reporting
+#>                                CIBasis             CIUse Converged
+#> 55 Normal interval from model-based SE primary_reporting      TRUE
+#> 56 Normal interval from model-based SE primary_reporting      TRUE
+#> 57 Normal interval from model-based SE primary_reporting      TRUE
+#> 5  Normal interval from model-based SE primary_reporting      TRUE
+#> 6  Normal interval from model-based SE primary_reporting      TRUE
+#> 7  Normal interval from model-based SE primary_reporting      TRUE
+#>               CI_Method                     CILabel  FitValue ElementType
+#> 55 Normal approximation Model-based normal interval 0.7295356 Facet level
+#> 56 Normal approximation Model-based normal interval 0.8547918 Facet level
+#> 57 Normal approximation Model-based normal interval 1.0155312 Facet level
+#> 5  Normal approximation Model-based normal interval 0.5638368      Person
+#> 6  Normal approximation Model-based normal interval 0.4878576      Person
+#> 7  Normal approximation Model-based normal interval 0.3851674      Person
+#>    FitScale FitStatistic FitColumn FitDistance Flagged FitDirection
+#> 55     mnsq        Infit     Infit   0.2704644   FALSE  within_band
+#> 56     mnsq        Infit     Infit   0.1452082   FALSE  within_band
+#> 57     mnsq        Infit     Infit   0.0155312   FALSE  within_band
+#> 5      mnsq        Infit     Infit   0.4361632   FALSE  within_band
+#> 6      mnsq        Infit     Infit   0.5121424    TRUE      overfit
+#> 7      mnsq        Infit     Infit   0.6148326    TRUE      overfit
+#>           Panel Shape    LabelText
+#> 55 All elements    21      Content
+#> 56 All elements    21     Language
+#> 57 All elements    21 Organization
+#> 5  All elements    15             
+#> 6  All elements    15         P006
+#> 7  All elements    15         P007
+```
+
+### Category probabilities
+
+Category curves ask which ordered score is most probable at each
+ability. They complement the expected-score pathway: a single expected
+score can hide which categories contribute to it.
+
+``` r
+
+category_curves <- plot(fit, type = "ccc", preset = "monochrome")
+```
+
+![Predicted category probabilities across ability for the fitted rating
+scale. Line patterns and colours identify categories; the curves use a
+reference profile with other additive facet effects fixed at
+zero.](mfrmr-visual-diagnostics_files/figure-html/category-curves-1.png)
+
+These are reference-profile probabilities, not observed category
+frequencies or uncertainty bands. For PCM/GPCM, select and interpret the
+relevant step/slope owner. A rarely dominant category is a reason to
+inspect counts and rubric meaning, not automatic evidence that
+categories should be merged.
+
+``` r
+
+head(plot_data(category_curves, component = "probabilities"))
+#> # A tibble: 6 × 13
+#>   Theta Probability ExpectedScore ScoreVariance Information CategoryInformation
+#>   <dbl>       <dbl>         <dbl>         <dbl>       <dbl>               <dbl>
+#> 1 -6          0.992          1.01       0.00835     0.00835           0.0000697
+#> 2 -5.95       0.991          1.01       0.00878     0.00878           0.0000770
+#> 3 -5.9        0.991          1.01       0.00922     0.00922           0.0000850
+#> 4 -5.85       0.990          1.01       0.00969     0.00969           0.0000939
+#> 5 -5.8        0.990          1.01       0.0102      0.0102            0.000104 
+#> 6 -5.75       0.989          1.01       0.0107      0.0107            0.000114 
+#> # ℹ 7 more variables: CategoryInformationShare <dbl>, Slope <dbl>, Model <chr>,
+#> #   Category <chr>, CurveGroup <chr>, CurveBasis <chr>, PredictorOffset <dbl>
+# Optional customization without refitting:
+# as_ggplot(category_curves)
+```
 
 ## 2. Local response and level issues
 
@@ -301,18 +597,45 @@ coverage matrix before interpreting cross-subset contrasts.
 ``` r
 
 sc <- subset_connectivity_report(fit, diagnostics = diag)
-plot(sc, type = "design_matrix", preset = "publication")
+coverage <- plot(sc, type = "design_matrix", preset = "publication")
 ```
 
-![Observed connections across rating-design subsets. Separate blocks
-identify a need to examine linking before comparing locations across
-subsets.](mfrmr-visual-diagnostics_files/figure-html/linking-1.png)
+![Observation shares above a matrix of relative facet-level coverage
+across observed subsets. Matrix cells compare each subset with the
+largest observed count for that facet; they are not completion rates for
+planned
+assignments.](mfrmr-visual-diagnostics_files/figure-html/linking-1.png)
 
-Interpretation:
+The cells divide each subset’s observed number of facet levels by the
+largest such count for that facet among the observed subsets. They do
+not show the proportion of planned ratings that were completed. A single
+connected subset can therefore have coverage values of one even with a
+sparse rating design. Low relative counts invite a closer assignment
+review; they do not alone establish weak linking, informative
+missingness, or random missingness.
 
-- Sparse rows or columns indicate weak subset coverage.
-- Facets with low overlap are weaker anchors for cross-subset
-  comparisons.
+``` r
+
+plot_data(coverage, component = "matrix")
+#>           1
+#> Criterion 1
+#> Person    1
+#> Rater     1
+head(plot_data(coverage, component = "table"))
+#> # A tibble: 3 × 9
+#>   Subset Facet    LevelsN Levels Observations ObservationPercent Ruler MaxLevels
+#>   <fct>  <fct>      <int> <chr>         <dbl>              <dbl> <chr>     <int>
+#> 1 1      Criteri…       3 Conte…          282                100 [===…         3
+#> 2 1      Person        48 P001,…          282                100 [===…        48
+#> 3 1      Rater          6 R01, …          282                100 [===…         6
+#> # ℹ 1 more variable: CoverageRatio <dbl>
+# Only the matrix is converted; the observation-share panel is not included.
+# as_ggplot(coverage, component = "matrix")
+```
+
+Compare an explicit assignment roster with observed ratings when
+distinguishing unassigned cells from missing assigned scores. Neither
+should be coded as zero.
 
 Keep three uses of *network* separate.
 [`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md)
@@ -630,6 +953,93 @@ let you change colors, labels, panels, or rendering technology while
 preserving the same measurement scale, reference lines, caveats, and
 reporting role used by the package-native plot.
 
+### Set an appearance once for several plots
+
+Use `options(mfrmr.plot_preset = "monochrome")` to set a common default
+in the development version. This example restores the previous option
+when it ends:
+
+``` r
+
+local({
+  old <- options(mfrmr.plot_preset = "monochrome")
+  on.exit(options(old))
+  saved <- plot(fit, type = "ccc", draw = FALSE)
+  special <- plot(fit, type = "ccc", preset = "publication", draw = FALSE)
+  c(session_default = saved$data$preset, explicit_override = special$data$preset)
+})
+#>   session_default explicit_override 
+#>      "monochrome"     "publication"
+```
+
+The choices are `"standard"`, `"publication"`, `"compact"` and
+`"monochrome"`. Explicit `preset` wins over the option; omitting both
+retains `"standard"`. Explicit `preset = NULL` also selects the package
+default. Remove the session setting with
+`options(mfrmr.plot_preset = NULL)`.
+
+A supported `as_ggplot(saved)` conversion uses the saved preset, whereas
+a new `plot(fit, ...)` call uses the current option. Set the option in a
+script or use explicit arguments to reproduce its appearance in another
+session. This applies to the common preset controls, including category,
+coverage and network report plots. Extended-model plots with separate
+`palette` controls retain their own settings. It does not change
+estimates, confidence levels, screening thresholds or the user’s global
+ggplot theme.
+
+### Use a common title argument
+
+In the development version, eight existing helpers accept `title`:
+[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
+[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md),
+[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
+[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
+[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md),
+[`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md),
+[`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+and
+[`plot_facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_quality_dashboard.md).
+
+``` r
+
+plain <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
+                     title = NULL, preset = "monochrome", draw = FALSE)
+as_ggplot(plain)
+```
+
+![Infit and Outfit mean squares for fitted facet levels, with the title
+omitted. Bubble sizes reflect rating counts; reference lines and the
+saved descriptive review band remain
+unchanged.](mfrmr-visual-diagnostics_files/figure-html/title-controls-1.png)
+
+``` r
+
+# Reuse the saved values, screening references and interval settings.
+plain$data$reference_lines
+#>   axis value                 label linetype      role
+#> 1    h   0.5 Lower fit review band   dashed threshold
+#> 2    h   1.0          Ideal Outfit   dashed reference
+#> 3    h   1.5 Upper fit review band   dashed threshold
+#> 4    v   0.5 Lower fit review band   dashed threshold
+#> 5    v   1.0           Ideal Infit   dashed reference
+#> 6    v   1.5 Upper fit review band   dashed threshold
+```
+
+Omit `title` for the default heading, supply
+`title = "Scoring patterns"` to replace it, or use `title = NULL` (or
+`""`) to hide it. This does not remove subtitles, legends, screening
+settings or interpretation notes. The dashboard method also accepts
+`plot(dashboard, title = NULL)`. Keep review-only limitations in the
+figure caption or accompanying report if its heading is hidden.
+
+Existing `main` calls and positional arguments still work without
+deprecation warnings. `main = NULL` retains its earlier meaning of “use
+the default heading”. Do not supply both `main` and `title`, even with
+the same value. These aliases do not imply that every plot has an
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+converter; consult `mfrmr_output_guide("plots")` for the supported
+route.
+
 ### Fair Scores and annotations outside the figure
 
 Use `plot_type = "measure"` to relate measures to fair scores,
@@ -863,6 +1273,148 @@ Interpretation:
   instability, not automatic rater-quality failure.
 - Report the shrinkage method and keep this display separate from bias,
   fit, or validity claims.
+
+## 7. Attributes and assessment planning
+
+### External-feature hierarchy
+
+A hierarchy can summarize raters’ backgrounds before discussing
+training. These eight fictional raters illustrate the mechanics; their
+groups are not estimates of severity, ability or rater quality. Choose
+attributes and their coding for the substantive question before
+interpreting a tree.
+
+``` r
+
+backgrounds <- data.frame(
+  Rater = paste0("R", 1:8),
+  Years = c(1, 2, 4, 6, 8, 10, 12, 15),
+  Training = ordered(c("Basic", "Basic", "Advanced", "Basic",
+    "Advanced", "Advanced", "Specialist", "Specialist"),
+    levels = c("Basic", "Advanced", "Specialist")))
+features <- mfrm_features(backgrounds, "Rater", c("Years", "Training"))
+hierarchy <- mfrm_cluster_hierarchical(features, k = 3, linkage = "average")
+```
+
+``` r
+
+hierarchy_plot <- plot(hierarchy, preset = "monochrome")
+```
+
+![Average-linkage dendrogram for eight fictional raters, based on Gower
+dissimilarities in experience and ordered training level. Labelled
+leaves identify raters and boxes show the requested three groups;
+heights are dissimilarities, not significance
+levels.](mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.png)
+
+Three groups were requested; the diagram does not select that number or
+establish that the groups are real. Feature weights, coding and linkage
+can change the branches. The full tree and memberships in leaf order are
+available for inspection. The development version supports both the base
+plot and a dedicated ggplot conversion of this saved tree.
+
+``` r
+
+plot_data(hierarchy_plot, component = "table")
+#>   ID Cluster Silhouette
+#> 7 R7       3  0.7428571
+#> 8 R8       3  0.7954545
+#> 4 R4       1  0.5344828
+#> 1 R1       1  0.7750000
+#> 2 R2       1  0.7972973
+#> 3 R3       2  0.4642857
+#> 5 R5       2  0.7500000
+#> 6 R6       2  0.6190476
+tree <- plot_data(hierarchy_plot, component = "tree")
+```
+
+``` r
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  hierarchy_figure <- as_ggplot(hierarchy_plot, component = "tree") +
+    ggplot2::labs(title = NULL, subtitle = NULL)
+  print(hierarchy_figure)
+}
+```
+
+![The same saved hierarchy of eight fictional raters rendered with
+ggplot. Leaf order, Gower merge heights and the three group boxes are
+unchanged. The caption explains that heights are not branch
+support.](mfrmr-visual-diagnostics_files/figure-html/hierarchy-ggplot-1.png)
+
+The conversion keeps the saved label setting and preset. Use
+`labels = FALSE` when creating a crowded tree to hide IDs without
+removing leaves. Where heights tie, boxes follow the stored merge-order
+groups; they need not correspond to a unique horizontal height cut.
+Removing titles or captions with
+[`ggplot2::labs()`](https://ggplot2.tidyverse.org/reference/labs.html)
+leaves the tree and memberships in
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
+
+For imputed features, group comparisons and PCA, continue with
+[Exploring person, rater, and task
+attributes](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-external-features.md).
+
+### D-study planning
+
+A D-study asks how a specified measurement design would perform if we
+changed facet counts. The packaged MGENOVA manual example has two
+scores, V and W, observed for Persons crossed with Tasks. Here the
+target is their equal-weight composite. There is no rater facet in this
+example.
+
+``` r
+
+tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
+gstudy <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
+planned <- mfrm_multivariate_d_study(gstudy,
+  data.frame(Tasks = c(3, 6, 12)), weights = c(V = 0.5, W = 0.5))
+```
+
+``` r
+
+planning_plot <- plot(planned, type = "coefficients", preset = "monochrome")
+```
+
+![G and Phi coefficients for an equally weighted V and W composite at
+three, six and twelve planned Tasks. Separate panels distinguish
+relative and absolute decisions; points identify requested designs, and
+lines guide the
+eye.](mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.png)
+
+G concerns relative comparisons among Persons; Phi concerns absolute
+score interpretation. More tasks reduce the modeled task-related error
+while holding the estimated covariance components and composite weights
+fixed. These are observed-score projections, not MFRM ability
+reliability or a guarantee for a new task population. Uncertainty in the
+estimated components is omitted.
+
+``` r
+
+plot_data(planning_plot, component = "table")
+#>   Scenario Tasks      Kind     Score UniverseVariance RelativeErrorVariance
+#> 3        1     3 Composite Composite        0.3438889            0.34987654
+#> 6        2     6 Composite Composite        0.3438889            0.17493827
+#> 9        3    12 Composite Composite        0.3438889            0.08746914
+#>   AbsoluteErrorVariance         G       Phi RelativeSEM AbsoluteSEM    Status
+#> 3             0.4205556 0.4956847 0.4498547   0.5915036   0.6485025 Available
+#> 6             0.2102778 0.6628198 0.6205514   0.4182562   0.4585605 Available
+#> 9             0.1051389 0.7972238 0.7658521   0.2957518   0.3242513 Available
+#>     GStatus PhiStatus RelativeSEMStatus AbsoluteSEMStatus ComponentPSD
+#> 3 Available Available         Available         Available         TRUE
+#> 6 Available Available         Available         Available         TRUE
+#> 9 Available Available         Available         Available         TRUE
+# Customizable conversion of this selected score/composite:
+# as_ggplot(planning_plot)
+# Error in score units is a different view:
+# plot(planned, type = "sem")
+```
+
+Use
+[`?mfrm_multivariate_d_study`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_study.md)
+for score/composite selection and supported crossed or nested designs.
+An ordinary `mfrm_d_study` object has its own base plot; its automatic
+ggplot conversion is currently unavailable.
 
 ## Portable score-batch review
 

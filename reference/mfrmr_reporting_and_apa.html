@@ -35,7 +35,7 @@ treated as automatic operational-scoring evidence."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,7 @@ treated as automatic operational-scoring evidence."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Reporting and APA Guide</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/help_reporting_and_apa.R" class="external-link"><code>R/help_reporting_and_apa.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/help_reporting_and_apa.R" class="external-link"><code>R/help_reporting_and_apa.R</code></a></small>
       <div class="d-none name"><code>mfrmr_reporting_and_apa.Rd</code></div>
     </div>
 
@@ -101,7 +101,15 @@ treated as automatic operational-scoring evidence.</p>
     <h2 id="start-with-the-reporting-question">Start with the reporting question<a class="anchor" aria-label="anchor" href="#start-with-the-reporting-question"></a></h2>
 
 
-<ul><li><p>"Which parts of this run are ready to draft, and with what caveats?"
+<ul><li><p>"Where should I start with an existing fit?"
+Use <code><a href="mfrm_results.html">mfrm_results()</a></code> to retain the fit and matching outputs, inspect
+<code>summary(res)</code>, then use <code><a href="mfrm_report.html">mfrm_report()</a></code> for a report or
+<code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> for an analyst archive.</p></li>
+<li><p>"What can I give to an individual rater?"
+Use <code>mfrm_report(res, style = "rater", facet = "Rater", rater = "R01", output = "html")</code> for native additive RSM/PCM results. Review and retain
+the standalone HTML file. The complete analysis archive serves the analyst
+and retains source data and identifiers.</p></li>
+<li><p>"Which parts of this run are ready to draft, and with what caveats?"
 Use <code><a href="reporting_checklist.html">reporting_checklist()</a></code>.</p></li>
 <li><p>"How should I phrase the model, fit, and precision sections?"
 For <code>RSM</code> / <code>PCM</code>, use <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>.</p></li>
@@ -126,29 +134,51 @@ sentence starters, then verify availability with
     <h2 id="recommended-reporting-route">Recommended reporting route<a class="anchor" aria-label="anchor" href="#recommended-reporting-route"></a></h2>
 
 
-<ol><li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p></li>
-<li><p>Build diagnostics with <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>.</p></li>
-<li><p>Review precision strength with <code><a href="precision_review_report.html">precision_review_report()</a></code> when
-inferential language matters.</p></li>
-<li><p>Run <code><a href="reporting_checklist.html">reporting_checklist()</a></code> to identify missing sections, caveats, and
-next actions. Use the <code>"Visual Displays"</code> rows as the figure-routing
-layer for the current run.</p></li>
-<li><p>When strict marginal rows are available, follow up with
-<code><a href="plot_marginal_fit.html">plot_marginal_fit()</a></code> and <code><a href="plot_marginal_pairwise.html">plot_marginal_pairwise()</a></code> before finalizing
-the narrative around local misfit.</p></li>
-<li><p>Create manuscript-draft prose and metadata with <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>.
-For <code>GPCM</code>, treat the APA/QC/export stack as caveated
-sensitivity-reporting output and keep its <code>gpcm_boundary</code> visible.</p></li>
-<li><p>Convert summary outputs to reusable table bundles with
-<code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code>, review the bundle with <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> /
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, then convert specific components to handoff tables with
-<code><a href="apa_table.html">apa_table()</a></code> or export them directly with <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code>.</p></li>
-<li><p>When candidate models are compared, keep the comparison as a reporting
+<ol><li><p>Fit with <code><a href="fit_mfrm.html">fit_mfrm()</a></code> and inspect <code>summary(fit)</code> before interpreting it.</p></li>
+<li><p>Calculate the diagnostics or intervals needed for the question. For a
+fixed-rater RSM/PCM feedback sheet, use <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> and, for
+eligible MML fits, <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code>. A rater coefficient and a
+difference between raters are distinct interval targets.</p></li>
+<li><p>Retain them with <code>res &lt;- mfrm_results(fit, diagnostics = diagnostics, intervals = list(raters = ci), compute = "never")</code> when these objects
+have been calculated. Omit attachments you do not need. Here
+<code>compute = "never"</code> avoids filling absent diagnostics automatically;
+missing sections remain explicit.</p></li>
+<li><p>Inspect <code>summary(res)$triage</code> and <code>summary(res)$next_actions</code>. Choose a
+figure through <code>summary(res)$plot_map</code> or <code>mfrmr_output_guide("plots")</code>.
+Use <code>plot(res, ...)</code> or <code><a href="as_ggplot.html">as_ggplot()</a></code> for supported views. An attached
+rater interval is displayed by <code>type = "facet_raters"</code>; an ordinary
+Wright map does not acquire that interval method automatically.</p></li>
+<li><p>Use <code>mfrm_report(res)</code> for the analyst's quality-control report, or
+<code>style = "rater"</code> with explicit <code>facet</code> and <code>rater</code> for one recipient.
+<code>output = "html"</code> creates a temporary file; copy it to keep it.</p></li>
+<li><p>Save <code>res</code> with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">base::saveRDS()</a></code> for later use, or use
+<code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> for CSVs, HTML, RDS and replay files.
+<code>preset = "starter"</code> also requests reports and available figures.
+Review <code>written_files</code> and <code>plot_errors</code> before treating export as complete.</p></li>
+</ol><p>These functions serve different purposes; figures and reports are optional
+branches from the saved results, not compulsory steps before saving them.
+The worked example in <code><a href="../articles/mfrmr-facet-intervals.html">vignette("mfrmr-facet-intervals")</a></code> follows this route
+through individual feedback, interval figures and save/reopen operations.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="specialist-reporting-tools">Specialist reporting tools<a class="anchor" aria-label="anchor" href="#specialist-reporting-tools"></a></h2>
+
+
+<p>Use <code><a href="reporting_checklist.html">reporting_checklist()</a></code> to inspect manuscript sections and
+<code><a href="precision_review_report.html">precision_review_report()</a></code> when the strength of precision claims matters.
+<code><a href="build_apa_outputs.html">build_apa_outputs()</a></code> supplies manuscript-draft prose and metadata;
+<code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> collects selected tables for <code><a href="apa_table.html">apa_table()</a></code>
+or <code><a href="export_summary_appendix.html">export_summary_appendix()</a></code>. These narrower tools remain useful and
+are not replaced by the general report. For <code>GPCM</code>, keep the
+<code>gpcm_boundary</code> caveats with APA/QC/export output.
+When strict marginal rows are available, <code><a href="plot_marginal_fit.html">plot_marginal_fit()</a></code> and
+<code><a href="plot_marginal_pairwise.html">plot_marginal_pairwise()</a></code> support local-misfit follow-up.
+When candidate models are compared, keep the comparison as a reporting
 review: <code><a href="compare_mfrm.html">compare_mfrm()</a></code> -&gt; <code><a href="build_model_choice_review.html">build_model_choice_review()</a></code> -&gt;
 <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code>. Treat <code>GPCM</code> as a slope-aware
 sensitivity route unless the study design explicitly justifies
-discrimination-based operational scoring.</p></li>
-</ol></div>
+discrimination-based operational scoring.</p>
+    </div>
     <div class="section level2">
     <h2 id="keep-each-fit-with-its-own-diagnostics">Keep each fit with its own diagnostics<a class="anchor" aria-label="anchor" href="#keep-each-fit-with-its-own-diagnostics"></a></h2>
 

@@ -7,7 +7,8 @@ facets, and score, as in the complete example below.
 The default is method = &quot;MML&quot; (marginal maximum likelihood).
 The RSM / PCM branches are the package's many-facet Rasch-family
 reference route. GPCM adds positive, level-specific discriminations to
-one facet, which must also supply its category steps. See &quot;GPCM model and
+one facet. MML permits a different facet to supply category steps;
+JML requires the same facet for both roles. See &quot;GPCM model and
 inference&quot; below for the current limits on uncertainty and comparisons.
 In the example, toy stores the data and fit stores the fitted model.
 Quoted column names such as &quot;Person&quot; must match the data, including case.
@@ -26,7 +27,8 @@ facets, and score, as in the complete example below.
 The default is method = &quot;MML&quot; (marginal maximum likelihood).
 The RSM / PCM branches are the package's many-facet Rasch-family
 reference route. GPCM adds positive, level-specific discriminations to
-one facet, which must also supply its category steps. See &quot;GPCM model and
+one facet. MML permits a different facet to supply category steps;
+JML requires the same facet for both roles. See &quot;GPCM model and
 inference&quot; below for the current limits on uncertainty and comparisons.
 In the example, toy stores the data and fit stores the fitted model.
 Quoted column names such as &quot;Person&quot; must match the data, including case.
@@ -45,7 +47,7 @@ population distribution are analysis choices even when arguments are omitted."><
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,7 +86,7 @@ population distribution are analysis choices even when arguments are omitted."><
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit many-facet ordered-response models with a flexible number of facets</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/6f541bfa3ff5eb6f59e513ee4a375956e9119eb7/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>fit_mfrm.Rd</code></div>
     </div>
 
@@ -97,7 +99,8 @@ Each data row is one rating. Supply its column names with <code>person</code>,
 The default is <code>method = "MML"</code> (marginal maximum likelihood).
 The <code>RSM</code> / <code>PCM</code> branches are the package's many-facet Rasch-family
 reference route. <code>GPCM</code> adds positive, level-specific discriminations to
-one facet, which must also supply its category steps. See "GPCM model and
+one facet. MML permits a different facet to supply category steps;
+JML requires the same facet for both roles. See "GPCM model and
 inference" below for the current limits on uncertainty and comparisons.
 In the example, <code>toy</code> stores the data and <code>fit</code> stores the fitted model.
 Quoted column names such as <code>"Person"</code> must match the data, including case.
@@ -263,9 +266,9 @@ set of rating-scale thresholds.</p></dd>
 estimates one positive slope for every level of this designated facet.
 Thus <code>slope_facet = "Criterion"</code> gives criterion-specific slopes, whereas
 <code>slope_facet = "Rater"</code> gives rater-specific slopes. The current route
-accepts exactly one slope-owning facet, requires
-<code>slope_facet == step_facet</code>, and cannot estimate criterion and rater slope
-blocks simultaneously. Slopes are identified on the log scale with their
+accepts exactly one slope-owning facet. MML allows a distinct <code>step_facet</code>;
+JML requires <code>slope_facet == step_facet</code>. Criterion and rater slope
+blocks cannot be estimated simultaneously. Slopes are identified on the log scale with their
 geometric mean fixed to 1, so the table reports relative discrimination
 across the selected facet's levels rather than unrelated absolute weights.</p></dd>
 
@@ -683,10 +686,12 @@ explains the result's status; <code><a href="diagnose_mfrm.html">diagnose_mfrm()
     <h2 id="gpcm-model-and-inference">GPCM model and inference<a class="anchor" aria-label="anchor" href="#gpcm-model-and-inference"></a></h2>
 
 
-<p>One selected facet supplies both level-specific positive discriminations
-and category steps: <code>slope_facet == step_facet</code>. For example, selecting
-<code>Criterion</code> estimates a relative discrimination for each criterion; it does
-not simultaneously estimate rater discriminations. The model has one
+<p>One selected facet supplies level-specific positive discriminations. With
+MML, a different facet may supply category steps. For example,
+<code>slope_facet = "Criterion", step_facet = "Rater"</code> estimates a relative
+discrimination for each criterion and category-step contrasts for each
+rater. It does not simultaneously estimate rater discriminations. JML
+requires the same owner for both blocks. The model has one
 substantive ability dimension; its structural choices and currently
 unavailable inferential outputs are separate considerations.</p>
 <p>Free-slope fits retain numerical estimates for review. <code><a href="confint.mfrm_fit.html">confint.mfrm_fit()</a></code>
@@ -728,10 +733,13 @@ threshold/scale anchors and fixed-calibration starting values.</p>
 <p>With <code>model = "GPCM"</code>, the adjacent-category kernel is multiplied by
 a positive slope for the designated slope-facet level:</p>
 <p>$$\ln\frac{P(X_{nij} = k)}{P(X_{nij} = k-1)} =
-  \alpha_g(\eta - \tau_{g,k}),\quad \alpha_g &gt; 0.$$</p>
-<p>The current implementation requires <code>slope_facet == step_facet</code> and
-identifies slopes by a sum-to-zero constraint on log slopes, so their
-geometric mean is 1.
+  \alpha_g(\eta - \tau_{h,k}),\quad \alpha_g &gt; 0.$$</p>
+<p>Here \(g\) indexes the slope facet and \(h\) the step facet; MML permits
+these to differ. Slopes have a sum-to-zero constraint on log slopes, so
+their geometric mean is 1. Step contrasts are centered within each step
+owner, separately from facet location effects. Crossing the facets and
+observing enough categories is necessary to distinguish their effects;
+allowing separate owners does not ensure identification in a given design.
 A selected facet owns a vector rather than one common number: if there are
 \(G\) levels, the fit returns \(G\) positive slopes with \(G-1\) free
 log-slope contrasts. Every other facet remains additive inside \(\eta\)
@@ -745,8 +753,8 @@ multiplies ability while rater severity and other intercept terms remain
 unscaled. Such a formulation, including TAM multifacet <code>GPCM.design</code>
 constructions with separate linear intercept and slope designs, is a
 different model unless an algebraic reduction establishes equivalence.
-In this many-facet GPCM, exactly one facet supplies both
-the slope and step blocks. It is not the broader Uto–Ueno generalized MFRM,
+In this many-facet GPCM, exactly one facet supplies slopes. MML permits
+a different step owner; JML requires a shared owner. It is not the broader Uto–Ueno generalized MFRM,
 whose task and rater slopes enter multiplicatively and whose step owner must
 be stated separately. Setting every current slope to one recovers the
 package's equal-discrimination PCM kernel; it does not establish support for
@@ -981,8 +989,8 @@ the shared observed-score scale.</p>
 <li><p><code>model = "PCM"</code> with a designated <code>step_facet</code> (defaults to first facet)</p></li>
 <li><p><code>facet_interactions</code> with <code>model = "RSM"</code> or <code>"PCM"</code> for explicit
 two-way non-person facet interactions</p></li>
-<li><p><code>model = "GPCM"</code> is currently implemented only for the narrow bounded
-branch with <code>slope_facet == step_facet</code>; <code>MML</code> and <code>JML</code> fitting, core
+<li><p><code>model = "GPCM"</code> uses one positive slope family. MML permits separate
+slope/step owners; JML requires <code>slope_facet == step_facet</code>. Core
 summaries, fitted-object posterior scoring, <code><a href="compute_information.html">compute_information()</a></code>,
 Wright/pathway/CCC fit plots, <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>, residual-PCA follow-up,
 <code><a href="interrater_agreement_table.html">interrater_agreement_table()</a></code>, <code><a href="unexpected_response_table.html">unexpected_response_table()</a></code>,
@@ -991,8 +999,11 @@ Wright/pathway/CCC fit plots, <code><a href="diagnose_mfrm.html">diagnose_mfrm()
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code>, <code><a href="category_structure_report.html">category_structure_report()</a></code>,
 <code><a href="category_curves_report.html">category_curves_report()</a></code>, and graph/scorefile
 <code><a href="facets_output_file_bundle.html">facets_output_file_bundle()</a></code> routes are available with score-side
-caveats. Direct simulation
-specifications and data generation are also supported through
+caveats. Separate-owner MML supports slope and curve intervals,
+same-design <code><a href="bootstrap_mfrm_gpcm.html">bootstrap_mfrm_gpcm()</a></code>, and matched PCM comparison.
+<code><a href="build_weighting_review.html">build_weighting_review()</a></code> and the following simulation/design workflows
+still require the same slope/step owner. Direct simulation specifications
+and data generation are also supported through
 <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code>, <code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code>, and
 <code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code> when the slope-aware generator contract is stored
 explicitly; direct recovery checks are available through

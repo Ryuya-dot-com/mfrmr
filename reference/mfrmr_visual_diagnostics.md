@@ -54,6 +54,103 @@ Use `summary(scores)` and `plot(scores)` as described in
 Those displays review returned scores; they do not replace source-fit
 diagnostics or establish calibration fit.
 
+## Session plot defaults
+
+Set `options(mfrmr.plot_preset = "publication")` to choose a session
+default for plotting functions that expose the common `preset` argument.
+The supported values are `"standard"`, `"publication"`, `"compact"` and
+`"monochrome"`. Precedence is an explicit call argument, then the
+session option, then `"standard"`. For example, `preset = "standard"`
+overrides a session set to `"monochrome"`. Explicit `preset = NULL`
+retains the earlier package-default behavior; it does not read the
+session option. Invalid session values cause an error only when that
+option is needed.
+
+The category-curve, data-quality, fit-review, connectivity and network
+routes of [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+report bundles use the same option through `...`. Plots without a common
+`preset` argument, including extended-model plots with their own
+`palette` controls, keep their own settings. This option selects a
+preset, not a universal theme or a guarantee that all renderers
+implement every appearance control identically.
+
+New plot payloads retain the resolved preset for supported saved-data
+rendering. Converting an existing payload with
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+uses its saved appearance, even after the session option changes. A call
+that creates a new plot from a fit or statistical result uses the
+current default. For a reproducible script, supply `preset` explicitly
+or set the option in that script. Saving only the fitted model does not
+save a session option. No global ggplot theme is changed.
+
+Restore previous settings with
+`old <- options(mfrmr.plot_preset = "monochrome")` followed by
+`options(old)`. Use `options(mfrmr.plot_preset = NULL)` to remove the
+option. The preset changes appearance, not estimates, confidence levels
+or diagnostic thresholds.
+
+## Titles and compatibility
+
+The development version adds `title` to
+[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md),
+[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md),
+[`plot_unexpected()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_unexpected.md),
+[`plot_interrater_agreement()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_interrater_agreement.md),
+[`plot_facets_chisq()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facets_chisq.md),
+[`plot_bubble()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bubble.md),
+[`plot_bias_interaction()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_bias_interaction.md)
+and
+[`plot_facet_quality_dashboard()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_facet_quality_dashboard.md).
+Omission keeps the default title; `title = "Scoring patterns"` replaces
+it; `title = NULL` or `title = ""` suppresses it. The dashboard's S3
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method forwards
+these controls. Use exact argument names.
+
+Legacy `main` remains supported without warnings, and `main = NULL`
+keeps its original meaning: use the default heading. Supplying both
+`main` and `title` is an error, even when they are equal or both `NULL`.
+Existing positional calls retain their argument order. This is a
+compatible new spelling, not removal or deprecation of `main`.
+
+A title change does not alter the data, interval level, screening
+settings, reference lines, subtitles or interpretation notes. In stored
+plot payloads, an omitted heading is represented by an empty string.
+When hiding the heading of a review-only dashboard, retain its
+limitations in the figure caption or accompanying report. Use the plot
+guide to check ggplot support; accepting `title` does not add a
+converter for an unsupported plot.
+
+## Fitted plots and saved intervals
+
+For ordinary fitted-model plots, `plot(fit, level = 0.90)` is an
+alternative to `ci_level = 0.90`; use only one spelling. The same
+control is forwarded by ordinary fit-based routes of `plot(res, ...)`
+and `as_ggplot(fit, ...)`. It changes the normal intervals where
+`show_ci = TRUE`, without refitting the model. The default remains 0.95.
+Specialist helpers that document only `ci_level` retain that argument;
+this is not a package-wide rename.
+
+A saved inferential result has already chosen its method and level. For
+example, create `ci <- mfrm_facet_intervals(fit, "Rater", level = 0.90)`
+before `plot(ci)`; passing `level` to that plotting method is an error.
+The attached route `plot(res, type = "facet_raters")` uses those saved
+endpoints and does not inherit the Wright map's interval settings.
+
+A saved plot payload also retains its rendering choices. With
+`p <- plot(fit, level = 0.90, show_title = FALSE, draw = FALSE)`,
+`as_ggplot(p)` keeps that selection. To change it, make a new plot from
+`fit`; extra settings such as `as_ggplot(p, level = 0.80)` are rejected.
+To change labels on the converted ggplot, use
+`as_ggplot(p) + ggplot2::labs(title = NULL)`.
+
+Title suppression depends on the entry point. Ordinary fitted-model
+plots retain the historical `title = NULL` meaning (automatic title);
+use `show_title = FALSE` to hide it and `show_notes = FALSE` to hide
+notes. Fixed-facet interval plots and the helpers listed above accept
+`title = NULL` to hide the title. These distinctions preserve existing
+scripts. Hiding annotations does not remove numerical cautions from the
+saved results or establish stronger inference.
+
 ## Start with the question
 
 - "Do persons and facet levels overlap on the same logit scale?" Use

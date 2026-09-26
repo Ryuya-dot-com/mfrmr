@@ -29,6 +29,21 @@ as automatic operational-scoring evidence.
 
 ## Start with the reporting question
 
+- "Where should I start with an existing fit?" Use
+  [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+  to retain the fit and matching outputs, inspect `summary(res)`, then
+  use
+  [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+  for a report or
+  [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+  for an analyst archive.
+
+- "What can I give to an individual rater?" Use
+  `mfrm_report(res, style = "rater", facet = "Rater", rater = "R01", output = "html")`
+  for native additive RSM/PCM results. Review and retain the standalone
+  HTML file. The complete analysis archive serves the analyst and
+  retains source data and identifiers.
+
 - "Which parts of this run are ready to draft, and with what caveats?"
   Use
   [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md).
@@ -69,52 +84,80 @@ as automatic operational-scoring evidence.
 ## Recommended reporting route
 
 1.  Fit with
-    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+    [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+    and inspect `summary(fit)` before interpreting it.
 
-2.  Build diagnostics with
-    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+2.  Calculate the diagnostics or intervals needed for the question. For
+    a fixed-rater RSM/PCM feedback sheet, use
+    [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+    and, for eligible MML fits,
+    [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md).
+    A rater coefficient and a difference between raters are distinct
+    interval targets.
 
-3.  Review precision strength with
-    [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md)
-    when inferential language matters.
+3.  Retain them with
+    `res <- mfrm_results(fit, diagnostics = diagnostics, intervals = list(raters = ci), compute = "never")`
+    when these objects have been calculated. Omit attachments you do not
+    need. Here `compute = "never"` avoids filling absent diagnostics
+    automatically; missing sections remain explicit.
 
-4.  Run
-    [`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
-    to identify missing sections, caveats, and next actions. Use the
-    `"Visual Displays"` rows as the figure-routing layer for the current
-    run.
+4.  Inspect `summary(res)$triage` and `summary(res)$next_actions`.
+    Choose a figure through `summary(res)$plot_map` or
+    `mfrmr_output_guide("plots")`. Use `plot(res, ...)` or
+    [`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+    for supported views. An attached rater interval is displayed by
+    `type = "facet_raters"`; an ordinary Wright map does not acquire
+    that interval method automatically.
 
-5.  When strict marginal rows are available, follow up with
-    [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md)
-    and
-    [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
-    before finalizing the narrative around local misfit.
+5.  Use `mfrm_report(res)` for the analyst's quality-control report, or
+    `style = "rater"` with explicit `facet` and `rater` for one
+    recipient. `output = "html"` creates a temporary file; copy it to
+    keep it.
 
-6.  Create manuscript-draft prose and metadata with
-    [`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md).
-    For `GPCM`, treat the APA/QC/export stack as caveated
-    sensitivity-reporting output and keep its `gpcm_boundary` visible.
+6.  Save `res` with
+    [`base::saveRDS()`](https://rdrr.io/r/base/readRDS.html) for later
+    use, or use
+    [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+    for CSVs, HTML, RDS and replay files. `preset = "starter"` also
+    requests reports and available figures. Review `written_files` and
+    `plot_errors` before treating export as complete.
 
-7.  Convert summary outputs to reusable table bundles with
-    [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md),
-    review the bundle with
-    [`summary()`](https://rdrr.io/r/base/summary.html) /
-    [`plot()`](https://rdrr.io/r/graphics/plot.default.html), then
-    convert specific components to handoff tables with
-    [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-    or export them directly with
-    [`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
+These functions serve different purposes; figures and reports are
+optional branches from the saved results, not compulsory steps before
+saving them. The worked example in
+[`vignette("mfrmr-facet-intervals")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.md)
+follows this route through individual feedback, interval figures and
+save/reopen operations.
 
-8.  When candidate models are compared, keep the comparison as a
-    reporting review:
-    [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
-    -\>
-    [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
-    -\>
-    [`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md).
-    Treat `GPCM` as a slope-aware sensitivity route unless the study
-    design explicitly justifies discrimination-based operational
-    scoring.
+## Specialist reporting tools
+
+Use
+[`reporting_checklist()`](https://ryuya-dot-com.github.io/mfrmr/reference/reporting_checklist.md)
+to inspect manuscript sections and
+[`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md)
+when the strength of precision claims matters.
+[`build_apa_outputs()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_apa_outputs.md)
+supplies manuscript-draft prose and metadata;
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md)
+collects selected tables for
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
+or
+[`export_summary_appendix()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_summary_appendix.md).
+These narrower tools remain useful and are not replaced by the general
+report. For `GPCM`, keep the `gpcm_boundary` caveats with APA/QC/export
+output. When strict marginal rows are available,
+[`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md)
+and
+[`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md)
+support local-misfit follow-up. When candidate models are compared, keep
+the comparison as a reporting review:
+[`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+-\>
+[`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
+-\>
+[`build_summary_table_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_summary_table_bundle.md).
+Treat `GPCM` as a slope-aware sensitivity route unless the study design
+explicitly justifies discrimination-based operational scoring.
 
 ## Keep each fit with its own diagnostics
 
