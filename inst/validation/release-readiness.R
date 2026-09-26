@@ -1831,7 +1831,7 @@ mfrmr_release_readiness_public_scope_status <- function(
     c(
       "unidimensional many-facet ordered-response models",
       "one observed score scale",
-      "documented bounded `gpcm` extension",
+      "gpcm uses one substantive ability dimension",
       "portable fixed-calibration artifacts are available only",
       "posterior scoring from an existing fitted object is a separate"
     ),
@@ -1967,7 +1967,9 @@ mfrmr_release_readiness_prose_count_status <- function(
 
   current_news <- mfrmr_release_readiness_read_lines(paths$news)
   target_heading <- paste("# mfrmr", target_version[1])
-  heading_index <- which(current_news == target_heading)
+  heading_index <- which(current_news %in% c(
+    target_heading, paste(target_heading, "(development version)")
+  ))
   if (length(heading_index) > 0L) {
     start <- heading_index[1]
     later_heading <- which(

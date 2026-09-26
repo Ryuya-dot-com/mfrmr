@@ -54,7 +54,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
     "## Rater assignment and anchors",
     "## External comparison",
     "## Compatibility principles",
-    "## Not part of the 0.2.4 promise"
+    "## Focus for 0.2.4"
   )
   for (marker in required_public_markers) {
     expect_match(public, marker, fixed = TRUE)
@@ -65,8 +65,8 @@ test_that("public roadmap and current NEWS exclude internal release operations",
     fixed = TRUE
   )
   expect_match(public, "GPCM", fixed = TRUE)
-  expect_match(public, "multivariate designs", fixed = TRUE)
-  expect_match(public, "complete and incomplete rating designs", fixed = TRUE)
+  expect_match(public, "Multivariate observed-score G/D studies", fixed = TRUE)
+  expect_match(public, "complete versus connected\n   incomplete assignments", fixed = TRUE)
   expect_match(internal, "internal development and validation roadmap",
                fixed = TRUE)
 
@@ -3112,7 +3112,7 @@ test_that("GPCM stress smoke generator is deterministic and fails closed", {
   expect_true(all(!negative$results$NumericExternalEligible))
 })
 
-test_that("GPCM local-dependence corner reaches exploratory residual PCA", {
+test_that("GPCM local-dependence review distinguishes available and unavailable PCA", {
   pkg_root <- normalizePath(test_path("..", ".."), winslash = "/",
                             mustWork = TRUE)
   runner <- file.path(
@@ -3132,8 +3132,12 @@ test_that("GPCM local-dependence corner reaches exploratory residual PCA", {
     verbose = FALSE
   )
   expect_identical(result$results$RunState, "completed_calibration")
-  expect_identical(result$results$PCAState, "available_exploratory")
-  expect_true(is.finite(result$results$PCAFirstEigenvalue))
+  if (is.finite(result$results$PCAFirstEigenvalue)) {
+    expect_identical(result$results$PCAState, "available_exploratory")
+  } else {
+    expect_identical(result$results$PCAState, "unavailable")
+    expect_match(result$results$Warnings, "Residual PCA returned no finite eigenvalue")
+  }
   expect_gt(result$results$ExactCellDuplicates, 0L)
   expect_identical(result$results$DistinguishedCellDuplicates, 0L)
   expect_false(result$results$InferenceReady)

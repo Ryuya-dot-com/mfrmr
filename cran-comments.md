@@ -51,7 +51,7 @@ are not attributed to this candidate.
   (R 4.6.1 UCRT) and [R-devel](https://win-builder.r-project.org/jNhW5RFMe5gs/00check.log)
   (2026-09-21 r90579 UCRT) each report **0 errors, 0 warnings and 1 NOTE**.
   Installation, examples, tests, vignette rebuilding and PDF/HTML manuals pass.
-  Each selected CRAN test suite has 3,683 passes, zero failures/warnings and
+  Each selected CRAN test suite completes without failures or warnings, with
   five skips: one fresh-process case, three deliberate CRAN skips and one
   compiled-source case. This is not the exhaustive local suite. The logs and
   Windows binaries are archived locally before the temporary links expire.

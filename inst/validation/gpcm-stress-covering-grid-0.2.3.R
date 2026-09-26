@@ -937,18 +937,17 @@ mfrmr_gpcm_stress_run_one <- function(row, run_diagnostics = FALSE,
     if (inherits(pca_capture$value, "error")) {
       pca_state <- "failed"
     } else {
-      pca_state <- "available_exploratory"
       pca_table <- as.data.frame(
         pca_capture$value$overall_table %||% data.frame(),
         stringsAsFactors = FALSE
       )
-      numeric_columns <- names(pca_table)[vapply(pca_table, is.numeric,
-                                                 logical(1))]
-      preferred <- intersect(c("Eigenvalue", "Variance"), numeric_columns)
-      chosen <- (c(preferred, numeric_columns))[1L]
-      if (length(chosen) == 1L && !is.na(chosen) && nrow(pca_table) > 0L) {
-        pca_first <- as.numeric(pca_table[[chosen]][1L])
+      # A returned object or a numeric component index is not an eigenvalue.
+      if (nrow(pca_table) > 0L && is.numeric(pca_table$Eigenvalue)) {
+        pca_first <- as.numeric(pca_table$Eigenvalue[1L])
       }
+      pca_state <- if (is.finite(pca_first)) "available_exploratory" else "unavailable"
+      if (!is.finite(pca_first)) warnings <- unique(c(warnings,
+        "Residual PCA returned no finite eigenvalue; diagnostic output is unavailable."))
     }
   }
 

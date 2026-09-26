@@ -1,4 +1,4 @@
-# mfrmr 0.2.4.9000
+# mfrmr 0.2.4.9000 (development version)
 
 * GPCM MML now allows different slope and step facets, for example criterion
   discrimination with rater-specific category steps. One slope family retains

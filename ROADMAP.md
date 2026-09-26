@@ -954,7 +954,7 @@ category use conditional on that model, not an automatic diagnosis of a rater's
 habit. Rater location and step contrasts need separate identification, adequate
 crossing and category support, especially in incomplete designs.
 
-The September 26 internal-kernel preflight checks two slope levels versus
+The September 26 numerical verification checks two slope levels versus
 three step levels and the reversed ownership, complete and incomplete crossed
 rosters, and fixed/adaptive MML integration. Direct scalar category recursion
 and independent R integration agree with the marginal likelihood; analytical
@@ -1357,7 +1357,7 @@ and check ties, zero-height trees, replay and refusal of misleading component
 selection. No clustering or recutting is performed. The purpose guide includes this dedicated conversion.
 
 Imputation co-membership conversion is now also implemented locally. Saved
-fractions, the all-imputation denominator, requested ID order, labels and
+fractions calculated over all imputations, requested ID order, labels and
 zero-to-one scale are retained. Unavailable cells use both grey fill and
 crosses. Selection does not renormalize values; hiding labels does not sample
 cells. Matrix/source metadata, including exclusions, remain extractable from
@@ -1398,7 +1398,7 @@ statistical work packages remain open. The rater-uncertainty evidence/budget rev
 separate-owner GPCM MML is now connected locally. The next substantive priority
 is D1 statistical evaluation above; additional converters are not an automatic
 prerequisite. Rater-interval qualification resumes only under its stated triggers. Evidence is recorded
-in `inst/validation/claim-reconciliation-0.2.4.md`.
+in the [validation record](inst/validation/claim-reconciliation-0.2.4.md).
 
 The [lifecycle definitions](https://lifecycle.r-lib.org/articles/stages.html)
 distinguish `superseded` (a better alternative, continued support, no warning)

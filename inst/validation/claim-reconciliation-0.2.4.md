@@ -5933,3 +5933,25 @@ simulation, hosted CI, commit/push, release-tag change or CRAN submission occurr
 Help source, generated Rd, NEWS, README, scope vignette and roadmap are updated.
 Sources: `validation-results/gpcm-separated-owners-20260926/fit/{probe.rds,
 workflow.R,workflow.log,tests.log,regression.log,reexport.R,reexport.log}`.
+
+## 2026-09-26: Repair development-branch CI metadata review
+
+GitHub run 36230655189 for 7699a05e stopped at source-metadata review before
+package building or tests; the other four environments were skipped. Local
+reproduction identified internal path/terminology in the public roadmap.
+Reader-facing prose and a linked evidence reference now pass the unchanged
+source-truth check. NEWS explicitly identifies the development version.
+
+The affected repository review initially exposed nine failures: outdated
+roadmap/README wording assertions, a historical raw pass-count claim, and a
+stress-runner PCA availability error. Scope checks now follow the current
+one-slope-family wording without restoring the obsolete blanket "bounded"
+label. The stress runner accepts only a named finite eigenvalue, not merely
+a returned object or another numeric column; unavailable PCA remains explicit.
+The iteration-limited JML corner has no finite PCA result and is no longer
+recorded as available. Neither fitting nor statistical eligibility was changed.
+The complete release-readiness protocol file now passes locally (no failures,
+warnings or skips); the direct CI metadata check and diff whitespace check pass.
+Logs are retained in `validation-results/development-ci-repair-20260926/`.
+These results repair the stopped check; they do not constitute a five-platform
+package-check result or completion of D1 statistical evaluation.
