@@ -12,17 +12,21 @@ analysis guidance. The files here support package release checks and
 maintenance review; public release notes stay in `NEWS.md`.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
-release direction and support boundaries. `internal-roadmap-0.2.3.md` owns
-maintainer sequencing, local-tool identities, candidate gates, and validation
-operations. Other files in this directory may add evidence or preserve history
-but do not broaden current API scope.
+release direction and support boundaries. The
+[current internal roadmap](internal-roadmap-0.2.4.md) owns maintainer sequencing,
+source/evidence identity, completion criteria and validation decisions for the
+integrated 0.2.4. Start there for the three pillars, open statistical and workflow
+decisions, and the single ordered work queue. `internal-roadmap-0.2.3.md` is
+historical. Other records preserve evidence but do not broaden current API scope
+or create competing execution plans.
 
-Start with the [integrated claim/evidence ledger, 2026-09-14](claim-reconciliation-0.2.4.md)
-for the latest assessment of all 18 public claim groups. It reconciles 373
-current namespace declarations, separates repaired defects from remaining
-statistical questions, and records the bounded current-source checks and
-release consequences. Earlier records below retain their original outcomes
-and source identities; they are not blanket current-source approvals.
+The [claim/evidence ledger](claim-reconciliation-0.2.4.md) retains the September
+14 assessment of 18 claim groups and 373 namespace declarations, followed by
+dated repairs and checks. Those counts and present-tense source descriptions
+belong to their recorded checkpoints. The current plan links subsequent GMFRM,
+corrected-JML and portable-scoring evidence. Earlier records below retain their
+original outcomes and source identities; they are not blanket current-source
+approvals.
 
 The [September 20–21 candidate checks](release-candidate-check-0.2.4.md) verify
 portable scoring across fresh sessions and Mac/Linux, correct two public-output

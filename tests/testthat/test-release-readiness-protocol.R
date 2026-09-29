@@ -12,7 +12,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   public_path <- file.path(pkg_root, "ROADMAP.md")
   news_path <- file.path(pkg_root, "NEWS.md")
   internal_path <- file.path(pkg_root, "inst", "validation",
-                             "internal-roadmap-0.2.3.md")
+                             "internal-roadmap-0.2.4.md")
   skip_if_not(all(file.exists(c(public_path, news_path))))
   expect_true(file.exists(internal_path))
 

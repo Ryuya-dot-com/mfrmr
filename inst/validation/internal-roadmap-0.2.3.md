@@ -1,15 +1,17 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-24.
+Status: historical maintainer plan, last refined 2026-09-24;
+superseded for execution on 2026-09-30 by the
+[integrated 0.2.4 internal roadmap](internal-roadmap-0.2.4.md).
 
-The repository-root `ROADMAP.md` is the single source of truth for public
-release direction. This file owns internal sequencing, candidate gates, local
-tool identities, and validation operations. `NEWS.md` records completed
-user-visible changes. Other files under `inst/validation/` provide
-technical evidence or historical context and are subordinate to this roadmap.
-The roadmap is repository-only and is excluded from source-package tarballs.
+The repository-root `ROADMAP.md` describes public release direction and
+`NEWS.md` records user-visible changes. This file preserves earlier sequencing,
+candidate gates, local-tool identities and validation operations. Its dated
+instructions and completion claims apply to their original sources, not the
+current integrated scope. It is repository-only and excluded from source
+tarballs. Use the current internal roadmap for execution decisions.
 
-## Current work plan
+## Historical work plan
 
 Updated 2026-09-24 after the user's post-release roadmap request. The agreed
 0.2.4 sequence was to finish implemented development functions, extend statistical
