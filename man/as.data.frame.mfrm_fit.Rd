@@ -21,6 +21,13 @@ A data.frame with columns \code{Facet}, \code{Level},
 is populated for person rows from the extreme-score flag
 (\code{"Min"} / \code{"Max"} / \code{NA}); non-person
 facet rows carry \code{NA} in that column by design.
+Corrected-JML fits additionally retain estimator, correction order,
+point/covariance status, uncertainty target and structural \code{RootSE}
+columns. Person \code{RootSE} is missing; extreme Person flags are
+\code{"low"} / \code{"high"} / \code{"none"}. The \code{estimation_note}
+attribute explains the local-root uncertainty and remaining bias. Ordinary
+diagnostic attachments do not apply to this estimator; see the Corrected
+JML section of \code{\link{fit_mfrm}}.
 }
 \description{
 Returns all facet-level estimates (person and others) in a single

@@ -46,7 +46,8 @@ orders >= 3, for example \code{c(31, 61)}. Adds a per-Person
 \code{quadrature_review} at each fit's fixed parameters, comparing a fixed-prior
 grid with mode/curvature-adapted grids. This separates integration error
 from parameter changes during refitting. Inspect changes between adaptive
-orders too; neither grid is certified exact.}
+orders too; neither grid is certified exact.
+This optional fixed/adaptive review is unavailable for two slope families.}
 }
 \value{
 An object of class \code{mfrm_quadrature_sensitivity} containing:
@@ -60,10 +61,13 @@ mode/curvature and computation status. Unavailable rows retain their reason.
 \code{summary()} also supplies a compact \code{quadrature_overview};
 \item \code{runs}: likelihood, gradient, curvature, population-scale, and readiness
 details for each fit;
-\item \code{slopes}: relative-slope estimates, raw diagnostic SEs and freshly checked
+\item \code{slopes}: component-slope estimates, raw diagnostic SEs and freshly checked
 95\% model intervals. The summary reports endpoint changes among jointly
-eligible levels and counts changes in interval availability;
-\item \code{conditions}: warnings and messages emitted by the explicit refits;
+eligible levels and counts changes in interval availability. One-family
+slopes have geometric mean one; two-family scale references differ;
+\item \code{intervals}: for two families, saved \code{mfrm_slope_intervals} objects named
+by quadrature count, with their numerical checks and cautions;
+\item \code{conditions}: warnings and messages from refitting and result extraction;
 \item \code{fits}: the reference and refitted \code{mfrm_fit} objects;
 \item \code{settings} and \code{notes}: the fixed comparison contract and interpretation
 boundary.
@@ -82,8 +86,8 @@ identification, anchor, interaction, optimizer, and population settings.
 This is an explicit refit diagnostic: neither \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}} nor
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} invokes it automatically. It reports continuous changes
 rather than classifying a fit as quadrature-stable or unstable. In
-particular, it does not set a practical cutoff, promote slope standard
-errors, or override the fit-readiness record.
+particular, it does not select a cutoff for acceptable changes, make
+unavailable standard errors valid, or resolve other warnings about the fit.
 
 The probability comparison evaluates every observed combination of
 non-Person facet levels on the same theta grid. It includes fitted two-way
@@ -100,6 +104,34 @@ Raw slope and population-SD standard errors are computed from each local
 observed-information Hessian for diagnostic comparison only. The public
 parameter-level \code{SEEligible} state remains unchanged.
 }
+\section{Two slope families}{
+
+For a two-family GPCM, fixed-grid refits preserve the ordered slope owners,
+fixed N(0,1) population, score ladder, \code{em_score_tol} and EM iteration limit.
+Each refit starts from the usual neutral initialization, not the reference
+estimate. Component slopes retain \code{SlopeOwner} and \code{ScaleReference}: the
+first family has geometric mean one; the second is free on the fixed ability
+scale. Category-probability comparisons use the product of both slopes.
+
+\code{intervals} contains the separately checked experimental \code{confint()} result
+for each grid, including failed checks, cautions and missing bounds. For
+example, after comparing \code{quad_points = c(31, 61)}, use
+\code{plot(out$intervals$q61)} and
+\code{apa_table(out$intervals$q61, which = "numerical_checks")}. These checks also
+evaluate q versus 2q-1 at that fit's saved parameters without another refit.
+Passing these checks does not establish sampling coverage or resolve
+other warnings about the fitted model.
+Person-score comparisons remain unavailable for two families: EAP and
+posterior-SD changes are \code{NA}, not zero. Adaptive review is refused.
+
+More quadrature points improve the numerical approximation, not the amount
+of observed information. In a sparse design, a small group of candidates
+rated many times may need a finer grid than candidates with few ratings.
+Inspect interval availability and measured changes; no fixed point count
+is guaranteed to be adequate for every design. See the GPCM scope vignette
+for a same-data example and its sampling limitations.
+}
+
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")

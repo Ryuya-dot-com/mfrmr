@@ -89,6 +89,18 @@
 #' variance. The cited results do not guarantee coverage for a new assessment
 #' design or for this implementation.
 #'
+#' @section Relation to discrimination and shared rater effects:
+#' Discrimination changes response sensitivity; it is not a substitute for
+#' dependence within a performance. This function fits an RSM, not a GPCM
+#' with additional slopes. Its local effect is shared only within a
+#' Person/block pair. A Person/task block shared across assessors differs
+#' from a Person/task/assessor rating-occasion block. Select the identifier
+#' according to the assessment process; only one nonoverlapping membership
+#' is supported. A nonzero local variance does not by itself establish halo.
+#' For one rater effect shared across persons, see [fit_mfrm_random_rater()].
+#' The two models cannot currently be combined. See [gpcm_capability_matrix()]
+#' for the relationship to fixed discrimination and local independence.
+#'
 #' @section Comparison with ordinary MFRM:
 #' Hold the observed events, categories, fixed facets, omissions and ability
 #' population constant. A known `testlet_variance = 0` removes local
@@ -320,7 +332,8 @@ mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, perso
     den <- mfrm_testlet_logsum_rows(logw)
     if (gradient) {
       prob <- exp(logw - den)
-      mean <- as.vector(prob %*% (0:ns)); variance <- as.vector(prob %*% (0:ns)^2) - mean^2
+      mean <- as.vector(prob %*% (0:ns))
+      variance <- mfrm_category_variance(prob, 0:ns, mean)
     }
     for (y in 0:ns) {
       residual <- if (gradient) y - mean else NULL

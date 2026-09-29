@@ -1,5 +1,364 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Two-family GPCM MML--EM now supports an explicitly selected component profile
+  through `confint(fit, method = "profile", slope = c(Task = "t1"))`, using
+  the fitted facet and level names. Other slopes, locations and steps are
+  reoptimized while the population and identification constraints remain fixed.
+  Saved results retain owner identity, numerical checks, unresolved endpoints,
+  the same-target Wald comparison and profile plots/reports/exports. This is
+  an experimental local likelihood-ratio interval; better coverage is not
+  established. No default estimator or interval method changes.
+  Profile calculations are faster and more reliable when starting estimates
+  differ substantially. After an inaccurate outward trial, the search can
+  find an endpoint closer to the fitted slope, while retaining the failed
+  trial in tables and plots. Failures inside the interval search still leave
+  the affected endpoint unavailable. Numerical accuracy requirements are
+  unchanged; profiles remain optional sensitivity analyses, not a routine
+  replacement for Wald intervals.
+  A failed optimization can also retry with rescaled search coordinates when
+  a small slope makes other coefficients difficult to estimate. The same
+  model, parameter constraints and numerical checks apply; unsuccessful
+  searches still leave the affected endpoint unavailable.
+
+* Two-family MML--EM more reliably reaches the accuracy requested by
+  `em_score_tol` when an M step stops too early. Accepted steps still preserve
+  likelihood ascent, and `fit$opt$em_trace` records convergence and numerical
+  difficulties. Improved numerical convergence does not guarantee reliable
+  confidence intervals, particularly when slopes are poorly determined.
+
+* Two-family GPCM MML--EM fits now connect to `mfrm_response_diagnostics()`.
+  The existing response model integrates each Person's ability posterior while
+  holding both slope families, locations and steps fixed. Original observed
+  assignments and row identities are retained; selecting rows does not shorten
+  the conditioning record. Category probabilities, expected scores, mixture
+  variances and descriptive Infit/Outfit receive row-level integration checks.
+  Unresolved rows remain visible and are not silently excluded from groups.
+  Saved results support paired/scatter plots, ggplot conversion, reports and
+  exports without refitting. There is no expectation-one reference, automatic
+  fit cutoff, formal fit test or calibration-uncertainty propagation.
+
+* Corrected shared-owner GPCM JML now connects to `predict_mfrm_units()` and
+  the portable calibration lifecycle. New-Person EAP uses the corrected point
+  calibration and a separate normal reference prior. File format 5 preserves
+  the explicit correction order, assignment-sampling assumption and fresh
+  adjusted-equation/root checks, without training responses or Person
+  estimates. It does not apply ordinary JML likelihood checks to a corrected
+  root. Covariance failure does not suppress a valid calibration. Score tables,
+  summaries and portable score plots retain the experimental estimator and
+  conditional uncertainty; residual calibration bias may remain. Structural
+  intervals and corrected Person ML/WLE are not added. Formats 1–4 retain their
+  existing meaning, and every score batch still receives integration checks.
+
+* `mfrm_response_diagnostics()` now supports corrected GPCM JML. It uses
+  saved corrected calibration and reprofiled Person abilities to compute
+  conditional probabilities, expected scores, variances and descriptive
+  residuals on observed rows. It performs no posterior integration and
+  excludes calibration/Person estimation uncertainty. Extreme-score
+  probabilities remain available when zero variance makes standardization
+  undefined. Infit is retained when its aggregate ratio is defined, even if
+  Outfit is unavailable; no rows are silently dropped. Paired/scatter plots,
+  ggplot conversion, results, reports and saved exports preserve this
+  distinction without cutoffs or rater-quality flags. Saved attachments
+  must match the slopes, Person profiles and exact fitted roster.
+
+* `fit_mfrm()` adds an explicit, experimental `jml_correction_order` for
+  shared-owner GPCM JML with centered fixed facets and observed unit-weight
+  ratings. It solves a profile-score-adjusted equation and retains numerical
+  attempts, unresolved roots, point estimates and covariance failures
+  separately. `RootSE` describes local adjusted-equation variation; residual
+  structural bias may remain, and no confidence limits are supplied. Summary,
+  point/distribution plots, ggplot conversion, results, reports and saved
+  exports preserve this interpretation. Unsupported ordinary diagnostics,
+  likelihood comparison are refused; conditional post-hoc EAP and portable
+  scoring use the distinct corrected-equation checks described above. The default MML
+  and uncorrected JML calls are unchanged; correction order is not selected
+  automatically. Help and the scope guide explain the sampling assumptions,
+  supported assignments and remaining inferential limits.
+
+* `mml_quadrature_sensitivity()` and its GPCM entry point now support two
+  slope families with fixed-grid MML--EM. Refits preserve owner order,
+  the score ladder and EM controls; comparisons use both slopes in category
+  probabilities and full joint information for raw diagnostic SEs. Saved
+  component intervals retain their numerical checks and connect to existing
+  plots and tables. Person-score comparisons are explicitly unavailable and
+  adaptive integration comparisons are unavailable for this model. No fixed
+  number of integration points is sufficient for every dataset; compare
+  estimates and intervals across grids before interpreting sensitive results.
+
+* Two-family slope intervals now retain a warning for a small optimization
+  residual instead of automatically withholding every interval. The
+  standardized Newton displacement must be at most 0.01; values above 1e-4
+  carry the additional caution and remain visible in saved numerical checks,
+  plots and reports. The fit, estimates and EM stopping rule are unchanged.
+  Mean-score, information, local-rank and quadrature checks still apply.
+  This numerical approximation does not establish sampling coverage.
+  Sparse assignments can leave slopes poorly determined even when numerical
+  checks pass. Bias and underestimated uncertainty remain possible.
+
+* `fit_mfrm()` now accepts an ordered pair of slope facets for a provisional
+  two-family GPCM MML--EM route. It requires explicit fixed-standard-normal
+  identification, exactly two facets, second-owner steps, unit weights and no
+  anchors or population covariates. The first family's slopes have geometric
+  mean one; the second is free on the fixed ability scale. Original facet
+  names and owner-level identities are retained. `em_score_tol` controls the
+  marginal-score stopping rule per Person; unsupported options are rejected.
+  Summary and conditional probability/information curves connect to plots,
+  saved results, reports and exports. These curves have no calibration
+  intervals. Ordinary diagnostics, Wright/Pathway maps, other parameter intervals,
+  model ranking and portable two-family scoring remain unavailable. The
+  capability table and workflow guide distinguish this scope from one-family
+  GPCM. Existing single-family defaults and EM-to-direct fallback are unchanged.
+
+* `confint()` now offers explicitly experimental component-slope intervals for
+  the two-family fixed-standard-normal MML--EM model. Full joint marginal
+  information includes nuisance parameters and cross-family covariance.
+  Source, local score rank, stationarity and higher-order quadrature checks
+  are retained through plots, tables, reports and exports. Failed checks keep
+  estimates with missing bounds and reasons. Both families retain their own
+  scale reference; no unit-slope p-values or automatic rater-quality decisions
+  are supplied. The default scale for two families is `"standardized"` (SD fixed
+  at one). One-family defaults are unchanged. These numerical checks do not
+  establish global identification, boundary absence or sampling coverage.
+
+* Summary help now distinguishes slope owners, primary estimates and numerical
+  optimizer values, and explains why a scale constraint alone does not establish
+  inferential reliability. It identifies the fields for the actual MML engine,
+  iteration count and numerical stopping rule. Corrected JML now has the
+  explicit experimental workflow above; its formal structural intervals remain
+  unavailable.
+
+* `as_ggplot()` now converts residual-PCA scree, reference, excess and loading
+  plots explicitly. Previously, reference plots could become unrelated bars
+  through generic column guessing. Conversions retain the saved numerical
+  values, styles and replay data; incomplete payloads fail clearly. Base
+  reference plots now show a legend. Summaries and reference plots explain
+  that scanning componentwise cutoffs does not control the chance of any false
+  flag, and bootstrap status distinguishes unavailable observed PCA from a
+  failed refit.
+
+* Residual PCA from a fitted object now skips unrelated marginal-fit tables,
+  reducing repeated diagnostic work during the model bootstrap while preserving
+  observation residuals and PCA results. The visual guide now distinguishes
+  shared-Person links from fixed parameter anchors, explains why a connected
+  sparse design can still lack usable residual correlations, and describes
+  when testlet and correlated-trait interpretations yield the same ratings.
+
+* `analyze_residual_pca()` adds `parallel_method = "model_bootstrap"` for
+  RSM/PCM MML fits with fixed standard-normal population, fixed quadrature,
+  additive facets, unit weights and no anchors or shrinkage. Ratings are
+  regenerated on the retained assignment and the model is refitted once per
+  replicate for all requested PCA scopes. Every attempt and warning is saved;
+  an affected comparison is unavailable if any replicate fails. Existing
+  summary, scree/excess plots and ggplot conversion distinguish this reference
+  from the unchanged default residual permutation. Both remain exploratory,
+  without calibrated dimensionality decisions or multiplicity adjustment.
+
+* The visual diagnostics guide and residual-PCA/Q3 help now explain how to
+  examine a one-ability assumption before fitting a multidimensional model.
+  They distinguish current exploratory screens from model-generated reference
+  tests and residual-network/EGA methods, clarify sparse-overlap and
+  community-count interpretation, and identify external comparison requirements.
+  No calibrated dimensionality test or residual-network estimator is added.
+
+* Testlet result/report exports now retain the complete saved scoring roster,
+  including explicitly omitted responses and original column names, alongside
+  observed block counts. Testlet scores and random-rater probability predictions
+  also record effect-sharing and integration meanings in their settings;
+  observed-rater conditional distributions remain distinct from new-rater
+  population predictions. Older saved scores without a roster remain readable.
+
+* GPCM, testlet and random-rater help now distinguish discrimination from local
+  dependence and identify which ratings share a latent effect. The guide
+  explains performance versus rating-occasion blocks, observed/new-effect
+  prediction and why local variance does not by itself establish halo or
+  equal task weights. Existing model availability is unchanged.
+
+* The GPCM guide and workflow help now explain proposed two-slope applications
+  for task review and assessor feedback, with speaking, music and clinical
+  assessment examples. They distinguish response models from MML/JML estimation
+  and EM/direct optimization, and explain why the former "bounded GPCM" label
+  should be replaced by explicit structural and output restrictions. The
+  provisional two-family workflow above has its own narrower output scope.
+
+* The GPCM guide clarifies ability-SD changes, scale identification and the
+  difference between common rated performances and fixed parameter anchors.
+  Multivariate D-study plot help explains when to use 2D comparisons, why SEM
+  is not a confidence band, and why a higher G/Phi in a more heterogeneous
+  population need not mean lower measurement error. Existing plot methods
+  and model availability are unchanged.
+
+* GPCM predictions and probability-based diagnostics now share the conditional
+  probability calculation used by likelihood evaluation. Full category log
+  probabilities are retained directly, including when an extremely small
+  probability rounds to zero.
+  Curve interval results now retain a `contexts` table identifying predictions
+  for combinations of known facet levels not observed together in the retained
+  rating data. Printed output, default plot captions and report tables preserve
+  this distinction; it does not certify interval reliability.
+
+* The GPCM guide explains how MML--EM can estimate task and rater slopes
+  together and why the response equations of `sirt::rm.facets()` and the
+  Uto--Ueno model generally differ. The provisional two-family `fit_mfrm()`
+  route uses the whole-predictor slope product; this does not establish
+  free-estimator equivalence with sirt.
+  For the two-family formulation, it distinguishes the task-family geometric
+  reference from free rater slopes: a rater slope of one does not mean the
+  average rater or provide a competence threshold.
+  Facet names are distinguished from model roles: example labels such as
+  Task/Rater are not mandatory column names, and labels alone do not determine
+  the slope reference or step owner.
+  The guide also connects Wang and Liu's latent-regression formulation to
+  `population_formula` and distinguishes ability-dependent response sensitivity,
+  information and external scoring accuracy when interpreting rater feedback.
+  It explains why complete task-rater crossings alone do not establish
+  identification of two slope families when persons contribute too few ratings.
+  The GPCM and workflow guides also distinguish multivariate observed-score
+  G/D studies from multiple GPCM slopes, with literature on complementary and
+  joint IRT/G-theory approaches. No automatic conversion or joint fitter is added.
+
+* The linking guide now starts with assignment checks before fitting and
+  distinguishes common-person links from fixed parameter anchors. Runnable
+  examples cover common persons, rotating subsets and random subsets, with
+  task-specific skeletons explained separately. The workflow guide clarifies
+  that MML is a default rather than an automatically selected estimator.
+  The GPCM explanation uses separate slope-owner and step-owner indices to
+  match the supported MML model. Estimation behavior is unchanged.
+
+* `analyze_facet_equivalence()` now marks fixed locations explicitly and omits
+  their marginal intervals. Contrasts with estimated levels and deviations
+  from the estimated facet mean retain their covariance-based uncertainty.
+  Matching diagnostics with fixed-value labels now give the same results as
+  the direct fit route. This also fixes an MML path that could still display
+  a zero-width interval for an anchor after the general diagnostic repair.
+
+* `fit_measures_table()` now carries SE methods and interval interpretation
+  through its report tables, summaries and table exports. JML normal bands
+  retain their exploratory status; missing provenance in older inputs is
+  explicit. The `measure_ci` plot preserves these labels when changing the
+  interval level and displays finite fixed/no-interval estimates instead of
+  dropping them. Captions can be hidden with `show_notes = FALSE` while their
+  explanation remains in saved plot data. Estimation and SE formulas are unchanged.
+
+* Diagnostic tables now identify location values fixed by anchors or
+  identification constraints. Such values no longer receive exploratory JML
+  SEs or zero-width MML confidence intervals. Sampling SEs and intervals are
+  marked not applicable, including attached diagnostics, reports and Wright
+  maps. Facet reliability/separation and variability tests involving fixed
+  values are unavailable; free-level SEs and response-fit statistics remain
+  available. Supplied-anchor uncertainty is not estimated.
+
+* Category variance now uses centered moments in information curves, curve
+  intervals, response diagnostics, posterior category summaries and the
+  shared-rater/testlet derivative calculations. The R and compiled posterior
+  paths agree. This fixes cancellation that could turn small positive upper-tail
+  information into zero and disagree with summed category information.
+  Existing diagnostic variance thresholds and inference eligibility rules remain
+  unchanged; this numerical repair is not a new interval-coverage guarantee.
+
+* JML estimation help corrects the displayed facet/location SE formula to
+  include observation weights and squared GPCM slopes, matching the existing
+  calculation. It distinguishes exploratory SEs, local curvature checks for
+  portable scoring, and formal inference, with a binary Rasch reference for
+  the incidental-parameter limitation. Estimates and SE calculations are
+  unchanged; formal JML slope intervals remain unavailable. The help also
+  explains why applying a common item-bias multiplier to all relative GPCM
+  slopes cannot correct their ratios.
+
+* Calibration and prediction help now distinguish the literature basis for
+  fixed-calibration EAP from checks of numerical accuracy and
+  JML estimation. Fixed-score agreement with external software does not imply
+  matching free estimators, calibration bias or interval coverage. The
+  `quadrature_review` help now specifies that its RSM/PCM requirement applies
+  to MML, not JML.
+
+* Shared-owner GPCM JML now supports conditional fitted-object and portable
+  EAP scoring with a post-hoc reference prior (file format 4). Fresh joint
+  likelihood, gradient and unregularized full-curvature checks are separate
+  from the retained global audits. Known Person/additive/slope boundary
+  certificates prevent automatic scoring even when optimizer traces and local
+  curvature are finite. Incomplete global audits stay labelled as incomplete
+  through saved artifacts and score summaries. Unit weights and no anchors or
+  interactions are required. This does not supply formal JML slope intervals,
+  global-optimum or calibration-bias guarantees. Frozen scoring reuses the
+  existing kernel and does not repeat source curvature calculations.
+
+* RSM/PCM JML now supports the existing portable calibration lifecycle, using
+  file format 3 and a post-hoc standard-normal reference prior. Extraction
+  requires a finite identified source, unit weights, no anchors/interactions,
+  and passing fresh joint-likelihood/gradient checks. Each new batch checks
+  EAP/SD integration; summaries retain source evidence and distinguish the
+  reference prior from a distribution estimated by JML. Explicit scoring-prior
+  sensitivity remains available. JML calibration bias and uncertainty are not
+  included in posterior intervals. Formal JML slope inference remains
+  unavailable. Existing MML file formats are unchanged.
+
+* Portable score summaries distinguish checks on the reported EAP/SD from
+  comparisons of alternative integration grids. With adaptive scoring, the
+  fixed grid in the comparison is explicitly identified as unused for the
+  reported scores. The GPCM tutorial now connects calibration, a fresh scoring
+  session, prior sensitivity and saved score/review tables, including people
+  without valid responses. Score plots state how many people have no score;
+  their zero reference is labelled as the scale origin, rather than assuming
+  it equals an estimated or explicitly changed prior mean.
+
+* `confint()` now offers experimental `method = "profile"` for one explicitly
+  named GPCM relative `slope`. Nuisance calibration and population parameters
+  are reoptimized under the sum-zero log-slope constraint. Two-start, gradient
+  and integration checks preserve unresolved endpoints; a finite search limit
+  is not labelled an infinite confidence bound. Shared and separate owners
+  are supported within the estimated-normal, unit-weight scope without anchors
+  or interactions. Saved curves, Wald comparisons and numerical records connect
+  to `plot(..., type = "profile")`, ggplot conversion, tables and reports without
+  refitting. Model/sandwich defaults are unchanged. Profile coverage, global
+  optimality and superiority over Wald are not established. A small-sample
+  saved-fit comparison found substantially lower profile interval availability;
+  the method remains for explicitly requested sensitivity analysis, not a
+  routine replacement for Wald intervals.
+
+* Portable GPCM MML calibration now uses the existing extract/validate/freeze/
+  save/load/score API. It retains both slope/step owners, one relative-slope
+  family, an estimated intercept-only normal prior and passing conditional
+  source-check evidence. Unit weights and no anchors/interactions are required.
+  Shared and separate owners are supported. Replay validates the stored source
+  evidence without refitting; each batch must pass numerical scoring checks.
+  Failed integration stops instead of returning review-only numerical scores.
+  `score_mfrm_calibration()` also accepts an explicit common normal scoring
+  prior for current artifacts, preserving original and actual priors through
+  summaries and plot data. Existing RSM/PCM default artifact semantics remain
+  unchanged. These are conditional posterior scores, not a global-maximum,
+  population-transport or interval-coverage guarantee.
+
+* `predict_mfrm_units()` and `sample_mfrm_plausible_values()` now accept
+  `scoring_prior = list(mean = ..., sd = ...)` for sensitivity to a common
+  normal scoring prior. For MML the default retains the fitted prior; JML uses
+  a post-hoc standard-normal reference prior. The calibration
+  stays fixed, its source checks remain in force, and numerical checks use the
+  specified prior. Original and scoring prior values remain unrounded through
+  estimates, summaries, draws and exports. Background-covariate population
+  overrides are refused. Help includes a plot comparing identical response
+  patterns under two priors; this does not establish a new cohort's distribution
+  or estimate its distribution.
+
+* Fitted-object scoring now distinguishes local calibration eligibility from
+  global inference readiness. GPCM MML and intercept-only normal population
+  models can return conditional scores after fresh likelihood, gradient,
+  unregularized-information and integration checks. Per-person checks compare
+  reported EAP/SD with adaptive references; unresolved scores require explicit
+  review and retain their labels through summaries, draws and exports. Invalid
+  calibrations or inconsistent stored priors cannot be enabled by review.
+  Unevaluated boundary audits are labelled as unevaluated. These changes do not
+  validate a prior for a new cohort.
+  The scoring help explains the retained-prior default for a later cohort,
+  distinguishes prior sensitivity from recalibration, and clarifies why a
+  narrower interval from a narrower prior is not additional rating evidence.
+
+* Adaptive MML fitting now rejects numerically unevaluable trial values,
+  including overflow with finite GPCM slopes, so the optimizer can shorten
+  its step. Failed evaluations cannot reuse an earlier likelihood from the
+  cache. Invalid starting values still fail explicitly, and final convergence
+  checks remain unchanged; this does not impose an upper discrimination limit
+  or establish that a fitted model has a finite global maximum.
+
 * Ordinary fitted-model plots now accept named `level` as an alternative to
   `ci_level`, also through results and ggplot entry points. Previously `level`
   could be silently ignored. Supplying both names is an error; the default
@@ -28,8 +387,8 @@
   owners. CCC and expected-score pathway plots show labeled step/slope pairs;
   single-facet fit flags are not assigned to those joint profiles. JML, weighting
   reviews and simulation/design workflows still require a shared owner. This
-  extension does not establish finite-sample coverage or provide portable GPCM
-  calibration or simultaneous criterion/rater slope families.
+  extension does not establish finite-sample coverage or provide simultaneous
+  criterion/rater slope families.
 
 * Random-rater interval help now explains why increasing bootstrap size alone
   cannot resolve unbounded limits: at 95% with 499 planned draws, 13 unresolved
@@ -101,7 +460,7 @@
   overrides remain supported. Relative radii and reference lines are retained,
   while physical sizes can differ between base graphics and ggplot.
 
-* Eight existing plotting helpers now accept `title` alongside the supported
+* Eight plotting functions now accept `title` alongside the supported
   legacy `main` spelling: marginal fit/pairwise, unexpected responses,
   interrater agreement, facet chi-square, bubble, bias interaction and facet
   dashboard plots. `title = NULL` suppresses the heading; omission and legacy
@@ -342,16 +701,15 @@ with corrections to uncertainty, subgroup comparisons and design planning.
   identifies its required inputs, follow-up tables/plots and interpretation
   limits. This adds guidance for existing functions, not a new estimator or
   a rater-quality classification rule.
-* Installation guidance distinguishes the current source from GitHub rc.5,
-  which predates the new API names. The package description and MML tutorial
-  now state the GPCM slope/step structure and its separate inference limits.
+* The package description and MML tutorial now state the GPCM slope/step
+  structure and its separate inference limits.
 * GPCM diagnostics no longer treat missing or outdated slope-eligibility
   records as permission to report ordinary SEs or confidence intervals.
   Local covariance calculations remain in explicitly named `Optimizer*`
   diagnostic columns; regularized covariance does not authorize primary
   slope uncertainty. SE and interval eligibility are checked separately.
   Re-run `diagnose_mfrm()` or `confint()` on saved fits to refresh these tables;
-  output-specific slope eligibility does not promote global fit readiness.
+  available slope intervals do not resolve other warnings about the fitted model.
 * Use `mfrm_cluster_pam()` for Gower/PAM grouping and
   `review_mfrm_imputations(..., impute_ids = ...)` to check supplied score
   completions. The older `mfrm_cluster()` and `mfrm_response_imputations()`

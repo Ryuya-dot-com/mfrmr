@@ -124,6 +124,7 @@
 #' # test$test
 #' @export
 bootstrap_mfrm_gpcm <- function(fit, nsim = 499L, seed, null_fit = NULL) {
+  stop_if_product_slopes(fit, "bootstrap_mfrm_gpcm()")
   info <- mfrm_gpcm_inference(fit)
   source_check <- if (is.null(null_fit)) mfrm_gpcm_bootstrap_check(fit, info) else info$check
   if (!isTRUE(source_check$eligible)) stop(source_check$review, call. = FALSE)
@@ -274,9 +275,13 @@ mfrm_gpcm_bootstrap_generate <- function(fit, seed) {
     sd <- if (isTRUE(pop$active)) sqrt(pop$sigma2) else 1
     theta <- stats::rnorm(config$n_person, mu, sd)
     eta <- theta[idx$person] + compute_base_eta(idx, params, config)
-    cumulative <- t(apply(params$steps_mat, 1L, function(x) c(0, cumsum(x))))
-    probs <- if (config$model == "GPCM") category_prob_gpcm(eta, cumulative, idx$step_idx,
-      params$slopes, idx$slope_idx) else category_prob_pcm(eta, cumulative, idx$step_idx)
+    probs <- if (config$model == "RSM") {
+      category_prob_rsm(eta, c(0, cumsum(params$steps)))
+    } else {
+      cumulative <- t(apply(params$steps_mat, 1L, function(x) c(0, cumsum(x))))
+      if (config$model == "GPCM") category_prob_gpcm(eta, cumulative, idx$step_idx,
+        params$slopes, idx$slope_idx) else category_prob_pcm(eta, cumulative, idx$step_idx)
+    }
     u <- stats::runif(nrow(probs)); category <- rowSums(u > t(apply(probs, 1L, cumsum)))
     category <- pmin(category, ncol(probs)-1L)
     map <- fit$prep$score_map

@@ -28,6 +28,11 @@ Use \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=plot_dif_heatmap]{pl
 
 \section{Recommended linking route}{
 
+Before fitting, use \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} on the rating table and inspect
+\code{design_connectivity}. Supply \code{expected_design} if the planned assignment
+is available, so unassigned cells and missing assigned ratings are distinct.
+A connected graph alone does not establish identification of all model
+parameters, adequate precision, or absence of informative assignment.
 \enumerate{
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and diagnose with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
 \item Check connectedness with \code{\link[=subset_connectivity_report]{subset_connectivity_report()}}.
@@ -64,6 +69,38 @@ Before reuse, also verify consistent model/score/orientation/population
 conventions, cross-run element identity, and the relevant assignment
 connectedness. \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} checks syntax and receiving-data
 support, not those substantive assumptions.
+}
+
+\section{Common persons, rotating assignments, and random assignments}{
+
+These are ways to collect ratings, not instructions to fix a parameter.
+For example, asking all eight raters to score the same four performances
+creates common-person links. Their abilities can still be estimated;
+do not pass them to \code{anchors} unless known values really are intended.
+
+Existing \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} choices let you inspect these structures:
+\itemize{
+\item Common persons: \code{assignment = "sparse_linked"} with
+\code{sparse_controls = list(link_persons = 4, link_raters_per_person = 8)}.
+Set \code{n_rater = 8} and specify the ordinary \code{raters_per_person} separately.
+The counts illustrate syntax, not a recommended number of linking persons.
+\item Overlapping rotation: \code{assignment = "rotating"} with
+\code{raters_per_person = 2} assigns successive subsets of raters.
+\item Random subsets: \code{assignment = "sparse_linked"} with
+\code{sparse_controls = list(link_persons = 0, assignment_mode = "random")}.
+This does not guarantee connectedness or equal workloads for every draw.
+\item Task-specific or externally planned assignments: \code{assignment = "skeleton"}
+accepts an explicit Person-by-facet template. The ordinary rotating
+generator assigns the chosen raters across all generated criteria; it
+is not a general implementation of task-nested spiral designs.
+}
+
+Generate ratings with \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} and inspect them with
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. Use the linking vignette for runnable examples.
+A generator can represent a design without qualifying an estimator for it.
+Compare both the amount and placement of overlap, and what happens when
+a critical common person or rater is unavailable. Keep rating costs equal
+when the question is which allocation uses a fixed budget better.
 }
 
 \section{Design the link, not only the anchor count}{
@@ -193,6 +230,10 @@ head(dff$dif_table[, c("Level", "Group1", "Group2",
 
 }
 \references{
+Eckes, T. (2023). \emph{Introduction to Many-Facet Rasch Measurement},
+Section 9.1, pp. 151--155, Table 9.1. Peter Lang.
+ISBN 978-3-631-90305-6.
+
 Myford, C. M., & Wolfe, E. W. (2000). Strengthening the ties that bind:
 Improving the linking network in sparsely connected rating designs.
 \emph{ETS Research Report Series}, 2000(1).

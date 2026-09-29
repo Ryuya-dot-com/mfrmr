@@ -8,12 +8,19 @@ mfrmr_adaptive_integration <- function(config) {
   identical(mode, "adaptive")
 }
 
+new_adaptive_quadrature_numeric_error <- function(message) {
+  structure(list(message = message, call = NULL),
+    class = c("mfrmr_adaptive_quadrature_numeric_error", "error", "condition"))
+}
+
 mfrmr_adaptive_posterior_location <- function(evaluate) {
   mode <- stats::uniroot(function(z) evaluate(z)$score, c(-1, 1),
                          extendInt = "downX", check.conv = TRUE, tol = 1e-12)$root
   at_mode <- evaluate(mode)
   scale <- 1 / sqrt(at_mode$information)
-  if (!is.finite(scale) || scale <= 0) stop("Invalid local posterior scale.", call. = FALSE)
+  if (!is.finite(scale) || scale <= 0) {
+    stop(new_adaptive_quadrature_numeric_error("Invalid local posterior scale."))
+  }
   list(mode = mode, scale = scale, score = at_mode$score)
 }
 
@@ -80,6 +87,9 @@ mfrmr_adaptive_person_kernel <- function(idx, config, params, base_eta, mu, sigm
       c(score = sigma * sum(idx$weight * slope * (idx$score_k - expected)),
         information = sigma^2 * sum(idx$weight * slope^2 * variance))
     }, c(score = 0, information = 0))
+    if (any(!is.finite(moments))) {
+      stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive posterior score or information."))
+    }
     list(log_likelihood = colSums(bundle$log_prob_mat),
          score = moments[1L, ] - z, information = moments[2L, ] + 1,
          prob_list = bundle$prob_list, linear_part_list = bundle$linear_part_list)
@@ -148,7 +158,9 @@ mfrmr_adaptive_quadrature_review <- function(
         local_idx, config, params, base_eta[observations], mu[person], sigma
       )
       summarize <- function(z, joint) {
-        if (any(!is.finite(joint))) stop("Non-finite integration terms.", call. = FALSE)
+        if (any(!is.finite(joint))) {
+          stop(new_adaptive_quadrature_numeric_error("Non-finite integration terms."))
+        }
         normalizer <- logsumexp(joint)
         probability <- exp(joint - normalizer)
         center <- sum(probability * z)
@@ -255,7 +267,7 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
   log_slope_design <- mfrmr_empty_sparse_matrix(n, p)
   if (length(slices$log_slopes)) {
     log_slope_design[, slices$log_slopes] <-
-      sum_zero_jacobian(length(config$gpcm_spec$levels))[idx$slope_idx, , drop = FALSE]
+      gpcm_log_slope_design(config$gpcm_spec)[idx$slope_idx, , drop = FALSE]
   }
   person_ids <- sort(unique(idx$person))
   groups <- split(seq_len(n), factor(idx$person, levels = person_ids))
@@ -335,7 +347,9 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
       nodes <- evaluate(z, include_linear_part = TRUE)
       joint <- log(rule$weights) + nodes$log_likelihood + stats::dnorm(z, log = TRUE) -
         stats::dnorm(rule$nodes, log = TRUE) + log(scale)
-      if (any(!is.finite(joint))) stop("Non-finite integration terms.", call. = FALSE)
+      if (any(!is.finite(joint))) {
+        stop(new_adaptive_quadrature_numeric_error("Non-finite integration terms."))
+      }
       normalizer <- logsumexp(joint)
       posterior <- exp(joint - normalizer)
       value <- value - normalizer
@@ -351,7 +365,7 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
       }
     }
     if (!is.finite(value) || any(!is.finite(gradient))) {
-      stop("Non-finite adaptive MML objective or gradient.", call. = FALSE)
+      stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))
     }
     list(value = value, gradient = gradient)
   }

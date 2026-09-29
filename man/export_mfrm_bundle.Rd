@@ -97,7 +97,7 @@ Export a fit-level analysis archive
 }
 \details{
 This function is the one-call fit-level archive and HTML route. It reuses
-existing \code{mfrmr} helpers instead of reimplementing estimation or diagnostics.
+\code{mfrmr} functions for estimation and diagnostics.
 When \code{diagnostics = NULL},
 the exporter computes the diagnostics it needs, then writes the requested
 CSV/text/replay artifacts and a lightweight HTML page from the fitted object.

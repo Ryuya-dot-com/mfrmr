@@ -21,7 +21,10 @@
 #' @return A list with `probabilities` (rows by categories), `expected_scores`,
 #'   `newdata`, `ability`, `settings` and matching `source` metadata for
 #'   [mfrm_results()]. No model is refitted. Save this list
-#'   together with the fitted model and prediction inputs.
+#'   together with the fitted model and prediction inputs. The settings record
+#'   the effect-sharing unit and whether integration uses the observed rater's
+#'   conditional distribution or the replacement-rater population. These are
+#'   preserved in the prediction settings table of [mfrm_results()].
 #' @details Predictions condition on estimated calibration and supplied ability.
 #'   They do not propagate calibration-estimation uncertainty or uncertainty
 #'   about ability. Observed-rater integration uses the conditional Laplace
@@ -91,6 +94,10 @@ predict.mfrm_random_rater <- function(object, newdata, ability,
     expected_scores = data.frame(Row = seq_len(n), Rater = ids[[columns$rater]],
       Ability = ability, ExpectedScore = as.vector(probabilities %*% categories)),
     newdata = newdata, ability = ability, settings = list(rater = rater,
+      effect_sharing = "One severity effect per rater ID, shared across Persons; row probabilities are not independent joint predictions",
+      rater_integration = if (rater == "observed")
+        "Conditional Laplace distribution given calibration responses; conditional rater covariance" else
+        "Normal replacement-rater population; fitted rater SD",
       calibration_uncertainty = "Not included; fitted calibration held fixed",
       ability_uncertainty = "Not included; specified ability values",
       row_target = "Marginal probabilities, not a joint rating distribution", quad_points = quad_points))

@@ -6,6 +6,7 @@
 #'   diagnostics must retain all target-facet levels, model-based SEs and
 #'   ordinary-inference eligibility. Estimates and covariance are always taken
 #'   from `fit`; supplying diagnostics cannot override its restrictions.
+#'   Fixed levels instead require their fixed-value labels and absent sampling SEs.
 #' @param facet Character scalar naming a non-person facet. When `NULL`, a
 #'   rater-like facet is preferred, otherwise the first model facet is used.
 #' @param equivalence_bound Positive practical-equivalence bound in logits.
@@ -82,7 +83,12 @@
 #' - `chi_square`: joint Wald heterogeneity test and descriptive separation.
 #' - `rope` / `forest`: `Measure`, marginal `SE` and `CI_Lower`/`CI_Upper`, plus
 #'   `Deviation`, `DeviationSE` and `DeviationCI_Lower`/`DeviationCI_Upper` for
-#'   proximity to the equally weighted facet mean.
+#'   the difference from the estimated facet mean. `Fixed` marks an anchored
+#'   or constraint-fixed location: its conditional marginal `SE` is zero and
+#'   its marginal interval is absent. Its deviation from an estimated mean,
+#'   or contrast with an estimated level, can still have nonzero uncertainty.
+#'   The forest plot displays these deviations, not the anchored locations.
+#'   No uncertainty in supplied anchor values is propagated.
 #'
 #' @section Recommended next step:
 #' Review numerical integration and the model's uncertainty assumptions before
@@ -127,6 +133,7 @@ analyze_facet_equivalence <- function(fit,
                                       equivalence_bound = 0.5,
                                       ci_level = 0.95,
                                       conf_level = NULL) {
+  stop_if_product_slopes(fit, "analyze_facet_equivalence()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -194,6 +201,7 @@ analyze_facet_equivalence <- function(fit,
   }
   slice <- covariance$param_slices[[facet]]
   jac <- constraint_jacobian(spec)
+  fixed <- if (ncol(jac)) rowSums(abs(jac)) == 0 else rep(TRUE, n_elem)
   facet_cov <- symmetrize_matrix(
     jac %*% covariance$cov[slice, slice, drop = FALSE] %*% t(jac)
   )
@@ -218,10 +226,12 @@ analyze_facet_equivalence <- function(fit,
     row_idx <- match(labels, as.character(rows$Level))
     if (!all(c("Level", "SE", "SupportsFormalInference") %in% names(rows)) ||
         nrow(rows) != n_elem || anyNA(row_idx) || anyDuplicated(rows$Level) ||
-        !isTRUE(all(rows$SupportsFormalInference[row_idx])) ||
-        !isTRUE(all.equal(as.numeric(rows$SE[row_idx]), se, tolerance = 1e-8,
-                          check.attributes = FALSE))) {
-      stop("Supplied facet diagnostics must contain all levels with matching model-based SEs and ordinary-inference eligibility.",
+        !isTRUE(all(rows$SupportsFormalInference[row_idx[!fixed]])) ||
+        !isTRUE(all.equal(as.numeric(rows$SE[row_idx[!fixed]]), se[!fixed], tolerance = 1e-8,
+                          check.attributes = FALSE)) ||
+        (any(fixed) && !("Fixed" %in% names(rows) &&
+          all(rows$Fixed[row_idx[fixed]] %in% TRUE) && all(is.na(rows$SE[row_idx[fixed]]))))) {
+      stop("Supplied facet diagnostics must contain all levels with matching model-based SEs and ordinary-inference eligibility for estimated levels, and fixed-value labels for constants.",
            call. = FALSE)
     }
   }
@@ -278,14 +288,15 @@ analyze_facet_equivalence <- function(fit,
 
   rope_tbl <- data.frame(
     Element = labels,
+    Fixed = fixed,
     Measure = est,
     Deviation = est - grand_mean,
     SE = se,
     DeviationSE = deviation_se,
     DeviationCI_Lower = est - grand_mean - z_ci * deviation_se,
     DeviationCI_Upper = est - grand_mean + z_ci * deviation_se,
-    CI_Lower = est - z_ci * se,
-    CI_Upper = est + z_ci * se,
+    CI_Lower = ifelse(fixed, NA_real_, est - z_ci * se),
+    CI_Upper = ifelse(fixed, NA_real_, est + z_ci * se),
     stringsAsFactors = FALSE
   )
   rope_tbl$ROPEPct <- 100 * (

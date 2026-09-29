@@ -139,6 +139,12 @@ test_that("predict_mfrm_units returns posterior summaries and optional draws", {
   expect_true(is.data.frame(s$row_review))
   printed <- capture.output(print(summary(pred)))
   expect_true(any(grepl("mfrmr Unit Prediction Summary", printed, fixed = TRUE)))
+  alternate <- predict_mfrm_units(fixture$fit, fixture$new_units,
+    scoring_prior = list(mean = 0.25, sd = 1.2))
+  expect_true(all(alternate$estimates$RetainedPriorMean == 0))
+  expect_true(all(alternate$estimates$RetainedPriorSD == 1))
+  expect_true(all(alternate$estimates$ScoreIntegrationReady))
+  expect_s3_class(summary(alternate), "summary.mfrm_unit_prediction")
 })
 
 test_that("predict_mfrm_units supports explicit column remapping and weights", {
@@ -197,6 +203,10 @@ test_that("predict_mfrm_units rejects unseen facet levels", {
 
 test_that("predict_mfrm_units requires person_data when latent-regression scoring uses covariates", {
   fixture <- make_population_model_prediction_fixture()
+
+  expect_error(predict_mfrm_units(fixture$fit, fixture$new_units,
+    scoring_prior = list(mean = 0, sd = 1), readiness_policy = "review"),
+    "cannot override a population model with background covariates", fixed = TRUE)
 
   expect_error(
     predict_mfrm_units(fixture$fit, fixture$new_units, readiness_policy = "review"),
@@ -488,6 +498,7 @@ test_that("predict_mfrm_units supports JML PCM calibrations with custom facet na
     Score = c(2, 3)
   )
 
+  original_fit <- serialize(fit_jml, NULL)
   pred <- predict_mfrm_units(fit_jml, new_units, n_draws = 2, seed = 11)
   pv <- sample_mfrm_plausible_values(fit_jml, new_units, n_draws = 2, seed = 12)
 
@@ -501,6 +512,16 @@ test_that("predict_mfrm_units supports JML PCM calibrations with custom facet na
   expect_equal(pv$settings$method, "JML")
   expect_true(any(grepl("standard normal reference prior", pv$notes, fixed = TRUE)))
   expect_equal(nrow(pv$values), 2)
+  alternate <- sample_mfrm_plausible_values(fit_jml, new_units,
+    scoring_prior = list(mean = 0.25, sd = 1.2), seed = 12)
+  expect_true(all(alternate$estimates$PriorSource == "user_supplied"))
+  expect_true(all(alternate$estimates$RetainedPriorSD == 1))
+  expect_true(all(alternate$estimates$ScoreIntegrationReady))
+  expect_false(any(grepl("standard normal reference prior", alternate$notes, fixed = TRUE)))
+  expect_s3_class(summary(alternate), "summary.mfrm_plausible_values")
+  expect_gt(max(abs(alternate$estimates$Estimate - pred$estimates$Estimate)), 1e-6)
+  expect_true(any(grepl("post hoc fitted-object EAP", pred$notes, fixed = TRUE)))
+  expect_identical(serialize(fit_jml, NULL), original_fit)
 })
 
 test_that("predict_mfrm_units supports GPCM fixed-calibration scoring", {
@@ -807,6 +828,8 @@ test_that("scoring tables retain interval, prior and draw meanings without inter
     Draw = 1:100, Value = 0:99), estimates = pred$estimates[1, ],
     settings = pred$settings, notes = pred$notes, row_review = pred$row_review),
     class = "mfrm_plausible_values")
+  # Keep the artificial one-person draw sample's prior record aligned.
+  pv$settings$prior_comparison <- pv$settings$prior_comparison[1, , drop = FALSE]
   draw_summary <- summary(pv, digits = 2)
   expect_equal(draw_summary$draw_summary$LowerValue, 9)
   expect_equal(draw_summary$draw_summary$UpperValue, 90)
@@ -821,7 +844,11 @@ test_that("scoring tables retain interval, prior and draw meanings without inter
   expect_error(build_summary_table_bundle(stale), "no refitting or resampling")
 
   older <- pred
+  # Reconstruct the old schema, which predates separate retained-prior records.
+  older$settings$prior_comparison <- NULL
+  older$settings$retained_posterior_basis <- NULL
   older$estimates <- older$estimates[c("Person", "Estimate", "SD", "Lower", "Upper", "Observations", "WeightedN", "SourceScoringReady", "EstimateUse")]
+  expect_no_warning(summary(older))
   expect_identical(unique(summary(older, digits = 0)$estimates$IntervalLevel), level)
   expect_true(all(summary(older)$estimates$PriorSD == 1))
   missing_method <- older

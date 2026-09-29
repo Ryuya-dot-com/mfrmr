@@ -32,11 +32,14 @@ mfrm_curve_intervals(
 )
 }
 \arguments{
-\item{fit}{An eligible native GPCM MML fit.}
+\item{fit}{A native GPCM MML fit. Two-family fits supply provisional point
+curves only; intervals and covariance adjustments are unavailable.}
 
 \item{newdata}{Data frame with each fitted non-Person facet and a numeric
 \code{Theta} column. Each row is one rating context at one known ability value.
-Use original facet labels. Unknown levels and missing inputs are refused.}
+Use original facet labels. Unknown levels and missing inputs are refused.
+Previously unobserved combinations of known levels are allowed and labelled
+in the returned \code{contexts} table.}
 
 \item{type}{\code{"probability"} (one row per category) or \code{"information"}
 (one row per supplied context/ability). Information is per rating, not a
@@ -56,12 +59,16 @@ types distinguish series in addition to color. The default is colorblind friendl
 \item{draw}{Draw the ggplot immediately? Default TRUE; FALSE returns it only.}
 
 \item{caption}{Optional plot caption. If omitted, unavailable intervals are
-counted and explained. NULL removes the caption without removing markers
+counted and explained, along with unobserved combinations of fitted levels.
+NULL removes the caption without removing markers
 or the reasons in the saved table.}
 }
 \value{
 A \code{mfrm_curve_intervals} list with \code{table}, \code{settings}, and the exact
-\code{newdata}. Its plot method returns a ggplot with the plotted data available
+\code{newdata}, plus \code{contexts} identifying each \code{InputRow} as an observed or
+unobserved combination of fitted facet levels (\code{ObservedContext}). This
+records the retained rating design, not statistical identification or
+interval reliability. Its plot method returns a ggplot with the plotted data available
 in \code{plot$data}; titles can be omitted and the plot can be customized.
 }
 \description{
@@ -107,6 +114,18 @@ The warning is saved in \code{cautions} and the table's \code{InferenceReview}, 
 appears in printing and the default plot subtitle. A custom subtitle,
 including NULL, changes the display without removing saved diagnostics.
 }
+\section{Two slope families}{
+
+For a two-family fit, the two component slopes are multiplied in each
+specified context. The shared evaluator returns provisional fitted values,
+including after numerical nonconvergence; it does not certify their
+reliability. \code{SE}, \code{Lower} and \code{Upper} remain missing and \code{CIEligible} is
+false. Printing and default plot text identify this scope without claiming
+nominal intervals. Sandwich and simultaneous adjustments are not available.
+The existing plot, saved-data, report and export routes preserve these values
+and missing intervals. A slope value of one is not a rater-quality threshold.
+}
+
 \examples{
 # After fitting a GPCM:
 # grid <- expand.grid(Theta = seq(-3, 3, length.out = 41),

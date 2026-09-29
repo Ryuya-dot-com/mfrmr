@@ -77,36 +77,8 @@ category_prob_pcm <- function(eta, step_cum_mat, criterion_idx,
 # parameterization with unscaled facet intercepts.
 category_prob_gpcm <- function(eta, step_cum_mat, criterion_idx, slopes,
                                slope_idx = criterion_idx) {
-  n <- length(eta)
-  if (n == 0) return(matrix(0, nrow = 0, ncol = ncol(step_cum_mat)))
-  if (length(criterion_idx) != n || length(slope_idx) != n) {
-    stop("`criterion_idx` and `slope_idx` must have one entry per observation.",
-         call. = FALSE)
-  }
-
-  criterion_idx <- as.integer(criterion_idx)
-  slope_idx <- as.integer(slope_idx)
-  if (any(!is.finite(criterion_idx)) || any(criterion_idx < 1L) ||
-      any(criterion_idx > nrow(step_cum_mat))) {
-    stop("`criterion_idx` must index valid rows of `step_cum_mat`.", call. = FALSE)
-  }
-  if (any(!is.finite(slope_idx)) || any(slope_idx < 1L) ||
-      any(slope_idx > length(slopes))) {
-    stop("`slope_idx` must index valid `slopes` entries.", call. = FALSE)
-  }
-
-  slope_obs <- as.numeric(slopes[slope_idx])
-  if (any(!is.finite(slope_obs)) || any(slope_obs <= 0)) {
-    stop("Observed GPCM slopes must be finite and strictly positive.", call. = FALSE)
-  }
-
-  step_cum_obs <- step_cum_mat[criterion_idx, , drop = FALSE]
-  k_cat <- ncol(step_cum_obs)
-  linear_part <- outer(eta, 0:(k_cat - 1)) - step_cum_obs
-  log_num <- linear_part * matrix(slope_obs, nrow = n, ncol = k_cat)
-  row_max <- row_max_fast(log_num)
-  log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
-  exp(log_num - matrix(log_denom, nrow = n, ncol = k_cat))
+  mfrm_jml_probability_bundle(eta, rep(0L, length(eta)), "GPCM", step_cum_mat,
+    criterion_idx = criterion_idx, slopes = slopes, slope_idx = slope_idx)$probs
 }
 
 # Joint probability / observed-log-probability kernel used by the optimizer.
@@ -120,12 +92,14 @@ mfrm_jml_probability_bundle <- function(eta,
                                           step_cum,
                                           criterion_idx = NULL,
                                           slopes = NULL,
-                                          slope_idx = criterion_idx) {
+                                          slope_idx = criterion_idx,
+                                          include_log_probs = FALSE) {
   n <- length(eta)
   k_cat <- if (identical(model, "RSM")) length(step_cum) else ncol(step_cum)
   if (n == 0L) {
     return(list(
       probs = matrix(0, nrow = 0L, ncol = k_cat),
+      log_probs = if (isTRUE(include_log_probs)) matrix(0, nrow = 0L, ncol = k_cat) else NULL,
       log_prob_obs = numeric(0),
       linear_part = NULL
     ))
@@ -173,6 +147,10 @@ mfrm_jml_probability_bundle <- function(eta,
 
   list(
     probs = exp(log_prob),
+    # Retain the full matrix only for consumers needing category log values;
+    # ordinary prediction/JML caches need not keep another n x K matrix.
+    # Recovering it with log(probs) would lose finite tail log likelihoods.
+    log_probs = if (isTRUE(include_log_probs)) log_prob else NULL,
     log_prob_obs = log_prob[cbind(seq_len(n), score_k + 1L)],
     linear_part = if (identical(model, "GPCM")) linear_part else NULL
   )

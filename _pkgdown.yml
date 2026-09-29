@@ -55,6 +55,12 @@ reference:
       - mfrm_facet_intervals
       - plot.mfrm_facet_intervals
 
+  - title: "Response probabilities and residuals"
+    desc: "Describe observed ratings using each supported model's probability definition, without automatic fit cutoffs."
+    contents:
+      - mfrm_response_diagnostics
+      - plot.mfrm_response_diagnostics
+
   - title: "Shared random raters"
     desc: "Estimate a rater population and distinguish observed-rater feedback from replacement-rater probabilities."
     contents:
@@ -62,8 +68,6 @@ reference:
       - score_mfrm_random_rater
       - score_mfrm_persons
       - mfrmr_model_maps
-      - mfrm_response_diagnostics
-      - plot.mfrm_response_diagnostics
       - plot.mfrm_random_rater_scores
       - confint.mfrm_random_rater
       - predict.mfrm_random_rater

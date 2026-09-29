@@ -31,7 +31,9 @@ available.
 The table is intended for route selection before or after fitting and is
 limited to workflow availability, interpretive constraints, and the route
 to use next.
-The fitted model uses one facet for relative discriminations. MML permits
+Except for the multiple-slope and EM rows, the table describes one facet
+supplying relative discriminations. The provisional two-family route has
+a separate scope below. The one-family model uses one slope facet. MML permits
 a different facet for category steps; JML requires \code{slope_facet == step_facet}.
 It has one substantive ability dimension. Separate-owner MML supports
 fitted-object scoring, information, slope/curve uncertainty, matched PCM
@@ -40,6 +42,19 @@ workflows still require the same owner; same-design \code{\link[=bootstrap_mfrm_
 supports separate owners. Numerical eligibility is not a coverage guarantee. These structural choices are stated separately from the
 availability of each output. An available probability or descriptive comparison does
 not establish eligibility for a confidence interval or model-selection rule.
+
+JML fits estimate relative slopes but do not support the MML slope interval,
+bootstrap, curve-uncertainty or inferential comparison routes described here.
+Their available facet/location SEs are exploratory observation-table
+approximations, not slope SEs or nuisance-adjusted joint-information SEs.
+Local curvature checks do not establish bias control or interval coverage.
+Fitted-object
+JML scoring uses post-hoc EAP with a default standard-normal reference prior
+or an explicit \code{scoring_prior}; it is not ML/WLE scoring. Portable GPCM extraction
+supports MML and shared-owner JML within their distinct source-check scopes.
+JML local checks leave incomplete global audits unchanged. See \code{\link[=fit_mfrm]{fit_mfrm()}}
+for JML estimation and boundary
+conventions and \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for conditional scoring.
 }
 \details{
 \code{Status} has the following user-facing meanings:
@@ -55,6 +70,124 @@ Read \code{Boundary} before interpreting a caveated result. For a blocked or
 deferred row, use \code{RecommendedRoute} to choose a supported analysis or a
 Rasch-family alternative.
 }
+\section{Connected outputs and unavailable extensions}{
+
+For the current one-slope-family model, use \code{summary(fit)} to review the
+model and numerical status, \code{plot(fit, type = ...)} for available location,
+fit and category views, and \code{\link[stats:confint]{stats::confint()}} / \code{\link[=mfrm_curve_intervals]{mfrm_curve_intervals()}} for
+separately checked MML uncertainty. An interval result has its own \code{print()}
+and \code{plot()} methods; attach selected results to \code{\link[=mfrm_results]{mfrm_results()}} for
+\code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}. A plot of locations or fit
+statistics is not a plot of slope uncertainty.
+
+Portable calibration has its own row and \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}
+gives estimator-specific source restrictions. Two slope families are available
+provisionally through \code{\link[=fit_mfrm]{fit_mfrm()}} with fixed-standard-normal MML--EM, exactly
+two facets, no anchors and unit weights. Use \code{summary(fit)}, then
+\code{curves <- mfrm_curve_intervals(fit, newdata)} and \code{plot(curves)}. Despite the
+function name, this route returns fitted values with unavailable intervals.
+Attach them with \code{mfrm_results(fit, include = c("fit", "plots"), compute = "never", intervals = curves)} for reports and saved exports.
+Separately use \code{ci <- confint(fit)} for experimental component-slope intervals
+and attach \code{intervals = list(slopes = ci, curves = curves)}. Local numerical
+checks do not establish global identification or sampling coverage; failed
+checks retain missing bounds.
+An explicit \code{confint(fit, method = "profile", slope = c(Task = "t1"))}
+profiles one two-family component, using the actual owner/level names.
+It retains nuisance reoptimization, numerical checks, unavailable endpoints
+and a same-target Wald comparison. Neither method has qualified coverage.
+Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare
+fixed-grid refits with the same EM controls and save each grid's interval
+checks. Person-score and adaptive-grid comparisons remain unavailable for
+two families. \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
+predictive residuals with fixed calibration, including descriptive Infit/Outfit
+without reference cutoffs. Attach the saved object through \code{response_diagnostics}
+to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and
+portable two-family calibration remain unavailable. Shared-owner corrected
+JML has an explicit experimental point-estimation and reporting route through
+\code{jml_correction_order}; formal structural intervals remain unavailable.
+Its descriptive response diagnostics and conditional EAP scoring use their
+own saved identities and source checks. Portable corrected calibration uses
+file format 5; no ordinary JML likelihood checks or structural intervals
+are inherited. Separate slope and step owners alone still
+define one slope family.
+}
+
+\section{Model, estimation and algorithm}{
+
+RSM, PCM and GPCM describe response probabilities, not a particular fitting
+algorithm. MML integrates over an ability distribution; JML estimates the
+training persons' abilities jointly with the other parameters. EM and direct
+optimization are numerical ways to fit an MML model. RSM/PCM can therefore
+also use MML--EM. In this package, MML defaults to direct optimization;
+RSM/PCM EM and hybrid support additive, fixed-population models with fixed
+integration (\code{population = NULL}). One-family GPCM EM/hybrid requests fall back to direct
+and record the engine in \code{fit$summary}.
+
+The provisional two-slope-family GMFRM route uses fixed-standard-normal MML
+with numerical generalized EM. It requires an explicit EM request; direct
+and hybrid are not available for this route. EM is not a defining property
+of GMFRM. See the GPCM
+scope vignette for the distinction between the model, estimation method
+and algorithm, with links to Muraki, TAM and sirt.
+}
+
+\section{Applications of two slope families}{
+
+In a speaking assessment, task difficulty and assessor severity describe
+shifts in ratings, whereas task and assessor slopes describe how responses
+change with ability. Their product is the effective slope for a rating.
+For example, 0.8 times 1.2 gives 0.96; it is a log-odds multiplier, not an
+accuracy percentage or a score weight. The same roles can use piece/judge
+or station/examiner labels, provided the single-ability assumption is
+appropriate. Two slope families do not create two latent abilities or a
+separate free slope for every task-by-assessor pair.
+
+Potential uses include task review and assessor feedback. A high assessor
+slope is not a competence threshold, and a low task slope is not a rule for
+deleting content. Read category and information curves over the relevant
+ability range, inspect uncertainty and assignment overlap, and bring in
+reference ratings or substantive evidence for accuracy claims. The vignette
+explains these uses and a provisional two-family fitting example. It does
+not yet provide a two-family model comparison or qualified feedback decision.
+}
+
+\section{Local independence, testlets and random effects}{
+
+Two fixed slope families change response sensitivity; they do not by
+themselves remove dependence between ratings from the same performance.
+A testlet effect is itself a random effect, defined by its sharing unit.
+A testlet model assumes independence conditional on ability and its local
+effect, with dependence remaining after the effect is integrated out.
+One substantive ability can therefore coexist with additional latent
+dependence variables.
+
+\code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} supplies a Person-local RSM block effect; reusing a
+block label for another Person creates a different effect.
+\code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} instead supplies a rater severity effect shared
+across persons. These separate RSM routes neither add effects to GPCM nor
+jointly estimate shared-rater and testlet effects. Random discrimination is
+also different from estimating two fixed slope families.
+The GPCM scope vignette explains effect-sharing units, observed versus new
+block/rater prediction and the distinction from multivariate G-theory.
+A testlet variance does not diagnose halo or enforce equal task weights.
+}
+
+\section{Interpreting the former bounded GPCM label}{
+
+Use GPCM as the model name and state the structure and output restrictions
+explicitly. The older label described limited implementation scope, not a
+distinct unidimensional response model. Positive log-parameterized relative
+slopes retain their geometric-mean-one identification; there is no extra
+user-facing finite slope box. Rejection of numerical overflow/underflow is
+not clipping to a valid estimate. Separate owners, MML inference/comparison
+and portable calibration are available within their respective scopes;
+two-family fitting provides provisional estimates and conditional curves,
+with separately checked experimental component-slope intervals. JML slope
+intervals remain unavailable.
+A data-specific boundary or unbounded interval is a separate statistical
+issue, and retirement of the label does not certify interval coverage.
+}
+
 \section{Estimates, intervals and comparisons}{
 
 For free slopes, these are different questions:
@@ -100,7 +233,12 @@ positive unregularized information, unit weights and a grid of at least
 approximations for geometric-mean-one relative slopes by default.
 Explicit options add population-SD-standardized slopes, named ratios or
 differences, Bonferroni adjustment and independent-cluster sandwich
-covariance. Small samples and misspecification can still affect coverage.
+covariance. An experimental \code{method = "profile"} with one named \code{slope}
+reoptimizes all nuisance parameters, including the normal population, and
+retains endpoint failures and a saved likelihood plot. Its initial scope
+excludes anchors, interactions, covariates and standardized targets.
+Profile coverage and superiority over Wald have not been established.
+Small samples and misspecification can still affect coverage.
 Failed checks retain missing limits and a reason. \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}}
 provides fitted-model bootstrap intervals or a matched PCM/GPCM test;
 \code{\link[=mfrm_curve_intervals]{mfrm_curve_intervals()}} propagates calibration uncertainty to curves.

@@ -1,4 +1,4 @@
-#' Plot descriptive posterior predictive residual summaries
+#' Plot descriptive response residual summaries
 #'
 #' Compare residual summaries across selected groups without reference cutoffs.
 #' @param x Saved [mfrm_response_diagnostics()] output.
@@ -19,6 +19,12 @@
 #'   one nor a universal acceptable range is established. No interval, warning
 #'   region or statistical test is drawn. Hiding annotations changes only the
 #'   display; [plot_data()] retains the probability definition and limitations.
+#'   For corrected JML, probabilities instead condition on corrected calibration
+#'   and reprofiled Person point estimates; no latent effects are integrated.
+#'   The paired view displays each available index independently, so an
+#'   available Infit is retained when zero conditional variance makes Outfit
+#'   undefined. The scatter view requires both indices. The caption reports
+#'   partial availability, and the saved table retains its reasons.
 #' @export
 plot.mfrm_response_diagnostics <- function(x, facet = NULL, style = c("paired", "scatter"),
     draw = TRUE, palette = c("accessible", "mono"), title = NULL, caption = NULL,
@@ -32,10 +38,17 @@ plot.mfrm_response_diagnostics <- function(x, facet = NULL, style = c("paired", 
   facet <- facet %||% x$settings$group_by[1L]
   if (!is.character(facet) || length(facet) != 1L || is.na(facet) || !facet %in% x$settings$group_by) stop("Choose one recorded grouping column.", call. = FALSE)
   tab <- x$measures[x$measures$Facet == facet, , drop = FALSE]
-  available <- is.finite(tab$Infit) & is.finite(tab$Outfit)
+  available <- if (style=="paired") is.finite(tab$Infit) | is.finite(tab$Outfit) else
+    is.finite(tab$Infit) & is.finite(tab$Outfit)
   limits <- c(0, max(c(.1, tab$Infit, tab$Outfit), na.rm = TRUE) * 1.15)
-  note <- "Same-data posterior predictions | calibration fixed | descriptive only; no reference cutoffs"
+  note <- if (identical(x$settings$probability_method,"corrected_jml_plugin"))
+    "Same-data conditional probabilities | calibration and Person profiles fixed | no reference cutoffs" else
+    "Same-data posterior predictions | calibration fixed | descriptive only; no reference cutoffs"
+  if (any(tab$Status=="partially_available",na.rm=TRUE)) note <- paste(note,
+    "Zero-variance ratings prevent Outfit; defined Infit is retained.",sep="\n")
   count <- sprintf("%d of %d groups displayed; selected rows only.", sum(available), nrow(tab))
+  if (any(xor(is.finite(tab$Infit),is.finite(tab$Outfit)))) count <- paste(count,
+    sprintf("Infit available: %d; Outfit available: %d.",sum(is.finite(tab$Infit)),sum(is.finite(tab$Outfit))))
   payload <- list(table = tab, settings = x$settings,
     title = title %||% paste(x$settings$model, "residual summaries:", facet),
     caption = caption %||% paste(note, count, sep = "\n"),
@@ -71,7 +84,9 @@ mfrm_draw_response_diagnostics <- function(payload) {
       pch = 16, col = colour[1], cex = opt$point_size / 2.5)
     if (opt$show_labels) graphics::text(tab$Infit, tab$Outfit, labels = tab$Level, pos = 3, cex = .8)
   }
-  if (!any(is.finite(tab$Infit))) graphics::text(mean(opt$limits),
+  shown <- if (opt$style=="paired") is.finite(tab$Infit) | is.finite(tab$Outfit) else
+    is.finite(tab$Infit) & is.finite(tab$Outfit)
+  if (!any(shown)) graphics::text(mean(opt$limits),
     if (opt$style == "paired") (nrow(tab) + 1) / 2 else mean(opt$limits), "No available summaries")
   if (opt$show_notes) {
     lines <- unlist(lapply(strsplit(payload$caption, "\n", fixed = TRUE)[[1L]], strwrap, width = 100))
@@ -89,8 +104,8 @@ mfrm_draw_response_diagnostics <- function(payload) {
   if (opt$style == "paired") {
     p <- p + ggplot2::geom_segment(data = used,
       ggplot2::aes(xend = .data$Outfit, yend = .data$.Row), colour = "grey65") +
-      ggplot2::geom_point(data = used, ggplot2::aes(shape = "Infit", colour = "Infit"), size = opt$point_size) +
-      ggplot2::geom_point(data = used, ggplot2::aes(x = .data$Outfit, shape = "Outfit", colour = "Outfit"), size = opt$point_size) +
+      ggplot2::geom_point(data = tab[is.finite(tab$Infit),,drop=FALSE], ggplot2::aes(shape = "Infit", colour = "Infit"), size = opt$point_size) +
+      ggplot2::geom_point(data = tab[is.finite(tab$Outfit),,drop=FALSE], ggplot2::aes(x = .data$Outfit, shape = "Outfit", colour = "Outfit"), size = opt$point_size) +
       ggplot2::scale_shape_manual(name = NULL, values = c(Infit = 16, Outfit = 17)) +
       ggplot2::scale_colour_manual(name = NULL, values = stats::setNames(colours, c("Infit", "Outfit"))) +
       ggplot2::scale_y_continuous(breaks = tab$.Row,
@@ -102,7 +117,8 @@ mfrm_draw_response_diagnostics <- function(payload) {
     if (opt$show_labels) p <- p + ggplot2::geom_text(data = used,
       ggplot2::aes(y = .data$Outfit, label = .data$Level), vjust = -1, size = 3 * opt$text_scale)
   }
-  if (!any(available)) p <- p + ggplot2::annotate("text", x = mean(opt$limits),
+  shown <- if (opt$style=="paired") is.finite(tab$Infit) | is.finite(tab$Outfit) else available
+  if (!any(shown)) p <- p + ggplot2::annotate("text", x = mean(opt$limits),
     y = if (opt$style == "paired") (nrow(tab) + 1) / 2 else mean(opt$limits), label = "No available summaries")
   p <- p + ggplot2::scale_x_continuous(limits = opt$limits) +
     ggplot2::theme_minimal(base_size = 11 * opt$text_scale) + ggplot2::theme(legend.position = "bottom")

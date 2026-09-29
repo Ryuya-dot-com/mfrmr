@@ -71,6 +71,8 @@ local({
     # a free level minus the mean has variance (9+1+1)v/16.
     expect_equal(eq$summary$GrandMean, 0.15)
     expect_equal(eq$rope$SE, c(0, rep(sqrt(0.02), 3)))
+    expect_identical(eq$rope$Fixed, c(TRUE, FALSE, FALSE, FALSE))
+    expect_true(is.na(eq$rope$CI_Lower[1]) && is.na(eq$rope$CI_Upper[1]))
     expect_equal(eq$rope$DeviationSE, sqrt(c(3, 11, 11, 11) * 0.02 / 16))
     expect_equal(eq$pairwise$SE_Diff, sqrt(c(rep(0.02, 3), rep(0.04, 3))))
     expect_equal(nrow(eq$pairwise), 6)
@@ -78,6 +80,25 @@ local({
       pnorm(0.5, -0.15, sqrt(3 * 0.02 / 16)) -
         pnorm(-0.5, -0.15, sqrt(3 * 0.02 / 16))
     ))
+  })
+
+  test_that("actual anchored MML fits agree with and without supplied diagnostics", {
+    anchored <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+      method = "MML", noncenter_facet = "Rater",
+      anchors = data.frame(Facet = "Rater", Level = "R01", Anchor = .1))
+    dx <- diagnose_mfrm(anchored)
+    eq <- analyze_facet_equivalence(anchored, facet = "Rater")
+    expect_identical(eq, analyze_facet_equivalence(anchored, dx, facet = "Rater"))
+    fixed <- eq$forest$Element == "R01"
+    expect_true(eq$forest$Fixed[fixed])
+    expect_equal(eq$forest$Measure[fixed], .1)
+    expect_equal(eq$forest$SE[fixed], 0)
+    expect_true(is.na(eq$forest$CI_Lower[fixed]) && is.na(eq$forest$CI_Upper[fixed]))
+    expect_gt(eq$forest$DeviationSE[fixed], 0)
+    expect_true(all(is.finite(eq$pairwise$SE_Diff)))
+    expect_identical(plot(eq, draw = FALSE)$data, eq$forest)
+    bad <- dx; bad$measures$Fixed[bad$measures$Facet == "Rater"] <- FALSE
+    expect_error(analyze_facet_equivalence(anchored, bad, facet = "Rater"), "fixed-value labels")
   })
 
   test_that("constrained contrasts are rejected before covariance roundoff can admit them", {

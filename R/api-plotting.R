@@ -3593,6 +3593,8 @@ export_mfrm <- function(fit,
                         tables = c("person", "facets", "summary", "steps", "measures"),
                         overwrite = FALSE,
                         acknowledge_sensitive = FALSE) {
+  stop_if_product_slopes(fit, "export_mfrm()")
+
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
@@ -3742,6 +3744,13 @@ export_mfrm <- function(fit,
 #'   is populated for person rows from the extreme-score flag
 #'   (\code{"Min"} / \code{"Max"} / \code{NA}); non-person
 #'   facet rows carry \code{NA} in that column by design.
+#'   Corrected-JML fits additionally retain estimator, correction order,
+#'   point/covariance status, uncertainty target and structural \code{RootSE}
+#'   columns. Person \code{RootSE} is missing; extreme Person flags are
+#'   \code{"low"} / \code{"high"} / \code{"none"}. The \code{estimation_note}
+#'   attribute explains the local-root uncertainty and remaining bias. Ordinary
+#'   diagnostic attachments do not apply to this estimator; see the Corrected
+#'   JML section of \code{\link{fit_mfrm}}.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}
 #' @examples
 #' \donttest{
@@ -3767,6 +3776,16 @@ export_mfrm <- function(fit,
 #' }
 #' @export
 as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, ...) {
+  if (mfrm_has_jml_adjustment(x)) {
+    rlang::check_dots_empty()
+    person <- x$facets$person
+    person$Facet <- "Person"; person$Level <- person$Person
+    person$Person <- person$SE <- NULL
+    out <- as.data.frame(dplyr::bind_rows(person,x$facets$others),row.names=row.names,
+      optional=optional)
+    attr(out,"estimation_note") <- mfrm_jml_note()
+    return(out)
+  }
   # Carry forward the Extreme flag from build_person_table().
   # so downstream ggplot / CSV export paths see per-person extreme status.
   person_extreme <- if ("Extreme" %in% names(x$facets$person)) {
@@ -3802,6 +3821,9 @@ print.mfrm_plot_bundle <- function(x, ...) {
 
 #' @export
 print.mfrm_fit <- function(x, ...) {
+  if (mfrm_has_jml_adjustment(x)) {
+    print(summary(x)); return(invisible(x))
+  }
   if (is.list(x) && !is.null(x$summary) && nrow(x$summary) > 0) {
     ov <- round_numeric_df(as.data.frame(x$summary), digits = 3L)[1, , drop = FALSE]
     fit_summary <- tryCatch(summary(x), error = function(e) NULL)
@@ -3845,6 +3867,8 @@ print.mfrm_fit <- function(x, ...) {
           fixed_standard_normal = "fixed standard-normal population",
           estimated_population_scale = "estimated population",
           "see fitted scale settings"),
+        if (identical(scale_contract$SlopeBasis[1], "owner_specific_product_discrimination"))
+          "product of facet slopes; first family geometric mean 1, second family free" else
         if (identical(as.character(scale_contract$Model[1]), "GPCM"))
           "relative slopes with geometric mean 1" else "fixed at 1",
         population_text

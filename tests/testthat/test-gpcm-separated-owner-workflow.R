@@ -40,6 +40,28 @@ test_that("MML keeps distinct owners through inference, curves and saved output"
   grid <- expand.grid(Theta=c(-1,0,1),Rater=paste0("R",1:3),Criterion=paste0("C",1:2))
   curves <- mfrm_curve_intervals(f,grid)
   info <- mfrm_curve_intervals(f,grid,type="information")
+  expect_identical(curves$contexts$ObservedContext, rep(TRUE, nrow(grid)))
+  expect_identical(curves$contexts$InputRow, seq_len(nrow(grid)))
+  expect_identical(mfrm_gpcm_inference_tables(curves)$contexts, curves$contexts)
+  # Retaining known levels while omitting one design crossing changes the
+  # context label, without changing the fitted coefficients used to predict it.
+  prep <- f$prep
+  prep$data <- prep$data[!(prep$data$Rater == "R1" & prep$data$Criterion == "C1"), ]
+  query <- mfrm_gpcm_response_evaluator(prep, f$config, grid)
+  expect_identical(query$contexts$ObservedContext,
+    !(grid$Rater == "R1" & grid$Criterion == "C1"))
+  expect_equal(as.vector(t(query$evaluate(f$opt$par)$probabilities)),
+    curves$table$Estimate, tolerance = 1e-12)
+  marked <- curves; marked$contexts <- query$contexts
+  expect_output(print(marked), "Unobserved combinations")
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_match(plot(marked, draw = FALSE)$labels$caption, "not observed together")
+    expect_null(plot(marked, caption = NULL, draw = FALSE)$labels$caption)
+    unavailable <- marked; unavailable$table$CIEligible[1] <- FALSE
+    caption <- plot(unavailable, draw = FALSE)$labels$caption
+    expect_match(caption, "Intervals unavailable")
+    expect_match(caption, "not observed together")
+  }
   pars <- expand_params(f$opt$par,build_param_sizes(f$config),f$config)
   # Independent category recursion, with deliberately different role sizes.
   expected <- t(vapply(seq_len(nrow(grid)),function(i) {
@@ -62,6 +84,8 @@ test_that("MML keeps distinct owners through inference, curves and saved output"
   path <- tempfile(fileext=".rds"); withr::defer(unlink(path))
   saveRDS(result,path); reopened <- readRDS(path)
   expect_identical(reopened$gpcm_inference,result$gpcm_inference)
+  saveRDS(marked, path)
+  expect_identical(readRDS(path)$contexts, query$contexts)
   expect_identical(reopened$fit$config$slope_facet,"Criterion")
   report <- mfrm_report(reopened)
   expect_identical(report$tables$gpcm_slopes_intervals,result$tables$gpcm_slopes_intervals)

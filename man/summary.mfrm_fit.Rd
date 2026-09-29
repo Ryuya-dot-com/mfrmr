@@ -55,7 +55,10 @@ is \code{FALSE} for privacy-safe console output.}
 \value{
 An object of class \code{summary.mfrm_fit} with:
 \itemize{
-\item \code{overview}: global model/fit indicators
+\item \code{overview}: global model/fit indicators. For MML, \code{MMLEngineUsed} records
+the actual algorithm, \code{IterationsBasis} explains what is counted, and
+\code{ConvergenceBasis} identifies the numerical stopping rule. Numerical
+convergence does not establish identification or interval eligibility
 \item \code{status}: concise front-door status block for quick review
 \item \code{decision}: plain-language interpretation, formal-inference status,
 reason, and highest-priority next action derived from the stored readiness
@@ -84,7 +87,11 @@ use
 \item \code{step_overview}: threshold/step diagnostics by PCM/GPCM \code{StepFacet}
 ladder, or for the common RSM ladder
 \item \code{slope_overview}: parameter-readiness and explicitly labelled optimizer-
-trace summary for \code{GPCM} discriminations
+trace summary for \code{GPCM} discriminations. \code{SlopeOwner} identifies the facet
+whose levels carry slopes. \code{Min}, \code{Max} and \code{GeometricMean} summarize
+primary estimates; the \verb{Optimizer*} fields retain numerical iterates when
+primary estimates are unavailable. The scale reference is an identification
+constraint, not evidence that estimates or intervals are reliable
 \item \code{inference_evidence}: for \code{GPCM} MML, a compact separation of optimizer
 stationarity, retained-point local rank, observed-information curvature,
 slope-boundary screening, and the final readiness decision. Supportive
@@ -161,6 +168,12 @@ measures
 }
 \section{Interpreting output}{
 
+Corrected JML has a separate summary of saved \code{tables} and numerical
+\code{attempts}, with the correction order and the meaning of RootSE. All profiles
+show the same saved summary and never compute ordinary diagnostics. Use
+\code{include_person = TRUE} for conditional Person profiles without Person SEs.
+See the \strong{Corrected JML} section of \code{\link[=fit_mfrm]{fit_mfrm()}}. The entries below describe
+the ordinary, uncorrected fitting routes.
 \itemize{
 \item \code{overview}: convergence plus the versioned information-criterion contract.
 For eligible fixed-facet MML fits, BIC/SABIC use unique Persons, not

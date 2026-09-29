@@ -246,6 +246,44 @@ test_that("gpcm_capability_matrix filters by status", {
   expect_equal(nrow(supported_tbl), sum(full_tbl$Status == "supported"))
 })
 
+test_that("GPCM availability separates portable scoring from unfinished estimation routes", {
+  tbl <- gpcm_capability_matrix()
+  portable <- tbl[tbl$Area == "Portable calibration and later-person scoring", ]
+  expect_equal(nrow(portable), 1L)
+  expect_identical(portable$Status, "supported_with_caveat")
+  expect_match(portable$Helpers, "score_mfrm_calibration", fixed = TRUE)
+  expect_match(portable$Boundary, "condition on the saved calibration", fixed = TRUE)
+  sources <- subset(mfrm_calibration_capabilities(), Model == "GPCM")
+  expect_setequal(sources$Estimator[sources$PortableCalibration == "available"],
+                  c("MML", "JML", "Corrected JML"))
+  corrected <- tbl[tbl$Area=="Experimental corrected JML estimates and saved output",]
+  expect_match(corrected$Helpers,"extract_mfrm_calibration",fixed=TRUE)
+  expect_match(corrected$Boundary,"Conditional new-Person/portable EAP",fixed=TRUE)
+  unfinished <- "Formal structural confidence intervals for corrected JML"
+  rows <- tbl[match(unfinished, tbl$Area), ]
+  expect_identical(rows$Status, "deferred")
+  expect_true(all(is.na(rows$Helpers)))
+  expect_true(unfinished %in% gpcm_runtime_guard_coverage()$Area)
+  scoped <- tbl[match(c("Simultaneous estimation of multiple slope families",
+    "GPCM fitting with EM or hybrid optimization"), tbl$Area), ]
+  expect_true(all(scoped$Status == "supported_with_caveat"))
+  expect_true(all(grepl("fit_mfrm", scoped$Helpers, fixed=TRUE)))
+  expect_match(scoped$Boundary[1], "intervals are unavailable", fixed=TRUE)
+  expect_match(scoped$Boundary[2], "One-family EM/hybrid", fixed=TRUE)
+})
+
+test_that("slope-owner input explains unsupported models and rejects missing names", {
+  args <- list(data = data.frame(Person = "P1", Task = "T1", Rater = "R1", Score = 1), person = "Person",
+    facets = c("Task", "Rater"), score = "Score", model = "GPCM",
+    step_facet = "Rater")
+  expect_error(do.call(fit_mfrm, c(args, list(slope_facet = c("Task", "Rater")))),
+    "Two slope families require", fixed = TRUE)
+  for (owner in list(NA_character_, character(), "", c("Task", NA_character_))) {
+    expect_error(do.call(fit_mfrm, c(args, list(slope_facet = owner))),
+      "non-empty character strings", fixed = TRUE)
+  }
+})
+
 test_that("gpcm_capability_matrix prints a compact first screen", {
   tbl <- gpcm_capability_matrix()
   expect_s3_class(tbl, "mfrmr_gpcm_capabilities")

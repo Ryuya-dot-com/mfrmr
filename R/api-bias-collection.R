@@ -90,6 +90,7 @@ estimate_all_bias <- function(fit,
                               omit_extreme = TRUE,
                               max_iter = 4,
                               tol = 1e-3) {
+  stop_if_product_slopes(fit, "estimate_all_bias()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }

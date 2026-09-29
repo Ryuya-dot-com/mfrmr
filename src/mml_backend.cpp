@@ -288,14 +288,17 @@ writable::list mfrm_cpp_expected_category_bundle(list prob_list,
   writable::doubles var_k(n);
   for (int i = 0; i < n; ++i) {
     double first_moment = 0.0;
-    double second_moment = 0.0;
     for (int k = 0; k < k_cat; ++k) {
       const double p = posterior_prob(i, k);
       first_moment += p * static_cast<double>(k);
-      second_moment += p * static_cast<double>(k * k);
     }
     expected_k[i] = first_moment;
-    var_k[i] = second_moment - first_moment * first_moment;
+    double variance = 0.0;
+    for (int k = 0; k < k_cat; ++k) {
+      const double centered = static_cast<double>(k) - first_moment;
+      variance += posterior_prob(i, k) * centered * centered;
+    }
+    var_k[i] = variance;
   }
 
   if (include_p_geq && k_cat > 1) {

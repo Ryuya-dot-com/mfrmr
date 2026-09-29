@@ -130,6 +130,15 @@
 #' Earlier saved fits without ability-population parameters retain their
 #' original known N(0,1) meaning for predictions, profiles and bootstrap refits.
 #'
+#' @section Relation to testlets and discrimination:
+#' A shared severity effect is not a random discrimination parameter.
+#' This RSM does not estimate GPCM slopes. Its rater effect spans persons,
+#' whereas [fit_mfrm_testlet()] uses a distinct effect for each Person/block
+#' pair, even when the block is named Rater. These sharing structures lead
+#' to different marginal likelihoods and prediction targets; the two routes
+#' cannot currently be combined. See [gpcm_capability_matrix()] for the
+#' relationship to fixed slope families and local independence.
+#'
 #' @section Comparison with fixed-rater MFRM:
 #' Compare the same observed rating events, categories, fixed facets and
 #' ability population. Fixed rater effects describe the observed panel;
@@ -380,7 +389,7 @@ mfrm_random_rater_zero_score <- function(input, beta, steps, quad_points, person
       p <- exp(logw - shift); denominator <- rowSums(p); p <- p / denominator
       loglik <- loglik + logw[, input$y[i] + 1L] - shift - log(denominator)
       mean <- as.vector(p %*% (0:length(steps)))
-      variance <- as.vector(p %*% (0:length(steps))^2) - mean^2
+      variance <- mfrm_category_variance(p, 0:length(steps), mean)
       r <- input$rater[i]
       score[, r] <- score[, r] + mean - input$y[i]
       curvature[, r] <- curvature[, r] - variance

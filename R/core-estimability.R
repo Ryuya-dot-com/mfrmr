@@ -515,10 +515,13 @@ mfrmr_estimability_rank_audit <- function(design, parameter_map,
   inverse_norm <- ifelse(zero, 1, 1 / norms)
   scaled <- design %*% Matrix::Diagonal(x = inverse_norm)
   scaled <- Matrix::drop0(methods::as(scaled, "dgCMatrix"))
+  # Matrix's QR rank routine transposes wide matrices itself, with a warning.
+  # Make that rank-preserving step explicit; retain original columns for nulls.
+  rank_design <- if (nrow(scaled) < ncol(scaled)) Matrix::t(scaled) else scaled
 
   ranks <- vapply(tolerances, function(tolerance) {
     as.integer(Matrix::rankMatrix(
-      scaled, method = "qr", tol = as.numeric(tolerance)
+      rank_design, method = "qr", tol = as.numeric(tolerance)
     ))
   }, integer(1))
   structural_index <- which.min(abs(tolerances - structural_tolerance))
@@ -965,33 +968,38 @@ mfrmr_nonlinear_transformation_audit <- function(
   if ("log_slopes" %in% nonlinear_blocks) {
     slice <- as.integer(slices$log_slopes %||% integer(0))
     free <- as.numeric(par[slice])
-    levels <- as.character(config$gpcm_spec$levels %||% character(0))
-    n_levels <- length(levels)
+    product_slopes <- !is.null(config$gpcm_spec$log_slope_design)
+    log_jacobian <- as.matrix(gpcm_log_slope_design(config$gpcm_spec))
+    n_levels <- nrow(log_jacobian)
     valid_config <- identical(config$model, "GPCM") &&
-      length(slice) > 0L && n_levels == length(free) + 1L
-    if (valid_config) {
-      transformed <- expand_gpcm_log_slopes(free, config$gpcm_spec)
-      log_jacobian <- sum_zero_jacobian(n_levels)
-      natural_jacobian <- diag(
-        transformed$slopes, nrow = n_levels
-      ) %*% log_jacobian
+      length(slice) > 0L && ncol(log_jacobian) == length(free) &&
+      n_levels >= length(free) && all(is.finite(log_jacobian))
+    transformed <- if (valid_config) tryCatch(
+      expand_gpcm_log_slopes(free, config$gpcm_spec),
+      mfrmr_gpcm_slope_numeric_boundary_error = function(e) NULL) else NULL
+    if (!is.null(transformed)) {
+      natural_jacobian <- log_jacobian * transformed$slopes
+      coordinate_system <- if (product_slopes) {
+        "free_owner_log_slopes -> crossing_log_slopes -> positive_product_slopes"
+      } else paste("free_log_slopes -> sum_zero_log_slopes ->",
+                   "positive_geometric_mean_one_slopes")
+      rank_labels <- if (product_slopes) {
+        c("crossing_log_slopes", "positive_product_slopes")
+      } else c("expanded_sum_zero_log_slopes", "positive_geometric_mean_one_slopes")
+      invariant <- if (product_slopes) {
+        abs(mean(transformed$slope_components[[1]]$LogSlope))
+      } else abs(mean(log(transformed$slopes)))
       results[[length(results) + 1L]] <- mfrmr_transformation_block_audit(
         block = "log_slopes",
-        coordinate_system = paste(
-          "free_log_slopes -> sum_zero_log_slopes ->",
-          "positive_geometric_mean_one_slopes"
-        ),
-        rank_labels = c(
-          "expanded_sum_zero_log_slopes",
-          "positive_geometric_mean_one_slopes"
-        ),
+        coordinate_system = coordinate_system,
+        rank_labels = rank_labels,
         free = free,
-        log_transform = function(value) c(value, -sum(value)),
-        natural_transform = function(value) exp(c(value, -sum(value))),
+        log_transform = function(value) as.numeric(log_jacobian %*% value),
+        natural_transform = function(value) exp(as.numeric(log_jacobian %*% value)),
         analytic_log_jacobian = log_jacobian,
         analytic_natural_jacobian = natural_jacobian,
         natural_values = transformed$slopes,
-        invariant_residual = abs(mean(log(transformed$slopes))),
+        invariant_residual = invariant,
         relative_step = relative_step,
         tolerances = tolerances
       )
@@ -1086,6 +1094,23 @@ mfrmr_gpcm_log_slope_map <- function(config, sizes) {
   levels <- as.character(config$gpcm_spec$levels %||% character(0))
   n_free <- as.integer(sizes$log_slopes %||% 0L)
   if (n_free == 0L) return(mfrmr_estimability_map())
+  if (!is.null(config$gpcm_spec$log_slope_design)) {
+    component_levels <- config$gpcm_spec$component_levels
+    n <- lengths(component_levels)
+    if (length(n) != 2L || any(n < 2L) || sum(n) - 1L != n_free ||
+        !identical(names(component_levels), config$slope_facet)) {
+      stop("The product-slope parameter map does not match the fitted owners.", call. = FALSE)
+    }
+    owner <- rep(names(component_levels), c(n[1] - 1L, n[2]))
+    level <- c(component_levels[[1]][seq_len(n[1] - 1L)], component_levels[[2]])
+    return(mfrmr_estimability_map(
+      Block = rep("log_slopes", n_free),
+      Coordinate = paste0("log_slopes:", owner, ":", level),
+      Facet = owner, Level = level,
+      ReferenceLevel = c(rep(tail(component_levels[[1]], 1), n[1] - 1L), rep("", n[2])),
+      Constraint = c(rep("sum_zero_log_slopes", n[1] - 1L), rep("free_log_slope", n[2])),
+      OptimizerIndex = as.integer(build_param_slices(sizes)$log_slopes)))
+  }
   if (length(levels) != n_free + 1L) {
     stop(
       "Internal GPCM response-kernel audit found an inconsistent slope map.",

@@ -79,7 +79,16 @@ dispositions are highlighted in every view.
 
 These are score-batch review displays, not calibration-fit diagnostics.
 Posterior SDs and intervals are conditional on the frozen point calibration
-and its recorded prior. They exclude calibration-parameter uncertainty.
+and the actual scoring prior. They exclude calibration-parameter uncertainty.
+For GPCM or an explicitly supplied scoring prior, summaries and plot data
+retain both original and actual prior values without rounding, the per-Person
+integration checks, and (for GPCM) the source decision recorded at extraction.
+These records describe conditional scoring, not a new evaluation of the
+training fit or the suitability of its population for another cohort.
+\code{summary(x)$settings$score_integration_review} compares the reported EAP/SD
+with higher-order adaptive references. The separate \code{quadrature_review}
+compares adaptive and fixed grids; for an adaptive scorer, that fixed grid
+did not produce the reported scores. Printing distinguishes the two checks.
 Persons with no valid responses have no score coordinate and are retained
 in \code{summary(x)$review} and in the plot payload's
 \code{unplotted_dispositions} component.

@@ -53,6 +53,7 @@ plot_threshold_ladder <- function(fit,
                                   highlight_disorder = TRUE,
                                   preset = c("standard", "publication", "compact", "monochrome"),
                                   draw = TRUE) {
+  stop_if_product_slopes(fit, "plot_threshold_ladder()")
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
@@ -620,6 +621,8 @@ plot_rater_severity_profile <- function(fit,
                                         show_bands = TRUE,
                                         preset = c("standard", "publication", "compact", "monochrome"),
                                         draw = TRUE) {
+  stop_if_product_slopes(fit, "plot_rater_severity_profile()")
+
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)

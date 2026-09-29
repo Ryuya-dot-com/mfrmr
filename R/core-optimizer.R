@@ -297,7 +297,9 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
     # may be reused between calls, which would invalidate exact cache-key
     # comparisons and make an otherwise deterministic optimization path depend
     # on allocation history.
-    cached_par <<- par + 0
+    # Publish the key only after evaluation succeeds. A caught numeric error
+    # must not turn a repeated invalid trial into a cache hit for an old value.
+    cached_par <<- NULL
     cached_gradient <<- NULL
     probability_bundle <<- NULL
     logprob_bundle <<- NULL
@@ -308,6 +310,7 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
       result <- adaptive_evaluate(par)
       cached_value <<- result$value
       cached_gradient <<- result$gradient
+      cached_par <<- par + 0
       gradient_builds <<- gradient_builds + 1L
       return(invisible(NULL))
     }
@@ -348,6 +351,7 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
         posterior_bundle$person_bundle$log_marginal
       )
     }
+    cached_par <<- par + 0
     invisible(NULL)
   }
 
@@ -403,6 +407,7 @@ make_mfrm_boundary_safe_objective <- function(evaluator,
   }
   rejections <- 0L
   population_rejections <- 0L
+  adaptive_rejections <- 0L
   list(
     value = function(par, ...) {
       tryCatch(
@@ -414,6 +419,10 @@ make_mfrm_boundary_safe_objective <- function(evaluator,
         mfrmr_population_variance_numeric_boundary_error = function(error) {
           population_rejections <<- population_rejections + 1L
           penalty
+        },
+        mfrmr_adaptive_quadrature_numeric_error = function(error) {
+          adaptive_rejections <<- adaptive_rejections + 1L
+          penalty
         }
       )
     },
@@ -424,11 +433,13 @@ make_mfrm_boundary_safe_objective <- function(evaluator,
       tryCatch(
         evaluator$gradient(par),
         mfrmr_gpcm_slope_numeric_boundary_error = function(error) numeric(length(par)),
-        mfrmr_population_variance_numeric_boundary_error = function(error) numeric(length(par))
+        mfrmr_population_variance_numeric_boundary_error = function(error) numeric(length(par)),
+        mfrmr_adaptive_quadrature_numeric_error = function(error) numeric(length(par))
       )
     },
     rejections = function() as.integer(rejections),
     population_variance_rejections = function() as.integer(population_rejections),
+    adaptive_quadrature_rejections = function() as.integer(adaptive_rejections),
     penalty = penalty
   )
 }
@@ -577,10 +588,10 @@ run_mfrm_direct_optimization <- function(start,
     quad = quad,
     reuse_probability_workspace = identical(optimizer_plan$Used, "L-BFGS-B")
   )
-  # A non-representable GPCM slope or population variance is an invalid
-  # line-search proposal. Return a finite, dominating objective so both
-  # BFGS and L-BFGS-B can contract the step. All other errors remain fail-hard,
-  # and expand_params() still rejects an invalid retained solution.
+  # A non-representable GPCM slope, population variance or adaptive
+  # integration calculation is an invalid line-search proposal. Return a
+  # finite, dominating objective so both BFGS and L-BFGS-B can contract the step.
+  # Other errors remain fail-hard; retained solutions use the raw evaluator.
   safe_objective <- make_mfrm_boundary_safe_objective(evaluator)
   fn <- function(par, ...) safe_objective$value(par)
   gr <- function(par, ...) safe_objective$gradient(par)
@@ -590,8 +601,8 @@ run_mfrm_direct_optimization <- function(start,
                         coordinate_scale = NULL) {
     input_par <- par
     proposal_counts <- c("function" = 0L, "gradient" = 0L)
-    # The finite penalty applies only to proposals from a valid starting point.
-    cache$ensure(par)
+    # The finite penalty applies only to proposals from an evaluable starting point.
+    evaluator$value(par)
     started <- proc.time()[["elapsed"]]
     stage_control <- build_mfrm_optim_control(
       stage_method,
@@ -884,6 +895,8 @@ run_mfrm_direct_optimization <- function(start,
     safe_objective$rejections()
   opt$evaluation_cache$PopulationVarianceNumericBoundaryRejections <-
     safe_objective$population_variance_rejections()
+  opt$evaluation_cache$AdaptiveQuadratureNumericRejections <-
+    safe_objective$adaptive_quadrature_rejections()
 
   if (!identical(opt$optimizer_diagnostics$ConvergenceSeverity, "pass") &&
       !isTRUE(suppress_convergence_warning)) {

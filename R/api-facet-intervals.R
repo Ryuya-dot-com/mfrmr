@@ -125,6 +125,7 @@
 mfrm_facet_intervals <- function(fit, facet, contrasts = NULL,
                                  method = c("model", "sandwich"),
                                  clusters = NULL, adjust = FALSE, level = .95) {
+  stop_if_product_slopes(fit, "mfrm_facet_intervals()")
   method <- match.arg(method)
   if (!inherits(fit, "mfrm_fit") || !identical(fit$config$method, "MML") ||
       !fit$config$model %in% c("RSM", "PCM") ||

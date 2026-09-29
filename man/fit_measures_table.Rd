@@ -103,6 +103,22 @@ Build a FACETS-style fit-measures review table
 This helper gives users a direct table route for the common FACETS-style
 question: which raters, criteria, or other facet elements show underfit or
 overfit? It uses the fit statistics already computed by \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+\code{Fixed} identifies values supplied by anchors or identification constraints.
+Their sampling SEs and intervals are not applicable; response-fit statistics
+remain available. Recompute older diagnostics to obtain these labels.
+The table also retains \code{SE_Method}, \code{PrecisionTier}, \code{SEUse}, \code{CIBasis},
+\code{CIUse}, \code{CIEligible}, \code{CILabel}, \code{CI_Method} and \code{SupportsFormalInference}
+from the diagnostics. For JML, normal bands remain exploratory screening
+summaries, not qualified confidence intervals for the true parameter.
+Changing \code{ci_level} changes their width, not their inferential status.
+Older inputs without this metadata are labelled as having an unrecorded
+basis; finite SEs alone do not establish formal inference.
+
+\code{plot(x, type = "measure_ci")} retains these explanations in its caption
+and saved data. Fixed values use open diamonds without intervals; other
+finite estimates without intervals use crosses. Use \code{main = ""} to omit
+the title or \code{show_notes = FALSE} to hide the caption while retaining its
+text in the saved plot data.
 
 Directional labels use the selected \code{flag_basis}. By default, high mean
 squares are labeled \code{underfit} and low mean squares \code{overfit}; conflicting

@@ -439,6 +439,7 @@ validate_shrinkage_output <- function(fit) {
 apply_empirical_bayes_shrinkage <- function(fit,
                                             facet_prior_sd = NULL,
                                             shrink_person = FALSE) {
+  stop_if_product_slopes(fit, "apply_empirical_bayes_shrinkage()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit from fit_mfrm().", call. = FALSE)
   }

@@ -834,6 +834,7 @@ extract_mfrm_sim_spec <- function(fit,
                                   source_data = NULL,
                                   person = NULL,
                                   group = NULL) {
+  stop_if_product_slopes(fit, "extract_mfrm_sim_spec()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be output from fit_mfrm().", call. = FALSE)
   }

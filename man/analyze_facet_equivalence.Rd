@@ -20,7 +20,8 @@ with unregularized observed-information covariance and estimable contrasts.}
 \item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Supplied
 diagnostics must retain all target-facet levels, model-based SEs and
 ordinary-inference eligibility. Estimates and covariance are always taken
-from \code{fit}; supplying diagnostics cannot override its restrictions.}
+from \code{fit}; supplying diagnostics cannot override its restrictions.
+Fixed levels instead require their fixed-value labels and absent sampling SEs.}
 
 \item{facet}{Character scalar naming a non-person facet. When \code{NULL}, a
 rater-like facet is preferred, otherwise the first model facet is used.}
@@ -117,7 +118,12 @@ or a material difference. \code{chi_square} addresses exact equality, while
 \item \code{chi_square}: joint Wald heterogeneity test and descriptive separation.
 \item \code{rope} / \code{forest}: \code{Measure}, marginal \code{SE} and \code{CI_Lower}/\code{CI_Upper}, plus
 \code{Deviation}, \code{DeviationSE} and \code{DeviationCI_Lower}/\code{DeviationCI_Upper} for
-proximity to the equally weighted facet mean.
+the difference from the estimated facet mean. \code{Fixed} marks an anchored
+or constraint-fixed location: its conditional marginal \code{SE} is zero and
+its marginal interval is absent. Its deviation from an estimated mean,
+or contrast with an estimated level, can still have nonzero uncertainty.
+The forest plot displays these deviations, not the anchored locations.
+No uncertainty in supplied anchor values is propagated.
 }
 }
 

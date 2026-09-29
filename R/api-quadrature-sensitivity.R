@@ -109,6 +109,12 @@ mfrmr_gqs_validate <- function(fit, data, quad_points,
 
 mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
   replay <- fit$config$replay_inputs
+  if (mfrm_has_product_slopes(fit)) {
+    replay$package_version <- NULL
+    replay$data <- data
+    replay$quad_points <- as.integer(nodes)
+    return(replay)
+  }
   config <- fit$config %||% list()
   control <- config$estimation_control %||% list()
 
@@ -229,7 +235,6 @@ mfrmr_gqs_same_prepared_data <- function(reference, candidate) {
 mfrmr_gqs_design_probabilities <- function(fit, theta_range, theta_points) {
   theta <- seq(theta_range[1L], theta_range[2L], length.out = theta_points)
   model <- toupper(as.character(fit$config$model %||% "")[1L])
-  structure <- information_build_step_structure(fit, model)
   prepared <- as.data.frame(fit$prep$data, stringsAsFactors = FALSE)
   facet_names <- as.character(fit$config$facet_names %||% character())
   mfrmr_gqs_assert(
@@ -245,6 +250,17 @@ mfrmr_gqs_design_probabilities <- function(fit, theta_range, theta_points) {
   )
   cells <- cells[ordering, , drop = FALSE]
   rownames(cells) <- NULL
+
+  if (mfrm_has_product_slopes(fit)) {
+    grid <- cells[rep(seq_len(nrow(cells)), each = length(theta)), , drop = FALSE]
+    grid$Theta <- rep(theta, nrow(cells))
+    response <- mfrm_gpcm_response_evaluator(fit$prep, fit$config, grid)
+    probabilities <- response$evaluate(fit$opt$par)$probabilities
+    return(list(cells = cells, theta = theta,
+      categories = seq_len(fit$config$n_cat) - 1L,
+      values = as.numeric(t(probabilities))))
+  }
+  structure <- information_build_step_structure(fit, model)
 
   facets <- as.data.frame(fit$facets$others %||% data.frame(),
                           stringsAsFactors = FALSE)
@@ -376,6 +392,18 @@ mfrmr_gqs_probability_difference <- function(reference, candidate) {
   max(abs(reference$values - candidate$values))
 }
 
+mfrmr_gqs_slope_keys <- function(fit) {
+  slopes <- fit$slopes
+  if (!mfrm_has_product_slopes(fit)) return(as.character(slopes$SlopeFacet))
+  metadata <- mfrm_gpcm_product_metadata(fit$config$gpcm_spec)
+  index <- mfrm_match_slope_table(metadata$Owner, metadata$Level, slopes)
+  mfrmr_gqs_assert(length(index) == nrow(slopes) && !anyNA(index),
+    "Slope owners and levels must match the fitted component specification.")
+  keys <- character(nrow(slopes))
+  keys[index] <- as.character(seq_along(index))
+  keys
+}
+
 mfrmr_gqs_measurement_parameters <- function(fit) {
   facets <- as.data.frame(fit$facets$others %||% data.frame(),
                           stringsAsFactors = FALSE)
@@ -412,7 +440,9 @@ mfrmr_gqs_measurement_parameters <- function(fit) {
   }
   if (nrow(slopes) > 0L) {
     value <- as.numeric(slopes$OptimizerEstimate %||% slopes$Estimate)
-    names(value) <- paste("slope", slopes$SlopeFacet, sep = "::")
+    # Owner and level identities remain explicit in the output slope table.
+    # Numbered coordinates avoid collisions when both families use the same IDs.
+    names(value) <- paste("slope", mfrmr_gqs_slope_keys(fit), sep = "::")
     out <- c(out, value)
   }
   mfrmr_gqs_assert(
@@ -423,7 +453,7 @@ mfrmr_gqs_measurement_parameters <- function(fit) {
 }
 
 mfrmr_gqs_person_scores <- function(fit, data, nodes) {
-  if (nodes < 2L) {
+  if (nodes < 2L || mfrm_has_product_slopes(fit)) {
     return(data.frame(
       Person = character(), EAP = numeric(), PosteriorSD = numeric(),
       stringsAsFactors = FALSE
@@ -486,7 +516,14 @@ mfrmr_gqs_raw_information <- function(fit) {
   )
   slope_se <- rep(NA_real_, length(slope_values))
   slope_slice <- covariance$param_slices$log_slopes %||% integer()
-  if (covariance$status %in% c("ok", "regularized") &&
+  product <- mfrm_has_product_slopes(fit)
+  intervals <- if (product) stats::confint(fit) else NULL
+  if (product && identical(covariance$status, "ok") && is.matrix(covariance$cov)) {
+    target <- mfrm_gpcm_product_slope_targets(fit$opt$par, fit$config)$components
+    index <- mfrm_match_slope_table(target$metadata$Owner, target$metadata$Level, slopes)
+    log_covariance <- target$jacobian %*% covariance$cov %*% t(target$jacobian)
+    slope_se[index] <- target$estimate * sqrt(pmax(diag(log_covariance), 0))
+  } else if (!product && covariance$status %in% c("ok", "regularized") &&
       is.matrix(covariance$cov) && length(slope_values) > 0L &&
       length(slope_slice) == length(slope_values) - 1L) {
     jacobian <- sum_zero_jacobian(length(slope_values))
@@ -511,7 +548,8 @@ mfrmr_gqs_raw_information <- function(fit) {
   }
 
   list(
-    slope_intervals = if (identical(fit$config$model, "GPCM"))
+    intervals = intervals,
+    slope_intervals = if (product) attr(intervals, "diagnostics") else if (identical(fit$config$model, "GPCM"))
       compute_mml_structural_parameter_se(fit, covariance = covariance)$slopes else NULL,
     covariance_status = as.character(covariance$status),
     covariance_detail = covariance$detail,
@@ -553,9 +591,11 @@ mfrmr_gqs_extract_run <- function(fit, data, nodes,
   } else {
     character()
   }
+  product <- mfrm_has_product_slopes(fit)
+  slope_keys <- mfrmr_gqs_slope_keys(fit)
   mfrmr_gqs_assert(
     length(slope_labels) == length(information$slope_values) &&
-      !anyDuplicated(slope_labels),
+      !anyDuplicated(slope_keys),
     "Slope labels were not aligned with the observed-information coordinates."
   )
 
@@ -580,9 +620,16 @@ mfrmr_gqs_extract_run <- function(fit, data, nodes,
     )
   }
 
+  if (product) {
+    slope_table$SlopeOwner <- slopes$SlopeOwner
+    slope_table$ScaleReference <- slopes$ScaleReference
+  }
+
   ci <- information$slope_intervals
   if (!is.null(ci) && nrow(ci)) {
-    aligned <- match(slope_labels, ci$SlopeFacet)
+    if (product) ci$SlopeFacet <- ci$SlopeLevel
+    aligned <- if (product) mfrm_match_slope_table(slopes$SlopeOwner, slope_labels,
+      ci) else match(slope_labels, ci$SlopeFacet)
     slope_table$PublicSEEligible <- ci$SEEligible[aligned]
     slope_table$CIEligible <- ci$CIEligible[aligned]
     slope_table$CI_Lower <- ci$CI_Lower[aligned]
@@ -622,12 +669,13 @@ mfrmr_gqs_extract_run <- function(fit, data, nodes,
       stringsAsFactors = FALSE
     ),
     slopes = slope_table,
+    intervals = information$intervals,
     measurement_parameters = mfrmr_gqs_measurement_parameters(fit),
     slope_parameters = stats::setNames(
       information$slope_values,
-      slope_labels
+      slope_keys
     ),
-    slope_se = stats::setNames(information$slope_se, slope_labels),
+    slope_se = stats::setNames(information$slope_se, slope_keys),
     population_sd = information$population_sd,
     population_sd_se = information$population_sd_se,
     probabilities = mfrmr_gqs_design_probabilities(
@@ -689,13 +737,14 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'   grid with mode/curvature-adapted grids. This separates integration error
 #'   from parameter changes during refitting. Inspect changes between adaptive
 #'   orders too; neither grid is certified exact.
+#'   This optional fixed/adaptive review is unavailable for two slope families.
 #'
 #' @details
 #' This is an explicit refit diagnostic: neither [summary.mfrm_fit()] nor
 #' [diagnose_mfrm()] invokes it automatically. It reports continuous changes
 #' rather than classifying a fit as quadrature-stable or unstable. In
-#' particular, it does not set a practical cutoff, promote slope standard
-#' errors, or override the fit-readiness record.
+#' particular, it does not select a cutoff for acceptable changes, make
+#' unavailable standard errors valid, or resolve other warnings about the fit.
 #'
 #' The probability comparison evaluates every observed combination of
 #' non-Person facet levels on the same theta grid. It includes fitted two-way
@@ -712,6 +761,32 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' observed-information Hessian for diagnostic comparison only. The public
 #' parameter-level `SEEligible` state remains unchanged.
 #'
+#' @section Two slope families:
+#' For a two-family GPCM, fixed-grid refits preserve the ordered slope owners,
+#' fixed N(0,1) population, score ladder, `em_score_tol` and EM iteration limit.
+#' Each refit starts from the usual neutral initialization, not the reference
+#' estimate. Component slopes retain `SlopeOwner` and `ScaleReference`: the
+#' first family has geometric mean one; the second is free on the fixed ability
+#' scale. Category-probability comparisons use the product of both slopes.
+#'
+#' `intervals` contains the separately checked experimental `confint()` result
+#' for each grid, including failed checks, cautions and missing bounds. For
+#' example, after comparing `quad_points = c(31, 61)`, use
+#' `plot(out$intervals$q61)` and
+#' `apa_table(out$intervals$q61, which = "numerical_checks")`. These checks also
+#' evaluate q versus 2q-1 at that fit's saved parameters without another refit.
+#' Passing these checks does not establish sampling coverage or resolve
+#' other warnings about the fitted model.
+#' Person-score comparisons remain unavailable for two families: EAP and
+#' posterior-SD changes are `NA`, not zero. Adaptive review is refused.
+#'
+#' More quadrature points improve the numerical approximation, not the amount
+#' of observed information. In a sparse design, a small group of candidates
+#' rated many times may need a finer grid than candidates with few ratings.
+#' Inspect interval availability and measured changes; no fixed point count
+#' is guaranteed to be adequate for every design. See the GPCM scope vignette
+#' for a same-data example and its sampling limitations.
+#'
 #' @return An object of class `mfrm_quadrature_sensitivity` containing:
 #' - `summary`: one comparison row per quadrature grid relative to the original
 #'   fit, including likelihood, measurement-coordinate, probability, EAP, and
@@ -722,10 +797,13 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'   `summary()` also supplies a compact `quadrature_overview`;
 #' - `runs`: likelihood, gradient, curvature, population-scale, and readiness
 #'   details for each fit;
-#' - `slopes`: relative-slope estimates, raw diagnostic SEs and freshly checked
+#' - `slopes`: component-slope estimates, raw diagnostic SEs and freshly checked
 #'   95% model intervals. The summary reports endpoint changes among jointly
-#'   eligible levels and counts changes in interval availability;
-#' - `conditions`: warnings and messages emitted by the explicit refits;
+#'   eligible levels and counts changes in interval availability. One-family
+#'   slopes have geometric mean one; two-family scale references differ;
+#' - `intervals`: for two families, saved `mfrm_slope_intervals` objects named
+#'   by quadrature count, with their numerical checks and cautions;
+#' - `conditions`: warnings and messages from refitting and result extraction;
 #' - `fits`: the reference and refitted `mfrm_fit` objects;
 #' - `settings` and `notes`: the fixed comparison contract and interpretation
 #'   boundary.
@@ -768,6 +846,10 @@ mfrmr_gqs_run <- function(
     fit, data, quad_points, theta_range, theta_points, allowed_models,
     adaptive_quad_points = NULL) {
   adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
+  product <- mfrm_has_product_slopes(fit)
+  if (product && !is.null(adaptive_quad_points)) {
+    stop("Adaptive quadrature review is not available for two slope families; compare fixed grids with quad_points.", call. = FALSE)
+  }
   contract <- mfrmr_gqs_validate(
     fit, data, quad_points, theta_range, theta_points, allowed_models
   )
@@ -803,13 +885,16 @@ mfrmr_gqs_run <- function(
         "The refit did not preserve the fitted population design by Person.")
       fits[[name]] <- candidate
     }
-    extracted[[name]] <- mfrmr_gqs_extract_run(
+    details <- mfrmr_gqs_capture_conditions(mfrmr_gqs_extract_run(
       candidate,
       data,
       nodes,
       contract$theta_range,
       contract$theta_points
-    )
+    ))
+    extracted[[name]] <- details$value
+    capture$warnings <- unique(c(capture$warnings, details$warnings))
+    capture$messages <- unique(c(capture$messages, details$messages))
     condition_rows[[name]] <- mfrmr_gqs_condition_rows(nodes, capture)
   }
 
@@ -840,6 +925,9 @@ mfrmr_gqs_run <- function(
     }
     reference_run <- reference$run
     candidate_run <- candidate$run
+    interval_index <- if (product) mfrm_match_slope_table(reference$slopes$SlopeOwner,
+      reference$slopes$SlopeFacet, candidate$slopes) else
+      match(reference$slopes$SlopeFacet, candidate$slopes$SlopeFacet)
     nll_change_per_person <- candidate_run$NLLPerPerson -
       reference_run$NLLPerPerson
     data.frame(
@@ -859,7 +947,7 @@ mfrmr_gqs_run <- function(
       SlopeIntervalMaxAbsChange = {
         old <- reference$slopes; new <- candidate$slopes
         if (!"CIEligible" %in% names(old)) NA_real_ else {
-          new <- new[match(old$SlopeFacet, new$SlopeFacet), , drop = FALSE]
+          new <- new[interval_index, , drop = FALSE]
           usable <- old$CIEligible & new$CIEligible
           if (any(usable)) max(abs(c(old$CI_Lower[usable] - new$CI_Lower[usable],
             old$CI_Upper[usable] - new$CI_Upper[usable]))) else NA_real_
@@ -868,7 +956,7 @@ mfrmr_gqs_run <- function(
       SlopeIntervalEligibilityChanged = {
         old <- reference$slopes; new <- candidate$slopes
         if (!"CIEligible" %in% names(old)) NA_integer_ else
-          sum(old$CIEligible != new$CIEligible[match(old$SlopeFacet, new$SlopeFacet)])
+          sum(old$CIEligible != new$CIEligible[interval_index])
       },
       PopulationSDAbsChange = abs(
         candidate$population_sd - reference$population_sd
@@ -936,6 +1024,14 @@ mfrmr_gqs_run <- function(
       )
     )
   )
+  if (product) {
+    out$intervals <- lapply(extracted, `[[`, "intervals")
+    out$settings$person_score_comparison <- "unavailable_two_family"
+    out$notes <- c(out$notes,
+      "Two-family Person-score comparisons are unavailable; EAP and posterior-SD changes are NA.",
+      paste("Component intervals are experimental and keep separate family scale references.",
+        "Inspect $intervals for numerical checks, cautions and unavailable bounds; coverage is not established."))
+  }
   if (!is.null(adaptive_quad_points)) {
     out$quadrature_review <- do.call(rbind, lapply(fits, function(candidate) {
       config <- candidate$config
@@ -1025,6 +1121,7 @@ summary.mfrm_quadrature_sensitivity <- function(object, ...) {
     conditions = as.data.frame(object$conditions, stringsAsFactors = FALSE),
     notes = object$notes
   )
+  if (!is.null(object$intervals)) out$intervals <- object$intervals
   if (!is.null(object$quadrature_review)) {
     out$quadrature_review <- object$quadrature_review
     out$quadrature_overview <- mfrmr_adaptive_quadrature_overview(object$quadrature_review)
@@ -1049,6 +1146,7 @@ print.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
   cat(
     "No automatic stability classification or readiness change is applied.\n"
   )
+  if (!is.null(x$intervals)) cat("Person-score comparisons are unavailable for two families; inspect $intervals for experimental interval checks.\n")
   invisible(x)
 }
 
@@ -1073,5 +1171,6 @@ print.summary.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
     cat("Inspect $quadrature_review for adaptive-order changes and unavailable rows.\n")
   }
   cat("No automatic stability classification or readiness change is applied.\n")
+  if (!is.null(x$intervals)) cat("Person-score comparisons are unavailable for two families; inspect $intervals for experimental interval checks.\n")
   invisible(x)
 }

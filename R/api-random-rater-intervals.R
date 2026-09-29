@@ -48,7 +48,7 @@
 #'   coverage guarantee. Linear mixed-model bootstrap theory motivates the
 #'   construction but does not establish its accuracy for this crossed ordinal
 #'   RSM, few raters, variance boundaries or Laplace approximation. Basic error
-#'   intervals and studentized intervals need separate empirical qualification.
+#'   intervals and studentized intervals need separate studies of their coverage.
 #'   The fit's normal-population and assignment assumptions remain essential.
 #'   Omitted scores stay omitted; this conditions on analyzed rows and does not
 #'   simulate a missingness mechanism or impute assigned scores. Rater contrasts,

@@ -57,6 +57,10 @@ within each Person/testlet block and conditioning on fitted calibration.
 \details{
 All supplied rows for a Person are scored jointly. This does not
 append to cached responses or condition on a stored local-effect mode.
+The saved settings retain this integration, effect-sharing and roster
+interpretation. \code{\link[=mfrm_results]{mfrm_results()}} retains the complete \code{scoring_data} as
+its \code{scoring_roster} table, including explicitly omitted scores, alongside
+observed block counts. Column names and row order are preserved.
 To add ratings for an existing Person, supply that Person's complete set
 of ratings once, with memberships that correctly identify effects shared
 within that set. Scores from separate calls are not automatically linked

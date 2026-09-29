@@ -303,7 +303,7 @@ test_that("mutations fail closed with stable refusal codes", {
   draft <- fixed_calibration_draft_fixture("RSM")$draft
 
   newer <- draft
-  newer$header$schema_version <- 2L
+  newer$header$schema_version <- 6L
   review <- mfrmr:::mfrmr_review_calibration(newer)
   expect_true("SCHEMA_VERSION_UNSUPPORTED" %in% review$Code)
 
@@ -370,7 +370,7 @@ test_that("load rejects corrupt, partial, altered, and newer artifacts", {
   expect_identical(err$code, "IDENTITY_COMPONENT_MISMATCH")
 
   newer <- draft
-  newer$header$schema_version <- 2L
+  newer$header$schema_version <- 6L
   saveRDS(newer, paths[4], version = 3)
   err <- capture_calibration_error(mfrmr:::mfrmr_load_calibration(paths[4]))
   expect_identical(err$code, "SCHEMA_VERSION_UNSUPPORTED")
@@ -400,10 +400,10 @@ test_that("source readiness and optional lanes do not inherit core eligibility",
   err <- capture_calibration_error(
     mfrmr:::mfrmr_extract_calibration_draft(jml)
   )
-  expect_identical(err$code, "MODEL_ESTIMATOR_UNSUPPORTED")
+  expect_identical(err$code, "SOURCE_READINESS_INELIGIBLE")
 
   gpcm <- fit
-  gpcm$config$model <- "GPCM"
+  gpcm$config$model <- "unsupported"
   err <- capture_calibration_error(
     mfrmr:::mfrmr_extract_calibration_draft(gpcm)
   )

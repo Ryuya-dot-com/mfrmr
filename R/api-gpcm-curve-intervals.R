@@ -4,10 +4,13 @@
 #' full calibration covariance to category probabilities or per-rating Fisher
 #' information. This is uncertainty in a fitted curve, not a Person score interval.
 #'
-#' @param fit An eligible native GPCM MML fit.
+#' @param fit A native GPCM MML fit. Two-family fits supply provisional point
+#'   curves only; intervals and covariance adjustments are unavailable.
 #' @param newdata Data frame with each fitted non-Person facet and a numeric
 #'   `Theta` column. Each row is one rating context at one known ability value.
 #'   Use original facet labels. Unknown levels and missing inputs are refused.
+#'   Previously unobserved combinations of known levels are allowed and labelled
+#'   in the returned `contexts` table.
 #' @param type `"probability"` (one row per category) or `"information"`
 #'   (one row per supplied context/ability). Information is per rating, not a
 #'   sum over all observed exposures as in [compute_information()].
@@ -18,7 +21,8 @@
 #'   types distinguish series in addition to color. The default is colorblind friendly.
 #' @param draw Draw the ggplot immediately? Default TRUE; FALSE returns it only.
 #' @param caption Optional plot caption. If omitted, unavailable intervals are
-#'   counted and explained. NULL removes the caption without removing markers
+#'   counted and explained, along with unobserved combinations of fitted levels.
+#'   NULL removes the caption without removing markers
 #'   or the reasons in the saved table.
 #' @param ... Unused.
 #'
@@ -53,8 +57,21 @@
 #'   stop at unavailable grid points; a missing ribbon does not mean zero
 #'   uncertainty. Consult the table's `InferenceReview` for each reason.
 #'
+#' @section Two slope families:
+#' For a two-family fit, the two component slopes are multiplied in each
+#' specified context. The shared evaluator returns provisional fitted values,
+#' including after numerical nonconvergence; it does not certify their
+#' reliability. `SE`, `Lower` and `Upper` remain missing and `CIEligible` is
+#' false. Printing and default plot text identify this scope without claiming
+#' nominal intervals. Sandwich and simultaneous adjustments are not available.
+#' The existing plot, saved-data, report and export routes preserve these values
+#' and missing intervals. A slope value of one is not a rater-quality threshold.
+#'
 #' @return A `mfrm_curve_intervals` list with `table`, `settings`, and the exact
-#'   `newdata`. Its plot method returns a ggplot with the plotted data available
+#'   `newdata`, plus `contexts` identifying each `InputRow` as an observed or
+#'   unobserved combination of fitted facet levels (`ObservedContext`). This
+#'   records the retained rating design, not statistical identification or
+#'   interval reliability. Its plot method returns a ggplot with the plotted data available
 #'   in `plot$data`; titles can be omitted and the plot can be customized.
 #' @seealso [confint.mfrm_fit()], [category_curves_report()], [compute_information()]
 #' @details A numerically verified but ill-conditioned information inverse can
@@ -72,39 +89,22 @@
 mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "information"),
     method = c("model", "sandwich"), clusters = NULL, adjust = FALSE,
     level = .95, simultaneous = c("none", "bonferroni")) {
+  stop_if_jml_adjustment(fit, "mfrm_curve_intervals")
   type <- match.arg(type); method <- match.arg(method); simultaneous <- match.arg(simultaneous)
   mfrm_random_rater_interval_level(level)
+  point_only <- mfrm_has_product_slopes(fit)
+  if (point_only && simultaneous != "none") {
+    stop("Two-family curve intervals are unavailable; simultaneous adjustment is not supported.", call. = FALSE)
+  }
   inference <- mfrm_gpcm_inference(fit, method, clusters, adjust)
   if (!is.null(inference$check$caution)) warning(inference$check$caution, call. = FALSE)
   facets <- fit$config$facet_names
-  required <- c("Theta", facets)
-  if ("Theta" %in% facets || !is.data.frame(newdata) || !nrow(newdata) ||
-      anyDuplicated(names(newdata)) || !all(required %in% names(newdata)) ||
-      !is.numeric(newdata$Theta) || is.complex(newdata$Theta) || any(!is.finite(newdata$Theta))) {
-    stop("`newdata` needs finite numeric Theta and every non-Person facet column; Theta is reserved for ability.", call. = FALSE)
-  }
-  newdata <- as.data.frame(newdata[required])
-  prep <- fit$prep
-  prep$data <- data.frame(Person = factor(rep(fit$prep$levels$Person[1], nrow(newdata)),
-    levels = fit$prep$levels$Person), score_k = 0L, Weight = 1)
-  for (facet in facets) {
-    values <- as.character(newdata[[facet]])
-    if (anyNA(values) || any(!values %in% fit$prep$levels[[facet]])) {
-      stop("Unknown or missing level in facet ", facet, ".", call. = FALSE)
-    }
-    prep$data[[facet]] <- factor(values, levels = fit$prep$levels[[facet]])
-  }
-  config <- fit$config; sizes <- build_param_sizes(config)
-  idx <- build_indices(prep, config$step_facet, config$slope_facet, config$interaction_specs)
+  response <- mfrm_gpcm_response_evaluator(fit$prep, fit$config, newdata)
+  newdata <- response$newdata
   evaluate <- function(par) {
-    params <- expand_params(par, sizes, config)
-    cum <- t(apply(params$steps_mat, 1L, function(x) c(0, cumsum(x))))
-    p <- category_prob_gpcm(newdata$Theta + compute_base_eta(idx, params, config),
-      cum, idx$step_idx, params$slopes, idx$slope_idx)
-    if (type == "probability") return(as.vector(t(p)))
-    k <- seq_len(ncol(p))-1L
-    variance <- drop(p %*% k^2) - drop(p %*% k)^2
-    pmax(0, variance) * params$slopes[idx$slope_idx]^2
+    value <- response$evaluate(par)
+    if (type == "probability") return(as.vector(t(value$probabilities)))
+    value$information
   }
   estimate <- evaluate(fit$opt$par)
   n <- length(estimate)
@@ -141,22 +141,32 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
   tab$Estimate <- estimate; tab$SE <- se; tab$Lower <- low; tab$Upper <- high
   tab$CIEligible <- usable; tab$InferenceReview <- reason
   rownames(tab) <- NULL
-  structure(list(table = tab, newdata = newdata, cautions = inference$check$caution,
+  structure(list(table = tab, newdata = newdata, contexts = response$contexts,
+    cautions = inference$check$caution,
     source = mfrm_gpcm_inference_source(fit),
     settings = list(type = type, method = method, clusters = inference$clusters,
       adjust = adjust, level = level, simultaneous = simultaneous, facets = facets,
-      target = "Calibration uncertainty at fixed native-scale ability and rating context")),
+      point_only = point_only,
+      target = if (point_only) "Provisional fitted curves at fixed ability and rating context; intervals unavailable" else
+        "Calibration uncertainty at fixed native-scale ability and rating context")),
     class = "mfrm_curve_intervals")
 }
 
 #' @rdname mfrm_curve_intervals
 #' @export
 print.mfrm_curve_intervals <- function(x, ...) {
-  cat("GPCM", x$settings$type, "curve intervals:", x$settings$method, "covariance\n")
+  if (isTRUE(x$settings$point_only)) {
+    cat("Two-family GPCM", x$settings$type, "curves: provisional fitted values; intervals unavailable\n")
+  } else cat("GPCM", x$settings$type, "curve intervals:", x$settings$method, "covariance\n")
   print(x$table[setdiff(names(x$table), "InferenceReview")], row.names = FALSE)
-  cat("Available:", sum(x$table$CIEligible), "of", nrow(x$table),
-    "; fixed ability values, calibration uncertainty only.\n")
-  cat("Approximate intervals; numerical availability does not establish nominal coverage.\n")
+  cat("Available intervals:", sum(x$table$CIEligible), "of", nrow(x$table),
+    if (isTRUE(x$settings$point_only)) "; fitted values at fixed ability values only.\n" else
+      "; fixed ability values, calibration uncertainty only.\n")
+  if (!is.null(x$contexts) && any(!x$contexts$ObservedContext)) {
+    cat("Unobserved combinations of fitted levels:", sum(!x$contexts$ObservedContext),
+      "of", nrow(x$contexts), "input rows; see contexts.\n")
+  }
+  if (!isTRUE(x$settings$point_only)) cat("Approximate intervals; numerical availability does not establish nominal coverage.\n")
   for (reason in unique(x$table$InferenceReview[!x$table$CIEligible])) {
     cat("  ", reason, "\n", sep = "")
   }
@@ -172,13 +182,22 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       if (x$settings$simultaneous == "none") "pointwise" else "Bonferroni grid points", sep = " | "),
     palette = NULL, draw = TRUE, caption = NULL, ...) {
   rlang::check_dots_empty()
+  if (isTRUE(x$settings$point_only)) {
+    if (missing(title)) title <- "Two-family GPCM fitted curves"
+    if (missing(subtitle)) subtitle <- "Provisional fitted values; calibration intervals are unavailable"
+  }
   if (missing(subtitle) && length(x$cautions)) subtitle <- paste(subtitle,
     paste(x$cautions, collapse = " "), sep = "\n")
   if (!requireNamespace("ggplot2", quietly = TRUE)) stop("Install ggplot2 to plot curve intervals.", call. = FALSE)
   tab <- x$table
-  if (missing(caption) && any(!tab$CIEligible)) caption <- paste(
+  automatic_caption <- missing(caption)
+  if (automatic_caption && any(!tab$CIEligible)) caption <- paste(
     "Intervals unavailable at", sum(!tab$CIEligible), "of", nrow(tab),
     "points. Crosses mark retained estimates; see the result table for reasons.")
+  if (automatic_caption && !is.null(x$contexts) && any(!x$contexts$ObservedContext)) {
+    caption <- paste(c(caption, paste(sum(!x$contexts$ObservedContext),
+      "input rows combine fitted levels not observed together; see contexts.")), collapse = " ")
+  }
   if (!is.null(subtitle)) subtitle <- paste(strwrap(subtitle, width = 75), collapse = "\n")
   if (!is.null(caption)) caption <- paste(strwrap(caption, width = 85), collapse = "\n")
   tab$Context <- apply(tab[x$settings$facets], 1L, function(z)
@@ -205,7 +224,9 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       color = if (x$settings$type == "probability") "Category" else "Series",
       fill = if (x$settings$type == "probability") "Category" else "Series",
       linetype = if (x$settings$type == "probability") "Category" else "Series",
-      alt = paste("GPCM", x$settings$type, "curves with", 100*x$settings$level,
+      alt = if (isTRUE(x$settings$point_only)) paste("Two-family GPCM", x$settings$type,
+        "provisional fitted curves. Intervals are unavailable; crosses mark the retained estimates.") else
+        paste("GPCM", x$settings$type, "curves with", 100*x$settings$level,
         "percent", if (x$settings$simultaneous == "none") "pointwise" else "Bonferroni-adjusted",
         "intervals;", sum(!tab$CIEligible), "unavailable grid-point intervals.",
         "Crosses mark estimates without intervals; ribbons do not bridge unavailable points.")) +

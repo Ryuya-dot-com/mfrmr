@@ -62,7 +62,15 @@ An object of class \code{mfrm_diagnostics} including:
 \item \code{obs}: observed/expected/residual-level table
 \item \code{measures}: facet/person fit table (\code{Infit}, \code{Outfit}, \code{ZSTD},
 \code{PTMEA}, \code{ModelSE}, \code{RealSE}, \code{CI_Lower}, \code{CI_Upper}, \code{CI_Level},
-\code{CI_Method})
+\code{CI_Method}). \code{Fixed = TRUE} identifies location values fixed by anchors
+or identification constraints. Their sampling SEs and normal intervals
+are \code{NA} (not estimated, not a numerical failure). Free levels retain
+their estimator-specific SEs. Aggregate reliability/separation and facet
+variability tests are unavailable for facets containing fixed values;
+response-fit diagnostics remain available. This convention differs from
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, which represents a fixed target's conditional
+covariance as zero, also without an interval. Neither route propagates
+uncertainty in supplied anchor values.
 \item \code{overall_fit}: overall fit summary
 \item \code{fit}: element-level fit diagnostics
 \item \code{reliability}: facet-level model/real separation and reliability

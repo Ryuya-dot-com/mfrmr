@@ -19,7 +19,8 @@ predict_mfrm_units(
   readiness_policy = c("error", "review"),
   n_draws = 0,
   seed = NULL,
-  adaptive_quad_points = NULL
+  adaptive_quad_points = NULL,
+  scoring_prior = NULL
 )
 }
 \arguments{
@@ -76,10 +77,12 @@ The fixed or adaptive integration mode is inherited from \code{fit}.}
 handled. \code{"error"} (default) refuses scoring. \code{"review"} permits an
 explicitly review-only fitted-object calculation and labels the returned
 estimates and settings accordingly; it does not make the source fit ready.
-Estimated-population fits currently require \code{"review"} because their
-identification, boundary and numerical-accuracy acceptance rule is incomplete.
-Earlier population-model predictions labelled scoring-ready must be
-regenerated with explicit review before summary or export.}
+GPCM MML and intercept-only normal population models may pass the
+conditional-scoring checks described below even when their global inference
+audit remains incomplete. Population models with background covariates
+still require explicit review. Invalid calibration parameters or inconsistent
+stored prior parameters are refused under either policy. Older population
+results without the new check records retain their review-only restriction.}
 
 \item{n_draws}{Optional number of quadrature-grid posterior draws to return
 per scored person. Use 0 to skip draws.}
@@ -91,7 +94,19 @@ orders >= 3, for example \code{c(31, 61)}. Adds \code{quadrature_review}, compar
 a fixed-prior grid with grids centered and scaled to each Person's
 posterior. Calibration parameters and the prior are held fixed. Inspect
 both fixed/adaptive differences and movement between adaptive orders;
-this diagnostic does not replace estimates, intervals, draws, or readiness.}
+this diagnostic does not replace estimates, intervals or draws. The
+conditional-scoring route automatically adds reference orders and uses
+them to check numerical score accuracy; see below.}
+
+\item{scoring_prior}{Optional \code{list(mean = ..., sd = ...)} specifying one
+normal scoring prior shared by all scored persons, on the unchanged
+calibration ability scale. \code{sd} is a standard deviation, not a variance.
+\code{NULL} (default) retains the MML scoring prior; JML uses a post-hoc
+standard-normal reference prior. Both values must be
+finite; SD and its representable variance must be positive. Overrides of
+population models with background covariates are not supported. A supplied
+prior does not refit the calibration, estimate a new population, or bypass
+source checks. Numerical scoring checks run under the supplied prior.}
 }
 \value{
 An object of class \code{mfrm_unit_prediction} with components:
@@ -120,7 +135,8 @@ available, the fitted one-dimensional population model to score new or
 partially observed persons via Expected A Posteriori (EAP) summaries on a
 quadrature grid.
 
-When the original fit uses ordinary \code{method = "MML"}, the posterior
+With the default \code{scoring_prior = NULL}, when the original fit uses ordinary
+\code{method = "MML"}, the posterior
 summaries use that fitted MML calibration and a standard normal scoring
 prior, unless a population model was fitted. When the original fit
 uses the latent-regression MML branch, the scoring prior is the fitted
@@ -161,11 +177,106 @@ posterior uncertainty summaries, not as deterministic future truth values.
 
 For \code{JML} fits, this scoring stage is intentionally post hoc: \code{mfrmr} uses
 the fitted facet and step parameters from the joint-likelihood fit, then
-adds a standard normal reference prior only for the scoring layer so that
+adds a standard normal reference prior by default (or the explicit
+\code{scoring_prior}) only for the scoring layer so that
 new or partially observed units can be summarized on a quadrature grid.
 This is a practical fitted-object EAP procedure, not a claim that the
-original \code{JML} fit itself estimated a population model.
+original \code{JML} fit itself estimated a population model. It does not reproduce
+the training Person joint maximum-likelihood estimates or provide ML/WLE
+scoring for new Persons. Posterior uncertainty conditions on the fitted
+calibration; it does not include calibration-parameter uncertainty.
 }
+\section{Conditional scoring and source checks}{
+
+A finite calibration can define a person's posterior score without proving
+that the calibration is the unique global optimum. For GPCM MML and models
+with an estimated intercept-only normal population, this function checks the
+current likelihood, gradient and unregularized joint information using the
+same local-solution machinery as \code{\link[=compare_mfrm]{compare_mfrm()}}. Detected identification
+deficiencies, inadequate categories and failed convergence do not pass.
+Boundary and identification audits labelled "not evaluated" remain so;
+they are not relabelled as completed by these local checks.
+
+Shared-owner GPCM JML can also use conditional scoring with unit weights and
+no anchors/interactions. Fresh joint objective/gradient and unregularized
+full-curvature checks must pass; known Person/additive/slope boundary
+certificates are not overridden by finite optimizer coordinates. Incomplete
+global identification/boundary audits remain incomplete. Source curvature
+includes free Person parameters and uses a dense matrix; saved portable
+calibration avoids repeating it. No MML integration check or formal slope
+interval is inferred from this JML calculation.
+
+MML calibration checks also compare the retained solution at its fitting order
+and a higher order (normally \code{2 * q - 1}, at least \code{q + 10}; \code{q + 10} is
+used if the larger rule is not representable). They require NLL movement
+<= 1e-5, gradient movement <= 1e-4 and a higher-order gradient <= 1e-4,
+in addition to the existing local-solution criteria. These are numerical
+screening tolerances, not statistical coverage or global-existence guarantees.
+
+After a calibration passes, the actual reported EAP and SD are compared
+with adaptive reference orders under the same calibration and scoring prior.
+The reference includes the scoring order (at least 3 for this comparison)
+and a higher order chosen by the same rule. EAP/SD discrepancies and changes
+in adaptive EAP, SD and log marginal likelihood must each be <= 1e-5.
+Increase \code{scoring_quad_points} if this check fails. \code{readiness_policy = "review"} retains and labels those scores for inspection instead of stopping.
+Nonfinite posterior calculations or invalid parameters cannot be enabled by review.
+
+\code{settings$local_calibration_review} records the source checks and
+\code{settings$score_integration_review} records the per-Person numerical checks.
+\code{SourceScoringReady} concerns the calibration; \code{ScoreIntegrationReady}
+concerns the reported scores. \code{EstimateUse} identifies any scores requiring
+integration review. These records accompany summaries, draws and exports.
+The conditional route has \code{source_scoring_status = "conditional"} and does
+not change the fit's global \code{InferenceReady} or boundary/identification status.
+Information-matrix work respects \code{mfrmr.max_information_bytes}; unavailable
+checks require explicit review, rather than accepting a stale covariance.
+
+For example, a rubric calibration that passes these checks can score new
+respondents while holding its estimated normal prior fixed. Passing does
+not establish that the next cohort has the same ability distribution.
+Calibration and prior estimation uncertainty remain excluded from posterior
+intervals, and no portable GPCM calibration artifact is created here.
+}
+
+\section{Scoring a later cohort}{
+
+By default the scoring prior is retained from the fitted model; this function does not
+estimate a new cohort's population mean or spread from \code{new_data}. For
+example, a calibration from an advanced class may not supply a suitable
+prior for a beginning class, even when both classes use the same rubric.
+With only a few ratings, scores can depend substantially on that prior.
+The number of ratings alone is not an information measure: their calibrated
+difficulties, discriminations and observed categories also matter.
+Inspect extreme response patterns separately; increasing the rating count
+does not guarantee less prior sensitivity for every person.
+
+A narrower prior can yield narrower posterior intervals without any new
+rating evidence. This is greater certainty under a stronger assumption,
+not evidence that the assessment became more informative. Changing the
+prior while fixing calibration is a sensitivity analysis; estimating the
+calibration again changes a different part of the analysis. Neither action
+alone establishes coverage for a new cohort.
+
+Use \code{scoring_prior = list(mean = 0.5, sd = 1.5)}, for example, to inspect
+another normal-prior assumption while retaining the calibration. Choose
+plausible values for your setting; these example numbers are not a default
+recommendation. Compare the same response rows under both priors. The
+supplied prior is labelled as an analyst assumption, even if its numbers
+equal the retained prior. It does not repair a poorly estimated calibration.
+
+\code{PriorMean}/\code{PriorSD} describe the prior actually used for scoring;
+\code{RetainedPriorMean}/\code{RetainedPriorSD} describe the original scoring prior.
+\code{PriorSource} distinguishes \code{"retained"} from \code{"user_supplied"}.
+\code{RetainedPrior} distinguishes an estimated normal population from the
+standard normal reference (including post hoc JML scoring). These unrounded
+columns accompany estimates, posterior draws and their summaries.
+\code{settings$prior_comparison} records both priors by person, and
+\code{settings$retained_posterior_basis} records the original basis. Do not edit
+\code{fit$population}: its consistency with the retained calibration is checked
+independently of \code{scoring_prior}. Saving a prediction with \code{saveRDS()} stores
+a result; it does not create a portable GPCM calibration for future scoring.
+}
+
 \section{Interpreting output}{
 
 \itemize{
@@ -223,7 +334,8 @@ fitted one-dimensional population model.
 
 The posterior summaries follow the usual quadrature-based EAP scoring
 framework used in item response modeling under calibrated parameters
-(for example Bock & Aitkin, 1981). When \code{fit} uses the latent-regression
+(Bock & Mislevy, 1982, pp. 432-433; Bock & Aitkin, 1981).
+When \code{fit} uses the latent-regression
 branch, \code{mfrmr} scores under the fitted conditional normal population model
 in the general plausible-values spirit discussed by Mislevy (1991). Optional
 posterior draws are exposed as quadrature-grid plausible-value-style
@@ -233,7 +345,14 @@ literature supports
 the quadrature-based scoring layer, but the standard normal prior is a
 package-level reference prior introduced for post hoc scoring rather than an
 estimated population distribution.
+The local JML objective, gradient and curvature cutoffs are package
+numerical criteria, not literature-derived guarantees of calibration
+accuracy or interval coverage. The scoring literature does not establish
+the completeness of the source boundary audit.
 \itemize{
+\item Bock, R. D., & Mislevy, R. J. (1982). \emph{Adaptive EAP estimation of ability
+in a microcomputer environment}. Applied Psychological Measurement,
+6(4), 431-444. \doi{10.1177/014662168200600405}.
 \item Bock, R. D., & Aitkin, M. (1981). \emph{Marginal maximum likelihood estimation
 of item parameters: Application of an EM algorithm}. Psychometrika, 46(4),
 443-459.
@@ -242,6 +361,21 @@ variables from complex samples}. Psychometrika, 56(2), 177-196.
 \item Muraki, E. (1992). \emph{A generalized partial credit model: Application of an
 EM algorithm}. Applied Psychological Measurement, 16(2), 159-176.
 }
+}
+
+\section{Corrected JML}{
+
+An experimental shared-owner corrected GPCM calibration can score new
+Persons after fresh checks of its adjusted equation, full Jacobian and
+saved parameter identities. These checks never apply an unadjusted
+likelihood-stationarity requirement to the corrected root. Unit weights
+and known facet levels are required; unresolved roots cannot be enabled by
+\code{readiness_policy = "review"}. No model is refitted. The returned EAPs
+use the corrected point calibration and a separate normal reference prior,
+not the original profiled Person estimates. Continuous posterior intervals
+exclude calibration uncertainty and residual calibration bias. The correction
+order and estimator remain recorded in the score table and saved settings.
+\code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} provides the corresponding portable route.
 }
 
 \examples{
@@ -264,6 +398,19 @@ new_units <- data.frame(
 )
 pred_units <- predict_mfrm_units(toy_fit, new_units, n_draws = 0)
 summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
+# Compare assumptions on the same response rows, without refitting.
+alternative <- predict_mfrm_units(
+  toy_fit, new_units, scoring_prior = list(mean = 0.5, sd = 1.5)
+)
+comparison <- dplyr::bind_rows(
+  "Retained prior" = pred_units$estimates,
+  "Alternative prior" = alternative$estimates, .id = "Scenario"
+)
+ggplot2::ggplot(comparison, ggplot2::aes(Scenario, Estimate)) +
+  ggplot2::geom_pointrange(ggplot2::aes(ymin = Lower, ymax = Upper)) +
+  ggplot2::facet_wrap(~ Person) + ggplot2::theme_minimal() +
+  ggplot2::labs(x = NULL, y = "Posterior EAP",
+    caption = "95\% posterior intervals conditional on calibration and each prior")
 }
 \seealso{
 \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}, \code{\link[=fit_mfrm]{fit_mfrm()}},

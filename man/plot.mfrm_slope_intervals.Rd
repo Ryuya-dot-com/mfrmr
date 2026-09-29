@@ -13,7 +13,9 @@
     " | "),
   reference = NULL,
   draw = TRUE,
-  ...
+  ...,
+  type = c("interval", "profile"),
+  caption = NULL
 )
 
 \method{plot}{mfrm_gpcm_bootstrap}(
@@ -39,6 +41,16 @@ no quality threshold or scoring-policy cutoff is selected.}
 
 \item{...}{For bootstrap slope results, passed to \code{confint()} to select its
 target and level. Otherwise unused.}
+
+\item{type}{For saved slope intervals, \code{"interval"} displays bounds;
+\code{"profile"} displays saved likelihood evaluations and the same-target Wald
+limits. The default is \code{"profile"} for saved profile calculations and
+\code{"interval"} otherwise. This never initiates profiling.}
+
+\item{caption}{For saved slope intervals, optional caption. NULL removes it.
+Two-family intervals state the distinct family references by default.
+Profile plots supply a
+default explanation of line styles and missing coordinates when omitted.}
 }
 \value{
 Invisibly a ggplot, retaining an \code{mfrm_plot_data} attribute for

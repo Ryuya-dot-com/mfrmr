@@ -116,6 +116,9 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
                               theta_range = c(-6, 6), theta_points = 241L,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               show_title = TRUE, show_notes = TRUE, draw = TRUE) {
+  stop_if_product_slopes(reference, "plot_compare_mfrm()")
+  stop_if_product_slopes(comparison, "plot_compare_mfrm()")
+
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   type <- match.arg(type); view <- match.arg(view); panel <- match.arg(panel)
   preset <- match.arg(preset)

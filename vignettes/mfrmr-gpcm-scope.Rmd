@@ -20,7 +20,9 @@ knitr::opts_chunk$set(
 
 `mfrmr` includes a Generalized Partial Credit Model (GPCM; Muraki 1992) in which
 one selected facet supplies level-specific discriminations. MML permits a
-different facet to supply category steps; JML requires a shared owner. MML information
+different facet to supply category steps; JML requires a shared owner. A
+provisional two-family MML--EM route is described separately below; its fitted
+curves do not include intervals. For the one-family route, MML information
 criteria can be compared when the likelihood and local-solution checks pass.
 `confint(fit, parm = "slopes")` provides approximate relative-slope intervals
 when its MML checks pass. Explicit options add standardized slopes, specified
@@ -40,7 +42,637 @@ statistical penalty. If the likelihood has a certified recession direction,
 the finite optimizer iterate is retained only as a numerical trace and the
 primary result carries an extended-real or typed boundary status.
 
-## What can I report?
+## Follow the result through the existing API
+
+The established GPCM route estimates **one slope family**. For example, criterion
+slopes and rater-owned category steps are supported by MML; this does not also
+estimate rater slopes. The following routes apply to that public model, subject
+to each function's checks. A returned number is not by itself evidence that
+its uncertainty or interpretation is adequate for the intended decision.
+
+| Purpose | Existing route | What to check |
+| --- | --- | --- |
+| Fit and read the model | `fit_mfrm()` → `print(fit)` → `summary(fit)` | Estimator, actual optimization engine, slope/step owners, ability scale, numerical status and unavailable estimates. |
+| Inspect locations, fit and category use | `plot(fit, type = "wright")`, `"fit_pathway"`, `"pathway"` or `"ccc"` | These describe locations, fit or response curves; they do not supply slope confidence intervals. GPCM fit screens remain exploratory. |
+| Examine slope uncertainty | `confint(fit, parm = "slopes")` → `print()` / `plot()` | MML only, with separate numerical/inference checks. Profile intervals are an explicit experimental option for one relative slope. |
+| Examine response uncertainty in a rating context | `mfrm_curve_intervals(fit, newdata)` → `print()` / `plot()` | Category probability or information at supplied abilities and facet levels; retain labels for combinations not observed together. |
+| Report and reuse selected inference | `mfrm_results(fit, intervals = ...)` → `mfrm_report()` → `export_mfrm_results()` | Select the result needed for the question; preserve its scale, source, unavailable intervals and interpretation. |
+| Score later persons with saved calibration | `extract_mfrm_calibration()` → `save_mfrm_calibration()` / `load_mfrm_calibration()` → `score_mfrm_calibration()` | Separate source restrictions apply to MML and JML. These are conditional EAP scores; their posterior intervals exclude calibration uncertainty and are not JML slope intervals. |
+
+Use `gpcm_capability_matrix()` to check availability and
+`mfrm_calibration_capabilities()` for portable source restrictions. The
+**provisional two-slope-family route** below has a narrower output scope;
+the one-family table above does not grant it the same diagnostics or inference.
+**Corrected JML** also has a separate, experimental workflow below. It provides
+adjusted point estimates and local root uncertainty, with no formal structural
+intervals or ordinary fit tests. Conditional probabilities, descriptive
+residuals and new-Person/portable EAP have separate saved-output routes below. The approximate location
+SEs and conditional Person posterior intervals in the ordinary JML workflow
+answer different questions.
+
+## An explicit corrected-JML workflow
+
+Suppose many learners each receive only a few ratings. Increasing the number
+of learners does not necessarily remove the structural bias caused by estimating
+an ability from each short rating record. `jml_correction_order` adjusts the
+profile-score equation to address that bias. It changes the estimation method;
+the shared-owner GPCM response model remains the same.
+
+This is an experimental, explicitly chosen analysis. It does not automatically
+replace ordinary JML or choose a correction order. A larger order may reduce
+one source of bias while increasing variance or numerical difficulty; existing
+studies do not establish a universally best order. Choose an order in the
+analysis plan, examine sensitivity, and do not select by the smallest SE.
+
+```r
+# Example for your observed 0:3 ratings, with at least two levels per facet.
+# Install the optional nleqslv package before using this route.
+# An order of 2 illustrates the syntax; it is not a universal recommendation.
+# fit <- fit_mfrm(
+#   ratings, person = "Candidate", facets = c("Judge", "Criterion"),
+#   score = "Score", model = "GPCM", method = "JML",
+#   step_facet = "Criterion", rating_min = 0, rating_max = 3,
+#   category_policy = "preserve", jml_correction_order = 2,
+#   jml_correction_sampling = "fixed_rosters"
+# )
+# summary(fit)$tables
+# plot(fit, type = "locations", facet = "Judge")
+# as_ggplot(plot(fit, type = "slopes", draw = FALSE))
+# res <- mfrm_results(fit)
+# mfrm_report(res)
+```
+
+Here each Criterion owns both its positive discrimination and its step ladder;
+Judge and Criterion locations and each ladder are centered, and discriminations
+have geometric mean one. Names are arbitrary: a different assessment can supply
+its own facet names. The current scope requires observed integer scores, fixed
+additive facets and unit-weight rows. It excludes anchors, interactions,
+separate slope/step owners, corrected RSM/PCM and correlated responses. Sparse
+assignments are retained as observed; absent cells are not filled with scores.
+Repeated rows are independent ratings under this model, not a treatment of
+within-Person local dependence.
+
+Read the output in this order:
+
+1. **Was a local solution found?** The summary records agreement or disagreement
+   across starting values. Numerical agreement does not prove a unique global
+   solution or removal of statistical bias. Unresolved fits retain their
+   attempts without displaying optimizer placeholders as estimates.
+2. **What was estimated?** The tables contain adjusted locations, steps and
+   relative slopes. Person abilities are reprofiled at those values; extreme
+   scores have infinite limits. Person standard errors are unavailable.
+3. **What does RootSE mean?** It describes local variation around the adjusted
+   equation's solution. That solution may still be biased for the true
+   structural value. RootSE is therefore not presented as a structural SE with
+   established coverage, and the plots do not invent confidence intervals.
+   When this covariance cannot be computed, the point estimates remain visible
+   alongside the reason.
+4. **How was allocation sampled?** `"fixed_rosters"` conditions on assignment
+   counts and centers actual Person contributions within each pattern. It
+   requires at least two Persons per pattern for covariance. `"random_rosters"`
+   instead centers globally when assignment patterns are sampled. This choice
+   must reflect the sampling design; it is not a workaround for sparse data.
+
+The figures show slopes, one selected facet's locations, or steps as points
+(`style = "points"`) or an empirical cumulative distribution
+(`style = "distribution"`). Titles and notes can be suppressed with
+`show_title = FALSE` and `show_notes = FALSE`. Reports and saved exports retain
+the estimator and interpretation; they do not support ordinary fit tests,
+Wright/Pathway maps, likelihood ranking or rater-quality classifications.
+New-Person EAP uses the separate scoring workflow below.
+
+### Score a new cohort using the corrected calibration
+
+Suppose next year's learners use the same rubric and the same calibrated
+raters. `predict_mfrm_units(fit, new_ratings)` uses only those supplied ratings
+and the corrected facet, step and slope values. It adds a normal reference
+prior to obtain EAP scores. This is a different question from estimating the
+original learners' profile maxima: even all-minimum or all-maximum responses
+can have finite EAPs. JML did not estimate this prior. Consider a substantive
+alternative with `scoring_prior = list(mean = ..., sd = ...)`; sensitivity to
+that choice matters particularly for short or extreme response patterns.
+
+To score in another R session without retaining the training data:
+
+```{r corrected-jml-portable}
+# draft <- extract_mfrm_calibration(fit, scoring_quad_points = 101)
+# calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+# save_mfrm_calibration(calibration, "rubric-calibration.rds")
+# calibration <- load_mfrm_calibration("rubric-calibration.rds")
+# scores <- score_mfrm_calibration(calibration, new_ratings)
+# summary(scores)
+# plot(scores, type = "interval")
+# plot(scores, type = "precision")
+# as_ggplot(scores)
+```
+
+Here 101 is an example integration order, not a universal accuracy setting.
+Each batch is checked against higher-order adaptive integration. Increase the
+extraction order and recreate the artifact if those checks fail. When a
+Person-by-facet cell legitimately contains independent repeated events,
+supply a column of distinct event IDs through `event_id`; duplicate cells
+without event IDs are refused. Missing scores cause an error by default;
+`missing_response = "omit"` records omissions and leaves missing-only Persons
+unscored. It does not fill unassigned design cells.
+
+Extraction checks the corrected equation and its full Jacobian at the saved
+solution; it does not refit the model or demand an ordinary JML likelihood
+maximum. A covariance failure does not by itself prevent scoring. File format
+5 preserves the correction order, source checks, scale and prior while
+omitting original ratings and Person estimates. The posterior SD and intervals
+hold calibration fixed: they do not propagate RootSE, resolve residual
+calibration bias or provide corrected Person ML/WLE. Calibration uncertainty
+and the suitability of the prior for the new cohort remain separate issues.
+Saved score objects support their own summaries and plots; they are not
+attachments to the corrected fit's `mfrm_results()` report.
+
+### Describe the observed ratings at the corrected estimates
+
+Use `mfrm_response_diagnostics()` to ask how the observed scores differ from
+the scores expected at the corrected calibration and each learner's reprofiled
+ability. For example, select Judge groups to inspect rating residuals without
+automatically labelling anyone an inaccurate or overly predictable judge:
+
+```r
+# response <- mfrm_response_diagnostics(fit, group_by = "Judge")
+# response$measures
+# response$rows
+# response$probabilities
+# plot(response, style = "paired")
+# as_ggplot(plot(response, style = "scatter", draw = FALSE))
+# res <- mfrm_results(fit, response_diagnostics = response, compute = "never")
+# mfrm_report(res)
+```
+
+These are **conditional fitted probabilities**. The calculation holds the
+corrected facet/step/slope estimates and reprofiled abilities fixed. It does
+not average over a posterior distribution or account for uncertainty in those
+estimates. A comparison between observed and expected scores uses the same
+data as fitting; it is not a test of performance on unseen ratings. Sparse
+assignments and repeated observed events retain their original row identities.
+Selecting `rows` changes the summarized events but does not re-estimate ability.
+
+All-minimum or all-maximum learners have infinite profile limits. Their
+conditional distribution concentrates on one category, so its variance is
+zero. The probabilities, expected score and raw residual remain available,
+but a residual divided by its SD is undefined at these saved values. No
+automatic convention replaces `0/0` with zero. Consequently:
+
+- **Infit** can still be returned for a group: its sum of squared raw residuals
+  divided by the sum of conditional variances is defined when that denominator
+  is positive and all required values are available. Zero-variance rows remain
+  in those sums.
+- **Outfit** is missing if any selected standardized residual is undefined.
+  The result records `partially_available` and explains why. `Available` counts
+  standardizable rows; it is not an Infit exclusion count.
+- A group consisting entirely of zero-variance rows has neither index.
+  Rows are never dropped silently. An explicit `rows` selection changes the
+  target group and must be reported.
+
+The paired plot retains an available Infit when Outfit is missing; the scatter
+plot requires both. Both retain complete tables and reasons in `plot_data()`.
+There are no reference cutoffs, automatic overfit warnings, p-values or
+rater-quality decisions. Saved results and reports preserve the conditional
+definition and check the source slopes, Person profiles and exact observed
+roster before accepting an attachment. This does not enable ordinary
+`diagnose_mfrm()` tests or corrected-JML model comparisons.
+
+The adjustment uses the MLE plug-in profile-score construction discussed by
+[Dhaene and Weidner (2023), section 8.1](https://doi.org/10.1007/s13209-023-00283-1).
+Exact owner-total expectations and a full equation Jacobian are used within
+the supported state limit (5,000 joint states per assignment pattern).
+This numerical implementation does not establish general residual-bias or
+sampling-coverage guarantees. See `?fit_mfrm` for the full input contract.
+
+## A provisional two-family workflow
+
+Suppose candidates complete speaking tasks scored by overlapping assessors.
+Use this route to examine how fitted category probabilities change when both
+the task and assessor have their own slopes. The first owner has centered
+locations and geometric-mean-one slopes; the second has free locations and
+slopes and owns centered category steps. This is an explicit fixed-N(0,1)
+model choice, not an automatic change to the usual GPCM population model.
+
+The code below expects your observed ratings in `ratings`, with columns
+`Candidate`, `Task`, `Assessor` and integer `Rating` on the declared 0--3 scale.
+Keep only actually observed scored rows. Unassigned cells must not be filled
+with zero. This route does not handle missing-score rows, weights, anchors,
+interactions or population covariates. Column names may be changed to match
+your application, including non-syntactic names.
+
+```{r two-family-workflow, eval=FALSE}
+fit_joint <- fit_mfrm(
+  ratings, person = "Candidate", facets = c("Task", "Assessor"), score = "Rating",
+  model = "GPCM", method = "MML",
+  slope_facet = c("Task", "Assessor"), step_facet = "Assessor",
+  noncenter_facet = "Assessor", gpcm_mml_identification = "fixed_standard_normal",
+  mml_engine = "em", rating_min = 0, rating_max = 3,
+  category_policy = "preserve", quad_points = 31, maxit = 500,
+  em_score_tol = 1e-6
+)
+summary(fit_joint)
+context <- expand.grid(
+  Theta = seq(-3, 3, length.out = 61),
+  Task = unique(ratings$Task)[1], Assessor = unique(ratings$Assessor)[1]
+)
+curves <- mfrm_curve_intervals(fit_joint, context)
+plot(curves) # provisional fitted probabilities; no confidence intervals
+ci_joint <- confint(fit_joint) # experimental component-slope intervals
+plot(ci_joint)
+apa_table(ci_joint, which = "checks")
+# For a figure without headings or notes:
+plot(curves, title = NULL, subtitle = NULL, caption = NULL)
+res <- mfrm_results(fit_joint, include = c("fit", "plots"),
+                    compute = "never", intervals = list(slopes = ci_joint, curves = curves))
+mfrm_report(res)
+# export_mfrm_results(res, output_dir = "joint_results")
+```
+
+`maxit` counts outer EM iterations. `em_score_tol` controls the largest absolute
+marginal-score component divided by the number of candidates; `reltol` is not
+a control for this route. EM uses ascent-checked numerical BFGS M steps.
+Inspect the numerical stopping result and retain nonconverged outcomes.
+Numerical convergence alone does not certify identification, an adequate
+quadrature order, interval coverage or the one-ability assumption.
+
+The curve function keeps its existing name and result class, but **does not
+provide intervals for two families**: SEs and bounds are missing and
+`CIEligible` is false. The default plot and saved reports say this explicitly.
+Known facet levels not observed together are labelled in `curves$contexts`;
+this label is not evidence that extrapolation is reliable. The first and
+second family's numerical slopes are retained separately in `fit_joint$slopes`;
+`PrimaryEstimate` remains unavailable pending inferential qualification.
+
+For a separate uncertainty check, `confint(fit_joint)` gives **experimental
+component-slope intervals** when its numerical checks pass. For example, the
+task slope describes a task relative to the geometric-average task slope;
+the assessor slope is on the fixed ability scale. Neither measures scoring
+accuracy. A wide interval means that the data give little precision about
+that component. The two sets have different scale references: do not rank
+tasks and assessors together or treat one as a universal quality threshold.
+
+The approximation uses the inverse full observed marginal information,
+including uncertainty in locations and steps and covariance between the two
+slope families. The default scale is `"standardized"`, with ability SD fixed at
+one. The default supplies model-based log-Wald intervals, without contrasts or
+cluster adjustments. `simultaneous = "bonferroni"` adjusts for all displayed
+components; no individual unit-slope p-values are provided.
+
+For one question chosen in advance, you can also examine a **profile likelihood
+interval**. It fixes that component slope at successive values and reestimates
+all remaining slopes, locations and steps. The ability population stays fixed
+at N(0,1). This allows the likelihood shape to depart from the quadratic shape
+used by Wald intervals; it does not automatically remove bias or improve coverage.
+
+```r
+# Choose an actual level of the fitted Assessor column, for example "A1":
+# profile <- confint(fit_joint, method = "profile", slope = c(Assessor = "A1"))
+# plot(profile) # likelihood loss, cutoff, and same-target Wald limits
+# apa_table(profile, which = "profile_endpoints")
+# res <- mfrm_results(fit_joint, include = c("fit", "plots"), compute = "never",
+#                     intervals = list(profile = profile))
+# mfrm_report(res)
+```
+
+The name `Assessor` identifies the owner; `"A1"` identifies its level. Use your
+own column/level names. Specifying both avoids confusion when two facets share
+the same level labels. A first-family component retains its geometric-mean-one
+reference; a second-family component is free on the fixed ability scale. The
+interval concerns one component, not the product of the two slopes. Neither
+owner name nor a large slope establishes rater competence.
+
+Profiling is an explicit, more expensive sensitivity analysis. Inspect the
+endpoint and numerical tables, including failed searches. The integration grid
+may need refinement even when it suffices for Wald intervals at the estimate:
+the profile also visits other coefficient values. No automatic grid change or
+fallback to Wald occurs. Missing endpoints mean unresolved calculations, not
+infinite intervals. The plot retains failed points and separates them from
+connected passing sections; headings and notes can be removed with `title =
+NULL`, `subtitle = NULL`, and `caption = NULL`, without deleting saved checks.
+
+In a synthetic 240-Person example, task t3 gave profile bounds 0.899--1.227
+versus Wald 0.901--1.228; assessor r3 gave 1.070--1.585 versus 1.075--1.590.
+These close results verify a calculation and do not demonstrate superior
+coverage. Profiling does not make a numerically rejected near-zero-slope fit
+eligible or certify that alternative boundary solutions are absent.
+
+Sparse assignments and a narrow ability distribution can leave slopes poorly
+determined. A fit may converge while a constrained search for an interval
+endpoint does not. Obtaining endpoints by increasing numerical accuracy does
+not establish that the intervals have their nominal coverage. In particular,
+evaluating coverage only among successful searches can overstate accuracy.
+There is no established coverage advantage over Wald intervals for this model.
+
+Failed trials remain saved even when both endpoints are found. An inaccurate
+trial beyond an endpoint need not prevent computing that endpoint: the search
+can try nearer values. Failures within a bracket still prevent accepting the
+interval. This is why a plot may contain crosses for unresolved trial points
+and also show two successfully computed bounds.
+
+If a profile is unresolved, first inspect the original fit's convergence, then
+the profile-check and endpoint tables. The controls address different problems:
+`maxit` in `fit_mfrm()` controls EM iterations, whereas
+`profile_control = list(maxit = ...)` in `confint()` controls each constrained
+BFGS stage. A finer `quad_points` setting requires refitting and addresses
+integration error; it does not repair unsuccessful optimization or agreement
+between starts. Keep the original failures when documenting a planned analysis;
+a changed numerical procedure needs its own checks.
+
+For a two-family fit that used 121 integration points, the following illustrates
+how to compare with 181 points and explicitly repeat the profile calculation.
+These counts illustrate the workflow; they are not universal accuracy settings.
+Use the same rating data used for the original fit.
+
+```r
+# review <- mml_quadrature_sensitivity(fit_joint, ratings,
+#                                      quad_points = c(121, 181))
+# summary(review)
+# profile_finer <- confint(review$fits$q181, method = "profile",
+#                          slope = c(Assessor = "A1"))
+# apa_table(profile_finer, which = "profile_endpoints")
+```
+
+`review$intervals` contains Wald intervals for each grid, not recalculated
+profile intervals. Use the explicit `confint()` call above to assess the
+selected profile. If the numerical tables instead show that constrained
+optimization reached its iteration limit, increase the profile iteration
+budget on the same fit:
+
+```r
+# profile_longer <- confint(fit_joint, method = "profile",
+#                           slope = c(Assessor = "A1"),
+#                           profile_control = list(maxit = 1600))
+```
+
+An increased budget allows more computation without relaxing the numerical
+checks. It may still leave an endpoint unresolved. Report any changed settings
+and the original outcome; do not select the result simply because its interval
+is narrower or supports a preferred conclusion.
+
+The checks re-evaluate the saved model, local score rank, convergence and
+information. They also increase the quadrature grid from q to 2q-1 at the
+saved parameters. **Passing is a numerical result, not a coverage guarantee
+or proof of global identification.** A converged five-point fit of a retained
+example failed this integration check; its 31-point fit passed. This example
+shows why convergence alone is insufficient, not that 31 points always suffice.
+See `?confint.mfrm_fit` for the tolerances. Use `apa_table(ci_joint, which =
+"checks")` for pass/fail reasons and `which = "numerical_checks"` for measured
+changes. Failed checks keep estimates with missing bounds. The experimental
+warning, owner identities and checks follow plots, reports and saved exports;
+the original fit's primary-estimate/readiness fields remain unchanged.
+
+A **small optimization residual** warning means the retained solution has a
+nonzero marginal score, but its local Newton displacement is at most 0.01 in
+joint SE units. Values above 1e-4 now retain this warning. This is an
+approximation at the saved estimate: `confint()` does not refit or move it.
+The other mean-score, information, local-rank and quadrature checks still apply.
+Do not repeatedly tighten `em_score_tol` without inspecting the result: very
+strict settings can exhaust the EM iteration limit at nearly unchanged
+estimates. A failed **quadrature sensitivity** check is a separate issue;
+use `mml_quadrature_sensitivity()` to refit with more points while retaining
+the same model and EM stopping controls:
+
+```{r joint-quadrature, eval=FALSE}
+# fit_joint above used 31 points. Include the original point count.
+integration <- mml_quadrature_sensitivity(
+  fit_joint, ratings, quad_points = c(31, 61)
+)
+summary(integration)
+integration$slopes # estimates, raw diagnostic SEs, interval availability
+ci_finer <- integration$intervals$q61 # already computed; no repeated fit
+apa_table(ci_finer, which = "numerical_checks")
+plot(ci_finer) # retains missing intervals and cautions
+# integration$fits$q61 is the corresponding fitted model.
+```
+
+Here the 61-point interval checks also compare 61 with 121 points at the same
+saved parameters; that check does not refit at 121 points. Each requested refit
+uses the usual neutral start. The first family's geometric-mean reference and
+the second family's fixed-population reference are retained in the slope table.
+The comparison does not yet provide two-family Person-score changes or an
+adaptive-grid review; missing EAP/SD changes mean unavailable, not agreement.
+Neither warning handling nor additional quadrature points
+establishes nominal coverage in a sparse assessment design.
+
+An initial simulation checked two assignment designs at equal cost: 240
+candidates, three tasks, six assessors and 1,440 ratings. A common-candidate
+design had 48 candidates scored by all assessors and 192 scored by one;
+a rotating design gave each candidate two adjacent assessors. Every assessor
+scored 80 candidates. Candidate assignment was independent of ability, and
+there were no fixed parameter anchors or missing assigned scores. The normal
+ability SD was 1 or 0.5; truth was transformed to the fitted fixed-N(0,1) scale.
+
+Using the current small-residual warning rule and a finer-grid follow-up for
+the common-candidate SD=1 condition gave:
+
+| Assignment | Generating ability SD | Fitting points | Intervals returned / 100 attempts | Task t1 covered / returned | Assessor r1 covered / returned |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Common candidates | 1 | 61 | 100/100 | 93/100 | 98/100 |
+| Rotating pairs | 1 | 31 | 100/100 | 93/100 | 95/100 |
+| Common candidates | 0.5 | 31 | 100/100 | 97/100 | 95/100 |
+| Rotating pairs | 0.5 | 31 | 99/100 | 90/99 | 95/99 |
+
+These are pointwise 95% intervals for two prespecified components, not a joint
+coverage statement. All nine components were summarized separately. The
+rotating-pair SD=0.5 task result, 90/99, has a Monte Carlo 95% interval of
+83.4--95.8%; it does not establish nominal coverage. In that condition its
+empirical log-slope SD was 0.178 versus root mean estimated variance 0.155.
+Some log-slope bias also remained: common-candidate SD=0.5 assessor r3 had mean
+error -0.111 (Monte Carlo SE 0.032), despite 99/100 coverage.
+
+Originally, 89 common-candidate SD=1 intervals failed the 31-versus-61-point
+integration check. Refitting **all 100 datasets**, including the 11 that had
+passed, at 61 points resolved these failures; all also passed the 61-versus-121
+check. The EM stopping tolerance, iteration limit, response data and model were
+unchanged. This is a numerical correction using the same sample, not an
+independent replication. Task t1 coverage of 93/100 has a Monte Carlo 95%
+interval of 86.1--97.1%; assessor r1 coverage of 98/100 has an interval of
+93.0--99.8%. These results do not establish nominal coverage or prove that
+61 points will suffice in other datasets. Across all nine components in this
+condition, coverage ranged from 90/100 to 98/100. Task t3 had 90/100 coverage
+(Monte Carlo 95% interval 82.4--95.1%), with empirical log-slope SD 0.130
+versus root mean estimated variance 0.110. Assessor r3 retained log bias
+-0.058 (Monte Carlo SE 0.016). Thus, removing integration failures did not
+remove the observed sampling discrepancies.
+
+The original failures must not be described as an unidentified assignment
+design. Equal integration-point counts did not give equivalent numerical
+accuracy across these designs. The remaining
+rotating SD=0.5 failure had a near-zero assessor slope and larger local
+optimization displacement. The warning change was assessed on saved fits;
+this is not independent confirmation of the revised rule. These results
+support cautious exploration and numerical review, not a general guarantee
+for sparse designs or a recommendation that one allocation is better.
+
+### Inspect observed ratings with posterior residuals
+
+Suppose you want to describe where a judge's observed scores differ from the
+model's predictions. `mfrm_response_diagnostics()` integrates each candidate's
+ability posterior, using all of that candidate's observed ratings and holding
+the fitted calibration fixed. Both slope families enter the response equation.
+It does not simply plug in the candidate's EAP score. Its predictive variance
+includes both rating variation at a given ability and variation in the expected
+rating across the ability posterior.
+
+```r
+# After the two-family fit has met its EM stopping criterion:
+# response <- mfrm_response_diagnostics(fit_joint, group_by = "Assessor")
+# response$rows     # review unavailable rows and integration differences first
+# response$measures
+# plot(response, style = "paired")
+# as_ggplot(plot(response, style = "scatter", draw = FALSE))
+# res <- mfrm_results(fit_joint, include = c("fit", "plots"), compute = "never",
+#                     response_diagnostics = response)
+# mfrm_report(res)
+```
+
+Use your fitted identifier name for `group_by`. If response integration is
+unresolved, explicitly increase `quad_points` and inspect the new check; the
+fitting grid need not suffice for every response prediction. This recomputes
+probabilities at the saved calibration. In contrast,
+`mml_quadrature_sensitivity()` refits the calibration across specified grids.
+Neither numerical check establishes model adequacy.
+
+With `rows`, select original input row numbers for display and grouping. All
+observed ratings still inform each candidate's posterior. Incomplete assignments
+stay incomplete; the function adds no unassigned ratings. A group with any
+unresolved observed row has unavailable summaries rather than silently dropping
+that row. Available output connects to paired/scatter plots, ggplot conversion,
+saved reports and exports without refitting or reintegration.
+
+These are **same-data descriptive summaries**: calibration and checking use
+the same observations. Infit and Outfit have no established expectation-one
+reference here. A value above one is not an automatic misfit flag, and a value
+below one is not evidence that a judge is too predictable. No formal fit test,
+confidence interval or rater-quality classification is supplied. These residuals
+do not test unidimensionality or local independence and exclude calibration
+uncertainty. No slope confidence interval is needed to compute the fixed-point
+probabilities; its availability answers a different question.
+
+`plot(fit_joint)`, ordinary fit diagnostics, Wright/Pathway maps, location/curve
+intervals, model ranking, later-person scoring and portable two-family
+calibration are not yet available. Unsupported fitting arguments produce an
+error rather than being ignored. Saving and reopening `res` preserves this
+analysis; it does not create a calibration that can score a new cohort.
+
+## Model, estimation method and algorithm are different choices
+
+A model describes how a rating depends on ability, difficulty, severity and
+category steps. An estimation method defines what is fitted to the data. An
+algorithm is the numerical procedure used to obtain that fit. Keep these
+three choices separate when reading an analysis or selecting an option:
+
+| Choice | Question it answers | Examples |
+| --- | --- | --- |
+| Response model | How can ability and rating context change category probabilities? | RSM shares category steps; PCM allows facet-level step sets; GPCM adds positive discriminations. A two-family formulation multiplies two facet-specific discriminations. |
+| Estimation method | How is unknown person ability handled while estimating the model? | MML integrates over an ability distribution; JML estimates the training persons' abilities jointly with the other parameters. |
+| Numerical algorithm | How is the likelihood optimized? | Direct optimization, EM, or an EM warm start followed by direct optimization. |
+
+**RSM and PCM can also use MML and EM.** In EM for an MML model, the E-step
+calculates a distribution over each person's ability given all their ratings
+and the current parameters. The M-step updates the parameters using those
+probabilistic contributions. It does not replace each unknown ability by an
+EAP point score and treat that score as observed. Direct optimization instead
+optimizes the marginal likelihood itself. With the same model, identification
+and integration rule, both seek the same likelihood target, although different
+starts, local optima and convergence tolerances can produce different results.
+
+The current mfrmr routes are:
+
+| Model route | Estimation and calculation in this version |
+| --- | --- |
+| Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid are available for supported additive, fixed-population, fixed-integration settings (`population = NULL`). |
+| Public one-slope-family GPCM | MML uses direct optimization. Requests for EM or hybrid currently fall back to direct and record the choice in `fit$summary`. JML is available within its separate restrictions. |
+| Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with numerical generalized EM. The numerical M-step increases its objective rather than requiring an exact maximizer at every iteration. Summary and conditional fitted curves are available; parameter intervals, model ranking and new-person scoring are not. |
+
+Muraki (1992) derives an EM estimation route for GPCM; this does not make EM
+a defining property of the response model. The
+[TAM documentation](https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html)
+also provides MML for RSM/PCM, and
+[`sirt::rm.facets()`](https://alexanderrobitzsch.github.io/sirt/reference/rm.facets.html)
+uses MML--EM for facet models with optional item and rater slopes. Matching an
+algorithm name does not establish matching response equations. In particular,
+GMFRM is a family description, not a uniquely specified estimator.
+
+## What happened to the name "bounded GPCM"?
+
+**Use GPCM as the model name, and state the actual restrictions.** The older
+package label described a limited implementation scope; it should not suggest
+that unidimensional GPCM is a separate statistical model or that every estimated
+slope is truncated at an arbitrary finite upper bound.
+
+Three different issues should not be conflated:
+
+- **Parameter range and identification.** Current slopes are positive and
+  represented on a log scale. Public relative slopes have geometric mean one
+  to identify the scale. There is no additional user-facing finite slope box;
+  numerical overflow or underflow proposals are rejected, not clipped to an
+  acceptable estimate. These constraints do not disappear when the old label
+  is retired.
+- **Available structure and outputs.** MML now allows different slope and step
+  owners, approximate slope/curve inference, checked information-criterion and
+  PCM/GPCM comparisons, and portable calibration within their documented
+  one-family scopes. Two-family fitting adds provisional estimates and
+  conditional curves on fixed N(0,1), with separately checked experimental
+  component-slope intervals. Statistical qualification remains unfinished.
+  JML does not acquire MML intervals automatically.
+- **A boundary in a particular dataset.** Sparse or extreme data may not yield
+  a finite, well-identified optimum. Boundary diagnostics and an unbounded
+  interval describe that data/model fit; removing the word "bounded" does not
+  remove these possibilities or guarantee coverage.
+
+Prefer a concrete description such as "unidimensional many-facet GPCM,
+criterion slopes and rater steps, fitted by MML with direct optimization".
+Older NEWS entries retain historical terminology; they do not define the
+current parameter range or available workflows.
+
+## What changes if I use JML?
+
+`fit_mfrm(..., model = "GPCM", method = "JML")` is an implemented estimation
+route. It estimates each training Person's ability together with the structural
+parameters, instead of integrating over a population distribution as MML does.
+The recent MML inference and portable-calibration additions do not extend
+automatically to JML.
+
+| Task | GPCM MML | GPCM JML |
+| --- | --- | --- |
+| Estimate one family of relative slopes | Available, subject to fit diagnostics | Available, subject to fit diagnostics |
+| Use different slope and step facets | Available | Not implemented; use the same facet |
+| Slope intervals, bootstrap and curve uncertainty | Available within each method's scope; profile intervals are experimental | Not implemented |
+| Inferential model ranking and the matched PCM/GPCM test | Available after their separate checks | Not implemented; numerical criteria alone are descriptive |
+| Score new Persons from the fitted object | Conditional EAP under the retained or explicitly supplied prior | Post-hoc EAP under a reference prior; not direct ML/WLE scoring |
+| Save a portable calibration without the fit | Available within the stated MML scope | Available for shared owners after JML-specific conditional source checks; incomplete global audits remain recorded |
+
+For example, a JML calibration can describe how strictly existing raters score.
+To score next year's learners with `predict_mfrm_units()`, the current route
+holds those structural parameters fixed and adds a normal prior for EAP:
+standard normal by default, or `scoring_prior = list(mean = ..., sd = ...)`.
+That prior was **not estimated by JML**, and the posterior SD does not include
+uncertainty in the estimated calibration. Neither these scores nor posterior
+draws reproduce the training Person joint maximum-likelihood estimates.
+
+JML also has an incidental-parameter issue: increasing the number of Persons
+does not by itself increase the number of observations for each Person. Its
+structural SEs currently use exploratory observation-table approximations,
+not a joint-information calculation accounting for estimated Person
+parameters. These default JML calls apply no bias correction; the explicit
+corrected route described above has a different covariance target and excludes
+portable scoring. Certified extreme Person
+estimates can be infinite, while finite optimizer traces remain diagnostic.
+See `?fit_mfrm` for these conventions.
+
+When comparing JML software, align these choices before interpreting differences.
+For example, [TAM's `tam.jml()` documentation](https://alexanderrobitzsch.github.io/TAM/reference/tam.jml.html)
+specifies an extreme-score adjustment (`adj = 0.3`) and item-parameter bias
+correction (`bias = TRUE`) by default. A common estimator label does not make
+those defaults identical to mfrmr, nor does a PCM comparison validate free
+GPCM slope inference. Portable reference-prior EAP is available for RSM/PCM and shared-owner GPCM
+JML, with separate source checks. GPCM JML local curvature does not establish
+a global finite maximum or qualify formal slope intervals; known boundary
+certificates prevent automatic portable scoring. See the portable-calibration
+vignette for the connected workflow.
+
+## What can I report under MML?
 
 The following distinctions apply to the current free-slope model under MML.
 They describe mfrmr's available output, not a general impossibility of GPCM
@@ -208,6 +840,92 @@ Bonferroni **family** coverage ranged from 91.7--98% with model covariance and
 These correctly specified normal-population results show that neither
 sandwich covariance nor multiplicity adjustment guarantees nominal coverage
 in small samples; they do not test robustness under misspecification.
+
+### Examine one relative discrimination with a profile likelihood
+
+The default slope interval uses the local curvature near the fitted solution.
+If the likelihood is asymmetric, that approximation can differ substantially
+from an interval obtained by fixing a candidate discrimination and refitting
+all remaining parameters. Development mfrmr offers the latter as an explicit,
+experimental option for **one prespecified relative slope**. It does not
+establish better small-sample coverage.
+
+```{r slope-profile, eval=FALSE}
+# Choose a level from fit$slopes$SlopeFacet before looking for a favorable result.
+ci <- confint(fit, method = "profile", slope = "R01")
+print(ci)
+plot(ci, type = "profile")
+# Hide text when composing a larger figure:
+as_ggplot(ci, type = "profile", title = NULL, subtitle = NULL, caption = NULL)
+apa_table(ci, which = "profile_endpoints")
+apa_table(ci, which = "profile_checks", digits = 8)
+
+# Keep the calculated profile; reporting does not fit the model again.
+res <- mfrm_results(fit, intervals = list(profile = ci), compute = "never")
+report <- mfrm_report(res)
+saveRDS(ci, "one-slope-profile.rds")
+```
+
+The curve shows twice the log-likelihood loss. The horizontal dashed line is
+the requested chi-square(1) cutoff; its crossings define the connected local
+interval. Dotted vertical lines show the same-target Wald limits. The slope
+axis is logarithmic. Crosses identify unresolved calculations; lines stop at
+failed points, and evaluations without finite coordinates remain in the tables.
+A steeper discrimination is not a measure of rater agreement or a scoring
+weight recommendation.
+
+The relative slopes still have geometric mean one. Fixing even the dependent
+last slope preserves that constraint, while the population mean and variance
+and other nuisance parameters remain free. Two starting values and a finer
+quadrature are checked at each candidate. A better source likelihood, failed
+numerical checks, observed nonmonotonicity or an exhausted search produce
+explicitly unresolved bounds. Increase `profile_control$max_steps` only to
+extend a stated search; failing to find a crossing does not prove an infinite
+interval. Successful finite searches cannot exclude other, disconnected regions.
+
+The initial scope is an eligible GPCM MML fit with an estimated intercept-only
+normal population, unit weights, and no anchors or interactions, with shared or
+separate slope/step owners. Standardized targets, ratios/differences, JML,
+latent regression and simultaneous profile intervals are not included.
+The source fit and its global audit states remain unchanged. This method
+requires additional nuisance fits and is not assumed cheaper than bootstrap.
+Regular likelihood-ratio asymptotics still matter near boundaries; a profile
+is not a correction for a wrong model or a guarantee of interval coverage.
+
+A comparison using **all 100 saved calibrations** from one small-sample
+condition illustrates why successful profiles alone are insufficient. Each
+dataset had 40 people, three criteria and a linked rotating assignment of two
+of three raters. Rater slopes and steps shared their owner. The target was the
+first rater's relative slope, with true value `exp(-0.4)`; both methods used
+nominal 95% intervals on the same stored estimate.
+
+| Outcome | Log-Wald | Profile |
+| --- | ---: | ---: |
+| Complete finite intervals / all datasets | 98/100 | 53/100 |
+| True slope inside / available intervals | 89/98 (90.8%) | 53/53 (100%) |
+| Interval both available and containing truth / all datasets | 89/100 | 53/100 |
+| Median calculation time, including unsuccessful calls | 0.38 seconds | 8.80 seconds |
+
+The exact 95% Monte Carlo interval for profile availability is 42.8%–63.1%;
+for coverage among available profiles it is 93.3%–100%. The latter describes
+the selected 53 datasets, not a reliable procedure for all datasets. Among the
+same 53 datasets, Wald covered 49; their median interval widths were 1.010 for
+Wald and 1.035 for profile. This comparison does not establish general profile
+superiority. Wald also remains approximate: its available-interval coverage has
+a Monte Carlo interval of 83.3%–95.7%, and some intervals were extremely wide.
+
+Of the 47 unresolved profiles, 11 failed before profiling (source integration,
+information or category checks) and 36 failed during constrained searches.
+These are limitations of this numerical procedure on the stored calibrations;
+they do not show that a statistical interval cannot exist. No failed case was
+replaced, and no tolerance was relaxed. Times include the interval method's
+checks, exclude original fitting, and were measured with two local workers.
+
+These previously analysed data provide a diagnostic comparison, not independent
+confirmation of the current estimator. They do not assess separate owners,
+probability intervals or all sparse designs. Retain profile intervals as an
+explicit experimental sensitivity analysis; do not use them as an automatic
+Wald replacement or report their successful subset as a coverage guarantee.
 
 ### A fitted-model bootstrap alternative
 
@@ -641,11 +1359,13 @@ current many-facet notation,
 
 \[
 \log\frac{P(Y_o=k)}{P(Y_o=k-1)}
-  = \alpha_{g(o)}\{\eta_o-\tau_{g(o),k}\},
+  = \alpha_{s(o)}\{\eta_o-\tau_{t(o),k}\},
 \qquad \prod_g\alpha_g=1,
 \]
 
-where the additive predictor \(\eta_o\) contains person ability and the signed
+where \(s(o)\) selects the slope owner and \(t(o)\) selects the step owner.
+They must coincide for JML; MML also permits separate owners. The additive
+predictor \(\eta_o\) contains person ability and the signed
 locations of the observed facets. Thus the selected slope multiplies the
 complete adjacent-category predictor: person ability, every facet location or
 fitted interaction inside \(\eta_o\), and the owned step. It is not a
@@ -657,20 +1377,321 @@ The phrase *generalized many-facet Rasch model* is broader and is not a unique
 synonym for this implementation. For example, Uto and Ueno (2020, equation 9)
 use multiplicative task and rater slope blocks,
 \(\alpha_i\alpha_r\), together with rater severity and rater-specific steps.
-The current mfrmr GPCM estimates one slope family. MML can separate the
-slope owner from the step owner; JML requires `slope_facet == step_facet`.
-It does not jointly estimate task and rater slopes or introduce a
+The one-family mfrmr GPCM can separate the slope owner from the step owner
+under MML; JML requires `slope_facet == step_facet`. The provisional two-family
+MML--EM route jointly estimates the two slope blocks in this equation on a
+fixed standard-normal ability scale. Neither route introduces a
 multidimensional ability vector. Selecting criterion slopes and rater steps
 therefore remains a restricted many-facet GPCM, with the entire adjacent-category
 predictor multiplied by the selected criterion slope.
 
 A rater-owned fit is close to a restricted Uto--Ueno form after suppressing the
 task-slope block, provided the remaining step and identification contracts are
-also aligned. A criterion-owned fit instead has criterion-owned slopes and
-steps and should be described as an analogous restricted many-facet GPCM, not
+also aligned. A fit with both slopes and steps owned by Criterion should be
+described as an analogous restricted many-facet GPCM, not
 as an exact fit of Uto and Ueno's equation. Because free discrimination relaxes
 the defining equal-discrimination Rasch restriction, "generalized MFRM" means
 a model generalized from the MFRM baseline rather than a strict Rasch model.
+
+### When would two slope families help in practice?
+
+Consider a speaking assessment: each candidate completes several tasks, and
+several assessors score overlapping sets of performances. Difficulty concerns
+which tasks tend to receive lower scores. Severity concerns which assessors
+tend to give lower scores. Discrimination asks a different question: how
+strongly do the probabilities of higher categories change with ability?
+Two slope families let that change depend on both the task and the assessor.
+The provisional `fit_mfrm()` route below supports exploring this formulation.
+Its current output does not supply uncertainty or a rule for feedback decisions.
+
+| Practical question | What the two-family model can describe | What it does not establish by itself |
+| --- | --- | --- |
+| Should a speaking task be reviewed? | A task slope describes its contribution to response sensitivity across assessors, alongside difficulty and predicted category curves. | A low slope does not establish poor content validity or require deleting the task. |
+| Which assessors may benefit from feedback? | Severity, category steps and an assessor slope distinguish a shift in scores from a change in response sensitivity. | A large slope is not proof of scoring accuracy or rater competence; training decisions also need substantive review and, where appropriate, reference ratings. |
+| Does the pattern recur in music assessment or clinical skills examinations? | Task and assessor labels can be replaced by piece/station and judge/examiner while keeping their declared model roles. | Renaming columns does not justify a single ability dimension across unrelated musical or clinical skills. |
+
+For a simple numerical illustration, let a task slope be 0.8 and an assessor
+slope be 1.2. Their effective slope is 0.96. Combining the same task with an
+assessor slope of 0.7 gives 0.56. These are multipliers in the adjacent-category
+log-odds equation, not score weights, accuracy percentages or observed score
+increases. The actual expected-score change also depends on ability, locations
+and category steps. In particular, a large slope can coexist with little
+information where almost everyone receives an extreme category. Read the
+probability and information curves over the ability range relevant to the
+assessment, not just a ranked slope table.
+
+The multiplication is also a substantive restriction. The task/assessor
+sensitivity factors combine as a product; they are not a freely estimated
+slope for every task-by-assessor pair. A particular assessor's unusual reaction
+to only one task may require a different model. Nor do two slopes create two
+latent abilities: the formulation discussed here has one ability dimension.
+
+A useful analysis starts with the decision and rating design:
+
+1. Define the ability being assessed, the meaning of each facet and the proposed
+   feedback or task-review decision. Keep the column labels distinct from the
+   chosen slope reference and step owner.
+2. Inspect who rated which performances. Overlapping performances and multiple
+   ratings per person help separate effects. A connected assignment graph alone
+   does not establish that both slope families are identified; inspect weak
+   links and systematic differences in the assigned candidate groups too.
+3. Compare equal-slope and simpler one-family explanations on matched data,
+   response equations and scales before attributing a pattern to two families.
+   Supported one-family PCM/GPCM comparisons are available now; the current
+   comparison API does not qualify a two-family test or ranking.
+4. For a qualified two-family analysis, inspect uncertainty, starting-value and
+   integration sensitivity, curves and substantive evidence together. Mark
+   predictions for combinations not observed together. Use the findings to
+   investigate tasks or feedback needs, not as an automatic removal or
+   competence rule.
+
+### Can EM estimate two slope families?
+
+Yes. With fixed task and rater effects and one latent ability, adding a second
+slope family does not add another latent integration dimension. MML--EM can
+combine all ratings of each person in the E-step and jointly update task
+slopes, rater slopes, locations and steps in a constrained numerical M-step.
+This extends the estimation approach used for GPCM by Muraki (1992); it does
+not turn the model into JML. Numerical EM can converge slowly or to a local
+solution, and small likelihood changes alone do not establish convergence.
+Uncertainty must account for unobserved ability: the curvature of a single
+M-step is not the observed marginal information matrix.
+
+In the two-family formulation discussed here, fixing the ability distribution
+to N(0,1) and the geometric mean of task slopes to one leaves the rater slopes
+free. A task slope of one is the task-family geometric reference. A rater
+slope of one is a unit multiplier on this model's identified scale, not the
+average rater's slope. Neither is a cutoff for rater competence. Tables and
+plots must identify both the owning facet and its level, even when task and
+rater levels use the same labels. The effective slope for a rating is their
+product, not either component alone.
+
+"Task" and "Rater" describe the example's roles, not required column names.
+The same roles could be labelled "Criterion" and "Assessor". Keep the column
+names separate from the choice of slope reference and step owner: changing a
+label should not change the model, whereas assigning steps to a different
+facet generally does. Neither the order of columns in a data frame nor words
+such as "rater" should silently select the model's constraints. The public
+`fit_mfrm()` accepts chosen person, facet and score column names. For two
+families, the order of `slope_facet = c(first_owner, second_owner)` declares
+their roles explicitly; it is independent of data-column or `facets` order.
+
+[`sirt::rm.facets()`](https://alexanderrobitzsch.github.io/sirt/reference/rm.facets.html)
+provides an existing MML--EM route with item and rater slopes. Its documented
+slopes multiply ability, with item category intercepts and unscaled rater
+severity. The Uto--Ueno equation instead multiplies the whole adjacent-category
+predictor and uses rater steps. They are generally different models, so their
+estimates should not be compared as alternative optimizers without first
+matching the response equation and identification. Availability of both
+fitting routes does not establish software equivalence or qualify uncertainty
+for mfrmr's provisional two-family route.
+
+Assignment also matters. Having every task rated by every rater is not enough
+to distinguish two slope families. For example, with two tasks, two raters,
+binary scores and a fixed standard-normal ability distribution, the two-family
+model above has six free location/slope parameters. If each person supplies
+only one rating, the data provide just four marginal success probabilities,
+one per task-rater pair. More people with that same assignment cannot resolve
+all six parameters. Several ratings of the same person provide additional
+information through their joint response patterns. This does not guarantee
+precise estimates: category use, sample size, the population assumption and
+numerical integration still matter. Optimizer convergence alone cannot resolve
+an insufficient assignment design.
+
+### What does changing the ability SD test?
+
+A narrow ability distribution may give different category exposure and less
+information about a response curve than a broad distribution. But parameter
+recovery must first be compared on the same identified scale. For the two-owner
+equation above, write ability as `theta = mu + sigma*z`, with standard-normal
+`z`. The same response probabilities result when task slopes are unchanged,
+rater slopes are multiplied by `sigma`, task locations and rater steps are
+divided by `sigma`, and rater locations become `(location - mu)/sigma`.
+This preserves the task-slope geometric mean of one. A change in raw slope
+values across these representations is not by itself estimator bias.
+
+A single correctly transformed normal population is different from rater
+panels assigned different ability means or SDs, or a skewed/mixture population
+fitted with a normal model. Common rated performances help connect panels, but
+are not fixed ability anchors unless their values are explicitly supplied.
+Neither overlap counts nor fixed severity anchors alone establish the ability
+scale and both slope families. The one-family GPCM and provisional
+two-family formulation have distinct identification constraints; do
+not transfer parameter values or anchor settings without matching them.
+
+### Do two slopes handle testlets or local dependence?
+
+No. Two fixed slope families allow the response curve to differ across two
+facets. They still assume independent ratings after conditioning on ability
+and the specified fixed parameters. Two scores from the same performance may
+remain related beyond ability: for example, fluency and accuracy ratings may
+both reflect an unusually successful response to one speaking task. Merely
+adding task and assessor slopes does not model this shared fluctuation.
+
+**Local independence is a conditional assumption.** A testlet model adds a
+latent effect for a block of related ratings and assumes independence after
+conditioning on ability and that effect. Integrating out the effect leaves
+dependence among the block's ratings. This is compatible with one substantive
+ability, but it introduces additional latent variables for dependence. It
+should not be described as having only one latent variable or as measuring
+several substantive abilities automatically.
+
+| Feature | Speaking-assessment example | Current mfrmr route |
+| --- | --- | --- |
+| Two fixed slope families | Task and assessor jointly determine the effective response slope. | Provisional fixed-population MML--EM with summary and conditional curves; no local-dependence correction or interval inference. |
+| Person-local testlet | One candidate's performance affects multiple scores within a task. | `fit_mfrm_testlet()` for RSM, one common local variance and one nonoverlapping block membership per row. |
+| Shared random rater severity | An assessor's usual severity affects everyone they assess. | `fit_mfrm_random_rater()` for approximate RSM MML, with its documented uncertainty limitations. |
+| Random discrimination | Assessors' slopes arise from a specified population distribution. | Not supplied by either two fixed slope families or random rater severity; no current public route. |
+
+A testlet effect is itself a random effect; the distinction from random rater
+severity is which ratings share it, not whether the model uses random effects.
+Block identity must follow the assessment process. A Person-by-Task effect
+shared across assessors represents something different from a
+Person-by-Task-by-Assessor impression shared only across that assessor's rubric
+scores. With `testlet = "Rater"`, the current testlet API assigns a separate
+effect to each Person/rater pair; it does not create one rater effect shared
+across persons. Repeated ratings and assignment overlap are needed to separate
+such effects. Nonzero testlet variance is not proof of halo, and zero estimated
+variance in a weak design is not proof of independence.
+
+The current testlet and random-rater routes are separate RSM models. Neither
+adds dependence effects to a GPCM fit, and they cannot yet be combined.
+A future combined model must specify how effects are shared, whether a local
+effect is multiplied by discrimination, and how all shared effects are
+integrated. Independently redrawing a common rater for each person would change
+the model. EM cannot resolve that problem by itself.
+
+For feedback and planning, specify whether a prediction concerns an observed
+performance/rater or a new one. An observed block's fitted effect is not the
+predictive distribution of a new block. Read model-specific residuals and
+uncertainty alongside the response curves; ordinary infit thresholds do not
+automatically become calibrated tests in the extended models. Do not sum
+per-rating marginal information as if dependent ratings were independent, or
+interpret testlet variance as a G-theory coefficient. A testlet model also does
+not automatically make differently sized tasks equally weighted.
+
+The [Rasch testlet model of Wang and Wilson (2005)](https://doi.org/10.1177/0146621604271053)
+and their [random-effects facet model](https://doi.org/10.1177/0146621605276281)
+provide the local-effect background. [Rijmen (2009)](https://www.ets.org/research/policy_research_reports/publications/report/2009/hycg.html)
+explains how testlet and bifactor formulations can be related under particular
+loading constraints. These relationships do not mean every latent effect or
+multilevel model is interchangeable. For available operations, consult
+`?fit_mfrm_testlet`, `?fit_mfrm_random_rater` and their prediction methods.
+
+The one-ability assumption can be examined before a multidimensional GMFRM
+is available. The [visual diagnostics guide](mfrmr-visual-diagnostics.html#checking-one-substantive-dimension-without-fitting-a-multidimensional-model)
+compares residual PCA, Q3-style and marginal screens, model-generated reference
+checks and explicit alternative-model comparisons. It also distinguishes
+residual networks/EGA from assignment networks. Current residual screens are
+exploratory; neither a residual component count nor a network community count
+is a certified number of abilities.
+
+### How does this relate to multivariate G theory?
+
+The two approaches answer different questions about the same assessment.
+A many-facet GPCM describes category responses in terms of ability, task
+location, rater severity, steps and discrimination. Multivariate G theory
+instead asks how observed scores on several criteria, such as fluency and
+accuracy, vary together across persons, raters and tasks. It can then compare
+assessment plans, for example adding raters or tasks for a prespecified
+weighted score. Two slope families still describe one latent ability; they
+do not create two score dimensions or estimate their G-study covariances.
+
+| Question | Existing route | Interpretation |
+| --- | --- | --- |
+| How do category responses and rater effects vary with ability? | `fit_mfrm()` and its response/diagnostic outputs | A latent response model; the provisional two-family route has a narrower output scope than one-family GPCM. |
+| How much observed-score variation comes from persons, raters, tasks and their interactions across criteria? | `mfrm_multivariate_gstudy()` | Score-specific variance and between-score covariance components. |
+| What changes when the assessment uses more raters/tasks or different prespecified score weights? | `mfrm_multivariate_d_study()` and `plot()` | G, Phi and SEM for the declared future design. |
+| How uncertain is the difference between two prespecified plans? | `mfrm_multivariate_d_compare()` | Approximate paired intervals under explicit normal random-effect assumptions for two common crossed facets. |
+
+Start the G-study from numeric score columns and the declared design, not a
+matrix of GPCM parameter estimates. The current G-study supports one or two
+common random measurement facets, including its documented nested structure.
+Balanced ANOVA and identifiable incomplete-design MINQUE(0) analyses are
+available. The latter does not correct informative missingness. D-study plans
+use the documented balanced future designs; their help describes the distinct
+restrictions on point estimates and plan-difference intervals. G/D-study objects
+have their own `summary()`, `plot()` and `plot_data()` routes and are not
+`mfrm_results()` inputs.
+
+For design decisions, begin with the existing two-dimensional D-study plots:
+condition count on the horizontal axis, G/Phi or SEM on the vertical axis,
+with separate lines for the other count. Inspect one criterion or declared
+composite at a time. Multiple score criteria do not require a 3D surface.
+An increase in G/Phi across populations need not mean smaller measurement
+error: coefficients depend on person variation as well as error variance.
+Read SEM in score units alongside them. The plot help explains the distinction
+between point projections and intervals for prespecified plan differences.
+
+Individual rater feedback sheets currently support native additive RSM/PCM,
+not GPCM. Use the supported GPCM-specific outputs for discrimination and
+response curves; do not relabel an ordinary-model sheet as a GMFRM report.
+
+The separate `mfrm_generalizability(fit)` convenience route does accept an
+MFRM fit, but uses its stored ratings (or supplied data) for an observed-score
+main-effects analysis. It does not convert latent model parameters to
+G-theory components or fit the multivariate model.
+
+There is direct precedent for complementary use. [Hirai and Koizumi
+(2013)](https://doi.org/10.1080/15434303.2013.824973) used multivariate G theory
+with mGENOVA to examine criterion-specific dependability across stories and
+MFRM with Facets to study ratings and scales. Their G-study excluded raters;
+that design does not by itself establish generalization to new raters. The
+paper also set negative variance estimates to zero, whereas mfrmr retains
+raw component estimates and reports when a requested coefficient is
+unavailable. Using the same broad methods is not a numerical reproduction of
+that analysis. [Jiang et al. (2020)](https://doi.org/10.3758/s13428-020-01399-z)
+explain estimation of multivariate G-theory parameters through a linear mixed
+model framework; this is not an automatic conversion of GPCM slopes.
+
+There are also joint IRT/G-theory approaches, including [Briggs and Wilson
+(2007)](https://doi.org/10.1111/j.1745-3984.2007.00031.x). Such integration
+requires specifying the population of tasks/raters, the score or latent scale
+and the quantity to generalize. It is not implemented by passing the sampling
+covariance of estimated GPCM slopes to a G-study: that covariance describes
+estimation error, not sources of variation in observed scores. G-study score
+weights express the intended assessment composite, not estimated GPCM
+identification or discrimination weights.
+
+For complementary analyses, keep the person, rater and task identifiers and
+state which ratings and score criteria each analysis uses, including any
+aggregation or exclusions. Do not silently replace unassigned ratings with
+predictions or analyze EAP scores as error-free observations. Those choices
+change the target and its uncertainty. A joint GMFRM/G-theory model with
+propagated calibration uncertainty and a declared generalization population
+remains a separate extension; the current APIs do not claim that integration.
+
+### What can the related facets literature add?
+
+Wang and Liu (2007) combine item discrimination and item steps with latent
+regression: person background variables explain the latent ability distribution
+while response uncertainty remains in the model. The existing MML arguments
+`population_formula` and `person_data` provide a conditional-normal latent
+regression route in mfrmr. Regressing fitted EAP scores as if they were observed
+without error is a different procedure. Their model does not itself add a
+second, multiplicative rater-slope family, and its item steps differ from the
+rater steps in the Uto--Ueno example.
+
+Wang, Wu and Qiu (2025, preprint) propose a derivative-based rater capability
+index for binary ratings. The useful practical question is how a rater's
+response changes across the ability range. In a GPCM context with effective
+slope A, expected-score sensitivity is `A * Var(Score | Theta, context)`, whereas
+information is `A^2 * Var(Score | Theta, context)`. A steep curve and a large
+amount of information are related but not identical. Existing probability and
+information curves can help examine this distinction; mfrmr does not currently
+provide the paper's normalized capability index.
+
+Population-averaged feedback also depends on the ability distribution and the
+tasks used for averaging. Comparing raters on different assigned populations
+can change the comparison; a common reference population answers a different
+question from each rater's actual assignment. Such summaries describe a fitted
+response model, not agreement with an independently established correct score.
+The preprint's binary normalization and Laplace approximation should not be
+treated as validated defaults for polytomous GPCM or sparse rating panels.
+EM and Laplace address different numerical choices: EM is an optimization
+strategy, whereas Laplace approximates integration over the latent ability.
+A Laplace-based marginal likelihood is not ordinary JML, and its accuracy
+needs checking separately from optimizer convergence.
 
 ### Which facet receives different slopes?
 
@@ -685,7 +1706,7 @@ to one.
 | `step_facet = "Criterion"`, `slope_facet = "Criterion"` | Each criterion has its own relative discrimination and criterion-specific steps. | Supported; inference availability is listed above. |
 | `step_facet = "Rater"`, `slope_facet = "Rater"` | Each rater has its own model-conditional relative discrimination and rater-specific steps. | Code-supported with rater-interpretation caveats; a slope is not automatically evidence of rater consistency. |
 | Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Supported with MML; one slope family and existing output-specific inference checks. JML, weighting reviews and simulation/design workflows are unavailable for this structure. |
-| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in the current package; this is closer to a multiplicative generalized-MFRM extension. |
+| Criterion slopes and rater slopes together | Effective discrimination is the product of two slope blocks. | Provisional MML--EM on fixed N(0,1), exactly two facets and second-owner steps; summary, fitted curves without intervals and separately checked experimental component-slope intervals. |
 
 Every facet that is not selected remains an additive location term inside
 \(\eta\). For example, a criterion-owned GPCM can still estimate rater severity,
@@ -1476,6 +2497,13 @@ object with a `gpcm_boundary`; full FACETS score-side review remains on the
 
 ## Estimator references
 
+- Wang, W.-C., & Liu, C.-Y. (2007). *Formulation and Application of the
+  Generalized Multilevel Facets Model*. Educational and Psychological
+  Measurement, 67(4), 583--605.
+  <https://doi.org/10.1177/0013164406296974>
+- Wang, Y.-G., Wu, J., & Qiu, X. (2025). *A Differential Index Measuring
+  Rater's Capability in Educational Assessment*. Preprint, arXiv:2502.09099v1.
+  <https://arxiv.org/abs/2502.09099v1>
 - Muraki, E. (1992). *A generalized partial credit model: Application of an EM
   algorithm*. Applied Psychological Measurement, 16, 159--176.
 - Uto, M., & Ueno, M. (2020). *A generalized many-facet Rasch model and its

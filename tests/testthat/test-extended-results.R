@@ -249,3 +249,71 @@ test_that("explicit calibration selection survives archive and replay without fi
   expect_identical(mfrm_report(legacy)$tables$calibration, legacy$tables$calibration)
   expect_true(all(is.na(mfrm_results(legacy$fit)$tables$calibration$Lower)))
 })
+
+test_that("testlet reports preserve the scoring roster and Person-local sharing", {
+  fit <- extended_report_fixture()
+  fit$input$columns$person <- "Candidate ID"
+  roster <- data.frame(Rater = c("A", "A", "A", "B", "A"),
+    Score = c(0, 1, 1, 0, NA_real_), check.names = FALSE)
+  roster[["Candidate ID"]] <- c("p:1", "p:1", "p2", "p2", "Missing")
+  scored <- predict(fit, roster, missing = "omit", persons = c("p:1", "Missing"))
+  expect_identical(scored$table$Status, c("available_conditional", "prior_only"))
+  expect_match(scored$settings$effect_sharing, "Person/testlet pair", fixed = TRUE)
+  expect_match(scored$settings$local_effect_integration, "no stored local-effect mode")
+  # Another Person's scores cannot update this Person-local testlet effect.
+  isolated <- predict(fit, roster[roster[["Candidate ID"]] == "p:1", ], persons = "p:1")
+  expect_equal(scored$table[1, ], isolated$table, tolerance = 1e-10)
+  fail <- function(...) stop("Unexpected scoring or fitting")
+  local_mocked_bindings(predict.mfrm_testlet = fail, fit_mfrm_testlet = fail)
+  result <- mfrm_results(fit, predictions = scored, compute = "never")
+  expect_identical(result$tables$scoring_roster, scored$scoring_data)
+  expect_identical(result$tables$scoring_roster[["Candidate ID"]], roster[["Candidate ID"]])
+  expect_true(is.na(result$tables$scoring_roster$Score[5]))
+  expect_identical(result$tables$scoring_blocks, scored$blocks)
+  expect_identical(mfrm_report(result)$tables$scoring_roster, scored$scoring_data)
+  expect_identical(result$tables$scoring_settings,
+    mfrm_extended_settings_table(scored$settings))
+  directory <- tempfile(); withr::defer(unlink(directory, recursive = TRUE))
+  archive <- export_mfrm_results(result, directory, include = c("tables", "replay"),
+    acknowledge_sensitive = TRUE)
+  file <- archive$written_files$Path[archive$written_files$Component == "table_scoring_roster"]
+  expect_length(file, 1L)
+  csv <- read.csv(file, check.names = FALSE)
+  expect_identical(names(csv), names(scored$scoring_data))
+  expect_equal(csv, scored$scoring_data, ignore_attr = TRUE)
+  file <- tempfile(); withr::defer(unlink(file))
+  saveRDS(result, file)
+  expect_identical(readRDS(file)$tables$scoring_roster, scored$scoring_data)
+  legacy <- scored; legacy$scoring_data <- NULL
+  legacy$settings[c("effect_sharing", "local_effect_integration", "roster")] <- NULL
+  older <- mfrm_results(fit, predictions = legacy, compute = "never")
+  expect_null(older$tables$scoring_roster)
+  expect_identical(older$tables$person_scores, legacy$table)
+})
+
+test_that("random-rater probability settings preserve the integration target", {
+  fit <- extended_report_fixture(FALSE)
+  ability <- c(-.8, .6)
+  known <- predict(fit, data.frame(Rater = c("A", "A")), ability)
+  replacement <- predict(fit, data.frame(Rater = c("new", "new")), ability, rater = "new")
+  expect_match(known$settings$rater_integration, "Conditional Laplace")
+  expect_match(replacement$settings$rater_integration, "replacement-rater population")
+  expect_identical(known$settings$effect_sharing, replacement$settings$effect_sharing)
+  # Independent integration checks that the labelled distributions are used.
+  reference <- function(mu, sd) vapply(ability, function(theta)
+    stats::integrate(function(z) stats::plogis(theta - mu - sd * z) * stats::dnorm(z),
+      -Inf, Inf, rel.tol = 1e-10)$value, numeric(1))
+  expect_equal(known$probabilities[, 2], reference(-.3, .2), tolerance = 1e-9)
+  expect_equal(replacement$probabilities[, 2], reference(0, .7), tolerance = 1e-9)
+  fail <- function(...) stop("Unexpected prediction or fitting")
+  local_mocked_bindings(predict.mfrm_random_rater = fail, fit_mfrm_random_rater = fail)
+  for (prediction in list(known, replacement)) {
+    res <- mfrm_results(fit, predictions = prediction, compute = "never")
+    expect_identical(res$tables$prediction_settings,
+      mfrm_extended_settings_table(prediction$settings))
+    expect_identical(mfrm_report(res)$tables$prediction_settings, res$tables$prediction_settings)
+    file <- tempfile(); withr::defer(unlink(file))
+    saveRDS(res, file)
+    expect_identical(readRDS(file)$tables$prediction_settings, res$tables$prediction_settings)
+  }
+})

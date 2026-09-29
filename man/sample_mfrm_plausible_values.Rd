@@ -18,7 +18,8 @@ sample_mfrm_plausible_values(
   interval_level = 0.95,
   scoring_quad_points = 31L,
   readiness_policy = c("error", "review"),
-  seed = NULL
+  seed = NULL,
+  scoring_prior = NULL
 )
 }
 \arguments{
@@ -71,10 +72,15 @@ fit-time quadrature order. Fixed or adaptive integration is inherited
 from \code{fit}.}
 
 \item{readiness_policy}{Source-fit readiness policy passed to
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. Estimated-population fits currently require
-\code{"review"}; the returned notes and eligibility labels retain that restriction.}
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. Conditional calibration and scoring-integration
+checks are shared with that function and retained in the returned settings.}
 
 \item{seed}{Optional seed for reproducible posterior draws.}
+
+\item{scoring_prior}{Optional normal scoring prior, \code{list(mean = ..., sd = ...)},
+passed to \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. \code{NULL} retains the fitted scoring prior.
+Estimates and draws retain both the original and the supplied prior;
+checks of the fitted calibration and numerical accuracy are unchanged.}
 }
 \value{
 An object of class \code{mfrm_plausible_values} with components:
@@ -95,14 +101,15 @@ latent-regression scoring; \code{NULL} otherwise
 Sample approximate plausible values under fitted posterior scoring
 }
 \details{
-\code{sample_mfrm_plausible_values()} is a thin public wrapper around
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} that exposes the fitted-object posterior draws as
+\code{sample_mfrm_plausible_values()} uses \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} to return
+draws from each Person's posterior distribution as
 a standalone object. It is useful when downstream workflows want repeated
 latent-value imputations rather than just one posterior EAP summary.
 
 In the current \code{mfrmr} implementation these are \strong{approximate plausible
 values} drawn from the fitted quadrature-grid posterior under the scoring
-basis implied by \code{fit}. For ordinary \code{MML} fits this is the fitted marginal
+basis implied by \code{fit}, unless \code{scoring_prior} explicitly supplies another
+normal prior. With the default prior, for ordinary \code{MML} fits this is the fitted marginal
 calibration; for latent-regression \code{MML} fits it is the fitted conditional
 normal population model for the scored persons; for \code{JML} fits it is the
 fixed facet/step calibration together with a standard normal reference prior

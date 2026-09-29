@@ -37,10 +37,13 @@ mfrm_use_cpp11_backend <- function(config, include_linear_part = FALSE) {
 
 # Stable model-identity fields shared by fitted objects and reporting surfaces.
 # These describe the implemented likelihood; they are not readiness claims.
-mfrmr_gpcm_model_identity <- function(model) {
+mfrmr_gpcm_model_identity <- function(model, gpcm_spec = NULL) {
   is_gpcm <- identical(toupper(as.character(model)[1]), "GPCM")
+  product <- is_gpcm && !is.null(gpcm_spec$component_levels)
   list(
-    model_family = if (is_gpcm) {
+    model_family = if (product) {
+      "two_owner_product_slope_gpcm"
+    } else if (is_gpcm) {
       "aligned_single_owner_relative_slope_gpcm"
     } else {
       "not_applicable"
@@ -50,7 +53,9 @@ mfrmr_gpcm_model_identity <- function(model) {
     } else {
       "not_applicable"
     },
-    slope_composition = if (is_gpcm) {
+    slope_composition = if (product) {
+      "two_owner_product_first_gm1"
+    } else if (is_gpcm) {
       "single_owner_relative_gm1"
     } else {
       "not_applicable"
@@ -302,6 +307,7 @@ stop_if_gpcm_out_of_scope <- function(fit,
                                       helper,
                                       supported = "fitting, core summary output, fitted-object posterior scoring, compute_information(), direct simulation and recovery checks, residual-based diagnostics, the curve/report helpers, and the slope-aware element-conditional fair_average_table() and estimate_bias() (with the SE caveats documented in their help pages)",
                                       area = NULL) {
+  stop_if_product_slopes(fit, helper)
   if (!inherits(fit, "mfrm_fit")) return(invisible(NULL))
   model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
   if (identical(model, "GPCM")) {
@@ -886,6 +892,25 @@ build_gpcm_slope_spec <- function(levels,
 
 expand_gpcm_log_slopes <- function(free,
                                    spec) {
+  if (!is.null(spec$log_slope_design)) {
+    if (length(free) != spec$n_params || any(!is.finite(free))) {
+      stop("Product slopes require a finite vector with one entry per free coordinate.")
+    }
+    n <- lengths(spec$component_levels)
+    component_log <- list(expand_facet(free[seq_len(n[1] - 1L)], n[1]),
+                          free[n[1] - 1L + seq_len(n[2])])
+    components <- Map(function(x, labels) {
+      data.frame(Level = labels, LogSlope = as.numeric(x), Slope = exp(as.numeric(x)))
+    }, component_log, spec$component_levels)
+    names(components) <- names(spec$component_levels)
+    log_slopes <- as.numeric(spec$log_slope_design %*% free)
+    if (any(!is.finite(unlist(lapply(components, `[[`, "Slope")))) ||
+        any(unlist(lapply(components, `[[`, "Slope")) <= 0)) {
+      stop(new_gpcm_slope_numeric_boundary_error(unlist(component_log)))
+    }
+    return(list(log_slopes = log_slopes, slopes = exp(log_slopes),
+                slope_components = components))
+  }
   n_levels <- length(spec$levels %||% character(0))
   if (n_levels == 0L) {
     return(list(
@@ -1512,6 +1537,7 @@ collapse_step_constraint <- function(expanded, spec, tolerance = 1e-12) {
 }
 
 build_param_sizes <- function(config) {
+  stop_if_jml_adjustment(list(config=config), "Ordinary likelihood parameter calculations")
   n_steps <- max(config$n_cat - 1, 0)
   sizes <- list(
     theta = if (config$method == "JML") config$theta_spec$n_params else 0
@@ -1587,6 +1613,7 @@ center_step_matrix_rows <- function(step_mat) {
 }
 
 expand_params <- function(par, sizes, config) {
+  stop_if_jml_adjustment(list(config=config), "Ordinary likelihood parameter calculations")
   parts <- split_params(par, sizes)
   theta <- if (config$method == "JML") {
     expand_facet_with_constraints(parts$theta, config$theta_spec)
@@ -1645,7 +1672,7 @@ expand_params <- function(par, sizes, config) {
     )
   }
 
-  list(
+  out <- list(
     theta = theta,
     facets = facets,
     interactions = interactions,
@@ -1655,6 +1682,10 @@ expand_params <- function(par, sizes, config) {
     slopes = slopes,
     population = population
   )
+  if (identical(config$model, "GPCM") && !is.null(gpcm_expanded$slope_components)) {
+    out$slope_components <- gpcm_expanded$slope_components
+  }
+  out
 }
 
 collapse_expanded_params <- function(params, config) {
@@ -1692,8 +1723,7 @@ collapse_expanded_params <- function(params, config) {
     }), use.names = FALSE)
   }
   if (identical(config$model, "GPCM")) {
-    n <- as.integer(config$gpcm_spec$n_params %||% 0L)
-    blocks$log_slopes <- if (n > 0L) params$log_slopes[seq_len(n)] else numeric(0)
+    blocks$log_slopes <- collapse_gpcm_log_slopes(params$log_slopes, config$gpcm_spec)
   }
   if (identical(config$method, "MML") && isTRUE(config$population_spec$active)) {
     blocks$beta <- as.numeric(params$population$coefficients)
@@ -2065,7 +2095,7 @@ mfrm_mml_expected_category_bundle_r <- function(logprob_bundle,
 
   k_vals <- 0:(k_cat - 1)
   expected_k <- as.vector(posterior_prob %*% k_vals)
-  var_k <- as.vector(posterior_prob %*% (k_vals^2)) - expected_k^2
+  var_k <- mfrm_category_variance(posterior_prob, k_vals, expected_k)
 
   out <- list(
     posterior_prob = posterior_prob,
@@ -2273,7 +2303,7 @@ mfrm_grad_jml_core <- function(params, eta, idx, config, sizes,
     rs_slope <- rowsum(matrix(slope_score, ncol = 1), idx$slope_idx)
     slope_ids <- as.integer(rownames(rs_slope))
     grad_log_slope_exp[slope_ids] <- as.vector(rs_slope)
-    grad_log_slope_free <- project_sum_zero_gradient(grad_log_slope_exp)
+    grad_log_slope_free <- project_gpcm_log_slope_gradient(grad_log_slope_exp, config$gpcm_spec)
   } else {
     # PCM
     step_cum_mat <- step_cum %||%
@@ -2533,7 +2563,7 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
     }
 
     grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
-    grad_log_slope_free <- project_sum_zero_gradient(grad_log_slope_exp)
+    grad_log_slope_free <- project_gpcm_log_slope_gradient(grad_log_slope_exp, config$gpcm_spec)
   } else {
     k_cat <- ncol(logprob_bundle$prob_list[[1]])
     n_steps <- k_cat - 1
@@ -3134,7 +3164,9 @@ build_optimizer_diagnostics <- function(opt,
                                         maxit = NA_integer_,
                                         optimizer_method = "BFGS",
                                         convergence_basis = c("optimizer_gradient",
-                                                              "relative_loglik")) {
+                                                              "relative_loglik",
+                                                              "marginal_score_per_person"),
+                                        gradient_tolerance = NULL) {
   convergence_basis <- match.arg(convergence_basis)
   code <- as.integer(opt$convergence %||% NA_integer_)
   counts <- opt$counts %||% c()
@@ -3149,7 +3181,22 @@ build_optimizer_diagnostics <- function(opt,
 
   grad_metrics <- compute_gradient_metrics(gradient)
   grad_tol <- if (is.finite(reltol)) max(1e-4, 10 * reltol) else 1e-4
-  if (identical(convergence_basis, "relative_loglik")) {
+  if (identical(convergence_basis, "marginal_score_per_person")) {
+    if (length(gradient_tolerance) != 1L || !is.finite(gradient_tolerance) ||
+        gradient_tolerance <= 0) stop("Supply the positive marginal-score stopping tolerance.")
+    grad_tol <- gradient_tolerance
+    reviewable_warning <- FALSE
+    passed <- identical(code, 0L) && is.finite(grad_metrics$TerminalGradientSupNorm) &&
+      grad_metrics$TerminalGradientSupNorm <= grad_tol
+    status <- if (passed) "converged" else if (identical(code, 1L)) "iteration_limit" else "optimizer_warning"
+    reason <- if (passed) "marginal_score_tolerance_met" else "marginal_score_tolerance_not_met"
+    severity <- if (passed) "pass" else "fail"
+    detail <- if (passed) {
+      "EM met the marginal-score tolerance per Person; this is numerical convergence, not inferential eligibility."
+    } else {
+      "EM stopped without meeting the marginal-score tolerance per Person."
+    }
+  } else if (identical(convergence_basis, "relative_loglik")) {
     reviewable_warning <- FALSE
     if (is.na(code)) {
       status <- "unknown"
@@ -3338,7 +3385,7 @@ compute_hybrid_em_reltol <- function(reltol) {
 }
 
 
-build_person_table <- function(method, idx, config, params, prep, quad_points) {
+build_person_table <- function(method, idx, config, params, prep, quad_points, quad = NULL) {
   # Flag extreme persons (all observed at rating_min or rating_max).
   # Under JML the corresponding theta diverges to +-Inf, so surfacing
   # the flag early lets downstream diagnostics and reporting avoid
@@ -3348,7 +3395,7 @@ build_person_table <- function(method, idx, config, params, prep, quad_points) {
                                         rating_max = prep$rating_max)
 
   if (method == "MML") {
-    quad <- gauss_hermite_normal(quad_points)
+    if (is.null(quad)) quad <- gauss_hermite_normal(quad_points)
     tbl <- compute_person_eap(idx, config, params, quad) |>
       mutate(Person = prep$levels$Person) |>
       select(Person, Estimate, SD)
@@ -3423,6 +3470,21 @@ build_slope_table <- function(config, prep, params) {
     return(tibble())
   }
 
+  if (!is.null(config$gpcm_spec$component_levels)) {
+    spec <- config$gpcm_spec
+    components <- params$slope_components
+    if (!identical(prep$levels[config$slope_facet], spec$component_levels) ||
+        !identical(names(components), names(spec$component_levels)) ||
+        !all(vapply(names(components), function(owner)
+          identical(components[[owner]]$Level, spec$component_levels[[owner]]), logical(1)))) {
+      stop("Slope tables require the fitted owners and level ordering.", call. = FALSE)
+    }
+    meta <- mfrm_gpcm_product_metadata(spec)
+    return(tibble(SlopeOwner = meta$Owner, SlopeFacet = meta$Level,
+      LogEstimate = unlist(lapply(components, `[[`, "LogSlope"), use.names = FALSE),
+      Estimate = unlist(lapply(components, `[[`, "Slope"), use.names = FALSE),
+      ScaleReference = meta$ScaleReference, Identification = meta$Identification))
+  }
   tibble(
     SlopeFacet = prep$levels[[config$slope_facet]],
     LogEstimate = params$log_slopes,
@@ -3560,6 +3622,7 @@ mfrm_ic_console_lines <- function(summary_row, digits = 3L) {
     suppressed_nonunit_weight = "non-unit observation weights lack ordinary likelihood-based comparison support",
     invalid_person_count = "the Person count is invalid",
     invalid_likelihood_contract = "likelihood or parameter-count information is unavailable",
+    unsupported_product_slopes = "two-family slope model comparison is not yet supported",
     "current comparison support is not established")
   lines <- paste0(
     "LogLik: ", loglik,
@@ -3726,7 +3789,14 @@ build_mfrm_ic_contract <- function(loglik, npar, prep, config, method) {
     weight_policy %in% c("unweighted", "explicit_unit") &&
     is.finite(persons) && persons >= 1L &&
     valid_likelihood_contract
-  ic_status <- if (!identical(method, "MML")) {
+  product_slopes <- !is.null(config$gpcm_spec$component_levels)
+  if (product_slopes) {
+    structural_eligible <- FALSE
+    legacy_aic <- legacy_bic <- NA_real_
+  }
+  ic_status <- if (product_slopes) {
+    "unsupported_product_slopes"
+  } else if (!identical(method, "MML")) {
     "descriptive_jml"
   } else if (identical(weight_policy, "invalid")) {
     "invalid_weight_policy"
@@ -3744,6 +3814,8 @@ build_mfrm_ic_contract <- function(loglik, npar, prep, config, method) {
   ic_sample_size <- if (structural_eligible) as.numeric(persons) else NA_real_
   ic_sample_size_basis <- if (structural_eligible) {
     "person_count"
+  } else if (product_slopes) {
+    "unsupported_product_slopes"
   } else if (!identical(method, "MML")) {
     "descriptive_jml"
   } else if (identical(weight_policy, "invalid")) {
@@ -8816,7 +8888,7 @@ estimate_bias_interaction <- function(res,
       }
       k_vals <- 0:(ncol(probs) - 1)
       expected_k <- as.vector(probs %*% k_vals)
-      var_k <- as.vector(probs %*% (k_vals^2)) - expected_k^2
+      var_k <- mfrm_category_variance(probs, k_vals, expected_k)
       var_k <- ifelse(var_k <= 1e-10, NA_real_, var_k)
       resid_k <- score_k_sub - expected_k
       std_sq <- resid_k^2 / var_k
@@ -9183,6 +9255,10 @@ extract_anchor_tables <- function(config) {
 
 calc_facets_chisq <- function(measure_df) {
   if (is.null(measure_df) || nrow(measure_df) == 0) return(tibble())
+  # These aggregate approximations do not model uncertainty in supplied anchors.
+  # Do not silently test a subset of levels using the full facet's degrees of freedom.
+  fixed_facets <- unique(measure_df$Facet[which(measure_df[["Fixed"]] %in% TRUE)])
+  measure_df$SE[measure_df$Facet %in% fixed_facets] <- NA_real_
   measure_df |>
     group_by(Facet) |>
     summarize(
@@ -9447,7 +9523,8 @@ compute_mml_parameter_covariance <- function(res) {
 
   idx <- build_indices(res$prep, step_facet = config$step_facet,
                        slope_facet = config$slope_facet,
-                       interaction_specs = config$interaction_specs)
+                       interaction_specs = config$interaction_specs,
+                       gpcm_spec = config$gpcm_spec)
   quad_points <- max(1L, as.integer(config$estimation_control$quad_points %||% 15L))
   quad <- gauss_hermite_normal(quad_points)
   cache <- make_param_cache(sizes, config, idx, is_mml = TRUE)
@@ -9827,6 +9904,34 @@ compute_mml_structural_parameter_se <- function(res,
   )
 }
 
+# Fixed coordinates are supplied constants, not estimates with sampling SEs.
+# Reuse the optimizer's sparse constraint expansion, including group constraints.
+apply_fixed_measure_precision <- function(tbl, config) {
+  tbl$Fixed <- rep(FALSE, nrow(tbl))
+  for (facet in unique(as.character(tbl$Facet))) {
+    if (facet == "Person" && identical(config$method, "MML")) next
+    spec <- if (facet == "Person") config$theta_spec else config$facet_specs[[facet]]
+    if (is.null(spec)) next
+    if (identical(as.integer(spec$n_params), as.integer(length(spec$levels)))) next
+    jac <- mfrmr_constraint_jacobian_sparse(spec, facet)$jacobian
+    fixed_levels <- as.character(spec$levels)[Matrix::rowSums(abs(jac)) == 0]
+    tbl$Fixed[tbl$Facet == facet & tbl$Level %in% fixed_levels] <- TRUE
+  }
+  fixed <- tbl$Fixed
+  for (nm in intersect(c("SE", "ModelSE", "RealSE", "CI_Lower", "CI_Upper"), names(tbl))) {
+    tbl[[nm]][fixed] <- NA_real_
+  }
+  labels <- c(SE_Method = "Fixed by constraints; not estimated",
+    PrecisionTier = "unavailable", SEUse = "not_applicable",
+    CIBasis = "Fixed value; no sampling interval", CIUse = "not_applicable",
+    CI_Method = "Not applicable to fixed values", CILabel = "Fixed value; no sampling interval")
+  for (nm in intersect(names(labels), names(tbl))) tbl[[nm]][fixed] <- labels[[nm]]
+  for (nm in intersect(c("SupportsFormalInference", "CIEligible"), names(tbl))) {
+    tbl[[nm]][fixed] <- FALSE
+  }
+  tbl
+}
+
 build_measure_se_table <- function(res, obs_df, facet_cols, fit_tbl, covariance = NULL) {
   approx_tbl <- calc_facet_se(obs_df, facet_cols) |>
     rename(ApproxSE = SE)
@@ -9927,6 +10032,7 @@ build_measure_se_table <- function(res, obs_df, facet_cols, fit_tbl, covariance 
     select("Facet", "Level", "N", "SE", "ModelSE", "RealSE", "SE_Method",
            "Converged", "InferenceReady", "ConvergenceSeverity",
            "PrecisionTier", "SupportsFormalInference", "SEUse", "CIBasis", "CIUse") |>
+    apply_fixed_measure_precision(res$config) |>
     arrange(.data$Facet, .data$Level) |>
     structure(mml_se_status = facet_model_bundle$status, mml_se_detail = facet_model_bundle$detail)
 }
@@ -9989,6 +10095,8 @@ summarize_precision_basis <- function(df, se_col, distribution_basis = c("sample
     ExcludedEstimates = nrow(df) - n_est,
     SummaryNote = if (n_est == 0L) {
       "Indices unavailable: no finite estimates."
+    } else if (any(df[["Fixed"]] %in% TRUE)) {
+      "Indices unavailable: facet includes values fixed by constraints."
     } else if (!complete_se) {
       sprintf("Indices unavailable: %d of %d finite estimates lack a valid SE.",
               n_est - n_se, n_est)
@@ -10254,6 +10362,8 @@ build_precision_profile <- function(res, measure_df, reliability_tbl, facet_prec
 
 audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_precision_tbl, precision_profile_tbl = NULL) {
   measure_df <- as.data.frame(measure_df %||% data.frame(), stringsAsFactors = FALSE)
+  # A supplied constant has no estimated SE; it is not a failed SE calculation.
+  if ("Fixed" %in% names(measure_df)) measure_df <- measure_df[!measure_df$Fixed, , drop = FALSE]
   reliability_tbl <- as.data.frame(reliability_tbl %||% data.frame(), stringsAsFactors = FALSE)
   facet_precision_tbl <- as.data.frame(facet_precision_tbl %||% data.frame(), stringsAsFactors = FALSE)
   precision_profile_tbl <- as.data.frame(precision_profile_tbl %||% data.frame(), stringsAsFactors = FALSE)
@@ -10366,7 +10476,7 @@ audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_prec
       if (!is.finite(model_share)) {
         "The proportion of available SEs could not be computed."
       } else {
-        paste0("Finite standard errors were available for ", sprintf("%.1f", 100 * model_share), "% of rows.")
+        paste0("Finite standard errors were available for ", sprintf("%.1f", 100 * model_share), "% of non-fixed rows.")
       },
       if (is.na(real_ok)) {
         "No finite model/fit-adjusted SE pairs were available for comparison."
@@ -10752,11 +10862,12 @@ mfrm_diagnostics <- function(res,
       CI_Method = ifelse(
         .data$BoundaryExcluded,
         "Not available for unbounded JML Person",
-        "Normal approximation"
+        ifelse(.data$Fixed, "Not applicable to fixed values", "Normal approximation")
       ),
       CIEligible = dplyr::coalesce(.data$SupportsFormalInference, FALSE),
       CILabel = dplyr::case_when(
         .data$BoundaryExcluded ~ "No interval; typed unbounded JML Person",
+        .data$Fixed ~ "Fixed value; no sampling interval",
         .data$PrecisionTier == "model_based" & !.data$CIEligible ~ "Diagnostic normal band; ordinary inference unavailable",
         .data$PrecisionTier == "model_based" ~ "Model-based normal interval",
         .data$PrecisionTier == "hybrid" ~ "Diagnostic normal band; review fallback or regularized SE",

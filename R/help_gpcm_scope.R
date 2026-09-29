@@ -8,7 +8,9 @@
 #' The table is intended for route selection before or after fitting and is
 #' limited to workflow availability, interpretive constraints, and the route
 #' to use next.
-#' The fitted model uses one facet for relative discriminations. MML permits
+#' Except for the multiple-slope and EM rows, the table describes one facet
+#' supplying relative discriminations. The provisional two-family route has
+#' a separate scope below. The one-family model uses one slope facet. MML permits
 #' a different facet for category steps; JML requires `slope_facet == step_facet`.
 #' It has one substantive ability dimension. Separate-owner MML supports
 #' fitted-object scoring, information, slope/curve uncertainty, matched PCM
@@ -17,6 +19,19 @@
 #' supports separate owners. Numerical eligibility is not a coverage guarantee. These structural choices are stated separately from the
 #' availability of each output. An available probability or descriptive comparison does
 #' not establish eligibility for a confidence interval or model-selection rule.
+#'
+#' JML fits estimate relative slopes but do not support the MML slope interval,
+#' bootstrap, curve-uncertainty or inferential comparison routes described here.
+#' Their available facet/location SEs are exploratory observation-table
+#' approximations, not slope SEs or nuisance-adjusted joint-information SEs.
+#' Local curvature checks do not establish bias control or interval coverage.
+#' Fitted-object
+#' JML scoring uses post-hoc EAP with a default standard-normal reference prior
+#' or an explicit `scoring_prior`; it is not ML/WLE scoring. Portable GPCM extraction
+#' supports MML and shared-owner JML within their distinct source-check scopes.
+#' JML local checks leave incomplete global audits unchanged. See [fit_mfrm()]
+#' for JML estimation and boundary
+#' conventions and [predict_mfrm_units()] for conditional scoring.
 #'
 #' @param status Which rows to return: `"all"` (default), `"supported"`,
 #'   `"supported_with_caveat"`, `"blocked"`, or `"deferred"`.
@@ -33,6 +48,115 @@
 #' Read `Boundary` before interpreting a caveated result. For a blocked or
 #' deferred row, use `RecommendedRoute` to choose a supported analysis or a
 #' Rasch-family alternative.
+#'
+#' @section Connected outputs and unavailable extensions:
+#' For the current one-slope-family model, use `summary(fit)` to review the
+#' model and numerical status, `plot(fit, type = ...)` for available location,
+#' fit and category views, and [stats::confint()] / [mfrm_curve_intervals()] for
+#' separately checked MML uncertainty. An interval result has its own `print()`
+#' and `plot()` methods; attach selected results to [mfrm_results()] for
+#' [mfrm_report()] and [export_mfrm_results()]. A plot of locations or fit
+#' statistics is not a plot of slope uncertainty.
+#'
+#' Portable calibration has its own row and [mfrm_calibration_capabilities()]
+#' gives estimator-specific source restrictions. Two slope families are available
+#' provisionally through [fit_mfrm()] with fixed-standard-normal MML--EM, exactly
+#' two facets, no anchors and unit weights. Use `summary(fit)`, then
+#' `curves <- mfrm_curve_intervals(fit, newdata)` and `plot(curves)`. Despite the
+#' function name, this route returns fitted values with unavailable intervals.
+#' Attach them with `mfrm_results(fit, include = c("fit", "plots"),
+#' compute = "never", intervals = curves)` for reports and saved exports.
+#' Separately use `ci <- confint(fit)` for experimental component-slope intervals
+#' and attach `intervals = list(slopes = ci, curves = curves)`. Local numerical
+#' checks do not establish global identification or sampling coverage; failed
+#' checks retain missing bounds.
+#' An explicit `confint(fit, method = "profile", slope = c(Task = "t1"))`
+#' profiles one two-family component, using the actual owner/level names.
+#' It retains nuisance reoptimization, numerical checks, unavailable endpoints
+#' and a same-target Wald comparison. Neither method has qualified coverage.
+#' Use [mml_quadrature_sensitivity()] to compare
+#' fixed-grid refits with the same EM controls and save each grid's interval
+#' checks. Person-score and adaptive-grid comparisons remain unavailable for
+#' two families. [mfrm_response_diagnostics()] supplies same-data posterior
+#' predictive residuals with fixed calibration, including descriptive Infit/Outfit
+#' without reference cutoffs. Attach the saved object through `response_diagnostics`
+#' to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and
+#' portable two-family calibration remain unavailable. Shared-owner corrected
+#' JML has an explicit experimental point-estimation and reporting route through
+#' `jml_correction_order`; formal structural intervals remain unavailable.
+#' Its descriptive response diagnostics and conditional EAP scoring use their
+#' own saved identities and source checks. Portable corrected calibration uses
+#' file format 5; no ordinary JML likelihood checks or structural intervals
+#' are inherited. Separate slope and step owners alone still
+#' define one slope family.
+#'
+#' @section Model, estimation and algorithm:
+#' RSM, PCM and GPCM describe response probabilities, not a particular fitting
+#' algorithm. MML integrates over an ability distribution; JML estimates the
+#' training persons' abilities jointly with the other parameters. EM and direct
+#' optimization are numerical ways to fit an MML model. RSM/PCM can therefore
+#' also use MML--EM. In this package, MML defaults to direct optimization;
+#' RSM/PCM EM and hybrid support additive, fixed-population models with fixed
+#' integration (`population = NULL`). One-family GPCM EM/hybrid requests fall back to direct
+#' and record the engine in `fit$summary`.
+#'
+#' The provisional two-slope-family GMFRM route uses fixed-standard-normal MML
+#' with numerical generalized EM. It requires an explicit EM request; direct
+#' and hybrid are not available for this route. EM is not a defining property
+#' of GMFRM. See the GPCM
+#' scope vignette for the distinction between the model, estimation method
+#' and algorithm, with links to Muraki, TAM and sirt.
+#'
+#' @section Applications of two slope families:
+#' In a speaking assessment, task difficulty and assessor severity describe
+#' shifts in ratings, whereas task and assessor slopes describe how responses
+#' change with ability. Their product is the effective slope for a rating.
+#' For example, 0.8 times 1.2 gives 0.96; it is a log-odds multiplier, not an
+#' accuracy percentage or a score weight. The same roles can use piece/judge
+#' or station/examiner labels, provided the single-ability assumption is
+#' appropriate. Two slope families do not create two latent abilities or a
+#' separate free slope for every task-by-assessor pair.
+#'
+#' Potential uses include task review and assessor feedback. A high assessor
+#' slope is not a competence threshold, and a low task slope is not a rule for
+#' deleting content. Read category and information curves over the relevant
+#' ability range, inspect uncertainty and assignment overlap, and bring in
+#' reference ratings or substantive evidence for accuracy claims. The vignette
+#' explains these uses and a provisional two-family fitting example. It does
+#' not yet provide a two-family model comparison or qualified feedback decision.
+#'
+#' @section Local independence, testlets and random effects:
+#' Two fixed slope families change response sensitivity; they do not by
+#' themselves remove dependence between ratings from the same performance.
+#' A testlet effect is itself a random effect, defined by its sharing unit.
+#' A testlet model assumes independence conditional on ability and its local
+#' effect, with dependence remaining after the effect is integrated out.
+#' One substantive ability can therefore coexist with additional latent
+#' dependence variables.
+#'
+#' [fit_mfrm_testlet()] supplies a Person-local RSM block effect; reusing a
+#' block label for another Person creates a different effect.
+#' [fit_mfrm_random_rater()] instead supplies a rater severity effect shared
+#' across persons. These separate RSM routes neither add effects to GPCM nor
+#' jointly estimate shared-rater and testlet effects. Random discrimination is
+#' also different from estimating two fixed slope families.
+#' The GPCM scope vignette explains effect-sharing units, observed versus new
+#' block/rater prediction and the distinction from multivariate G-theory.
+#' A testlet variance does not diagnose halo or enforce equal task weights.
+#'
+#' @section Interpreting the former bounded GPCM label:
+#' Use GPCM as the model name and state the structure and output restrictions
+#' explicitly. The older label described limited implementation scope, not a
+#' distinct unidimensional response model. Positive log-parameterized relative
+#' slopes retain their geometric-mean-one identification; there is no extra
+#' user-facing finite slope box. Rejection of numerical overflow/underflow is
+#' not clipping to a valid estimate. Separate owners, MML inference/comparison
+#' and portable calibration are available within their respective scopes;
+#' two-family fitting provides provisional estimates and conditional curves,
+#' with separately checked experimental component-slope intervals. JML slope
+#' intervals remain unavailable.
+#' A data-specific boundary or unbounded interval is a separate statistical
+#' issue, and retirement of the label does not certify interval coverage.
 #'
 #' @section Estimates, intervals and comparisons:
 #' For free slopes, these are different questions:
@@ -73,7 +197,12 @@
 #'   approximations for geometric-mean-one relative slopes by default.
 #'   Explicit options add population-SD-standardized slopes, named ratios or
 #'   differences, Bonferroni adjustment and independent-cluster sandwich
-#'   covariance. Small samples and misspecification can still affect coverage.
+#'   covariance. An experimental `method = "profile"` with one named `slope`
+#'   reoptimizes all nuisance parameters, including the normal population, and
+#'   retains endpoint failures and a saved likelihood plot. Its initial scope
+#'   excludes anchors, interactions, covariates and standardized targets.
+#'   Profile coverage and superiority over Wald have not been established.
+#'   Small samples and misspecification can still affect coverage.
 #'   Failed checks retain missing limits and a reason. [bootstrap_mfrm_gpcm()]
 #'   provides fitted-model bootstrap intervals or a matched PCM/GPCM test;
 #'   [mfrm_curve_intervals()] propagates calibration uncertainty to curves.
@@ -217,7 +346,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
   status_summary <- status_summary[status_summary$Routes > 0L, , drop = FALSE]
 
   cat("mfrmr GPCM workflow availability\n")
-  cat("One facet supplies slopes; MML permits a separate step owner, whereas JML requires the same owner.\n")
+  cat("Most rows describe one slope family; two-family MML-EM has a separate provisional scope.\n")
   cat("MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.\n\n")
   print.data.frame(status_summary, row.names = FALSE)
 
@@ -263,7 +392,11 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "residual_bias_screening",
       "scorefile_export",
       "facets_score_review",
-      "optimization_replay"
+      "optimization_replay",
+      "portable_calibration",
+      "multiple_slope_families",
+      "corrected_jml_inference",
+      "gpcm_em_fitting"
     ),
     Area = c(
       "Core fitting and summaries",
@@ -284,7 +417,11 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "Residual-bias screening under GPCM",
       "Score-side scorefile export under GPCM",
       "FACETS output-contract score-side review",
-      "Replayed optimization diagnostics under GPCM"
+      "Replayed optimization diagnostics under GPCM",
+      "Portable calibration and later-person scoring",
+      "Simultaneous estimation of multiple slope families",
+      "Formal structural confidence intervals for corrected JML",
+      "GPCM fitting with EM or hybrid optimization"
     ),
     Helpers = c(
       "fit_mfrm(model = \"GPCM\"); summary(); print(); confint(parm = \"slopes\")",
@@ -320,7 +457,12 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "estimate_bias(); unexpected_after_bias_table()",
       "facets_output_file_bundle(include = \"score\")",
       "facets_output_contract_review()",
-      "estimation_iteration_report()"
+      "estimation_iteration_report()",
+      paste("mfrm_calibration_capabilities(); extract_mfrm_calibration();",
+        "save_mfrm_calibration(); load_mfrm_calibration(); score_mfrm_calibration()"),
+      "fit_mfrm(); summary(); mfrm_curve_intervals(); mfrm_response_diagnostics(); mfrm_results(); mfrm_report(); export_mfrm_results()",
+      NA_character_,
+      "fit_mfrm(mml_engine = 'em', slope_facet = c(first_owner, second_owner))"
     ),
     Status = c(
       "supported_with_caveat",
@@ -341,16 +483,22 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "supported_with_caveat",
       "supported_with_caveat",
       "blocked",
+      "supported_with_caveat",
+      "supported_with_caveat",
+      "supported_with_caveat",
+      "deferred",
       "supported_with_caveat"
     ),
     Boundary = c(
       paste(
-        "Requires an explicit step facet; MML allows a separate slope owner,",
+        "One slope family: requires an explicit step facet; MML allows a separate slope owner,",
         "whereas JML requires `slope_facet == step_facet`. MML direct is the default,",
         "and EM/hybrid fall back to direct. Free-slope fits retain numerical",
         "estimates for review. confint(fit, parm = \"slopes\") separately checks approximate MML intervals.",
         "Explicit options add standardized slopes, comparisons, sandwich covariance and Bonferroni adjustment;",
+        "method = 'profile' supplies an experimental one-relative-slope nuisance profile within its separate scope;",
         "bootstrap_mfrm_gpcm() and mfrm_curve_intervals() supply bootstrap inference and curve uncertainty.",
+        "These inference routes require MML; JML formal slope intervals are not implemented.",
         "MML information-criterion ranking requires the separate likelihood",
         "and local-solution checks in compare_mfrm()."
       ),
@@ -362,7 +510,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       paste(
         "`predict_mfrm_units()` and `sample_mfrm_plausible_values()` consume",
-        "the fitted model and hold its non-Person parameters fixed. This is",
+        "the fitted model and hold its non-Person parameters fixed. For JML this is post-hoc EAP",
+        "with a default N(0,1) reference prior or explicit scoring_prior, not ML/WLE scoring.",
+        "The prior is not a population distribution estimated by JML. This is",
         "not scoring from a saved, versioned calibration artifact; population",
         "forecasting is a separate layer outside this row."
       ),
@@ -479,6 +629,39 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "This is a slope-aware diagnostic replay from a reconstructed starting",
         "state, not the exact optimizer history stored during fitting and not",
         "an additional convergence test."
+      ),
+      paste(
+        "One slope family only. MML permits shared or separate slope/step owners with",
+        "an estimated intercept-only normal population; JML requires shared owners",
+        "and uses a declared post-hoc normal reference prior. Both require their",
+        "source checks, unit weights, known levels and no anchors or interactions.",
+        "Later-person EAP scores and posterior intervals condition on the saved",
+        "calibration; they exclude its estimation uncertainty and bias and are not ML/WLE.",
+        "Experimental corrected shared-owner JML uses distinct adjusted-equation checks and preserves the explicit correction order (file format 5)."
+      ),
+      paste(
+        "Provisional MML-EM fitting for exactly two fixed slope facets, with fixed N(0,1),",
+        "unit weights, no anchors or population covariates and observed zero-based scores.",
+        "The first family's slopes have geometric mean one; the second owns steps and has free slopes.",
+        "Summary and fitted curves connect to saved results/reports; curve intervals are unavailable.",
+        "confint(fit) separately checks experimental component-slope intervals; global identification and coverage remain unestablished.",
+        "method = 'profile' and a named slope value profile one owner/level, with nuisance reoptimization and saved Wald comparison; coverage improvement is not established.",
+        "mml_quadrature_sensitivity() compares fixed-grid refits and retains component intervals and their checks, without Person-score or adaptive comparisons.",
+        "mfrm_response_diagnostics() integrates ability with both slope families fixed; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests.",
+        "Ordinary fit diagnostics, model ranking, new-person scoring and portable two-family calibration are not supported."
+      ),
+      paste(
+        "Formal corrected-JML structural intervals are unavailable.",
+        "The explicit corrected estimator reports local adjusted-equation RootSE, not established structural coverage.",
+        "Uncorrected JML location SEs and post-hoc Person intervals answer different questions.",
+        "None is a bias-corrected structural confidence interval."
+      ),
+      paste(
+        "Two-family GPCM requires mml_engine = 'em' and fixed-standard-normal identification.",
+        "It uses ascent-checked numerical M steps and per-Person marginal-score stopping;",
+        "numerical convergence does not establish inferential reliability.",
+        "One-family EM/hybrid requests still use direct optimization and record that fallback.",
+        "Two-family direct/hybrid fitting is not supported."
       )
     ),
     RecommendedRoute = c(
@@ -575,11 +758,39 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "Use `summary(fit, profile = \"fit\", detail = \"brief\")` for the",
         "recorded convergence result. Use `estimation_iteration_report()` only",
         "to inspect a reconstructed trajectory and label it as replayed."
+      ),
+      paste(
+        "Check mfrm_calibration_capabilities(), then extract, save, load and score",
+        "with the existing calibration workflow; review the scoring prior and each batch's numerical checks."
+      ),
+      paste(
+        "See the Two slope families section of fit_mfrm() for explicit owners and fitting settings;",
+        "use summary(fit), mfrm_curve_intervals(fit, newdata) and saved fit/plot results with compute = 'never'."
+      ),
+      paste(
+        "Use current JML outputs within their descriptive scope, or explicitly choose",
+        "MML inference if its population assumptions suit the analysis; do not transfer MML intervals to JML."
+      ),
+      paste(
+        "Use direct MML for one-family GPCM or the explicitly scoped EM route for two families;",
+        "inspect the actual engine and ConvergenceBasis in summary(fit)."
       )
     ),
     stringsAsFactors = FALSE
   )
 
+  out <- rbind(out,data.frame(
+    CapabilityID="corrected_jml_estimation",
+    Area="Experimental corrected JML estimates and saved output",
+    Helpers="fit_mfrm(jml_correction_order = ...); summary(); mfrm_response_diagnostics(); predict_mfrm_units(); extract_mfrm_calibration(); score_mfrm_calibration(); plot(); mfrm_results(); mfrm_report(); export_mfrm_results()",
+    Status="supported_with_caveat",
+    Boundary=paste("Shared-owner GPCM JML with an explicit positive order, declared categories, unit-weight observed ratings and centered fixed facets.",
+      "No anchors, interactions or automatic order selection. RootSE describes local adjusted-equation variation; residual bias may remain.",
+      "Point estimates survive covariance failure. Conditional observed-row probabilities and descriptive residual summaries hold corrected calibration and Person profiles fixed; no fit cutoffs or rater-quality classifications.",
+      "Conditional new-Person/portable EAP uses distinct adjusted-equation checks and a separate normal prior; calibration uncertainty and residual bias are not propagated.",
+      "Ordinary fit tests, structural intervals, likelihood ranking and corrected Person ML/WLE remain unavailable."),
+    RecommendedRoute="Read the Corrected JML section of fit_mfrm(); inspect summary(fit)$tables, then collect mfrm_results(fit).",
+    stringsAsFactors=FALSE))
   if (!identical(status, "all")) {
     out <- out[out$Status == status, , drop = FALSE]
   }
@@ -758,18 +969,22 @@ gpcm_runtime_guard_coverage <- function() {
   guard <- data.frame(
     CapabilityID = c(
       "facets_score_review",
-      "mcmc_backends"
+      "mcmc_backends",
+      "corrected_jml_inference"
     ),
     Helper = c(
       "facets_output_contract_review()",
+      NA_character_,
       NA_character_
     ),
     AvailabilityMode = c(
       "structured_error",
+      "no_public_helper",
       "no_public_helper"
     ),
     ConditionClass = c(
       "mfrmr_gpcm_scope_error",
+      NA_character_,
       NA_character_
     ),
     stringsAsFactors = FALSE

@@ -39,7 +39,10 @@ from 7 to 121; default 41. Compare orders when needed.}
 A list with \code{probabilities} (rows by categories), \code{expected_scores},
 \code{newdata}, \code{ability}, \code{settings} and matching \code{source} metadata for
 \code{\link[=mfrm_results]{mfrm_results()}}. No model is refitted. Save this list
-together with the fitted model and prediction inputs.
+together with the fitted model and prediction inputs. The settings record
+the effect-sharing unit and whether integration uses the observed rater's
+conditional distribution or the replacement-rater population. These are
+preserved in the prediction settings table of \code{\link[=mfrm_results]{mfrm_results()}}.
 }
 \description{
 Evaluate a shared-rater RSM at explicitly supplied ability values.

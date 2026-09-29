@@ -38,7 +38,10 @@ as_ggplot(x, type = NULL, component = NULL, ...)
 }
 \arguments{
 \item{x}{An \code{mfrm_plot_data} object, or an mfrmr object with a draw-free
-plot method.}
+plot method.
+Corrected-JML slope, location and step plots retain their point or
+cumulative-distribution view, labels, reference and interpretation note;
+conversion does not add confidence intervals.}
 
 \item{type}{Optional plot type passed to \code{plot()} for a non-plot-data input.
 A saved plot-data input already selects a view and rejects \code{type}.}
@@ -83,8 +86,9 @@ controls and alternative text; see \code{\link[=plot.mfrm_extended_comparison]{p
 Threshold-sensitivity tile and curve payloads also preserve their selected
 view, display controls and text alternatives; see
 \code{\link[=plot.mfrm_screening_sensitivity]{plot.mfrm_screening_sensitivity()}}.
-Posterior predictive residual displays preserve their descriptive meaning
-and lack of reference cutoffs; see \code{\link[=plot.mfrm_response_diagnostics]{plot.mfrm_response_diagnostics()}}.
+Response residual displays preserve their posterior or conditional plug-in
+probability definition and lack of reference cutoffs. Paired views retain
+available Infit when Outfit is undefined; see \code{\link[=plot.mfrm_response_diagnostics]{plot.mfrm_response_diagnostics()}}.
 Testlet conversions retain unavailable
 rows, prior-only symbols and the conditional-interval note; they do not
 estimate diagnostics or add calibration uncertainty. Extended-model interval,
@@ -98,6 +102,10 @@ For multivariate D-study plots, an explicit \code{component = "series"} keeps
 this dedicated conversion; use \code{\link[=plot_data]{plot_data()}} for other tables.
 Difference-interval plots from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} use their
 base \code{plot()} method or \code{\link[=plot_data]{plot_data()}}; automatic conversion is not supported.
+Residual-PCA scree, reference, excess and loadings plots have dedicated
+conversions with the default or \code{component = "data"}. They preserve saved
+eigenvalues, reference cutoffs, signed loadings and display encodings; method
+identifiers are not inferred as plotted variables. No PCA is recomputed.
 External-feature PCA scree, scores and loadings views have dedicated
 conversions. They preserve selected axes, retained-component symbols,
 saved group colours and shapes, labels and transformation metadata.

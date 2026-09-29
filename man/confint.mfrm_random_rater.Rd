@@ -56,7 +56,8 @@ single-variance boundary asymptotics. Few raters, Laplace error and design
 misspecification can alter coverage. The numerical checks do not establish
 those asymptotic conditions. The calculation stops if the fitted or profiled
 ability variance is an estimated zero boundary; that additional nuisance
-boundary needs a different qualification. No ability-SD interval is supplied.
+boundary requires a different reference distribution for inference.
+No ability-SD interval is supplied.
 This interval does not quantify the predictive
 distribution of a replacement rater, whose variation is a different target.
 

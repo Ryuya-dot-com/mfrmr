@@ -20,7 +20,7 @@
 #'   families, mixed families, multiple independent scales,
 #'   general threshold anchoring, and importing FACETS or third-party frozen
 #'   calibrations are not part of the current public estimator; native portable
-#'   calibration is available for the narrower documented RSM/PCM MML route,
+#'   calibration is available within the scope of [mfrm_calibration_capabilities()],
 #'   and posterior scoring from an existing fitted object remains separate;
 #' - extension surface: native R tables, plot data, GPCM diagnostics,
 #'   network views, and G/D-study helpers are package extensions, not promises
@@ -51,7 +51,7 @@ facets_positioning_guide <- function() {
       "mfrmr estimates are package-native; FACETS-style names do not mean that FACETS estimated the model.",
       "FACETS-style wrappers, table labels, and files support transition, handoff, and report organization, not optimizer-level reproduction.",
       "Numerical comparison requires an explicit external FACETS output table supplied by the user.",
-      "Each fit uses one ordered-categorical response-model family and one observed score scale; nominal and count-response families, mixed families, multiple independent scales, general threshold anchors, and importing FACETS or third-party frozen calibrations are not current public capabilities. Native portable calibration is limited to the documented RSM/PCM MML route, and posterior scoring from an existing fitted object is separate. Positive observation weights act on row-level conditional ordered-rating contributions; they are not a general collapsed-person frequency-table interface and do not change the response family.",
+      "Each fit uses one ordered-categorical response-model family and one observed score scale; nominal and count-response families, mixed families, multiple independent scales, general threshold anchors, and importing FACETS or third-party frozen calibrations are not current public capabilities. Native portable calibration follows the model, estimator and source-check scope in mfrm_calibration_capabilities(), and posterior scoring from an existing fitted object is separate. Positive observation weights act on row-level conditional ordered-rating contributions; they are not a general collapsed-person frequency-table interface and do not change the response family.",
       "Inference and reporting should be based on native fit, diagnostics, review, table, and plot-data objects.",
       "GPCM, D-study, network, and reusable visualization data are extension routes rather than FACETS menu clones."
     ),
@@ -524,7 +524,7 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "FACETS or third-party frozen-calibration import",
         "current mfrmr public contract",
         "no external import; native route: mfrm_calibration_capabilities(); load_mfrm_calibration(); score_mfrm_calibration()", "not_implemented",
-        "Native mfrmr portable RSM/PCM MML calibration artifacts can be loaded and scored through the documented fixed-standard-normal route.",
+        "Native mfrmr portable artifacts support fixed-standard-normal RSM/PCM MML, qualified estimated-normal GPCM MML and qualified reference-prior RSM/PCM or shared-owner GPCM JML; consult mfrm_calibration_capabilities() for scope and source checks.",
         "No current route converts a FACETS or another program's calibration file into an mfrmr portable artifact; native artifact scoring does not establish transportability or external-program equivalence.",
         "Use the native mfrmr calibration workflow for eligible fits; use a separately validated external workflow when third-party calibration import is required."),
     row("Current scope boundary",

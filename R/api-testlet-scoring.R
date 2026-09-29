@@ -15,6 +15,10 @@
 #' @param ... Unused.
 #' @details All supplied rows for a Person are scored jointly. This does not
 #'   append to cached responses or condition on a stored local-effect mode.
+#'   The saved settings retain this integration, effect-sharing and roster
+#'   interpretation. [mfrm_results()] retains the complete `scoring_data` as
+#'   its `scoring_roster` table, including explicitly omitted scores, alongside
+#'   observed block counts. Column names and row order are preserved.
 #'   To add ratings for an existing Person, supply that Person's complete set
 #'   of ratings once, with memberships that correctly identify effects shared
 #'   within that set. Scores from separate calls are not automatically linked
@@ -126,6 +130,9 @@ predict.mfrm_testlet <- function(object, newdata = NULL, level = .95,
     source = mfrm_extended_prediction_source(object),
     settings = list(level = level, quad_points = quad_points, check_points = 2 * quad_points + 1,
       missing = missing, calibration_uncertainty = FALSE,
+      effect_sharing = "One local effect per Person/testlet pair; repeated labels across Persons are different effects",
+      local_effect_integration = "Integrated within each Person/block, then over ability; no stored local-effect mode is reused",
+      roster = "Supplied table replaces source; output selection retains the full scoring roster",
       estimated_variance_boundary = object$checks$EstimatedVarianceBoundary,
       estimated_person_variance_boundary = isTRUE(object$checks$EstimatedPersonVarianceBoundary),
       person_variance = person_variance,

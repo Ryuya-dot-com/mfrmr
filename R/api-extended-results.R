@@ -120,8 +120,11 @@ mfrm_extended_results <- function(fit, include, predictions, intervals, scores =
   if (!is.null(person_scores)) {
     tables$person_scores <- person_scores$table
     tables$scoring_settings <- mfrm_extended_settings_table(person_scores$settings)
-    if (testlet) tables$scoring_blocks <- person_scores$blocks else
-      tables$scoring_roster <- person_scores$scoring_data
+    if (testlet) tables$scoring_blocks <- person_scores$blocks
+    # Keep the supplied event roster as well as aggregated block counts.
+    # Older saved scores without a roster remain readable; do not reconstruct
+    # their scoring responses from the calibration data.
+    if (is.data.frame(person_scores$scoring_data)) tables$scoring_roster <- person_scores$scoring_data
     tables$scoring_data_usage <- as.data.frame(as.list(person_scores$data_usage))
     tables$scoring_omitted_rows <- data.frame(InputRow = person_scores$omitted_rows)
     tables$scoring_status <- as.data.frame(table(factor(person_scores$table$Status,

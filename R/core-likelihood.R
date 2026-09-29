@@ -166,6 +166,17 @@ compute_P_geq <- function(probs) {
   compute_P_geq_r(probs)
 }
 
+# Normalized category probabilities; center before squaring to avoid losing
+# positive tail variance through E[X^2] - E[X]^2 cancellation.
+mfrm_category_variance <- function(probs, categories = seq_len(ncol(probs)) - 1L,
+                                   expected = drop(probs %*% categories)) {
+  variance <- numeric(nrow(probs))
+  for (k in seq_along(categories)) {
+    variance <- variance + probs[, k] * (categories[k] - expected)^2
+  }
+  unname(variance)
+}
+
 compute_response_probability_bundle <- function(config, idx, params, eta) {
   n_obs <- length(eta)
   if (n_obs == 0L) {
@@ -210,7 +221,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
 
   k_vals <- 0:(ncol(probs) - 1L)
   expected_k <- as.vector(probs %*% k_vals)
-  var_k <- as.vector(probs %*% (k_vals^2)) - expected_k^2
+  var_k <- mfrm_category_variance(probs, k_vals, expected_k)
   diff_k <- sweep(
     matrix(k_vals, nrow = nrow(probs), ncol = length(k_vals), byrow = TRUE),
     1L,

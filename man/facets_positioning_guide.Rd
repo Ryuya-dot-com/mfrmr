@@ -35,7 +35,7 @@ one observed score scale are used per fit; nominal and count-response
 families, mixed families, multiple independent scales,
 general threshold anchoring, and importing FACETS or third-party frozen
 calibrations are not part of the current public estimator; native portable
-calibration is available for the narrower documented RSM/PCM MML route,
+calibration is available within the scope of \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}},
 and posterior scoring from an existing fitted object remains separate;
 \item extension surface: native R tables, plot data, GPCM diagnostics,
 network views, and G/D-study helpers are package extensions, not promises

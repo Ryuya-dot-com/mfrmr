@@ -5637,7 +5637,8 @@ validate_residual_parallel_args <- function(parallel,
       parallel_quantile <= 0 || parallel_quantile >= 1) {
     stop("`parallel_quantile` must be a number between 0 and 1.")
   }
-  parallel_method <- match.arg(tolower(as.character(parallel_method[1])), "residual_permutation")
+  parallel_method <- match.arg(tolower(as.character(parallel_method[1])),
+    c("residual_permutation", "model_bootstrap"))
   if (!is.null(seed)) {
     seed <- as.integer(seed)
     if (length(seed) != 1L || is.na(seed)) {
@@ -5760,9 +5761,12 @@ compute_residual_parallel_analysis <- function(residual_matrix,
     return(out)
   }
 
-  n_components <- length(observed)
-  null_mat <- do.call(rbind, eig_list)
+  list(table = residual_parallel_table(observed, do.call(rbind, eig_list),
+      reps, quantile, method), successful_reps = as.integer(successful),
+    error = NULL, warning = NULL, settings = settings)
+}
 
+residual_parallel_table <- function(observed, null_mat, reps, quantile, method) {
   null_mean <- colMeans(null_mat, na.rm = TRUE)
   null_sd <- apply(null_mat, 2L, stats::sd, na.rm = TRUE)
   null_cutoff <- apply(
@@ -5775,30 +5779,19 @@ compute_residual_parallel_analysis <- function(residual_matrix,
     type = 8L
   )
   excess <- observed - null_cutoff
-  out <- data.frame(
-    Component = seq_len(n_components),
+  data.frame(
+    Component = seq_along(observed),
     Eigenvalue = observed,
     ParallelMean = null_mean,
     ParallelSD = null_sd,
     ParallelCutoff = null_cutoff,
-    ParallelQuantile = rep(as.numeric(quantile), n_components),
+    ParallelQuantile = rep(as.numeric(quantile), length(observed)),
     ExcessOverParallelCutoff = excess,
     ExceedsParallelCutoff = is.finite(excess) & excess > 0,
-    ParallelReps = rep(as.integer(reps), n_components),
-    SuccessfulParallelReps = rep(as.integer(successful), n_components),
-    ParallelMethod = rep(method, n_components),
+    ParallelReps = rep(as.integer(reps), length(observed)),
+    SuccessfulParallelReps = rep(as.integer(reps), length(observed)),
+    ParallelMethod = rep(method, length(observed)),
     stringsAsFactors = FALSE
-  )
-  list(
-    table = out,
-    successful_reps = as.integer(successful),
-    error = NULL,
-    warning = if (successful < as.integer(reps)) {
-      paste0("Only ", successful, " of ", as.integer(reps), " residual permutations produced valid eigenvalues.")
-    } else {
-      NULL
-    },
-    settings = settings
   )
 }
 
@@ -5903,18 +5896,19 @@ infer_facet_names <- function(diagnostics) {
 #' @param mode `"overall"`, `"facet"`, or `"both"`.
 #' @param facets Optional subset of facets for facet-specific PCA.
 #' @param pca_max_factors Maximum number of retained components.
-#' @param parallel Logical; if `TRUE`, add residual-permutation parallel
-#'   analysis to the PCA tables.
-#' @param parallel_reps Number of residual permutations used when
-#'   `parallel = TRUE`.
-#' @param parallel_quantile Upper permutation quantile used as the exploratory
+#' @param parallel Logical; if `TRUE`, add a simulation reference to the PCA tables.
+#' @param parallel_reps Number of permutations or simulated-and-refitted data sets
+#'   when `parallel = TRUE`. Each model-bootstrap replicate requires a full fit.
+#' @param parallel_quantile Upper reference quantile used as the exploratory
 #'   comparison cutoff. The default (`0.95`) follows the common parallel
 #'   analysis convention.
-#' @param parallel_method Parallel-analysis reference method. Currently
-#'   `"residual_permutation"` is implemented: standardized residuals are
-#'   permuted within each residual column, preserving each column's residual
-#'   distribution and missingness pattern while breaking residual association.
-#' @param seed Optional integer seed for reproducible residual permutations.
+#' @param parallel_method Reference method. `"residual_permutation"` (default)
+#'   permutes standardized residuals within each column, preserving residual
+#'   distributions and missingness. `"model_bootstrap"` generates ratings and
+#'   refits a supported RSM/PCM MML model; supply the original fit, not detached
+#'   diagnostics. See Model-generated reference below for restrictions.
+#' @param seed Optional integer seed for reproducible simulation. When supplied,
+#'   the caller's random-number state is restored after the calculation.
 #'
 #' @details
 #' The function works on standardized residual structures derived from
@@ -5950,14 +5944,15 @@ infer_facet_names <- function(diagnostics) {
 #' - `Cumulative`: cumulative variance proportion
 #'
 #' When `parallel = TRUE`, the variance tables additionally include
-#' conditional permutation-reference summaries:
-#' - `ParallelMean`: mean permuted-residual eigenvalue
-#' - `ParallelCutoff`: `parallel_quantile` cutoff of permuted eigenvalues
+#' reference summaries (the method is retained in `ParallelMethod`):
+#' - `ParallelMean`: mean reference eigenvalue
+#' - `ParallelCutoff`: `parallel_quantile` cutoff of reference eigenvalues
 #' - `ExcessOverParallelCutoff`: observed eigenvalue minus the cutoff
 #' - `ExceedsParallelCutoff`: whether the observed eigenvalue exceeds the
-#'   permutation cutoff
+#'   selected reference cutoff
 #'
-#' The comparison conditions on the fitted residuals and missingness pattern;
+#' With `parallel_method = "residual_permutation"`, the comparison conditions
+#' on the fitted residuals and missingness pattern;
 #' it does not simulate responses or refit the model. It does not account for
 #' fitted-parameter uncertainty and is not a calibrated dimensionality test.
 #' If any requested permutation has unavailable or invalid correlations, the
@@ -5990,6 +5985,55 @@ infer_facet_names <- function(diagnostics) {
 #' Finally, inspect loadings via [plot_residual_pca()] to identify which
 #' variables/elements drive each component.
 #'
+#' @section Model-generated reference:
+#' `parallel_method = "model_bootstrap"` is an exploratory parametric-bootstrap
+#' reference for native RSM/PCM MML fits with a fixed standard-normal population,
+#' fixed quadrature, additive facets and unit weights. Anchors, dummy/positive
+#' facets, shrinkage, estimated population models, GPCM, JML and extended
+#' testlet/shared-rater models are not supported by this reference yet.
+#'
+#' Each replicate draws one independent standard-normal ability per Person and
+#' shares it across that Person's retained rating rows. Fitted facet and step
+#' parameters generate conditionally independent ratings. The model is refitted
+#' with the original identification, category map, quadrature and optimization
+#' settings. Standardized residuals use the same scoring and aggregation as the
+#' observed analysis. One refit supplies every requested PCA scope.
+#'
+#' The reference conditions on the analyzed assignment and observation pattern:
+#' it does not fill unassigned or missing ratings or simulate informative
+#' missingness. Sparse designs remain usable only when the required residual
+#' correlations are defined and their matrix is positive semidefinite.
+#' Source and refitted models must pass numerical convergence checks. The
+#' observed PCA itself can be unavailable despite successful fitting, for
+#' example because the assignment lacks shared-Person pairs. This is reported
+#' separately from refit failure. Every planned replicate is retained in `bootstrap_trials`, including warnings and
+#' failures. An affected scope has no reference cutoff if any replicate fails;
+#' successful replicates are not substituted or selected to form its reference.
+#' Raw eigenvalue draws, with missing rows for failures, are stored under each
+#' PCA bundle's `parallel$draws`.
+#'
+#' Refitting includes variation from parameter estimation under the fitted null;
+#' generating parameters themselves are plug-in estimates, not posterior draws.
+#' Cutoffs are componentwise reference quantiles, not multiplicity-adjusted
+#' tests. Scanning every component does not preserve the nominal false-flag
+#' probability of one component. Absence of a flag is not evidence that all
+#' model assumptions hold. Few replicates give unstable tail quantiles. Neither a fixed number of
+#' replicates nor this algorithm establishes calibrated false-flag rates or
+#' proves unidimensionality. Inspect convergence, quadrature sensitivity,
+#' overlap and competing dependence explanations before substantive use.
+#'
+#' @section Dimensionality and network follow-up:
+#' Checking a one-dimensional model does not require fitting a multidimensional
+#' alternative first. Residual structure can also reflect testlet, rater or
+#' assignment effects; neither the component count nor the count plus one is
+#' an estimated number of substantive abilities. Combine the screen with
+#' [q3_statistic()], marginal-fit review and substantive task/criterion evidence.
+#' The current permutation reference does not replace a fitted-model parametric
+#' bootstrap. No native residual-network/EGA or calibrated dimensionality
+#' decision is supplied here. Residual communities would describe remaining
+#' associations, not automatically latent dimensions. See
+#' `vignette("mfrmr-visual-diagnostics")` for alternatives and their scope.
+#'
 #' @section References:
 #' The residual-PCA idea follows the Rasch residual-structure literature,
 #' especially Linacre's discussions of principal components of Rasch residuals.
@@ -6000,9 +6044,10 @@ infer_facet_names <- function(diagnostics) {
 #' The optional parallel analysis follows Horn's data-driven eigenvalue
 #' comparison logic and later recommendations to compare observed eigenvalues
 #' with high quantiles of a reference distribution. Here that reference is
-#' generated by within-column permutation of standardized residuals. The
-#' cited factor-retention literature does not calibrate this many-facet
-#' residual comparison as a fitted-model test.
+#' generated by within-column permutation of standardized residuals by default.
+#' The optional model bootstrap instead regenerates ratings and refits the
+#' supported model. The cited factor-retention literature does not calibrate
+#' either many-facet residual comparison as a fitted-model test.
 #'
 #' - Horn, J. L. (1965). A rationale and test for the number of factors in
 #'   factor analysis. *Psychometrika*, 30, 179-185.
@@ -6050,10 +6095,10 @@ infer_facet_names <- function(diagnostics) {
 #' - `parallel_settings`, `parallel_overall_table`,
 #'   `parallel_by_facet_table`, and `parallel_status`: returned for every call;
 #'   the parallel tables are populated when `parallel = TRUE`
-#' - `errors`: named list of any per-facet PCA errors that were
-#'   caught and turned into `NA_real_` rows in the variance tables
-#'   (e.g., `psych::principal()` failure on a near-singular residual
-#'   matrix). The list is empty when every facet PCA succeeded.
+#' - `bootstrap_trials`, `bootstrap_settings`: attempted replicate/scope records
+#'   and generation settings for the model bootstrap; otherwise `NULL`.
+#' - `errors`: explanations for unavailable overall or facet PCA analyses;
+#'   unavailable analyses have empty variance tables.
 #' - `warnings`: named list of non-fatal PCA warnings captured from the
 #'   underlying PCA engine. These indicate exploratory boundary conditions,
 #'   not confirmatory evidence.
@@ -6086,7 +6131,7 @@ analyze_residual_pca <- function(diagnostics,
                                  parallel = FALSE,
                                  parallel_reps = 200L,
                                  parallel_quantile = 0.95,
-                                 parallel_method = c("residual_permutation"),
+                                 parallel_method = c("residual_permutation", "model_bootstrap"),
                                  seed = NULL) {
   mode <- match.arg(tolower(mode), c("overall", "facet", "both"))
   parallel_args <- validate_residual_parallel_args(
@@ -6106,9 +6151,15 @@ analyze_residual_pca <- function(diagnostics,
   # silently coerced to NA, which broke psych::principal() downstream.
   pca_max_factors <- .resolve_pca_max_factors(pca_max_factors)
 
+  source_fit <- NULL
+  if (parallel && parallel_method == "model_bootstrap") {
+    validate_residual_bootstrap_source(diagnostics)
+    source_fit <- diagnostics
+  }
   if (inherits(diagnostics, "mfrm_fit")) {
     diagnostics <- diagnose_mfrm(
       diagnostics,
+      diagnostic_mode = "legacy", # PCA uses observation residuals, not marginal-fit tables.
       residual_pca = "none",
       pca_max_factors = pca_max_factors
     )
@@ -6168,7 +6219,13 @@ analyze_residual_pca <- function(diagnostics,
     }
   }
 
-  if (isTRUE(parallel)) {
+  bootstrap <- NULL
+  if (parallel && parallel_method == "model_bootstrap") {
+    bootstrap <- residual_model_bootstrap(source_fit, out_overall, out_by_facet,
+      mode, facets, pca_max_factors, parallel_reps, parallel_quantile, seed)
+    out_overall <- bootstrap$overall
+    out_by_facet <- bootstrap$by_facet
+  } else if (isTRUE(parallel)) {
     if (is.list(out_overall)) {
       out_overall <- attach_residual_parallel(
         out_overall,
@@ -6257,6 +6314,8 @@ analyze_residual_pca <- function(diagnostics,
       if (length(parallel_tbls) == 0L) data.frame() else dplyr::bind_rows(parallel_tbls)
     },
     parallel_status = build_residual_parallel_status(out_overall, out_by_facet),
+    bootstrap_trials = bootstrap$trials,
+    bootstrap_settings = bootstrap$settings,
     errors = pca_errors,
     warnings = pca_warnings,
     InferenceTier = "exploratory",
@@ -6345,8 +6404,8 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #'
 #' Plot types:
 #' - `"scree"`: component vs eigenvalue line plot
-#' - `"parallel_scree"`: observed eigenvalues with residual-permutation
-#'   parallel-analysis mean and upper cutoff
+#' - `"parallel_scree"`: observed eigenvalues with the selected reference's
+#'   mean and upper cutoff (residual permutation or model bootstrap)
 #' - `"parallel_excess"`: observed eigenvalue minus the parallel-analysis
 #'   cutoff by component
 #' - `"loadings"`: horizontal bar chart of top absolute loadings
@@ -6360,8 +6419,10 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #'   unidimensionality test or a DIMTEST/UNIDIM substitute.
 #' - `plot_type = "parallel_scree"` or `"parallel_excess"`: use only after
 #'   running [analyze_residual_pca()] with `parallel = TRUE`. Components
-#'   above the residual-permutation cutoff are candidates for follow-up,
-#'   not proof of multidimensionality.
+#'   above the selected reference cutoff are candidates for follow-up,
+#'   not proof of multidimensionality. Model-bootstrap plots label the refitted
+#'   reference explicitly; unavailable comparisons are explained in
+#'   `parallel_status` and `bootstrap_trials`.
 #' - `plot_type = "loadings"`: identifies variables/elements driving each
 #'   component; inspect both sign and absolute magnitude.
 #'
@@ -6449,7 +6510,9 @@ plot_residual_pca <- function(x,
     has_parallel <- all(c("ParallelMean", "ParallelCutoff", "ExcessOverParallelCutoff",
                           "ExceedsParallelCutoff") %in% names(tbl))
     if (plot_type %in% c("parallel_scree", "parallel_excess") && !has_parallel) {
-      stop("Parallel-analysis results are unavailable. Run analyze_residual_pca(..., parallel = TRUE) first.")
+      stop(paste("Parallel-analysis results are unavailable. Inspect parallel_status",
+        "and bootstrap_trials for failed comparisons, or request parallel = TRUE",
+        "in analyze_residual_pca() if no reference was computed."))
     }
     title <- paste0(title_suffix, " (Scree)")
     subtitle <- if (mode == "overall") {
@@ -6459,15 +6522,19 @@ plot_residual_pca <- function(x,
     }
     rasch_refs <- 1
     rasch_ref_labels <- "Unit eigenvalue (descriptive reference)"
+    reference_note <- "Componentwise cutoffs; no adjustment for scanning components"
 
     if (plot_type == "parallel_scree") {
       title <- paste0(title_suffix, " (Parallel Scree)")
       q_percent <- formatC(100 * unique(tbl$ParallelQuantile)[1], format = "fg", digits = 4)
-      q_label <- paste0(q_percent, "% residual-permutation cutoff")
-      subtitle <- if (mode == "overall") {
-        "Conditional residual-permutation reference; fitted-model uncertainty omitted"
+      model_reference <- all(tbl$ParallelMethod == "model_bootstrap")
+      q_label <- paste0(q_percent, if (model_reference) "% refitted-model cutoff" else "% residual-permutation cutoff")
+      subtitle <- if (model_reference) {
+        paste0("Simulated ratings with model refitting.\n", reference_note)
+      } else if (mode == "overall") {
+        paste0("Conditional permutation reference; fitted-model uncertainty omitted.\n", reference_note)
       } else {
-        paste0("Facet-specific permutation comparison: ", facet)
+        paste0("Facet-specific permutation comparison: ", facet, ".\n", reference_note)
       }
       if (isTRUE(draw)) {
         apply_plot_preset(style)
@@ -6481,7 +6548,8 @@ plot_residual_pca <- function(x,
           xlab = "Component",
           ylab = "Eigenvalue",
           ylim = yr,
-          main = title
+          main = title,
+          sub = reference_note
         )
         graphics::abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
         graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
@@ -6501,6 +6569,10 @@ plot_residual_pca <- function(x,
           col = style$accent_tertiary
         )
         graphics::abline(h = rasch_refs, lty = 2, col = style$neutral)
+        graphics::legend("topright", bty = "n", cex = .8,
+          legend = c("Observed residual eigenvalues", q_label, "Parallel mean", rasch_ref_labels),
+          col = c(style$accent_primary, style$accent_secondary, style$accent_tertiary, style$neutral),
+          lty = c(1, 2, 3, 2), pch = c(16, 17, NA, NA))
       }
       out <- new_mfrm_plot_data(
         "residual_pca",
@@ -6534,7 +6606,10 @@ plot_residual_pca <- function(x,
 
     if (plot_type == "parallel_excess") {
       title <- paste0(title_suffix, " (Parallel Excess)")
-      subtitle <- "Observed residual eigenvalue minus permutation cutoff"
+      model_reference <- all(tbl$ParallelMethod == "model_bootstrap")
+      cutoff_label <- if (model_reference) "Refitted-model cutoff" else "Permutation cutoff"
+      subtitle <- paste0("Observed residual eigenvalue minus ", tolower(cutoff_label),
+        ".\n", reference_note)
       if (isTRUE(draw)) {
         apply_plot_preset(style)
         cols <- ifelse(tbl$ExceedsParallelCutoff, style$accent_secondary, style$neutral)
@@ -6545,7 +6620,8 @@ plot_residual_pca <- function(x,
           border = style$background,
           xlab = "Component",
           ylab = "Eigenvalue minus cutoff",
-          main = title
+          main = title,
+          sub = reference_note
         )
         graphics::abline(h = 0, lty = 2, col = style$neutral)
       }
@@ -6563,7 +6639,7 @@ plot_residual_pca <- function(x,
             aesthetic = c("bar", "bar"),
             value = c(style$accent_secondary, style$neutral)
           ),
-          reference_lines = new_reference_lines("h", 0, "Permutation cutoff", "dashed", "reference"),
+          reference_lines = new_reference_lines("h", 0, cutoff_label, "dashed", "reference"),
           data = tbl,
           InferenceTier = "exploratory",
           SupportsFormalInference = FALSE,
@@ -6895,6 +6971,7 @@ estimate_bias <- function(fit,
                           omit_extreme = TRUE,
                           max_iter = 4,
                           tol = 1e-3) {
+  stop_if_product_slopes(fit, "estimate_bias()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)

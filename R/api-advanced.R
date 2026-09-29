@@ -2527,6 +2527,11 @@ information_build_step_structure <- function(fit, model) {
 #'   information formula that Muraki 1993 specializes to the GPCM.)
 #'
 #' @section Interpreting output:
+#' Category variance is computed from squared deviations about its mean to
+#' retain small positive information near an endpoint category. This avoids
+#' cancellation in raw second moments; it does not eliminate floating-point
+#' underflow or account for calibration uncertainty.
+#'
 #' - `$tif`: design-weighted precision curve data with theta, Information, and SE.
 #' - `$iif`: design-weighted facet-level contribution curves for the fitted
 #'   non-person facets.
@@ -2579,6 +2584,7 @@ information_build_step_structure <- function(fit, model) {
 compute_information <- function(fit,
                                 theta_range = c(-6, 6),
                                 theta_points = 201L) {
+  stop_if_product_slopes(fit, "compute_information()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an `mfrm_fit` object.", call. = FALSE)
   }
@@ -2589,8 +2595,6 @@ compute_information <- function(fit,
   # Extract model parameters and realized observation design.
   step_structure <- information_build_step_structure(fit, model)
   categories <- step_structure$categories
-  category_vec <- matrix(categories, ncol = 1)
-  category_sq_vec <- matrix(categories^2, ncol = 1)
 
   facet_tbl <- tibble::as_tibble(fit$facets$others)
   if (nrow(facet_tbl) == 0) {
@@ -2622,9 +2626,7 @@ compute_information <- function(fit,
     } else {
       step_structure$compute(eta, rep(step_idx, length(eta)), rep(slope_idx, length(eta)))
     }
-    expected <- as.vector(probs %*% category_vec)
-    second_moment <- as.vector(probs %*% category_sq_vec)
-    variance <- pmax(second_moment - expected^2, 0)
+    variance <- mfrm_category_variance(probs, categories)
     if (identical(step_structure$kind, "step_and_slope_specific")) {
       variance <- variance * (step_structure$slopes[slope_idx]^2)
     }
@@ -3218,6 +3220,7 @@ plot_wright_unified <- function(fit,
                                 extreme_placement = c("ends", "estimate"),
                                 persons_per_star = NULL,
                                 ...) {
+  stop_if_product_slopes(fit, "plot_wright_unified()")
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an `mfrm_fit` object.", call. = FALSE)
@@ -5237,7 +5240,7 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' - `overview`: which evidence sources were supplied and the current review status.
 #' - `top_linking_risks`: primary operational triage table.
 #' - `group_view_index`: stable wave/link/facet/source-family grouping routes.
-#' - `plot_map`: which existing plotting helper should be used next.
+#' - `plot_map`: which plotting function to use for each result.
 #' - `reporting_map`: what is covered here versus which manuscript-oriented
 #'   helper should be used separately.
 #'
@@ -7205,6 +7208,7 @@ build_weighting_review <- function(rasch_fit,
                                    theta_points = 101L,
                                    top_n = 10L,
                                    nested = FALSE) {
+  stop_if_product_slopes(gpcm_fit, "build_weighting_review()")
   rasch_fit <- .validate_weighting_review_fit(rasch_fit, "rasch_fit", c("RSM", "PCM"))
   gpcm_fit <- .validate_weighting_review_fit(gpcm_fit, "gpcm_fit", "GPCM")
   top_n <- max(1L, as.integer(top_n %||% 10L))

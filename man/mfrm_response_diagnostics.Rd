@@ -4,7 +4,7 @@
 \alias{mfrm_response_diagnostics}
 \alias{summary.mfrm_response_diagnostics}
 \alias{print.mfrm_response_diagnostics}
-\title{Describe posterior predictive residuals for ordinary and extended RSMs}
+\title{Describe fitted response probabilities and residuals}
 \usage{
 mfrm_response_diagnostics(
   fit,
@@ -19,19 +19,25 @@ mfrm_response_diagnostics(
 }
 \arguments{
 \item{fit}{A numerically ready native RSM MML \code{\link[=fit_mfrm]{fit_mfrm()}},
-\code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} or \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} result.}
+\code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} or \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} result, a converged
+two-family GPCM MML--EM fit, or a shared-owner
+GPCM fit with an explicit \code{jml_correction_order} and an available point solution.}
 
 \item{rows}{Distinct original input row numbers to return, or \code{NULL} for
 all assigned rows. This selects outputs only: every observed source rating
-still informs the joint posterior. Groups summarize the selected rows.}
+still informs the joint posterior or saved JML Person profile. Groups
+summarize the selected rows; selection does not refit the model.}
 
 \item{group_by}{Fitted identifier columns to summarize separately. \code{NULL}
-uses all Person, testlet/rater and fixed-facet columns. No grouping by score.}
+uses all Person, testlet/rater and fixed-facet columns. No grouping by score.
+Corrected JML lists the fixed facets first, then Person, so the default
+plot shows the first declared facet.}
 
 \item{quad_points}{Normal quadrature order, 7 to 121 for testlets or 7 to
-241 for ordinary RSMs or shared raters. Defaults to the saved fit's order.
+241 for ordinary RSMs, two-family GPCMs or shared raters. Defaults to the saved fit's order.
 Results are checked at \code{2 * quad_points + 1};
-each category probability must change by no more than \code{1e-7}.}
+each category probability must change by no more than \code{1e-7}.
+Omit this argument for corrected JML, which performs no integration.}
 
 \item{object, x}{A saved response-diagnostics result.}
 
@@ -43,15 +49,17 @@ An \code{mfrm_response_diagnostics} object with \code{rows}, category
 Save with \code{saveRDS()}; attach via
 \code{mfrm_results(fit, response_diagnostics = result, compute = "never")}.
 Supply two saved outputs to \code{\link[=compare_mfrm]{compare_mfrm()}} for aligned ordinary versus
-extended-model comparisons, using the same selected events and group_by.
+extended RSM comparisons, using the same selected events and group_by.
+Corrected-JML and two-family GPCM comparisons are not supported by that route.
 Collecting, plotting and exporting saved results never recomputes integrals.
 }
 \description{
-Integrate uncertain abilities and local or shared-rater effects before
-computing response means, variances and descriptive Infit/Outfit summaries.
+Compute response means, variances and descriptive Infit/Outfit summaries.
+Ordinary and extended RSMs and two-family GPCMs integrate uncertain latent effects; corrected
+GPCM JML conditions on saved calibration and reprofiled Person estimates.
 }
 \details{
-Calibration is held fixed. For a replicate rating sharing the
+Calibration is held fixed. For a posterior replicate rating sharing the
 original row's latent effects, the target is
 \deqn{p_{ik}=E[P(Y_i^{rep}=k\mid b,\widehat\psi)\mid
     Y_{obs},\widehat\psi],}
@@ -60,7 +68,7 @@ uncertain shared-rater vector. This uses the same observed data for
 estimation and checking; it is not held-out prediction. Define
 \deqn{\mu_i=\sum_k k p_{ik},\qquad
     V_i=\sum_k (k-\mu_i)^2p_{ik}.}
-The mixture variance includes both conditional rating variance and
+For these posterior calculations, the mixture variance includes conditional rating variance and
 variance of conditional means. Substituting an ability/rater estimate or
 averaging conditional variances alone gives a different quantity.
 
@@ -95,13 +103,89 @@ small defects do not certify accuracy with few raters or sparse ratings.
 Shared-rater work grows with requested rows and categories; use \code{rows}
 to inspect a subset while retaining the complete conditioning data.
 
-Missing scores remain \code{missing_score}; they are not imputed. Nonfinite
+For these posterior routes, missing scores remain \code{missing_score}; they
+are not imputed. Nonfinite
 or zero predictive variances and unresolved integration remain unavailable
 with a reason. A group containing any unavailable observed row has no
 summary, rather than silently dropping that row. Entirely missing groups
 have no summary. A fitted zero latent variance defines the corresponding
 submodel's predictions; it does not establish absence of heterogeneity.
 }
+\section{Two-family GPCM posterior residuals}{
+
+Use this route to describe how observed scores differ from the fitted
+model's posterior predictions. For example, summarize by a Judge column
+with \code{mfrm_response_diagnostics(fit, group_by = "Judge")}. Both slope
+families multiply the complete adjacent-category predictor, as in fitting.
+Ability is integrated under the fitted fixed N(0,1) population and all of
+the Person's observed ratings; probabilities are not evaluated at the EAP.
+Only fitted observed rows are returned, preserving the original identifiers
+and incomplete assignment pattern. No unassigned cell is filled.
+
+The saved EM solution and point calibration must agree with their fitting
+specification. A slope covariance or slope interval is not required.
+This has the same scope as the two-family fit: two fixed slope facets,
+unit weights, no anchors or covariates, and observed zero-based categories.
+\code{quad_points} checks response integration at the retained parameters; it
+does not refit the calibration. If integration is unresolved, increase it
+explicitly. Separately use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to examine whether
+the fitted calibration changes across quadrature grids.
+
+Inspect \code{rows} for unavailable predictions before reading \code{measures}.
+A larger descriptive Infit or Outfit is not a calibrated misfit decision;
+there is no expectation-one reference. These same-data summaries neither
+establish rater quality nor test unidimensionality or local independence.
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, Q3/PCA, Wright/Pathway maps and model ranking retain
+their separate support restrictions. Attach the saved result with
+\code{mfrm_results(fit, include = c("fit", "plots"), compute = "never", response_diagnostics = result)} for plots, reports and exports. Collection
+and replay do not refit or reintegrate the saved probabilities.
+}
+
+\section{Corrected JML conditional residuals}{
+
+For an explicit profile-score-adjusted GPCM fit, probabilities are evaluated
+at the saved corrected facet/step/slope estimates and the reprofiled Person
+abilities: \eqn{p_{ik}=P(Y_i=k\mid\widehat\theta_i,\widehat\beta_{adj})}.
+These are conditional plug-in probabilities, not posterior predictions or
+held-out predictions. There is no normal ability prior or quadrature.
+Calibration and Person estimation uncertainty are excluded. Residual bias
+may remain. Unavailable RootSE does not prevent these point calculations.
+The response formula is the same shared-owner GPCM used for fitting.
+
+Only observed fitted rows are available; no unassigned cells are filled or
+missing scores imputed. Original row numbers, repeated-event multiplicity,
+category labels and facet names are retained. \code{rows} selects displayed and
+summarized events without changing their Person profiles. Save the result
+and attach it through \code{mfrm_results(fit, response_diagnostics = result)};
+the saved calibration, slopes, Person profiles and source rows must match.
+
+An extreme Person profile has a limiting probability of one at the minimum
+or maximum score. Its expected score, zero conditional variance and raw
+residual remain available. \code{StandardizedResidual} is missing with
+\code{Status = "zero_variance"}: the ratio at the saved probabilities is
+undefined. No automatic convention replacing \code{0/0} with zero is applied.
+\code{ProbabilityAvailable} distinguishes this case from a failed probability
+calculation. If all selected raw residuals and variances are available and
+their total variance is positive, Infit remains available, including those
+zero-variance rows. Outfit requires every selected standardized residual;
+otherwise it is missing, and the group is \code{partially_available} with a
+reason. The grouped \code{Available} column counts rows with finite standardized
+residuals; Infit can use all \code{Observed} rows despite that smaller count.
+No row is silently discarded. An all-zero-variance group has neither
+index. Explicitly selecting other rows changes the summarized set and must
+be reported as such.
+
+These same-data residual summaries have no calibrated expectation-one
+reference, uncertainty intervals, p-values, automatic flags or rater-quality
+classifications. They do not establish correction of structural bias or
+replace \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, which is unavailable for this estimator.
+\code{plot()} offers paired and scatter views, including \code{\link[=as_ggplot]{as_ggplot()}} conversion.
+A paired view retains available Infit when Outfit is missing; a scatter view
+needs both. Reports and exports preserve the probability definition and
+unavailable outcomes. Corrected-JML model comparison remains unavailable;
+portable scoring has its own calibration checks and conditional EAP target.
+}
+
 \examples{
 example <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr"))
 fit <- example$testlet$fit

@@ -129,3 +129,45 @@ test_that("population variance boundaries cannot poison an MML evaluation cache"
     expect_identical(cache$params()$population$sigma2, exp(log_sigma2))
   }
 })
+
+test_that("finite GPCM slopes can produce explicitly rejected adaptive moments", {
+  kernel <- mfrmr:::mfrmr_adaptive_person_kernel(
+    list(person=1L,score_k=1L,weight=1,step_idx=1L,slope_idx=1L),
+    list(model="GPCM",n_cat=2L),
+    list(slopes=1e200,steps_mat=matrix(0,1,1)),0,0,1)
+  expect_error(kernel(0), class="mfrmr_adaptive_quadrature_numeric_error")
+  safe <- mfrmr:::make_mfrm_boundary_safe_objective(list(
+    value=function(p)kernel(p)$information,gradient=function(p)kernel(p)$score))
+  expect_identical(safe$value(0),safe$penalty)
+  expect_identical(safe$gradient(0),0)
+  expect_identical(safe$adaptive_quadrature_rejections(),1L)
+  expect_identical(safe$rejections(),0L)
+})
+
+test_that("failed adaptive trials do not cache old likelihoods or qualify invalid starts", {
+  fit <- suppressWarnings(fit_mfrm(load_mfrmr_data("example_core"),
+    "Person",c("Rater","Criterion"),"Score",model="GPCM",
+    step_facet="Criterion",slope_facet="Criterion",quad_points=5L,maxit=2L))
+  cfg <- fit$config
+  cfg$estimation_control$mml_integration <- "adaptive"
+  sizes <- mfrmr:::build_param_sizes(cfg)
+  idx <- mfrmr:::build_indices(fit$prep,cfg$step_facet,cfg$slope_facet)
+  evaluator <- mfrmr:::make_mfrm_direct_evaluator("MML",
+    mfrmr:::make_param_cache(sizes,cfg,idx,is_mml=TRUE),idx,cfg,sizes,
+    mfrmr:::gauss_hermite_normal(5L))
+  safe <- mfrmr:::make_mfrm_boundary_safe_objective(evaluator)
+  valid <- rep(0,length(fit$opt$par)); invalid <- valid
+  invalid[mfrmr:::build_param_slices(sizes)$log_slopes[1]] <- 580
+  expect_true(all(is.finite(mfrmr:::expand_params(invalid,sizes,cfg)$slopes)))
+  expected <- evaluator$value(valid); gradient <- evaluator$gradient(valid)
+  for(i in 1:2) {
+    expect_identical(safe$value(invalid),safe$penalty)
+    expect_identical(safe$gradient(invalid),numeric(length(invalid)))
+    expect_error(evaluator$value(invalid),class="mfrmr_adaptive_quadrature_numeric_error")
+  }
+  expect_identical(safe$adaptive_quadrature_rejections(),2L)
+  expect_identical(evaluator$value(valid),expected)
+  expect_identical(evaluator$gradient(valid),gradient)
+  expect_error(mfrmr:::run_mfrm_direct_optimization(invalid,"MML",idx,cfg,sizes,
+    quad_points=5L,maxit=2L,reltol=1e-6),class="mfrmr_adaptive_quadrature_numeric_error")
+})

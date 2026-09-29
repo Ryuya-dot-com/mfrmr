@@ -49,7 +49,12 @@ loadings views via \code{\link[=plot_residual_pca]{plot_residual_pca()}}
 and row/category/missing-row plots
 \item \code{mfrm_facets_fit_review} -> FACETS-style df-sensitivity plot
 \item \code{mfrm_fit_measures} -> fit-status counts, Infit/Outfit scatter, measure
-intervals, and FACETS-style df-sensitivity plots
+normal bands, and FACETS-style df-sensitivity plots. For \code{type = "measure_ci"},
+the caption retains the source interval interpretation (including exploratory
+JML bands); fixed values use open diamonds and finite estimates without
+intervals use crosses. \code{main = ""} omits the title and \code{show_notes = FALSE}
+hides the caption without removing it from saved data. Changing \code{ci_level}
+does not change inferential eligibility. See \code{\link[=fit_measures_table]{fit_measures_table()}}.
 \item \code{mfrm_iteration_report} -> replayed-iteration trajectories
 \item \code{mfrm_subset_connectivity} -> subset-observation/connectivity plots
 \item \code{mfrm_facet_statistics} -> facet statistic profile plots

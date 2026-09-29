@@ -110,6 +110,18 @@ implemented and validated design-specific bootstrap; mfrmr does not
 currently provide that procedure.
 }
 
+\section{Dimensionality and network interpretation}{
+
+Choose \code{facet} for the question: pairing Rater levels describes rater
+residual associations, not a count of rubric dimensions. Associations may
+reflect additional ability structure, shared performance effects, rater
+effects or assignment patterns. A thresholded correlation graph is not a
+partial-correlation network or a fitted residual-network model; its community
+count is not a dimensionality test. Missing pairs are not zero edges.
+See \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} and \code{vignette("mfrmr-visual-diagnostics")}
+for complementary checks and the limits of exploratory network analysis.
+}
+
 \section{References}{
 
 \itemize{

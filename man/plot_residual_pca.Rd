@@ -61,8 +61,8 @@ Visualize residual PCA results
 Plot types:
 \itemize{
 \item \code{"scree"}: component vs eigenvalue line plot
-\item \code{"parallel_scree"}: observed eigenvalues with residual-permutation
-parallel-analysis mean and upper cutoff
+\item \code{"parallel_scree"}: observed eigenvalues with the selected reference's
+mean and upper cutoff (residual permutation or model bootstrap)
 \item \code{"parallel_excess"}: observed eigenvalue minus the parallel-analysis
 cutoff by component
 \item \code{"loadings"}: horizontal bar chart of top absolute loadings
@@ -79,8 +79,10 @@ this as exploratory residual-structure screening, not a standalone
 unidimensionality test or a DIMTEST/UNIDIM substitute.
 \item \code{plot_type = "parallel_scree"} or \code{"parallel_excess"}: use only after
 running \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} with \code{parallel = TRUE}. Components
-above the residual-permutation cutoff are candidates for follow-up,
-not proof of multidimensionality.
+above the selected reference cutoff are candidates for follow-up,
+not proof of multidimensionality. Model-bootstrap plots label the refitted
+reference explicitly; unavailable comparisons are explained in
+\code{parallel_status} and \code{bootstrap_trials}.
 \item \code{plot_type = "loadings"}: identifies variables/elements driving each
 component; inspect both sign and absolute magnitude.
 }

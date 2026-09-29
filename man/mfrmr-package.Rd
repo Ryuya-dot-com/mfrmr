@@ -65,9 +65,16 @@ one-scale \code{RSM} or \code{PCM} MML fit under the fixed standard-normal scori
 basis. Use \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}} before extraction, then follow
 \link{mfrm_calibration_workflow} to review, validate, freeze, save, load, and
 score the artifact. Review the returned batch with
-\link{mfrm_calibration_score_methods} before using its estimates. Estimated-
-population or latent-regression MML, JML, and
-\code{GPCM} remain fitted-object-only scoring routes in 0.2.4. Artifact
+\link{mfrm_calibration_score_methods} before using its estimates. Development GPCM
+MML also supports an estimated intercept-only normal population, shared or
+separate slope/step owners, unit weights and no anchors/interactions, subject
+to conditional source and per-batch numerical scoring checks. Estimated-
+population RSM/PCM and latent-regression MML remain fitted-object-only.
+RSM/PCM JML supports portable post-hoc EAP with a standard-normal reference
+prior, unit weights, no anchors/interactions and passing finite identified
+source checks. Shared-owner GPCM JML also supports conditional portable
+EAP after its joint-likelihood/curvature checks, preserving incomplete global
+audits. That reference prior is not estimated by JML. Artifact
 score uncertainty is conditional on the frozen point calibration and its
 recorded prior; loading validates consistency but does not authenticate an
 untrusted file.
@@ -337,7 +344,7 @@ set taken from the observed data.
 
 \strong{Generalized Partial Credit Model (GPCM)}
 
-Under \code{GPCM} (Muraki, 1992), the same adjacent-category partial-credit
+With one slope family under \code{GPCM} (Muraki, 1992), the adjacent-category partial-credit
 kernel is multiplied by a positive slope \eqn{\alpha_g} for the designated
 slope-facet level \eqn{g}:
 
@@ -349,10 +356,15 @@ JML requires \code{slope_facet == step_facet}. Slopes are identified on the log
 scale with geometric mean 1. This makes
 \code{GPCM} a slope-aware sensitivity/extension route, not a replacement for the
 equal-weighting \code{RSM}/\code{PCM} interpretation.
-It does not jointly estimate the multiplicative task and rater slopes of
-the broader Uto--Ueno generalized MFRM. Unit slopes reduce to
-the equal-discrimination PCM kernel.
-Under default MML, an intercept-only person distribution
+A separate provisional two-family MML--EM route fits the multiplicative
+Uto--Ueno equation with explicit fixed-N(0,1) identification, exactly two
+facets and second-owner steps. The first family's slopes have geometric mean
+one and the second family's slopes are free. It supplies summary and
+conditional fitted curves without intervals; the one-family diagnostic,
+inference and portable-scoring routes below do not apply to it. See the
+Two slope families section of \code{\link[=fit_mfrm]{fit_mfrm()}}. Unit slopes reduce to the
+equal-discrimination PCM kernel.
+Under default one-family MML, an intercept-only person distribution
 \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
 relative discriminations and \eqn{\sigma\alpha_g} are their equivalent
 fixed-latent-standard-deviation values, so the conventional common
@@ -361,8 +373,9 @@ discrimination degree of freedom is retained. The legacy
 \eqn{\sigma=1} and the slope geometric mean to one and is therefore a
 narrower relative-discrimination model. Under JML, geometric-mean-one is
 required to resolve the scale of jointly estimated person coordinates.
-"Bounded" refers to this deliberately limited model/workflow scope, not to
-finite optimizer box constraints. The GPCM JML objective is unpenalized.
+The former "bounded" label described limited model/workflow scope, not
+finite optimizer box constraints. Use GPCM with explicit scope restrictions.
+The GPCM JML objective is unpenalized.
 Certified extreme-person or facet recession is reported through typed
 primary boundary results; a finite optimizer iterate is retained only as a
 numerical trace and is not a finite JML maximum.

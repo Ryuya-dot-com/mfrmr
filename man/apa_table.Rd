@@ -83,7 +83,9 @@ unavailable reasons remain with the selected estimates and bounds.
 retain \code{"trials"}, \code{"checks"} and \code{"source_checks"} when recorded, \code{"sampling"}, and
 \code{"availability"} for slope intervals
 or \code{"test"} for a null-model LRT. Extended results also expose \code{"settings"},
-and \code{"clusters"}/\code{"contrasts"} when present. Target and method columns are preserved.
+and \code{"clusters"}/\code{"contrasts"} when present. Saved profile intervals also
+expose \code{"profile"}, \code{"profile_endpoints"}, \code{"profile_checks"} and \code{"wald"}.
+Target and method columns are preserved.
 }
 }
 \section{Interpreting output}{

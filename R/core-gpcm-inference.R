@@ -1,3 +1,58 @@
+# Conditional responses share the fitted free coordinates with inference.
+# Prediction may combine known levels absent from the estimation design; it
+# does not add such crossings to the fitted slope design or certify inference.
+mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
+  facets <- config$facet_names
+  required <- c("Theta", facets)
+  if ("Theta" %in% facets || !is.data.frame(newdata) || !nrow(newdata) ||
+      anyDuplicated(names(newdata)) || !all(required %in% names(newdata)) ||
+      !is.numeric(newdata$Theta) || is.complex(newdata$Theta) || any(!is.finite(newdata$Theta))) {
+    stop("`newdata` needs finite numeric Theta and every non-Person facet column; Theta is reserved for ability.", call. = FALSE)
+  }
+  newdata <- as.data.frame(newdata[required], check.names = FALSE)
+  query <- prep
+  query$data <- data.frame(Person = factor(rep(prep$levels$Person[1], nrow(newdata)),
+    levels = prep$levels$Person), score_k = 0L, Weight = 1)
+  for (facet in facets) {
+    values <- as.character(newdata[[facet]])
+    if (anyNA(values) || any(!values %in% prep$levels[[facet]])) {
+      stop("Unknown or missing level in facet ", facet, "; levels must be present in the fit.", call. = FALSE)
+    }
+    query$data[[facet]] <- factor(values, levels = prep$levels[[facet]])
+  }
+  key <- function(data) do.call(paste, c(lapply(data[facets], as.integer), sep = ":"))
+  contexts <- data.frame(InputRow = seq_len(nrow(newdata)),
+    ObservedContext = key(query$data) %in% key(prep$data))
+  # Location and interaction indices need no fitted crossing index: prediction
+  # slopes are assembled from the fitted component levels below.
+  idx <- build_indices(query, config$step_facet, interaction_specs = config$interaction_specs)
+  sizes <- build_param_sizes(config)
+  evaluate <- function(par) {
+    if (length(par) != sum(unlist(sizes)) || any(!is.finite(par))) stop("Invalid parameter vector.")
+    params <- expand_params(par, sizes, config)
+    components <- setNames(lapply(config$slope_facet, function(owner) {
+      values <- if (length(config$slope_facet) == 1L) params$slopes else
+        params$slope_components[[owner]]$Slope
+      unname(values[idx$facets[[owner]]])
+    }), config$slope_facet)
+    slope <- Reduce(`*`, components)
+    if (any(!is.finite(slope) | slope <= 0)) stop("Predicted slopes must be finite and positive.")
+    cumulative <- t(apply(params$steps_mat, 1L, function(s) c(0, cumsum(s))))
+    bundle <- mfrm_jml_probability_bundle(
+      eta = newdata$Theta + compute_base_eta(idx, params, config),
+      score_k = rep(0L, nrow(newdata)), model = "GPCM", step_cum = cumulative,
+      criterion_idx = idx$step_idx, slopes = slope, slope_idx = seq_len(nrow(newdata)),
+      include_log_probs = TRUE)
+    if (any(!is.finite(bundle$log_probs))) stop("Predicted log probabilities are not finite.")
+    colnames(bundle$probs) <- colnames(bundle$log_probs) <- as.character(seq_len(config$n_cat) - 1L)
+    variance <- mfrm_category_variance(bundle$probs)
+    list(probabilities = bundle$probs, log_probabilities = bundle$log_probs,
+      slope_components = components, effective_slope = slope, variance = variance,
+      information = slope^2 * variance)
+  }
+  list(newdata = newdata, contexts = contexts, evaluate = evaluate)
+}
+
 # Joint information and transformations shared by slope/curve inference.
 mfrm_gpcm_inference_source <- function(fit) {
   list(signature = normalize_compare_signature(fit), parameters = fit$opt$par,
@@ -15,6 +70,15 @@ mfrm_gpcm_inference <- function(fit, method = "model", clusters = NULL, adjust =
   method <- match.arg(method, c("model", "sandwich"))
   if (!is.logical(adjust) || length(adjust) != 1L || is.na(adjust)) stop("`adjust` must be TRUE or FALSE.", call. = FALSE)
   if (method == "model" && (!is.null(clusters) || adjust)) stop("`clusters` and `adjust` require method = 'sandwich'.", call. = FALSE)
+  if (mfrm_has_product_slopes(fit)) {
+    if (method != "model" || !is.null(clusters) || adjust) {
+      stop("Two-family curves do not yet support covariance methods or uncertainty adjustments.", call. = FALSE)
+    }
+    return(list(covariance = NULL, information = NULL, method = method, clusters = NULL,
+      check = list(eligible = FALSE, review = paste(
+        "Provisional two-family fitted values; curve intervals are not available.",
+        "Numerical convergence does not establish identification or inferential reliability."))))
+  }
   information <- compute_mml_parameter_covariance(fit)
   check <- mfrm_gpcm_slope_inference_check(fit, information)
   out <- list(covariance = information$cov, information = information, check = check,
@@ -37,10 +101,11 @@ mfrm_gpcm_inference <- function(fit, method = "model", clusters = NULL, adjust =
   out
 }
 
-mfrm_mml_person_scores_numeric <- function(fit) {
+mfrm_mml_person_scores_numeric <- function(fit, relative_step = 1e-5) {
   config <- fit$config
   sizes <- build_param_sizes(config)
-  idx <- build_indices(fit$prep, config$step_facet, config$slope_facet, config$interaction_specs)
+  idx <- build_indices(fit$prep, config$step_facet, config$slope_facet, config$interaction_specs,
+                       gpcm_spec = config$gpcm_spec)
   quad <- gauss_hermite_normal(config$estimation_control$quad_points)
   marginal <- function(par) {
     params <- expand_params(par, sizes, config)
@@ -48,7 +113,7 @@ mfrm_mml_person_scores_numeric <- function(fit) {
     person <- mfrm_mml_person_bundle(bundle$log_prob_mat, bundle$person_int, bundle$quad_basis)
     person$log_marginal[match(seq_len(config$n_person), person$person_ids)]
   }
-  jac <- mfrmr_numeric_transformation_jacobian(marginal, fit$opt$par, relative_step = 1e-5)
+  jac <- mfrmr_numeric_transformation_jacobian(marginal, fit$opt$par, relative_step = relative_step)
   if (!jac$valid) stop("Person marginal-likelihood derivatives are unavailable.", call. = FALSE)
   scores <- jac$jacobian
   cache <- make_param_cache(sizes, config, idx, is_mml = TRUE)

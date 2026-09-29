@@ -648,8 +648,7 @@ build_curve_tables <- function(curve_spec, theta_grid) {
     }
     k_vals <- as.numeric(curve_spec$categories)
     expected <- as.numeric(probs %*% matrix(k_vals, ncol = 1))
-    second <- as.numeric(probs %*% matrix(k_vals^2, ncol = 1))
-    score_variance <- pmax(second - expected^2, 0)
+    score_variance <- mfrm_category_variance(probs, k_vals, expected)
     information <- (slope_val^2) * score_variance
     exp_tables[[idx_exp]] <- tibble::tibble(
       Theta = theta_grid,
@@ -729,7 +728,7 @@ compute_se_for_plot <- function(x, ci_level = 0.95, diagnostics = NULL) {
     )
     se_tbl$CI_Level <- ci_level
     se_tbl$Measure_Source <- "diagnostics$measures"
-    return(se_tbl)
+    return(apply_fixed_measure_precision(se_tbl, x$config))
   }
   tryCatch({
     obs_df <- compute_obs_table(x)
@@ -772,7 +771,7 @@ compute_se_for_plot <- function(x, ci_level = 0.95, diagnostics = NULL) {
     se_tbl$CIEligible <- FALSE
     se_tbl$CILabel <- "Approximate interval; screening only"
     se_tbl$Measure_Source <- "fit + observation-table information"
-    as.data.frame(se_tbl, stringsAsFactors = FALSE)
+    as.data.frame(apply_fixed_measure_precision(se_tbl, x$config), stringsAsFactors = FALSE)
   }, error = function(e) NULL)
 }
 
@@ -1166,7 +1165,7 @@ build_wright_map_data <- function(x,
       "SE" %in% names(se_tbl)) {
     se_join <- se_tbl[, intersect(
       c(
-        "Facet", "Level", "SE",
+        "Facet", "Level", "SE", "Fixed",
         "CI_Level", "SE_Method", "PrecisionTier", "SupportsFormalInference",
         "SEUse", "CIBasis", "CIUse", "CIEligible", "CILabel",
         "Measure_Source"
@@ -3243,6 +3242,19 @@ draw_facet_plot <- function(facet_tbl,
 #' types (`"facet"`, `"person"`, `"step"`, `"shrinkage"`) provide
 #' compact location-specific displays.
 #'
+#' @section Corrected JML plots:
+#' A fit with an explicit `jml_correction_order` uses `type = "slopes"`
+#' (default), `"locations"` or `"steps"`. Locations show one `facet`, defaulting
+#' to the first declared facet. `style = "points"` shows estimates without
+#' intervals; `"distribution"` shows their empirical cumulative distribution.
+#' These displays do not classify rater quality. They support `title`, `caption`,
+#' `show_title`, `show_notes`, `show_labels`, `sort`, `palette`, `preset`,
+#' `text_scale`, `point_size`, and draw-free [as_ggplot()] conversion. Slopes
+#' use a reference of one; location/step displays use zero. Ordinary plot types,
+#' `show_ci = TRUE`, and unrelated plot controls are rejected for this estimator.
+#' The figure retains point estimates if their RootSE is unavailable; it cannot
+#' be drawn if no unambiguous point solution was obtained.
+#'
 #' @section Graphics layout:
 #' Single-panel plots advance through a caller's `par(mfrow = ...)` or
 #' `layout()` arrangement and restore the style and margins they change.
@@ -3353,6 +3365,22 @@ plot.mfrm_fit <- function(x,
                           show_title = TRUE,
                           show_notes = TRUE,
                           ..., level = NULL) {
+  if (mfrm_has_jml_adjustment(x)) {
+    supplied <- names(as.list(match.call())[-1L])
+    allowed <- c("x","type","facet","draw","title","show_title","show_notes","palette","preset",
+      "show_ci","style","sort","caption","show_labels","text_scale","point_size")
+    if (length(setdiff(supplied,allowed))) stop("Unsupported corrected-JML plot arguments: ",
+      paste(setdiff(supplied,allowed),collapse=", "),call.=FALSE)
+    if (!is.null(show_ci) && !identical(show_ci,FALSE))
+      stop("Corrected-JML plots show point estimates; structural confidence intervals are not available.",call.=FALSE)
+    if(missing(preset)) preset <- .mfrm_default_plot_preset()
+    preset <- resolve_plot_preset(preset)$name
+    dots <- list(...)
+    if(is.null(dots$text_scale)) dots$text_scale <- switch(preset,compact=.9,publication=1.05,1)
+    return(do.call(mfrm_jml_plot,c(list(x=x,type=type,facet=facet,draw=draw,title=title,
+      show_title=show_title,show_notes=show_notes,palette=palette %||% if(preset=="monochrome") "mono" else "accessible"),dots)))
+  }
+  stop_if_product_slopes(x, "plot.mfrm_fit()")
   if (!missing(level)) {
     if (!missing(ci_level)) stop("Supply only one of `level` and `ci_level`.", call. = FALSE)
     if (!is.numeric(level) || is.complex(level) || length(level) != 1L ||

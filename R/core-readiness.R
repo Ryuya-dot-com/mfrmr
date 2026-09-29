@@ -307,14 +307,22 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
   if (!identical(as.character(config$model %||% ""), "GPCM")) {
     return(mfrmr_readiness_empty_parameter_table())
   }
-  levels <- as.character(config$gpcm_spec$levels %||% character(0))
+  product <- !is.null(config$gpcm_spec$component_levels)
+  metadata <- if (product) mfrm_gpcm_product_metadata(config$gpcm_spec) else NULL
+  levels <- if (product) metadata$Level else as.character(config$gpcm_spec$levels %||% character(0))
   if (length(levels) == 0L) {
     return(mfrmr_readiness_empty_parameter_table())
   }
-  slope_facet <- as.character(config$slope_facet %||% NA_character_)
+  slope_facet <- if (product) metadata$Owner else
+    rep(as.character(config$slope_facet %||% NA_character_), length(levels))
   method <- as.character(config$method %||% NA_character_)
   audit <- config$boundary_audit$gpcm_slope_boundary %||% list()
   joint_audit <- config$boundary_audit$gpcm_joint_boundary %||% list()
+  if (product) {
+    # Existing boundary certificates concern one slope family. They cannot
+    # qualify either component of the internal product model.
+    audit <- joint_audit <- list(state = "not_evaluated_for_product_slopes")
+  }
   targets <- as.data.frame(audit$target_status %||% data.frame(),
                            stringsAsFactors = FALSE)
   joint_targets <- as.data.frame(
@@ -335,7 +343,7 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
   }
   table_index <- if (nrow(slope_table) > 0L &&
                      "SlopeFacet" %in% names(slope_table)) {
-    match(levels, as.character(slope_table$SlopeFacet))
+    mfrm_match_slope_table(slope_facet, levels, slope_table)
   } else {
     rep(NA_integer_, length(levels))
   }
@@ -453,7 +461,7 @@ mfrmr_readiness_gpcm_slope_parameters <- function(config,
     ReadinessScope = rep("parameter", length(levels)),
     ParameterId = paste0("Slope:", slope_facet, ":", levels),
     ParameterClass = rep("gpcm_slope", length(levels)),
-    Facet = rep(slope_facet, length(levels)),
+    Facet = slope_facet,
     Level = levels,
     OptimizerLogEstimate = optimizer_log,
     OptimizerEstimate = optimizer_slope,
@@ -490,11 +498,16 @@ apply_mfrm_slope_readiness <- function(slope_table, readiness_record) {
   parameters <- parameters[
     parameters$ParameterClass %in% "gpcm_slope", , drop = FALSE
   ]
-  parameter_id <- paste0(
-    "Slope:", as.character(parameters$Facet[1] %||% ""), ":",
-    as.character(slope_table$SlopeFacet)
-  )
-  index <- match(parameter_id, as.character(parameters$ParameterId))
+  if (nrow(parameters) && !identical(as.character(parameters$ParameterId),
+      paste0("Slope:", parameters$Facet, ":", parameters$Level))) {
+    stop("The GPCM slope-readiness identities do not match their owners and levels.", call. = FALSE)
+  }
+  if (is.null(slope_table[["SlopeOwner"]]) && length(unique(parameters$Facet)) > 1L) {
+    stop("Multiple slope owners require an explicit SlopeOwner column.", call. = FALSE)
+  }
+  owners <- slope_table[["SlopeOwner"]] %||% rep(parameters$Facet[1] %||% "", nrow(slope_table))
+  index <- mfrm_match_slope_table(owners, slope_table$SlopeFacet,
+    data.frame(SlopeOwner = parameters$Facet, SlopeFacet = parameters$Level))
   if (nrow(parameters) == 0L || anyNA(index)) {
     stop(
       "The GPCM slope-readiness record did not match the fitted slope table.",
@@ -643,7 +656,9 @@ mfrmr_readiness_boundary_component <- function(config) {
         reasons,
         if (free_gpcm_slopes) {
           c("boundary_audit_incomplete",
-            "mml_gpcm_slope_boundary_not_evaluated")
+            if (!is.null(config$gpcm_spec$component_levels))
+              "mml_gpcm_product_boundary_not_evaluated" else
+              "mml_gpcm_slope_boundary_not_evaluated")
         }
       ),
       audit_state = paste0(

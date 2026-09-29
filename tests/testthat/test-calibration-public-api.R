@@ -69,7 +69,7 @@ test_that("portable calibration exports only the reviewed public workflow", {
 
 test_that("public capability matrix states the bounded artifact envelope", {
   capabilities <- mfrm_calibration_capabilities()
-  expect_identical(nrow(capabilities), 6L)
+  expect_identical(nrow(capabilities), 7L)
   expect_identical(
     names(capabilities),
     c(
@@ -79,11 +79,11 @@ test_that("public capability matrix states the bounded artifact envelope", {
     )
   )
   available <- capabilities$PortableCalibration == "available"
-  expect_identical(which(available), c(1L, 2L))
-  expect_identical(capabilities$Model[available], c("RSM", "PCM"))
-  expect_true(all(capabilities$Estimator[available] == "MML"))
+  expect_identical(which(available), c(1L, 2L, 4L, 5L, 6L, 7L))
+  expect_identical(capabilities$Model[available], c("RSM", "PCM", "GPCM", "RSM/PCM", "GPCM", "GPCM"))
+  expect_identical(capabilities$Estimator[available], c("MML", "MML", "MML", "JML", "JML", "Corrected JML"))
   expect_true(all(
-    capabilities$ScoringBasis[available] == "fixed standard normal"
+    capabilities$ScoringBasis[1:2] == "fixed standard normal"
   ))
   expect_true(all(nzchar(capabilities$ExistingAlternative[!available])))
   expect_true(all(nzchar(capabilities$Limitation)))
@@ -102,7 +102,7 @@ test_that("public capability matrix states the bounded artifact envelope", {
     "plot(scores, type = \"interval\")", guide$MainFunction, fixed = TRUE
   )))
   expect_true(any(grepl(
-    "does not construct typed step anchors", guide$Notes, fixed = TRUE
+    "GPCM currently requires unit weights and no anchors or interactions", guide$Notes, fixed = TRUE
   )))
   expect_true(any(grepl(
     "excludes calibration-parameter uncertainty",
@@ -284,7 +284,7 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   expect_identical(interval$data$selection_summary$NotScoredPersons, 1L)
   expect_identical(
     interval$data$subtitle,
-    "1 of 1 scored Persons shown; 1 review disposition shown"
+    "1 of 1 scored Persons shown; 1 review disposition shown; 1 not scored"
   )
   expect_true(all(c(
     "ReviewFlag", "QuadratureEdgeMass", "QuadratureEdgeThreshold",
@@ -403,7 +403,7 @@ test_that("public loader explicitly refuses incompatible schema fixtures", {
   on.exit(unlink(path), add = TRUE)
 
   newer <- fixture$frozen
-  newer$header$schema_version <- newer$header$schema_version + 1L
+  newer$header$schema_version <- 6L
   saveRDS(newer, path, version = 3)
   newer_error <- tryCatch(
     load_mfrm_calibration(path),
@@ -441,14 +441,14 @@ test_that("public extraction refusals give actionable non-internal alternatives"
     family = list(
       code = "MODEL_FAMILY_UNSUPPORTED",
       mutate = function(fit) {
-        fit$config$model <- "GPCM"
+        fit$config$model <- "unsupported"
         fit
       }
     ),
     estimator = list(
       code = "MODEL_ESTIMATOR_UNSUPPORTED",
       mutate = function(fit) {
-        fit$config$method <- "JML"
+        fit$config$method <- "unsupported"
         fit
       }
     ),
@@ -741,4 +741,40 @@ test_that("installed public API preserves CSV identities and refusals in a fresh
                tolerance = 0)
   expect_equal(nrow(result$quadrature_review), nrow(result$estimates) * 2L)
   expect_true(all(result$quadrature_review$Status == "computed"))
+})
+
+
+test_that("current RSM portable artifacts accept explicit scoring priors without mutation", {
+  f <- calibration_public_fixture()
+  expect_error(score_mfrm_calibration(f$frozen, f$rows,
+    scoring_prior = list(mean = .4, sd = 1.2)), "integration did not pass")
+  f$frozen <- freeze_mfrm_calibration(validate_mfrm_calibration(
+    extract_mfrm_calibration(f$fit, quadrature_review = f$quadrature_review,
+      scoring_quad_points = 121)))
+  before <- serialize(f$frozen, NULL)
+  prior <- list(mean = .4, sd = 1.2)
+  scored <- score_mfrm_calibration(f$frozen, f$rows, scoring_prior = prior)
+  native <- predict_mfrm_units(f$fit, f$rows, scoring_prior = prior,
+    scoring_quad_points = 121, readiness_policy = "review")
+  expect_equal(scored$estimates$Estimate, unname(native$estimates$Estimate[match(scored$estimates$Person, native$estimates$Person)]), tolerance = 1e-5)
+  expect_equal(scored$estimates$SD, unname(native$estimates$SD[match(scored$estimates$Person, native$estimates$Person)]), tolerance = 1e-5)
+  expect_true(all(scored$estimates$ScoreIntegrationReady))
+  expect_identical(serialize(f$frozen, NULL), before)
+  expect_true(all(summary(scored)$estimates$PriorSD == prior$sd))
+  legacy <- f$frozen
+  legacy$scoring_basis$scoring_algorithm <- sub("_v2$", "_v1", legacy$scoring_basis$scoring_algorithm)
+  legacy$integrity$semantic_components <- mfrmr:::mfrmr_calibration_semantic_components(legacy)
+  expect_error(score_mfrm_calibration(legacy, f$rows, scoring_prior = prior), "re-extract")
+})
+
+
+test_that("the output guide agrees with conditional portable GPCM capabilities", {
+  guide <- mfrmr_output_guide("calibration")
+  expect_true(all(guide$GPCMStatus == "supported_with_caveat"))
+  expect_true(any(grepl("conditional source checks", guide$UseWhen, fixed = TRUE)))
+  expect_true(any(grepl("GPCM", guide$Notes, fixed = TRUE)))
+  boundary <- guide$DecisionBoundary[guide$ObjectRole == "portable calibration lifecycle"]
+  expect_length(boundary, 1L)
+  expect_match(boundary, "GPCM MML", fixed = TRUE)
+  expect_match(boundary, "shared-owner GPCM JML", fixed = TRUE)
 })

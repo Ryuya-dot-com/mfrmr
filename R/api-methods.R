@@ -764,11 +764,21 @@ summarize_residual_pca_bundle <- function(object, digits = 3, top_n = 10) {
       "Residual PCA is exploratory residual-structure screening",
       "(overall and/or by facet), not a standalone dimensionality test or",
       "an automatic decision about dimensions or subscores."
-    ), if (isTRUE(object$parallel_settings$Enabled)) paste(
-      "The permutation comparison conditions on the fitted residuals and their missingness.",
-      "It omits fitted-model uncertainty and is not a calibrated dimensionality test.",
-      sprintf("Reference quantile: %g%%; %d permutations requested per analysis.",
-              100 * object$parallel_settings$Quantile, object$parallel_settings$Reps)
+    ), if (isTRUE(object$parallel_settings$Enabled)) {
+      if (identical(object$parallel_settings$Method, "model_bootstrap")) paste(
+        "The model reference regenerates ratings and refits the model, holding the analyzed assignment fixed.",
+        "It is exploratory, not a calibrated dimensionality test. Inspect bootstrap_trials for every attempted replicate.",
+        sprintf("Reference quantile: %g%%; %d model replicates requested.",
+                100 * object$parallel_settings$Quantile, object$parallel_settings$Reps)
+      ) else paste(
+        "The permutation comparison conditions on the fitted residuals and their missingness.",
+        "It omits fitted-model uncertainty and is not a calibrated dimensionality test.",
+        sprintf("Reference quantile: %g%%; %d permutations requested per analysis.",
+                100 * object$parallel_settings$Quantile, object$parallel_settings$Reps)
+      )
+    }, if (isTRUE(object$parallel_settings$Enabled)) paste(
+      "Cutoffs apply separately to each component; scanning all components or facets",
+      "does not control the chance of any false flag. A missing flag does not establish model adequacy."
     ), issues),
     digits = digits,
     top_n = top_n,
@@ -1187,7 +1197,8 @@ summarize_fit_measures_bundle <- function(object, digits = 3, top_n = 10) {
 
   basis <- object$settings$flag_basis %||% "mnsq_or_zstd"
   notes <- c(paste0("Fit-measures directional screen: ", basis, "."),
-    "Low mean squares describe low residual variability; they do not establish poor rater quality or justify automatic exclusion.")
+    "Low mean squares describe low residual variability; they do not establish poor rater quality or justify automatic exclusion.",
+    fit_measure_interval_note(bundle_component_table(object, "table")))
   if (nrow(df_summary) > 0L) {
     changed <- suppressWarnings(as.integer(df_summary$FlagChangedByDfRows[1] %||% 0L))
     sensitive <- nrow(df_sensitive)
@@ -4858,7 +4869,11 @@ draw_fit_measures_bundle <- function(x,
                                      label_angle = 45,
                                      preset = c("standard", "publication", "compact", "monochrome"),
                                      ci_level = NULL,
-                                     top_n = 30L) {
+                                     top_n = 30L,
+                                     show_notes = TRUE) {
+  if (!is.logical(show_notes) || length(show_notes) != 1L || is.na(show_notes)) {
+    stop("`show_notes` must be TRUE or FALSE.", call. = FALSE)
+  }
   type <- match.arg(tolower(as.character(type[1])), c("status", "infit_outfit", "measure_ci", "df_sensitivity"))
   style <- resolve_plot_preset(preset)
   pal <- resolve_palette(
@@ -4925,31 +4940,45 @@ draw_fit_measures_bundle <- function(x,
     tbl$CI_Lower <- ifelse(is.finite(measure) & is.finite(se) & se >= 0, measure - z_ci * se, NA_real_)
     tbl$CI_Upper <- ifelse(is.finite(measure) & is.finite(se) & se >= 0, measure + z_ci * se, NA_real_)
     tbl$CI_Level <- active_ci
+    fixed <- tbl[["Fixed"]] %in% TRUE
+    if (length(fixed) != nrow(tbl)) fixed <- rep(FALSE, nrow(tbl))
+    tbl$CI_Lower[fixed] <- tbl$CI_Upper[fixed] <- NA_real_
     ok <- is.finite(measure) & is.finite(tbl$CI_Lower) & is.finite(tbl$CI_Upper)
-    if (!any(ok)) stop("No finite measure confidence intervals are available for plotting.", call. = FALSE)
+    shown <- is.finite(measure)
+    if (!any(shown)) stop("No finite measure estimates are available for plotting.", call. = FALSE)
+    title <- if (is.null(main)) paste0("Fit-measure estimates with ",
+      round(100 * active_ci), "% normal bands") else as.character(main[1])
+    note <- fit_measure_interval_note(tbl)
+    if (any(fixed)) note <- paste(note, "Open diamonds: fixed values.")
+    if (any(shown & !fixed & !ok)) note <- paste(note, "Crosses: no interval.")
+    shape <- ifelse(fixed, 5, ifelse(ok, 21, 4))
     labels <- paste(tbl$Facet, tbl$Level, sep = ": ")
     y <- seq_len(nrow(tbl))
     cols <- unname(pal[match(tbl$FitStatus, names(pal))])
     cols[is.na(cols)] <- pal["point"]
     if (isTRUE(draw)) {
+      old_par <- graphics::par(no.readonly = TRUE)
+      on.exit(graphics::par(old_par), add = TRUE)
       apply_plot_preset(style)
-      xr <- range(c(tbl$CI_Lower[ok], tbl$CI_Upper[ok], measure[ok]), finite = TRUE)
+      note_lines <- strwrap(note, width = 88)
+      mar <- graphics::par("mar")
+      if (show_notes) mar[1] <- max(mar[1], 5 + length(note_lines) * .7)
+      mar[2] <- max(mar[2], max(graphics::strwidth(labels[shown],
+        units = "inches", cex = .76)) / graphics::par("csi") + 3)
+      graphics::par(mar = mar)
+      xr <- range(c(tbl$CI_Lower[ok], tbl$CI_Upper[ok], measure[shown]), finite = TRUE)
       graphics::plot(
-        x = measure[ok],
-        y = y[ok],
-        pch = 21,
-        bg = cols[ok],
-        col = style$background,
+        x = measure[shown],
+        y = y[shown],
+        pch = shape[shown],
+        bg = cols[shown],
+        col = cols[shown],
         xlim = xr,
-        ylim = rev(range(y[ok])),
+        ylim = rev(range(y[shown])),
         yaxt = "n",
         xlab = "Measure (logits)",
         ylab = "",
-        main = if (is.null(main)) {
-          paste0("Fit-measure estimates with ", round(100 * active_ci), "% CI")
-        } else {
-          as.character(main[1])
-        }
+        main = title
       )
       graphics::segments(
         x0 = tbl$CI_Lower[ok],
@@ -4960,20 +4989,25 @@ draw_fit_measures_bundle <- function(x,
         lwd = 1.6
       )
       graphics::points(
-        x = measure[ok],
-        y = y[ok],
-        pch = 21,
-        bg = cols[ok],
-        col = style$background
+        x = measure[shown],
+        y = y[shown],
+        pch = shape[shown],
+        bg = cols[shown],
+        col = cols[shown]
       )
-      graphics::axis(2, at = y[ok], labels = labels[ok], las = 2, cex.axis = 0.76)
+      graphics::axis(2, at = y[shown], labels = labels[shown], las = 2, cex.axis = 0.76)
       graphics::abline(v = 0, lty = 3, col = pal["reference"])
+      if (show_notes) graphics::mtext(note_lines, side = 1,
+        line = 3 + seq_along(note_lines) * .7, cex = .7)
     }
     return(invisible(new_mfrm_plot_data(
       "fit_measures",
       list(
         plot = "measure_ci",
         table = tbl,
+        title = title,
+        caption = note,
+        display = list(show_notes = show_notes),
         ci_level = active_ci,
         preset = style$name
       )
@@ -6783,7 +6817,12 @@ plot_visual_summaries_bundle <- function(x,
 #'   and row/category/missing-row plots
 #' - `mfrm_facets_fit_review` -> FACETS-style df-sensitivity plot
 #' - `mfrm_fit_measures` -> fit-status counts, Infit/Outfit scatter, measure
-#'   intervals, and FACETS-style df-sensitivity plots
+#'   normal bands, and FACETS-style df-sensitivity plots. For `type = "measure_ci"`,
+#'   the caption retains the source interval interpretation (including exploratory
+#'   JML bands); fixed values use open diamonds and finite estimates without
+#'   intervals use crosses. `main = ""` omits the title and `show_notes = FALSE`
+#'   hides the caption without removing it from saved data. Changing `ci_level`
+#'   does not change inferential eligibility. See [fit_measures_table()].
 #' - `mfrm_iteration_report` -> replayed-iteration trajectories
 #' - `mfrm_subset_connectivity` -> subset-observation/connectivity plots
 #' - `mfrm_facet_statistics` -> facet statistic profile plots
@@ -7102,7 +7141,8 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
       label_angle = label_angle,
       preset = preset,
       ci_level = ci_level,
-      top_n = top_n
+      top_n = top_n,
+      show_notes = if ("show_notes" %in% names(dots)) dots$show_notes else TRUE
     )))
   }
   if (inherits(x, "mfrm_iteration_report")) {
@@ -8563,6 +8603,13 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   measures
 #'
 #' @section Interpreting output:
+#' Corrected JML has a separate summary of saved `tables` and numerical
+#' `attempts`, with the correction order and the meaning of RootSE. All profiles
+#' show the same saved summary and never compute ordinary diagnostics. Use
+#' `include_person = TRUE` for conditional Person profiles without Person SEs.
+#' See the **Corrected JML** section of [fit_mfrm()]. The entries below describe
+#' the ordinary, uncorrected fitting routes.
+#'
 #' - `overview`: convergence plus the versioned information-criterion contract.
 #'   For eligible fixed-facet MML fits, BIC/SABIC use unique Persons, not
 #'   response rows; JML, non-unit observation weights, and legacy objects do
@@ -8639,7 +8686,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'    [plot_information()] or the fitted-object posterior scoring helpers.
 #'
 #' @return An object of class `summary.mfrm_fit` with:
-#' - `overview`: global model/fit indicators
+#' - `overview`: global model/fit indicators. For MML, `MMLEngineUsed` records
+#'   the actual algorithm, `IterationsBasis` explains what is counted, and
+#'   `ConvergenceBasis` identifies the numerical stopping rule. Numerical
+#'   convergence does not establish identification or interval eligibility
 #' - `status`: concise front-door status block for quick review
 #' - `decision`: plain-language interpretation, formal-inference status,
 #'   reason, and highest-priority next action derived from the stored readiness
@@ -8668,7 +8718,11 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `step_overview`: threshold/step diagnostics by PCM/GPCM `StepFacet`
 #'   ladder, or for the common RSM ladder
 #' - `slope_overview`: parameter-readiness and explicitly labelled optimizer-
-#'   trace summary for `GPCM` discriminations
+#'   trace summary for `GPCM` discriminations. `SlopeOwner` identifies the facet
+#'   whose levels carry slopes. `Min`, `Max` and `GeometricMean` summarize
+#'   primary estimates; the `Optimizer*` fields retain numerical iterates when
+#'   primary estimates are unavailable. The scale reference is an identification
+#'   constraint, not evidence that estimates or intervals are reliable
 #' - `inference_evidence`: for `GPCM` MML, a compact separation of optimizer
 #'   stationarity, retained-point local rank, observed-information curvature,
 #'   slope-boundary screening, and the final readiness decision. Supportive
@@ -8748,6 +8802,13 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
                              diagnostics = NULL,
                              compute = c("auto", "never"),
                              include_person = FALSE) {
+  if (mfrm_has_jml_adjustment(object)) {
+    rlang::check_dots_empty()
+    if (!is.null(diagnostics)) stop_if_jml_adjustment(object, "Attaching ordinary diagnostics")
+    match.arg(profile); match.arg(compute)
+    if (!is.null(detail)) match.arg(detail,c("brief","full"))
+    return(mfrm_jml_summary(object, digits, include_person))
+  }
   profile <- match.arg(tolower(as.character(profile[1])),
                        c("fit", "facets", "reporting"))
   if (is.null(detail) || length(detail) == 0L) {
@@ -9046,7 +9107,14 @@ mfrm_fit_scale_contract <- function(object) {
   } else {
     "joint_person_coordinate_scale"
   }
-  slope_basis <- if (identical(model, "GPCM")) {
+  product_slopes <- identical(model, "GPCM") && !is.null(config$gpcm_spec$component_levels)
+  if (product_slopes) {
+    mfrm_gpcm_slope_roles(config)
+    if (population_active) stop("Product-slope summaries require the fitted fixed population scale.", call. = FALSE)
+  }
+  slope_basis <- if (product_slopes) {
+    "owner_specific_product_discrimination"
+  } else if (identical(model, "GPCM")) {
     "geometric_mean_one_relative_discrimination"
   } else {
     "unit_discrimination"
@@ -9065,7 +9133,7 @@ mfrm_fit_scale_contract <- function(object) {
   } else {
     "posterior_eap_under_population_model"
   }
-  gpcm_identity <- mfrmr_gpcm_model_identity(model)
+  gpcm_identity <- mfrmr_gpcm_model_identity(model, config$gpcm_spec)
 
   out <- tibble::tibble(
     Model = model,
@@ -9074,13 +9142,13 @@ mfrm_fit_scale_contract <- function(object) {
     PopulationSD = population_sd,
     SlopeBasis = slope_basis,
     GpcmModelFamily = as.character(
-      config$gpcm_model_family %||% gpcm_identity$model_family
+      if (product_slopes) gpcm_identity$model_family else config$gpcm_model_family %||% gpcm_identity$model_family
     ),
     GpcmSlopeAction = as.character(
       config$gpcm_slope_action %||% gpcm_identity$slope_action
     ),
     GpcmSlopeComposition = as.character(
-      config$gpcm_slope_composition %||%
+      if (product_slopes) gpcm_identity$slope_composition else config$gpcm_slope_composition %||%
         gpcm_identity$slope_composition
     ),
     GpcmLatentDimensionCount = as.integer(
@@ -9088,7 +9156,7 @@ mfrm_fit_scale_contract <- function(object) {
         gpcm_identity$latent_dimension_count
     ),
     GpcmMmlIdentification = as.character(
-      config$gpcm_mml_identification %||% "not_applicable"
+      if (product_slopes) "fixed_population_first_family_gm1" else config$gpcm_mml_identification %||% "not_applicable"
     ),
     GpcmEstimatorFamily = as.character(
       config$gpcm_estimator_family %||% estimator_family
@@ -9107,7 +9175,7 @@ mfrm_fit_scale_contract <- function(object) {
     ),
     FixedLatentSDSlopeField = if (identical(model, "GPCM") &&
                                      identical(method, "MML")) {
-      "FixedLatentSDOptimizerEstimate"
+      if (product_slopes) "OptimizerEstimate" else "FixedLatentSDOptimizerEstimate"
     } else {
       NA_character_
     }
@@ -9121,6 +9189,116 @@ mfrm_fit_scale_contract <- function(object) {
     out[columns] <- lapply(out[columns], function(value) { value[] <- NA; value })
   }
   out
+}
+
+# Shared by ordinary fit summaries and the internal product-slope result.
+# Do not pool different owners or infer readiness from finite optimizer traces.
+mfrm_fit_slope_overview <- function(config, slopes) {
+  if (!nrow(slopes) || !"Estimate" %in% names(slopes)) return(tibble::tibble())
+  roles <- mfrm_gpcm_slope_roles(config)
+  product <- !is.null(config$gpcm_spec$component_levels)
+  if (product) {
+    metadata <- mfrm_gpcm_product_metadata(config$gpcm_spec)
+    index <- mfrm_match_slope_table(metadata$Owner, metadata$Level, slopes)
+    if (anyNA(index) || nrow(slopes) != length(index)) {
+      stop("Slope summaries require every fitted owner and level exactly once.", call. = FALSE)
+    }
+    slopes <- slopes[index, , drop = FALSE]
+  }
+  rows <- lapply(seq_len(nrow(roles)), function(i) {
+    slope_tbl <- if (product) slopes[slopes$SlopeOwner == roles$SlopeOwner[i], , drop = FALSE] else slopes
+    optimizer_slope <- if ("OptimizerEstimate" %in% names(slope_tbl)) {
+      as.numeric(slope_tbl$OptimizerEstimate)
+    } else {
+      as.numeric(slope_tbl$Estimate)
+    }
+    primary_slope <- if ("PrimaryEstimate" %in% names(slope_tbl)) {
+      as.numeric(slope_tbl$PrimaryEstimate)
+    } else {
+      as.numeric(slope_tbl$Estimate)
+    }
+    slope_range_value <- function(x, fun) {
+      x <- x[is.finite(x)]
+      if (length(x) == 0L) return(NA_real_)
+      fun(x)
+    }
+    slope_geometric_mean <- function(x) {
+      x <- x[is.finite(x) & x > 0]
+      if (length(x) == 0L) return(NA_real_)
+      exp(mean(log(x)))
+    }
+    parameter_status <- if ("ParameterStatus" %in% names(slope_tbl)) {
+      paste(sort(unique(as.character(slope_tbl$ParameterStatus))), collapse = ",")
+    } else {
+      "legacy_unknown"
+    }
+    primary_ready <- length(primary_slope) > 0L &&
+      all(is.finite(primary_slope) & primary_slope > 0)
+    value_basis <- if (primary_ready) {
+      "primary"
+    } else if ("OptimizerEstimate" %in% names(slope_tbl)) {
+      "optimizer_trace"
+    } else {
+      "legacy_estimate"
+    }
+    out <- tibble::tibble(
+      SlopeOwner = roles$SlopeOwner[i],
+      StepOwner = as.character(config$step_facet %||% NA_character_)[1],
+      OwnerInterpretation =
+        "model_conditional_discrimination_not_rater_consistency",
+      Slopes = nrow(slope_tbl),
+      ValueBasis = value_basis,
+      ParameterStatus = parameter_status,
+      PrimaryReady = primary_ready,
+      PrimaryFinite = sum(is.finite(primary_slope)),
+      Min = slope_range_value(primary_slope, min),
+      Max = slope_range_value(primary_slope, max),
+      GeometricMean = slope_geometric_mean(primary_slope),
+      Positive = if (primary_ready) TRUE else NA,
+      OptimizerMin = slope_range_value(optimizer_slope, min),
+      OptimizerMax = slope_range_value(optimizer_slope, max),
+      OptimizerGeometricMean = slope_geometric_mean(optimizer_slope),
+      OptimizerPositive = all(is.finite(optimizer_slope) & optimizer_slope > 0),
+      PopulationSD = if ("PopulationSD" %in% names(slope_tbl)) {
+        as.numeric(slope_tbl$PopulationSD[1])
+      } else {
+        NA_real_
+      },
+      FixedLatentSDOptimizerGeometricMean = if (
+        "FixedLatentSDOptimizerEstimate" %in% names(slope_tbl)
+      ) {
+        slope_geometric_mean(slope_tbl$FixedLatentSDOptimizerEstimate)
+      } else {
+        NA_real_
+      },
+      FixedLatentSDBasis = if ("FixedLatentSDBasis" %in% names(slope_tbl)) {
+        as.character(slope_tbl$FixedLatentSDBasis[1])
+      } else {
+        "not_available"
+      },
+      SEEligible = if ("SEEligible" %in% names(slope_tbl)) {
+        sum(as.logical(slope_tbl$SEEligible), na.rm = TRUE)
+      } else {
+        NA_integer_
+      },
+      CIEligible = if ("CIEligible" %in% names(slope_tbl)) {
+        sum(as.logical(slope_tbl$CIEligible), na.rm = TRUE)
+      } else {
+        NA_integer_
+      },
+      ComparisonEligible = if ("ComparisonEligibility" %in% names(slope_tbl)) {
+        sum(as.character(slope_tbl$ComparisonEligibility) == "eligible", na.rm = TRUE)
+      } else {
+        NA_integer_
+      }
+    )
+    if (product) {
+      out$ScaleReference <- roles$ScaleReference[i]
+      out$Identification <- roles$Identification[i]
+    }
+    out
+  })
+  dplyr::bind_rows(rows)
 }
 
 mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
@@ -9413,94 +9591,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     }
   }
 
-  slope_overview <- tibble::tibble()
-  if (nrow(slope_tbl) > 0 && "Estimate" %in% names(slope_tbl)) {
-    optimizer_slope <- if ("OptimizerEstimate" %in% names(slope_tbl)) {
-      as.numeric(slope_tbl$OptimizerEstimate)
-    } else {
-      as.numeric(slope_tbl$Estimate)
-    }
-    primary_slope <- if ("PrimaryEstimate" %in% names(slope_tbl)) {
-      as.numeric(slope_tbl$PrimaryEstimate)
-    } else {
-      as.numeric(slope_tbl$Estimate)
-    }
-    slope_range_value <- function(x, fun) {
-      x <- x[is.finite(x)]
-      if (length(x) == 0L) return(NA_real_)
-      fun(x)
-    }
-    slope_geometric_mean <- function(x) {
-      x <- x[is.finite(x) & x > 0]
-      if (length(x) == 0L) return(NA_real_)
-      exp(mean(log(x)))
-    }
-    parameter_status <- if ("ParameterStatus" %in% names(slope_tbl)) {
-      paste(sort(unique(as.character(slope_tbl$ParameterStatus))), collapse = ",")
-    } else {
-      "legacy_unknown"
-    }
-    primary_ready <- length(primary_slope) > 0L &&
-      all(is.finite(primary_slope) & primary_slope > 0)
-    value_basis <- if (primary_ready) {
-      "primary"
-    } else if ("OptimizerEstimate" %in% names(slope_tbl)) {
-      "optimizer_trace"
-    } else {
-      "legacy_estimate"
-    }
-    slope_overview <- tibble::tibble(
-      SlopeOwner = as.character(config$slope_facet %||% NA_character_)[1],
-      StepOwner = as.character(config$step_facet %||% NA_character_)[1],
-      OwnerInterpretation =
-        "model_conditional_discrimination_not_rater_consistency",
-      Slopes = nrow(slope_tbl),
-      ValueBasis = value_basis,
-      ParameterStatus = parameter_status,
-      PrimaryReady = primary_ready,
-      PrimaryFinite = sum(is.finite(primary_slope)),
-      Min = slope_range_value(primary_slope, min),
-      Max = slope_range_value(primary_slope, max),
-      GeometricMean = slope_geometric_mean(primary_slope),
-      Positive = if (primary_ready) TRUE else NA,
-      OptimizerMin = slope_range_value(optimizer_slope, min),
-      OptimizerMax = slope_range_value(optimizer_slope, max),
-      OptimizerGeometricMean = slope_geometric_mean(optimizer_slope),
-      OptimizerPositive = all(is.finite(optimizer_slope) & optimizer_slope > 0),
-      PopulationSD = if ("PopulationSD" %in% names(slope_tbl)) {
-        as.numeric(slope_tbl$PopulationSD[1])
-      } else {
-        NA_real_
-      },
-      FixedLatentSDOptimizerGeometricMean = if (
-        "FixedLatentSDOptimizerEstimate" %in% names(slope_tbl)
-      ) {
-        slope_geometric_mean(slope_tbl$FixedLatentSDOptimizerEstimate)
-      } else {
-        NA_real_
-      },
-      FixedLatentSDBasis = if ("FixedLatentSDBasis" %in% names(slope_tbl)) {
-        as.character(slope_tbl$FixedLatentSDBasis[1])
-      } else {
-        "not_available"
-      },
-      SEEligible = if ("SEEligible" %in% names(slope_tbl)) {
-        sum(as.logical(slope_tbl$SEEligible), na.rm = TRUE)
-      } else {
-        NA_integer_
-      },
-      CIEligible = if ("CIEligible" %in% names(slope_tbl)) {
-        sum(as.logical(slope_tbl$CIEligible), na.rm = TRUE)
-      } else {
-        NA_integer_
-      },
-      ComparisonEligible = if ("ComparisonEligibility" %in% names(slope_tbl)) {
-        sum(as.character(slope_tbl$ComparisonEligibility) == "eligible", na.rm = TRUE)
-      } else {
-        NA_integer_
-      }
-    )
-  }
+  slope_overview <- mfrm_fit_slope_overview(config, slope_tbl)
 
   inference_evidence <- mfrm_gpcm_mml_inference_evidence(object)
 
@@ -9518,6 +9609,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       )
   }
 
+  # One settings row per slope owner for a product model; other settings repeat.
   settings_overview <- tibble::tibble(
     StepFacet = as.character(config$step_facet %||% NA_character_),
     StepFacetSource = as.character(config$step_facet_source %||% "unknown"),
@@ -9606,9 +9698,9 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       any(internal_unused) ~ "internal",
       TRUE ~ "boundary"
     )
-    settings_overview$UnusedScoreCategories[1] <- paste(unused_score_categories, collapse = ", ")
-    settings_overview$UnusedScoreCategoryCount[1] <- length(unused_score_categories)
-    settings_overview$UnusedScoreCategoryType[1] <- unused_score_category_type
+    settings_overview$UnusedScoreCategories[] <- paste(unused_score_categories, collapse = ", ")
+    settings_overview$UnusedScoreCategoryCount[] <- length(unused_score_categories)
+    settings_overview$UnusedScoreCategoryType[] <- unused_score_category_type
   }
 
   reporting_map <- tibble::tibble(
@@ -9734,7 +9826,13 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   if (nrow(slope_overview) > 0) {
     notes <- c(
       notes,
-      paste(
+      if (!is.null(config$gpcm_spec$component_levels)) paste(
+        "GPCM slopes multiply across the two declared facets. Only the first",
+        "family has geometric mean one; the second is free on the fixed",
+        "standard-normal ability scale. A second-family slope of one is not",
+        "the average of that family. Primary summaries remain unavailable until",
+        "parameter readiness is established; optimizer traces do not supply inference."
+      ) else paste(
         "GPCM discriminations use positive log-slope identification with",
         "geometric-mean-one scaling; primary summaries remain missing until",
         "parameter readiness is established, while finite optimizer traces",
@@ -10062,6 +10160,16 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     "Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for reporting readiness."
   )
   next_actions <- clean_summary_lines(next_actions, max_n = 6L)
+  if (!is.null(config$gpcm_spec$component_levels)) {
+    next_actions <- c(
+      "Review numerical convergence separately from parameter and interval readiness.",
+      "Read each slope facet on its stated reference scale; retain unavailable primary estimates.",
+      "Use mfrm_curve_intervals(fit, newdata) for provisional response curves without intervals; ordinary diagnostics, parameter intervals and Wright/Pathway plots are not available."
+    )
+    reporting_map$CompanionOutput <- "Two-family diagnostics are not available"
+    reporting_map$CompanionOutput[reporting_map$Area == "Model identification / convergence"] <-
+      "Stored model and per-facet slope summaries"
+  }
   decision <- mfrm_fit_decision_summary(
     stored_readiness,
     next_action = next_actions[1L] %||% NA_character_
@@ -10325,6 +10433,10 @@ mfrm_fit_summary_analysis <- function(out, results = NULL, digits = 3L,
 
 mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
                                       diagnostics, compute, include_person) {
+  product_slopes <- !is.null(fit$config$gpcm_spec$component_levels)
+  if (product_slopes && !identical(profile, "fit")) {
+    stop("Two-family slope models currently support only the fit summary; diagnostic and reporting profiles are not available.", call. = FALSE)
+  }
   results <- NULL
   if (!identical(profile, "fit")) {
     include <- if (identical(profile, "facets")) "facets" else "standard"
@@ -10346,6 +10458,18 @@ mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
     results = results,
     include_person = include_person
   )
+  if (product_slopes) {
+    unavailable <- out$section_status$Section != "fit_summary"
+    out$section_status$Status[unavailable] <- "not_available"
+    out$section_status$Detail[unavailable] <-
+      "This summary does not provide two-family diagnostics or route to single-family helpers."
+    out$required_visual$Required <- FALSE
+    out$required_visual$Available <- FALSE
+    out$required_visual$InterpretationReady <- FALSE
+    out$required_visual$InterpretationStatus <- "not_available"
+    out$required_visual$Route <- NA_character_
+    out$required_visual$Detail <- "This figure has not been adapted to the two-family slope model."
+  }
   out$provenance <- mfrm_fit_summary_provenance(
     profile = profile,
     detail = detail,
@@ -10767,7 +10891,9 @@ mfrm_mml_integration_console_lines <- function(summary_object) {
   } else {
     "Population identification: fixed N(0,1)"
   }
-  scale_text <- if (identical(as.character(overview$Model[1] %||% ""), "GPCM")) {
+  scale_text <- if (identical(settings$GpcmSlopeComposition[1], "two_owner_product_first_gm1")) {
+    "product slopes: first family geometric mean=1; second family free"
+  } else if (identical(as.character(overview$Model[1] %||% ""), "GPCM")) {
     "relative slopes: geometric mean=1"
   } else {
     "discrimination=1"
@@ -10941,6 +11067,7 @@ mfrm_gpcm_console_lines <- function(settings) {
 
 #' @export
 print.summary.mfrm_fit <- function(x, ...) {
+  if (isTRUE(x$jml_adjustment)) return(mfrm_jml_print_summary(x))
   digits <- x$digits
   if (is.null(digits) || !is.finite(digits)) digits <- 3L
   profile <- as.character(x$profile %||% "fit")
@@ -11425,10 +11552,19 @@ print.summary.mfrm_fit <- function(x, ...) {
     cat("\nSlope parameter readiness and optimizer trace\n")
     slopes <- as.data.frame(x$slope_overview)
     slopes <- slopes[setdiff(names(slopes), c("OwnerInterpretation", "ParameterStatus",
-      "PrimaryReady", "FixedLatentSDBasis"))]
+      "PrimaryReady", "FixedLatentSDBasis", "Identification"))]
+    if ("ScaleReference" %in% names(slopes)) {
+      slopes$ScaleReference <- ifelse(slopes$ScaleReference == "geometric_mean_one",
+        "Within-facet geometric mean 1", ifelse(slopes$ScaleReference == "fixed_standard_normal",
+          "Fixed standard-normal ability scale", "Reference not recorded"))
+    }
     if ("ValueBasis" %in% names(slopes)) slopes$ValueBasis <- mfrm_fit_display_status(slopes$ValueBasis)
     print(round_numeric_df(slopes, digits = digits), row.names = FALSE)
-    print_wrapped_line("Use confint(fit, parm = 'slopes') or diagnose_mfrm(fit) for separately checked MML relative-slope intervals. Their CIEligible decision does not certify global boundary absence. Use confint(fit, scale = 'standardized') for intervals on population-SD times slope, including estimated-scale uncertainty. With covariates, this is the residual population SD.")
+    if (nrow(x$slope_overview) > 1L) {
+      print_wrapped_line("Each row describes one slope facet and its own scale reference. Use confint(fit) for separately checked experimental component-slope intervals. These summaries do not qualify intervals, global identification or model comparisons; sampling coverage remains unestablished.")
+    } else {
+      print_wrapped_line("Use confint(fit, parm = 'slopes') or diagnose_mfrm(fit) for separately checked MML relative-slope intervals. Their CIEligible decision does not certify global boundary absence. Use confint(fit, scale = 'standardized') for intervals on population-SD times slope, including estimated-scale uncertainty. With covariates, this is the residual population SD.")
+    }
   }
   if (nrow(x$interaction_overview %||% data.frame()) > 0) {
     cat("\nFacet interaction summary\n")

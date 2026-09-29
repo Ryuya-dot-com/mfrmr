@@ -2496,6 +2496,7 @@ build_conquest_overlap_bundle <- function(fit = NULL,
                                           quad_points = 7L,
                                           maxit = 40L,
                                           reltol = 1e-9) {
+  stop_if_product_slopes(fit, "build_conquest_overlap_bundle()")
   resolved <- resolve_conquest_overlap_input(
     fit = fit,
     case = case,
@@ -4606,7 +4607,7 @@ export_summary_appendix <- function(x,
 #'
 #' @details
 #' This function is the one-call fit-level archive and HTML route. It reuses
-#' existing `mfrmr` helpers instead of reimplementing estimation or diagnostics.
+#' `mfrmr` functions for estimation and diagnostics.
 #' When `diagnostics = NULL`,
 #' the exporter computes the diagnostics it needs, then writes the requested
 #' CSV/text/replay artifacts and a lightweight HTML page from the fitted object.

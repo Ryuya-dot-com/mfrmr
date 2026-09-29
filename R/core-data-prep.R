@@ -732,7 +732,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
 }
 
 build_indices <- function(prep, step_facet = NULL, slope_facet = NULL,
-                          interaction_specs = NULL) {
+                          interaction_specs = NULL, gpcm_spec = NULL) {
   df <- prep$data
   facets_idx <- lapply(prep$facet_names, function(f) as.integer(df[[f]]))
   names(facets_idx) <- prep$facet_names
@@ -741,7 +741,18 @@ build_indices <- function(prep, step_facet = NULL, slope_facet = NULL,
   } else {
     NULL
   }
-  slope_idx <- if (!is.null(slope_facet)) {
+  slope_idx <- if (length(slope_facet) > 1L) {
+    if (is.null(gpcm_spec$cells) || !identical(slope_facet, gpcm_spec$slope_facet)) {
+      stop("Multiple slope families require their fitted crossing specification.")
+    }
+    if (!identical(prep$levels[slope_facet], gpcm_spec$component_levels)) {
+      stop("Slope indices require the fitted facet level ordering.")
+    }
+    key <- function(x) do.call(paste, c(lapply(x, as.integer), sep = ":"))
+    index <- match(key(df[slope_facet]), key(gpcm_spec$cells))
+    if (anyNA(index)) stop("Slope indices require crossings in the supplied specification.")
+    index
+  } else if (!is.null(slope_facet)) {
     as.integer(df[[slope_facet]])
   } else {
     NULL

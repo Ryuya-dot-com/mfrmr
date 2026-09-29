@@ -98,8 +98,8 @@ fit_measure_reason <- function(infit_band, outfit_band, infit_z_band, outfit_z_b
 make_facets_fit_measure_labels <- function(tbl) {
   keep <- intersect(
     c(
-      "Facet", "Level", "Measure", "S.E.", "Lower CI", "Upper CI",
-      "CI Level", "Obs", "Infit MnSq", "Infit ZStd", "Outfit MnSq",
+      "Facet", "Level", "Measure", "Fixed", "S.E.", "Lower CI", "Upper CI",
+      "CI Level", "Interval interpretation", "SE basis", "Obs", "Infit MnSq", "Infit ZStd", "Outfit MnSq",
       "Outfit ZStd", "Infit df", "Outfit df", "Fit df method",
       "FACETS Infit df", "FACETS Outfit df", "FACETS Infit ZStd",
       "FACETS Outfit ZStd", "Max ZStd shift", "Flag changed by df",
@@ -116,6 +116,13 @@ fit_measure_validate_ci_level <- function(ci_level) {
     stop("`ci_level` must be a single number in (0, 1).", call. = FALSE)
   }
   ci_level
+}
+
+fit_measure_interval_note <- function(tbl) {
+  labels <- unique(as.character(tbl[["CILabel"]]))
+  labels <- labels[!is.na(labels) & nzchar(labels)]
+  if (!length(labels)) return("Interval basis not recorded; review source diagnostics.")
+  paste0("Interval interpretation: ", paste(labels, collapse = "; "), ".")
 }
 
 fit_measure_validate_nonnegative_finite <- function(x, arg) {
@@ -680,6 +687,22 @@ summarize_fit_measure_df_sensitivity <- function(df_sensitivity) {
 #' This helper gives users a direct table route for the common FACETS-style
 #' question: which raters, criteria, or other facet elements show underfit or
 #' overfit? It uses the fit statistics already computed by [diagnose_mfrm()].
+#' `Fixed` identifies values supplied by anchors or identification constraints.
+#' Their sampling SEs and intervals are not applicable; response-fit statistics
+#' remain available. Recompute older diagnostics to obtain these labels.
+#' The table also retains `SE_Method`, `PrecisionTier`, `SEUse`, `CIBasis`,
+#' `CIUse`, `CIEligible`, `CILabel`, `CI_Method` and `SupportsFormalInference`
+#' from the diagnostics. For JML, normal bands remain exploratory screening
+#' summaries, not qualified confidence intervals for the true parameter.
+#' Changing `ci_level` changes their width, not their inferential status.
+#' Older inputs without this metadata are labelled as having an unrecorded
+#' basis; finite SEs alone do not establish formal inference.
+#'
+#' `plot(x, type = "measure_ci")` retains these explanations in its caption
+#' and saved data. Fixed values use open diamonds without intervals; other
+#' finite estimates without intervals use crosses. Use `main = ""` to omit
+#' the title or `show_notes = FALSE` to hide the caption while retaining its
+#' text in the saved plot data.
 #'
 #' Directional labels use the selected `flag_basis`. By default, high mean
 #' squares are labeled `underfit` and low mean squares `overfit`; conflicting
@@ -763,6 +786,7 @@ fit_measures_table <- function(x,
                                sort_by = c("status", "abs_zstd", "facet", "level"),
                                top_n = Inf,
                                flag_basis = c("mnsq", "mnsq_or_zstd")) {
+  stop_if_jml_adjustment(x, "fit_measures_table")
   flag_basis <- match.arg(flag_basis)
   sort_by <- match.arg(tolower(as.character(sort_by[1])), c("status", "abs_zstd", "facet", "level"))
   threshold_profiles <- match.arg(
@@ -931,6 +955,7 @@ fit_measures_table <- function(x,
     Facet = as.character(measures$Facet),
     Level = as.character(measures$Level),
     Measure = estimate,
+    Fixed = if ("Fixed" %in% names(measures)) measures$Fixed else rep(FALSE, nrow(measures)),
     SE = se,
     CI_Lower = ci_lower,
     CI_Upper = ci_upper,
@@ -966,6 +991,21 @@ fit_measures_table <- function(x,
     MaxMnSqDistance = max_mnsq_distance,
     stringsAsFactors = FALSE
   )
+  # Keep the uncertainty contract beside the numbers in every reporting route.
+  precision_defaults <- list(SE_Method = "Not recorded", PrecisionTier = "unknown",
+    SupportsFormalInference = FALSE, SEUse = "review_before_reporting",
+    CIBasis = "Interval basis not recorded", CIUse = "review_before_reporting",
+    CIEligible = FALSE, CILabel = "Interval basis not recorded; review source diagnostics",
+    CI_Method = "Normal approximation")
+  for (nm in names(precision_defaults)) {
+    out[[nm]] <- if (nm %in% names(measures)) measures[[nm]] else
+      rep(precision_defaults[[nm]], nrow(out))
+  }
+  if (!all(names(precision_defaults) %in% names(measures))) {
+    for (nm in c("PrecisionTier", "SupportsFormalInference", "SEUse", "CIUse", "CIEligible", "CILabel")) {
+      out[[nm]] <- rep(precision_defaults[[nm]], nrow(out))
+    }
+  }
   df_sensitivity_all <- build_fit_measure_df_sensitivity(
     out,
     zstd_cut = zstd_cut,
@@ -1036,10 +1076,13 @@ fit_measures_table <- function(x,
     Facet = out_display$Facet,
     Level = out_display$Level,
     Measure = out_display$Measure,
+    Fixed = out_display$Fixed,
     `S.E.` = out_display$SE,
     `Lower CI` = out_display$CI_Lower,
     `Upper CI` = out_display$CI_Upper,
     `CI Level` = out_display$CI_Level,
+    `Interval interpretation` = out_display$CILabel,
+    `SE basis` = out_display$SE_Method,
     Obs = out_display$N,
     `Infit MnSq` = out_display$Infit,
     `Infit ZStd` = out_display$InfitZSTD,
@@ -9881,7 +9924,9 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #'   retain `"trials"`, `"checks"` and `"source_checks"` when recorded, `"sampling"`, and
 #'   `"availability"` for slope intervals
 #'   or `"test"` for a null-model LRT. Extended results also expose `"settings"`,
-#'   and `"clusters"`/`"contrasts"` when present. Target and method columns are preserved.
+#'   and `"clusters"`/`"contrasts"` when present. Saved profile intervals also
+#'   expose `"profile"`, `"profile_endpoints"`, `"profile_checks"` and `"wald"`.
+#'   Target and method columns are preserved.
 #'
 #' @section Interpreting output:
 #' - `table`: plain data.frame ready for export or further formatting.
@@ -9939,6 +9984,7 @@ apa_table <- function(x,
                       context = list(),
                       whexact = FALSE,
                       branch = c("apa", "facets")) {
+  stop_if_jml_adjustment(x, "apa_table(fit)")
   branch <- match.arg(tolower(as.character(branch[1])), c("apa", "facets"))
   style <- ifelse(branch == "facets", "facets_manual", "apa")
   digits <- max(0L, as.integer(digits))

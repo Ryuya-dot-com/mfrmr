@@ -1,5 +1,44 @@
 # Reader-facing methods for portable fixed-calibration score batches.
 
+mfrmr_validate_calibration_score_assumptions <- function(x) {
+  s <- x$settings
+  if (!identical(s$estimator, "JML") && !identical(s$family, "GPCM") && is.null(s$scoring_prior) &&
+      is.null(s$score_integration_review)) return(invisible(x))
+  valid <- tryCatch({
+    prior <- prediction_validate_scoring_prior(s$scoring_prior)
+    retained <- s$retained_prior_identity
+    actual <- s$prior_identity
+    original <- s$semantic_components$scoring_prior
+    r <- s$score_integration_review
+    e <- x$estimates
+    fields <- c("Person", "PriorSource", "PriorMean", "PriorSD", "RetainedPriorMean", "RetainedPriorSD", "ScoreIntegrationReady")
+    all(fields %in% names(e)) &&
+      identical(s$estimator, s$semantic_components$model_family_estimator$estimator) &&
+      is.list(retained) && is.list(actual) && is.list(original) &&
+      identical(retained, list(type = original$type, mean = original$prior_mean, sd = original$prior_sd)) &&
+      identical(actual, if (is.null(prior)) retained else list(type = "user_supplied_normal", mean = prior$mean, sd = prior$sd)) &&
+      all(e$PriorSource == if (is.null(prior)) "retained" else "user_supplied") &&
+      all(e$PriorMean == actual$mean & e$PriorSD == actual$sd &
+        e$RetainedPriorMean == retained$mean & e$RetainedPriorSD == retained$sd) &&
+      (!identical(s$family, "GPCM") ||
+        ((if (identical(s$schema_version,5L)) mfrm_jml_scoring_evidence_valid else if (identical(s$estimator, "JML")) mfrmr_calibration_gpcm_jml_evidence_valid else mfrmr_calibration_source_evidence_valid)(s$source_scoring_evidence) &&
+          identical(s$source_scoring_evidence, s$semantic_components$source_scoring_review$source_scoring_evidence))) &&
+      (!identical(s$estimator, "JML") || identical(s$family, "GPCM") ||
+        (mfrmr_calibration_jml_evidence_valid(s$source_scoring_evidence) &&
+          identical(s$source_scoring_evidence, s$semantic_components$source_scoring_review$source_scoring_evidence))) &&
+      is.data.frame(r) && identical(names(r), c("Person", "EAPChange", "SDChange", "ReferenceChange", "Passed")) &&
+      identical(as.character(r$Person), as.character(e$Person)) &&
+      identical(e$ScoreIntegrationReady, r$Passed) && all(r$Passed) &&
+      all(vapply(r[c("EAPChange", "SDChange", "ReferenceChange")], function(v)
+        is.numeric(v) && all(is.finite(v) & v >= 0 & v <= 1e-5), TRUE))
+  }, error = function(e) FALSE)
+  if (identical(s$schema_version,5L)) valid <- valid &&
+    all(c("CalibrationMethod","CorrectionOrder") %in% names(x$estimates)) &&
+    isTRUE(all(x$estimates$CalibrationMethod=="Corrected JML" & x$estimates$CorrectionOrder==s$source_scoring_evidence$local_calibration_review$correction_order))
+  if (!isTRUE(valid)) stop("Portable scoring output has missing or inconsistent prior or numerical-check records; score again from the frozen calibration.", call. = FALSE)
+  invisible(x)
+}
+
 mfrmr_validate_calibration_score <- function(x, arg = "x") {
   if (!inherits(x, "mfrm_calibration_score")) {
     stop(
@@ -19,7 +58,7 @@ mfrmr_validate_calibration_score <- function(x, arg = "x") {
       call. = FALSE
     )
   }
-  invisible(x)
+  mfrmr_validate_calibration_score_assumptions(x)
 }
 
 mfrmr_calibration_score_digits <- function(digits) {
@@ -73,13 +112,29 @@ mfrmr_validate_calibration_score_summary <- function(x) {
       call. = FALSE
     )
   }
-  invisible(x)
+  mfrmr_validate_calibration_score_assumptions(x)
 }
 
 mfrmr_calibration_score_print_value <- function(value) {
   value <- value[1L]
   if (length(value) == 0L || is.na(value)) return("NA")
   format(value, trim = TRUE, scientific = FALSE)
+}
+
+mfrmr_calibration_score_print_prior <- function(settings) {
+  if (is.null(settings$retained_prior_identity)) return(invisible(NULL))
+  prior <- settings$prior_identity
+  retained <- settings$retained_prior_identity
+  print_wrapped_line(paste0("Scoring prior: ", if (is.null(settings$scoring_prior)) "retained normal" else "user-supplied normal",
+    " (mean ", prior$mean, ", SD ", prior$sd, "). Retained prior: mean ", retained$mean, ", SD ", retained$sd, "."))
+  if (identical(settings$schema_version,5L)) print_wrapped_line(mfrm_jml_scoring_note(settings$source_scoring_evidence))
+  if (identical(settings$estimator, "JML")) print_wrapped_line(
+    "JML-calibrated post-hoc EAP: the reference prior was not estimated by JML; these are not ML/WLE scores.")
+  if (identical(settings$family, "GPCM")) print_wrapped_line(
+    "Source calibration: conditional checks passed at extraction; the source fit is not re-estimated on replay.")
+  if (any(settings$source_scoring_evidence$source_audit_states %in% "not_evaluated"))
+    print_wrapped_line("Global identification or boundary checks remain incomplete; these are conditional scores.")
+  invisible(NULL)
 }
 
 mfrmr_calibration_score_interval_note <- function(settings) {
@@ -165,7 +220,7 @@ mfrmr_calibration_score_overview <- function(x) {
       x$settings$calibration_id %||% NA_character_
     ),
     Model = as.character(x$settings$family %||% NA_character_),
-    Estimator = as.character(x$settings$estimator %||% NA_character_),
+    Estimator = if (identical(x$settings$schema_version,5L)) "Corrected JML" else as.character(x$settings$estimator %||% NA_character_),
     ScoringBasis = as.character(
       x$settings$scoring_basis %||% NA_character_
     ),
@@ -199,7 +254,16 @@ mfrmr_calibration_score_overview <- function(x) {
 #'
 #' These are score-batch review displays, not calibration-fit diagnostics.
 #' Posterior SDs and intervals are conditional on the frozen point calibration
-#' and its recorded prior. They exclude calibration-parameter uncertainty.
+#' and the actual scoring prior. They exclude calibration-parameter uncertainty.
+#' For GPCM or an explicitly supplied scoring prior, summaries and plot data
+#' retain both original and actual prior values without rounding, the per-Person
+#' integration checks, and (for GPCM) the source decision recorded at extraction.
+#' These records describe conditional scoring, not a new evaluation of the
+#' training fit or the suitability of its population for another cohort.
+#' `summary(x)$settings$score_integration_review` compares the reported EAP/SD
+#' with higher-order adaptive references. The separate `quadrature_review`
+#' compares adaptive and fixed grids; for an adaptive scorer, that fixed grid
+#' did not produce the reported scores. Printing distinguishes the two checks.
 #' Persons with no valid responses have no score coordinate and are retained
 #' in `summary(x)$review` and in the plot payload's
 #' `unplotted_dispositions` component.
@@ -295,7 +359,9 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
       "Person", "Estimate", "SD", "Lower", "Upper", "Observations",
       "WeightedN", "Disposition", "ReasonCodes", "ReadinessStatus",
       "EstimateBasis", "UncertaintyBasis", "CalibrationId", "SchemaVersion",
-      "ScoringBasis", "ScoringAlgorithm", "IntervalLevel"
+      "ScoringBasis", "ScoringAlgorithm", "IntervalLevel", "PriorSource", "PriorMean", "PriorSD",
+      "RetainedPriorMean", "RetainedPriorSD", "ScoreIntegrationReady",
+      "CalibrationMethod", "CorrectionOrder"
     ),
     names(estimates)
   )
@@ -322,7 +388,7 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
 
   round_numeric <- function(data) {
     numeric_columns <- vapply(data, is.double, logical(1))
-    numeric_columns[names(data) == "IntervalLevel"] <- FALSE
+    numeric_columns[names(data) %in% c("IntervalLevel", "PriorMean", "PriorSD", "RetainedPriorMean", "RetainedPriorSD")] <- FALSE
     data[numeric_columns] <- lapply(
       data[numeric_columns], round, digits = digits
     )
@@ -358,6 +424,12 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
     out$quadrature_review <- object$quadrature_review
     out$quadrature_overview <- mfrmr_adaptive_quadrature_overview(object$quadrature_review)
   }
+  if (!is.null(object$settings$score_integration_review)) {
+    for (name in c("schema_version", "semantic_components", "source_scoring_evidence", "score_integration_review",
+                    "scoring_prior", "prior_identity", "retained_prior_identity")) {
+      out$settings[name] <- object$settings[name]
+    }
+  }
   class(out) <- c("summary.mfrm_calibration_score", "list")
   out
 }
@@ -384,6 +456,7 @@ print.mfrm_calibration_score <- function(x, ...) {
   print_wrapped_line("Intervals: conditional on frozen point calibration;")
   print_wrapped_line("calibration-parameter uncertainty excluded")
   print_wrapped_line(mfrmr_calibration_score_interval_note(x$settings))
+  mfrmr_calibration_score_print_prior(x$settings)
   if (overview$Scored > 0L) {
     print_wrapped_line(
       "Use `summary(x)` for review tables and `plot(x)` for score intervals.",
@@ -405,8 +478,24 @@ print.summary.mfrm_calibration_score <- function(x, ...) {
   mfrmr_validate_calibration_score_summary(x)
   overview <- x$overview[1L, , drop = FALSE]
   cat("mfrmr Portable Calibration Score Summary\n")
+  mfrmr_calibration_score_print_prior(x$settings)
+  checks <- x$settings$score_integration_review
+  if (!is.null(checks)) {
+    cat("\nReported-score integration check\n")
+    if (nrow(checks)) {
+      print_wrapped_line(sprintf(paste0(
+        "%d of %d scored Persons passed. Against higher-order adaptive integration: ",
+        "largest absolute EAP change %.3g; posterior SD change %.3g; reference change %.3g."),
+        sum(checks$Passed), nrow(checks), max(checks$EAPChange),
+        max(checks$SDChange), max(checks$ReferenceChange)))
+    } else print_wrapped_line("No scored Persons; no score integration comparison is available.")
+  }
   if (!is.null(x$quadrature_overview)) {
     cat("\nFixed-parameter integration review (adaptive minus fixed)\n")
+    if (startsWith(x$settings$scoring_algorithm %||% "", "adaptive_"))
+      print_wrapped_line(paste(
+        "This compares alternative grids. The fixed grid in this table did not produce",
+        "the reported scores, which use adaptive integration."))
     print(x$quadrature_overview, row.names = FALSE)
   }
   print_wrapped_line(paste0("Calibration: ", overview$CalibrationId))
@@ -629,6 +718,7 @@ plot.mfrm_calibration_score <- function(
     review_plotted, " review disposition",
     if (review_plotted == 1L) "" else "s", " shown"
   )
+  if (nrow(not_scored)) subtitle <- paste0(subtitle, "; ", nrow(not_scored), " not scored")
   uncertainty_note <- paste(
     "Conditional on the frozen point calibration;",
     "calibration-parameter uncertainty excluded."
@@ -639,6 +729,9 @@ plot.mfrm_calibration_score <- function(
       sep = "\n"
     )
   }
+  if (identical(x$settings$schema_version,5L)) uncertainty_note <- paste(
+    uncertainty_note,paste0("Corrected JML (order ",x$settings$source_scoring_evidence$local_calibration_review$correction_order,
+      "); residual calibration bias may remain."),sep="\n")
   selection_summary <- data.frame(
     ScoredPersons = as.integer(nrow(full)),
     PlottedPersons = as.integer(nrow(plotted)),
@@ -671,7 +764,7 @@ plot.mfrm_calibration_score <- function(
   reference_lines <- switch(
     type,
     interval = new_reference_lines(
-      axis = "v", value = 0, label = "Prior mean / scale origin",
+      axis = "v", value = 0, label = "Scale origin",
       linetype = "dashed", role = "reference"
     ),
     precision = new_reference_lines(),
@@ -824,5 +917,9 @@ plot.mfrm_calibration_score <- function(
       reference_lines = reference_lines
     )
   )
+  for (name in c("prior_identity", "retained_prior_identity", "scoring_prior",
+                 "source_scoring_evidence", "score_integration_review")) {
+    if (!is.null(x$settings[[name]])) out$data$settings[[name]] <- x$settings[[name]]
+  }
   invisible(out)
 }

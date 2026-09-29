@@ -55,6 +55,7 @@ Suggests:
     RTMB (>= 2.0),
     cluster,
     mice,
+    nleqslv,
     testthat (>= 3.0.0),
     withr,
     covr,

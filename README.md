@@ -2182,9 +2182,11 @@ FACETS replacement: each `fit_mfrm()` call uses one response-model family and
 one observed score scale, and the current public API does not provide mixed
 response families, multiple independent rating scales, general threshold
 anchoring, or online calibration updates. Portable fixed-calibration artifacts
-are available only for one-scale `RSM`/`PCM` `MML` fits under the fixed
-standard-normal scoring basis. Posterior scoring from an existing fitted
-object is a separate, wider analysis route.
+support one-scale `RSM`/`PCM` `MML` fits under the fixed standard-normal
+calibration basis, and qualified estimated-normal GPCM MML fits in development.
+See the portable workflow below for its narrower structural and source-check
+requirements. Posterior scoring from an existing fitted object is a separate,
+wider analysis route.
 
 ## Portable fixed calibration
 
@@ -2223,10 +2225,22 @@ Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
 and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
 example. See `help("mfrm_calibration_methods", package = "mfrmr")` for the
 artifact summaries and `help("mfrm_calibration_score_methods",
-package = "mfrmr")` for score summaries and plots. Estimated-population and
-latent-regression MML, JML, and GPCM
-remain fitted-object-only routes; they do not create portable calibration
-artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
+package = "mfrmr")` for score summaries and plots. In the development version,
+GPCM MML also supports portable calibration with one slope family, shared or
+separate slope/step owners, an estimated intercept-only normal population,
+unit weights and no anchors or interactions. Extraction requires fresh passing
+conditional source checks; each scoring batch must pass numerical integration
+checks. The original global inference states remain recorded. Estimated-population
+RSM/PCM and latent-regression MML remain fitted-object-only routes. RSM/PCM JML
+also supports portable post-hoc EAP with a reference N(0,1) prior, current finite
+identified source checks, unit weights and no anchors or interactions. That
+prior is not estimated by JML. Shared-owner GPCM JML also supports conditional
+portable EAP after fresh joint-likelihood/curvature checks; detected boundary
+certificates are refused and incomplete global audits remain recorded. Formal
+JML slope inference is not supplied by these scoring checks.
+`score_mfrm_calibration(..., scoring_prior = list(mean = 0, sd = 1))` can examine
+an explicit normal prior without changing a current frozen artifact; omitted
+`scoring_prior` retains its original prior. Artifact scores are posterior EAP values conditional on the
 frozen point calibration and recorded prior. Their intervals exclude
 calibration-parameter uncertainty, and loading validates consistency rather
 than authenticating files from untrusted sources. Review every
@@ -2300,6 +2314,16 @@ check, including Bonferroni-adjusted families. Numerical availability is not a
 coverage certification, and neither sandwich covariance nor a bootstrap option
 automatically resolves that limitation.
 
+Development also offers experimental `confint(fit, method = "profile", slope = "R01")`
+for one prespecified level from `fit$slopes$SlopeFacet`. It reoptimizes nuisance
+parameters, including the estimated normal population, and retains failed
+searches. Assign the result to `ci`; use `plot(ci)` for its saved likelihood curve, or
+`plot(ci, type = "interval")` for bounds; `apa_table(ci, which = "profile_endpoints")`
+shows endpoint status. Shared/separate owners are supported with unit weights
+and no anchors, interactions or covariate population model. A search that finds
+no crossing is unresolved, not automatically an infinite interval. This option
+has numerical endpoint checks, but improved coverage over Wald is not established.
+
 For MML, the default `gpcm_mml_identification = "free_population"` estimates
 an intercept-only population distribution while relative slopes satisfy a
 geometric-mean-one constraint. The corresponding fixed-latent-SD optimizer
@@ -2307,7 +2331,21 @@ coordinate is retained in `FixedLatentSDOptimizerEstimate`. Use
 `gpcm_mml_identification = "fixed_standard_normal"` only when a deliberately
 matched legacy or external comparison requires that identification.
 
-The GPCM estimates **relative discriminations for one selected facet**;
+A provisional two-family route is also available: use ordered
+`slope_facet = c(first_owner, second_owner)` with explicit fixed-standard-normal
+MML--EM, exactly two facets, and the second owner as both `step_facet` and
+`noncenter_facet`. `summary()` and `mfrm_curve_intervals()` supply numerical
+estimates and conditional fitted curves without intervals; saved curves connect
+to `mfrm_results(include = c("fit", "plots"), compute = "never")` and reports.
+`confint(fit)` separately checks experimental component-slope intervals on the
+fixed ability scale. It retains owner labels, full joint covariance and numerical
+checks through plots and saved reports; global identification and sampling
+coverage remain unestablished. Failed checks leave estimates with missing bounds.
+Diagnostics, model ranking, new-person scoring and portable calibration remain
+unavailable for two families. See the [two-family workflow](vignettes/mfrmr-gpcm-scope.Rmd#a-provisional-two-family-workflow)
+for a complete call, input restrictions and interpretation.
+
+The one-family GPCM estimates **relative discriminations for one selected facet**;
 under MML, another facet may own the category steps:
 
 $$
@@ -2334,8 +2372,8 @@ for every criterion; `slope_facet = "Rater"` estimates one for every rater.
 The other facets retain additive location effects but no slope block. Those
 effects are still inside the complete adjacent-category predictor multiplied
 by the selected slope; the current kernel is not a loading-only model with
-unscaled facet intercepts. Criterion and rater slopes cannot be estimated
-simultaneously in this model.
+unscaled facet intercepts. To estimate criterion and rater slopes together,
+use the separately scoped two-family route above.
 
 `plot(fit_gpcm, type = "ccc")` and `category_curves_report(fit_gpcm)` retain
 the estimated slope for each step-facet level. These are reference-profile

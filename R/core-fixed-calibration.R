@@ -1,12 +1,17 @@
 # Fixed-calibration implementation for the supported portable workflow.
 #
 # Helper functions remain unexported. The public workflow supports only
-# one-scale, one-dimensional RSM/PCM MML fits with an unconditional
-# fixed-standard-normal scoring basis.
+# one-scale, one-dimensional fits. Version 1 retains RSM/PCM MML semantics;
+# version 2 adds GPCM MML; versions 3/4 add RSM/PCM and GPCM JML respectively.
+# Version 5 stores corrected GPCM JML with its own equation-based source checks.
 
 mfrmr_calibration_schema_id <- function() "mfrmr.fixed_calibration"
 
-mfrmr_calibration_schema_version <- function() 1L
+mfrmr_calibration_schema_version <- function(model = NULL, method = "MML") {
+  if (identical(method, "JML")) {
+    if (identical(model, "GPCM")) 4L else 3L
+  } else if (identical(model, "GPCM")) 2L else 1L
+}
 
 mfrmr_calibration_semantic_identity_version <- function() {
   "mfrmr-calibration-semantic-identity-v1"
@@ -643,6 +648,15 @@ mfrmr_calibration_extract_coordinates <- function(fit, params) {
     }
   }
 
+  if (identical(fit$config$model, "GPCM")) {
+    owner <- fit$config$slope_facet
+    levels <- fit$config$facet_levels[[owner]]
+    for (i in seq_along(levels)) {
+      add_row(sprintf("slope::level::%d", i), "slope", owner, levels[i],
+        NA_character_, NA_character_, params$slopes[i])
+    }
+  }
+
   specs <- fit$config$interaction_specs %||% list()
   for (interaction_index in seq_along(specs)) {
     spec <- specs[[interaction_index]]
@@ -777,7 +791,7 @@ mfrmr_calibration_extract_identification <- function(fit) {
 }
 
 mfrmr_calibration_semantic_components <- function(x) {
-  list(
+  out <- list(
     schema = list(
       schema_id = x$header$schema_id,
       schema_version = x$header$schema_version,
@@ -802,6 +816,112 @@ mfrmr_calibration_semantic_components <- function(x) {
     )],
     support_profile = x$eligibility$support_profile_id
   )
+  if (x$header$schema_version %in% c(2L, 4L, 5L)) {
+    out$slope_specification <- x$model[c("slope_owner", "slope_action")]
+  }
+  if (x$header$schema_version %in% c(2L, 3L, 4L, 5L)) {
+    out$source_scoring_review <- x$eligibility[c("source_readiness_status", "source_scoring_evidence")]
+  }
+  out
+}
+
+mfrmr_calibration_source_evidence_valid <- function(evidence) {
+  # Replay checks a stored extraction decision; training data are not in the file.
+  if (!is.list(evidence) || !identical(names(evidence), c("policy_basis", "status",
+      "local_calibration_review", "source_audit_states", "inference_ready"))) return(FALSE)
+  local <- evidence$local_calibration_review
+  if (!is.list(local)) return(FALSE)
+  integration <- local$integration
+  columns <- c("OriginalOrder", "ComparisonOrder", "NLLChange", "GradientChange", "ComparisonGradient")
+  isTRUE(identical(evidence$policy_basis, "conditional_scoring_checks_v3") &&
+    identical(evidence$status, "conditional") &&
+    is.list(local) && isTRUE(local$eligible) &&
+    identical(local$basis, "local_mml_and_integration_v1") &&
+    is.character(local$review) && length(local$review) == 1L && nzchar(local$review) &&
+    is.logical(evidence$inference_ready) && length(evidence$inference_ready) == 1L &&
+    !is.na(evidence$inference_ready) &&
+    is.character(evidence$source_audit_states) &&
+    identical(names(evidence$source_audit_states), c("identification", "boundary", "numerical")) &&
+    evidence$source_audit_states[["numerical"]] == "ready" &&
+    evidence$source_audit_states[["identification"]] %in% c("identified", "population_assumption_linked", "not_evaluated") &&
+    evidence$source_audit_states[["boundary"]] %in% c("finite", "not_applicable", "not_evaluated") &&
+    is.data.frame(integration) && nrow(integration) == 1L && identical(names(integration), columns) &&
+    all(vapply(integration, is.numeric, TRUE)) && all(is.finite(unlist(integration))) &&
+    integration$OriginalOrder >= 31 && integration$OriginalOrder == floor(integration$OriginalOrder) &&
+    integration$ComparisonOrder > integration$OriginalOrder &&
+    integration$ComparisonOrder == floor(integration$ComparisonOrder) &&
+    integration$NLLChange >= 0 && integration$NLLChange <= 1e-5 &&
+    integration$GradientChange >= 0 && integration$GradientChange <= 1e-4 &&
+    integration$ComparisonGradient >= 0 && integration$ComparisonGradient <= 1e-4)
+}
+
+mfrmr_calibration_jml_evidence_valid <- function(evidence) {
+  tryCatch(isTRUE(
+    is.list(evidence) && identical(names(evidence), c("policy_basis", "source_audit_states",
+      "source_ready", "objective_difference", "max_abs_gradient")) &&
+    identical(evidence$policy_basis, "jml_reference_eap_v1") &&
+    identical(evidence$source_ready, TRUE) &&
+    identical(evidence$source_audit_states,
+      c(identification = "identified", boundary = "finite", numerical = "ready")) &&
+    is.numeric(evidence$objective_difference) && length(evidence$objective_difference) == 1L &&
+    is.finite(evidence$objective_difference) && evidence$objective_difference >= 0 &&
+    evidence$objective_difference <= 1e-6 &&
+    is.numeric(evidence$max_abs_gradient) && length(evidence$max_abs_gradient) == 1L &&
+    is.finite(evidence$max_abs_gradient) && evidence$max_abs_gradient >= 0 &&
+    evidence$max_abs_gradient <= 1e-4), error = function(e) FALSE)
+}
+
+mfrmr_calibration_gpcm_jml_evidence_valid <- function(evidence) {
+  tryCatch({
+    local <- evidence$local_calibration_review
+    check <- local$checks
+    isTRUE(is.list(evidence) && identical(names(evidence), c("policy_basis", "status",
+      "local_calibration_review", "source_audit_states", "inference_ready")) &&
+      identical(evidence$policy_basis, "conditional_scoring_checks_v3") &&
+      identical(evidence$status, "conditional") && isTRUE(local$eligible) &&
+      identical(local$basis, "local_jml_and_curvature_v1") &&
+      is.character(local$review) && length(local$review) == 1L && nzchar(local$review) &&
+      is.character(local$caution) && length(local$caution) == 1L && nzchar(local$caution) &&
+      is.logical(evidence$inference_ready) && length(evidence$inference_ready) == 1L &&
+      !is.na(evidence$inference_ready) &&
+      is.character(evidence$source_audit_states) &&
+      identical(names(evidence$source_audit_states), c("identification", "boundary", "numerical")) &&
+      evidence$source_audit_states[["numerical"]] == "ready" &&
+      evidence$source_audit_states[["identification"]] %in% c("identified", "not_evaluated") &&
+      evidence$source_audit_states[["boundary"]] %in% c("finite", "not_applicable", "not_evaluated") &&
+      identical(names(check), c("objective_difference", "max_abs_gradient", "dimension",
+        "positive_definite", "reciprocal_condition", "known_boundary_absent")) &&
+      all(vapply(check[c("objective_difference", "max_abs_gradient", "dimension", "reciprocal_condition")],
+        function(x) is.numeric(x) && length(x) == 1L && is.finite(x), TRUE)) &&
+      check$objective_difference >= 0 && check$objective_difference <= 1e-6 &&
+      check$max_abs_gradient >= 0 && check$max_abs_gradient <= 1e-4 &&
+      check$dimension >= 1 && check$dimension == as.integer(check$dimension) &&
+      identical(check$positive_definite, TRUE) &&
+      identical(check$known_boundary_absent, TRUE) &&
+      check$reciprocal_condition > 1e-10 && check$reciprocal_condition <= 1)
+  }, error = function(e) FALSE)
+}
+
+mfrmr_calibration_jml_source_review <- function(fit) {
+  # These are JML source checks, not marginal integration or interval qualification.
+  tryCatch({
+    source <- prediction_source_scoring_readiness(fit)
+    if (!isTRUE(source$ready) || !identical(source$status, "ready"))
+      stop(paste(prediction_scoring_reasons(source$reason_codes), collapse = " "))
+    sizes <- build_param_sizes(fit$config)
+    idx <- build_indices(fit$prep, fit$config$step_facet, fit$config$slope_facet,
+      fit$config$interaction_specs)
+    evaluator <- make_mfrm_direct_evaluator("JML",
+      make_param_cache(sizes, fit$config, idx, is_mml = FALSE), idx, fit$config, sizes)
+    evidence <- list(policy_basis = "jml_reference_eap_v1",
+      source_audit_states = source$source_audit_states, source_ready = TRUE,
+      objective_difference = abs(evaluator$value(fit$opt$par) - fit$opt$value),
+      max_abs_gradient = max(abs(evaluator$gradient(fit$opt$par))))
+    if (!mfrmr_calibration_jml_evidence_valid(evidence))
+      stop("Current finite/identified source checks, objective agreement <= 1e-6 and maximum absolute JML gradient <= 1e-4 are required.")
+    evidence
+  }, error = function(e) mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE", "fit",
+    paste("Portable JML calibration did not pass source checks.", conditionMessage(e))))
 }
 
 mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
@@ -814,23 +934,37 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       "source must inherit from `mfrm_fit`"
     )
   }
+  adjusted <- if (mfrm_has_jml_adjustment(fit)) tryCatch(mfrm_jml_scoring_components(fit),
+    error=function(e) mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE","fit",conditionMessage(e))) else NULL
+  if (!is.null(adjusted)) fit$config <- adjusted$config
   model <- toupper(as.character(fit$config$model %||% ""))
   method <- toupper(as.character(fit$config$method %||% ""))
-  if (!model %in% c("RSM", "PCM")) {
+  if (!model %in% c("RSM", "PCM", "GPCM")) {
     mfrmr_calibration_abort(
       "MODEL_FAMILY_UNSUPPORTED", "model.family",
-      "portable calibration accepts only RSM or PCM fits"
+      "portable calibration accepts only RSM, PCM or GPCM fits"
     )
   }
-  if (!identical(method, "MML")) {
+  jml <- identical(method, "JML")
+  if (!identical(method, "MML") && !jml) {
     mfrmr_calibration_abort(
       "MODEL_ESTIMATOR_UNSUPPORTED", "model.estimator",
-      "portable calibration accepts only MML fits"
+      "portable calibration supports the documented JML and MML models"
     )
   }
+  if (jml && (length(fit$config$interaction_specs) > 0L ||
+      any(!is.na(fit$config$theta_spec$anchors)) || length(fit$config$theta_spec$group_values) ||
+      nrow(mfrmr_calibration_extract_anchors(fit)) > 0L))
+    mfrmr_calibration_abort("MODEL_STRUCTURE_UNSUPPORTED", "constraints",
+      "portable JML currently requires no anchors or interactions")
+  if (jml && (is.null(fit$prep$data$Weight) || anyNA(fit$prep$data$Weight) ||
+      any(fit$prep$data$Weight != 1)))
+    mfrmr_calibration_abort("SCORING_WEIGHT_UNSUPPORTED", "fit",
+      "portable JML requires unit observation weights")
   population <- fit$config$population_spec %||% list()
   posterior_basis <- as.character(fit$config$posterior_basis %||% "")
-  if (isTRUE(population$active) || identical(posterior_basis, "population_model")) {
+  if ((model != "GPCM" || jml) &&
+      (isTRUE(population$active) || identical(posterior_basis, "population_model"))) {
     mfrmr_calibration_abort(
       "SCORING_BASIS_UNSUPPORTED", "scoring_basis.type",
       paste(
@@ -839,19 +973,50 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       )
     )
   }
-  if (identical(model, "PCM") &&
+  if (model %in% c("PCM", "GPCM") &&
       (is.null(fit$config$step_facet) ||
        !fit$config$step_facet %in% fit$config$facet_names)) {
     mfrmr_calibration_abort(
       "IDENTIFICATION_CONTRACT_INVALID", "model.step_owner",
-      "PCM requires one explicit stored step owner"
+      "PCM and GPCM require one explicit stored step owner"
     )
   }
 
+  if (identical(model, "GPCM")) {
+    if (!jml && (!isTRUE(population$active) ||
+        !identical(population$design_columns, "(Intercept)") ||
+        !is.matrix(population$design_matrix) || ncol(population$design_matrix) != 1L ||
+        anyNA(population$design_matrix) || any(population$design_matrix != 1))) {
+      mfrmr_calibration_abort("SCORING_BASIS_UNSUPPORTED", "scoring_basis.type",
+        "GPCM portability requires an estimated intercept-only normal population; use fitted-object scoring for latent regression")
+    }
+    if (jml && !identical(fit$config$slope_facet, fit$config$step_facet))
+      mfrmr_calibration_abort("MODEL_STRUCTURE_UNSUPPORTED", "model.slope_owner",
+        "portable GPCM JML requires the same slope and step owner")
+    if (!is.character(fit$config$slope_facet) || length(fit$config$slope_facet) != 1L ||
+        is.na(fit$config$slope_facet) || !isTRUE(fit$config$gpcm_spec$active) ||
+        !identical(fit$config$gpcm_spec$identification, "sum_to_zero_log_slopes") ||
+        !identical(fit$config$gpcm_spec$scale_reference, "geometric_mean_one") ||
+        !identical(fit$config$gpcm_spec$levels, fit$config$facet_levels[[fit$config$slope_facet]]) ||
+        !fit$config$slope_facet %in% fit$config$facet_names) {
+      mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "model.slope_owner",
+        "GPCM requires one declared slope owner and geometric-mean-one relative slopes")
+    }
+    if (length(fit$config$interaction_specs) > 0L ||
+        nrow(mfrmr_calibration_extract_anchors(fit)) > 0L) {
+      mfrmr_calibration_abort("MODEL_STRUCTURE_UNSUPPORTED", "constraints",
+        "portable GPCM does not yet support anchors or interactions; use fitted-object scoring")
+    }
+    if (any(fit$prep$data$Weight != 1)) {
+      mfrmr_calibration_abort("SCORING_WEIGHT_UNSUPPORTED", "fit",
+        "portable GPCM requires unit observation weights")
+    }
+  }
+
   fit_quad_points <- fit$config$estimation_control$quad_points
-  if (is.null(fit_quad_points) || length(fit_quad_points) != 1L ||
+  if (is.null(adjusted) && (is.null(fit_quad_points) || length(fit_quad_points) != 1L ||
       !is.finite(fit_quad_points) || fit_quad_points < 1 ||
-      fit_quad_points != as.integer(fit_quad_points)) {
+      fit_quad_points != as.integer(fit_quad_points))) {
     mfrmr_calibration_abort(
       "QUADRATURE_ORDER_INVALID", "scoring_basis.quadrature_order",
       "the source fit must store one positive integer quadrature order"
@@ -867,19 +1032,40 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   }
   quad_points <- as.integer(scoring_quad_points)
 
-  sizes <- build_param_sizes(fit$config)
-  params <- expand_params(fit$opt$par, sizes, fit$config)
+  params <- if (is.null(adjusted)) {
+    sizes <- build_param_sizes(fit$config)
+    expand_params(fit$opt$par, sizes, fit$config)
+  } else adjusted$params
   coordinates <- mfrmr_calibration_extract_coordinates(fit, params)
   interactions <- mfrmr_calibration_extract_interactions(fit, coordinates)
   anchors <- mfrmr_calibration_extract_anchors(fit)
   identification <- mfrmr_calibration_extract_identification(fit)
+  prior_mean <- 0
+  prior_sd <- 1
+  if (identical(model, "GPCM") && !jml) {
+    pop <- materialize_population_spec(fit$config, params)
+    prior_mean <- unname(as.numeric(pop$coefficients))
+    prior_sd <- sqrt(pop$sigma2)
+    if (length(prior_mean) != 1L || length(prior_sd) != 1L ||
+        any(!is.finite(c(prior_mean, prior_sd))) || prior_sd <= 0) {
+      mfrmr_calibration_abort("SCORING_PRIOR_INVALID", "scoring_basis",
+        "GPCM requires a finite population mean and positive finite SD")
+    }
+  }
+  if (identical(model, "GPCM")) {
+    identification <- rbind(identification, data.frame(
+      ConstraintId = "relative_slope_constraint", ParameterClass = "slope",
+      OwnerFacet = fit$config$slope_facet, ConstraintType = "sum_to_zero_log_slopes",
+      Target = "geometric_mean_one", Value = 0,
+      FreeDimension = as.integer(length(params$slopes) - 1L), stringsAsFactors = FALSE))
+  }
   quad <- gauss_hermite_normal(as.integer(quad_points))
   quad_order <- order(quad$nodes)
   quad$nodes <- as.numeric(quad$nodes[quad_order])
   quad$weights <- as.numeric(quad$weights[quad_order])
   facet_names <- as.character(fit$config$facet_names)
   is_step_owner <- rep(FALSE, length(facet_names))
-  if (identical(model, "PCM")) {
+  if (model %in% c("PCM", "GPCM")) {
     is_step_owner <- facet_names == fit$config$step_facet
   }
   facet_roles <- data.frame(
@@ -909,16 +1095,37 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
     "mfrm-fit", as.character(utils::packageVersion("mfrmr")), model, method,
     length(fit$opt$par), gsub("[^0-9]", "", created_at_utc), sep = ":"
   ))
-  readiness_contract <- as.character(
+  readiness_contract <- if (!is.null(adjusted)) mfrmr_readiness_contract_version() else as.character(
     fit$readiness$contract_version %||% ""
   )
   source_ready <- identical(readiness_contract, mfrmr_readiness_contract_version()) &&
     isTRUE(mfrm_inference_ready(fit))
+  source_scoring <- NULL
+  if (identical(model, "GPCM")) {
+    source_scoring <- if (is.null(adjusted)) prediction_source_scoring_readiness(fit) else adjusted$source
+    if (!isTRUE(source_scoring$ready) ||
+        !identical(source_scoring$status, "conditional") ||
+        !isTRUE(source_scoring$local_calibration_review$eligible)) {
+      mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE", "fit",
+        paste("Portable GPCM requires passing conditional calibration checks.",
+          paste(prediction_scoring_reasons(source_scoring$reason_codes), collapse = " "),
+          source_scoring$local_calibration_review$review %||% ""))
+    }
+    source_ready <- TRUE
+  }
+  if (jml && model != "GPCM") {
+    source_scoring <- mfrmr_calibration_jml_source_review(fit)
+    source_ready <- TRUE
+  }
   parameter_classes <- unique(coordinates$ParameterClass)
   parameter_status <- data.frame(
     ParameterClass = parameter_classes,
-    Status = if (source_ready) "eligible" else "ineligible",
-    EvidenceCode = if (source_ready) {
+    Status = if (model == "GPCM" || jml) "conditional" else if (source_ready) "eligible" else "ineligible",
+    EvidenceCode = if (jml) {
+      "SOURCE_JML_SCORING_CHECKS_PASSED"
+    } else if (model == "GPCM") {
+      "SOURCE_CONDITIONAL_SCORING_CHECKS_PASSED"
+    } else if (source_ready) {
       "SOURCE_FIT_CURRENT_AND_READY"
     } else {
       "SOURCE_READINESS_INELIGIBLE"
@@ -938,7 +1145,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   x <- list(
     header = list(
       schema_id = mfrmr_calibration_schema_id(),
-      schema_version = mfrmr_calibration_schema_version(),
+      schema_version = if (!is.null(adjusted)) 5L else mfrmr_calibration_schema_version(model, method),
       object_class = "mfrm_calibration",
       calibration_id = calibration_id,
       semantic_identity_version = mfrmr_calibration_semantic_identity_version()
@@ -970,9 +1177,9 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       anchors = anchors
     ),
     scoring_basis = list(
-      type = "fixed_standard_normal",
-      prior_mean = 0,
-      prior_sd = 1,
+      type = if (jml) "post_hoc_standard_normal" else if (model == "GPCM") "frozen_estimated_normal" else "fixed_standard_normal",
+      prior_mean = prior_mean,
+      prior_sd = prior_sd,
       scoring_algorithm = if (mfrmr_adaptive_integration(fit$config)) {
         "adaptive_quadrature_eap_v2"
       } else "quadrature_eap_v2",
@@ -982,13 +1189,17 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       weights = as.numeric(quad$weights)
     ),
     eligibility = list(
-      support_profile_id = if (identical(model, "RSM")) {
+      support_profile_id = if (!is.null(adjusted)) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
+        paste0(tolower(model), "_jml_reference_normal_v", if (model == "GPCM") 4L else 3L)
+      } else if (identical(model, "GPCM")) {
+        "gpcm_mml_frozen_normal_v2"
+      } else if (identical(model, "RSM")) {
         "rsm_mml_fixed_standard_normal_v1"
       } else {
         "pcm_mml_fixed_standard_normal_v1"
       },
       source_readiness_contract = readiness_contract,
-      source_readiness_status = if (source_ready) "eligible" else "ineligible",
+      source_readiness_status = if (model == "GPCM" || jml) "conditional" else if (source_ready) "eligible" else "ineligible",
       parameter_class_status = parameter_status
     ),
     validation = list(
@@ -1014,14 +1225,21 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       optional_hash = NULL
     )
   )
+  if (identical(model, "GPCM")) {
+    x$model$slope_owner <- fit$config$slope_facet
+    x$model$slope_action <- "full_adjacent_predictor"
+    x$eligibility$source_scoring_evidence <- source_scoring[c(
+      "policy_basis", "status", "local_calibration_review", "source_audit_states", "inference_ready")]
+  }
+  if (jml && model != "GPCM") x$eligibility$source_scoring_evidence <- source_scoring
   x$integrity$semantic_components <- mfrmr_calibration_semantic_components(x)
   class(x) <- c("mfrm_calibration", "list")
   x$validation$refusals <- mfrmr_review_calibration(x)
   x
 }
 
-mfrmr_calibration_expected_sections <- function() {
-  list(
+mfrmr_calibration_expected_sections <- function(version = 1L) {
+  out <- list(
     top = c(
       "header", "model", "response", "input_schema", "parameters",
       "constraints", "scoring_basis", "eligibility", "validation",
@@ -1059,6 +1277,13 @@ mfrmr_calibration_expected_sections <- function() {
     ),
     integrity = c("semantic_components", "optional_hash")
   )
+  if (version %in% c(2L, 4L, 5L)) {
+    out$model <- c(out$model, "slope_owner", "slope_action")
+  }
+  if (version %in% c(2L, 3L, 4L, 5L)) {
+    out$eligibility <- c(out$eligibility, "source_scoring_evidence")
+  }
+  out
 }
 
 mfrmr_calibration_find_prohibited <- function(x, path = "") {
@@ -1136,7 +1361,7 @@ mfrmr_review_calibration <- function(x) {
       add("SCHEMA_FIELD_MISSING", paste(path, field, sep = "."), "required field is absent")
     }
     for (field in unexpected) {
-      add("SCHEMA_FIELD_UNEXPECTED", paste(path, field, sep = "."), "field is not registered in schema version 1")
+      add("SCHEMA_FIELD_UNEXPECTED", paste(path, field, sep = "."), "field is not registered in this schema version")
     }
     length(missing) == 0L && length(unexpected) == 0L
   }
@@ -1158,7 +1383,17 @@ mfrmr_review_calibration <- function(x) {
       )
     }
   }
-  expected <- mfrmr_calibration_expected_sections()
+  version <- if (is.list(x$header)) x$header$schema_version else NULL
+  if (!scalar_integer(version)) {
+    add("SCHEMA_TYPE_INVALID", "header.schema_version", "must be one integer")
+    return(refusals)
+  }
+  if (!version %in% c(1L, 2L, 3L, 4L, 5L)) {
+    add(if (version < 1L) "SCHEMA_MIGRATION_REQUIRED" else "SCHEMA_VERSION_UNSUPPORTED",
+      "header.schema_version", "schema version is not supported")
+    return(refusals)
+  }
+  expected <- mfrmr_calibration_expected_sections(version)
   if (!check_names(x, expected$top, "<root>")) return(refusals)
   section_ok <- vapply(names(expected)[-1], function(section) {
     check_names(x[[section]], expected[[section]], section)
@@ -1170,14 +1405,6 @@ mfrmr_review_calibration <- function(x) {
   }
   if (!identical(x$header$schema_id, mfrmr_calibration_schema_id())) {
     add("SCHEMA_ID_UNKNOWN", "header.schema_id", "schema identifier is not registered")
-  }
-  version <- x$header$schema_version
-  if (!scalar_integer(version)) {
-    add("SCHEMA_TYPE_INVALID", "header.schema_version", "must be one integer")
-  } else if (version > mfrmr_calibration_schema_version()) {
-    add("SCHEMA_VERSION_UNSUPPORTED", "header.schema_version", "newer schema version must fail closed")
-  } else if (version < mfrmr_calibration_schema_version()) {
-    add("SCHEMA_MIGRATION_REQUIRED", "header.schema_version", "older schema requires an explicit migration")
   }
   if (!identical(x$header$object_class, "mfrm_calibration")) {
     add("SCHEMA_CLASS_INVALID", "header.object_class", "class marker must be exact")
@@ -1192,11 +1419,13 @@ mfrmr_review_calibration <- function(x) {
     add("IDENTITY_VERSION_UNKNOWN", "header.semantic_identity_version", "identity algorithm is not registered")
   }
 
-  if (!identical(x$model$family, "RSM") && !identical(x$model$family, "PCM")) {
-    add("MODEL_FAMILY_UNSUPPORTED", "model.family", "core family must be RSM or PCM")
+  gpcm <- version %in% c(2L, 4L, 5L) && identical(x$model$family, "GPCM")
+  jml <- version %in% c(3L, 4L, 5L)
+  if (!(if (version %in% c(1L, 3L)) x$model$family %in% c("RSM", "PCM") else gpcm)) {
+    add("MODEL_FAMILY_UNSUPPORTED", "model.family", "versions 1 and 3 support RSM/PCM; versions 2, 4 and 5 support GPCM")
   }
-  if (!identical(x$model$estimator, "MML")) {
-    add("MODEL_ESTIMATOR_UNSUPPORTED", "model.estimator", "core estimator must be MML")
+  if (!identical(x$model$estimator, if (jml) "JML" else "MML")) {
+    add("MODEL_ESTIMATOR_UNSUPPORTED", "model.estimator", "estimator must match the file format")
   }
   if (!identical(x$model$n_observed_scales, 1L)) {
     add("MODEL_SCALE_COUNT_UNSUPPORTED", "model.n_observed_scales", "schema version 1 supports exactly one scale")
@@ -1232,7 +1461,7 @@ mfrmr_review_calibration <- function(x) {
   if (identical(x$model$family, "RSM") && !identical(x$model$step_owner, "shared")) {
     add("IDENTIFICATION_CONTRACT_INVALID", "model.step_owner", "RSM step owner must be shared")
   }
-  if (identical(x$model$family, "PCM") &&
+  if (x$model$family %in% c("PCM", "GPCM") &&
       (!scalar_character(x$model$step_owner) || !x$model$step_owner %in% facet_names)) {
     add("IDENTIFICATION_CONTRACT_INVALID", "model.step_owner", "PCM step owner must be one declared facet")
   }
@@ -1293,14 +1522,15 @@ mfrmr_review_calibration <- function(x) {
     if (any(!is.finite(coordinates$Value))) {
       add("PARAMETER_NONFINITE", "parameters.coordinates.Value", "every expanded coordinate must be finite")
     }
-    allowed_classes <- c("facet", "shared_step", "owned_step", "interaction")
+    allowed_classes <- c("facet", "shared_step", "owned_step", "interaction",
+      if (gpcm) "slope")
     if (any(!coordinates$ParameterClass %in% allowed_classes)) {
       add("PARAMETER_COORDINATE_INVALID", "parameters.coordinates.ParameterClass", "unknown parameter class")
     }
     if (identical(x$model$family, "RSM") && any(coordinates$ParameterClass == "owned_step")) {
       add("PARAMETER_COORDINATE_INVALID", "parameters.coordinates.ParameterClass", "RSM cannot contain owned steps")
     }
-    if (identical(x$model$family, "PCM") && any(coordinates$ParameterClass == "shared_step")) {
+    if (x$model$family %in% c("PCM", "GPCM") && any(coordinates$ParameterClass == "shared_step")) {
       add("PARAMETER_COORDINATE_INVALID", "parameters.coordinates.ParameterClass", "PCM cannot contain shared steps")
     }
   }
@@ -1395,12 +1625,46 @@ mfrmr_review_calibration <- function(x) {
     }
   }
 
-  if (!identical(x$scoring_basis$type, "fixed_standard_normal")) {
-    add("SCORING_BASIS_UNSUPPORTED", "scoring_basis.type", "core scoring basis must be fixed_standard_normal")
-  }
-  if (!identical(x$scoring_basis$prior_mean, 0) ||
-      !identical(x$scoring_basis$prior_sd, 1)) {
-    add("SCORING_PRIOR_INVALID", "scoring_basis.prior_mean", "core prior must be exactly N(0,1)")
+  if (gpcm) {
+    if (!identical(x$scoring_basis$type, if (jml) "post_hoc_standard_normal" else "frozen_estimated_normal") ||
+        !scalar_numeric(x$scoring_basis$prior_mean) ||
+        !scalar_numeric(x$scoring_basis$prior_sd) || x$scoring_basis$prior_sd <= 0 ||
+        !is.finite(x$scoring_basis$prior_sd^2) || x$scoring_basis$prior_sd^2 <= 0) {
+      add("SCORING_PRIOR_INVALID", "scoring_basis", "GPCM requires a frozen finite normal mean and positive SD")
+    }
+    if (!scalar_character(x$model$slope_owner) || !x$model$slope_owner %in% facet_names ||
+        !identical(x$model$slope_action, "full_adjacent_predictor")) {
+      add("IDENTIFICATION_CONTRACT_INVALID", "model.slope_owner", "GPCM requires one declared slope owner and full adjacent-predictor action")
+    }
+    if (is.data.frame(interactions) && nrow(interactions) > 0L ||
+        is.data.frame(anchors) && nrow(anchors) > 0L) {
+      add("MODEL_STRUCTURE_UNSUPPORTED", "constraints", "portable GPCM does not support anchors or interactions")
+    }
+    if (scalar_character(x$model$slope_owner) && is.data.frame(levels) &&
+        is.data.frame(identification) && identical(names(identification), identification_columns)) {
+    expected_slope_constraint <- data.frame(
+      ConstraintId = "relative_slope_constraint", ParameterClass = "slope",
+      OwnerFacet = x$model$slope_owner, ConstraintType = "sum_to_zero_log_slopes",
+      Target = "geometric_mean_one", Value = 0,
+      FreeDimension = as.integer(sum(levels$Facet == x$model$slope_owner) - 1L),
+      stringsAsFactors = FALSE)
+    actual <- identification[identification$ParameterClass == "slope", , drop = FALSE]
+    rownames(actual) <- NULL
+    if (!identical(actual, expected_slope_constraint)) {
+      add("IDENTIFICATION_CONTRACT_INVALID", "constraints.identification", "relative-slope identification must be stored explicitly")
+    }
+    }
+    if (!scalar_character(x$scoring_basis$scoring_algorithm) ||
+        !x$scoring_basis$scoring_algorithm %in% c("quadrature_eap_v2", "adaptive_quadrature_eap_v2")) {
+      add("SCORING_BASIS_UNSUPPORTED", "scoring_basis.scoring_algorithm", "GPCM requires continuous posterior intervals")
+    }
+  } else {
+    if (!identical(x$scoring_basis$type, if (jml) "post_hoc_standard_normal" else "fixed_standard_normal")) {
+      add("SCORING_BASIS_UNSUPPORTED", "scoring_basis.type", "scoring basis must match the estimator and file format")
+    }
+    if (!identical(x$scoring_basis$prior_mean, 0) || !identical(x$scoring_basis$prior_sd, 1)) {
+      add("SCORING_PRIOR_INVALID", "scoring_basis.prior_mean", "core prior must be exactly N(0,1)")
+    }
   }
   if (!is.character(x$scoring_basis$scoring_algorithm) ||
       length(x$scoring_basis$scoring_algorithm) != 1L ||
@@ -1434,7 +1698,20 @@ mfrmr_review_calibration <- function(x) {
     add("QUADRATURE_WEIGHTS_INVALID", "scoring_basis.weights", "weights must be finite, positive, aligned, and normalized")
   }
 
-  expected_support_profile <- if (identical(x$model$family, "RSM")) {
+  if (jml && (!identical(x$scoring_basis$prior_mean, 0) || !identical(x$scoring_basis$prior_sd, 1)))
+    add("SCORING_PRIOR_INVALID", "scoring_basis", "JML reference prior must be exactly N(0,1)")
+  if (jml && gpcm && !identical(x$model$slope_owner, x$model$step_owner))
+    add("MODEL_STRUCTURE_UNSUPPORTED", "model.slope_owner", "GPCM JML requires a shared slope and step owner")
+  if (jml && (is.data.frame(anchors) && nrow(anchors) > 0L ||
+      is.data.frame(interactions) && nrow(interactions) > 0L))
+    add("MODEL_STRUCTURE_UNSUPPORTED", "constraints", "portable JML does not support anchors or interactions")
+  if (jml && !identical(x$scoring_basis$scoring_algorithm, "quadrature_eap_v2"))
+    add("SCORING_BASIS_UNSUPPORTED", "scoring_basis.scoring_algorithm", "JML requires reference-prior EAP with continuous posterior intervals")
+  expected_support_profile <- if (version == 5L) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
+    paste0(tolower(x$model$family), "_jml_reference_normal_v", if (gpcm) 4L else 3L)
+  } else if (gpcm) {
+    "gpcm_mml_frozen_normal_v2"
+  } else if (identical(x$model$family, "RSM")) {
     "rsm_mml_fixed_standard_normal_v1"
   } else {
     "pcm_mml_fixed_standard_normal_v1"
@@ -1453,13 +1730,22 @@ mfrmr_review_calibration <- function(x) {
   )) {
     add("SOURCE_READINESS_CONTRACT_INVALID", "eligibility.source_readiness_contract", "source readiness contract is not current")
   }
-  if (!identical(x$eligibility$source_readiness_status, "eligible")) {
+  expected_status <- if (gpcm || jml) "conditional" else "eligible"
+  if (jml && !gpcm && !mfrmr_calibration_jml_evidence_valid(x$eligibility$source_scoring_evidence))
+    add("SOURCE_READINESS_INELIGIBLE", "eligibility.source_scoring_evidence",
+      "JML requires intact passing extraction-time source checks")
+  if (gpcm && !(if (version == 5L) mfrm_jml_scoring_evidence_valid else if (jml) mfrmr_calibration_gpcm_jml_evidence_valid else
+      mfrmr_calibration_source_evidence_valid)(x$eligibility$source_scoring_evidence)) {
+    add("SOURCE_READINESS_INELIGIBLE", "eligibility.source_scoring_evidence",
+      "GPCM requires intact passing extraction-time conditional calibration checks")
+  }
+  if (!identical(x$eligibility$source_readiness_status, expected_status)) {
     add("SOURCE_READINESS_INELIGIBLE", "eligibility.source_readiness_status", "source fit is not eligible for validation")
   }
   parameter_status <- x$eligibility$parameter_class_status
   if (!is.data.frame(parameter_status) ||
       !identical(names(parameter_status), names(mfrmr_calibration_parameter_status_template())) ||
-      nrow(parameter_status) == 0L || any(parameter_status$Status != "eligible")) {
+      nrow(parameter_status) == 0L || any(parameter_status$Status != expected_status)) {
     add("PARAMETER_CLASS_INELIGIBLE", "eligibility.parameter_class_status", "every stored parameter class must be eligible")
   }
 
@@ -1592,6 +1878,10 @@ mfrmr_review_calibration <- function(x) {
     add("INTEGRITY_HASH_INVALID", "integrity.optional_hash", "optional hash must be one nonempty string when present")
   }
 
+  if (gpcm && nrow(refusals) == 0L) {
+    tryCatch(mfrmr_calibration_materialize_scoring(x),
+      mfrm_calibration_error = function(error) add(error$code, error$field_path, error$detail))
+  }
   rownames(refusals) <- NULL
   refusals
 }
@@ -1938,7 +2228,27 @@ mfrmr_calibration_materialize_scoring <- function(x) {
     }
   }
 
-  expected_coordinate_count <- sum(lengths(facet_levels)) +
+  slopes <- NULL
+  if (identical(x$model$family, "GPCM")) {
+    owner <- x$model$slope_owner
+    rows <- coordinates[coordinates$ParameterClass == "slope", , drop = FALSE]
+    position <- match(facet_levels[[owner]], rows$Level)
+    if (nrow(rows) != length(facet_levels[[owner]]) || anyNA(position) ||
+        anyDuplicated(rows$Level) || anyNA(rows$OwnerFacet) ||
+        any(rows$OwnerFacet != owner) || any(!is.na(rows$Step)) ||
+        any(!is.na(rows$InteractionId)) || any(!is.finite(rows$Value)) ||
+        any(rows$Value <= 0)) {
+      mfrmr_calibration_abort("PARAMETER_COORDINATE_INVALID", "parameters.coordinates",
+        "GPCM requires exactly one positive finite slope per declared slope-owner level")
+    }
+    slopes <- stats::setNames(rows$Value[position], facet_levels[[owner]])
+    if (abs(sum(log(slopes))) > 1e-10) {
+      mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "parameters.coordinates",
+        "relative slopes must have geometric mean one")
+    }
+  }
+
+  expected_coordinate_count <- sum(lengths(facet_levels)) + length(slopes) +
     (if (identical(x$model$family, "RSM")) n_steps else {
       length(facet_levels[[x$model$step_owner]]) * n_steps
     }) + sum(x$model$interactions$LevelCountA * x$model$interactions$LevelCountB)
@@ -1954,6 +2264,7 @@ mfrmr_calibration_materialize_scoring <- function(x) {
     facet_values = facet_values,
     shared_steps = shared_steps,
     owned_steps = owned_steps,
+    slopes = slopes,
     interactions = interaction_values
   )
 }
@@ -1985,10 +2296,30 @@ mfrmr_score_calibration <- function(calibration,
                                     interval_level = 0.95,
                                     missing_response = "error",
                                     event_id = NULL,
-                                    adaptive_quad_points = NULL) {
+                                    adaptive_quad_points = NULL,
+                                    scoring_prior = NULL) {
+  scoring_prior <- tryCatch(prediction_validate_scoring_prior(scoring_prior),
+    error = function(e) mfrmr_calibration_abort("SCORING_PRIOR_INVALID", "scoring_prior", conditionMessage(e)))
   adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
   review <- mfrmr_review_calibration(calibration)
   mfrmr_calibration_abort_review(review)
+  gpcm <- identical(calibration$model$family, "GPCM")
+  jml <- identical(calibration$model$estimator, "JML")
+  check_scores <- gpcm || jml || !is.null(scoring_prior)
+  prior_mean <- if (is.null(scoring_prior)) calibration$scoring_basis$prior_mean else scoring_prior$mean
+  prior_sd <- if (is.null(scoring_prior)) calibration$scoring_basis$prior_sd else scoring_prior$sd
+  if (!is.null(scoring_prior) && !endsWith(calibration$scoring_basis$scoring_algorithm, "_v2")) {
+    mfrmr_calibration_abort("SCORING_BASIS_UNSUPPORTED", "scoring_prior",
+      "Alternative priors require a calibration with continuous posterior intervals; re-extract the legacy grid-interval artifact.")
+  }
+  if (check_scores) {
+    q <- calibration$scoring_basis$quadrature_order
+    higher <- max(q + 10L, 2L * q - 1L)
+    if (inherits(tryCatch(gauss_hermite_normal(higher), error = identity), "error")) higher <- q + 10L
+    adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(unique(c(adaptive_quad_points, max(3L, q), higher)))
+  }
+  score_integration_review <- data.frame(Person = character(), EAPChange = numeric(),
+    SDChange = numeric(), ReferenceChange = numeric(), Passed = logical())
   if (!inherits(calibration, "mfrm_calibration")) {
     mfrmr_calibration_abort(
       "SCHEMA_CLASS_INVALID", "header.object_class",
@@ -2162,6 +2493,10 @@ mfrmr_score_calibration <- function(calibration,
       "every weight must be finite and strictly positive"
     )
   }
+  if (identical(calibration$model$family, "GPCM") && any(weights[scored_row] != 1)) {
+    mfrmr_calibration_abort("SCORING_WEIGHT_UNSUPPORTED", "weight",
+      "portable GPCM requires unit observation weights")
+  }
   weights[!scored_row] <- NA_real_
 
   materialized <- mfrmr_calibration_materialize_scoring(calibration)
@@ -2306,18 +2641,28 @@ mfrmr_score_calibration <- function(calibration,
     scored_weights <- weights[scoring_rows]
     review_idx <- list(person = person_index, score_k = score_k,
       weight = scored_weights,
-      step_idx = if (identical(calibration$model$family, "PCM")) {
+      step_idx = if (calibration$model$family %in% c("PCM", "GPCM")) {
         scored_facet_index[[calibration$model$step_owner]]
       } else NULL)
     review_config <- list(model = calibration$model$family,
       n_cat = calibration$response$n_categories, n_person = length(person_labels))
-    review_params <- list(steps = materialized$shared_steps, steps_mat = materialized$owned_steps)
+    review_idx$slope_idx <- if (identical(calibration$model$family, "GPCM")) {
+      scored_facet_index[[calibration$model$slope_owner]]
+    } else NULL
+    review_params <- list(steps = materialized$shared_steps,
+      steps_mat = materialized$owned_steps, slopes = materialized$slopes)
+    population <- if (gpcm || !is.null(scoring_prior)) {
+      list(active = TRUE, design_matrix = matrix(1, length(person_labels), 1L),
+        person_lookup = seq_along(person_labels),
+        coefficients = prior_mean, sigma2 = prior_sd^2)
+    } else NULL
     adaptive <- startsWith(calibration$scoring_basis$scoring_algorithm, "adaptive_")
     basis <- if (adaptive) mfrmr_adaptive_quadrature_basis(
       review_idx, review_config, review_params,
-      list(nodes = nodes, weights = prior_weights), base_eta
+      list(nodes = nodes, weights = prior_weights), base_eta, population_spec = population
     ) else resolve_person_quadrature_basis(
-      list(nodes = nodes, weights = prior_weights), person_count = length(person_labels)
+      list(nodes = nodes, weights = prior_weights), population_spec = population,
+      person_count = length(person_labels)
     )
     person_nodes <- basis$nodes
     k_values <- 0:(calibration$response$n_categories - 1L)
@@ -2338,7 +2683,8 @@ mfrmr_score_calibration <- function(calibration,
       }
       cumulative_step <- c(0, cumsum(step_values))
       for (node in seq_along(nodes)) {
-        logits <- k_values * (person_nodes[person_index[row], node] + base_eta[row]) - cumulative_step
+        slope <- if (is.null(materialized$slopes)) 1 else materialized$slopes[review_idx$slope_idx[row]]
+        logits <- slope * (k_values * (person_nodes[person_index[row], node] + base_eta[row]) - cumulative_step)
         maximum <- max(logits)
         observed_log_probability <- logits[score_k[row] + 1L] -
           (maximum + log(sum(exp(logits - maximum))))
@@ -2364,7 +2710,7 @@ mfrmr_score_calibration <- function(calibration,
       )
     }
 
-    estimate <- if (adaptive) rowSums(posterior * person_nodes) else as.vector(posterior %*% nodes)
+    estimate <- if (adaptive || !is.null(population)) rowSums(posterior * person_nodes) else as.vector(posterior %*% nodes)
     posterior_sd <- vapply(seq_along(person_labels), function(i) {
       sqrt(sum(posterior[i, ] * (person_nodes[i, ] - estimate[i])^2))
     }, numeric(1))
@@ -2377,7 +2723,7 @@ mfrmr_score_calibration <- function(calibration,
     }, numeric(1))
     if (endsWith(calibration$scoring_basis$scoring_algorithm, "_v2")) {
       intervals <- mfrmr_person_posterior_intervals(review_idx, review_config, review_params,
-        base_eta, person_labels, interval_level = interval_level)
+        base_eta, person_labels, population_spec = population, interval_level = interval_level)
       lower <- intervals[, "Lower"]; upper <- intervals[, "Upper"]
     }
     observations <- tabulate(person_index, nbins = length(person_labels))
@@ -2388,8 +2734,17 @@ mfrmr_score_calibration <- function(calibration,
       quadrature_review <- mfrmr_adaptive_quadrature_review(
         review_idx, review_config, review_params,
         list(nodes = nodes, weights = prior_weights), person_labels,
-        adaptive_quad_points, base_eta = base_eta
+        adaptive_quad_points, base_eta = base_eta, population_spec = population
       )
+    }
+    if (check_scores) {
+      score_integration_review <- prediction_score_integration_review(
+        data.frame(Person = person_labels, Estimate = estimate, SD = posterior_sd), quadrature_review)
+      if (!all(score_integration_review$Passed) ||
+          any(!is.finite(c(estimate, posterior_sd, lower, upper)))) {
+        mfrmr_calibration_abort("SCORING_INTEGRATION_FAILED", "scoring_basis.quadrature_order",
+          "Posterior scoring integration did not pass; extract a calibration with more scoring_quad_points and inspect the source fit. No scores were returned.")
+      }
     }
     edge_nodes <- unique(c(1L, ncol(posterior)))
     edge_mass <- rowSums(posterior[, edge_nodes, drop = FALSE])
@@ -2527,9 +2882,18 @@ mfrmr_score_calibration <- function(calibration,
           person = person_col, facets = facet_cols,
           score = score_col, weight = weight_col, event_id = event_id_col
         ),
-        engine_identity = "artifact_coordinates_v1"
+        engine_identity = if (jml) paste0("artifact_coordinates_v", calibration$header$schema_version) else if (identical(calibration$header$schema_version, 2L)) {
+          "artifact_coordinates_v2"
+        } else "artifact_coordinates_v1"
       ),
       notes = c(
+        if (identical(calibration$header$schema_version,5L)) mfrm_jml_scoring_note(calibration$eligibility$source_scoring_evidence),
+        if (jml) paste("JML-calibrated post-hoc EAP uses a reference prior, not a population estimated by JML or ML/WLE scoring.",
+          "Replay validates stored source checks, not a fresh joint calibration fit."),
+        if (identical(calibration$model$family, "GPCM")) paste(
+          "The GPCM calibration passed conditional source checks at extraction.",
+          "Replay validates that stored evidence, not a fresh calibration fit.",
+          "Global boundary/identification states remain as recorded; population transport is not established."),
         "Posterior summaries use only the frozen calibration artifact and supplied response rows.",
         "All estimates are posterior EAP values; endpoint results are not finite JML maxima.",
         "Posterior SD and intervals are conditional on the frozen point calibration and exclude calibration-parameter uncertainty.",
@@ -2547,7 +2911,31 @@ mfrmr_score_calibration <- function(calibration,
   if (!is.null(adaptive_quad_points)) {
     out$quadrature_review <- quadrature_review
     out$settings$adaptive_quad_points <- adaptive_quad_points
-    out$notes <- c(out$notes, mfrmr_adaptive_quadrature_note())
+    out$notes <- c(out$notes, if (check_scores) {
+      "Reported EAP and SD passed per-person adaptive reference-order checks under the actual scoring prior; these checks do not validate that prior for a new cohort."
+    } else mfrmr_adaptive_quadrature_note())
+  }
+  if (check_scores) {
+    out$estimates$PriorSource <- rep(if (is.null(scoring_prior)) "retained" else "user_supplied", nrow(estimates))
+    out$estimates$PriorMean <- rep(prior_mean, nrow(estimates))
+    out$estimates$PriorSD <- rep(prior_sd, nrow(estimates))
+    out$estimates$RetainedPriorMean <- rep(calibration$scoring_basis$prior_mean, nrow(estimates))
+    out$estimates$RetainedPriorSD <- rep(calibration$scoring_basis$prior_sd, nrow(estimates))
+    out$estimates$ScoreIntegrationReady <- score_integration_review$Passed
+    out$settings$retained_prior_identity <- out$settings$prior_identity
+    out$settings$scoring_prior <- scoring_prior
+    out$settings$prior_identity <- list(type = if (is.null(scoring_prior)) calibration$scoring_basis$type else "user_supplied_normal",
+      mean = prior_mean, sd = prior_sd)
+    out$settings$score_integration_review <- score_integration_review
+    if (gpcm || jml) out$settings$source_scoring_evidence <- calibration$eligibility$source_scoring_evidence
+    out$notes <- c(out$notes, paste0("Scoring prior: ", if (is.null(scoring_prior)) "retained normal" else "user-supplied normal",
+      " (mean ", prior_mean, ", SD ", prior_sd, "). The artifact's original prior remains unchanged."))
+    if (!is.null(scoring_prior)) out$notes <- c(out$notes,
+      "The supplied prior is an analyst assumption, not a population estimated from the new responses. Compare the same rows under alternative priors to assess sensitivity.")
+  }
+  if (identical(calibration$header$schema_version,5L)) {
+    out$estimates$CalibrationMethod <- rep("Corrected JML",nrow(out$estimates))
+    out$estimates$CorrectionOrder <- rep(calibration$eligibility$source_scoring_evidence$local_calibration_review$correction_order,nrow(out$estimates))
   }
   out
 }
@@ -2559,7 +2947,7 @@ mfrmr_validate_calibration_method_input <- function(x, arg = "object") {
       call. = FALSE
     )
   }
-  expected <- mfrmr_calibration_expected_sections()
+  expected <- mfrmr_calibration_expected_sections(x$header$schema_version %||% 1L)
   nested_incomplete <- if (is.list(x) &&
       length(setdiff(expected$top, names(x))) == 0L) {
     any(vapply(names(expected)[-1L], function(section) {
@@ -2643,6 +3031,9 @@ summary.mfrm_calibration <- function(object, ...) {
     coordinates = nrow(coordinates),
     anchors = nrow(object$constraints$anchors),
     scoring_basis = object$scoring_basis$type,
+    prior_mean = object$scoring_basis$prior_mean,
+    prior_sd = object$scoring_basis$prior_sd,
+    source_scoring_evidence = object$eligibility$source_scoring_evidence,
     source_readiness = object$eligibility$source_readiness_status,
     refusals = mfrmr_review_calibration(object)
   )
@@ -2658,7 +3049,12 @@ print.mfrm_calibration <- function(x, ...) {
   cat("<mfrm_calibration>", "\n", sep = "")
   cat("  State: ", s$state, "\n", sep = "")
   cat("  Model: ", s$model, " / ", s$estimator, "\n", sep = "")
-  cat("  Scoring prior: standard normal (mean 0, SD 1)\n")
+  cat("  Scoring prior: ", if (s$prior_mean == 0 && s$prior_sd == 1) "standard normal" else "normal",
+      " (mean ", s$prior_mean, ", SD ", s$prior_sd, ")\n", sep = "")
+  if (identical(s$schema_version,5L)) print_wrapped_line(mfrm_jml_scoring_note(s$source_scoring_evidence))
+  if (identical(s$estimator, "JML")) print_wrapped_line("Post-hoc EAP reference prior; not estimated by JML.")
+  if (any(s$source_scoring_evidence$source_audit_states %in% "not_evaluated"))
+    print_wrapped_line("Global identification or boundary checks remain incomplete; calibration is for conditional scoring.")
   cat("  Facets: ", s$facets, "; coordinates: ", s$coordinates,
       "; anchors: ", s$anchors, "\n", sep = "")
   cat("  Validation refusals: ", nrow(s$refusals), "\n", sep = "")
@@ -2675,7 +3071,12 @@ print.summary.mfrm_calibration <- function(x, ...) {
   cat("  File format: version ", x$schema_version, "\n", sep = "")
   cat("  State: ", x$state, "\n", sep = "")
   cat("  Model / estimator: ", x$model, " / ", x$estimator, "\n", sep = "")
-  cat("  Scoring prior: standard normal (mean 0, SD 1)\n")
+  cat("  Scoring prior: ", if (identical(x$scoring_basis, "fixed_standard_normal")) "standard normal" else "normal",
+      " (mean ", x$prior_mean %||% 0, ", SD ", x$prior_sd %||% 1, ")\n", sep = "")
+  if (identical(x$schema_version,5L)) print_wrapped_line(mfrm_jml_scoring_note(x$source_scoring_evidence))
+  if (identical(x$estimator, "JML")) print_wrapped_line("Post-hoc EAP reference prior; not estimated by JML.")
+  if (any(x$source_scoring_evidence$source_audit_states %in% "not_evaluated"))
+    print_wrapped_line("Global identification or boundary checks remain incomplete; calibration is for conditional scoring.")
   cat("  Validation refusals: ", nrow(x$refusals), "\n", sep = "")
   invisible(x)
 }

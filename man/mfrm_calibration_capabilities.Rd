@@ -9,13 +9,18 @@ mfrm_calibration_capabilities()
 \value{
 A data frame with one row per model, estimator, and scoring-basis
 combination. \code{PortableCalibration} is either \code{"available"} or
-\code{"unavailable"}.
+\code{"unavailable"}; the listed scope and source checks still apply.
 }
 \description{
 Returns the model and estimator combinations supported by the portable
 calibration workflow. This matrix concerns saved calibration artifacts;
 it does not replace the wider fitted-object capabilities of \code{\link[=fit_mfrm]{fit_mfrm()}} or
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
+For JML fits, fitted-object scoring is post-hoc EAP with a standard-normal
+reference prior by default, or an explicit \code{scoring_prior}. It is not
+ML/WLE scoring or a population distribution estimated by JML. Portable
+extraction supports RSM/PCM and shared-owner GPCM JML within their distinct
+source-check scopes. No artifact stores training Person estimates.
 }
 \examples{
 mfrm_calibration_capabilities()

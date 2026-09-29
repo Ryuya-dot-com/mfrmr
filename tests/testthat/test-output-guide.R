@@ -16,6 +16,8 @@ test_that("rater-feedback guidance separates uncertainty, misfit and known-truth
   expect_match(ordinary$DecisionBoundary, "does not estimate", fixed = TRUE)
   extended <- feedback[feedback$MainFunction == "mfrm_response_diagnostics()", ]
   expect_match(extended$DecisionBoundary, "No classic cutoffs", fixed = TRUE)
+  expect_match(extended$GPCMStatus, "corrected JML", fixed = TRUE)
+  expect_match(extended$DecisionBoundary, "Infit defined but Outfit unavailable", fixed = TRUE)
   uncertainty <- feedback[grepl("mfrm_random_rater_intervals", feedback$MainFunction), ]
   expect_match(uncertainty$NextStep, "parm = 'raters'", fixed = TRUE)
   expect_match(uncertainty$DecisionBoundary, "unqualified for general coverage", fixed = TRUE)

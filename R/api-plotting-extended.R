@@ -41,7 +41,7 @@ mfrm_extended_estimate_plot <- function(table, labels, name, default_title, xlab
   values <- base::sort(unique(used))
   distribution <- data.frame(Estimate = values,
     Cumulative = if (length(values)) findInterval(values, base::sort(used)) / length(used) else numeric())
-  limits <- range(c(-.1, .1, reference, table$Estimate,
+  limits <- range(c((reference %||% 0) + c(-.1, .1), table$Estimate,
     if (style == "interval") c(table$Lower, table$Upper,
       if (isTRUE(settings$comparison)) c(table$OrdinaryLower, table$OrdinaryUpper))), finite = TRUE)
   padding <- max(diff(limits) * .08, .1); limits <- limits + c(-padding, padding)
@@ -51,9 +51,11 @@ mfrm_extended_estimate_plot <- function(table, labels, name, default_title, xlab
   ) else data.frame(Estimate = numeric(), Cumulative = numeric())
   view_note <- switch(style, interval = "",
     precision = "Width = upper minus lower bound; not a fit statistic or reliability coefficient.",
-    distribution = "Empirical distribution of point estimates; not a latent population distribution. Prior-only scores excluded.")
-  count_note <- sprintf("%d of %d estimates displayed; %d prior only; %d omitted from this view.",
-    sum(valid), nrow(table), sum(prior), sum(!valid))
+    distribution = paste0("Empirical distribution of point estimates; not a latent population distribution.",
+      if ("Status" %in% names(table)) " Prior-only scores excluded." else ""))
+  count_note <- paste0(sprintf("%d of %d estimates displayed; ",sum(valid),nrow(table)),
+    if ("Status" %in% names(table)) sprintf("%d prior only; ",sum(prior)) else "",
+    sprintf("%d omitted from this view.",sum(!valid)))
   interpretation <- paste(c(note, view_note[nzchar(view_note)], count_note[style != "interval" || any(!valid)]), collapse = "\n")
   caption_note <- if (style == "distribution" && grepl("Approximate|conditional intervals|normal approximation", note))
     "Point estimates only; no intervals displayed." else note

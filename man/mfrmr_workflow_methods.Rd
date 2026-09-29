@@ -122,6 +122,16 @@ the ability distribution at N(0,1). Both extended RSMs instead estimate
 ability variance by default (\code{person_sd = NULL}). Their model-comparison
 tutorials show how to match population assumptions. Changing only the
 fitting function can change more than the rater/dependence structure.
+\item \strong{Estimator choice:} MML is the current default, not the result of
+an automatic comparison of estimators. It uses a population model for
+abilities. JML estimates each person's ability as a separate parameter;
+it does not fit a population distribution during calibration. Choosing
+JML does not automatically correct the bias associated with few ratings
+per person. The current public JML route is uncorrected and its location
+SEs are exploratory; see the estimator discussion in \code{\link[=fit_mfrm]{fit_mfrm()}}.
+Neither a larger model nor a smaller reported SE establishes a better
+analysis. Choose from the assessment question, rating design and modeling
+assumptions, rather than from whether the user is a beginner or expert.
 \item \strong{Rating scale:} supply \code{rating_min}, \code{rating_max} and \code{category_policy}
 from the rubric in both data review and ordinary fitting. Omitted bounds
 use the observed range. The ordinary default \code{category_policy = NULL}
@@ -279,6 +289,22 @@ and do not estimate reliability on its latent scale.
 In particular, a testlet variance is on the latent logit scale and cannot
 be substituted for an observed-score G-study component. Start G/D analyses
 from the ratings and their declared G-study design.
+Multivariate here means several observed score criteria, such as fluency
+and accuracy, whose source-specific covariances are estimated together.
+Multiple GPCM slope owners still describe a single latent ability.
+The provisional two-family MML--EM route supports only summary and conditional
+fitted curves with saved reports; it does not inherit the one-family
+diagnostic/inference workflow below. See \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} and the
+Two slope families section in \code{\link[=fit_mfrm]{fit_mfrm()}}.
+Neither the estimated slopes nor their sampling covariance can substitute
+for G-study score covariance components. Score weights specify the intended
+composite; they are not discrimination estimates. There is no automatic
+GMFRM-to-G-study conversion or joint estimation in these APIs.
+Hirai and Koizumi (2013, \doi{10.1080/15434303.2013.824973}) illustrate
+complementary multivariate G-theory and MFRM analyses. Their G-study omitted
+raters, so its generalization scope differs from a person-by-rater-by-task
+analysis. For the relationship and literature, see
+\code{vignette("mfrmr-gpcm-scope", package = "mfrmr")}.
 
 To group persons, raters or tasks by external attributes, use \code{\link[=mfrm_features]{mfrm_features()}}
 followed by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for mixed

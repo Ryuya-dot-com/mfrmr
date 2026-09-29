@@ -900,6 +900,71 @@
   stop("The selected component is not suitable for automatic ggplot conversion.", call. = FALSE)
 }
 
+.mfrmr_gg_residual_pca <- function(x) {
+  .require_mfrmr_ggplot2()
+  payload <- x$data
+  df <- payload$data
+  view <- payload$plot
+  required <- switch(view,
+    scree = c("Component", "Eigenvalue"),
+    parallel_scree = c("Component", "Eigenvalue", "ParallelCutoff", "ParallelMean"),
+    parallel_excess = c("Component", "ExcessOverParallelCutoff", "ExceedsParallelCutoff"),
+    loadings = c("Variable", "Loading"),
+    stop("Unsupported residual-PCA view. Recreate the plot from its result.", call. = FALSE))
+  if (!is.data.frame(df) || !nrow(df) || !all(required %in% names(df))) {
+    stop("Residual-PCA conversion requires the saved values for the selected view.", call. = FALSE)
+  }
+  legend <- payload$legend
+  if (!all(c("label", "value") %in% names(legend)) || nrow(legend) < 2L) {
+    stop("Recreate the residual-PCA plot to retain its display encoding.", call. = FALSE)
+  }
+  if (view == "parallel_scree") {
+    labels <- legend$label[1:3]
+    if (length(labels) != 3L || anyNA(labels)) stop("The reference legend is incomplete.", call. = FALSE)
+    long <- do.call(rbind, lapply(seq_along(labels), function(i) {
+      data.frame(Component = df$Component,
+        Value = df[[c("Eigenvalue", "ParallelCutoff", "ParallelMean")[i]]],
+        Series = factor(labels[i], levels = labels))
+    }))
+    p <- ggplot2::ggplot(long, ggplot2::aes(x = .data$Component, y = .data$Value,
+      colour = .data$Series, linetype = .data$Series, shape = .data$Series)) +
+      ggplot2::geom_line() + ggplot2::geom_point(na.rm = TRUE) +
+      ggplot2::scale_colour_manual(values = stats::setNames(legend$value[1:3], labels)) +
+      ggplot2::scale_linetype_manual(values = stats::setNames(c("solid", "dashed", "dotted"), labels)) +
+      ggplot2::scale_shape_manual(values = stats::setNames(c(16, 17, NA), labels)) +
+      ggplot2::labs(colour = NULL, linetype = NULL, shape = NULL)
+    xlab <- "Component"; ylab <- "Eigenvalue"
+  } else if (view == "scree") {
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Component, y = .data$Eigenvalue)) +
+      ggplot2::geom_line(colour = legend$value[1]) +
+      ggplot2::geom_point(colour = legend$value[1])
+    xlab <- "Component"; ylab <- "Eigenvalue"
+  } else {
+    positive <- if (view == "loadings") df$Loading >= 0 else df$ExceedsParallelCutoff
+    df$Direction <- factor(ifelse(positive, legend$label[1], legend$label[2]),
+      levels = legend$label[1:2])
+    if (view == "loadings") {
+      df$Variable <- factor(df$Variable, levels = unique(df$Variable))
+      p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Loading, y = .data$Variable,
+        fill = .data$Direction)) + ggplot2::geom_col(orientation = "y")
+      xlab <- "Loading"; ylab <- NULL
+    } else {
+      p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Component,
+        y = .data$ExcessOverParallelCutoff, fill = .data$Direction)) + ggplot2::geom_col()
+      xlab <- "Component"; ylab <- "Eigenvalue minus cutoff"
+    }
+    p <- p + ggplot2::scale_fill_manual(values = stats::setNames(
+      legend$value[1:2], legend$label[1:2]), drop = FALSE) + ggplot2::labs(fill = NULL)
+  }
+  if (view != "loadings") p <- p + ggplot2::scale_x_continuous(breaks = df$Component)
+  p <- p + .mfrmr_gg_theme() + ggplot2::theme(legend.position = "bottom")
+  p <- .mfrmr_gg_add_references(p, payload$reference_lines)
+  p <- .mfrmr_gg_labs(p, payload, x = xlab, y = ylab)
+  p <- p + ggplot2::labs(alt = "Exploratory residual structure, not a dimensionality decision.")
+  attr(p, "mfrmr_plot_data") <- x
+  p
+}
+
 .mfrmr_gg_simulation_scan <- function(payload) {
   .require_mfrmr_ggplot2()
   df <- as.data.frame(payload$data %||% data.frame(), stringsAsFactors = FALSE)
@@ -1033,8 +1098,9 @@
 #' Threshold-sensitivity tile and curve payloads also preserve their selected
 #' view, display controls and text alternatives; see
 #' [plot.mfrm_screening_sensitivity()].
-#' Posterior predictive residual displays preserve their descriptive meaning
-#' and lack of reference cutoffs; see [plot.mfrm_response_diagnostics()].
+#' Response residual displays preserve their posterior or conditional plug-in
+#' probability definition and lack of reference cutoffs. Paired views retain
+#' available Infit when Outfit is undefined; see [plot.mfrm_response_diagnostics()].
 #' Testlet conversions retain unavailable
 #' rows, prior-only symbols and the conditional-interval note; they do not
 #' estimate diagnostics or add calibration uncertainty. Extended-model interval,
@@ -1048,6 +1114,10 @@
 #' this dedicated conversion; use [plot_data()] for other tables.
 #' Difference-interval plots from [mfrm_multivariate_d_compare()] use their
 #' base `plot()` method or [plot_data()]; automatic conversion is not supported.
+#' Residual-PCA scree, reference, excess and loadings plots have dedicated
+#' conversions with the default or `component = "data"`. They preserve saved
+#' eigenvalues, reference cutoffs, signed loadings and display encodings; method
+#' identifiers are not inferred as plotted variables. No PCA is recomputed.
 #' External-feature PCA scree, scores and loadings views have dedicated
 #' conversions. They preserve selected axes, retained-component symbols,
 #' saved group colours and shapes, labels and transformation metadata.
@@ -1108,6 +1178,9 @@
 #'
 #' @param x An `mfrm_plot_data` object, or an mfrmr object with a draw-free
 #'   plot method.
+#'   Corrected-JML slope, location and step plots retain their point or
+#'   cumulative-distribution view, labels, reference and interpretation note;
+#'   conversion does not add confidence intervals.
 #' @param type Optional plot type passed to `plot()` for a non-plot-data input.
 #'   A saved plot-data input already selects a view and rejects `type`.
 #' @seealso [mfrmr_output_guide()] with `scope = "plots"` for selected
@@ -1201,6 +1274,19 @@ as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL,
 #' @export
 as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   if (!is.null(type)) stop("A saved plot already selects a view. Recreate it from the fit or result to select another view.", call. = FALSE)
+  if (identical(x$name, "residual_pca")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "data")) {
+      stop("Use component = 'data' for the selected residual-PCA view, or plot_data() for other components.", call. = FALSE)
+    }
+    return(.mfrmr_gg_residual_pca(x))
+  }
+  if (identical(x$name, "gpcm_slope_profile")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table"))
+      stop("Use component = 'table' for the complete profile view, or plot_data() for other tables.", call. = FALSE)
+    return(mfrm_gg_gpcm_profile(x))
+  }
   if (identical(x$name, "facet_interval_methods")) {
     if (!is.null(component)) stop("Use plot_data() to select a fixed-facet table; as_ggplot() preserves the complete interval view.", call. = FALSE)
     rlang::check_dots_empty()
@@ -1275,7 +1361,7 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     if (!is.null(component) && !identical(component, "table")) stop("Use component = 'table', or plot_data() for other comparison components.", call. = FALSE)
     return(.mfrmr_gg_extended_comparison(payload))
   }
-  if (x$name %in% c("testlet_calibration", "testlet_scores", "random_rater_scores", "person_scores", "random_rater_severity", "random_rater_interval_bootstrap")) {
+  if (x$name %in% c("testlet_calibration", "testlet_scores", "random_rater_scores", "person_scores", "random_rater_severity", "random_rater_interval_bootstrap", "jml_adjustment")) {
     rlang::check_dots_empty()
     if (!is.null(component) && !identical(component, "table")) stop(
       "Extended-model graphics use component = 'table'; use plot_data() for other components.", call. = FALSE)

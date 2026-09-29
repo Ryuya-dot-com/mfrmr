@@ -369,6 +369,8 @@ plot_rater_trajectory <- function(fits,
                                   ci_level = 0.95,
                                   preset = c("standard", "publication", "compact", "monochrome"),
                                   draw = TRUE) {
+  for (fit in fits) stop_if_product_slopes(fit, "plot_rater_trajectory()")
+
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   if (!is.list(fits) || length(fits) < 2L) {
     stop("`fits` must be a named list of at least two mfrm_fit objects.",

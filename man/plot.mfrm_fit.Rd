@@ -334,6 +334,21 @@ manuscript-use boundaries remain visible to beginners. The remaining
 types (\code{"facet"}, \code{"person"}, \code{"step"}, \code{"shrinkage"}) provide
 compact location-specific displays.
 }
+\section{Corrected JML plots}{
+
+A fit with an explicit \code{jml_correction_order} uses \code{type = "slopes"}
+(default), \code{"locations"} or \code{"steps"}. Locations show one \code{facet}, defaulting
+to the first declared facet. \code{style = "points"} shows estimates without
+intervals; \code{"distribution"} shows their empirical cumulative distribution.
+These displays do not classify rater quality. They support \code{title}, \code{caption},
+\code{show_title}, \code{show_notes}, \code{show_labels}, \code{sort}, \code{palette}, \code{preset},
+\code{text_scale}, \code{point_size}, and draw-free \code{\link[=as_ggplot]{as_ggplot()}} conversion. Slopes
+use a reference of one; location/step displays use zero. Ordinary plot types,
+\code{show_ci = TRUE}, and unrelated plot controls are rejected for this estimator.
+The figure retains point estimates if their RootSE is unavailable; it cannot
+be drawn if no unambiguous point solution was obtained.
+}
+
 \section{Graphics layout}{
 
 Single-panel plots advance through a caller's \code{par(mfrow = ...)} or

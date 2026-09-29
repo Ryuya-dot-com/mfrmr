@@ -62,7 +62,7 @@ Use existing package-native outputs in this order:
 \item \code{overview}: which evidence sources were supplied and the current review status.
 \item \code{top_linking_risks}: primary operational triage table.
 \item \code{group_view_index}: stable wave/link/facet/source-family grouping routes.
-\item \code{plot_map}: which existing plotting helper should be used next.
+\item \code{plot_map}: which plotting function to use for each result.
 \item \code{reporting_map}: what is covered here versus which manuscript-oriented
 helper should be used separately.
 }

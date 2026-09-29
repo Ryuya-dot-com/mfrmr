@@ -97,7 +97,11 @@ Report rows deliberately distinguish evidence from claims. The
 testlet and random-rater route is a smaller stored-result report: all
 supported styles (excluding \code{"rater"})
 retain numerical checks, data usage, interval meanings and supplied
-predictions/intervals. It does not supply ordinary residual diagnostics or
+predictions/intervals. When saved scores include a scoring roster, the
+\code{scoring_roster} table preserves its rows, identifiers and omitted scores;
+testlet \code{scoring_blocks} separately summarizes observed blocks. Older
+results without a roster do not reconstruct one from calibration rows.
+It does not supply ordinary residual diagnostics or
 fit/APA wording templates; \code{template_index} is empty. See the model-specific
 section in \code{\link[=mfrm_results]{mfrm_results()}} for supported tables and plots.
 
@@ -157,6 +161,18 @@ collapsed into a single pass/fail statement; bias screens are not treated
 as final fairness conclusions; pathway/misfit rows are case-review prompts;
 and drift/equating claims require multiple fitted forms or waves.
 }
+\section{Corrected JML reports}{
+
+Results from an explicit \code{jml_correction_order} have an estimator-specific
+report of saved estimates, numerical status and RootSE interpretation.
+The report does not contain ordinary fit tests or structural confidence
+intervals. The \code{"rater"} style is unavailable for this estimator.
+Saved \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} output adds conditional response means,
+probabilities and descriptive residual summaries, with unavailable indices
+and their reasons retained. These do not classify rater quality. See
+\code{\link[=mfrm_results]{mfrm_results()}} and the \strong{Corrected JML} section of \code{\link[=fit_mfrm]{fit_mfrm()}}.
+}
+
 \section{Individual rater sheets}{
 
 Use \code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01", output = "html")} to create a temporary HTML sheet. Open its \verb{$path}, review

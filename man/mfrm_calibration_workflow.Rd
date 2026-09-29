@@ -46,7 +46,8 @@ score_mfrm_calibration(
   interval_level = 0.95,
   missing_response = "error",
   event_id = NULL,
-  adaptive_quad_points = NULL
+  adaptive_quad_points = NULL,
+  scoring_prior = NULL
 )
 }
 \arguments{
@@ -66,7 +67,9 @@ the source fit and stored in the artifact's scoring algorithm identity.
 With adaptive scoring, stored nodes and weights define the base Hermite
 rule; their person-specific locations are recomputed for each new batch.}
 
-\item{quadrature_review}{An \code{mfrm_quadrature_sensitivity} from
+\item{quadrature_review}{Required for RSM/PCM MML, optional for GPCM MML
+(which checks the fitted calibration directly); not used when checking JML fits.
+An \code{mfrm_quadrature_sensitivity} from
 \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} for the same data and model. \code{fit} must be
 the exact highest-grid fit stored in this object. The package checks this
 procedural evidence but leaves acceptable numerical movement to the user.}
@@ -104,10 +107,21 @@ orders >= 3, for example \code{c(31, 61)}, used only by
 \code{score_mfrm_calibration()}. Adds an unrounded \code{quadrature_review} comparing
 stored-grid results with mode/curvature-adapted integration for each Person.
 Inspect both fixed/adaptive differences and changes between adaptive orders.
-The artifact, reported scores/intervals and readiness are unchanged;
-adaptive results are diagnostics conditional on the same point calibration.
+This does not change the artifact or replace the reported scores/intervals;
+adaptive results condition on the same point calibration.
+For GPCM or an explicitly supplied scoring prior, reference orders are
+added automatically and the comparison governs numerical score acceptance.
 Only Persons with scored responses have numerical review rows. \code{Status = "computed"} means the calculation finished, not that accuracy is certified;
 an unavailable row retains the reason in \code{Detail}.}
+
+\item{scoring_prior}{Optional \code{list(mean = ..., sd = ...)} for
+\code{score_mfrm_calibration()}. \code{NULL} retains the artifact's normal prior.
+Values use the unchanged calibration scale and must be finite with positive
+SD and representable positive variance. A supplied prior automatically
+receives numerical scoring checks and does not modify the frozen artifact.
+Legacy artifacts with discrete grid-endpoint intervals require re-extraction
+before using this option. The prior is common to all scored persons;
+covariate-dependent overrides are not supported.}
 }
 \value{
 \code{extract_mfrm_calibration()}, \code{validate_mfrm_calibration()},
@@ -125,19 +139,45 @@ fixed/adaptive comparison; \code{summary()} preserves it and adds a compact
 \description{
 These functions implement a strict lifecycle for a saved, versioned
 calibration. \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} creates a draft from an eligible
-\code{RSM} or \code{PCM} MML fit under the fixed standard-normal scoring basis.
+\code{RSM} or \code{PCM} MML fit under the fixed standard-normal scoring basis, or
+a GPCM MML fit with an estimated intercept-only normal population that passes
+the conditional source checks in \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. RSM/PCM JML also
+supports portable post-hoc EAP with a standard-normal reference prior.
 \code{\link[=validate_mfrm_calibration]{validate_mfrm_calibration()}} and \code{\link[=freeze_mfrm_calibration]{freeze_mfrm_calibration()}} are separate,
 fail-closed transitions. Only a frozen artifact can be passed to
 \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}.
 }
 \details{
-The portable 0.2.4 workflow supports one observed score scale, one latent
-dimension, known non-Person facet levels, and stored two-way facet
-interactions. Estimated-population or latent-regression MML, JML, and
-\code{GPCM} remain available only through their fitted-object routes; see
-\code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}.
+The portable workflow supports one observed score scale, one latent
+dimension and known non-Person facet levels. RSM/PCM MML retain stored anchors
+and two-way facet interactions in file format 1. GPCM uses file format 2,
+retaining both step and slope owners, positive geometric-mean-one relative
+slopes and the estimated population mean and SD. The slope multiplies the
+entire adjacent-category predictor. GPCM currently requires unit weights,
+no anchors or interactions, and an intercept-only normal population when
+estimated by MML. Shared-owner GPCM JML uses file format 4 and a post-hoc
+N(0,1) reference prior; its distinct checks are described below.
+RSM/PCM JML uses file format 3, with unit weights, no anchors or interactions,
+a finite identified source and a post-hoc N(0,1) reference prior. This prior
+is not estimated by JML. Estimated-population RSM/PCM and latent regression
+use fitted-object routes; other structures follow their documented capabilities.
+See \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}.
 
-Before extraction, run \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} on user-selected grids
+GPCM MML extraction freshly evaluates the native fit's local likelihood,
+gradient, unregularized information and source-integration stability using
+the same conditional source checks as \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. A failed or
+unresolved source cannot be frozen by selecting a review policy. The
+artifact retains the passing extraction decision, numerical comparison,
+and original global boundary/identification states. Reading it validates
+these records against its stored identity; it does not refit the source or
+claim a global maximum, valid population transport or calibration intervals.
+Every GPCM scoring call also checks EAP/SD against two adaptive reference
+orders under the actual scoring prior. Failed score integration stops with
+\code{SCORING_INTEGRATION_FAILED}; extract with more \code{scoring_quad_points} before
+retrying. Endpoint and sparse-pattern review labels remain separate from
+numerical accuracy. File format 1 retains its original default semantics.
+
+For RSM/PCM MML extraction, run \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} on user-selected grids
 and inspect its continuous differences. Pass the exact highest-grid fit in
 that object together with \code{quadrature_review}. The retained fits must use
 their recorded grid sizes and the same data, score map and fitting settings,
@@ -147,16 +187,101 @@ does not declare the fit numerically stable: the package does not choose the
 application-specific tolerance or decide whether more grids are needed.
 Archive the review separately when it is part of the audit trail, because
 response-linked fits are deliberately not embedded in the portable artifact.
+GPCM uses the fresh source checks above and does not require an additional
+refitting study. If supplied, \code{quadrature_review} is still validated.
+
+RSM/PCM JML extraction requires current passing input, identification, category,
+boundary and numerical checks from the fitted-object scoring policy. It
+freshly evaluates the joint likelihood and gradient: the stored objective
+must agree within 1e-6 and the maximum absolute gradient must be <= 1e-4.
+These are numerical source criteria, not interval-coverage or bias guarantees.
+Boundary or unresolved sources are refused; there is no review override.
+No MML quadrature review is used because JML does not integrate over Persons
+during calibration. Every new JML score batch receives adaptive-reference
+EAP/SD checks under the actual scoring prior. Increase \code{scoring_quad_points}
+on extraction if the scoring grid is inadequate. Source checks and the prior
+origin persist through saving, loading and score summaries; replay checks
+the stored evidence without re-estimating the training model.
+
+Experimental corrected GPCM JML uses file format 5 and its own source
+checks. Extraction reconstructs the adjusted equation from the observed
+ratings and checks the saved root, full equation Jacobian and parameter
+tables. The maximum mean-equation residual must be <= 1e-7 and the
+remaining Newton step <= 1e-5. These are numerical checks, not a global
+uniqueness or bias guarantee. An unavailable covariance does not erase a
+valid calibration. The artifact records correction order, assignment-sampling
+assumption, local-root status and numerical checks without training responses
+or Person estimates. It is never labelled an ordinary JML likelihood maximum.
+Its EAP and continuous posterior intervals use a separate normal scoring
+prior; they exclude calibration uncertainty and do not supply corrected
+Person ML/WLE or structural confidence intervals. Older file formats retain
+their original checks. See \code{\link[=fit_mfrm]{fit_mfrm()}} for corrected estimation limits.
+
+For shared-owner uncorrected GPCM JML, extraction checks the joint likelihood and
+gradient, and positive-definite, unregularized curvature over all free Person
+and structural parameters (reciprocal condition number > 1e-10). Recorded
+Person, additive or slope boundary certificates prevent automatic scoring;
+finite optimizer traces cannot override them. Detected identification failure,
+inadequate categories, failed numerical checks and unsupported structures
+also prevent extraction. Otherwise, global identification/boundary audits
+labelled as incomplete stay incomplete in the artifact. This qualifies
+conditional EAP only, not global optimality or formal JML slope inference.
+Source curvature currently uses a dense joint matrix, so its memory cost
+grows quadratically with the number of free parameters, including Persons.
+Frozen-artifact scoring does not repeat that calculation or use training data.
+The objective, gradient and condition-number cutoffs are package numerical
+criteria, not statistical thresholds established by the scoring literature.
+A refused source does not imply that all its structural parameters are
+inestimable: portable scoring does not currently qualify boundary-profile
+calibrations with infinite training-Person estimates.
 
 Posterior EAP estimates, posterior standard deviations, and intervals are
-conditional on the frozen point calibration and its recorded fixed
-standard-normal prior. They do not include calibration-parameter
+conditional on the frozen point calibration and the scoring prior.
+For GPCM MML, the prior mean and SD estimated during calibration are frozen;
+a new cohort does not reestimate or replace them. Use \code{scoring_prior} to
+examine another shared normal prior without changing the artifact. The
+original and scoring prior identities remain separate in estimates and
+settings, including summaries, plot data and exports. A supplied prior is
+an analyst assumption, not a population estimate. Intervals exclude both
+population-parameter and calibration-parameter
 uncertainty. Loading validates structure and semantic consistency, but does
 not authenticate an artifact from an untrusted source.
 New v2 scoring algorithms invert the continuous posterior CDF for equal-tail
 intervals. EAP and SD retain the stored quadrature rule. Saved v1 artifacts
 preserve their discrete grid interval endpoints and carry a note that the
 continuous posterior mass can differ from the requested interval level.
+}
+\section{Statistical basis and external comparisons}{
+
+Bock and Mislevy (1982, pp. 432-433) describe posterior-mean and
+posterior-SD scoring from fixed response functions and a specified prior,
+including multiple-category responses. This supports the scoring layer;
+it does not validate JML calibration bias, the default reference prior for
+a new cohort, or the numerical tolerances used to check a fitted calibration. Their adaptive
+testing simulations do not establish coverage for sparse many-facet designs.
+Muraki (1992) supplies the GPCM model basis and an EM estimation method,
+not evidence that many-facet JML intervals have accurate coverage.
+
+External checks of fixed probabilities, likelihoods and EAP/SD must align
+the response functions and prior. They do not compare free JML estimation.
+ConQuest documents that JML cannot estimate item scores (the free scores
+used for GPCM discrimination). TAM's \code{tam.jml()} uses a supplied loading
+array and defaults to extreme-score adjustment and item-bias correction;
+its default output is not the same estimator as unadjusted JML. Do not
+infer agreement of estimators from agreement of fixed-calibration scores.
+}
+
+\references{
+Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability
+in a microcomputer environment. \emph{Applied Psychological Measurement},
+6(4), 431-444. \doi{10.1177/014662168200600405}.
+
+Muraki, E. (1992). A generalized partial credit model: Application of an
+EM algorithm. \emph{Applied Psychological Measurement}, 16(2), 159-176.
+\doi{10.1177/014662169201600206}.
+
+\href{https://alexanderrobitzsch.github.io/TAM/reference/tam.jml.html}{TAM joint maximum likelihood documentation}
+and \href{https://conquestmanual.acer.org/s4-00.html}{ACER ConQuest command reference}.
 }
 \seealso{
 \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}}, \link{mfrm_calibration_score_methods}

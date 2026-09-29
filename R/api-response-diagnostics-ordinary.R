@@ -91,16 +91,26 @@ mfrm_ordinary_response_probabilities <- function(input, rows, order) {
 }
 
 mfrm_response_source <- function(fit) {
+  if (mfrm_has_jml_adjustment(fit)) return(list(class=class(fit),config=fit$config,
+    facets=fit$facets,steps=fit$steps,slopes=fit$slopes,estimator=fit$jml_adjustment$estimator,
+    point_available=fit$jml_adjustment$point$available))
   if (mfrm_extended_fit(fit)) return(mfrm_extended_prediction_source(fit))
+  if (mfrm_has_product_slopes(fit)) return(list(class = class(fit), config = fit$config,
+    parameters = fit$opt$par, objective = fit$opt$value, convergence = fit$opt$convergence,
+    facets = fit$facets$others, steps = fit$steps, slopes = fit$slopes,
+    population = fit$population, specification = fit$gmfrm, summary = fit$summary))
   list(class = class(fit), config = fit$config[setdiff(names(fit$config), "attached_diagnostics")],
     facets = fit$facets$others, steps = fit$steps, population = fit$population,
     readiness = fit$readiness, summary = fit$summary, convergence = fit$opt$convergence)
 }
 
 mfrm_validate_response_diagnostics <- function(fit, diagnostics) {
-  input <- if (mfrm_extended_fit(fit)) fit$input else mfrm_ordinary_response_input(fit)
+  input <- if (mfrm_has_jml_adjustment(fit)) mfrm_jml_response_input(fit) else
+    if (mfrm_has_product_slopes(fit)) mfrm_gmfrm_response_input(fit, check_solution = FALSE) else
+    if (mfrm_extended_fit(fit)) fit$input else mfrm_ordinary_response_input(fit)
   if (!inherits(diagnostics, "mfrm_response_diagnostics") ||
       !identical(diagnostics$source, mfrm_response_source(fit)) ||
+      (mfrm_has_jml_adjustment(fit) && !identical(diagnostics$settings$probability_method,"corrected_jml_plugin")) ||
       !identical(diagnostics$source_data, input$assigned_data %||% input$data) ||
       !identical(diagnostics$source_observed, input$data)) stop(
     "Supply mfrm_response_diagnostics() output with matching calibration and the exact source roster.", call. = FALSE)
@@ -109,10 +119,13 @@ mfrm_validate_response_diagnostics <- function(fit, diagnostics) {
 
 mfrm_response_diagnostic_tables <- function(diagnostics) {
   p <- diagnostics$probabilities
+  settings <- diagnostics$settings
+  if (identical(settings$probability_method,"corrected_jml_plugin"))
+    settings$probability_method <- "Conditional fitted probabilities at corrected calibration and Person profiles"
   list(response_residuals = diagnostics$rows,
     response_measures = diagnostics$measures,
     response_probabilities = data.frame(
       InputRow = rep(diagnostics$rows$InputRow, ncol(p)),
       Score = rep(as.numeric(colnames(p)), each = nrow(p)), Probability = as.vector(p)),
-    response_diagnostic_settings = mfrm_extended_settings_table(diagnostics$settings))
+    response_diagnostic_settings = mfrm_extended_settings_table(settings))
 }

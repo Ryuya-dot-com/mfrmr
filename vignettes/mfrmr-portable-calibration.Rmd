@@ -25,12 +25,32 @@ source fit or training responses. The scoring phase uses only the saved
 artifact and the new response rows.
 
 The portable workflow is deliberately narrower than fitted-object scoring.
-It supports one observed score scale and one latent dimension for `RSM` or
-`PCM` fitted by `MML` under the fixed standard-normal scoring basis. It does
-not currently create portable artifacts for estimated-population or latent-
-regression fits, `JML`, or `GPCM`.
+It supports one observed score scale and one latent dimension. `RSM` and
+`PCM` MML use the fixed standard-normal calibration basis (file format 1).
+In the development version, `GPCM` MML also supports an estimated intercept-only
+normal population (file format 2), one positive slope family and shared or
+separate slope/step owners. GPCM requires unit weights and no anchors or
+interactions. RSM/PCM JML also supports post-hoc EAP from a portable artifact
+(file format 3), with a finite identified source, unit weights and no anchors
+or interactions. Shared-owner GPCM JML uses file format 4 after passing its
+conditional joint-likelihood and curvature checks. Experimental corrected
+shared-owner GPCM JML uses file format 5 with fresh adjusted-equation checks,
+an explicit correction order and a separate post-hoc normal reference prior.
+Its finite EAPs are not corrected Person maxima; calibration uncertainty and
+residual bias are not included in posterior intervals. See the corrected-JML
+example in `vignette("mfrmr-gpcm-scope", package = "mfrmr")`.
+Estimated-population
+RSM/PCM and latent regression remain fitted-object-only routes.
 
-Supported direct and group facet anchors and two-way facet interactions are
+For a JML source, EAP holds the calibration fixed and adds a standard-normal
+reference prior by default, or uses an explicit `scoring_prior`. JML did not
+estimate that distribution. This is not ML/WLE scoring or a replay of the
+original joint Person estimates. A full fit saved with `saveRDS()` and a
+portable calibration are different objects; only the latter omits training
+responses and Person estimates. See the GPCM scope vignette for the MML/JML
+feature comparison.
+
+For RSM/PCM MML, supported direct and group facet anchors and two-way facet interactions are
 retained in the calibration. New responses must use its recorded non-Person
 facet levels. Preserving an interaction for scoring does not establish its
 statistical significance or the model's suitability for another population.
@@ -244,9 +264,12 @@ An intercept-only normal population fitted to training data can adjust the
 scoring mean and variance, but it does not learn a skewed population shape.
 Its score intervals still condition on the estimated calibration and population
 parameters and exclude uncertainty from estimating them. Training and scoring
-populations also need not match. Such fitted-object scoring currently requires
-`readiness_policy = "review"` in `predict_mfrm_units()` and cannot be exported
-as a portable calibration; see the latent-regression workflow in `?fit_mfrm`.
+populations also need not match. Conditional fitted-object scoring can pass
+fresh local likelihood, gradient, information and integration checks without
+requiring a review override. GPCM fits passing these checks can also be exported
+within the scope above. This does not certify a global maximum or resolve
+unevaluated boundary/identification audits. Those original states remain in the
+artifact; loading checks the stored records, not the omitted training data.
 
 For example, a calibration may come from last year's cohort while this year's
 cohort has a different ability distribution. With an intercept-only population
@@ -257,6 +280,141 @@ training and scoring cohorts in the report, explain why the scoring prior can
 be applied to the new cohort, and examine sensitivity when that assumption is
 uncertain. A larger training sample can estimate last year's population more
 precisely without resolving a difference between the two populations.
+
+### Reuse a GPCM calibration for a later cohort
+
+Suppose a team uses the same rubric and known raters to score next year's
+performances. The calibration describes the relationships between categories,
+facet effects and ability. The later session applies those fixed relationships;
+it does not recalibrate raters or estimate the new cohort's distribution.
+
+Use the full planned calibration sample, not the 18-person RSM illustration
+above. Each row in `calibration_responses` represents an assigned rating, with
+columns `Person`, `Rater`, `Criterion` and `Score`. This model gives criteria
+their own discriminations and raters their own category thresholds. For
+rater-owned discriminations instead, set `slope_facet = "Rater"`. The 0–2
+category ladder is an example: specify the actual rubric's score range.
+
+```{r portable-gpcm-fit, eval=FALSE}
+library(mfrmr)
+calibration_responses <- read.csv(
+  "calibration-responses.csv", colClasses = "character", na.strings = "",
+  check.names = FALSE, fileEncoding = "UTF-8-BOM"
+)
+gpcm_fit <- fit_mfrm(
+  calibration_responses,
+  person = "Person", facets = c("Rater", "Criterion"), score = "Score",
+  model = "GPCM", method = "MML",
+  step_facet = "Rater", slope_facet = "Criterion",
+  rating_min = 0, rating_max = 2, category_policy = "preserve",
+  mml_integration = "adaptive", quad_points = 31,
+  maxit = 400, reltol = 1e-10
+)
+summary(gpcm_fit, profile = "fit", detail = "brief")
+```
+
+These settings are a starting configuration, not a convergence or sample-size
+guarantee. Inspect the fit and its warnings. Extraction checks the calibration
+before it can be frozen; increasing only the later scoring grid cannot repair
+a failed calibration check. A profile interval for a discrimination is a
+separate experimental option, not a required step in scoring or an interval
+for a new person's ability. Once `gpcm_fit` has passed calibration review:
+
+```{r portable-gpcm, eval=FALSE}
+draft <- extract_mfrm_calibration(
+  gpcm_fit, calibration_id = "rubric-calibration",
+  source_fit_id = "training-cohort", scoring_quad_points = 141
+)
+review_mfrm_calibration(draft)
+calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+save_mfrm_calibration(calibration, "gpcm-calibration.rds")
+```
+
+In a **new R session**, read that artifact and the later cohort's responses:
+
+```{r portable-gpcm-score, eval=FALSE}
+library(mfrmr)
+# A later session needs only this file and the new response rows.
+calibration <- load_mfrm_calibration("gpcm-calibration.rds")
+new_responses <- read.csv(
+  "new-responses.csv", colClasses = "character", na.strings = "",
+  check.names = FALSE, fileEncoding = "UTF-8-BOM"
+)
+scores <- score_mfrm_calibration(
+  calibration, new_responses, missing_response = "omit"
+)
+score_review <- summary(scores)
+score_review
+score_review$review
+score_review$settings$score_integration_review
+plot(scores, type = "interval", preset = "publication", top_n = Inf)
+
+# Keep full-precision scores and every Person's disposition, including those
+# without scores. The complete object supports later review and plotting.
+write.csv(scores$estimates, "person-scores.csv", row.names = FALSE, na = "")
+write.csv(scores$person_dispositions, "person-review.csv", row.names = FALSE, na = "")
+saveRDS(scores, "scored-cohort.rds")
+```
+
+The omission policy applies to assigned ratings whose score is missing. It
+does not impute scores or repair informative missingness. Leave unassigned
+rating combinations absent rather than manufacturing observations. A person
+with only missing assigned scores remains `not_scored` in the review table,
+with no plotted point. A person entirely absent from the input is not invented
+by the scorer. Keep the review file with the score file so unavailable results
+do not disappear. Identifiers `001`, `1` and the literal `NA` stay distinct
+with the character-column import above.
+
+`top_n = Inf` displays every available score; the default is at most 40, with
+review cases prioritized. For a large cohort use a legible subset and retain
+the complete tables. After `readRDS("scored-cohort.rds")`, `summary()`, `plot()`
+and `as_ggplot()` reuse saved results without fitting or scoring again.
+
+The summary distinguishes the actual reported-score integration check from
+the additional fixed-versus-adaptive grid comparison. For an adaptive scorer,
+a difference from an unused fixed grid does not contradict passing agreement
+of the reported EAP/SD with higher-order adaptive references.
+
+```{r portable-gpcm-prior, eval=FALSE}
+retained <- scores$settings$retained_prior_identity
+
+# Sensitivity analysis on the same calibration scale, not a new population fit.
+alternative <- score_mfrm_calibration(
+  calibration, new_responses, missing_response = "omit",
+  scoring_prior = list(mean = retained$mean + 0.5, sd = retained$sd * 1.25)
+)
+summary(alternative)
+```
+
+The shift of 0.5 logits and 25% wider SD illustrate a declared assumption;
+they are not recommended prior values. Compare the same people, retain both
+priors and justify substantive scenarios. These posterior score intervals
+condition on the calibration and prior. They differ from confidence intervals
+for estimated slopes or facet parameters.
+
+For the **training-model report**, use `mfrm_results(gpcm_fit)` and
+`mfrm_report()` in the calibration session. For the **later score batch**, use
+the dedicated summary, plots, CSV tables and saved score object above.
+`mfrm_report()` does not accept portable score batches; a report of the
+training fit does not become a report of the new cohort.
+
+There are two distinct checks. Extraction evaluates the estimated calibration
+using the training fit. Scoring checks the new response patterns under the
+actual prior. A calibration that passes the first check can still require a
+finer scoring grid for extreme new patterns. If scoring stops with
+`SCORING_INTEGRATION_FAILED`, extract again with more `scoring_quad_points`
+and repeat validation and freezing; 141 is an example, not a universal adequate
+order. There is no review override for failed portable numerical checks.
+Passing them does not remove endpoint or sparse-response review labels.
+
+The default retains the estimated normal mean and SD from calibration.
+`scoring_prior` supplies an assumption for sensitivity analysis; it does not
+estimate the later cohort's distribution or change the saved calibration.
+Both original and actual prior values remain in score tables, summaries and
+plot data. Intervals condition on these fixed values and exclude uncertainty
+from estimating the calibration and its population. The same prior option is
+available for current RSM/PCM artifacts; older artifacts using grid-endpoint
+intervals require re-extraction first.
 
 For a separate scoring script, the essential code is:
 
@@ -321,3 +479,119 @@ point calibration and prior;
 its uncertainty interval excludes calibration-parameter uncertainty. Validate
 the intended score use, population transport, and decision consequences
 outside this numerical workflow.
+
+## When the calibration was estimated with JML
+
+Suppose raters have already scored one cohort, and you want to score a later
+cohort using their existing severity estimates. RSM/PCM JML can now use the same
+extract/validate/freeze/save/load/score functions. Extraction checks a current,
+finite, identified source and freshly evaluates its joint likelihood and
+gradient. It does not use `mml_quadrature_sensitivity()`, because JML calibration
+does not integrate over a population distribution. An unresolved source is
+refused, not automatically switched to MML or made acceptable by a scoring prior.
+
+The following PCM example uses 14 synthetic learners for a small illustration,
+not as a sample-size recommendation. Its 141-node scoring grid is also an example,
+not a generally sufficient setting. Each new batch receives integration checks;
+if those fail, inspect the error and increase `scoring_quad_points` when extracting.
+
+```{r portable-jml, eval=FALSE}
+library(mfrmr)
+jml_data <- load_mfrmr_data("example_core")
+jml_data <- jml_data[jml_data$Person %in% unique(jml_data$Person)[1:14], ]
+jml_fit <- fit_mfrm(jml_data, "Person", c("Rater", "Criterion"), "Score",
+  model = "PCM", method = "JML", step_facet = "Criterion",
+  maxit = 500, reltol = 1e-10)
+jml_draft <- extract_mfrm_calibration(jml_fit, scoring_quad_points = 141)
+jml_calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(jml_draft))
+save_mfrm_calibration(jml_calibration, "jml-calibration.rds")
+
+# In a new session, supply your later cohort's ratings instead of these example rows.
+jml_new <- jml_data[jml_data$Person == unique(jml_data$Person)[1], ]
+jml_new$Person <- "NEXT01"
+jml_saved <- load_mfrm_calibration("jml-calibration.rds")
+jml_scores <- score_mfrm_calibration(jml_saved, jml_new)
+summary(jml_scores)
+plot(jml_scores, main = "New-cohort EAP scores")
+
+jml_alternative <- score_mfrm_calibration(jml_saved, jml_new,
+  scoring_prior = list(mean = 0.25, sd = 1.2))
+jml_scores$estimates[, c("Person", "Estimate", "SD", "PriorMean", "PriorSD")]
+jml_alternative$estimates[, c("Person", "Estimate", "SD", "PriorMean", "PriorSD")]
+```
+
+For a ggplot without headings or a caption, use
+`as_ggplot(jml_scores) + ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)`.
+Keep the interval interpretation in the surrounding report if you remove it
+from the figure.
+
+The default N(0,1) prior is a reference assumption on the JML calibration scale,
+not an estimate of either cohort's distribution. A different explicit prior
+changes the EAP target without changing the saved calibration. Report that
+choice alongside the scores. Posterior SDs and intervals condition on the
+calibration; they do not account for JML calibration bias or uncertainty in
+raters and steps. Extreme new-response patterns can have finite EAP scores
+and review flags; this does not turn an infinite JML estimate into a finite
+maximum-likelihood estimate. Formal JML slope intervals remain unavailable.
+
+### Using GPCM JML slopes in the same workflow
+
+GPCM JML can now preserve one shared slope/step owner and its relative slopes
+in a portable calibration. The following example uses criterion-specific
+slopes and steps. The same workflow supports a rater owner; different slope
+and step owners remain MML-only.
+
+```{r portable-gpcm-jml, eval=FALSE}
+gpcm_jml_fit <- fit_mfrm(jml_data, "Person", c("Rater", "Criterion"), "Score",
+  model = "GPCM", method = "JML", step_facet = "Criterion", slope_facet = "Criterion",
+  maxit = 600, reltol = 1e-11)
+gpcm_jml_calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(
+  extract_mfrm_calibration(gpcm_jml_fit, scoring_quad_points = 141)))
+save_mfrm_calibration(gpcm_jml_calibration, "gpcm-jml-calibration.rds")
+gpcm_jml_scores <- score_mfrm_calibration(
+  load_mfrm_calibration("gpcm-jml-calibration.rds"), jml_new)
+summary(gpcm_jml_scores)
+plot(gpcm_jml_scores, main = "New-cohort GPCM JML EAP scores")
+```
+
+A GPCM JML fit may still report incomplete global identification or boundary
+checks. The conditional scoring route does not change that finding: it checks
+the current joint likelihood, gradient and full local curvature, and rejects
+known Person, additive or slope boundary certificates. This distinction matters:
+even positive local curvature can coexist with a certified infinite Person
+estimate. The fit's finite optimizer trace does not override that certificate.
+If the source does not pass, inspect its diagnostics; an explicitly requested
+fitted-object `readiness_policy = "review"` result is not a portable calibration.
+
+After qualification, scores are conditional on the frozen calibration and the
+reference or explicitly supplied normal prior. Source audit states remain in
+saved scores and summaries, and every batch checks integration accuracy. These
+checks do not qualify slope confidence intervals, establish a unique global
+maximum, validate the new cohort's prior or remove JML bias. Computing source
+curvature can be expensive with many Persons because it uses a dense joint
+matrix; freezing the calibration lets later scoring avoid that calculation.
+
+### What supports these scores?
+
+Bock and Mislevy (1982, pp. 432-433) explain EAP and posterior-SD scoring
+from fixed response functions and a specified prior, including multiple-category
+responses. That is the basis of the scoring calculation. Their adaptive-testing
+examples do not establish that JML calibration is unbiased, that N(0,1) matches
+your next cohort, or that posterior intervals have nominal frequentist coverage
+in your rating design. The numerical cutoffs used to qualify a source are
+package checks, not statistical thresholds prescribed by that paper.
+
+It is useful to compare the same fixed calibration and prior in TAM or ConQuest.
+Agreement then checks score computation; it does not establish agreement of
+their estimation methods. In particular, ConQuest does not estimate free item
+scores under JML, while TAM's JML defaults include extreme-score adjustment
+and item-parameter bias correction. A finite EAP for an extreme *new* response
+pattern also does not qualify a training calibration with an infinite JML
+Person estimate. Refusing to export that calibration is the current workflow's
+scope; it does not assert that every structural parameter is inestimable.
+
+Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability in a
+microcomputer environment. *Applied Psychological Measurement, 6*(4), 431-444.
+[doi:10.1177/014662168200600405](https://doi.org/10.1177/014662168200600405).
+See also [TAM's JML help](https://alexanderrobitzsch.github.io/TAM/reference/tam.jml.html)
+and the [ConQuest command reference](https://conquestmanual.acer.org/s4-00.html).

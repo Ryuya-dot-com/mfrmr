@@ -2,7 +2,7 @@
 # at fixed parameters only; this is not a recovery or coverage experiment.
 
 aq_continuous_reference <- function(scores, base, steps, slopes, weights,
-                                    mu = 0, sigma = 1, limit = 32) {
+                                    mu = 0, sigma = 1, limit = 32, cdf_at = NULL) {
   # Independently expressed category logits, without the package probability
   # kernel or Gauss-Hermite rule. Integrate in local posterior coordinates so
   # a long response pattern's narrow peak is not missed by stats::integrate().
@@ -28,11 +28,14 @@ aq_continuous_reference <- function(scores, base, steps, slopes, weights,
                    maximum = TRUE, tol = 1e-10)$maximum
   peak <- evaluate(mode)
   scale <- 1 / sqrt(peak["information", ])
-  integral <- function(multiplier) {
+  integral <- function(multiplier, lower = -limit, upper = limit) {
     integrand <- function(u) {
       exp(evaluate(mode + scale * u)["log", ] - peak["log", ]) * multiplier(u)
     }
-    parts <- lapply(list(c(-limit, 0), c(0, limit)), function(bounds) {
+    cuts <- sort(unique(c(lower, upper, if (lower < 0 && upper > 0) 0)))
+    if (length(cuts) < 2L) return(c(value = 0, error = 0))
+    parts <- lapply(seq_len(length(cuts) - 1L), function(i) {
+      bounds <- cuts[c(i, i + 1L)]
       integrate(integrand, bounds[1], bounds[2], rel.tol = 1e-11,
                 abs.tol = 1e-12, subdivisions = 1000L)
     })
@@ -49,10 +52,17 @@ aq_continuous_reference <- function(scores, base, steps, slopes, weights,
   stopifnot(ends["score", 1L] > 0, ends["score", 2L] < 0)
   tails <- ends["log", ] - log(abs(ends["score", ]))
   log_tail <- max(tails) + log(sum(exp(tails - max(tails))))
+  cdf <- vapply(cdf_at, function(theta) {
+    u <- ((theta - mu) / sigma - mode) / scale
+    if (u <= -limit) return(0)
+    if (u >= limit) return(1)
+    unname(integral(function(u) rep(1, length(u)), upper = u)[1L] / mass[1L])
+  }, 0)
+  if (length(cdf)) names(cdf) <- paste0("cdf", seq_along(cdf))
   c(log_marginal = unname(log_mass), eap = unname(mu + sigma * (mode + scale * center)),
     sd = unname(sigma * scale * sqrt(variance)),
     relative_error = unname(mass[2L] / mass[1L]),
-    log_relative_tail_bound = unname(log_tail - log_mass))
+    log_relative_tail_bound = unname(log_tail - log_mass), cdf)
 }
 
 run_adaptive_quadrature_audit <- function(output_dir) {

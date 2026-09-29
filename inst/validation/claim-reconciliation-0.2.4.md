@@ -6110,3 +6110,441 @@ separately from package checks and the frozen rc.6 release.
 Evidence: `validation-results/d4-integration-20260926/` (documentation build,
 source-expression comparison and metadata checks). No new numerical study or
 CRAN submission is performed by this preparation.
+
+## 2026-09-27: Installed replay and development-source packaging
+
+This is a focused D2/D3 integration check of the uncommitted development
+source after `08a5ee9b`, not a new rc.6 qualification or completed D4 release
+check. Research-only JML correction code remains outside public estimation.
+
+A separate temporary library received `R CMD INSTALL --no-multiarch
+--with-keep.source` of the current development source. Installation, staged
+loading and final loading passed. The existing native objects were reused;
+this was not a clean native recompilation. Selected existing tests were then
+executed against the installed namespace, rather than `pkgload::load_all()`:
+
+- Fixed-normal RSM MML artifact CSV identities, invalid-input refusals and
+  scoring in a fresh R process (the case skipped by the earlier source test).
+- RSM/PCM JML artifact scoring in a new process without source fits or native
+  scoring calls.
+- Separate-owner GPCM MML artifact scoring in a fresh R process.
+- Both shared-owner GPCM JML configurations: artifact/result replay, summaries
+  and plots without fitting, native scoring or repeated source-curvature checks.
+- Saved experimental MML profile intervals: figures, tables, reports and
+  archives without renewed fitting, information calculation or profile search.
+
+All selected checks passed. Review found that the GPCM MML subprocess test
+had derived its package path from the source test directory, allowing it to
+reload development sources during an installed-package check. It now takes
+`find.package("mfrmr")`, checks that the output file exists, and verifies the
+**child's actual loaded package path** as well as the score values. The final
+path-aware check also passes. This repairs the test's ability to detect a
+source/installation mismatch; it does not change model estimates or scoring.
+
+A repository-only prototype test referenced excluded `inst/validation` code
+and would merely skip in a built package. It is now explicitly excluded by
+`.Rbuildignore`; the actual public profile implementation tests remain included.
+A development archive was built with **`--no-build-vignettes`** to verify file
+selection. Runtime R source, help and included tests match the working tree;
+DESCRIPTION differs by ordinary R build formatting and generated package/
+author fields. The public profile implementation and portable tests are present;
+research code/results and the prototype-only test are absent.
+
+Archive SHA256:
+`9d4b3cd0e3bd508aa41dfe5d7fcc4d1c921eff288da2510b3736d379944c5216`.
+This is a **packaging-review archive**, not the final submission archive.
+Vignettes were not rebuilt, no whole test suite or `R CMD check` was repeated,
+and no CI/publication/CRAN check was initiated. Final source/version freeze,
+applicable combined checks and matching platform evidence remain open. Earlier
+qualification is reused only for unchanged paths; this check does not qualify
+JML structural inference or repeated-sampling accuracy.
+
+The build/install logs, exact selected-test harnesses and logs, archive and
+member/source comparison are retained in
+`validation-results/development-integration-20260927/`. No user-facing NEWS
+feature is added for these validation and packaging corrections.
+
+## 2026-09-27: Complete the scoped local development integration
+
+The admitted local development scope is now reconciled and checked as an
+assembled source snapshot after `08a5ee9b`: the existing feedback/interface
+work, separate-owner MML, conditional scoring/prior corrections, portable
+GPCM MML and scoped RSM/PCM/shared-owner GPCM JML, and explicit experimental
+one-relative-slope MML profiles. Formal JML structural inference and the
+research correction remain outside the public implementation. No release
+version, Git commit/tag, deployment or CRAN submission is created by this check.
+
+### Test selection and frozen inputs
+
+Review found that five new public-route test files were absent from the normal
+CRAN/CI test selection: conditional scoring, portable GPCM, portable JML,
+scoring priors and GPCM profile intervals. They are now included in
+`tests/testthat.R`. The normal five-platform workflow already uses this
+selection, so no additional heavyweight CI workflow is introduced. Research
+prototype and long simulation tests remain outside this normal tier.
+
+A source snapshot was extracted from the preceding packaging-review archive,
+updated with the original DESCRIPTION and the test-selection repair, and
+compared with the working tree before building. The per-file manifest is
+retained. Its source identity is the uncommitted snapshot, **not** HEAD's Git
+commit. The first build recreated all 15 HTML vignettes using the usual
+`NOT_CRAN=false` build policy; explicitly non-executing code remained so.
+
+That archive (`7771c3266416063fadd1b14be9849e096bc2668dcbfeed24d3593d80362f4620`)
+passes `NOT_CRAN=false R CMD check --no-manual`: **Status: OK**, including
+examples, normal-tier tests and vignette rebuilding. Test output records
+0 failures, 0 warnings and 3 pre-existing CRAN-gated capability skips; none of
+the five added test files is skipped. This is the normal package-check tier,
+not the exhaustive research suite or `--as-cran` submission review.
+
+### Illustrated archive and complementary checks
+
+The usual non-execution vignette policy produced HTML without figures. That
+is adequate to exercise the standard check path but is not the illustrated
+reader-facing archive chosen here. The same frozen inputs were therefore
+built with `NOT_CRAN=true`, executing the enabled examples once. Explicit
+`eval=FALSE` examples remain examples for optional recalculation; their retained
+separate execution evidence is not relabelled as execution in this build.
+
+The resulting archive contains 15 tutorials and 87 images, each with nonempty
+alternative text. The updated portable-score and GPCM-curve figures were
+visually inspected; color-independent symbols/line types and the conditional
+score-interval explanation are retained. This is author visual/content review,
+not a novice-reader or comprehensive accessibility study. No JML research
+runner identifiers leak into the HTML.
+
+Final illustrated archive SHA256:
+`402b95c90184d3e1cbc7a054fee537063aab51c0737f817cf2dacaf09250e5a5`.
+
+Runtime R/native source, data, help, tests and public entry documents have
+identical file sets and bytes to the normally checked archive. The difference
+is generated documentation/build metadata. The final archive passes
+`NOT_CRAN=false R CMD check --no-tests --no-examples`: **Status: OK**, including
+vignette rebuilding and the PDF manual. Tests and examples were deliberately
+not repeated; their exact-source results above are the complementary evidence.
+This is not represented as a second complete test run on the final archive.
+
+Both checks use installed dependencies. Some remote repository-index lookups
+were unavailable in the sandbox; dependency checks nevertheless passed. No
+fresh online URL/reverse-dependency review, Windows upload, hosted CI or
+publication verification is claimed. The version remains `0.2.4.9000`.
+
+### Disposition
+
+D2's selected workflow consistency and D3's local source freeze are complete
+within the retained limitations. D4's local package/documentation component is
+complete with the two source-matched checks above. Commit/main integration,
+matching five-environment CI and documentation deployment remain open; D4 and
+D5 are not closed overall. Real-reader usability and broader statistical
+qualification remain independent open questions. Do not rerun the full local
+suite solely to replace these complementary checks with one number.
+
+Evidence is retained under `validation-results/development-final-local-20260927/`:
+source manifest, selected test files, both archives, build/check logs, extracted
+figure previews, source/HTML comparisons and source-bound check receipts.
+
+## 2026-09-27 mathematical API review: centered category variance
+
+The user places mathematical API completeness ahead of publication novelty.
+The literature review is supporting evidence, not a prerequisite for fixing an
+API or a reason to extend the publication assessment before development.
+
+A concrete counterexample was reproduced in the current numerical paths:
+binary zero-step probabilities at eta=-40 and +40 have the same positive
+variance, exp(-40)/(1+exp(-40))^2 = approximately 4.248354e-18. Computing
+E[K^2]-E[K]^2 returned that value in the lower tail but zero in the upper tail.
+This affected information displays and could disagree with the sum of category
+information even though the probabilities were representable.
+
+The fix centers category values before squaring. One internal R helper now
+serves information, curve intervals, category plots, response/bias diagnostics,
+posterior category summaries and the affected testlet/shared-rater derivative
+calculations. The compiled posterior category calculation uses the same
+identity. Existing small-variance diagnostic cutoffs and inference-eligibility
+policies are unchanged. Centering does not recover probabilities that have
+already underflowed and does not qualify interval coverage or JML bias correction.
+
+Validation:
+
+- New regression tests compare against analytic binary variance using relative
+  error, verify reflection/translation and degenerate/empty inputs, and use the
+  independent pairwise variance identity for polytomous probabilities.
+- The rebuilt compiled backend and the R posterior path retain positive tail
+  variance. Public GPCM curve information agrees with independently reconstructed
+  probabilities and exposure-weighted `compute_information()`. Category
+  information sums agree with curve totals for RSM/PCM/GPCM.
+- Six affected files pass without failures, warnings or skips:
+  `test-category-variance.R`, `test-mml-cpp11-backend.R`,
+  `test-information-module.R`, `test-testlet.R`, `test-random-rater.R`,
+  `test-gpcm-inference-extensions.R`.
+- The first new regression run passed the numerical comparisons but failed
+  four comparisons of incidental names/dimensions in test vectors. The tests
+  now compare numeric ratios; the helper preserves unnamed numeric variance
+  output. No numerical tolerance was relaxed to obtain a pass.
+
+The new regression file is included in normal package checks. NEWS and
+`compute_information` help describe the numerical repair and its limits.
+No whole-suite repetition or new sampling simulation was used for this repair.
+The prior source freeze and archive checks remain evidence for their original
+checkpoint; D2/D3 are reopened for these source changes and D4 needs matching
+integration evidence at the next freeze. This is an API correctness increment,
+not completion of the full mathematical or statistical roadmap.
+
+### 2026-09-27 mathematical API review: fixed-location uncertainty
+
+Following the JML SE route exposed a concrete inconsistency on `example_core`.
+With Rater R01 anchored at 0.1, JML diagnostics assigned an observation-information
+SE of approximately 0.0968 (95% normal band approximately -0.0898 to 0.2898).
+MML diagnostics instead displayed [0.1, 0.1] as a model-based normal interval.
+Neither value was estimated in that fit. The dedicated facet-interval API already
+treated fixed targets as constants without inferential intervals.
+
+Diagnostics now label `Fixed` using the existing sparse optimizer-constraint
+expansion, including direct anchors, group-implied constants and singleton
+centered facets. Fixed rows retain estimates and response-fit statistics, but
+sampling SEs and normal intervals are NA/not applicable. This is a reporting
+convention, not a claim that a constant has nonzero conditional variance:
+`mfrm_facet_intervals()` retains its zero conditional covariance and absent CI.
+Neither path estimates uncertainty in the supplied anchors.
+
+The same treatment reaches fit-only and saved-diagnostic plot paths, attached
+diagnostics, Wright-map data and both fit-measure report tables. Reliability and
+separation requiring all level SEs are unavailable for affected facets. The
+existing variability approximations also do not test a subset while retaining
+full-facet degrees of freedom. SE availability/source-label audits omit fixed
+rows rather than declaring their absent SEs a numerical failure. Free-level
+SE calculations and the estimator are unchanged.
+
+The focused regression covers direct/group/singleton/all-fixed constraints,
+JML Person and Rater anchors, MML Rater anchors, retained free-level bands,
+aggregate eligibility, plots, reports, attachment and RDS replay. Seven affected
+test files passed without warnings, failures or skips: fixed-measure-precision,
+attach-diagnostics, facet-intervals, fit-measures-consistency,
+jml-person-boundary-audit, results-precision-decision and wright-facets-style.
+The initial new test had names-only estimate mismatches and an incorrect expected
+plot class; those assertions were corrected without relaxing numeric tolerances.
+The subsequent report-display and unconstrained fast-path changes passed a
+focused repeat of the new regression and fit-measures-consistency tests.
+The final regression also checks older measure tibbles without a `Fixed` column;
+all 71 expectations passed. The three changed help pages parse successfully
+and `git diff --check` passes.
+
+Help, NEWS and the roadmap distinguish this correction from outstanding formal
+JML variance/bias correction. No whole-suite test, new sampling simulation,
+external-software comparison or release qualification is claimed here.
+
+### 2026-09-27 uncertainty meaning through fit-measure reporting
+
+The free-parameter follow-up reused the existing JML adjusted-equation and
+owner-total records. They verify matching local covariance in their small
+research scope but do not resolve residual bias, correction-order selection
+or broad statistical qualification. No public corrected estimator was promoted.
+
+Tracing the implemented public route revealed that `fit_measures_table()`
+retained normal-band endpoints but dropped the source SE method, precision
+tier and interval eligibility/use labels. Its measure plot then titled all
+bands as confidence intervals and omitted finite values without intervals.
+Thus the exploratory JML qualification could be lost without changing any
+numerical calculation.
+
+The reporting table now retains the nine source uncertainty fields; the
+human-readable companion exposes interval interpretation and SE basis.
+Summaries, saved-data replotting and the existing summary-table/export route
+retain that explanation. Legacy inputs with incomplete provenance retain
+their numeric estimates/bands but are not promoted to formal inference.
+The measure plot calls its endpoints normal bands, includes their source
+interpretation in the caption, retains fixed points as open diamonds and
+other finite/no-interval points as crosses, and restores graphics settings.
+`show_notes = FALSE` hides the drawn caption while preserving saved explanatory
+text; `main = ""` retains the existing title-removal route.
+
+Focused checks cover JML and MML, matching row identities after sorting,
+changed band levels, full and partially missing provenance, fixed/all-fixed
+and unavailable intervals, RDS replay, both report tables, summary-table
+bundles, actual CSV/HTML appendix export and drawing/graphics restoration.
+The affected fit-measures-consistency, fixed-measure-precision,
+report-functions and summary-table-bundle test files pass. The initial test
+run exposed four failures because `show_notes` was forwarded in the neighboring
+dispatch branch; the target branch was corrected and the affected tests rerun.
+No statistical tolerance or expected inferential classification was relaxed.
+The monochrome anchored-JML plot was rendered and visually checked, with
+caption and label margin adjustments. Updated help pages parse successfully.
+
+This closes a D2 reporting inconsistency. The estimator, SE formula, correction
+order and inference scope are unchanged. It does not close JML milestone 3;
+no new sampling study, whole-suite repetition, remote upload or release check
+was performed.
+
+### 2026-09-27 corrected-JML scope and further MML anchor audit
+
+The user's subsequent request explicitly adds residual bias, correction order
+and scope validation. The [prespecified population challenge](jml-scope-challenge-20260927.md)
+completes all 16 declared owner/design/order cases with two starts and retains
+one unresolved raw-JML case. All 12 corrected cases pass the declared local
+root/covariance checks. Orders 2 and 4 remain candidates; neither uniformly
+dominates the bias-squared-plus-variance proxy. This is not coverage validation
+or a new production estimator. The companion record distinguishes prior
+fixed-calibration TAM/ConQuest comparisons, current official documentation and
+the new local TAM fixed-parameter convention probe.
+
+The MML audit reproduced a remaining zero-width marginal anchor interval in
+`analyze_facet_equivalence()` with `noncenter_facet = "Rater"` and R01 fixed at
+.1. The general diagnostics already reported Fixed/NA correctly. Equivalence
+now marks fixed rows, retains their exact zero conditional covariance and
+omits marginal intervals. Supplied diagnostics validate free SEs and fixed
+labels separately, giving identical direct/supplied-diagnostics results.
+
+Do not suppress valid uncertainty in a different target. In the actual RSM
+example, the fixed R01 location has zero conditional variance but its deviation
+from the estimated facet mean has SE .0731261. Pairwise differences also retain
+the estimated counterpart's uncertainty. The existing analytical covariance
+test independently verifies this distinction. The equivalence forest displays
+deviations, not the fixed locations.
+
+Additional actual PCM/GPCM MML fits check fixed locations through diagnostics,
+Wright maps and Pathway maps. A GPCM anchor's derived fair score has SE .0203
+because estimated structural parameters still enter the score, while its
+location ModelSE remains NA. This source retains its review-only display
+restriction; the two expected GPCM warnings are explicitly asserted in tests.
+This does not promote derived-score intervals to formal inference.
+
+The facet-equivalence, facet-intervals and fixed-measure-precision files were
+checked, with the new warning assertions receiving a focused rerun. Help, NEWS
+and ROADMAP document the target distinction. No whole-suite or external-engine
+calibration rerun was needed for the MML repair.
+
+### 2026-09-27 corrected-JML paired-order sampling decision
+
+The next user-authorized increment completes the prespecified two-condition,
+200-replicate-per-condition [sampling comparison](jml-order-sampling-20260927.md).
+The [results and decision](jml-scope-challenge-20260927.md#independent-order-2order-4-sampling-decision)
+retain all 400 datasets, 800 two-start fits and fallback attempts. Both orders
+return intervals in every dataset. Primary log-slope paired MSE favors order
+4 for Criterion/unequal but order 2 for Rater/sparse; both normal Monte Carlo
+intervals exclude zero. Truth inclusion is 93.5%-94.5% with MC intervals too
+wide to certify nominal coverage. All five coordinates and method-specific
+population-root coverage remain available, with availability and inclusion
+reported separately. A separate record-based check reproduces all summaries,
+paired differences, roster sizes, hashes and stored covariance/SE consistency.
+
+This rules out a universal order-4 preference in the tested conditions. It
+does not produce a data-dependent order selector, a public corrected-JML
+estimator, a new coverage guarantee or an external-engine equivalence claim.
+The roadmap now closes the finite sampling question and puts the supported
+estimator/covariance/failure contract before production integration or further
+grids. Public help and NEWS retain their existing scope; research milestones
+are not advertised as new public functions. No production formulas, tolerances
+or defaults changed in this increment, and no whole-suite test was repeated.
+
+### 2026-09-27 beginner-facing correction and assignment-scope review
+
+The user asks for corrected JML in `fit_mfrm()`, an assessment of automatic
+selection, model positioning and a genuinely broad allocation audit. ROADMAP
+now names four integration milestones: observed-data estimator, fit/output
+integration, independently evaluated automatic policy, and novice usability.
+Universal coverage is not an acceptance requirement for scoped approximate
+outputs. However, no public correction argument or automatic selector was
+implemented by this documentation increment. Candidate correction orders,
+numerical fallbacks and statistical order selection remain distinct.
+
+Code inspection establishes that all Persons in the recent corrected-JML
+population and sampling studies receive ratings from both raters. Their
+Person-Rater-Criterion cells are incomplete, but the Person-Rater projection
+is fully crossed. The source review and roster assertion correct the earlier
+overbroad "sparse" description without changing results. These studies do not
+qualify weak common-person links, many-rater panels or bridge loss.
+
+Existing public generators already support common linking Persons, rotation,
+random subsets, empirical profiles and explicit skeletons. Three runnable
+eight-rater examples were executed with the local source: common Persons
+produce 312 criterion ratings, rotation/random 240 each. Assertions check
+four eight-rater/common Persons and 36 two-rater Persons in the first case,
+and two raters for each Person in the others. All three generated graphs are
+connected for the fixed demonstration seed; random generation itself does
+not guarantee connectivity. No fit or interval-coverage claim follows.
+
+Zotero item YS4Q732A / attachment VM86UIAV is the user's Eckes book. The local
+API was read without modification. The 2023 ePDF imprint was checked, and
+Section 9.1, printed pp. 151--155 (PDF pages 153--157), was read as text and
+visually page by page, including Table 9.1. Common examinees, distributed
+links, disconnected panels, task-nested spiral assignment and a common rater
+have different implications. The package's rotating generator is not a
+general spiral design. This is a targeted section review, not whole-book
+completion. Earlier McEwen evidence/gaps are reused, not counted as executed
+corrected-JML trials.
+
+Uto--Ueno equation 9 was checked in the primary article
+<https://doi.org/10.1007/s41237-020-00115-7>. It uses task and rater slope
+blocks; the current package has one slope family. The public GPCM vignette
+now distinguishes slope-owner and step-owner indices in its displayed
+equation, consistent with separate-owner MML. A correction is an estimator
+change, not a new response model or proof of complete GMFRM support.
+
+The workflow/linking help, linking examples and NEWS were updated. Generated
+Rd pages parse, and the actual new vignette code was executed. Fixed-anchor
+semantics, MML defaults, JML estimation and statistical tolerances are unchanged.
+The full test suite, external engines and numerical sampling studies were not
+rerun for these documentation changes.
+
+## 2026-09-27: joint task/rater slopes and MML--EM
+
+The requested Uto--Ueno-type two-slope response equation now has an internal
+fixed-normal MML--EM implementation. This is a response-model extension,
+not the corrected-JML estimator. Analytical gradients, Person-level E-steps,
+PCM/single-slope reductions and failure semantics pass 38 focused assertions.
+On one 240-Person fully crossed example, EM converges in 43 iterations and
+agrees with independent-start direct maximization within 3.8e-6 in parameters.
+The 31/61-node parameter difference is 8.84e-5; optimizer agreement must not
+be reported as integration accuracy. The installed sirt 4.2.133 probability
+kernel agrees within 2.00e-15 in a declared zero-intercept overlap. Its general
+response model differs, and no free-estimator equivalence was tested.
+
+`fit_mfrm()` still admits only one slope family. Public multi-slope output,
+inference, portable calibration and sparse-design qualification remain open
+under roadmap G2--G4. The GPCM vignette and NEWS explain the methodological
+distinction without presenting internal functions as callable user features.
+See [the algorithm record](gmfrm-mml-em-20260927.md) for scope and reproduction.
+
+The subsequent Wang--Liu (2007) and Wang--Wu--Qiu (2025, arXiv v1) review
+refines that same record and roadmap G2/G3. Single-owner MML already supports
+latent regression via `population_formula`/`person_data`; it is not newly
+implemented by this review. The two-slope core still fixes N(0,1). Three
+additional assertions check probability derivatives, expected-score sensitivity
+and information against independent finite differences, bringing the focused
+file to 41 passing assertions. This is not a new normalized rater-capability
+API. Numerical checks flag the preprint's Appendix A/B derivative algebra and
+approximate normalization; displayed RMSE and scale-update concerns are
+distinguished from claims about unreviewed author code. The existing EM
+estimator and public defaults were not changed, and no full suite or sampling
+study was repeated.
+
+The subsequent G2 increment shares the conditional GPCM probability kernel
+between the internal two-slope EM, internal conditional response evaluation
+and existing GPCM probability-based predictions/diagnostics. Internal response
+tables keep task/rater slopes separate and mark unobserved crossings of known
+levels. They do not provide estimated Person scores, parameter intervals or a
+normalized capability index. Public multi-owner fitting remains unavailable.
+Five targeted test files pass; saved 31/61-node likelihoods are unchanged at
+retained estimates, and one 61-node refit reproduces parameters within 2.84e-8.
+The [same algorithm record](gmfrm-mml-em-20260927.md) contains the exact scope
+and remaining integration work. No new sampling study or full suite was run.
+
+The next G2 increment connects the two-family numerical core to common
+parameter expansion/collapse, labelled slope components and fixed/adaptive
+direct MML gradients. A sparse design uses observed crossings and one explicit
+reference slope family. The saved 31/61-node likelihoods are unchanged; one
+common direct fit from zero agrees with saved EM within 3.8e-6 in parameters.
+Independent adaptive numerical integration is used where a fixed 61-node rule
+is not accurate enough. This is common numerical-layer integration, not a new
+public model: result consumers, inference/readiness and public dispatch remain
+open. The linked algorithm record contains checks and the reuse command.
+
+Owner-aware optimizer maps and nonlinear transformation diagnostics now also
+support the two-family internal result. Existing MML Person-score/all-pattern
+information diagnostics and local classification work with this representation.
+A fixed 16-row binary example separates connected task-rater crossings from
+adequate within-Person information: one rating per Person gives rank 4/6,
+whereas four joint ratings per Person give rank 6/6 at the same interior vector.
+Neither parameterization rank nor this local fixed-quadrature result is promoted
+to global identification or interval eligibility. The guide/NEWS add the
+assignment explanation; they do not advertise a public two-slope fitter.
