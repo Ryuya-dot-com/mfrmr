@@ -83,8 +83,8 @@ show the following rounded phase times:
 
 These timings exceed the 10-minute check-time threshold previously applied
 by CRAN incoming checks to mfrmr 0.2.3.1 on August 25, 2026. Installation is
-separate. We have not yet demonstrated an optimized current-source check
-below 600 seconds. Test execution is the largest recorded phase; additional
+separate. We have not yet demonstrated an optimized current-source Windows
+check below 600 seconds. Test execution is the largest recorded phase; additional
 static-analysis and manual costs also need measurement and reduction. Source
 line count alone does not establish proportional check time.
 
@@ -95,6 +95,19 @@ to allow headroom; it is not a guarantee of Windows performance. Preserve
 small checks of every admitted feature and keep longer studies in the explicit
 complete test tier. Skipping required checks or optional models to obtain a
 shorter time will not satisfy this requirement.
+
+The September 30 development-source local measurement (`0.2.4.9000`, not rc.6)
+took 468.66 seconds including approximately 27 seconds of installation: about
+442 seconds of checking on arm64 macOS/R 4.6.1. Static analysis took 58 seconds,
+ordinary examples 22, tests 230, vignette rebuilding 11, PDF manual 11 and HTML
+manual 12. The tests reported 4,930 passes with no failures or warnings. Normal
+examples were enabled; the additional `donttest` workload was not included.
+The full check found undeclared test imports from callr/pkgload; their Suggests
+declarations were repaired and R's test-dependency check then passed. The
+development-version NOTE remains expected. All other archive files are byte
+identical; no second full check or current Windows result is claimed. Exact
+archive hashes, commands, skips and the separate successful fresh-process
+check are recorded in `inst/validation/cran-check-time-20260930.md`.
 
 The September 24 Windows result skipped six tests because RTMB was 1.9 rather
 than the required >= 2.0. The rc.6 September 26 results do not have those RTMB

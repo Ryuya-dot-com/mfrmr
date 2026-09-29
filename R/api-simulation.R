@@ -6270,7 +6270,12 @@ recommend_mfrm_design <- function(x,
     }
   }
   if (inherits(x, "mfrm_design_evaluation")) {
-    design_summary <- summary.mfrm_design_evaluation(x)$design_summary
+    # Recommendations need the unrounded run aggregates, not the accompanying
+    # structural-review and planning appendix tables built by summary().
+    design_summary <- design_eval_summarize_results(
+      x$results, x$rep_overview,
+      design_variable_aliases = simulation_object_design_variable_aliases(x)
+    )$design_summary
   } else if (inherits(x, "summary.mfrm_design_evaluation")) {
     if (!identical(x$summary_precision, "full")) {
       stop("This saved summary may contain rounded metrics. Rebuild it with ",

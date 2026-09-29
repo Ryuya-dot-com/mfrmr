@@ -12,6 +12,18 @@ adaptive_api_fixture <- local({
   }
 })
 
+adaptive_sensitivity_fixture <- local({
+  cache <- list()
+  function(model = "RSM") {
+    if (is.null(cache[[model]])) {
+      fixture <- adaptive_api_fixture(model)
+      expect_no_warning(cache[[model]] <<- mml_quadrature_sensitivity(
+        fixture$fit, fixture$data, quad_points = c(31L, 41L)))
+    }
+    cache[[model]]
+  }
+})
+
 test_that("public adaptive fits use one objective for likelihood, gradient, covariance and EAP", {
   for (model in c("RSM", "PCM", "GPCM")) {
     fixture <- adaptive_api_fixture(model)
@@ -65,7 +77,7 @@ test_that("adaptive scoring survives artifact persistence and uses the same pers
   for (model in c("RSM", "PCM")) {
     fixture <- adaptive_api_fixture(model)
     fit <- fixture$fit
-    quadrature_review <- mml_quadrature_sensitivity(fit, fixture$data, quad_points = c(31L, 41L))
+    quadrature_review <- adaptive_sensitivity_fixture(model)
     fit <- quadrature_review$fits$q41
     rows <- fixture$data[rev(which(fixture$data$Person %in% unique(fixture$data$Person)[c(2, 7)])), ]
     rows$Weight <- rep(c(0.25, 1.75, 3), length.out = nrow(rows))
@@ -98,7 +110,7 @@ test_that("adaptive scoring survives artifact persistence and uses the same pers
 test_that("adaptive refits, replay and integration identities preserve the selected mode", {
   fixture <- adaptive_api_fixture()
   fit <- fixture$fit
-  sensitivity <- mml_quadrature_sensitivity(fit, fixture$data, quad_points = c(31L, 41L))
+  sensitivity <- adaptive_sensitivity_fixture()
   expect_identical(sensitivity$settings$mml_integration, "adaptive")
   expect_true(all(vapply(sensitivity$fits, function(x) {
     identical(x$config$estimation_control$mml_integration, "adaptive")

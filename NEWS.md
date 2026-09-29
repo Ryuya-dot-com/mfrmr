@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Numerical integration sensitivity checks for RSM and PCM no longer emit
+  an unnecessary warning about a missing slope column.
+
+* `recommend_mfrm_design()` avoids building unrelated planning tables when
+  selecting a design. Recommendations still use unrounded results and retain
+  failed replications in the convergence and workload checks.
+
 * Two-family GPCM MML--EM now supports an explicitly selected component profile
   through `confint(fit, method = "profile", slope = c(Task = "t1"))`, using
   the fitted facet and level names. Other slopes, locations and steps are

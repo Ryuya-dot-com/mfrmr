@@ -71,6 +71,19 @@ test_that("design recommendations retain failed runs in convergence denominators
   expect_error(recommend_mfrm_design(x), "No design summary rows")
 })
 
+test_that("recommendations do not rebuild unrelated planning appendices", {
+  x <- design_evaluation_denominator_fixture()
+  expected <- recommend_mfrm_design(summary(x), facets = c("Rater", "Criterion"))
+  local_mocked_bindings(
+    simulation_compact_structural_design_review_summary = function(...)
+      stop("Unexpected planning appendix"),
+    .package = "mfrmr"
+  )
+  actual <- recommend_mfrm_design(x, facets = c("Rater", "Criterion"))
+  decisions <- c("facet_table", "design_table", "recommended", "thresholds")
+  expect_identical(actual[decisions], expected[decisions])
+})
+
 test_that("design decisions preserve full precision through summaries and saved results", {
   boundaries <- c(Separation = 1.9999996, Reliability = .7999996,
                   SeverityRMSE = .5000004, MisfitRate = .1000004)

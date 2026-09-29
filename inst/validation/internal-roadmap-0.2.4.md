@@ -180,9 +180,10 @@ while retaining small real estimation/uncertainty checks for every supported
 feature → move genuinely long sampling/refit studies to the explicit complete
 CI tier → profile measured static-analysis/manual bottlenecks and simplify
 only proven duplication → rerun changed phases → run one assembled full check.
-The current test selector omits several newer GMFRM/corrected-JML files;
-D2/D4 must map all admitted features to an exercised small check, not preserve
-that omission to meet a time target. Do not disable code analysis, hide failures,
+The September 30 runtime pass added the existing GMFRM EM/public-workflow and
+corrected-JML public-workflow files to the CRAN selector after measuring them
+with dependencies present. D2/D4 must still map all admitted features to an
+exercised small check. Do not disable code analysis, hide failures,
 remove all coverage of an optional model or use extra cores to evade the budget.
 
 D3 needs measured source-matched local results and an evidence-backed path to
@@ -196,12 +197,21 @@ explicit correspondence; it must not be inferred from 0.2.3.1 acceptance.
 
 ### 0. Close the check-time measurement gap before another broad study (D0/D3)
 
-Workspace identity is now reconciled. Next obtain the missing current-source
-phase profile, first inspecting the expensive installed test files with RTMB
-available. This release prerequisite can proceed independently of unresolved
-D1 methods. Do not wait until a release archive is frozen to discover that its
-checks exceed the budget. This reconciliation reused logs; no new full check
-or timing improvement is claimed.
+Workspace identity is reconciled. The [September 30 runtime record](cran-check-time-20260930.md)
+now identifies an installed baseline, measured repeated-calibration and
+planning-table costs, targeted repairs, added model checks and the subsequent
+archive-bound phase profile. The complete command took 468.66 s including a
+rounded 27-second installation; check-only time is approximately 442 s, below
+the provisional local 480-second target. The test phase took 230 s with 4,930
+passes. Its undeclared-test-dependency warning was repaired through DESCRIPTION
+and the matching dependency check; a second complete check is not claimed.
+The metadata-only successor archive preserves all other 795 files. Use this
+evidence to select targeted static/manual profiling or a current-source Windows
+timing run; a Mac result cannot predict that ceiling. Do not repeat the same
+full run after metadata-only repairs or start
+another broad statistical study instead. This prerequisite proceeds separately
+from unresolved D1 methods. Local timing does not close the Windows ceiling
+or qualify the unfinished statistical scope.
 
 ### 1. Fix the inferential procedure and unresolved consumer decisions (D1/D2)
 
@@ -355,8 +365,11 @@ workflows. Installed-version inspection alone is not feature-test evidence.
 
 The September 24 Windows check skipped six tests because RTMB was 1.9; the
 September 26 rc.6 logs contain five other skips and no old/missing-RTMB skip.
-Do not merge those evidence states. Locally on this review, RTMB 2.0 and
-nleqslv 3.3.7 are installed; that observation does not replace execution.
+Do not merge those evidence states. The September 30 installed runtime checks
+execute shared-rater tests with RTMB 2.0 and corrected-JML fitting/covariance/
+replay with nleqslv 3.3.7; see the runtime record for source, results and remaining
+checks. Dependency absence/version-error branches and the final Windows
+environment remain separate evidence requirements.
 These checks belong to the existing five-environment/targeted CI process;
 no new service or broad duplicate simulation is required.
 

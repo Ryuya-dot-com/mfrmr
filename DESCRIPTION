@@ -57,6 +57,8 @@ Suggests:
     mice,
     nleqslv,
     testthat (>= 3.0.0),
+    callr,
+    pkgload,
     withr,
     covr,
     knitr,

@@ -64,6 +64,9 @@ cran_light_tests <- c(
   "gpcm-inference-reporting",
   "gpcm-profile-intervals",
   "gpcm-pattern-cache",
+  "gmfrm-public-workflow",
+  "gmfrm-em",
+  "jml-public-workflow",
   "namespace-contract",
   "optimizer-curvature",
   "vignette-artifacts"

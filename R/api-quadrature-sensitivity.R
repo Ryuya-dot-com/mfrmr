@@ -394,6 +394,7 @@ mfrmr_gqs_probability_difference <- function(reference, candidate) {
 
 mfrmr_gqs_slope_keys <- function(fit) {
   slopes <- fit$slopes
+  if (is.null(slopes) || nrow(slopes) == 0L) return(character())
   if (!mfrm_has_product_slopes(fit)) return(as.character(slopes$SlopeFacet))
   metadata <- mfrm_gpcm_product_metadata(fit$config$gpcm_spec)
   index <- mfrm_match_slope_table(metadata$Owner, metadata$Level, slopes)

@@ -1,13 +1,27 @@
-scoring_prior_fixture <- function() {
-  x <- readRDS(test_path("fixtures", "mfrm-conditional-scoring-gpcm.rds"))
-  x$new <- x$data[x$data$Person %in% c("P1", "P34"), ]
-  x$prior <- list(mean = unname(x$fit$population$coefficients[1]),
-    sd = sqrt(x$fit$population$sigma2))
-  x
-}
+scoring_prior_fixture <- local({
+  cached <- NULL
+  function() {
+    if (is.null(cached)) {
+      x <- readRDS(test_path("fixtures", "mfrm-conditional-scoring-gpcm.rds"))
+      x$new <- x$data[x$data$Person %in% c("P1", "P34"), ]
+      x$prior <- list(mean = unname(x$fit$population$coefficients[1]),
+        sd = sqrt(x$fit$population$sigma2))
+      x$review <- mfrmr:::prediction_local_calibration_review(x$fit)
+      cached <<- x
+    }
+    cached
+  }
+})
 
 test_that("explicit scoring priors match independently checked retained patterns", {
   x <- scoring_prior_fixture()
+  expect_true(x$review$eligible)
+  # This matrix checks scoring priors, not repeated Hessians of an unchanged
+  # calibration. Reuse one real review only while its exact input is preserved.
+  local_mocked_bindings(prediction_local_calibration_review = function(fit) {
+    expect_identical(fit, x$fit)
+    x$review
+  }, .package = "mfrmr")
   before <- serialize(x$fit, NULL)
   reference <- read.csv(test_path("fixtures", "mfrm-scoring-prior-reference.csv"))
   people <- unique(as.character(x$data$Person))
@@ -41,6 +55,10 @@ test_that("explicit scoring priors match independently checked retained patterns
 
 test_that("prior identity accompanies summaries, draws, figure data and exported estimates", {
   x <- scoring_prior_fixture()
+  local_mocked_bindings(prediction_local_calibration_review = function(fit) {
+    expect_identical(fit, x$fit)
+    x$review
+  }, .package = "mfrmr")
   prior <- x$prior; prior$sd <- 1.5 * prior$sd
   p <- predict_mfrm_units(x$fit, x$new, scoring_prior = prior, n_draws = 3, seed = 42)
   pv <- sample_mfrm_plausible_values(x$fit, x$new, scoring_prior = prior, n_draws = 3, seed = 42)
@@ -79,6 +97,8 @@ test_that("prior identity accompanies summaries, draws, figure data and exported
 })
 
 test_that("explicit priors cannot override source or integration failures", {
+  # No mocked review here: invalid sources and scoring grids must be refused
+  # using fresh likelihood, curvature and integration checks.
   x <- scoring_prior_fixture()
   invalid <- list(list(mean = 0), c(mean = 0, sd = 1), list(mean = 0, sd = 1, extra = 2),
     list(mean = Inf, sd = 1), list(mean = NA_real_, sd = 1),
