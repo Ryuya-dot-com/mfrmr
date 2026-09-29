@@ -66,6 +66,21 @@ reason for invalidating only affected evidence. A matched replay is not an
 independent confirmation. RDS replay is not portable calibration. Local `main`
 and a clean worktree are not evidence of a push, hosted CI or publication.
 
+Workspace reconciliation on 2026-09-30 corrected `../README.md`,
+`../releases/README.md` and `../release-candidates/README.md`: the active tree
+is `development/` on `main`; published CRAN is 0.2.3.1 (August 25); its earlier
+rejection remains a historical event, not its final status. These indexes are
+outside the package Git repository and are maintained in place. Remote
+`ls-remote` verified main at `08a5ee9b` and development/0.2.4 at `9020ca2a`;
+the latter is a historical branch, not the current source authority. Ahead/
+behind numbers are snapshots, not permanent branch labels.
+
+The missing `/private/tmp/...icc-candidate-20260921` registration was pruned.
+The clean `~/mfrmr-pr6` and saved site-edit worktrees were removed normally after
+checking tracked, untracked and ignored files. Commits `532d59e7`, `2b12b82f`
+and `4df7e072` remain referenced by their existing branch/remote refs. Only the
+active development worktree remains. No branch was reset, deleted or merged.
+
 ## Current delivery and remaining decisions
 
 | Outcome | Implemented scope | Required closure or explicit decision |
@@ -87,11 +102,11 @@ G2/D2 labels in historical records do not close these milestones.
 
 | Milestone | Status | Reviewable exit condition |
 | --- | --- | --- |
-| D0 — Evidence identity | Established for the checkpoint; maintained on every change | Source and scope of each result are identifiable; local, committed, archived and published states are distinct. |
-| D1 — Statistical support | Open | Fix each retained estimator/interval/diagnostic procedure and failure policy; evaluate the specific claim; resolve joint-slope and corrected-JML decisions. Report adverse and unavailable outcomes. No universal coverage or capacity guarantee is required or claimed. |
-| D2 — Complete delivered workflows | Open | Supported fit → summary/uncertainty → meaningful plot/diagnostic → report/export → reopen/scoring paths agree on model, owner, scale, population and uncertainty. Existing G/D, features/MI and RSM/PCM feedback stay on the regression path. Unsupported routes have explicit tested reasons. |
-| D3 — Freeze scope and source | Not reached | Required D1/D2 outcomes are closed or changed by explicit agreement. DESCRIPTION, capability tables, help, examples, NEWS, README and version metadata agree. Produce one identified submission-quality archive without changing old tags. |
-| D4 — Validate and integrate that source | Not reached for current scope | Run affected integration and package checks; fix failures; verify matching main integration, five-environment CI, installed/site examples, URLs, reverse dependencies and Windows results. Reuse source-identical evidence; no routine repeated whole-suite or numerical studies after small edits. |
+| D0 — Evidence identity | Reconciled on 2026-09-30 after correcting workspace records; repeat before freeze | Source and scope of each result, workspace indexes, active branch, retained worktrees and actual published baseline agree. Local, committed, archived and published states are distinct. |
+| D1 — Statistical support | Open | Fix each retained estimator/interval/diagnostic procedure and failure policy; evaluate the specific claim; resolve joint-slope and corrected-JML decisions. Report adverse and unavailable outcomes. Apply the dated escalation rule below before an over-budget study starts and while a conclusion is still unresolved. No universal coverage or capacity guarantee is required or claimed. |
+| D2 — Complete delivered workflows | Open | Supported fit → summary/uncertainty → meaningful plot/diagnostic → report/export → reopen/scoring paths agree on model, owner, scale, population and uncertainty. Existing G/D, features/MI and RSM/PCM feedback stay on the regression path. Unsupported routes have explicit tested reasons. Close the task-to-function acceptance table below against the installed guide, help, examples and saved replay; export counts are not acceptance evidence. |
+| D3 — Freeze scope and source | Not reached | Required D1/D2 outcomes are closed or changed by explicit agreement. DESCRIPTION, capability tables, help, examples, NEWS, README and version metadata agree. Produce one identified submission-quality archive without changing old tags. Retain a complete phase-timed local check and a demonstrated optimization plan against the 600-second check budget; an unmeasured or over-budget source does not close D3. |
+| D4 — Validate and integrate that source | Not reached for current scope | Run affected integration and package checks; fix failures; verify matching main integration, five-environment CI, installed/site examples, URLs, reverse dependencies and Windows results. Require matching Windows check time below 600 seconds, separated from installation, and a supported/missing optional-dependency matrix with no unexplained feature skips. Reuse source-identical evidence; no routine repeated whole-suite or numerical studies after small edits. |
 | D5 — Publish and maintain | Not reached for current scope | Matching source/documentation/assets are published under applicable authorization. Record GitHub release, CRAN submission and acceptance separately; retain regression witnesses and migration information. |
 
 Local completion requires implementation/decisions through D3 and applicable
@@ -100,7 +115,93 @@ requires matching hosted and release evidence. A clean development checkpoint
 closes neither endpoint. Stop the release cycle at its agreed endpoint, not
 when all long-term research has been attempted.
 
+## CRAN check-time budget: release prerequisite (D3/D4)
+
+The retained August 25 incoming-pretest notification for 0.2.3.1 explicitly
+reports `Overall checktime 12 min > 10 min`. Treat **600 seconds for the check
+itself** as this package's submission ceiling, with a **480-second local target**
+to leave headroom. Installation and build times are reported separately.
+The [CRAN policy](https://cran.r-project.org/web/packages/policies.html) requests
+minimal CPU use and feature coverage in retained checks; its public text does
+not state a universal 600-second rule. The concrete threshold is supported by
+this package's actual rejection. A previously accepted package or an `OK`
+status above 600 seconds is not permission for another over-budget submission.
+
+Retained observations, not measurements of the current development source:
+
+| Source / environment | Install | Check | Static R-code analysis | Examples | Tests | Vignette rebuild | PDF / HTML manual |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.2.3.1 incoming Windows, August 25 | separate | 701 s | 270 s | 82 s | 41 s | not separately timed | 45 / 38 s |
+| rc.6 Win-builder R-release, September 26 | 128 s | 1,538 s | 309 s | 82 s | about 780 s (`13m`) | 27 s | 68 / 127 s |
+| rc.6 Win-builder R-devel, September 26 | 133 s | 1,587 s | 356 s | 81 s | about 780 s (`13m`) | 26 s | 68 / 51 s |
+
+Phase labels are rounded service timings; their sum need not equal the
+notification total. Logs are in `validation-results/cran-preflight-20260926/`
+under `winbuilder-R-release/` and `winbuilder-R-devel/`; notifications and
+archive attribution remain in the [claim ledger](claim-reconciliation-0.2.4.md).
+The older rejection evidence is in the workspace's
+`release-candidates/cran-submission/2026-08-25/pretest-rejection-0.2.3.1/`.
+
+The freshly retrieved [CRAN check page](https://cran.r-project.org/web/checks/check_results_mfrmr.html),
+updated 2026-09-30 00:56 CEST, shows 0.2.3.1 r-devel Windows installation
+107 s, check **638 s**, total **745 s**. Do not label 745 s as check-only time.
+The [package page](https://cran.r-project.org/package=mfrmr) confirms version
+0.2.3.1 published on 2026-08-25. Browser-search caches can show older checks;
+verify the page's timestamp and version when refreshing this record. The
+retrieved HTML and HTTP headers are retained under
+`validation-results/roadmap-prerequisites-20260930/`.
+
+The retained 0.2.3 archive has 147,801 lines in 81 R files; the development
+checkpoint has 177,616 lines in 139 R files (about 20% more, including comments
+and roxygen). This flags a measurement need, not a linear timing law: loaded
+function/AST complexity, repeated analysis, R/codetools versions and hardware
+matter. The rc.6 test phase alone exceeded 600 seconds, so static-analysis
+optimization by itself cannot solve the observed problem.
+
+Provisional phase allocations for the 480-second local target are: static
+analysis 180 s, examples 45 s, tests 120 s, vignette rebuild 30 s, PDF/HTML
+manuals together 60 s, remaining check phases 45 s. These are planning budgets,
+not achieved results or independent acceptance thresholds; reallocate from
+measured evidence while retaining the overall ceiling and headroom.
+
+Required deliverable: one source/command/environment-bound timing table for
+static analysis, examples, tests, vignette rebuilding, PDF/HTML manual and
+other check overhead, plus install/build/check totals, CPU/elapsed distinction,
+R/codetools/optional-package versions, thread settings and actual skips. Use the
+built tarball with normal CRAN examples/tests/vignettes/manuals enabled and
+`NOT_CRAN=false`; a `--no-tests`, `--no-examples`, `--no-manual` or partial check
+cannot close this requirement. Record `--run-donttest` as a distinct additional
+profile if used; do not silently change the comparison workload.
+
+Optimization sequence: reuse old logs → time the selected installed-package
+tests by file with supported optional dependencies → remove repeated expensive
+fitting from presentation/compatibility checks using valid synthetic fixtures,
+while retaining small real estimation/uncertainty checks for every supported
+feature → move genuinely long sampling/refit studies to the explicit complete
+CI tier → profile measured static-analysis/manual bottlenecks and simplify
+only proven duplication → rerun changed phases → run one assembled full check.
+The current test selector omits several newer GMFRM/corrected-JML files;
+D2/D4 must map all admitted features to an exercised small check, not preserve
+that omission to meet a time target. Do not disable code analysis, hide failures,
+remove all coverage of an optional model or use extra cores to evade the budget.
+
+D3 needs measured source-matched local results and an evidence-backed path to
+600 seconds on Windows. D4 needs actual matching Windows results below that
+ceiling; a local 480-second result is not a cross-platform guarantee. If the
+ceiling cannot be met, report the measured bottleneck and ask for a concrete
+scope/engineering decision before submission. Any CRAN exception requires
+explicit correspondence; it must not be inferred from 0.2.3.1 acceptance.
+
 ## Next work: one ordered queue
+
+### 0. Close the check-time measurement gap before another broad study (D0/D3)
+
+Workspace identity is now reconciled. Next obtain the missing current-source
+phase profile, first inspecting the expensive installed test files with RTMB
+available. This release prerequisite can proceed independently of unresolved
+D1 methods. Do not wait until a release archive is frozen to discover that its
+checks exceed the budget. This reconciliation reused logs; no new full check
+or timing improvement is claimed.
 
 ### 1. Fix the inferential procedure and unresolved consumer decisions (D1/D2)
 
@@ -127,6 +228,17 @@ contract; neither ordinary-model reuse nor relabelling is sufficient.
 Exit: the procedure, sample-size/precision rationale, failure accounting and
 consumer decisions are fixed before new independent evaluation. Unresolved
 release commitments remain visible; a narrow experiment cannot close them.
+
+**Decision deadline:** report the evaluation plan's compute and elapsed-time
+estimate when the plan is ready. If its expected interpretable result would
+fall after **2026-10-02 18:00 JST**, consult the user before launching it; if D1
+is still unresolved at that checkpoint, present the evidence, remaining cost
+and concrete options for continued work or an explicit scope decision without
+waiting for a conclusive result. This is a review date, not a truncation rule
+for datasets, an automatic deferral of agreed features, or a promise that a
+background reminder has been scheduled. Continue independent G/D, MI, feedback
+and release-engineering work. Review earlier if a changed method or a new study
+materially exceeds the plan's estimate.
 
 ### 2. Resolve statistical claims using existing evidence first (D1)
 
@@ -191,6 +303,62 @@ for that source, not inherited historical candidates. Keep check failures and
 repairs attributable to their source. Commit, remote integration, CI, site,
 release assets, Windows checks and CRAN states are separate verification tasks.
 A local cleanup does not trigger external submission or retagging.
+
+## D2 task-to-function acceptance table
+
+This is the reviewable completion artifact, backed by the existing
+`mfrmr_output_guide()` and `mfrmr_output_guide("plots")`, not a new guide API.
+The current namespace still has 208 exports and 35 `plot_*` names (including
+plot-data helpers). Counts do not determine recommendations. For each row,
+D2 records: input/result class, model/estimator restrictions, consequential
+defaults, recommended entry and alias/specialist role, help/example link,
+plot-data/ggplot support, saved replay evidence and unresolved reason. Publish
+the applicable mapping through the existing help/guide and pkgdown categories.
+
+| Task | Recommended existing entry / sequence | Acceptance evidence to reconcile |
+| --- | --- | --- |
+| Review ratings and fit | `describe_mfrm_data()` → `fit_mfrm()` → `summary()` | Workflow help, public-model tests, explicit score scale/roles/defaults |
+| Review estimates and uncertainty | `mfrm_results()` with explicitly computed supported intervals; `confint()` where admitted | Output-guide, interval and results tests; model-specific exclusions |
+| Choose and customize a figure | `mfrmr_output_guide("plots")` → result `plot()`; `plot_data()` / `as_ggplot()` where supported | Plot-guide and result-class checks; unavailable conversions stated |
+| Deliver a report or file bundle | `mfrm_results()` → `mfrm_report()` / `export_mfrm_results()` | Report/export/reopen checks; do not pass the return value of `plot()` as results |
+| Give one rater a sheet | `mfrm_report(..., style = "rater")` | `test-rater-feedback.R`; additive RSM/PCM support and privacy |
+| Reuse calibration | `extract_mfrm_calibration()` → review/freeze → save/load → `score_mfrm_calibration()` | Portable workflow help and installed replay; estimator/prior/format limits |
+| Plan multivariate scores | `mfrm_multivariate_gstudy()` → `mfrm_multivariate_d_study()` → prespecified `mfrm_multivariate_d_compare()` | G/D examples, tables/plots and saved-result tests; source/future design distinction |
+| Group mixed features | `mfrm_cluster_pam()` or explicitly hierarchical `mfrm_cluster_hierarchical()` | Feature guide; `mfrm_cluster()` remains a compatible alias, not a new algorithm |
+| Explore numeric features | `mfrm_pca()` → `mfrm_cluster_kmeans()` when dimension reduction is intended | Numeric-feature tests; scaling, component retention and original-unit profiles |
+| Review and pool missing assigned scores | `review_mfrm_imputations()` → `fit_mfrm_imputed()` → `pool_mfrm_imputed()` | Imputation tests; compatible old review name, eligible cells and pooling targets |
+| Use dependence extensions | `fit_mfrm_random_rater()` / `fit_mfrm_testlet()` with model-specific scoring/response routes | Extension tests with dependencies present; conditional versus new-unit targets |
+
+The listed entries have been checked against current exports/source. This is
+an initial acceptance map, not a claim that every row has completed a new
+end-to-end run. D2 closes only when each admitted model/task combination has
+its actual help, example and replay evidence, and unsupported combinations
+are explicit. Preserve specialist functions unless their role is truly replaced.
+
+## D4 optional-dependency evidence
+
+A passing check with skips is not evidence that the skipped model ran. Retain
+a per-environment matrix of dependency/version, covered route, executed checks,
+skips and reasons, linked to the source. At least one supported environment
+must execute each admitted optional feature with its dependency present;
+platform-dependent compiled routes also need appropriate Windows evidence.
+Separately check the missing/too-old dependency message and unaffected core
+workflows. Installed-version inspection alone is not feature-test evidence.
+
+| Dependency / feature | Required supported case | Unavailable case / boundary |
+| --- | --- | --- |
+| RTMB >= 2.0 / shared-rater fitting and inference | Small actual estimation and applicable uncertainty/response checks; retain compiled version/platform | Missing or < 2.0 must give the documented actionable message; do not count skips as success |
+| nleqslv / corrected JML | Explicit-order fit and supported scoring/output check | Missing solver must not silently switch estimator |
+| cluster / feature clustering; mice / supplied imputation workflows | Exercise the admitted clustering and completion-review routes | No fabricated imputation or clustering when unavailable |
+| ggplot2 / conversion; lme4 / optional mixed-model comparisons | Execute supported conversions/comparisons and retain version | Keep native/core behavior and clear unavailable routes |
+| Other Suggests in DESCRIPTION | Map each admitted optional route to executed or explicitly inapplicable evidence | Explain skips; do not make all optional software mandatory for core use |
+
+The September 24 Windows check skipped six tests because RTMB was 1.9; the
+September 26 rc.6 logs contain five other skips and no old/missing-RTMB skip.
+Do not merge those evidence states. Locally on this review, RTMB 2.0 and
+nleqslv 3.3.7 are installed; that observation does not replace execution.
+These checks belong to the existing five-environment/targeted CI process;
+no new service or broad duplicate simulation is required.
 
 ## Evidence to reuse and unresolved findings
 

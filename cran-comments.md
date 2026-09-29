@@ -2,6 +2,8 @@
 
 This branch is now 0.2.4.9000. The notes below describe only the frozen
 0.2.4 rc.6 archive; its checks do not qualify the new development changes.
+Reviewed September 30, 2026: check time is an unresolved submission blocker.
+The earlier zero-error/zero-warning results do not establish submission readiness.
 
 # mfrmr 0.2.4 — submission preparation
 
@@ -64,6 +66,42 @@ are not attributed to this candidate.
   Imports, LinkingTo, Suggests or Enhances. Non-CRAN consumers are outside
   this index check.
 
+## Check time and optional-dependency coverage
+
+The rc.6 Win-builder notifications reported installation/check times of
+128/1,538 seconds on R-release and 133/1,587 seconds on R-devel. Their logs
+show the following rounded phase times:
+
+| Phase | R-release | R-devel |
+| --- | ---: | ---: |
+| R code for possible problems | 309 s | 356 s |
+| Examples | 82 s | 81 s |
+| Tests | 13 min | 13 min |
+| Vignette rebuilding | 27 s | 26 s |
+| PDF manual | 68 s | 68 s |
+| HTML manual | 127 s | 51 s |
+
+These timings exceed the 10-minute check-time threshold previously applied
+by CRAN incoming checks to mfrmr 0.2.3.1 on August 25, 2026. Installation is
+separate. We have not yet demonstrated an optimized current-source check
+below 600 seconds. Test execution is the largest recorded phase; additional
+static-analysis and manual costs also need measurement and reduction. Source
+line count alone does not establish proportional check time.
+
+Before submission, record source-matched full check phase timings with normal
+examples, tests, vignette and manual checks enabled, and verify the final
+Windows check time below 600 seconds. The local working target is 480 seconds
+to allow headroom; it is not a guarantee of Windows performance. Preserve
+small checks of every admitted feature and keep longer studies in the explicit
+complete test tier. Skipping required checks or optional models to obtain a
+shorter time will not satisfy this requirement.
+
+The September 24 Windows result skipped six tests because RTMB was 1.9 rather
+than the required >= 2.0. The rc.6 September 26 results do not have those RTMB
+skips; their five other skips are described above. Final evidence must record
+optional-package versions and executed feature checks, including supported
+RTMB and nleqslv routes and clear behavior when dependencies are unavailable.
+
 ## NOTE explanation
 
 The local and both Win-builder NOTE entries report maintainer information and
@@ -74,9 +112,10 @@ problem was corrected before freezing this archive.
 
 ## Remaining before submission
 
-The planned package, URL, CRAN reverse-dependency and Windows checks are
-complete; no code correction is required by these Windows results. Settle the
-final release/submission decision. If package content changes,
-identify a new archive and check the affected scope rather than attributing
-these results to changed bytes. Detailed development and reuse records are
-kept in the repository's package-excluded validation journal.
+The earlier functional, URL, reverse-dependency and Windows results belong
+to rc.6. Submission preparation is not complete: resolve the check-time excess,
+complete the agreed development scope, identify the final archive and obtain
+its matching full-check and optional-dependency evidence. Explain remaining
+notes and timing explicitly in the final submission comments. Do not assume
+that acceptance of 0.2.3.1 authorizes another over-budget submission. Detailed
+development and reuse records remain in package-excluded maintainer material.
