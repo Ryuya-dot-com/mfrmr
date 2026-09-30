@@ -1548,6 +1548,92 @@ current two-family route does not implement. A native fit would be a
 restricted analysis, not a reproduction of that study. The writing example
 does not qualify OSCE, music or sport applications by renaming facets.
 
+### What if the analysis could affect a championship?
+
+First identify the decision. The winner under the competition's scoring rules,
+the athlete with the highest modelled ability, and the winner of a future
+performance are different targets. A model can help review judging or plan
+future assessments without supplying a replacement competition result.
+
+The [official 2026 Olympic women's figure-skating results](https://results.isu.org/results/season2526/owg2026/CAT002RS.htm)
+provide a concrete example. Adding the published short-program and free-skating
+scores gives the following decomposition for the first two finishers:
+
+| Athlete | Technical element scores | Program component scores | Total |
+| --- | ---: | ---: | ---: |
+| Alysa Liu | 119.08 | 107.71 | 226.79 |
+| Kaori Sakamoto | 112.91 | 111.99 | 224.90 |
+
+Both have zero deductions. The 1.89-point total difference is an official
+score difference, not a latent-ability estimate or its uncertainty. The
+component-score ordering differs from the total-score ordering because the
+competition also rewards technical elements. Fitting only the component marks
+would answer a narrower question; it would not determine who should have won.
+
+The official [short-program](https://results.isu.org/results/season2526/owg2026/FSKWSINGLES-----------QUAL000100--_JudgesDetailsperSkater.pdf)
+and [free-skating](https://results.isu.org/results/season2526/owg2026/FSKWSINGLES-----------FNL-000100--_JudgesDetailsperSkater.pdf)
+protocols contain 29 and 24 performances, respectively, with nine judges and
+three program components per performance. Reconstructing the trimmed means,
+component factors and rounding reproduces all 53 program-component totals;
+combining them with the published technical scores and signed deductions
+reproduces all 24 finalists' totals. This verifies data interpretation, not
+the accuracy of a latent model. Technical GOE conversions were not rederived.
+
+Preserve the following information before fitting:
+
+* **Judge identity and performance occasion.** The two published panels have
+  13 distinct judges, five shared. Join actual names/IDs from the
+  [short-program](https://results.isu.org/results/season2526/owg2026/SEG003OF.htm)
+  and [free-skating](https://results.isu.org/results/season2526/owg2026/SEG004OF.htm)
+  rosters; a slot such as `J1` is not the same person across segments.
+* **Advancement and assignment.** The five non-finalists have no free-skating
+  performance in this event. Those absent records are not missing assigned
+  ratings. Advancement also selects the population observed in the final.
+* **Score meaning.** Component marks use quarter-point increments from .25
+  to 10; integer recoding preserves a 40-category ladder. Sparse category
+  use still needs review. GOE grades, difficulty/base values and deductions
+  are different quantities and cannot be pooled as one ordinal response.
+* **Model scope.** Athlete, segment, component and judge are distinct roles.
+  The current two-family route admits only two non-Person facets. Discarding
+  the segment or treating each performance as an independent athlete changes
+  the model. Shared-performance dependence, one-dimensionality and the
+  selected athlete population also require justification.
+
+For winner selection, average parameter recovery and overall rank correlation
+are insufficient. Validation must ask how often the procedure selects the
+wrong winner, whether it wrongly presents that choice as certain, and how
+often it cannot distinguish the leaders. Include near ties, exact ties, a
+clearly separated leader, weak panel links and performance dependence. Keep
+unavailable results in the denominator. Changing a judge or a model in a
+sensitivity analysis is not a random draw from future competitions.
+
+An individual 95% interval does not give a 95% confidence statement about
+being first among many athletes. Even a difference between two estimates needs
+their covariance: its variance is `Var(A) + Var(B) - 2*Cov(A,B)`. Selecting
+the apparent leaders after seeing the data also requires inference that
+accounts for that selection. Shared calibration uncertainty cannot be
+recovered by independently sampling normal values from printed SEs.
+
+`mfrmr` currently provides no winner-probability or simultaneous athlete-rank
+confidence-set API. Two-family GMFRM also lacks a public Person-scoring route.
+Available one-family EAP intervals condition on point calibration and a
+specified prior; they do not establish championship-decision accuracy.
+Multivariate G/D studies can examine dependability of supported score
+composites and designs, but a high G coefficient is not the probability of
+selecting the correct champion. Their linear composite weights do not
+implement the score-dependent trimming of competition panels.
+
+Sport applications have precedents. [Looney (1997)](https://pubmed.ncbi.nlm.nih.gov/9661718/)
+applied many-facet Rasch analysis to 1994 Olympic figure skating under the
+then-used rank aggregation system; that study does not validate current
+scoring rules or this GMFRM implementation. In gymnastics,
+[Mercier and Heiniger (2019)](https://arxiv.org/abs/1807.10021)
+examined performance-dependent judging error and limitations of ranking-based
+judge evaluation. Their comparison scores approximate performance quality;
+agreement with a panel is not independent proof of truth. These studies
+motivate checks of score meaning, judging variability and decision consequences,
+rather than automatic exclusion of a judge whose marks change the podium.
+
 ### Can EM estimate two slope families?
 
 Yes. With fixed task and rater effects and one latent ability, adding a second

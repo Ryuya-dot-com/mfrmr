@@ -40,6 +40,16 @@ review distinguishes the current model from published extensions. Real-data
 fit, known-truth simulation and practitioner usability answer different
 questions and do not substitute for one another.
 
+For consequential ranking, distinguish official rule-based results, latent
+ability and future-performance outcomes. The GPCM guide now reviews actual
+Olympic figure-skating records, including changing panels, selective
+advancement and score aggregation. Winner-error rates, uncertain or unavailable
+decisions, ties, calibration covariance and weak links need explicit evaluation
+before any winner-inference claim. No winner-probability or simultaneous
+Person-rank confidence-set API is currently provided; a high G coefficient
+does not supply one. This requirement sharpens the scope of assessment support
+without turning every competition's scoring rules into a new estimator.
+
 The development order is to finish implemented workflows, establish the
 statistical support for their claims, complete the agreed model extensions,
 and integrate them as 0.2.4. G-theory, latent measurement and external-feature

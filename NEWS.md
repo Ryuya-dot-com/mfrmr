@@ -1,5 +1,13 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* The GPCM guide adds a judged-sport example based on official Olympic score
+  protocols. It distinguishes competition totals from latent ability, preserves
+  judge identities and advancement, and explains the additional uncertainty
+  needed for winner selection. GPCM and multivariate D-study help clarify that
+  individual intervals and reliability coefficients do not supply winner
+  probabilities or simultaneous rank confidence sets. No new ranking estimator
+  or changes to fitted scores are introduced.
+
 * The GPCM guide adds an empirical writing-data workflow using the separately
   available `sirt::data.ratings1` dataset. It explains uneven assignment,
   unused factor levels, absent categories and unknown planned assignments,

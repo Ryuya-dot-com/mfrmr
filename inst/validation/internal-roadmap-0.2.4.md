@@ -320,6 +320,7 @@ is useful but does not qualify a typical real assessment workflow by itself.
 | --- | --- | --- |
 | Empirical Austrian writing assessment (`sirt::data.ratings1`, sirt 4.2.133): which category-use/response-sensitivity patterns merit rubric or rater review? | All 135 Persons, 7 observed raters, 5 criteria and 1,370 ratings retained. 89 Persons have one rater, 27 two, 2 six, 17 seven. There are 29 observed roster patterns (13 singletons), 9 unused rater factor levels and 5 empty rater/criterion/category cells. A planned roster is unavailable. Native two-family fits at 61/121 nodes converge but curves/diagnostics remain numerically sensitive. | Resolve the observed approximation/solution sensitivity before substantive feedback or a new large simulation. Preserve conditional independence, single-ability, population and step-owner questions; do not call the more complex model preferable merely because it fits. |
 | Medical interview OSCE: review rubric-specific rater behavior in a small cohort with two common raters and three subgroup raters. | Uto et al. (2024), DOI 10.1371/journal.pone.0309887; Dryad DOI 10.5061/dryad.tmpg4f56q describes 30 Persons, 5 raters, 30 rubric items and four categories. The downloaded scores remain unavailable (HTTP 403); only the published design was reviewed. Its rater/item interactions and item-owned steps exceed the current two-family model. | Retrieve/verify the public data through an available legitimate route and reconcile its coding/assignment before fitting. A restricted fit is not replication of the published extension. Do not add a model merely to make this dataset fit. |
+| Judged sport: could an apparent measurement improvement change a championship decision? | Official 2026 Olympic women's skating protocols: 29 short-program and 24 free-skating performances; 9 judges per segment, 13 distinct judges, 5 shared; 3 components and 1,431 component marks. All 53 PCS and 24 final totals reconstructed, retaining published technical scores. No GMFRM fitted and no winner inference qualified. | Separate rule-based results, latent ability and future-performance winners. Preserve actual judge IDs, segment effects and advancement. Require decision-specific uncertainty/loss before any selection claim; the present two-family model cannot absorb all these roles by relabelling. |
 
 The empirical writing runner is `gmfrm-practitioner-20260930.R`; its evidence
 is recorded in [the existing GMFRM review](gmfrm-mml-em-20260927.md#september-30-empirical-practitioner-workflow).
@@ -364,6 +365,69 @@ statistical claim. A real-data fit cannot establish coverage; simulated recovery
 cannot establish usability or the truth of the empirical model. Mathematical
 work remains first: the new empirical case identifies which mathematical and
 numerical checks the practitioners actually need, before optimization.
+
+#### Consequential ranking: define the decision before evaluating it
+
+The sport case is a concrete data/target review for D1/D2, not another model
+release commitment or a reason to abandon the writing-data integration issue.
+`gmfrm-sport-decision-20260930.R` reconstructs published scoring quantities;
+[the existing evidence record](gmfrm-mml-em-20260927.md#september-30-consequential-ranking-in-judged-sport)
+identifies sources, arithmetic checks and limits. It supplies a verified
+non-language data structure; it does not close a model-specific inference gate.
+
+Before admitting a ranking decision, fix these elements of the protocol:
+
+1. **Target and action.** Distinguish reconstruction of the official result,
+   selection by a prespecified latent construct/composite, and prediction of
+   the winner of a new performance. Define whether the action selects one,
+   returns a candidate set, requests further assessment or abstains. Preserve
+   official tie/advancement rules and their historical version. Observed
+   official winners and panel consensus are not known latent truth.
+2. **Population and repetitions.** State whether the same performances are
+   rejudged by a new panel, the same athletes perform again, or a new field is
+   sampled. These require different uncertainty. For decision evaluation,
+   the repeated unit is a complete competition under that contract, not
+   independent rows sampled out of a shared panel/performance. Resampling
+   Persons changes the competitor field; judge deletion is sensitivity, not
+   a winner probability. Preserve common calibrations and dependence.
+3. **Challenging contrasts.** Retain a clear leader, a practically close
+   leading group and an exact tie. Specify their gaps on the declared target
+   scale before responses are generated; do not define them retrospectively
+   from fitted SEs. Compare complete panels with cost-matched linked sparse
+   panels, then loss of a bridge. Review narrow elite-cohort SD separately
+   from raw-scale changes, ability-associated panel assignment and selective
+   advancement. Separately introduce shared-performance dependence and
+   judge-by-athlete interactions to test misspecification; these are not
+   effects already implemented by two fixed slope families. Common rated
+   performances are observed links, not known fixed-ability anchors.
+4. **Loss and availability.** Report wrong selections over all competitions,
+   over decisions actually issued, and separately the rate of abstention or
+   numerical unavailability. Separate a wrong confident singleton from a
+   broad candidate set. For a known latent target, record the loss
+   `max(truth) - truth[selected]`, candidate-set coverage/size and tie handling.
+   Define tied best performers as a set: distinguish selecting any member
+   from a confidence set that must retain all tied best performers.
+   Returning every athlete must not count as a useful precise decision.
+   Always report near-tie and separated-leader results separately; overall
+   rank correlation, mean bias and G cannot replace these outcomes.
+5. **Uncertainty and acceptance.** A selected best-minus-runner-up contrast
+   needs covariance, common calibration uncertainty and selection accounting;
+   independent draws from marginal SEs do not provide these. A simultaneous
+   contrast/rank procedure needs its own assumptions and evaluation, including
+   exact ties/boundaries. Freeze acceptable loss/error, Monte Carlo precision
+   and computational cost before an independent study. No universal 95%
+   individual interval, G cutoff or probability threshold defines an acceptable
+   championship procedure.
+
+The concrete skating fixture also requires correct order of trimming,
+rounding and factoring, signed deductions, and different score ladders for
+PCS and GOE. The current public support remains design/scoring interpretation
+and model-scoped diagnostics, not automatic championship decisions. The
+two-family route has neither Person scoring nor a joint athlete-rank
+inference consumer; one-family conditional EAP and linear G/D composites
+cannot fill that gap. Public help now states these limits at the relevant
+entry points. Existing joint-slope and corrected-JML commitments, their
+mathematical priorities, and the October 2 escalation condition remain intact.
 
 #### Mathematical review before another study or optimization
 

@@ -76,6 +76,9 @@ introduce conditions absent from the G-study.
 Read \code{summary(d)} together with \code{plot(d)}:
 \itemize{
 \item \code{G} concerns consistency of relative ordering, such as ranking examinees.
+It is not the probability of identifying the best person or the winner
+of a competition. Close leading scores can remain hard to distinguish
+even when G is high; this function provides no Person-rank intervals.
 \item \code{Phi} concerns absolute score levels and also counts shifts from easier
 tasks or more lenient raters as error. It is not pass/fail accuracy.
 \item \code{RelativeSEM} and \code{AbsoluteSEM} express these errors in the units of the
@@ -114,6 +117,8 @@ and \code{E}, universe-score covariance is \code{P}. Relative-error covariance i
 \code{R/n_r + T/n_t + RT/(n_r*n_t)}. The G-study number of persons does not
 divide individual-score universe variance. Holding a count constant does
 not turn its random facet into a fixed facet.
+Composite weights define linear score combinations. They do not implement
+score-dependent panel trimming or an entire competition scoring rule.
 For a Person-by-Task G-study, \code{E} combines Person-by-Task interaction and
 within-cell error: relative-error covariance is \code{E/n_t}, absolute-error
 covariance is \code{(T + E)/n_t}, and universe-score covariance remains \code{P}.

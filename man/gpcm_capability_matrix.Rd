@@ -158,6 +158,23 @@ residual summaries, so the example does not endorse rater feedback from
 those estimates. All score datasets bundled with mfrmr are synthetic.
 }
 
+\section{Rankings and consequential decisions}{
+
+An official competition result, highest latent ability and a future winner
+are different targets. The scope vignette reviews actual figure-skating
+score protocols, changing judge panels and advancement to a final.
+Individual score intervals, high rank correlation or a high G coefficient
+do not establish the probability of selecting the correct champion.
+Differences need covariance and selection-aware uncertainty; independently
+drawing from printed SEs omits shared calibration uncertainty.
+There is no winner-probability or simultaneous Person-rank confidence-set
+API. Two-family Person scoring is also unavailable. Available one-family
+EAP intervals condition on the calibration and prior; they do not provide
+a validated winner-selection procedure. Preserve competition-specific
+aggregation, rounding, tie rules and advancement separately from modelled
+ability. Do not interpret sensitivity to a judge's marks as proof of bias.
+}
+
 \section{Local independence, testlets and random effects}{
 
 Two fixed slope families change response sensitivity; they do not by

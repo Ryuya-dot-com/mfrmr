@@ -644,6 +644,9 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'
 #'   Read `summary(d)` together with `plot(d)`:
 #'   * `G` concerns consistency of relative ordering, such as ranking examinees.
+#'     It is not the probability of identifying the best person or the winner
+#'     of a competition. Close leading scores can remain hard to distinguish
+#'     even when G is high; this function provides no Person-rank intervals.
 #'   * `Phi` concerns absolute score levels and also counts shifts from easier
 #'     tasks or more lenient raters as error. It is not pass/fail accuracy.
 #'   * `RelativeSEM` and `AbsoluteSEM` express these errors in the units of the
@@ -680,6 +683,8 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   `R/n_r + T/n_t + RT/(n_r*n_t)`. The G-study number of persons does not
 #'   divide individual-score universe variance. Holding a count constant does
 #'   not turn its random facet into a fixed facet.
+#'   Composite weights define linear score combinations. They do not implement
+#'   score-dependent panel trimming or an entire competition scoring rule.
 #'   For a Person-by-Task G-study, `E` combines Person-by-Task interaction and
 #'   within-cell error: relative-error covariance is `E/n_t`, absolute-error
 #'   covariance is `(T + E)/n_t`, and universe-score covariance remains `P`.

@@ -1093,3 +1093,91 @@ to all 1,370 rows used for fitting. The guide renders to HTML; the generated
 Rd parses and matches its roxygen source. The runner's early existing-case
 guard was exercised: it refuses a duplicate run before writes, preserving
 hashes of all retained files. These checks add no refit or simulation.
+
+## September 30: consequential ranking in judged sport
+
+**Question.** The user asks specifically about a decision as consequential as
+selecting a sports champion. Before adding winner inference, determine what
+the recorded scores and outcome represent and whether the current model and
+uncertainty consumers can answer that question. This bounded audit addresses
+that scope decision; it is not a latent re-ranking of named competitors.
+
+**Primary data.** The [ISU Olympic 2026 women's event](https://results.isu.org/results/season2526/owg2026/)
+links the short/free score PDFs, their separate judge rosters and final result.
+`gmfrm-sport-decision-20260930.R` parses locally saved copies, preserves source
+URLs/hashes and fails on unaccounted records or aggregation discrepancies.
+Inputs and resulting `audit.rds`, component-mark CSV, final-total CSV and
+session information are under `validation-results/gmfrm-sport-20260930/`.
+These are external empirical records, not a new bundled package dataset.
+
+There are 29 short-program and 24 free-skating performances, three component
+marks per judge, and nine judges in each segment: 1,431 component marks in
+total. Named panels contain 13 different judges and five shared judges; only
+one slot keeps the same judge. Local `J1`--`J9` labels cannot be joined across
+segments as identities. Five short-program participants do not reach the
+final: their absent free-skating records are not uncollected assigned ratings.
+The HTML roster labels all judges ISU, so it does not independently supply
+judge nationalities for any national-bias analysis.
+
+**Executed arithmetic checks.** All 159 component trimmed means, 53 factored
+PCS totals, 53 segment totals and 24 final totals agree with the published
+figures to floating-point tolerance (1e-10). The audit uses integer
+quarter-points/hundredths for mean and per-component half-up rounding before
+adding factored components. The first draft correctly failed: rounding only
+after summation, or R's ties-to-even convention, misses some PCS totals.
+The parser also had to preserve negative signed deductions. These were audit
+implementation errors, not defects in mfrmr's estimator or the official data.
+Published technical-element totals are retained; element-specific GOE/base
+value conversion, tie resolution and the complete technical rule engine were
+not independently reconstructed. The first page of each score PDF was
+visually checked; all numeric records were parsed and reconciled. This is not
+a claim of visually reading every page of the full Olympic results book.
+
+Across the two segments, the first finisher's TES/PCS are 119.08/107.71 and
+the second finisher's 112.91/111.99, both with zero deductions. Totals are
+226.79 and 224.90, a difference of 1.89. PCS ordering differs from total
+ordering because their targets differ. Neither ordering establishes a latent
+truth or gives a calibrated probability of a different future outcome.
+
+**Mathematical/API consequence.** Athlete, segment, component and actual
+judge are distinct roles. Integer PCS coding preserves 40 categories; it
+does not remove empty cells, selected-population assumptions or within-
+performance dependence. Pooling those marks with GOE and difficulty points,
+dropping the segment, or treating repeated performances as independent
+athletes would change the model. The two-family route admits exactly two
+non-Person facets and supplies neither Person scoring nor athlete-rank
+inference. Component-slope intervals are not athlete intervals. Existing
+one-family EAP conditions on calibration; its marginal intervals do not
+account for selecting the highest estimate among many. Linear observed-score
+G/D composites do not reproduce trimming, and G is not a winner probability.
+
+**Literature review limits.** Looney (1997), *Objective measurement of figure
+skating performance*, Journal of Outcome Measurement 1(2), 143--163,
+[PMID 9661718](https://pubmed.ncbi.nlm.nih.gov/9661718/), was checked through its
+primary abstract: it analyzes the 1994 event and its historical median-rank
+system, not today's scoring or this implementation. Mercier and Heiniger's
+[2019 v3 paper](https://arxiv.org/abs/1807.10021) was reviewed selectively in
+Sections III, VI and VIII (rank-method pages 9--10 also visually inspected).
+It treats performance-dependent judging variability, imperfect control-score
+proxies and limitations of rank-based judge assessment. It is neither a
+GMFRM-equivalence study nor grounds to equate podium sensitivity with judge
+incompetence. No fresh full-paper or Zotero-library audit is claimed.
+
+**Disposition.** Public GPCM guidance now distinguishes official, latent and
+future-performance targets with the empirical example. GPCM and multivariate
+D-study help state the missing rank-inference scope. The internal roadmap
+requires explicit selection loss, false confident decisions, candidate-set
+coverage/size, unavailable outcomes, gap/tie contrasts and the appropriate
+repeated competition unit before admitting a winner claim. No new model,
+winner-probability API, simulation grid or estimator refit was introduced.
+The empirical writing integration issue and corrected-JML centering issue
+remain the mathematical priorities; this sport audit does not close them.
+
+**Verification.** The final runner also passed in an isolated copy of the
+five source files; its parsed ratings, checks and totals are identical to the
+retained audit. A repeated call in the original directory refuses to overwrite
+the saved result, with unchanged hashes. Both updated Rd pages parse, the
+vignette renders to HTML, and the new section/table is present. Parsed R
+expressions in the two edited package source files match HEAD: changes there
+are documentation only. No full test suite, estimator simulation or refit was
+needed for these changes.
