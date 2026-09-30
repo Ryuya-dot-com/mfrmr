@@ -228,12 +228,14 @@ The metadata-only successor archive preserves all other 795 files. The subsequen
 [Windows run](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36648663039)
 at `4c32dd9e` took approximately **1,472 seconds of checking**, including
 214 seconds static analysis and about 900 seconds of selected tests. Its
-README assertion failure is repaired locally; indexed PDF generation still
-needs isolated diagnosis, and HTML math rendering was skipped without V8.
-This is not a clean or under-budget result. Prioritize targeted Windows
+README assertion failure is repaired locally. Isolated diagnosis identified
+a missing makeindex tool; after adding it, Windows generated the indexed
+663-page manual successfully in 20.55 seconds. HTML math rendering was skipped
+without V8 in the complete run; V8 is now provisioned but that check remains
+unverified. This is not a clean or under-budget whole-check result. Prioritize targeted Windows
 test profiling and static-analysis/overhead work; a test-only optimization
-cannot leave adequate headroom. Diagnose the manual separately before another
-assembled check. Do not repeat the same
+cannot leave adequate headroom. Reuse the repaired manual evidence and local
+static-analysis profile before another assembled check. Do not repeat the same
 full run after metadata-only repairs or start
 another broad statistical study instead. This prerequisite proceeds separately
 from unresolved D1 methods. Local timing does not close the Windows ceiling

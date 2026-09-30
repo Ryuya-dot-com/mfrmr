@@ -1,14 +1,15 @@
 # Development branch — not for submission
 
-This branch is now 0.2.4.9000. The notes below describe only the frozen
-0.2.4 rc.6 archive; its checks do not qualify the new development changes.
+This branch is now 0.2.4.9000. Historical checks below identify the frozen
+0.2.4 rc.6 archive; they do not qualify the new development changes.
+September 30 development measurements are reported separately under check time.
 Reviewed September 30, 2026: check time is an unresolved submission blocker.
 The earlier zero-error/zero-warning results do not establish submission readiness.
 
 # mfrmr 0.2.4 — submission preparation
 
 Preparation draft, updated September 26, 2026. This source has not been
-submitted to CRAN. Both current Win-builder results have been retrieved and
+submitted to CRAN. Both rc.6 Win-builder results have been retrieved and
 reviewed: zero errors, zero warnings and one explained NOTE in each environment.
 
 ## Changes
@@ -105,9 +106,22 @@ examples were enabled; the additional `donttest` workload was not included.
 The full check found undeclared test imports from callr/pkgload; their Suggests
 declarations were repaired and R's test-dependency check then passed. The
 development-version NOTE remains expected. All other archive files are byte
-identical; no second full check or current Windows result is claimed. Exact
+identical; no second complete local check is claimed. Exact
 archive hashes, commands, skips and the separate successful fresh-process
 check are recorded in `inst/validation/cran-check-time-20260930.md`.
+
+The subsequent development-source Windows R 4.6.1 check took 1,561.889 seconds
+including a rounded 90-second installation, or approximately 1,472 seconds
+of checking. Static analysis took 214 seconds, ordinary examples 73, tests
+about 900, vignette rebuilding 27 and HTML manual generation 76. The result
+was one ERROR, one WARNING and three NOTEs. The failed test was a README
+wording check, subsequently corrected and checked locally. Indexed PDF
+generation lacked makeindex; an isolated Windows run identified that missing
+tool, which has been added to CI setup. A subsequent manual-only Windows run
+successfully generated the indexed PDF in 20.55 seconds. V8 was absent, so HTML math rendering
+was not checked; it is now requested for subsequent timing runs. These repairs
+do not turn the original result into a clean check or resolve the 600-second
+ceiling. No complete rerun or current-source Win-builder result is claimed.
 
 The September 24 Windows result skipped six tests because RTMB was 1.9 rather
 than the required >= 2.0. The rc.6 September 26 results do not have those RTMB
@@ -115,12 +129,12 @@ skips; their five other skips are described above. Final evidence must record
 optional-package versions and executed feature checks, including supported
 RTMB and nleqslv routes and clear behavior when dependencies are unavailable.
 
-## NOTE explanation
+## Historical rc.6 NOTE explanation
 
-The local and both Win-builder NOTE entries report maintainer information and
-seven updates in six months. This candidate consolidates estimation/inference corrections
-and interface/reporting improvements described in NEWS. It has no remaining
-local package-check errors or warnings. The initial missing-vignette-index
+The rc.6 local and both Win-builder NOTE entries report maintainer information and
+seven updates in six months. That candidate consolidates estimation/inference corrections
+and interface/reporting improvements described in NEWS. Its final recorded
+local package check had no errors or warnings. The initial missing-vignette-index
 problem was corrected before freezing this archive.
 
 ## Remaining before submission

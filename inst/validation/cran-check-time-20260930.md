@@ -4,6 +4,11 @@ This is release-engineering evidence for roadmap D3/D4, not new statistical
 qualification. The Windows check-only ceiling remains 600 seconds; the local
 480-second target is provisional and is not a cross-platform guarantee.
 
+Current outcome: the measured Windows check took about 1,472 seconds and did
+not pass. Its README assertion is repaired and its missing manual indexer was
+fixed and verified separately. No complete clean or under-budget Windows rerun
+is claimed; the runtime shortfall remains the release-engineering priority.
+
 ## Source and measurement
 
 Baseline source: `161db708`. Its normally built source archive is
@@ -338,3 +343,17 @@ local warm-session profile of one check routine, not a repeat of the whole
 package function to rewrite or justify disabling codetools. Raw profile,
 session, result and summary are retained under `static-profile/` beside the
 Windows records. Use it to guide profiling, not as an achieved optimization.
+
+[Manual repair run 36652479822](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36652479822)
+at `349f6bfc5d68ffb69fa0f81b0275c738fe93b164` then passed the canonical indexed
+route in **20.55 seconds**: exit status 0, PDF and `.ind` file present,
+3,459 index entries accepted and none rejected. The PDF has 663 pages.
+The evidence is in `manual-repair/manual-diagnostic/` beneath the Windows
+record directory. Only makeindex provisioning changed the TeX setup; no Rd
+content, source estimator or numerical test was altered to obtain success.
+The package build and complete check were skipped in both manual-only runs.
+The successful manual repair and local README assertion check do not replace
+the failed whole-check status, the pending HTML math-rendering check or the
+unmet runtime ceiling. Development source records and cran-comments distinguish
+these separate outcomes; no main push, release-tag change or CRAN submission
+was made.
