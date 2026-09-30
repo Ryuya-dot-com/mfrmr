@@ -209,6 +209,10 @@ mfrm_jml_adjustment_roster <- function(design, exposure, counts, max_states) {
 # Full nonsymmetric equation derivative; conditional means never replace the
 # actual Person contributions. Inference concerns the equation's root, which
 # may still differ from the generating structural parameter.
+# Within-roster centering describes independent new Persons from each roster's
+# population, including ability composition. It does not condition on every
+# Person's true ability. This is the empirical asymptotic meat, without an
+# n_g/(n_g-1) correction; two Persons is only a computational minimum.
 mfrm_jml_adjustment_covariance <- function(problem, beta, order,
     sampling = c("fixed_rosters", "random_rosters")) {
   sampling <- match.arg(sampling)

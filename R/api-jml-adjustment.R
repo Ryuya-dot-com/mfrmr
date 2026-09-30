@@ -115,6 +115,11 @@ mfrm_jml_summary <- function(fit, digits=3, include_person=FALSE) {
     locations=fit$facets$others, steps=fit$steps, slopes=fit$slopes,
     uncertainty=data.frame(Available=z$covariance$available,
       Sampling=if(z$estimator$sampling=="fixed_rosters") "Fixed assignment counts" else "Random assignment rosters",
+      RepeatedSampling=if(z$estimator$sampling=="fixed_rosters")
+        "New independent Persons within each assignment pattern; pattern counts fixed" else
+        "New independent Persons and their assignment patterns from the same joint population",
+      AbilityDistribution="Unspecified and allowed to differ between assignment patterns",
+      SamePersonReassessment="Not estimated: holding each Person's ability fixed defines a different variance",
       Target=z$estimator$target, Reason=z$covariance$reason),
     interpretation_notes=data.frame(Note=mfrm_jml_note()))
   if (include_person) tables$persons <- fit$facets$person
@@ -129,6 +134,8 @@ mfrm_jml_print_summary <- function(x) {
     "| Persons:",x$overview$Persons,"| Ratings:",x$overview$N,"\n")
   print_wrapped_line(x$decision$Interpretation)
   print_wrapped_line(x$estimation_note)
+  if (!is.null(x$tables$uncertainty$RepeatedSampling))
+    print_wrapped_line(paste("RootSE sampling:", x$tables$uncertainty$RepeatedSampling))
   cat("\nRelative discrimination\n")
   print(round_numeric_df(x$tables$slopes[,c("SlopeFacet","Estimate","LogRootSE","RootSE")],x$digits),row.names=FALSE)
   if (!isTRUE(x$overview$CovarianceAvailable)) print_wrapped_line(paste("RootSE unavailable:", x$overview$CovarianceReason))

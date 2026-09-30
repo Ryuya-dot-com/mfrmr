@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Corrected-JML summaries, reports and exports now explain which repeated
+  sampling the reported `RootSE` describes. Fixed assignment counts still
+  allow the composition of a new cohort to vary. This uncertainty does not
+  describe reassessing the same Persons at fixed abilities. Help clarifies
+  the sampling assumptions and small-sample limits; estimates and covariance
+  calculations are unchanged.
+
 * Adaptive MML fitting and calibration checks perform fewer repeated matrix
   calculations for RSM, PCM and GPCM. The likelihood, integration rules and
   numerical accuracy requirements are unchanged.

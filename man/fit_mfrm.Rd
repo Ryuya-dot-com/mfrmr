@@ -419,7 +419,10 @@ Person covariance: \code{"fixed_rosters"} (default) centers contributions
 within each observed assignment pattern; \code{"random_rosters"} centers
 globally when assignment patterns are sampled. This changes covariance,
 not the point equation. The fixed-roster calculation needs at least two
-Persons per pattern. Omit this argument when no correction is requested.}
+Persons per pattern. Both describe new independent Persons, including
+variation in their ability composition; neither estimates the variance
+from reassessing the same Persons at fixed abilities. Omit this argument
+when no correction is requested.}
 }
 \value{
 An object of class \code{mfrm_fit} (named list) with:
@@ -575,6 +578,19 @@ stop explicitly. No approximate pruning is substituted. The full equation
 Jacobian and empirical Person contributions give a sandwich covariance,
 with the selected assignment-sampling assumption. This is not an inverse
 likelihood Hessian or a general proof of bias removal.
+
+For example, \code{"fixed_rosters"} describes new cohorts with the same number
+of Persons assigned to each rater/task combination. It does not hold each
+Person's ability fixed across repeated cohorts. Ability distributions are
+unspecified and may differ between assignment patterns. With
+\code{"random_rosters"}, both Persons and their assignments are sampled from
+the same joint population; assignment need not be independent of ability.
+Neither option models shared random raters or dependent Persons.
+The empirical sandwich has no small-sample degrees-of-freedom correction.
+Its fixed-roster interpretation requires enough independent Persons within
+each pattern; two Persons is a computational minimum, not an assurance of
+accurate uncertainty. Taking \code{"random_rosters"} solely to obtain a RootSE
+changes the sampling assumption and is not a repair for sparse information.
 
 Use \code{summary(fit)$tables} for locations, steps, relative slopes and the
 uncertainty explanation; \code{include_person = TRUE} adds Person profiles.

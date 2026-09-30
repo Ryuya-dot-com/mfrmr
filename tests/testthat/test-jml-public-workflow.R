@@ -26,6 +26,10 @@ test_that("corrected JML retains its estimator through public output and saved e
   expect_s3_class(s,"summary.mfrm_fit")
   expect_output(print(fit),"Corrected JML")
   expect_match(s$estimation_note,"residual bias",ignore.case=TRUE)
+  expect_match(s$tables$uncertainty$RepeatedSampling,"New independent Persons.*counts fixed")
+  expect_match(s$tables$uncertainty$AbilityDistribution,"allowed to differ")
+  expect_match(s$tables$uncertainty$SamePersonReassessment,"Not estimated")
+  expect_output(print(s),"RootSE sampling: New independent Persons")
   expect_true(all(is.na(s$tables$persons$SE)))
   expect_true(all(!s$tables$slopes$CIEligible))
   estimates <- as.data.frame(fit)
@@ -55,6 +59,8 @@ test_that("corrected JML retains its estimator through public output and saved e
   report <- mfrm_report(res)
   expect_s3_class(report,"mfrm_report")
   expect_match(report$markdown,"No confidence intervals")
+  expect_match(report$markdown,"New independent Persons")
+  expect_identical(report$tables$uncertainty,s$tables$uncertainty)
   expect_match(mfrm_report(res,output="html")$html,"RootSE")
   path <- tempfile("adjusted-export-")
   on.exit(unlink(path,recursive=TRUE),add=TRUE)
@@ -66,6 +72,7 @@ test_that("corrected JML retains its estimator through public output and saved e
   saved <- exported$written_files$Path[exported$written_files$Component=="results_rds"]
   restored <- readRDS(saved)
   expect_identical(restored$fit$jml_adjustment,fit$jml_adjustment)
+  expect_identical(restored$tables$uncertainty,s$tables$uncertainty)
   replay <- exported$written_files$Path[exported$written_files$Component=="replay_code"]
   withr::with_dir(path,sys.source(replay,envir=new.env(parent=globalenv())))
   # Ordinary inference/diagnostics must never be attached to these roots.

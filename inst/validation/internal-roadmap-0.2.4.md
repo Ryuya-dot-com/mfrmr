@@ -64,7 +64,7 @@ heterogeneous milestones; report completed outcomes and remaining blockers.
 | Layer | Current meaning |
 | --- | --- |
 | Development checkpoint `7f4f530c` | Accumulated package code, help, tests and validation records through September 30. Two-family and corrected-JML statistical support remains unfinished. This is not a release freeze. |
-| This roadmap revision | Documentation/priority reconciliation after that checkpoint; no estimator, numerical default, simulation or acceptance threshold changes. |
+| This roadmap revision | Mathematical priority/sampling-target reconciliation after that checkpoint, with explicit sampling explanations in JML output/help. No estimator, covariance formula, numerical default, simulation or acceptance threshold changes. |
 | Prior development `08a5ee9b` | Recorded five-environment CI for that source. It does not qualify the accumulated checkpoint. Remote status was not refreshed for this reconciliation. |
 | Historical rc.6 | Preserve source/tags/assets and their evidence. Never retag it or reuse its platform/Win-builder checks as evidence for newer source. |
 | September 27 local archive | Its packaging, installed replay and manual/tutorial evidence is retained in the claim ledger. Later changes require their own affected checks and final assembled-source qualification. |
@@ -345,6 +345,31 @@ sections 1.2–1.3 (printed pp. 3–4) of the
 distinguish finite-order bias reduction from fixed-stratum-length consistency;
 even a fully iterated limit needs identifying information. This is a targeted
 source recheck, not a fresh whole-paper reading or a theorem for this GPCM.
+
+**Sampling target resolved, September 30.** The fixed-roster sandwich describes
+new independent Persons within each assignment pattern, with fixed pattern
+counts and unspecified, possibly different ability distributions. It does not
+condition on the same Persons' abilities across reassessments. Random rosters
+add variation in pattern composition; they do not require ability-independent
+assignment. Exact decomposition of the 12 saved corrected population cases
+reproduces the stored covariance and distinguishes response, ability-composition
+and roster-composition variation. In those cases the ability-composition share
+is at most 0.10% of each coordinate's fixed-roster variance. This closes the
+meaning of the existing covariance, not its coverage or the structural-bias
+decision. Help, printed summary and saved report tables now carry that meaning.
+The empirical asymptotic meat is retained: changing its finite-sample divisor
+cannot remove root displacement. Two Persons per pattern is a computational
+minimum, not statistical qualification for many small assignment groups.
+See the derivation/results in the [JML review](jml-inference-review-20260927.md#september-30-covariance-sampling-target-and-finite-roster-centering).
+
+The next corrected-JML decision remains a justified structural-bias treatment
+or exposure-growth regime for a fixed procedure. The T^(-k-1) rate in Dhaene
+and Weidner's Conjecture 1 must not be presented as a theorem for this GPCM.
+A proposed regime must control bias relative to the matching standard error,
+not bias alone, and must preserve information under the actual sparse design.
+Do not launch a new coverage study or select an order until that proposal and
+its falsifiable evaluation criteria are recorded. This does not defer the
+agreed interval outcome or replace the dated escalation rule below.
 
 The retained order-study CSV confirms all 400 datasets were attempted and both
 orders returned estimates/covariance. For log slope, order 2/4 truth inclusion

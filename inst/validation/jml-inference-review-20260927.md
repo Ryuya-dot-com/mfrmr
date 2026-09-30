@@ -1064,3 +1064,103 @@ Audit outputs are under `validation-results/jml-inferential-target-audit-2026093
 all-coordinate table, retained paired MSEs, input hashes and session. The
 authoritative order of remaining work is in the
 [internal roadmap](internal-roadmap-0.2.4.md#next-work-one-ordered-queue).
+
+## September 30: covariance sampling target and finite-roster centering
+
+Question: does the current covariance describe new independent Persons, or
+new responses from the same Persons with their abilities fixed? This matters
+because JML's absence of a parametric ability distribution does not identify
+the repeated-sampling target of a sandwich covariance.
+
+At a saved adjusted-equation population root, let U be one Person's actual
+score vector, g the assignment pattern and a the generating ability. Write
+m_g(a) = E[U | g,a], mu_g = E[U | g], and pi_g for the pattern proportion.
+The law of total covariance gives three distinct population meats:
+
+* Fixed abilities and assignment composition:
+  B_response = sum_g pi_g E_a[Var(U | g,a)].
+* New independent Persons, fixed assignment counts:
+  B_fixed = B_response + sum_g pi_g Var_a(m_g(a)).
+* New independent Persons and random assignment patterns:
+  B_random = B_fixed + Var_g(mu_g).
+
+All are evaluated at the same root and transformed by the same full,
+nonsymmetric Jacobian: V = A^(-1) B A^(-T)/N. For the first comparison,
+the fixed ability frequencies match the saved population masses, so the
+limiting equation and derivative are the same. Arbitrary fixed abilities
+could change both. The last two added matrices are positive semidefinite.
+Neither is a bias correction, and neither is shared-rater random-effect
+uncertainty. Random assignment here means joint sampling of Persons and
+patterns; it does not impose independence between assignment and ability.
+
+The current sample implementation centers within observed assignment patterns
+for `fixed_rosters` and globally for `random_rosters`, matching the second
+and third targets. The repeated-sample study drew full response patterns
+from each roster's ability mixture, not from a fixed list of individual
+abilities. The interpretation is therefore internally consistent. Section 2
+of [Dhaene and Weidner (2023)](https://arxiv.org/html/2301.13736v2#S2) also
+separates a specified conditional response model from an unrestricted
+distribution of latent effects conditional on covariates. Their MLE plug-in
+connection is in section 8.1; neither point makes its general inference
+claims automatic for this GPCM. This is a targeted source recheck.
+
+The existing `jml-inferential-target-audit-20260930.R` now reconstructs exact
+response probabilities at the three generating abilities per roster and
+uses the saved score vectors, roots and Jacobians. It reuses all 12 reviewed
+corrected cases (both owners, both designs, orders 1/2/4), without simulation,
+refitting or changing the original evidence. At every case, probability
+normalization, ability-mixture reconstruction, total-covariance decomposition,
+positive-semidefinite added components and stored covariance agree to 1e-12
+absolute tolerance. Input/source hashes are retained alongside the output.
+
+| Order | Ability-composition share of fixed-roster variance, range across 20 coordinates |
+| --- | ---: |
+| 1 | 0.00197%–0.09962% |
+| 2 | 0.00103%–0.05336% |
+| 4 | 0.0000871%–0.02675% |
+
+These small shares in the retained conditions are not a bound for other
+ability distributions or designs. The new CSV `sampling-decomposition.csv`
+retains all 60 coordinate results, including response-only, ability and
+assignment-composition terms; no coordinate was selected for a favorable
+conclusion. These are population linearizations, not new finite-sample
+coverage results.
+
+There is a separate finite-roster normalization issue. With n_g iid Persons
+in roster g, at a known fixed root and Sigma_g = Var(U | g), the implemented
+sample-centered meat has expectation
+
+    E[Bhat] = (1/N) sum_g (n_g - 1) Sigma_g,
+    B_fixed = (1/N) sum_g n_g Sigma_g.
+
+Multiplying each roster's centered cross-product by n_g/(n_g-1) would remove
+this particular finite-sample deficit at a known root. It would not make a
+fitted nonlinear sandwich unbiased, remove structural displacement or
+establish confidence-interval coverage. The current asymptotic meat is
+consistent with a fixed number of sufficiently populated rosters under the
+usual independent-Person moment and regular-root conditions. With many tiny
+rosters that argument cannot simply be reused. For example, n_g=2 halves
+the expected within-roster centered cross-product relative to its population
+target; the API's two-Person minimum is numerical, not statistical permission.
+
+For the saved N=400 designs, applying the same saved Jacobian to E[Bhat]
+gives coordinate variance ratios 0.994544–0.995227 relative to B_fixed.
+This calculation is explicitly at the population root; it is not the
+expectation of the fitted variance estimator in the 400 datasets. A divisor
+change would address only this small normalization effect in those designs.
+It cannot be used to close the residual-bias decision or explain all observed
+SE/coverage differences. No numeric estimator or covariance change is made.
+
+Public output now makes the repeated-sampling basis explicit in summary,
+report and saved-result tables, and help explains the ability-population and
+small-roster assumptions. Existing estimates and covariances are retained.
+The remaining D1 task is structural-bias treatment or a justified exposure-
+growth regime, followed by evaluation of the specified procedure. In
+particular, the T^(-k-1) bias rate stated as Conjecture 1 in Dhaene and Weidner
+is not a GPCM theorem; it cannot alone authorize formal structural intervals.
+
+Verification of this change: the existing `jml-adjustment` and
+`jml-public-workflow` test files pass without failures or warnings, including
+the saved numerical reference, full-Jacobian covariance and report/export/
+reopen checks. The updated Rd file parses and agrees with roxygen generation.
+No whole-package check, simulation, Windows run or timing claim is added.
