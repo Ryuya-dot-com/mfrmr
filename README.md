@@ -7,14 +7,17 @@
 
 `mfrmr` fits unidimensional many-facet ordered-response models in R.
 It supports rating-scale (`RSM`) and partial-credit (`PCM`) models, together
-with a `GPCM` extension in which one selected facet supplies level-specific
+with a one-family `GPCM` extension in which one selected facet supplies level-specific
 discriminations. MML permits a different facet to supply category steps;
 JML requires the same facet for both roles. GPCM MML information-criterion comparison
 uses explicit likelihood and solution checks; `confint(fit, parm = "slopes")`
 checks approximate pointwise relative-slope intervals separately. Matched PCM/GPCM MML fits can be tested
 with `compare_mfrm(..., nested = TRUE)`. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
-an ordered score.
+an ordered score. An experimental two-family GPCM route estimates two
+ordered slope families using fixed-standard-normal MML--EM; its supported
+outputs and unresolved inferential limitations are described in
+[Model scope](#model-scope).
 
 Educational performance assessment is a recurring example, but the column
 names and facet roles are configurable. The same analysis questions can arise
@@ -2169,9 +2172,10 @@ bootstrap diagnostics. See `help("compute_facet_icc")` for details.
 
 ## Model scope
 
-GPCM uses one substantive ability dimension and assigns relative
-discriminations to one selected facet. MML allows a different facet to own
-category steps; JML requires the same owner. Its model
+GPCM uses one substantive ability dimension. Its one-family route assigns
+relative discriminations to one selected facet. MML allows a different facet
+to own category steps; JML requires the same owner. A separate experimental
+MML--EM route estimates two ordered slope families. Model
 structure and the availability of intervals, comparisons and downstream
 workflows are described separately. Unsupported combinations and inference
 states are reported explicitly.
@@ -2182,7 +2186,7 @@ FACETS replacement: each `fit_mfrm()` call uses one response-model family and
 one observed score scale, and the current public API does not provide mixed
 response families, multiple independent rating scales, general threshold
 anchoring, or online calibration updates. Portable fixed-calibration artifacts are available only
-for eligible one-scale fits: fixed-standard-normal `RSM`/`PCM` MML,
+for eligible one-scale fits: `RSM`/`PCM` MML with a fixed standard-normal population,
 estimated-normal one-family GPCM MML, and the separately qualified JML routes
 described below. The prior and source checks depend on the estimator; successful
 loading does not establish validity for another population. See the portable
@@ -2262,12 +2266,13 @@ grid-based intervals, whose posterior mass may differ from the requested level.
 | Facets | Multiple observed facet roles | The design must remain connected for the intended contrasts |
 | `RSM` | Shared step structure | The common rating-scale assumption must be substantively defensible |
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
-| `GPCM` | One slope family; MML permits separate slope/step owners and estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
+| One-family `GPCM` | MML permits separate slope/step owners and estimates the common scale by default; JML requires a shared owner | Intervals, comparisons and scoring have estimator-specific checks |
+| Two-family `GPCM` | Experimental MML--EM with fixed N(0,1), exactly two facets and ordered slope owners | Experimental component intervals and descriptive response diagnostics; no ordinary model ranking or portable scoring |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
 | Latent regression | Conditional-normal, unidimensional MML population model | Person scoring requires explicit exploratory review and omits uncertainty in the fitted population parameters |
 | Diagnostics | Residual and posterior-averaged marginal screens | A flag is not a deletion, fairness, or validity decision; missing results remain unavailable |
 | Residual group comparisons | Differences in observed-minus-expected scores | No residual SEs, p-values, confidence intervals or differential-functioning classifications |
-| G/D studies | Observed-score main-effects variance decomposition and design projections | No MFRM latent-scale reliability, full interaction decomposition or cut-score accuracy estimate; variance-estimation uncertainty is omitted |
+| G/D studies | A simplified main-effects route and a separate multivariate route with interactions, composites and crossed or nested measurement facets | Observed-score quantities, not MFRM latent-scale reliability; future designs must match the supported structure. Prespecified crossed-plan differences have separate approximate intervals; ordinary D-study projections are point estimates |
 | Shrinkage | Post-fit adjustment toward zero | Original estimates and predictions are unchanged; descriptive bands omit prior-variance uncertainty and cross-level covariance |
 | External imports | Source-scale displays for supported mirt, TAM and eRm fits | No native response-level diagnostics or portable calibration; missing joint covariance is not reconstructed |
 | FACETS and ConQuest | Exported-table review within documented overlap | Neither external program is executed by `mfrmr` |
@@ -2343,8 +2348,10 @@ to `mfrm_results(include = c("fit", "plots"), compute = "never")` and reports.
 fixed ability scale. It retains owner labels, full joint covariance and numerical
 checks through plots and saved reports; global identification and sampling
 coverage remain unestablished. Failed checks leave estimates with missing bounds.
-Diagnostics, model ranking, new-person scoring and portable calibration remain
-unavailable for two families. See the [two-family workflow](vignettes/mfrmr-gpcm-scope.Rmd#a-provisional-two-family-workflow)
+`mfrm_response_diagnostics()` provides descriptive same-data posterior response
+checks, including Infit/Outfit without reference cutoffs, with plots and saved
+reports. Ordinary fit diagnostics, model ranking, new-person scoring and portable
+calibration remain unavailable for two families. See the [two-family workflow](vignettes/mfrmr-gpcm-scope.Rmd#a-provisional-two-family-workflow)
 for a complete call, input restrictions and interpretation.
 
 The one-family GPCM estimates **relative discriminations for one selected facet**;

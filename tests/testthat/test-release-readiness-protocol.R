@@ -2946,6 +2946,24 @@ test_that("release-readiness protocol checks GPCM scope alignment", {
   expect_match(missing$MissingRoadmapAreas, "Formal structural confidence intervals for corrected JML", fixed = TRUE)
 })
 
+test_that("current evidence lookup does not borrow a historical release", {
+  env <- new.env(parent = globalenv())
+  source(release_readiness_protocol_path(), local = env)
+  root <- tempfile()
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  historical <- file.path(root, "evidence-0.2.0.csv")
+  matching <- file.path(root, "evidence-0.2.4.csv")
+  writeLines("historical", historical)
+  lookup <- function(v) env$mfrmr_release_readiness_versioned_file(root,
+    "evidence-", v, ext = ".csv")
+  expect_identical(lookup("0.2.3"), historical)
+  expect_false(file.exists(lookup("0.2.4.9000")))
+  writeLines("matching release", matching)
+  expect_identical(lookup("0.2.4.9000"), matching)
+  expect_false(file.exists(lookup("0.2.5.9000")))
+})
+
 test_that("release-readiness protocol reviews the source tree shape", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -3072,7 +3090,10 @@ test_that("release-readiness protocol reviews the source tree shape", {
     ],
     "ok"
   )
-  expect_true(isTRUE(review$checklist_status$ChecklistAvailable[1]))
+  # A current frozen release checklist has not yet been assembled. An older
+  # checklist must not make the development source appear qualified.
+  expect_false(isTRUE(review$checklist_status$ChecklistAvailable[1]))
+  expect_match(basename(review$paths$evidence_checklist), "0.2.4", fixed = TRUE)
 })
 
 test_that("GPCM stress manifest covers every prespecified axis pair", {

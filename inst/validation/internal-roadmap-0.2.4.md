@@ -75,6 +75,12 @@ outside the package Git repository and are maintained in place. Remote
 the latter is a historical branch, not the current source authority. Ahead/
 behind numbers are snapshots, not permanent branch labels.
 
+Current readiness lookup now refuses an older release's evidence when a 0.2.4
+record is absent. A `.9000` source may locate its corresponding 0.2.4 record,
+but the existence of a 0.2.0/0.2.3 checklist or evidence map does not qualify it.
+The current frozen evidence map/checklist have not yet been assembled; their
+absence remains visible until D3 rather than being filled by historical files.
+
 The missing `/private/tmp/...icc-candidate-20260921` registration was pruned.
 The clean `~/mfrmr-pr6` and saved site-edit worktrees were removed normally after
 checking tracked, untracked and ignored files. Commits `532d59e7`, `2b12b82f`
@@ -218,9 +224,16 @@ rounded 27-second installation; check-only time is approximately 442 s, below
 the provisional local 480-second target. The test phase took 230 s with 4,930
 passes. Its undeclared-test-dependency warning was repaired through DESCRIPTION
 and the matching dependency check; a second complete check is not claimed.
-The metadata-only successor archive preserves all other 795 files. Use this
-evidence to select targeted static/manual profiling or a current-source Windows
-timing run; a Mac result cannot predict that ceiling. Do not repeat the same
+The metadata-only successor archive preserves all other 795 files. The subsequent
+[Windows run](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36648663039)
+at `4c32dd9e` took approximately **1,472 seconds of checking**, including
+214 seconds static analysis and about 900 seconds of selected tests. Its
+README assertion failure is repaired locally; indexed PDF generation still
+needs isolated diagnosis, and HTML math rendering was skipped without V8.
+This is not a clean or under-budget result. Prioritize targeted Windows
+test profiling and static-analysis/overhead work; a test-only optimization
+cannot leave adequate headroom. Diagnose the manual separately before another
+assembled check. Do not repeat the same
 full run after metadata-only repairs or start
 another broad statistical study instead. This prerequisite proceeds separately
 from unresolved D1 methods. Local timing does not close the Windows ceiling

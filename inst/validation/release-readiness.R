@@ -101,12 +101,15 @@ mfrmr_release_readiness_versioned_file <- function(validation_dir,
                                                    ext) {
   candidates <- character(0)
   if (mfrmr_release_readiness_has_value(target_version)) {
-    candidates <- c(candidates, file.path(validation_dir, paste0(prefix, target_version, ext)))
+    versions <- unique(c(target_version, sub("\\.9000$", "", target_version)))
+    candidates <- file.path(validation_dir, paste0(prefix, versions, ext))
   }
-  candidates <- c(
-    candidates,
-    file.path(validation_dir, paste0(prefix, fallback_version, ext))
-  )
+  # Historical fallback files are not evidence for a new release. Development
+  # snapshots may use their matching release record, never an older release.
+  if (!mfrmr_release_readiness_contract_applies(target_version, "0.2.4")) {
+    candidates <- c(candidates,
+      file.path(validation_dir, paste0(prefix, fallback_version, ext)))
+  }
   hits <- candidates[file.exists(candidates)]
   if (length(hits) > 0L) {
     hits[1]

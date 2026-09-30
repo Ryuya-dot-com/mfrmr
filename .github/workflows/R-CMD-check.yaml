@@ -23,6 +23,11 @@ on:
         type: boolean
         required: false
         default: false
+      manual_only:
+        description: With windows_timing, diagnose indexed manuals without rebuilding or checking the package
+        type: boolean
+        required: false
+        default: false
 
 name: R-CMD-check
 
@@ -69,3 +74,4 @@ jobs:
       r: release
       cell-id: windows-cran-timing
       cran-timing: true
+      manual-only: ${{ inputs.manual_only }}

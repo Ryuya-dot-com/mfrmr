@@ -23,6 +23,11 @@ on:
         required: false
         default: false
         type: boolean
+      manual-only:
+        description: Isolate indexed manual generation within the Windows timing workflow.
+        required: false
+        default: false
+        type: boolean
       http-user-agent:
         description: Optional setup-r HTTP user agent override.
         required: false
@@ -78,6 +83,7 @@ jobs:
             any::digest
             any::pkgbuild
             any::rcmdcheck
+            ${{ inputs.cran-timing && 'any::V8' || '' }}
             any::testthat
             ${{ runner.os == 'macOS' && 'flextable=?source, knitr=?source, xfun=?source' || '' }}
           needs: check
@@ -92,6 +98,7 @@ jobs:
           tlmgr install inconsolata times helvetic courier fancyvrb microtype
 
       - name: Exact source-tarball R CMD check (G4 confirmation held)
+        if: ${{ !inputs.manual-only }}
         env:
           MFRMR_CHECK_ERROR_ON: warning
           MFRMR_CHECK_PROFILE: ${{ inputs.cran-timing && 'cran-timing' || 'standard' }}
@@ -100,6 +107,40 @@ jobs:
             inst/validation/release-check-runner-0.2.4.R \
             . validation-results/release-check
         shell: bash
+
+      - name: Diagnose indexed manuals without repeating the package check
+        if: ${{ inputs.cran-timing && inputs.manual-only }}
+        shell: Rscript {0}
+        run: |
+          out <- "validation-results/release-check/manual-diagnostic"
+          dir.create(out, recursive = TRUE)
+          out <- normalizePath(out, winslash = "/")
+          writeLines(capture.output(list(
+            Commit = Sys.getenv("GITHUB_SHA"), Session = sessionInfo(),
+            Tools = Sys.which(c("texi2dvi", "texify", "makeindex", "pdflatex")),
+            DefaultTexi2dvi = getOption("texi2dvi")
+          )), file.path(out, "environment.txt"))
+          results <- lapply(c("default", "emulation"), function(mode) {
+            build <- file.path(out, mode)
+            dir.create(build)
+            pdf <- file.path(out, paste0(mode, ".pdf"))
+            log <- file.path(out, paste0(mode, ".log"))
+            started <- proc.time()[["elapsed"]]
+            status <- withr::with_envvar(c(R_TEXI2DVICMD =
+              if (mode == "emulation") "emulation" else NA_character_), {
+              system2(file.path(R.home("bin"), "Rcmd.exe"),
+                c("Rd2pdf", "--no-preview", "--no-clean", "--force",
+                  shQuote(paste0("--build-dir=", build)),
+                  shQuote(paste0("--output=", pdf)), "."),
+                stdout = log, stderr = log)
+            })
+            data.frame(Mode = mode, Status = status, PDFExists = file.exists(pdf),
+              Elapsed = proc.time()[["elapsed"]] - started)
+          })
+          results <- do.call(rbind, results)
+          write.csv(results, file.path(out, "results.csv"), row.names = FALSE)
+          print(results)
+          stopifnot(any(results$Status == 0 & results$PDFExists))
 
       - name: International input and moved-folder replay
         if: ${{ !inputs.cran-timing }}
@@ -136,6 +177,7 @@ jobs:
             validation-results/release-check/dependency-versions.csv
             validation-results/release-check/session-info.txt
             validation-results/release-check/portability
+            validation-results/release-check/manual-diagnostic
           if-no-files-found: ignore
 
       - name: Repository validation review

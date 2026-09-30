@@ -160,7 +160,8 @@ difference), not a precision benchmark. The test phase remains 230 seconds,
 above its provisional 120-second allocation, while the combined local target
 is met; do not drop mathematical checks solely to meet a per-phase allocation.
 
-Windows remains unmeasured for this source. Historical Windows static-analysis
+At the end of this local phase, Windows remained unmeasured; the subsequent
+Windows result is recorded below. Historical Windows static-analysis
 and manual costs are substantial, so extrapolating this Mac's total or only
 optimizing tests cannot establish the Windows ceiling. Before another broad
 test/study, use the 58/230/23-second local static/test/manual profile and the
@@ -239,3 +240,75 @@ pass 55 assertions; the other readiness tests were not needlessly repeated.
 Runner control tests pass 22 assertions, including evidence retention after
 an actual check WARNING as well as a time overrun. No package estimator or
 numerical experiment changed in this follow-up.
+
+Further source-identity review found that the general evidence lookup also
+fell back to 0.2.0 when current development records were absent. For 0.2.4 and
+later it now accepts only the requested version or its matching `.9000` base
+release. Historical files remain available for historical reviews. Tests cover
+an absent current record, a matching base-release record, an unrelated future
+release and the retained historical behavior; the affected lookup, GPCM and
+source-review tests pass 45 assertions. Overall readiness remains `concern`,
+including missing current evidence artifacts. No new frozen evidence is claimed.
+
+README's summary of model support is also corrected: one-family and
+experimental two-family GPCM are separate rows; same-data posterior response
+diagnostics are distinguished from ordinary fit diagnostics; multivariate
+G/D-study support is no longer described as the simplified main-effects route.
+These edits match existing help and leave formal inference limitations visible.
+
+## Measured Windows result: ceiling not met
+
+[Run 36648663039](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36648663039)
+checked commit `4c32dd9e09eb14a00aca35eac9ab3a0dbf0d0b0e`. Its archive SHA256 is
+`cca39a547345dd6a1c4d2d8ec619c3b555efb25e05be38917aa695423e00050f`.
+The archive, check directory and machine-readable timing/session/dependency
+records are retained in `validation-results/windows-cran-timing-20260930/measured/`;
+the full workflow log is `measured-run.log` beside that directory.
+
+Environment: GitHub's Windows runner, R 4.6.1 UCRT, RTMB 2.0, nleqslv 3.3.7,
+codetools 0.2-20 and testthat 3.3.2. The recorded CRAN selector and single-thread
+settings were used. This is a hosted Windows measurement, not a Win-builder
+service result or a new statistical study.
+
+| Work | Elapsed seconds |
+| --- | ---: |
+| Archive build, outside checking | 135.660 |
+| Check command including installation | 1,561.889 |
+| Installation, rounded native log | 90 |
+| **Check-only estimate** | **1,471.889 (rounding range 1,471.389–1,472.389)** |
+| Static R-code analysis | 214 |
+| Ordinary examples | 73 |
+| Selected tests | about 900 (`15m`, minute-rounded) |
+| Vignette rebuilding | 27 |
+| Indexed PDF manual attempt | 15, failed |
+| HTML manual | 76, math-rendering check skipped |
+| CRAN incoming feasibility | 35 |
+| Other check overhead and fallback PDF generation | about 132 |
+
+The result is **1 ERROR, 1 WARNING and 3 NOTEs**, not a time-only failure.
+Tests reported 4,929 passes, one failed assertion, no test warnings and the
+same four documented skips. RTMB/nleqslv absence did not remove model tests.
+The failed assertion was the public-calibration documentation check: this
+turn's README edit changed `fixed standard-normal` to a hyphenated wording.
+It was repaired as readable prose and that documentation test now passes
+19 assertions locally; no estimator/tolerance was changed or failure hidden.
+
+Indexed PDF generation warned, while its no-index fallback succeeded.
+The retained log contains no explicit LaTeX error explaining that failure;
+an index/tool-wrapper cause is a hypothesis requiring an isolated Windows
+manual run. Do not report the manual as fixed. The HTML NOTE identifies absent
+V8; V8 is now requested by the timing CI so the next complete run will include
+math-rendering checks. The remaining NOTEs concern the development version
+and a leftover TeX file from the failed manual. The initial run did not exercise
+HTML math rendering and does not qualify a complete clean manual check.
+
+The check-only ceiling is exceeded by about 872 seconds (2.45 times the
+budget). Tests alone exceed it. Local 442-second performance therefore did
+not transfer to this Windows runner. Fixing the README assertion and manual
+toolchain cannot establish the budget. Next: isolate the indexed-manual
+failure without repeating the full check; profile the Windows test phase
+by file/test against the retained source, reuse local profiles to identify
+redundant fitting, and measure affected repairs before another assembled run.
+Static analysis and other overhead together are also material; even deleting
+the test phase would leave only about 28 seconds of headroom on this run,
+before repairing the incomplete manual checks. D3/D4 remain open.
