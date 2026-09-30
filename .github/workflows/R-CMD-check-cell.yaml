@@ -18,6 +18,11 @@ on:
         required: false
         default: false
         type: boolean
+      cran-timing:
+        description: Time the complete CRAN workload with manuals and supported optional models.
+        required: false
+        default: false
+        type: boolean
       http-user-agent:
         description: Optional setup-r HTTP user agent override.
         required: false
@@ -28,6 +33,7 @@ jobs:
   check:
     runs-on: ${{ inputs.os }}
     name: ${{ inputs.os }} (${{ inputs.r }})
+    timeout-minutes: 60
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -76,9 +82,20 @@ jobs:
             ${{ runner.os == 'macOS' && 'flextable=?source, knitr=?source, xfun=?source' || '' }}
           needs: check
 
+      - uses: r-lib/actions/setup-tinytex@v2
+        if: inputs.cran-timing
+
+      - name: Prepare reference-manual LaTeX dependencies
+        if: inputs.cran-timing
+        run: |
+          tlmgr update --self
+          tlmgr install inconsolata times helvetic courier fancyvrb microtype
+        shell: bash
+
       - name: Exact source-tarball R CMD check (G4 confirmation held)
         env:
           MFRMR_CHECK_ERROR_ON: warning
+          MFRMR_CHECK_PROFILE: ${{ inputs.cran-timing && 'cran-timing' || 'standard' }}
         run: |
           Rscript --vanilla \
             inst/validation/release-check-runner-0.2.4.R \
@@ -86,6 +103,7 @@ jobs:
         shell: bash
 
       - name: International input and moved-folder replay
+        if: ${{ !inputs.cran-timing }}
         run: |
           check_root <- "validation-results/release-check"
           checked_library <- file.path(check_root, "check", "mfrmr.Rcheck")
@@ -113,10 +131,16 @@ jobs:
             validation-results/release-check/*.tar.gz
             validation-results/release-check/check
             validation-results/release-check/release-check-receipt.rds
+            validation-results/release-check/check-timing.rds
+            validation-results/release-check/check-timing.csv
+            validation-results/release-check/check-phases.csv
+            validation-results/release-check/dependency-versions.csv
+            validation-results/release-check/session-info.txt
             validation-results/release-check/portability
           if-no-files-found: ignore
 
       - name: Repository validation review
+        if: ${{ !inputs.cran-timing }}
         run: |
           source("inst/validation/release-readiness.R")
           maintenance <- new.env(parent = globalenv())

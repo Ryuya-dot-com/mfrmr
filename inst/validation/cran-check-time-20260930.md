@@ -167,3 +167,50 @@ test/study, use the 58/230/23-second local static/test/manual profile and the
 retained Windows breakdown to decide targeted profiling or a current-source
 Windows timing run. D3/D4, final scope/version freeze and submission readiness
 remain open. No CRAN upload, GitHub push or release-tag change was made.
+
+## Windows timing preparation and qualification repair
+
+The next measurement uses the existing `R-CMD-check` workflow with an explicit
+`windows_timing` dispatch input. Only Windows R-release runs in this mode.
+The existing source-tarball runner enables `--as-cran --timings`, static
+analysis, normal examples, selected tests, vignette rebuilding and both manuals;
+`NOT_CRAN=false`, the three thread settings equal 1 and the additional donttest
+profile remains separate. RTMB >= 2.0 and nleqslv are required rather than
+silently skipping their models. The workflow retains the source archive,
+phase/total times, dependencies, session, checks and source/hash identity even
+when the check fails or exceeds its time budget. TinyTeX supplies manual tools.
+Its 60-minute job limit permits recording a time overrun; it is not the
+600-second check qualification threshold.
+
+Inspection found that the old shared readiness parser qualified only the
+sum of examples, tests and vignettes, omitting static analysis, manuals and
+other overhead. Its regression fixture incorrectly accepted 1,120 seconds
+of timed phases because the selected subset was 420 seconds. This is repaired.
+The parser now accepts Windows `[309s]` / `[13m]` as well as Unix CPU/elapsed
+tokens. Check-only qualification requires a total elapsed measurement, timed
+installation subtraction, all six required phases and an upper rounding bound
+below 600 seconds. A partial phase log cannot demonstrate success, although
+enough timed phases can already demonstrate an overrun. An R reminder to run
+`--run-donttest` no longer counts as proof that those examples executed.
+
+Focused checks cover seconds/minutes, rounding at the ceiling, omitted phases,
+the legacy false-positive fixture and donttest detection. Runner-control tests
+mock the build/check boundary to verify the exact profile, retained evidence
+on a time overrun or WARNING, and restored environment; they do not rebuild
+the package or rerun numerical studies. The affected workflow-contract test
+passes 60 assertions; both YAML files parse and source-version metadata agree.
+
+The repository readiness-protocol file produced 854 passing assertions and
+eight failures in pre-existing scope/prose checks. Evaluating its public-scope,
+GPCM-scope and prose-status functions before and after these timing changes
+gives identical results (retained in
+`validation-results/windows-cran-timing-20260930/preexisting-readiness.rds`).
+The concerns are an obsolete literal README boundary expectation, a missing
+corrected-JML structural-inference row in the older supplementary roadmap,
+and a numerical pass count in cran-comments. These remain D2 reconciliation
+work; no expectations were weakened to claim an entirely passing repository
+review. They are outside the archive's selected tests and do not establish
+an estimator defect or excuse a failed package check.
+
+This preparation is not a Windows result or a final release qualification.
+The dedicated validation branch and measured run will be recorded below.

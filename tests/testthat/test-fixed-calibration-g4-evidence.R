@@ -1366,7 +1366,7 @@ test_that("macOS gates standard checks while legacy v5 issuance is disabled", {
         fixed = TRUE
       )
     )),
-    2L
+    3L
   )
   expect_false(grepl("- {os: macos-latest", workflow, fixed = TRUE))
   expect_match(workflow, "id: windows-release", fixed = TRUE)

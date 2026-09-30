@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      windows_timing:
+        description: Windows-only CRAN timing including manuals (ignores full_suite)
+        type: boolean
+        required: false
+        default: false
 
 name: R-CMD-check
 
@@ -26,6 +31,7 @@ permissions:
 
 jobs:
   macos-release:
+    if: ${{ !inputs.windows_timing }}
     name: macos-latest (release) prerequisite
     uses: ./.github/workflows/R-CMD-check-cell.yaml
     with:
@@ -35,6 +41,7 @@ jobs:
       full: false
 
   remaining-platforms:
+    if: ${{ !inputs.windows_timing }}
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
     needs: macos-release
     strategy:
@@ -52,3 +59,13 @@ jobs:
       cell-id: ${{ matrix.config.id }}
       full: ${{ github.event_name == 'workflow_dispatch' && inputs.full_suite && matrix.config.id == 'ubuntu-release' }}
       http-user-agent: ${{ matrix.config['http-user-agent'] || '' }}
+
+  windows-cran-timing:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_timing }}
+    name: Windows complete CRAN timing
+    uses: ./.github/workflows/R-CMD-check-cell.yaml
+    with:
+      os: windows-latest
+      r: release
+      cell-id: windows-cran-timing
+      cran-timing: true

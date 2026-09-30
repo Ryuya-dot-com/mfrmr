@@ -1114,40 +1114,39 @@ mfrmr_release_readiness_count_status <- function(status_line, label) {
   0L
 }
 
-mfrmr_release_readiness_check_timing <- function(lines) {
-  timed <- grep(
-    "^\\* checking .*\\[[0-9.]+s/[0-9.]+s\\]",
-    lines,
-    value = TRUE,
-    perl = TRUE
+mfrmr_release_readiness_check_timing <- function(lines, total_elapsed = NA_real_) {
+  # R prints elapsed only on Windows, CPU/elapsed elsewhere, and rounds long
+  # phases to minutes. Untimed overhead cannot be inferred from a phase sum.
+  pattern <- "\\[[0-9.]+[sm](/[0-9.]+[sm])?\\]"
+  timed <- grep("^\\* checking ", lines, value = TRUE)
+  timed <- timed[grepl(pattern, timed)]
+  tokens <- regmatches(timed, regexpr(pattern, timed))
+  parts <- strsplit(gsub("[\\[\\]]", "", tokens, perl = TRUE), "/", fixed = TRUE)
+  seconds <- function(x) as.numeric(sub("[sm]$", "", x)) * ifelse(endsWith(x, "m"), 60, 1)
+  last <- vapply(parts, tail, character(1), n = 1L)
+  elapsed <- seconds(last)
+  resolution <- ifelse(endsWith(last, "m"), 60, 1) *
+    10^(-ifelse(grepl("[.]", last), nchar(sub(".*[.]([0-9]+)[sm]$", "\\1", last)), 0))
+  phases <- data.frame(
+    Phase = sub(" \\.\\.\\..*$", "", sub("^\\* checking ", "", timed)),
+    CPUSeconds = vapply(parts, function(x) if (length(x) == 2L) seconds(x[1]) else NA_real_, 0),
+    ElapsedSeconds = elapsed, RoundingSeconds = resolution / 2,
+    Passed = grepl(" OK$", trimws(timed)), stringsAsFactors = FALSE
   )
-  elapsed_seconds <- function(x) {
-    if (length(x) == 0L) return(NA_real_)
-    as.numeric(sub(
-      "^.*\\[[0-9.]+s/([0-9.]+)s\\].*$",
-      "\\1",
-      x[[1]],
-      perl = TRUE
-    ))
-  }
   component <- function(pattern) {
-    elapsed_seconds(grep(pattern, timed, value = TRUE, perl = TRUE))
+    value <- phases$ElapsedSeconds[grepl(pattern, phases$Phase)]
+    if (length(value) == 1L) value else NA_real_
   }
-  elapsed <- vapply(timed, elapsed_seconds, numeric(1))
   component_timing_available <- length(timed) > 0L && all(is.finite(elapsed))
   estimated_seconds <- if (component_timing_available) {
     sum(elapsed)
   } else {
     NA_real_
   }
-  examples_seconds <- component("^\\* checking examples \\.\\.\\.")
-  donttest_seconds <- component(
-    "^\\* checking examples with --run-donttest"
-  )
-  tests_seconds <- component("^\\* checking tests \\.\\.\\.")
-  vignette_seconds <- component(
-    "^\\* checking re-building of vignette outputs"
-  )
+  examples_seconds <- component("^examples$")
+  donttest_seconds <- component("^examples with --run-donttest$")
+  tests_seconds <- component("^tests$")
+  vignette_seconds <- component("^re-building of vignette outputs$")
   cran_workload_components <- c(
     examples_seconds,
     donttest_seconds,
@@ -1161,7 +1160,24 @@ mfrmr_release_readiness_check_timing <- function(lines) {
   } else {
     NA_real_
   }
-  data.frame(
+  install <- which(grepl("^whether package .* can be installed$", phases$Phase))
+  required <- c("R code for possible problems", "examples", "tests",
+    "re-building of vignette outputs", "PDF version of manual", "HTML version of manual")
+  complete <- all(required %in% phases$Phase[phases$Passed])
+  total_known <- is.numeric(total_elapsed) && length(total_elapsed) == 1L &&
+    is.finite(total_elapsed) && length(install) == 1L &&
+    total_elapsed >= phases$ElapsedSeconds[install]
+  check_seconds <- lower <- upper <- NA_real_
+  if (total_known) {
+    check_seconds <- total_elapsed - phases$ElapsedSeconds[install]
+    lower <- max(0, check_seconds - phases$RoundingSeconds[install])
+    upper <- check_seconds + phases$RoundingSeconds[install]
+  }
+  non_install <- setdiff(seq_len(nrow(phases)), install)
+  measured_lower <- sum(pmax(0, phases$ElapsedSeconds[non_install] - phases$RoundingSeconds[non_install]))
+  under <- if (isTRUE(lower >= 600) || measured_lower >= 600) FALSE else if (
+    complete && isTRUE(upper < 600)) TRUE else NA
+  out <- data.frame(
     TimingAvailable = timing_available,
     ComponentElapsedSeconds = estimated_seconds,
     CranWorkloadElapsedSeconds = cran_workload_seconds,
@@ -1169,13 +1185,14 @@ mfrmr_release_readiness_check_timing <- function(lines) {
     DonttestExamplesSeconds = donttest_seconds,
     TestsSeconds = tests_seconds,
     VignetteRebuildSeconds = vignette_seconds,
-    UnderTenMinutes = if (timing_available) {
-      cran_workload_seconds <= 600
-    } else {
-      NA
-    },
+    CheckElapsedSeconds = check_seconds,
+    CheckElapsedLower = lower, CheckElapsedUpper = upper,
+    RequiredPhasesTimed = complete,
+    UnderTenMinutes = under,
     stringsAsFactors = FALSE
   )
+  attr(out, "phases") <- phases
+  out
 }
 
 mfrmr_release_readiness_check_timing_scope <- function(not_cran = Sys.getenv(
@@ -1190,7 +1207,8 @@ mfrmr_release_readiness_check_timing_scope <- function(not_cran = Sys.getenv(
 }
 
 mfrmr_release_readiness_parse_check_log <- function(path,
-                                                    target_version = NULL) {
+                                                    target_version = NULL,
+                                                    total_elapsed = NA_real_) {
   lines <- mfrmr_release_readiness_read_lines(path)
   if (length(lines) == 0L) {
     return(data.frame(
@@ -1213,6 +1231,9 @@ mfrmr_release_readiness_parse_check_log <- function(path,
       DonttestExamplesSeconds = NA_real_,
       TestsSeconds = NA_real_,
       VignetteRebuildSeconds = NA_real_,
+      CheckElapsedSeconds = NA_real_,
+      CheckElapsedLower = NA_real_, CheckElapsedUpper = NA_real_,
+      RequiredPhasesTimed = FALSE,
       UnderTenMinutes = NA,
       CheckPassed = FALSE,
       NeedsExplanation = TRUE,
@@ -1246,7 +1267,7 @@ mfrmr_release_readiness_parse_check_log <- function(path,
   if (isTRUE(status_present) && identical(status, "Status: OK")) {
     errors <- warnings <- notes <- 0L
   }
-  timing <- mfrmr_release_readiness_check_timing(lines)
+  timing <- mfrmr_release_readiness_check_timing(lines, total_elapsed)
   out <- data.frame(
     CheckLog = path,
     PackageVersion = package_version,
@@ -1255,7 +1276,7 @@ mfrmr_release_readiness_parse_check_log <- function(path,
     StatusLine = status,
     StatusPresent = status_present,
     AsCRAN = any(grepl("--as-cran", lines, fixed = TRUE)),
-    RunDonttest = any(grepl("--run-donttest", lines, fixed = TRUE)),
+    RunDonttest = any(grepl("^\\* (using options?.*|checking examples with )--run-donttest", lines)),
     ManualChecked = any(grepl(
       "* checking PDF version of manual",
       lines,
@@ -1275,6 +1296,10 @@ mfrmr_release_readiness_parse_check_log <- function(path,
     DonttestExamplesSeconds = timing$DonttestExamplesSeconds,
     TestsSeconds = timing$TestsSeconds,
     VignetteRebuildSeconds = timing$VignetteRebuildSeconds,
+    CheckElapsedSeconds = timing$CheckElapsedSeconds,
+    CheckElapsedLower = timing$CheckElapsedLower,
+    CheckElapsedUpper = timing$CheckElapsedUpper,
+    RequiredPhasesTimed = timing$RequiredPhasesTimed,
     UnderTenMinutes = timing$UnderTenMinutes,
     CheckPassed = isTRUE(status_present) &&
       isTRUE(errors == 0L && warnings == 0L),
@@ -2502,8 +2527,6 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
     "full_non_cran"
   )) {
     "ok"
-  } else if (!isTRUE(check_status$RunDonttest[1])) {
-    "concern"
   } else if (!isTRUE(check_status$TimingAvailable[1])) {
     "review"
   } else if (!isTRUE(check_status$UnderTenMinutes[1])) {
@@ -2719,6 +2742,8 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
         check_status$ComponentElapsedSeconds[1],
         "; cran_workload_elapsed_seconds=",
         check_status$CranWorkloadElapsedSeconds[1],
+        "; check_elapsed_seconds=", check_status$CheckElapsedSeconds[1],
+        "; check_elapsed_upper=", check_status$CheckElapsedUpper[1],
         "; examples_seconds=", check_status$ExamplesSeconds[1],
         "; donttest_seconds=", check_status$DonttestExamplesSeconds[1],
         "; tests_seconds=", check_status$TestsSeconds[1],

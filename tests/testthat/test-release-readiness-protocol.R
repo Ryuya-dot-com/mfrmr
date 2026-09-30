@@ -1733,10 +1733,10 @@ test_that("release-readiness protocol exposes review steps and parses check logs
   expect_equal(parsed$DonttestExamplesSeconds, 6)
   expect_equal(parsed$TestsSeconds, 1)
   expect_equal(parsed$VignetteRebuildSeconds, 1)
-  expect_true(parsed$UnderTenMinutes)
+  expect_true(is.na(parsed$UnderTenMinutes)) # Untimed phases/overhead are unknown.
 })
 
-test_that("release-readiness timing excludes check infrastructure overhead", {
+test_that("release-readiness timing includes check infrastructure overhead", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
   source(protocol, local = env)
@@ -1761,12 +1761,56 @@ test_that("release-readiness timing excludes check infrastructure overhead", {
 
   expect_equal(parsed$ComponentElapsedSeconds, 1120)
   expect_equal(parsed$CranWorkloadElapsedSeconds, 420)
-  expect_true(parsed$UnderTenMinutes)
+  expect_false(parsed$UnderTenMinutes)
   gate <- release_readiness_gate_fixture(env, parsed)
   expect_identical(
     gate$Status[gate$Gate == "check_timing"],
-    "ok"
+    "concern"
   )
+})
+
+test_that("complete timing separates installation and respects rounding uncertainty", {
+  env <- new.env(parent = globalenv())
+  source(release_readiness_protocol_path(), local = env)
+  required <- c("R code for possible problems", "examples", "tests",
+    "re-building of vignette outputs", "PDF version of manual", "HTML version of manual")
+  for (token in c("10s", "2s/10s")) {
+    lines <- c("* checking whether package 'mfrmr' can be installed ... [100s] OK",
+      paste0("* checking ", required, " ... [", token, "] OK"))
+    f <- env$mfrmr_release_readiness_check_timing
+    expect_true(is.na(f(lines)$UnderTenMinutes))
+    out <- f(lines, total_elapsed = 690)
+    expect_true(out$UnderTenMinutes)
+    expect_equal(out$CheckElapsedSeconds, 590)
+    expect_equal(out$CheckElapsedUpper, 590.5)
+    expect_true(out$RequiredPhasesTimed)
+    expect_equal(nrow(attr(out, "phases")), 7L)
+    expect_true(is.na(f(lines, total_elapsed = 699.5)$UnderTenMinutes))
+    expect_false(f(lines, total_elapsed = 700.5)$UnderTenMinutes)
+    expect_true(is.na(f(lines[-length(lines)], total_elapsed = 200)$UnderTenMinutes))
+    # Minute-rounded installation times need a 30-second uncertainty allowance.
+    lines[1] <- "* checking whether package 'mfrmr' can be installed ... [2m] OK"
+    expect_true(is.na(f(lines, total_elapsed = 690)$UnderTenMinutes))
+    expect_true(f(lines, total_elapsed = 689)$UnderTenMinutes)
+    expect_false(f(lines, total_elapsed = 750)$UnderTenMinutes)
+  }
+  long <- env$mfrmr_release_readiness_check_timing(
+    "* checking R code for possible problems ... [11m] OK")
+  expect_false(long$UnderTenMinutes)
+  expect_equal(long$ComponentElapsedSeconds, 660)
+  expect_true(is.na(attr(long, "phases")$CPUSeconds))
+})
+
+test_that("a donttest reminder is not evidence of executing donttest examples", {
+  env <- new.env(parent = globalenv())
+  source(release_readiness_protocol_path(), local = env)
+  log <- tempfile(fileext = ".log")
+  on.exit(unlink(log), add = TRUE)
+  writeLines(c("* using option '--as-cran'", "* checking examples ... [10s] OK",
+    "** found \\donttest examples: check also with --run-donttest", "Status: OK"), log)
+  expect_false(env$mfrmr_release_readiness_parse_check_log(log)$RunDonttest)
+  cat("* checking examples with --run-donttest ... [3s] OK\n", file = log, append = TRUE)
+  expect_true(env$mfrmr_release_readiness_parse_check_log(log)$RunDonttest)
 })
 
 test_that("release-readiness protocol flags check timing above ten minutes", {

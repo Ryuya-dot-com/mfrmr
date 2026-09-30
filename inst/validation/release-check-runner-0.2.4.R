@@ -42,6 +42,19 @@ mfrmr_release_check_main <- function(package_root = ".",
     file.exists(file.path(package_root, "DESCRIPTION")),
     "The package root does not contain DESCRIPTION."
   )
+  profile <- Sys.getenv("MFRMR_CHECK_PROFILE", "standard")
+  mfrmr_release_check_assert(profile %in% c("standard", "cran-timing"),
+    "MFRMR_CHECK_PROFILE must be standard or cran-timing.")
+  timed <- identical(profile, "cran-timing")
+  if (timed) {
+    withr::local_envvar(c(NOT_CRAN = "false", `_R_CHECK_TIMINGS_` = "0",
+      `_R_CHECK_DONTTEST_EXAMPLES_` = "false", OMP_NUM_THREADS = "1",
+      OPENBLAS_NUM_THREADS = "1", VECLIB_MAXIMUM_THREADS = "1"))
+    mfrmr_release_check_assert(
+      requireNamespace("RTMB", quietly = TRUE) && utils::packageVersion("RTMB") >= "2.0" &&
+        requireNamespace("nleqslv", quietly = TRUE),
+      "The timing profile must exercise RTMB >= 2.0 and nleqslv features.")
+  }
   output_directory <- normalizePath(
     output_directory, winslash = "/", mustWork = FALSE
   )
@@ -73,6 +86,7 @@ mfrmr_release_check_main <- function(package_root = ".",
     "The package check is not bound to the expected Git commit."
   )
 
+  build_started <- proc.time()
   tarball <- pkgbuild::build(
     path = package_root,
     dest_path = output_directory,
@@ -82,6 +96,7 @@ mfrmr_release_check_main <- function(package_root = ".",
     args = c("--no-manual", "--compact-vignettes=gs+qpdf"),
     quiet = FALSE
   )
+  build_time <- proc.time() - build_started
   tarball <- normalizePath(tarball, winslash = "/", mustWork = TRUE)
   check_directory <- file.path(output_directory, "check")
   error_on <- Sys.getenv("MFRMR_CHECK_ERROR_ON", unset = "warning")
@@ -89,18 +104,46 @@ mfrmr_release_check_main <- function(package_root = ".",
     error_on %in% c("never", "note", "warning", "error"),
     "MFRMR_CHECK_ERROR_ON has an unsupported value."
   )
+  check_args <- if (timed) c("--as-cran", "--timings") else "--no-manual"
   check <- rcmdcheck::rcmdcheck(
     path = tarball,
-    args = c("--no-manual"),
+    args = check_args,
     build_args = character(),
     check_dir = check_directory,
-    error_on = error_on
+    error_on = if (timed) "never" else error_on
   )
+  check_log <- file.path(check_directory, "mfrmr.Rcheck", "00check.log")
+  if (timed) {
+    protocol <- new.env(parent = globalenv())
+    sys.source(file.path(package_root, "inst/validation/release-readiness.R"), protocol)
+    lines <- if (file.exists(check_log)) readLines(check_log, warn = FALSE) else character()
+    timing <- protocol$mfrmr_release_readiness_check_timing(lines, check$duration)
+    # Use this source's declared optional dependencies, not the CRAN version.
+    suggests <- read.dcf(file.path(package_root, "DESCRIPTION"))[1, "Suggests"]
+    packages <- c("codetools", trimws(gsub("\\([^)]*\\)", "", strsplit(suggests, ",")[[1]])))
+    versions <- vapply(packages, function(p) {
+      tryCatch(as.character(utils::packageVersion(p)), error = function(e) NA_character_)
+    }, "")
+    utils::write.csv(attr(timing, "phases"), file.path(output_directory, "check-phases.csv"), row.names = FALSE)
+    utils::write.csv(timing, file.path(output_directory, "check-timing.csv"), row.names = FALSE)
+    utils::write.csv(data.frame(Package = packages, Version = unname(versions)),
+      file.path(output_directory, "dependency-versions.csv"), row.names = FALSE)
+    writeLines(capture.output(sessionInfo()), file.path(output_directory, "session-info.txt"))
+    saveRDS(list(Commit = commit, Tree = tree,
+      TarballSHA256 = digest::digest(file = tarball, algo = "sha256", serialize = FALSE),
+      Profile = profile, CheckArgs = check_args, BuildTime = build_time,
+      CheckCommandElapsed = check$duration, Timing = timing,
+      Errors = check$errors, Warnings = check$warnings, Notes = check$notes,
+      Platform = Sys.info(), Versions = versions,
+      Environment = Sys.getenv(c("NOT_CRAN", "_R_CHECK_TIMINGS_", "_R_CHECK_DONTTEST_EXAMPLES_",
+        "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"))),
+      file.path(output_directory, "check-timing.rds"))
+    print(timing)
+  }
   mfrmr_release_check_assert(
     length(check$errors) == 0L && length(check$warnings) == 0L,
     "The exact source tarball did not pass R CMD check."
   )
-  check_log <- file.path(check_directory, "mfrmr.Rcheck", "00check.log")
   mfrmr_release_check_assert(
     file.exists(check_log),
     "The exact package check did not retain 00check.log."
@@ -122,6 +165,7 @@ mfrmr_release_check_main <- function(package_root = ".",
     Errors = as.integer(length(check$errors)),
     Warnings = as.integer(length(check$warnings)),
     Notes = as.integer(length(check$notes)),
+    CheckProfile = profile,
     CheckComplete = TRUE,
     G4EvidenceIssued = FALSE,
     G4ExitComplete = FALSE,
@@ -136,6 +180,8 @@ mfrmr_release_check_main <- function(package_root = ".",
     file.path(output_directory, "release-check-receipt.rds"),
     version = 3
   )
+  if (timed) mfrmr_release_check_assert(isTRUE(timing$UnderTenMinutes),
+    "The complete check has not demonstrated check-only elapsed time below 600 seconds; see check-timing.rds.")
   cat(
     "Exact package check complete: commit=", commit,
     "; G4 evidence issued=FALSE\n",

@@ -213,6 +213,15 @@ another broad statistical study instead. This prerequisite proceeds separately
 from unresolved D1 methods. Local timing does not close the Windows ceiling
 or qualify the unfinished statistical scope.
 
+The next Windows measurement uses the existing check runner's `cran-timing`
+profile and a Windows-only manual workflow dispatch, with manuals enabled and
+RTMB >= 2.0/nleqslv present. The shared timing decision now requires the whole
+check minus installation, including rounding uncertainty; the earlier
+examples/tests/vignettes-only rule was insufficient. Its partial-log success
+must not be reused. See the runtime record for the corrected regression and
+the eight unchanged repository scope/prose failures that still require D2
+reconciliation. A successful package timing run will not close those concerns.
+
 ### 1. Fix the inferential procedure and unresolved consumer decisions (D1/D2)
 
 The first deliverable is a prespecified decision protocol for the revised
