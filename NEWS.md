@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* The GPCM guide adds an empirical writing-data workflow using the separately
+  available `sirt::data.ratings1` dataset. It explains uneven assignment,
+  unused factor levels, absent categories and unknown planned assignments,
+  and shows why numerical convergence alone is insufficient for rater
+  feedback. It also distinguishes the supported model from published OSCE
+  extensions and clarifies experimental two-family interval availability.
+
 * Corrected-JML summaries, reports and exports now explain which repeated
   sampling the reported `RootSE` describes. Fixed assignment counts still
   allow the composition of a new cohort to vary. This uncertainty does not

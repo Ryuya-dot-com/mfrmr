@@ -253,6 +253,10 @@ locations and geometric-mean-one slopes; the second has free locations and
 slopes and owns centered category steps. This is an explicit fixed-N(0,1)
 model choice, not an automatic change to the usual GPCM population model.
 
+For an empirical writing-data example, including the observed assignment
+pattern and the limits of the resulting fit, see
+[Start from an actual rating table](#start-from-an-actual-rating-table).
+
 The code below expects your observed ratings in `ratings`, with columns
 `Candidate`, `Task`, `Assessor` and integer `Rating` on the declared 0--3 scale.
 Keep only actually observed scored rows. Unassigned cells must not be filled
@@ -583,7 +587,7 @@ The current mfrmr routes are:
 | --- | --- |
 | Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid are available for supported additive, fixed-population, fixed-integration settings (`population = NULL`). |
 | Public one-slope-family GPCM | MML uses direct optimization. Requests for EM or hybrid currently fall back to direct and record the choice in `fit$summary`. JML is available within its separate restrictions. |
-| Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with numerical generalized EM. The numerical M-step increases its objective rather than requiring an exact maximizer at every iteration. Summary and conditional fitted curves are available; parameter intervals, model ranking and new-person scoring are not. |
+| Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with numerical generalized EM. The numerical M-step increases its objective rather than requiring an exact maximizer at every iteration. Summary, conditional fitted curves and experimental component-slope intervals are available; other parameter intervals, model ranking and new-person scoring are not. |
 
 Muraki (1992) derives an EM estimation route for GPCM; this does not make EM
 a defining property of the response model. The
@@ -1401,8 +1405,10 @@ which tasks tend to receive lower scores. Severity concerns which assessors
 tend to give lower scores. Discrimination asks a different question: how
 strongly do the probabilities of higher categories change with ability?
 Two slope families let that change depend on both the task and the assessor.
-The provisional `fit_mfrm()` route below supports exploring this formulation.
-Its current output does not supply uncertainty or a rule for feedback decisions.
+The provisional `fit_mfrm()` route supports exploring this formulation.
+Experimental component-slope intervals are available when their numerical
+checks pass. They do not establish a rule for feedback decisions; curve
+intervals and individual two-family feedback sheets remain unavailable.
 
 | Practical question | What the two-family model can describe | What it does not establish by itself |
 | --- | --- | --- |
@@ -1444,6 +1450,103 @@ A useful analysis starts with the decision and rating design:
    predictions for combinations not observed together. Use the findings to
    investigate tasks or feedback needs, not as an automatic removal or
    competence rule.
+
+### Start from an actual rating table
+
+Suppose an assessment coordinator wants to review how raters use a writing
+rubric. The question is whether differences concern consistently higher/lower
+scores, category use, or different sensitivity to writing ability. A two-slope
+model is a candidate explanation when both criteria and raters may differ in
+sensitivity. It is not automatically preferable to an equal-slope or
+one-slope-family model, and a high rater slope is not evidence of accurate
+scoring. Reference performances and a substantive review of the rubric are
+needed before deciding what feedback to give.
+
+The separately installed `sirt` package supplies the empirical
+`data.ratings1` table from a 2009 Austrian grade-8 German writing survey
+([sirt data documentation](https://alexanderrobitzsch.r-universe.dev/sirt/doc/manual.html#data.ratings)).
+In sirt 4.2.133 it contains 135 students, seven observed raters, five criteria
+(`k1`–`k5`) and scores 0–3. The stored rater factor has additional unused
+levels; these are not additional observed raters. The documentation does not
+provide descriptive names for the five criteria, so retain their labels
+instead of inventing rubric meanings. Using this dataset does not make
+mfrmr's response equation equivalent to `sirt::rm.facets()`.
+
+The following conversion preserves every supplied score and identifier. It
+requires `sirt` to be installed; it does not download data during analysis.
+
+```{r empirical-writing-review, eval=FALSE}
+library(mfrmr)
+data("data.ratings1", package = "sirt")
+writing_ratings <- do.call(rbind, lapply(paste0("k", 1:5), function(k) {
+  data.frame(
+    Person = as.character(data.ratings1$idstud),
+    Rater = as.character(data.ratings1$rater),
+    Criterion = k, Score = data.ratings1[[k]]
+  )
+}))
+writing_review <- describe_mfrm_data(
+  writing_ratings, person = "Person", facets = c("Criterion", "Rater"),
+  score = "Score", rating_min = 0, rating_max = 3,
+  category_policy = "preserve", rater_facet = "Rater"
+)
+writing_review$design_connectivity
+writing_review$structural_missingness$summary
+# Count distinct raters for each student, independently of criterion rows.
+writing_pairs <- unique(writing_ratings[c("Person", "Rater")])
+table(table(writing_pairs$Person))
+xtabs(~ Rater + Score, writing_ratings)
+```
+
+There are 1,370 observed ratings: 89 students have one rater, 27 have two,
+two have six, and 17 have all seven. The rater network is connected, but its
+information is concentrated unevenly across students. No score is missing
+within the supplied rows. That does **not** establish that every intended
+rating was collected: a separate planned assignment roster is unavailable.
+The unobserved combinations must not become zeros or automatically be labelled
+missing at random. Each criterion appears with each rater, but five
+rater-by-criterion-by-category counts are zero. These observations matter
+more than a single overall sample-size recommendation.
+
+To examine criterion and rater slopes, use the preceding two-family call with
+`data = writing_ratings`, `person = "Person"`,
+`facets = c("Criterion", "Rater")`, `score = "Score"`,
+`slope_facet = c("Criterion", "Rater")`, `step_facet = "Rater"` and
+`noncenter_facet = "Rater"`. Keep the declared 0–3 categories. This assumes
+one writing ability, a common standard-normal population, conditional
+independence of ratings, and rater-owned steps shared across criteria.
+Five analytic scores on the same performance may challenge independence;
+the fitted slope table does not test that assumption.
+
+If your records distinguish Task, Criterion and Rater, preserve all three
+roles during design review. The current two-family route admits exactly two
+non-Person facets. Pooling task and criterion labels or dropping a facet
+changes the model and can conceal dependence; such a dataset needs an
+explicit model-scope decision before fitting.
+
+An analysis of the complete table at 61 and 121 quadrature points converged
+under the same EM stopping rule, yet the maximum category-probability
+difference on a common ability grid from -4 to 4 was about 0.17. This compares
+fitted curves, not empirical predictive accuracy; the discrepancy also occurs
+within -2 to 2. Component-slope intervals were unavailable for both fits.
+At the 61-point calibration,
+the response-diagnostic check at 121 versus 243 points retained only 318 of
+1,370 rows under its probability tolerance; all grouped Infit/Outfit values
+remained unavailable. Thus this example does **not** support issuing rater
+feedback from the returned estimates. Integration and solution sensitivity
+need resolution first. More convergence messages, a low in-sample residual,
+or a ranked slope plot cannot replace that review.
+
+For a different operational setting, Uto et al. (2024) publish medical
+interview OSCE scores and their data description on
+[Dryad](https://doi.org/10.5061/dryad.tmpg4f56q): two raters cover every examinee
+and three additional raters cover different subsets. This asks whether rubric
+use and rater effects differ in a small assessment cohort. Their
+[published model](https://doi.org/10.1371/journal.pone.0309887) includes
+rater-by-item location interactions and item-specific steps, which the
+current two-family route does not implement. A native fit would be a
+restricted analysis, not a reproduction of that study. The writing example
+does not qualify OSCE, music or sport applications by renaming facets.
 
 ### Can EM estimate two slope families?
 

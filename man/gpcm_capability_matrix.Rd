@@ -149,6 +149,13 @@ ability range, inspect uncertainty and assignment overlap, and bring in
 reference ratings or substantive evidence for accuracy claims. The vignette
 explains these uses and a provisional two-family fitting example. It does
 not yet provide a two-family model comparison or qualified feedback decision.
+It also shows how to import the empirical writing table
+\code{sirt::data.ratings1} from that separately installed package, preserve its
+categories, and review unequal assignment. The example distinguishes new
+fitted response curves from evidence of predictive accuracy. Numerical
+convergence did not resolve its integration-sensitive curves or incomplete
+residual summaries, so the example does not endorse rater feedback from
+those estimates. All score datasets bundled with mfrmr are synthetic.
 }
 
 \section{Local independence, testlets and random effects}{

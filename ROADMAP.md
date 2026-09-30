@@ -32,6 +32,14 @@ clinical assessment and judged sport also motivate the design, provided their
 rating structure and assumptions match the selected model. Arbitrary column
 names do not make every assessment design supported.
 
+Validation must connect simulated recovery and interval coverage to actual
+assessment workflows. The GPCM guide includes an empirical writing-data
+review; its uneven assignment and unresolved numerical sensitivity identify
+work still needed before rater feedback. A separate clinical-assessment design
+review distinguishes the current model from published extensions. Real-data
+fit, known-truth simulation and practitioner usability answer different
+questions and do not substitute for one another.
+
 The development order is to finish implemented workflows, establish the
 statistical support for their claims, complete the agreed model extensions,
 and integrate them as 0.2.4. G-theory, latent measurement and external-feature

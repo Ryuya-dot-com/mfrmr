@@ -963,3 +963,133 @@ The existing quadrature-sensitivity route still addresses calibration grid
 sensitivity. Formal fit diagnostics, Q3/PCA for this model, model comparison,
 Wright/Pathway maps, later-Person scoring and portable calibration remain
 separate unfinished output contracts. This increment does not close G2/G3.
+
+## September 30: empirical practitioner workflow
+
+**Question and purpose.** Can a practitioner take an actual writing-rating
+table through assignment review, the two-family fit, numerical sensitivity,
+descriptive diagnostics and a saved report without treating unavailable
+outputs as usable rater feedback? The purpose is applied problem discovery
+and end-to-end interpretation. Real data have no known generating truth and
+cannot supply parameter recovery or confidence-interval coverage.
+
+**Provenance.** `sirt::data.ratings1`, installed sirt 4.2.133, is documented as
+a 2009 Austrian grade-8 German writing survey. All 274 supplied Person/rater
+rows and all five criterion columns were converted to 1,370 long-form scores,
+without deletion, imputation or invented criterion labels. The complete
+original table, source/package versions, input hashes and session are retained
+under `validation-results/gmfrm-practitioner-20260930/`. Data remain external
+to the mfrmr distribution; no new dependency is required for package use.
+The installed author help is the provenance source, also available in the
+[author's package manual](https://alexanderrobitzsch.r-universe.dev/sirt/doc/manual.html#data.ratings).
+
+All nine bundled mfrmr score datasets are synthetic. In particular, the legacy
+`ej2021_*` datasets reflect published dimensions, not actual TestDaF responses,
+and their unknown generation mechanism does not establish a recovery truth.
+The existing generic task/assessor example and common-Person/rotating-pair
+simulation had not completed this empirical practitioner check.
+
+**Observed design.** There are 135 Persons, seven observed raters, five criteria
+and scores 0–3. The rater factor contains nine additional unused levels; those
+were retained in the source archive but not invented as observed raters.
+Observed rater counts per Person are:
+
+| Raters per Person | Persons | Observed criterion ratings |
+| ---: | ---: | ---: |
+| 1 | 89 | 445 |
+| 2 | 27 | 270 |
+| 6 | 2 | 60 |
+| 7 | 17 | 595 |
+
+Each rater sees 37–41 Persons. All rater pairs share 17–21 Persons; the
+Person/rater network is connected. There are 29 observed roster patterns,
+13 occurring for only one Person. All rater-level categories occur, but five
+rater/criterion/category cells are empty. The 17 commonly rated Persons
+contribute 595/1,370 ratings, about 43.4%. Equal-ish rater workloads therefore
+do not mean equal information per Person or broadly distributed links.
+
+The source table contains no NA scores, but the intended assignment roster is
+not supplied. `describe_mfrm_data()` correctly retains `not_declared` for
+structural missingness: 1,370 of 4,725 possible cells is not an estimated
+missing-at-random rate. No absent combination is assigned a zero or a
+missing-score mechanism. Common Persons are links, not fixed parameter anchors.
+
+**Fixed procedure and result.** The runner
+`gmfrm-practitioner-20260930.R` used the whole table: Criterion then Rater
+slopes, rater-owned steps/free location, first-family GM1 constraint,
+N(0,1), observed categories 0–3, unit weights, generalized EM, 500 outer
+iterations and mean-score tolerance 1e-7. A 61-node fit and a single explicit
+121-node sensitivity refit were declared before execution. Both converged;
+the first used 180 outer iterations. Local elapsed times were 16.222 seconds
+for the initial fit and 44.883 seconds for the complete quadrature review,
+not a general speed claim. Fitting code was the local `4ba94470` checkpoint.
+
+The 61-node NLL was 1177.111; the 121-node refit changed NLL per Person by
+.0007644152, the largest slope coordinate by .2546042, and a fitted category
+probability by .1697842 over the common [-4,4] grid. A saved-fit review confirms
+the same maximum within [-2,2]; the finding is not confined to extreme tails.
+It compares conditional fitted curves at chosen abilities, not out-of-sample
+accuracy. Both returned interval objects retain all 12 components as
+ineligible with missing bounds. An existing result object is not equivalent
+to an available confidence interval. Neither fit is an empirical truth.
+
+At the 61-node calibration, `mfrm_response_diagnostics(..., quad_points=121)`
+checks response probabilities against 243 nodes. Results by observed exposure:
+
+| Raters per Person | Attempted rows | Available rows | Largest probability integration discrepancy |
+| ---: | ---: | ---: | ---: |
+| 1 | 445 | 283 | .004415534 |
+| 2 | 270 | 35 | .002956452 |
+| 6 | 60 | 0 | .007247950 |
+| 7 | 595 | 0 | .040124097 |
+
+The unchanged tolerance is 1e-7. Total availability is 318/1,370, and every
+criterion/rater group has incomplete rows, so all grouped Infit/Outfit values
+remain missing. These are approximation failures at a retained calibration,
+not observed evidence that those Persons or raters misfit. Concentrated
+within-Person ratings plausibly challenge a fixed prior grid, but this
+association does not establish a cause or rule out changed local solutions.
+The full calibration, fixed-parameter integral and refitting effects must
+be separated before changing an integration algorithm or recommended setting.
+
+`mfrm_results()` and `mfrm_report()` retain fitted curves, missing component
+intervals and all descriptive-diagnostic failures. The results/report RDS and
+Markdown report were saved; reopening preserves every table and the exact
+response-diagnostics attachment. No individual feedback sheet, competence
+ranking, automatic model-selection decision or unsupported Person score was
+manufactured. There was no broad simulation, full-package check or CI run.
+The empirical example and explanation are now in the GPCM vignette/help/NEWS.
+
+The executed runner is archived as `executed-runner.R`. Subsequent cleanup
+moves its existing-file guard before any writes, and the reporting block was
+executed separately from saved fits without re-estimation. Initial numerical
+results and hashes are unchanged. The central-grid comparison and exposure
+breakdown also reuse saved fits/diagnostics, and are retained in their CSVs.
+
+**Second domain and evidence limits.** Zotero read-only search confirmed
+Uto--Ueno (2020), key `IR3LFDRM`, and Uto (2021), key `38TX837G`.
+The OSCE title search found no matching local item. The primary
+[Uto et al. (2024) article](https://doi.org/10.1371/journal.pone.0309887) and
+[Dryad description](https://doi.org/10.5061/dryad.tmpg4f56q) describe a small
+medical-interview design with two common raters plus three subgroup raters.
+Its item-specific steps and rater/item location interactions distinguish it
+from the native two-family kernel. This was a targeted data/method-description
+review, not a fresh full-PDF review or empirical replication. The public CSV
+download returned HTTP 403, so its scores, coding and missingness were not
+inspected and no OSCE fit was performed.
+
+**Decision.** This empirical case adds a concrete integration/output obstacle
+to D1/D2; passing the earlier synthetic recovery checks does not close it.
+It does not establish that GMFRM is unsuitable for writing assessment or that
+an equal-slope model is better. The authoritative roadmap now requires
+question-led real-design simulation contrasts, matched simpler-model targets,
+and explicit decision/output availability in addition to recovery/coverage.
+Resolve this numerical obstacle and specify the retained practitioner claim
+before a new independent coverage study; do not expand a full factor grid or
+repeatedly increase quadrature until the output appears satisfactory.
+
+The published data-preparation chunk was executed and its result is identical
+to all 1,370 rows used for fitting. The guide renders to HTML; the generated
+Rd parses and matches its roxygen source. The runner's early existing-case
+guard was exercised: it refuses a duplicate run before writes, preserving
+hashes of all retained files. These checks add no refit or simulation.

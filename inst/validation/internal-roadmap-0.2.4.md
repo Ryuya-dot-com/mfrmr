@@ -131,8 +131,8 @@ G2/D2 labels in historical records do not close these milestones.
 | Milestone | Status | Reviewable exit condition |
 | --- | --- | --- |
 | D0 — Evidence identity | Reconciled on 2026-09-30 after correcting workspace records; repeat before freeze | Source and scope of each result, workspace indexes, active branch, retained worktrees and actual published baseline agree. Local, committed, archived and published states are distinct. |
-| D1 — Statistical support | Open | Fix each retained estimator/interval/diagnostic procedure and failure policy; evaluate the specific claim; resolve joint-slope and corrected-JML decisions. Report adverse and unavailable outcomes. Apply the dated escalation rule below before an over-budget study starts and while a conclusion is still unresolved. No universal coverage or capacity guarantee is required or claimed. |
-| D2 — Complete delivered workflows | Open | Supported fit → summary/uncertainty → meaningful plot/diagnostic → report/export → reopen/scoring paths agree on model, owner, scale, population and uncertainty. Existing G/D, features/MI and RSM/PCM feedback stay on the regression path. Unsupported routes have explicit tested reasons. Close the task-to-function acceptance table below against the installed guide, help, examples and saved replay; export counts are not acceptance evidence. |
+| D1 — Statistical support | Open | Fix each retained estimator/interval/diagnostic procedure and failure policy; evaluate the specific claim; resolve joint-slope and corrected-JML decisions. Include the empirical writing-design anchor and prespecified realistic perturbations below; recovery/coverage on a convenient balanced design alone is insufficient. Report adverse and unavailable outcomes. Apply the dated escalation rule below before an over-budget study starts and while a conclusion is still unresolved. No universal coverage or capacity guarantee is required or claimed. |
+| D2 — Complete delivered workflows | Open | Supported fit → summary/uncertainty → meaningful plot/diagnostic → report/export → reopen/scoring paths agree on model, owner, scale, population and uncertainty. Trace an empirical rating table through a named practitioner question, with actual unavailable outputs retained and a separate non-language design review. Existing G/D, features/MI and RSM/PCM feedback stay on the regression path. Unsupported routes have explicit tested reasons. Close the task-to-function acceptance table below against the installed guide, help, examples and saved replay; export counts are not acceptance evidence. |
 | D3 — Freeze scope and source | Not reached | Required D1/D2 outcomes are closed or changed by explicit agreement. DESCRIPTION, capability tables, help, examples, NEWS, README and version metadata agree. Produce one identified submission-quality archive without changing old tags. Retain a complete phase-timed local check and a demonstrated optimization plan against the 600-second check budget; an unmeasured or over-budget source does not close D3. |
 | D4 — Validate and integrate that source | Not reached for current scope | Run affected integration and package checks; fix failures; verify matching main integration, five-environment CI, installed/site examples, URLs, reverse dependencies and Windows results. Require matching Windows check time below 600 seconds, separated from installation, and a supported/missing optional-dependency matrix with no unexplained feature skips. Reuse source-identical evidence; no routine repeated whole-suite or numerical studies after small edits. |
 | D5 — Publish and maintain | Not reached for current scope | Matching source/documentation/assets are published under applicable authorization. Record GitHub release, CRAN submission and acceptance separately; retain regression witnesses and migration information. |
@@ -305,6 +305,65 @@ contract; neither ordinary-model reuse nor relabelling is sufficient.
 Exit: the procedure, sample-size/precision rationale, failure accounting and
 consumer decisions are fixed before new independent evaluation. Unresolved
 release commitments remain visible; a narrow experiment cannot close them.
+
+#### Practitioner questions and empirical design anchors (September 30)
+
+The user requires realistic use settings in addition to parameter recovery
+and coverage. These are linked requirements, not competing priorities. All
+nine packaged score datasets are synthetic; the `ej2021_*` names do not mean
+empirical TestDaF records. The principal completed two-family study used 240
+Persons, 3 tasks, 6 raters, 0–2 scores, no assigned missingness and assignment
+independent of normal ability. Its common-Person and rotating-pair comparison
+is useful but does not qualify a typical real assessment workflow by itself.
+
+| Applied anchor and question | Evidence / current restriction | Required next decision |
+| --- | --- | --- |
+| Empirical Austrian writing assessment (`sirt::data.ratings1`, sirt 4.2.133): which category-use/response-sensitivity patterns merit rubric or rater review? | All 135 Persons, 7 observed raters, 5 criteria and 1,370 ratings retained. 89 Persons have one rater, 27 two, 2 six, 17 seven. There are 29 observed roster patterns (13 singletons), 9 unused rater factor levels and 5 empty rater/criterion/category cells. A planned roster is unavailable. Native two-family fits at 61/121 nodes converge but curves/diagnostics remain numerically sensitive. | Resolve the observed approximation/solution sensitivity before substantive feedback or a new large simulation. Preserve conditional independence, single-ability, population and step-owner questions; do not call the more complex model preferable merely because it fits. |
+| Medical interview OSCE: review rubric-specific rater behavior in a small cohort with two common raters and three subgroup raters. | Uto et al. (2024), DOI 10.1371/journal.pone.0309887; Dryad DOI 10.5061/dryad.tmpg4f56q describes 30 Persons, 5 raters, 30 rubric items and four categories. The downloaded scores remain unavailable (HTTP 403); only the published design was reviewed. Its rater/item interactions and item-owned steps exceed the current two-family model. | Retrieve/verify the public data through an available legitimate route and reconcile its coding/assignment before fitting. A restricted fit is not replication of the published extension. Do not add a model merely to make this dataset fit. |
+
+The empirical writing runner is `gmfrm-practitioner-20260930.R`; its evidence
+is recorded in [the existing GMFRM review](gmfrm-mml-em-20260927.md#september-30-empirical-practitioner-workflow).
+The observed network is connected. Still, the 61/121-node fit comparison changes
+conditional category probabilities by up to .169784 on the same grid (also
+within [-2,2]). The 61-node calibration's 121/243-node response check returns
+318/1,370 rows, and no group has a complete Infit/Outfit summary. Every row
+from Persons with six/seven raters fails that numerical check. This association
+does not prove its cause. It makes concentrated within-Person information a
+necessary integration challenge alongside sparse overlap. Increasing the grid
+or relabeling a failure is not automatically a validated remedy. Source fit,
+integration at fixed parameters and a changed local solution must be separated.
+
+Before the next independent simulation, freeze a small set of question-led
+paired scenarios using the observed writing roster as a **design template**.
+Its absent cells are observed omissions, not a declared future assignment or
+a known missingness mechanism. Generated responses must have a separately
+documented model, truth and seed; empirical fitted parameters are not known truth.
+
+| Practitioner question | Prespecified contrast to add to the evaluation protocol | Decision-relevant evidence beyond recovery/coverage |
+| --- | --- | --- |
+| Is allowing two slope families useful for this rubric? | Equal slopes, one varying family and both varying families on the same rating rows; match response equation, population/scale and category-step ownership before comparing methods. | Stability of category probabilities/expected scores in observed contexts and which apparent feedback differences remain uncertain. No automatic AIC/LRT ranking until that consumer is qualified. |
+| Is the link dependent on a few commonly rated Persons? | Original roster versus a cost-matched redistribution of repeated ratings; separately remove a common-Person bridge. Distinguish common Persons/common raters from fixed parameter anchors. | Within-Person exposure, overlap distribution, available facet contrasts and impact of losing links. Preserve disconnected/unsupported results in the denominator. |
+| Could intake allocation masquerade as a rater effect? | Independent allocation baseline, then ability-associated allocation with prespecified group means/SDs; include SD .5/1/1.5 with the appropriate scale transformation. Separate nonnormality from assignment changes before combining them. | Spurious severity/slope differences and population-assumption sensitivity. Do not interpret an effect as training need solely from an observational roster. |
+| Are rare categories or the same-performance rubric structure driving results? | Empty/rare tail categories, category compression, and a declared Person-by-performance dependence term in separate misspecification conditions. Retain the original score ladder. | Output availability, category-probability calibration and sensitivity of feedback. No truth-coverage label for a fitted component without a matching estimand under misspecification. |
+| What happens when a planned rating is not collected? | Begin with an explicit planned roster, distinguish unassigned cells from assigned score missingness, then compare score-independent and score-dependent omissions. | Complete-row retention, missingness disclosure and sensitivity of available outputs; no filling unassigned cells and no implicit GMFRM MI support. |
+
+This is a question/contrast specification, not permission to cross every factor
+into a large grid. Select the contrasts that can change the admitted practitioner
+claim; freeze numerical procedure, values, estimands, loss/accuracy criteria,
+repetitions/MC precision and computation estimate before sampling. Report failures
+and output availability by exposure/roster/category support, not just averaged
+over a dataset. Hold out a complete Person for new-Person prediction only if
+that scoring route is supported; same-data posterior residuals cannot count as
+held-out accuracy. No pass/fail or rater-competence accuracy can be estimated
+without a defined decision rule and an appropriate reference target.
+
+**Exit conditions:** an interpretable empirical fit-to-output path (or an
+explicitly resolved limitation), a provenance-checked non-language design,
+and a prespecified realistic simulation contrast attached to each retained
+statistical claim. A real-data fit cannot establish coverage; simulated recovery
+cannot establish usability or the truth of the empirical model. Mathematical
+work remains first: the new empirical case identifies which mathematical and
+numerical checks the practitioners actually need, before optimization.
 
 #### Mathematical review before another study or optimization
 
