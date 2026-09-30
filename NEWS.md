@@ -1,5 +1,13 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* `mml_quadrature_sensitivity()` and its GPCM alias now accept
+  `adaptive_quad_points` for two slope families. The existing adaptive
+  integration calculation uses both slope components and compares integrals
+  at unchanged calibration parameters. Per-Person results distinguish
+  integration error from changes introduced by refitting. Summaries and saved
+  results retain these diagnostic quantities without adding Person scoring,
+  adaptive EM or changing interval eligibility.
+
 * The GPCM guide adds a judged-sport example based on official Olympic score
   protocols. It distinguishes competition totals from latent ability, preserves
   judge identities and advancement, and explains the additional uncertainty

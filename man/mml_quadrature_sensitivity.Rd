@@ -47,7 +47,8 @@ orders >= 3, for example \code{c(31, 61)}. Adds a per-Person
 grid with mode/curvature-adapted grids. This separates integration error
 from parameter changes during refitting. Inspect changes between adaptive
 orders too; neither grid is certified exact.
-This optional fixed/adaptive review is unavailable for two slope families.}
+Also available for two slope families as a numerical diagnostic; it does
+not add Person scoring or change the fitted integration method.}
 }
 \value{
 An object of class \code{mfrm_quadrature_sensitivity} containing:
@@ -121,8 +122,15 @@ example, after comparing \code{quad_points = c(31, 61)}, use
 evaluate q versus 2q-1 at that fit's saved parameters without another refit.
 Passing these checks does not establish sampling coverage or resolve
 other warnings about the fitted model.
-Person-score comparisons remain unavailable for two families: EAP and
-posterior-SD changes are \code{NA}, not zero. Adaptive review is refused.
+Person-score comparisons in \code{summary} remain unavailable for two families:
+EAP and posterior-SD changes there are \code{NA}, not zero. With
+\code{adaptive_quad_points}, the separate \code{quadrature_review} table evaluates
+posterior moments and log marginal likelihoods at each unchanged calibration.
+These diagnostic integrals do not enable \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or supply
+Person intervals.
+The effective slope is the product of both facet slopes; moving the
+integration grid retains the original N(0,1) density and its Jacobian.
+This does not provide adaptive EM, update estimates or repair their intervals.
 
 More quadrature points improve the numerical approximation, not the amount
 of observed information. In a sparse design, a small group of candidates

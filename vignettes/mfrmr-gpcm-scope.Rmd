@@ -439,9 +439,11 @@ the same model and EM stopping controls:
 ```{r joint-quadrature, eval=FALSE}
 # fit_joint above used 31 points. Include the original point count.
 integration <- mml_quadrature_sensitivity(
-  fit_joint, ratings, quad_points = c(31, 61)
+  fit_joint, ratings, quad_points = c(31, 61),
+  adaptive_quad_points = c(31, 61)
 )
 summary(integration)
+integration$quadrature_review # fixed-calibration integration checks per Person
 integration$slopes # estimates, raw diagnostic SEs, interval availability
 ci_finer <- integration$intervals$q61 # already computed; no repeated fit
 apa_table(ci_finer, which = "numerical_checks")
@@ -453,8 +455,20 @@ Here the 61-point interval checks also compare 61 with 121 points at the same
 saved parameters; that check does not refit at 121 points. Each requested refit
 uses the usual neutral start. The first family's geometric-mean reference and
 the second family's fixed-population reference are retained in the slope table.
-The comparison does not yet provide two-family Person-score changes or an
-adaptive-grid review; missing EAP/SD changes mean unavailable, not agreement.
+`adaptive_quad_points` adds a separate check at each fit's unchanged parameters.
+It adjusts the integration grid to each Person's posterior while preserving
+the original population distribution. This helps separate inaccurate
+integration from differences between fitted solutions. Compare both the
+fixed/adaptive results and successive adaptive orders in `quadrature_review`.
+Agreement between two orders is evidence of numerical stability, not a
+general error bound. No single point count is guaranteed to suffice.
+
+Two-family Person-score comparisons remain unavailable in the main comparison
+table; missing EAP/SD changes mean unavailable, not agreement. Posterior moments
+in `quadrature_review` are diagnostic calculations at fixed calibration;
+they do not enable `predict_mfrm_units()` or supply Person intervals.
+Requesting the review does not change EM's
+fixed-grid estimation, the saved estimates or interval availability.
 Neither warning handling nor additional quadrature points
 establishes nominal coverage in a sparse assessment design.
 
@@ -1536,6 +1550,16 @@ remained unavailable. Thus this example does **not** support issuing rater
 feedback from the returned estimates. Integration and solution sensitivity
 need resolution first. More convergence messages, a low in-sample residual,
 or a ranked slope plot cannot replace that review.
+
+Holding these two saved calibrations fixed, an adaptive 61-point review was
+checked against separate continuous integration for all 135 Persons.
+The maximum differences were below 2e-8 for log marginal likelihood and
+8e-8 for posterior mean/SD. The original fixed-grid likelihoods contained
+enough integration error to reverse which saved calibration had the higher
+likelihood. This identifies a numerical approximation problem; it does not
+establish that either calibration is the maximum of the accurately integrated
+likelihood, nor does it repair unavailable intervals. The same generic
+`adaptive_quad_points` option above supports this distinction for other data.
 
 For a different operational setting, Uto et al. (2024) publish medical
 interview OSCE scores and their data description on

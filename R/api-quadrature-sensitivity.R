@@ -738,7 +738,8 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'   grid with mode/curvature-adapted grids. This separates integration error
 #'   from parameter changes during refitting. Inspect changes between adaptive
 #'   orders too; neither grid is certified exact.
-#'   This optional fixed/adaptive review is unavailable for two slope families.
+#'   Also available for two slope families as a numerical diagnostic; it does
+#'   not add Person scoring or change the fitted integration method.
 #'
 #' @details
 #' This is an explicit refit diagnostic: neither [summary.mfrm_fit()] nor
@@ -778,8 +779,15 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' evaluate q versus 2q-1 at that fit's saved parameters without another refit.
 #' Passing these checks does not establish sampling coverage or resolve
 #' other warnings about the fitted model.
-#' Person-score comparisons remain unavailable for two families: EAP and
-#' posterior-SD changes are `NA`, not zero. Adaptive review is refused.
+#' Person-score comparisons in `summary` remain unavailable for two families:
+#' EAP and posterior-SD changes there are `NA`, not zero. With
+#' `adaptive_quad_points`, the separate `quadrature_review` table evaluates
+#' posterior moments and log marginal likelihoods at each unchanged calibration.
+#' These diagnostic integrals do not enable [predict_mfrm_units()] or supply
+#' Person intervals.
+#' The effective slope is the product of both facet slopes; moving the
+#' integration grid retains the original N(0,1) density and its Jacobian.
+#' This does not provide adaptive EM, update estimates or repair their intervals.
 #'
 #' More quadrature points improve the numerical approximation, not the amount
 #' of observed information. In a sparse design, a small group of candidates
@@ -848,9 +856,6 @@ mfrmr_gqs_run <- function(
     adaptive_quad_points = NULL) {
   adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
   product <- mfrm_has_product_slopes(fit)
-  if (product && !is.null(adaptive_quad_points)) {
-    stop("Adaptive quadrature review is not available for two slope families; compare fixed grids with quad_points.", call. = FALSE)
-  }
   contract <- mfrmr_gqs_validate(
     fit, data, quad_points, theta_range, theta_points, allowed_models
   )
@@ -1029,7 +1034,8 @@ mfrmr_gqs_run <- function(
     out$intervals <- lapply(extracted, `[[`, "intervals")
     out$settings$person_score_comparison <- "unavailable_two_family"
     out$notes <- c(out$notes,
-      "Two-family Person-score comparisons are unavailable; EAP and posterior-SD changes are NA.",
+      paste("The summary does not compare two-family Person scores; EAP and posterior-SD changes are NA.",
+        "Optional quadrature_review moments diagnose integration at fixed calibration; Person scoring remains unavailable."),
       paste("Component intervals are experimental and keep separate family scale references.",
         "Inspect $intervals for numerical checks, cautions and unavailable bounds; coverage is not established."))
   }
@@ -1037,7 +1043,7 @@ mfrmr_gqs_run <- function(
     out$quadrature_review <- do.call(rbind, lapply(fits, function(candidate) {
       config <- candidate$config
       idx <- build_indices(candidate$prep, config$step_facet, config$slope_facet,
-                           config$interaction_specs)
+                           config$interaction_specs, gpcm_spec = config$gpcm_spec)
       params <- expand_params(candidate$opt$par, build_param_sizes(config), config)
       nodes <- as.integer(config$estimation_control$quad_points)
       mfrmr_adaptive_quadrature_review(
@@ -1147,7 +1153,9 @@ print.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
   cat(
     "No automatic stability classification or readiness change is applied.\n"
   )
-  if (!is.null(x$intervals)) cat("Person-score comparisons are unavailable for two families; inspect $intervals for experimental interval checks.\n")
+  if (!is.null(x$intervals)) cat(
+    "The summary does not compare two-family Person scores.\n",
+    "Any adaptive-review moments are numerical diagnostics; inspect $intervals for experimental interval checks.\n", sep = "")
   invisible(x)
 }
 
@@ -1172,6 +1180,8 @@ print.summary.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
     cat("Inspect $quadrature_review for adaptive-order changes and unavailable rows.\n")
   }
   cat("No automatic stability classification or readiness change is applied.\n")
-  if (!is.null(x$intervals)) cat("Person-score comparisons are unavailable for two families; inspect $intervals for experimental interval checks.\n")
+  if (!is.null(x$intervals)) cat(
+    "The summary does not compare two-family Person scores.\n",
+    "Any adaptive-review moments are numerical diagnostics; inspect $intervals for experimental interval checks.\n", sep = "")
   invisible(x)
 }

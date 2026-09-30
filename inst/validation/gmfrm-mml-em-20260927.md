@@ -1181,3 +1181,73 @@ vignette renders to HTML, and the new section/table is present. Parsed R
 expressions in the two edited package source files match HEAD: changes there
 are documentation only. No full test suite, estimator simulation or refit was
 needed for these changes.
+
+## September 30: general-purpose fixed-calibration integration review
+
+The user clarified that general APIs take priority over domain-specific
+operational workflows. The empirical case therefore supplies a numerical
+counterexample, not a requirement for another writing/sport product. Reuse
+the existing integration machinery to separate integration error from fitted
+parameter differences, without running another calibration or simulation.
+
+**Mathematics.** At fixed positive component slopes, let `a_j` be their
+product for an observed crossing. With the existing whole-predictor GPCM,
+unit weights and N(0,1) ability distribution, the conditional log-posterior
+score is `sum_j a_j * (y_ij - E[Y_ij | theta]) - theta`. Its negative second
+derivative is `1 + sum_j a_j^2 * Var(Y_ij | theta)`, which is strictly positive.
+Thus the existing scalar mode/curvature kernel applies directly to two
+families once indices refer to their observed crossings. Under
+`theta = mode + scale*z`, the GH sum retains the original normal density
+through its density ratio and Jacobian; changing the integration coordinates
+does not replace the prior with a fitted posterior. A unique conditional
+posterior mode is not a unique marginal-likelihood calibration optimum.
+
+**Executed independent check.** `gmfrm-fixed-integration-20260930.R` reuses
+the original `quadrature-review.rds` containing the 61- and 121-node writing
+fits. It compares fixed and adaptive 15/31/61-node integrals at unchanged
+parameters, then independently evaluates literal category logits using
+`stats::integrate()` over the real line for every one of the 135 Persons.
+Density rescaling avoids underflow; mode and local scale only change the
+continuous integral's coordinates. The reference uses neither the package
+probability kernel nor its GH rules. All integration calls report `OK`.
+
+| Saved calibration | Original fixed-grid NLL | Continuous-integral NLL | Maximum fixed log-integral error per Person | Maximum adaptive-61 log-integral error | Maximum adaptive-61 mean / SD error |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 61 nodes | 1177.111430 | 1178.139807 | .3893272 | 1.425e-8 | 2.336e-8 / 2.301e-8 |
+| 121 nodes | 1177.214627 | 1177.662750 | .0921765 | 1.656e-8 | 5.599e-8 / 7.503e-8 |
+
+The ordering of the two calibrations by NLL reverses under common accurate
+integration. Maximum fixed-grid mean/SD errors are .072652/.084100 at the
+61-node calibration and .026744/.034384 at the 121-node calibration. Neither
+comparison reoptimizes parameters. These findings establish a numerical
+approximation problem in this case; they do not identify the accurate
+optimum, rule out local solutions or qualify interval coverage. Adaptive
+31-to-61 log-integral changes reach 8.45e-6, so order agreement itself should
+remain reported rather than interpreted as an exact-error certificate.
+This complete diagnostic took 9.386 seconds locally; no runtime or accuracy
+guarantee follows for arbitrary datasets.
+
+**Public integration.** The existing `mml_quadrature_sensitivity()` and GPCM
+alias now pass `gpcm_spec` to `build_indices()` for the optional adaptive
+review instead of rejecting two families. The same kernel, existing output
+class, summary/print and RDS path are retained. No new public function or
+estimation algorithm is introduced. `summary` still has unavailable
+two-family Person-score comparisons; posterior moments in the separately
+labelled `quadrature_review` are fixed-calibration diagnostics. Fixed-grid
+EM, reported estimates, component-interval checks and readiness are unchanged.
+The actual capability table, help, NEWS and guide describe this distinction.
+
+The next numerical decision concerns calibration against accurately
+integrated likelihood, including the optimization/derivative contract. This
+change does not silently turn the fixed-node generalized EM into an adaptive
+EM, certify Person scoring, or close the corrected-JML centering question.
+
+**Verification.** The scoped GMFRM quadrature tests and existing RSM/PCM
+quadrature tests pass. The GMFRM tests include literal continuous integrals,
+arbitrary owner labels with overlapping level names, an absent facet crossing,
+unchanged source likelihoods, saved review tables and continuing rejection of
+adaptive EM/Person scoring. Help generation and Rd parsing succeed, the actual
+capability table contains the new scope, and the guide renders to HTML. The
+initial test failures concerned expected console/error wording and were
+corrected before the passing run; numerical-reference assertions passed.
+No whole-package test or independent coverage simulation was repeated.

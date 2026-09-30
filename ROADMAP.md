@@ -32,8 +32,12 @@ clinical assessment and judged sport also motivate the design, provided their
 rating structure and assumptions match the selected model. Arbitrary column
 names do not make every assessment design supported.
 
-Validation must connect simulated recovery and interval coverage to actual
-assessment workflows. The GPCM guide includes an empirical writing-data
+The priority is a general-purpose API with explicit mathematical targets,
+reliable numerical calculations and consistent uncertainty/reporting semantics.
+Empirical cases challenge those contracts; each application area need not
+acquire a dedicated workflow or decision engine. Simulated recovery and
+interval coverage remain necessary for statistical claims.
+The GPCM guide includes an empirical writing-data
 review; its uneven assignment and unresolved numerical sensitivity identify
 work still needed before rater feedback. A separate clinical-assessment design
 review distinguishes the current model from published extensions. Real-data

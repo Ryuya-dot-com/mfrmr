@@ -131,8 +131,8 @@ G2/D2 labels in historical records do not close these milestones.
 | Milestone | Status | Reviewable exit condition |
 | --- | --- | --- |
 | D0 — Evidence identity | Reconciled on 2026-09-30 after correcting workspace records; repeat before freeze | Source and scope of each result, workspace indexes, active branch, retained worktrees and actual published baseline agree. Local, committed, archived and published states are distinct. |
-| D1 — Statistical support | Open | Fix each retained estimator/interval/diagnostic procedure and failure policy; evaluate the specific claim; resolve joint-slope and corrected-JML decisions. Include the empirical writing-design anchor and prespecified realistic perturbations below; recovery/coverage on a convenient balanced design alone is insufficient. Report adverse and unavailable outcomes. Apply the dated escalation rule below before an over-budget study starts and while a conclusion is still unresolved. No universal coverage or capacity guarantee is required or claimed. |
-| D2 — Complete delivered workflows | Open | Supported fit → summary/uncertainty → meaningful plot/diagnostic → report/export → reopen/scoring paths agree on model, owner, scale, population and uncertainty. Trace an empirical rating table through a named practitioner question, with actual unavailable outputs retained and a separate non-language design review. Existing G/D, features/MI and RSM/PCM feedback stay on the regression path. Unsupported routes have explicit tested reasons. Close the task-to-function acceptance table below against the installed guide, help, examples and saved replay; export counts are not acceptance evidence. |
+| D1 — Statistical support | Open | Fix each retained estimator/interval/diagnostic procedure and failure policy; evaluate the specific claim; resolve joint-slope and corrected-JML decisions. Cover sparse/unequal exposure and other relevant information conditions; the observed concentrated-posterior integration failure remains a mathematical issue to resolve. Empirical domains do not each require a separate validation program. Report adverse and unavailable outcomes. Apply the dated escalation rule below before an over-budget study starts and while a conclusion is still unresolved. No universal coverage or capacity guarantee is required or claimed. |
+| D2 — Complete delivered workflows | Open | Supported fit → summary/uncertainty → meaningful plot/diagnostic → report/export → reopen/scoring paths agree on model, owner, scale, population and uncertainty. Verify these general API contracts with suitable retained examples, preserving unavailable outputs and arbitrary facet names; no domain-specific workflow is required. Existing G/D, features/MI and RSM/PCM feedback stay on the regression path. Unsupported routes have explicit tested reasons. Close the task-to-function acceptance table below against the installed guide, help, examples and saved replay; export counts are not acceptance evidence. |
 | D3 — Freeze scope and source | Not reached | Required D1/D2 outcomes are closed or changed by explicit agreement. DESCRIPTION, capability tables, help, examples, NEWS, README and version metadata agree. Produce one identified submission-quality archive without changing old tags. Retain a complete phase-timed local check and a demonstrated optimization plan against the 600-second check budget; an unmeasured or over-budget source does not close D3. |
 | D4 — Validate and integrate that source | Not reached for current scope | Run affected integration and package checks; fix failures; verify matching main integration, five-environment CI, installed/site examples, URLs, reverse dependencies and Windows results. Require matching Windows check time below 600 seconds, separated from installation, and a supported/missing optional-dependency matrix with no unexplained feature skips. Reuse source-identical evidence; no routine repeated whole-suite or numerical studies after small edits. |
 | D5 — Publish and maintain | Not reached for current scope | Matching source/documentation/assets are published under applicable authorization. Record GitHub release, CRAN submission and acceptance separately; retain regression witnesses and migration information. |
@@ -280,6 +280,14 @@ checklist counts. This closes those documentation inconsistencies, not D1/D2.
 
 ## Next work: one ordered queue
 
+**September 30 clarification:** the user prioritizes a general-purpose API,
+not domain-specific operational products. Empirical writing, clinical and
+sport cases are optional sources of counterexamples and design constraints;
+they do not each require a bespoke end-to-end workflow or a new release gate.
+Preserve the existing statistical claims and their mathematical checks.
+Reuse model-generic fitting, integration, uncertainty and reporting APIs;
+do not add a sports scoring engine or winner-selection API from an example.
+
 ### 1. Fix the inferential procedure and unresolved consumer decisions (D1/D2)
 
 The first deliverable is a prespecified decision protocol for the revised
@@ -358,13 +366,28 @@ that scoring route is supported; same-data posterior residuals cannot count as
 held-out accuracy. No pass/fail or rater-competence accuracy can be estimated
 without a defined decision rule and an appropriate reference target.
 
-**Exit conditions:** an interpretable empirical fit-to-output path (or an
-explicitly resolved limitation), a provenance-checked non-language design,
-and a prespecified realistic simulation contrast attached to each retained
-statistical claim. A real-data fit cannot establish coverage; simulated recovery
-cannot establish usability or the truth of the empirical model. Mathematical
-work remains first: the new empirical case identifies which mathematical and
-numerical checks the practitioners actually need, before optimization.
+**Exit conditions (clarified September 30):** each retained general API claim
+has a mathematical target, an explicit numerical procedure, relevant
+simulation/independent numerical evidence and consistent output semantics.
+Reuse empirical examples where they reveal a failure condition; domain
+coverage is not an additional completion requirement. A real-data fit cannot
+establish coverage, and simulated recovery cannot establish the truth of an
+empirical model. The writing case identifies a general concentrated-posterior
+integration problem to resolve before optimization; it does not require a
+special writing-assessment API.
+
+**Fixed-parameter progress:** the existing adaptive quadrature review now
+accepts the two-family crossing specification through
+`mml_quadrature_sensitivity(..., adaptive_quad_points = ...)`. No new public
+function or numerical kernel was needed. Both saved 61/121-node calibrations
+were checked at all 135 Persons against literal continuous integration;
+61-node adaptive log-integral and moment discrepancies were below 2e-8 and
+8e-8 respectively. Fixed-grid errors reverse the likelihood ordering of
+those two saved calibrations. This isolates an integration error without
+refitting, but does not identify the accurately integrated optimum or promote
+interval eligibility. Next mathematical work must qualify the calibration
+procedure against accurate integration before another coverage study;
+diagnostic posterior moments do not establish two-family Person scoring.
 
 #### Consequential ranking: define the decision before evaluating it
 

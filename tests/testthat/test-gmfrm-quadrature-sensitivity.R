@@ -14,7 +14,7 @@ gmfrm_quadrature_fixture <- local({
         quad_points=5L,maxit=500L,em_score_tol=1e-6,
         rating_min=0,rating_max=2,category_policy="preserve")
       review <- suppressWarnings(mml_quadrature_sensitivity(fit,d,
-        quad_points=c(5L,31L),theta_points=21L))
+        quad_points=c(5L,31L),theta_points=21L,adaptive_quad_points=c(15L,31L)))
       cached <<- list(data=d,fit=fit,review=review)
     }
     cached
@@ -43,8 +43,8 @@ test_that("two-family quadrature refits preserve the model and interval evidence
   expect_equal(review$slopes$ScaleReference,rep(fine$ScaleReference,2L))
   expect_false(anyDuplicated(review$slopes[c("Nodes","SlopeOwner","SlopeFacet")])>0)
   expect_true(any(grepl("Experimental two-family",review$conditions$Message)))
-  expect_output(print(review),"Person-score comparisons are unavailable")
-  expect_output(print(summary(review)),"Person-score comparisons are unavailable")
+  expect_output(print(review),"does not compare two-family Person scores")
+  expect_output(print(summary(review)),"does not compare two-family Person scores")
   expect_s3_class(apa_table(review,digits=5),"apa_table")
   expect_s3_class(plot(review$intervals$q31,draw=FALSE),"ggplot")
   expect_equal(as.data.frame(review),review$summary)
@@ -52,6 +52,7 @@ test_that("two-family quadrature refits preserve the model and interval evidence
   path <- tempfile(fileext=".rds"); saveRDS(review,path)
   withr::defer(unlink(path))
   expect_identical(readRDS(path)$intervals,review$intervals)
+  expect_identical(readRDS(path)$quadrature_review,review$quadrature_review)
 })
 
 test_that("nonconverged two-family refits keep missing intervals and their reason", {
@@ -88,7 +89,7 @@ test_that("quadrature probabilities and diagnostic SEs use both slope owners", {
   expect_identical(mfrmr_gqs_slope_keys(reordered),rev(mfrmr_gqs_slope_keys(fit)))
 })
 
-test_that("two-family replay controls and unsupported integration requests stay explicit", {
+test_that("two-family replay controls and invalid integration requests stay explicit", {
   x <- gmfrm_quadrature_fixture()
   args <- mfrmr_gqs_refit_arguments(x$fit,x$data,31L)
   expect_identical(args$em_score_tol,1e-6)
@@ -97,10 +98,97 @@ test_that("two-family replay controls and unsupported integration requests stay 
   changed <- x$fit; changed$config$replay_inputs$em_score_tol <- 2e-6
   expect_identical(mfrmr_gqs_refit_arguments(changed,x$data,31L)$em_score_tol,2e-6)
   for (fun in list(mml_quadrature_sensitivity,gpcm_mml_quadrature_sensitivity)) {
-    expect_error(fun(x$fit,x$data,quad_points=c(5L,31L),adaptive_quad_points=c(15L,31L)),
-      "Adaptive quadrature review is not available for two slope families")
+    expect_error(fun(x$fit,x$data,quad_points=c(5L,31L),adaptive_quad_points=c(15L,15L)),
+      "adaptive_quad_points")
   }
+  args$mml_integration <- "adaptive"
+  expect_error(do.call(fit_mfrm,args),"requires MML with the direct engine",fixed=TRUE)
   changed <- x$review$fits$q31
   changed$prep$data$score_k[1] <- changed$prep$data$score_k[1]+1L
   expect_false(mfrmr_gqs_same_prepared_data(x$fit,changed))
+})
+
+test_that("two-family adaptive review retains model identity and diagnostic-only outputs", {
+  x <- gmfrm_quadrature_fixture(); review <- x$review; q <- review$quadrature_review
+  expect_equal(nrow(q), 4L * length(x$fit$prep$levels$Person))
+  expect_true(all(q$Status == "computed"))
+  expect_identical(summary(review)$quadrature_review,q)
+  expect_identical(summary(review)$overview$ReadinessEffect,"none_diagnostic_only")
+  expect_identical(review$settings$adaptive_quad_points,c(15L,31L))
+  expect_true(all(is.na(review$summary$EAPMaxAbsChange)))
+  for (nodes in c(5L,31L)) {
+    fit <- review$fits[[paste0("q",nodes)]]
+    rows <- q[q$FixedNodes==nodes & q$AdaptiveNodes==31L,]
+    expect_identical(rows$Person,fit$prep$levels$Person)
+    expect_equal(sum(rows$FixedLogMarginal),-fit$opt$value,tolerance=1e-9)
+    expect_identical(fit$config$estimation_control$mml_integration,"fixed")
+  }
+  expect_gt(max(abs(q$LogMarginalChange[q$FixedNodes==5L])),1e-3)
+  # Replaying summaries never performs inference or changes the calibration.
+  expect_identical(review$fits$q5,x$fit)
+  expect_error(predict_mfrm_units(x$fit,x$data),"two slope families")
+})
+
+# Independent literal probability equation and continuous posterior integrals.
+# This does not call the package probability kernel or GH integration rule.
+gmfrm_quadrature_reference <- function(fit, person, mode, scale) {
+  spec <- fit$gmfrm$specification; owners <- spec$slope_facets
+  data <- spec$data[as.character(spec$data[[spec$person]])==person,]
+  log_joint <- function(theta) {
+    sum(vapply(seq_len(nrow(data)),function(i) {
+      location <- sum(vapply(owners,function(owner) {
+        tab <- fit$facets$others
+        tab$Estimate[tab$Facet==owner & tab$Level==data[[owner]][i]]
+      },0))
+      slope <- prod(vapply(owners,function(owner) {
+        tab <- fit$slopes
+        tab$Estimate[tab$SlopeOwner==owner & tab$SlopeFacet==data[[owner]][i]]
+      },0))
+      tab <- fit$steps[fit$steps$StepFacet==data[[owners[2]]][i],]
+      steps <- tab$Estimate[order(tab$Step)]
+      eta <- c(0,cumsum(slope*(theta-location-steps)))
+      eta[data[[spec$score]][i]+1L]-max(eta)-log(sum(exp(eta-max(eta))))
+    },0))+dnorm(theta,log=TRUE)
+  }
+  height <- log_joint(mode)
+  moments <- vapply(0:2,function(power) integrate(function(z) vapply(z,function(x)
+    x^power*exp(log_joint(mode+scale*x)-height)*scale,0),-Inf,Inf,
+    rel.tol=1e-10,abs.tol=1e-12)$value,0)
+  c(log_marginal=height+log(moments[1]),eap=mode+scale*moments[2]/moments[1],
+    sd=scale*sqrt(moments[3]/moments[1]-(moments[2]/moments[1])^2))
+}
+
+test_that("both slope families match continuous integrals at unchanged parameters", {
+  review <- gmfrm_quadrature_fixture()$review
+  for (nodes in c(5L,31L)) {
+    fit <- review$fits[[paste0("q",nodes)]]
+    q <- review$quadrature_review
+    q <- q[q$FixedNodes==nodes & q$AdaptiveNodes==31L,]
+    selected <- unique(c(1L,which.min(q$LocalPosteriorSD),which.max(abs(q$PosteriorMode))))
+    for (i in selected) {
+      ref <- gmfrm_quadrature_reference(fit,q$Person[i],q$PosteriorMode[i],q$LocalPosteriorSD[i])
+      got <- unlist(q[i,c("AdaptiveLogMarginal","AdaptiveEAP","AdaptivePosteriorSD")],use.names=FALSE)
+      expect_lt(max(abs(got-ref)),1e-7)
+    }
+  }
+})
+
+test_that("adaptive review uses observed crossings in an incomplete two-family design", {
+  x <- gmfrm_quadrature_fixture(); fit <- x$review$fits$q31
+  owners <- fit$config$slope_facet; data <- x$data
+  data <- data[!(data[[owners[1]]]=="1" & data[[owners[2]]]=="3"),]
+  problem <- mfrm_gmfrm_problem(data,2L,gauss_hermite_normal(31L),slope_facets=owners)
+  fit <- mfrm_gmfrm_fit_result(problem,mfrm_gmfrm_em(problem,start=fit$opt$par,maxit=1L))
+  config <- fit$config
+  expect_lt(nrow(config$gpcm_spec$cells),prod(lengths(config$gpcm_spec$component_levels)))
+  idx <- build_indices(fit$prep,config$step_facet,config$slope_facet,
+    config$interaction_specs,gpcm_spec=config$gpcm_spec)
+  q <- mfrmr_adaptive_quadrature_review(idx,config,
+    expand_params(fit$opt$par,build_param_sizes(config),config),gauss_hermite_normal(31L),
+    fit$prep$levels$Person,c(15L,31L))
+  row <- q[q$AdaptiveNodes==31L,][1,]
+  ref <- gmfrm_quadrature_reference(fit,row$Person,row$PosteriorMode,row$LocalPosteriorSD)
+  expect_lt(max(abs(unlist(row[c("AdaptiveLogMarginal","AdaptiveEAP","AdaptivePosteriorSD")],
+    use.names=FALSE)-ref)),1e-7)
+  expect_equal(sum(q$FixedLogMarginal[q$AdaptiveNodes==31L]),-fit$opt$value,tolerance=1e-9)
 })

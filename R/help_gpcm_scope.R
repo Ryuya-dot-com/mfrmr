@@ -76,8 +76,11 @@
 #' and a same-target Wald comparison. Neither method has qualified coverage.
 #' Use [mml_quadrature_sensitivity()] to compare
 #' fixed-grid refits with the same EM controls and save each grid's interval
-#' checks. Person-score and adaptive-grid comparisons remain unavailable for
-#' two families. [mfrm_response_diagnostics()] supplies same-data posterior
+#' checks. Optional `adaptive_quad_points` also adds fixed-calibration
+#' integration checks for two families; the posterior moments in that review
+#' are numerical diagnostics, not a Person-scoring workflow. Person-score
+#' comparisons and adaptive fitting remain unavailable for two families.
+#' [mfrm_response_diagnostics()] supplies same-data posterior
 #' predictive residuals with fixed calibration, including descriptive Infit/Outfit
 #' without reference cutoffs. Attach the saved object through `response_diagnostics`
 #' to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and
@@ -668,7 +671,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "Summary and fitted curves connect to saved results/reports; curve intervals are unavailable.",
         "confint(fit) separately checks experimental component-slope intervals; global identification and coverage remain unestablished.",
         "method = 'profile' and a named slope value profile one owner/level, with nuisance reoptimization and saved Wald comparison; coverage improvement is not established.",
-        "mml_quadrature_sensitivity() compares fixed-grid refits and retains component intervals and their checks, without Person-score or adaptive comparisons.",
+        "mml_quadrature_sensitivity() compares fixed-grid refits and retains component intervals and their checks; optional adaptive_quad_points adds fixed-calibration integration diagnostics, not Person scoring or adaptive fitting.",
         "mfrm_response_diagnostics() integrates ability with both slope families fixed; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests.",
         "Ordinary fit diagnostics, model ranking, new-person scoring and portable two-family calibration are not supported."
       ),

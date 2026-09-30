@@ -97,8 +97,11 @@ It retains nuisance reoptimization, numerical checks, unavailable endpoints
 and a same-target Wald comparison. Neither method has qualified coverage.
 Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare
 fixed-grid refits with the same EM controls and save each grid's interval
-checks. Person-score and adaptive-grid comparisons remain unavailable for
-two families. \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
+checks. Optional \code{adaptive_quad_points} also adds fixed-calibration
+integration checks for two families; the posterior moments in that review
+are numerical diagnostics, not a Person-scoring workflow. Person-score
+comparisons and adaptive fitting remain unavailable for two families.
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
 predictive residuals with fixed calibration, including descriptive Infit/Outfit
 without reference cutoffs. Attach the saved object through \code{response_diagnostics}
 to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and
