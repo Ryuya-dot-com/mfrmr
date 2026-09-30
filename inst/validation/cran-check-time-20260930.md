@@ -7,9 +7,19 @@ qualification. The Windows check-only ceiling remains 600 seconds; the local
 Current outcome: the measured Windows check took about 1,472 seconds and did
 not pass. Its README assertion is repaired and its missing manual indexer was
 fixed and verified separately. No complete clean or under-budget Windows rerun
-is claimed; the runtime shortfall remains the release-engineering priority.
+is claimed; the runtime shortfall remains a release-engineering requirement.
 A subsequent adaptive-MML optimization improved one local calibration-review
 benchmark by 22%; it has not been measured in a full check or on Windows.
+
+**Priority update requested by the user on September 30:** further profiling
+and optimization follow the mathematical/statistical decisions in D1 and their
+D2 output contracts. The dated engineering next steps below are retained as
+history, not a competing active queue. See the authoritative internal roadmap.
+Examples and CRAN workload configuration are reviewed last; no example is newly
+excluded. In particular, the measured ordinary-example profile explicitly
+disabled `_R_CHECK_DONTTEST_EXAMPLES_`; unmodified `--as-cran` normally enables
+those examples. This result does not cover that submission workload, which
+must be reconciled before final qualification.
 
 ## Source and measurement
 

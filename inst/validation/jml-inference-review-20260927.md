@@ -2,6 +2,9 @@
 
 Date: 2026-09-27. Local development review; no new inferential API qualified.
 
+Current September 30 target review is recorded at the end of this file; older
+research/public-API status descriptions below retain their historical scope.
+
 ## Question and decision
 
 Can the joint-curvature check added for portable GPCM JML justify formal
@@ -994,3 +997,70 @@ an internal adapter reuses native parameter tables. The public fit/output
 contract remains unfinished. This computational extension
 does not change the residual-bias findings, choose an order or establish wider
 coverage. The earlier scope and timings above refer to their recorded source.
+
+## September 30: structural target before computational optimization
+
+The user requested that mathematical/statistical adequacy take priority over
+further CRAN runtime work. The current public explicit-order fitting/output
+route is documented in the general-input record; formal structural confidence
+intervals and an automatic order rule remain unfinished. This review does not
+withdraw that agreed work or present a local root covariance as its completion.
+
+The [reconciliation script](jml-inferential-target-audit-20260930.R) joins the
+saved exact population roots with the completed order study. All 400 datasets,
+both orders and all five free coordinates are retained. Bias, empirical SD,
+root-mean estimated variance, truth coverage and population-root coverage were
+independently recomputed from exported per-replicate rows and agree with the
+saved summaries within 1e-12. Original input hashes are unchanged. No response
+generation, fitting, quadrature change or new inference test was performed.
+
+The distinction that governs further work is beta_k* versus beta_0: the root
+of the expected order-k equation versus generating structural truth. With
+mean-equation derivative A and design-appropriate score variance B, the current
+covariance has the form A^{-1} B A^{-T}/N. The implementation retains the full
+nonsymmetric derivative and uses the transpose on the right; the actual Person
+scores and within-roster centering match the fixed-allocation target. Its
+mathematical target remains variation around beta_k*. It cannot remove the
+displacement beta_k* - beta_0. Under a valid root-centered normal approximation,
+nonzero fixed displacement and shrinking intervals cause truth coverage to
+tend to zero at fixed per-Person exposure. This deduction is conditional on
+those assumptions, not a newly observed finite-sample failure.
+
+| Retained condition | Order | Log-slope root displacement | Displacement / local SE at N=400 | Observed truth coverage |
+| --- | ---: | ---: | ---: | ---: |
+| Criterion / unequal | 2 | +0.007734 | 0.1061 | 94.5% |
+| Criterion / unequal | 4 | +0.001083 | 0.0151 | 93.5% |
+| Rater / sparse | 2 | -0.010706 | 0.1157 | 94.5% |
+| Rater / sparse | 4 | -0.007277 | 0.0769 | 94.5% |
+
+All 20 coordinate/condition/order combinations have nonzero retained root
+displacements. Their absolute displacement/local-SE ratios at N=400 range
+from 0.0015 to 0.1858. These are oracle diagnostics for the saved generating
+conditions, not statistics available to an analyst or proof of poor coverage
+at N=400. The earlier N=1600 population calculation halves SE and doubles these
+ratios; this is algebraic scaling, not 1,600-Person simulation evidence.
+Observed truth coverage across the 20 combinations is 93–98%, with only 200
+independent replicates per condition. It cannot certify a general coverage claim.
+
+The retained paired log-slope MSE difference (order 4 minus order 2) is
+-0.0001833 in Criterion/unequal (95% Monte Carlo interval
+[-0.0003182, -0.00004835]) and +0.0005310 in Rater/sparse
+([+0.0002449, +0.0008171]). Thus smaller population displacement does not give a
+uniform finite-sample MSE improvement. Other coordinates remain in the audit;
+these are retained paired comparisons, not newly selected superiority tests.
+More iterations, a stable equation or selecting the smallest reported SE
+cannot provide a justified default order from these findings.
+
+Sections 1.2–1.3 of the previously reviewed
+[Dhaene–Jochmans manuscript](https://jochmans.github.io/preprints/score%20adjustments/Dhaene-Jochmans%20adjscore.pdf)
+were rechecked: their finite-order large-stratum argument is distinct from
+fixed-stratum-length consistency and an informative limiting equation.
+No theorem for this GPCM is imported by analogy. The current scope decision
+therefore still needs a justified bias treatment or declared growth regime,
+followed by evaluation of that exact procedure. Existing finite-condition
+success does not justify silently changing the default or exposing formal CIs.
+
+Audit outputs are under `validation-results/jml-inferential-target-audit-20260930/`:
+all-coordinate table, retained paired MSEs, input hashes and session. The
+authoritative order of remaining work is in the
+[internal roadmap](internal-roadmap-0.2.4.md#next-work-one-ordered-queue).

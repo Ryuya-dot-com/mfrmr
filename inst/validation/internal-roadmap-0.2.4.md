@@ -37,6 +37,15 @@ Inference and output contracts constrain one another; necessary API/help work
 continues while statistical work proceeds. Do not wait for every research
 question before fixing an incorrect label, probability or saved result.
 
+**September 30 priority correction, requested by the user:** mathematical and
+statistical adequacy precede further runtime optimization. The immediate work
+is D1's inferential target, residual-bias and uncertainty decisions together
+with their D2 consequences. Then optimize the retained procedure, and finally
+review examples and submission checks. The 600-second ceiling remains a D3/D4
+release requirement; it does not make Windows profiling the current research
+priority. Retain the measured engineering improvements, without interpreting
+faster calculations or passing regression tests as inferential qualification.
+
 Joint-slope GMFRM and corrected JML remain agreed unfinished work. Formal JML
 inference cannot be marked complete by exposing RootSE, nor can a promised
 consumer be replaced with a generic warning. Required outcomes must be
@@ -189,10 +198,12 @@ other check overhead, plus install/build/check totals, CPU/elapsed distinction,
 R/codetools/optional-package versions, thread settings and actual skips. Use the
 built tarball with normal CRAN examples/tests/vignettes/manuals enabled and
 `NOT_CRAN=false`; a `--no-tests`, `--no-examples`, `--no-manual` or partial check
-cannot close this requirement. Record `--run-donttest` as a distinct additional
-profile if used; do not silently change the comparison workload.
+cannot close this requirement. Distinguish the historical ordinary-example
+profile from submission-relevant `--as-cran` defaults, including `donttest`
+execution; do not silently change or equate their workloads.
 
-Optimization sequence: reuse old logs → time the selected installed-package
+Once the retained statistical procedure is fixed, the optimization sequence is:
+reuse old logs → time the selected installed-package
 tests by file with supported optional dependencies → remove repeated expensive
 fitting from presentation/compatibility checks using valid synthetic fixtures,
 while retaining small real estimation/uncertainty checks for every supported
@@ -212,9 +223,7 @@ ceiling cannot be met, report the measured bottleneck and ask for a concrete
 scope/engineering decision before submission. Any CRAN exception requires
 explicit correspondence; it must not be inferred from 0.2.3.1 acceptance.
 
-## Next work: one ordered queue
-
-### 0. Close the check-time measurement gap before another broad study (D0/D3)
+### Retained engineering checkpoint — further timing work follows D1/D2
 
 Workspace identity is reconciled. The [September 30 runtime record](cran-check-time-20260930.md)
 now identifies an installed baseline, measured repeated-calibration and
@@ -232,16 +241,16 @@ README assertion failure is repaired locally. Isolated diagnosis identified
 a missing makeindex tool; after adding it, Windows generated the indexed
 663-page manual successfully in 20.55 seconds. HTML math rendering was skipped
 without V8 in the complete run; V8 is now provisioned but that check remains
-unverified. This is not a clean or under-budget whole-check result. Prioritize targeted Windows
-test profiling and static-analysis/overhead work; a test-only optimization
-cannot leave adequate headroom. Reuse the repaired manual evidence and local
-static-analysis profile before another assembled check. Do not repeat the same
-full run after metadata-only repairs or start
-another broad statistical study instead. This prerequisite proceeds separately
-from unresolved D1 methods. Local timing does not close the Windows ceiling
-or qualify the unfinished statistical scope.
+unverified. This is not a clean or under-budget whole-check result. Retain these
+measurements while resolving D1/D2; neither targeted Windows profiling nor
+another assembled check is the immediate next task. Later, a test-only
+optimization cannot leave adequate headroom, so reuse the manual evidence and
+static-analysis profile as well. Local timing does not close the Windows ceiling
+or qualify the unfinished statistical scope. New statistical work must answer
+the prespecified D1 question; this priority change does not authorize an
+unbounded new simulation grid.
 
-The next local optimization aggregates adaptive-MML category derivatives before
+The completed local optimization aggregates adaptive-MML category derivatives before
 sparse projection. It preserves the finite-sum objective, mode/scale derivatives,
 quadrature rules and admission tolerances. On one retained GPCM calibration,
 three alternating before/after measurements reduced the local review median
@@ -251,7 +260,8 @@ qualification. No test was removed or mocked to obtain that speedup.
 Per-function code-usage profiling found distributed cost across 2,401 functions;
 the ten slowest accounted for about 6% of timed calls. A wholesale decomposition
 of a few large functions therefore lacks evidence as the immediate remedy.
-Next, obtain test-file timings on Windows from the installed package and map
+After the mathematical/statistical procedure and admitted workflows are settled,
+obtain test-file timings on Windows from the installed package and map
 the dominant tests to their required feature checks before shrinking fixtures
 or moving repeated studies. Retain one real fit/uncertainty path per admitted
 feature. Run the assembled Windows check only after affected measurements
@@ -267,6 +277,8 @@ repository assertion failures. Their affected checks now pass after reconciling
 the portable-scope wording, prose count and GPCM roadmap lookup: current
 capabilities use this plan rather than the 0.2.2 supplement or unrelated
 checklist counts. This closes those documentation inconsistencies, not D1/D2.
+
+## Next work: one ordered queue
 
 ### 1. Fix the inferential procedure and unresolved consumer decisions (D1/D2)
 
@@ -294,6 +306,72 @@ Exit: the procedure, sample-size/precision rationale, failure accounting and
 consumer decisions are fixed before new independent evaluation. Unresolved
 release commitments remain visible; a narrow experiment cannot close them.
 
+#### Mathematical review before another study or optimization
+
+Keep four kinds of evidence separate: algebra/model identity, numerical
+accuracy, repeated-sample statistical behavior, and package/CRAN execution.
+The adaptive-gradient equivalence checks address the first two only. The
+following review fixes the next questions across all three release pillars;
+it does not silently remove the agreed joint-slope or corrected-JML work.
+
+| Route and target | Evidence already available | Immediate mathematical decision / stopping condition |
+| --- | --- | --- |
+| Two-family MML: identified component and effective slopes | Literal probabilities, first-family geometric-mean-one constraint with fixed N(0,1), EM/direct objective agreement, gradients and full marginal-information calculations. | Retain the exact response equation, ordered owners and identification. Distinguish connected crossings, within-Person response information and local versus global identification. A connected graph or positive Hessian alone cannot certify all of them. Do not use an EM Q-function Hessian as the observed marginal information. |
+| Two-family component Wald/profile intervals | Existing sparse-design and profile studies, integration failures and matched numerical repairs. | Freeze the complete source-fit/refinement/retry procedure and interval target before new coverage evaluation. Profile uses an asymptotic likelihood-ratio cutoff; neither local numerical success nor a repaired endpoint establishes its coverage advantage. Separate bias, covariance error, weak information/boundaries and quadrature error. |
+| Explicit-order corrected JML: structural parameters | Exact owner-total equations, full nonsymmetric Jacobian, actual Person contributions, fixed/random-roster decomposition, population roots and 200/400-dataset studies. | Resolve the centering target before formal truth intervals: variance about an adjusted-equation root is not bias removal. Review correction order and exposure-growth assumptions; order stability, a smaller residual, and more Persons do not establish negligible common bias. No automatic order selector or formal interval is admitted from those facts alone. |
+| Multivariate observed-score G/D: composite/difference dependability | Existing crossed/nested ANOVA/MINQUE(0), raw covariance components, metric-specific availability and paired-delta checks. | Reconcile random/fixed facets, score units, future complete-plan counts and covariance between criteria/plans. Preserve raw inadmissible estimates and restrictions on normal-theory intervals; do not equate observed-score components with GMFRM latent-parameter covariance. Reuse completed evidence unless an actual mismatch is found. |
+| Scoring, feedback, MI and dependence extensions | Existing fixed-calibration scoring, recipient reports, assigned-response MI and separate random-rater/testlet routes. | Keep the conditioning set and sampling unit visible: fixed calibration versus estimated calibration, independent Persons versus shared random raters, assigned missing scores versus unassigned cells. Check the supported target behind each interval, fit cutoff and pooling rule; descriptive feedback is not rater-competence inference. |
+
+**Corrected-JML centering check, revisited September 30.** At a fixed roster
+length and fixed order k, write the mean adjusted equation as
+g_k(beta) = E[U_k(Y; beta)] and its locally identified root as beta_k*.
+The implemented Person sandwich uses the full derivative A = d g_k/d beta
+and design-appropriate B: covariance about beta_k* is approximately
+A^{-1} B A^{-T}/N under the required sampling/regularity assumptions.
+This does not replace beta_k* with the generating parameter beta_0.
+For a scalar contrast with nonzero fixed displacement d = c'(beta_k* - beta_0)
+and a valid root-centered normal approximation of scale s/sqrt(N), its
+truth inclusion is approximately
+Phi(z_.975 - sqrt(N)*d/s) - Phi(-z_.975 - sqrt(N)*d/s), tending to zero as N
+increases. This is a conditional mathematical deduction, not a new coverage
+experiment or a claim that its finite-N normal approximation is exact.
+The existing nonzero exact population displacements therefore rule out using
+the 400-Person studies as a general fixed-exposure consistency argument.
+
+The current source still computes U_k = (I-P_beta)^k U_0 using MLE plug-in
+expectations and retains the derivative of the entire equation. Rechecked
+sections 1.2–1.3 (printed pp. 3–4) of the
+[Dhaene–Jochmans author manuscript](https://jochmans.github.io/preprints/score%20adjustments/Dhaene-Jochmans%20adjscore.pdf)
+distinguish finite-order bias reduction from fixed-stratum-length consistency;
+even a fully iterated limit needs identifying information. This is a targeted
+source recheck, not a fresh whole-paper reading or a theorem for this GPCM.
+
+The retained order-study CSV confirms all 400 datasets were attempted and both
+orders returned estimates/covariance. For log slope, order 2/4 truth inclusion
+is 94.5%/93.5% in the unequal Criterion case and 94.5%/94.5% in the sparse Rater
+case. These imprecise finite-condition results do not settle residual bias or
+select a universal order. All coordinates and adverse findings remain in the
+linked original records. Public `RootSE` remains labelled local root variation;
+it must not become an ordinary structural SE through summary, plot or export.
+
+The [all-coordinate reconciliation](jml-inference-review-20260927.md#september-30-structural-target-before-computational-optimization)
+now checks the saved population roots against all 400 study datasets and both
+orders without refitting. All 20 coordinate/condition/order summaries agree
+with recomputation; nonzero root displacements persist. Order 4 reduces the
+examined log-slope population displacements but its paired sample MSE improves
+in the unequal Criterion design and worsens in the sparse Rater design.
+This establishes the next question, not a universally preferred order.
+
+**Next bounded deliverable:** specify the additional mathematical bias treatment
+or declared growth-regime argument needed for the promised structural target,
+using the reconciled order/exposure evidence. Do not choose a benchmark's oracle
+correction, minimize a fitted SE, or invent an automatic order rule.
+In the same review, freeze the two-family inference procedure and its numerical
+failure accounting. Only then choose an independent evaluation and justify
+its precision/cost. A general theorem or a universal coverage/capacity guarantee
+is not required; unresolved agreed claims still require a repair or explicit
+user scope decision, not a weaker label presented as completion.
+
 **Decision deadline:** report the evaluation plan's compute and elapsed-time
 estimate when the plan is ready. If its expected interpretable result would
 fall after **2026-10-02 18:00 JST**, consult the user before launching it; if D1
@@ -301,9 +379,11 @@ is still unresolved at that checkpoint, present the evidence, remaining cost
 and concrete options for continued work or an explicit scope decision without
 waiting for a conclusive result. This is a review date, not a truncation rule
 for datasets, an automatic deferral of agreed features, or a promise that a
-background reminder has been scheduled. Continue independent G/D, MI, feedback
-and release-engineering work. Review earlier if a changed method or a new study
-materially exceeds the plan's estimate.
+background reminder has been scheduled. Continue independent correctness and
+interpretability work for G/D, MI and feedback; resume performance/submission
+work in the order below unless it is necessary to resolve a specific D1 check.
+Review earlier if a changed method or a new study materially exceeds the plan's
+estimate.
 
 ### 2. Resolve statistical claims using existing evidence first (D1)
 
@@ -359,7 +439,30 @@ Exit: each admitted user outcome in the scope table is executable and
 interpretable end to end, with matching help and NEWS. Unresolved GMFRM/JML
 scope cannot disappear when the walkthrough uses only RSM/PCM.
 
-### 4. Freeze, check and publish the integrated source (D3–D5)
+### 4. Optimize the retained calculations, then review examples (D3)
+
+After D1's procedure and D2's targets are fixed, resume the engineering sequence
+above using the retained timing evidence. Compare objective, gradients,
+covariance, interval/score outputs and failure decisions before accepting a
+speedup. Preserve independent small mathematical witnesses and all planned
+study denominators. If cost prevents a necessary mathematical evaluation,
+identify that concrete bottleneck and validate an equivalent computation;
+do not make runtime optimization a new parallel feature queue.
+
+Review help examples last against their teaching purpose and actual cost.
+Prefer a small runnable example and saved, traceable results for expensive
+follow-up displays. Do not hide an unverified method, failing example or the
+only test of a feature behind `donttest`/`dontrun`. The
+[R check documentation](https://stat.ethz.ch/CRAN/doc/manuals/r-devel/R-ints.html)
+states that `_R_CHECK_DONTTEST_EXAMPLES_` defaults to true under `--as-cran`;
+`donttest` is not a promise that CRAN submission will skip the code.
+The existing timing runner explicitly set that variable false, so its recorded
+73-second Windows example phase is ordinary examples only. Before final
+qualification reconcile that override and time the submission-relevant
+example workload; preserve the old measurement's narrower scope. No examples
+or test selectors are changed by this priority revision.
+
+### 5. Freeze, check and publish the integrated source (D3–D5)
 
 Reconcile the supported capability list and version metadata, including the
 DESCRIPTION description of multiple slope families, only against the admitted
@@ -436,7 +539,7 @@ no new service or broad duplicate simulation is required.
 | [Sparse intervals and numerical repair](gmfrm-sparse-intervals-20260928.md) | 400 original datasets; all 100 common-Person SD=1 fits replayed at 61 nodes; subsequent retained numerical failures and independent likelihood checks. | Same-data refits are not independent confirmation. Task t3 coverage 90/100 after the SD=1 integration repair remains an adverse finding. |
 | [Profile feasibility](gmfrm-profile-feasibility-20260929.md) | 80 new datasets / 160 requested component profiles under the original fixed procedure; availability, failure stages and cost. | Not a powered coverage comparison and not confirmation of later repaired procedures. |
 | [September 30 repairs](gmfrm-sparse-intervals-20260928.md#2026-09-30-control-sensitivity-weak-slope-search-and-user-documentation) | Matched replay: 43 sources and 45 profiles, originally 43/45 complete; later targeted repairs recovered the remaining optimization/integration cases. | No new all-45 success rate: only affected cases were replayed after the last changes. No established coverage advantage or general boundary solution. |
-| [Corrected-JML method](jml-inference-review-20260927.md), [sample comparison](jml-sample-comparison-20260927.md), [order comparison](jml-order-sampling-20260927.md) | Reference equations, fixed/random roster covariance, bias/SE/order results and adverse conditions. | No validated automatic selector or general structural interval. |
+| [Corrected-JML method](jml-inference-review-20260927.md), [sample comparison](jml-sample-comparison-20260927.md), [order comparison](jml-order-sampling-20260927.md) | Reference equations, fixed/random roster covariance, bias/SE/order results and adverse conditions; September 30 all-coordinate population-root/sample reconciliation reuses all 400 datasets. | No validated automatic selector or general structural interval. |
 | [General-input JML](jml-general-inputs-20260928.md) | Non-prototype numerical checks, explicit-order fit/output/residual/EAP and fresh-process portable replay. | Engineering samples do not establish coverage, unique global roots or absence of residual bias. |
 | [Portable MML GPCM](portable-gpcm-20260927.md), [JML GPCM](portable-gpcm-jml-20260927.md), [RSM/PCM JML](portable-jml-20260927.md) | Defined calibration formats, conditional scoring/prior and replay checks. | Conditional intervals omit calibration uncertainty; transport to another population needs its own interpretation. |
 | [Claim/evidence ledger](claim-reconciliation-0.2.4.md) and existing G/D, feature/MI, feedback and dependence records | Earlier mathematical/workflow and source-specific package evidence. | Historical present-tense claims do not override this current plan or qualify later source. |

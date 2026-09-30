@@ -5,6 +5,8 @@ This branch is now 0.2.4.9000. Historical checks below identify the frozen
 September 30 development measurements are reported separately under check time.
 Reviewed September 30, 2026: check time is an unresolved submission blocker.
 The earlier zero-error/zero-warning results do not establish submission readiness.
+Mathematical and statistical scope decisions currently precede further runtime
+optimization; example selection will be reviewed after those decisions.
 
 # mfrmr 0.2.4 — submission preparation
 
@@ -122,6 +124,10 @@ successfully generated the indexed PDF in 20.55 seconds. V8 was absent, so HTML 
 was not checked; it is now requested for subsequent timing runs. These repairs
 do not turn the original result into a clean check or resolve the 600-second
 ceiling. No complete rerun or current-source Win-builder result is claimed.
+The timing profile explicitly disabled `_R_CHECK_DONTTEST_EXAMPLES_`, so its
+example measurement excludes that additional workload. Final submission checks
+must reconcile this override with the normal `--as-cran` behavior; marking code
+as `donttest` does not establish that CRAN will skip it.
 
 A subsequent adaptive-MML optimization reduces repeated matrix calculations
 without changing integration rules or tolerances. Targeted numerical and API
