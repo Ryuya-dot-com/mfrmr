@@ -2181,11 +2181,13 @@ reproducibility, network review, and reporting support. It is not a general
 FACETS replacement: each `fit_mfrm()` call uses one response-model family and
 one observed score scale, and the current public API does not provide mixed
 response families, multiple independent rating scales, general threshold
-anchoring, or online calibration updates. Portable fixed-calibration artifacts
-support one-scale `RSM`/`PCM` `MML` fits under the fixed standard-normal
-calibration basis, and qualified estimated-normal GPCM MML fits in development.
-See the portable workflow below for its narrower structural and source-check
-requirements. Posterior scoring from an existing fitted object is a separate,
+anchoring, or online calibration updates. Portable fixed-calibration artifacts are available only
+for eligible one-scale fits: fixed-standard-normal `RSM`/`PCM` MML,
+estimated-normal one-family GPCM MML, and the separately qualified JML routes
+described below. The prior and source checks depend on the estimator; successful
+loading does not establish validity for another population. See the portable
+workflow below for structural and source-check requirements.
+Posterior scoring from an existing fitted object is a separate,
 wider analysis route.
 
 ## Portable fixed calibration

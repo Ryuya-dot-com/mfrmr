@@ -100,7 +100,7 @@ The September 30 development-source local measurement (`0.2.4.9000`, not rc.6)
 took 468.66 seconds including approximately 27 seconds of installation: about
 442 seconds of checking on arm64 macOS/R 4.6.1. Static analysis took 58 seconds,
 ordinary examples 22, tests 230, vignette rebuilding 11, PDF manual 11 and HTML
-manual 12. The tests reported 4,930 passes with no failures or warnings. Normal
+manual 12. The selected tests completed without failures or warnings. Normal
 examples were enabled; the additional `donttest` workload was not included.
 The full check found undeclared test imports from callr/pkgload; their Suggests
 declarations were repaired and R's test-dependency check then passed. The

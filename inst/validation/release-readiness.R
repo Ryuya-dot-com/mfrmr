@@ -178,7 +178,9 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       validation_dir,
       paste0("release-gate-results-", target_version, ".csv")
     ),
-    gpcm_roadmap = mfrmr_release_readiness_versioned_file(
+    gpcm_roadmap = if (mfrmr_release_readiness_contract_applies(release_version, "0.2.4")) {
+      file.path(validation_dir, paste0("internal-roadmap-", release_version, ".md"))
+    } else mfrmr_release_readiness_versioned_file(
       validation_dir,
       prefix = "gpcm-post-",
       target_version = target_version,
@@ -2327,14 +2329,10 @@ mfrmr_release_readiness_gpcm_scope_status <- function(paths,
   } else {
     NA_integer_
   }
-  checklist_covers <- if (is.na(checklist_rows)) {
-    NA
-  } else {
-    checklist_rows >= nrow(outstanding)
-  }
+  # Counts of unrelated historical checklist rows cannot establish coverage.
+  # Match every unavailable capability to the target release's actual plan.
   ok <- guidance_complete &&
     length(missing_areas) == 0L &&
-    (is.na(checklist_covers) || isTRUE(checklist_covers)) &&
     isTRUE(runtime_guard_coverage_ok)
 
   data.frame(

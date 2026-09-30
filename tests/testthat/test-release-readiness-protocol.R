@@ -2916,7 +2916,7 @@ test_that("release-readiness protocol checks GPCM scope alignment", {
   if (!file.exists(file.path(pkg_root, "DESCRIPTION"))) {
     pkg_root <- system.file(package = "mfrmr")
   }
-  paths <- env$mfrmr_release_readiness_paths(pkg_root, target_version = "0.2.2")
+  paths <- env$mfrmr_release_readiness_paths(pkg_root)
   checklist_status <- env$mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
   status <- env$mfrmr_release_readiness_gpcm_scope_status(
     paths = paths,
@@ -2933,7 +2933,17 @@ test_that("release-readiness protocol checks GPCM scope alignment", {
   expect_gt(status$RuntimeGuardRows[1], 0L)
   expect_true(status$RuntimeGuardAreas[1] >= status$OutstandingRows[1])
   expect_identical(status$MissingRuntimeGuardAreas[1], "")
-  expect_true(status$ChecklistRoadmapRows[1] >= status$OutstandingRows[1])
+  expect_identical(basename(paths$gpcm_roadmap), "internal-roadmap-0.2.4.md")
+  expect_identical(status$MissingRoadmapAreas, "")
+  # An unrelated checklist count must not stand in for the missing method.
+  incomplete <- tempfile(fileext = ".md")
+  on.exit(unlink(incomplete), add = TRUE)
+  lines <- readLines(paths$gpcm_roadmap, warn = FALSE)
+  writeLines(lines[!grepl("Formal structural confidence intervals for corrected JML", lines, fixed = TRUE)], incomplete)
+  paths$gpcm_roadmap <- incomplete
+  missing <- env$mfrmr_release_readiness_gpcm_scope_status(paths, checklist_status)
+  expect_identical(missing$GPCMScopeStatus, "concern")
+  expect_match(missing$MissingRoadmapAreas, "Formal structural confidence intervals for corrected JML", fixed = TRUE)
 })
 
 test_that("release-readiness protocol reviews the source tree shape", {

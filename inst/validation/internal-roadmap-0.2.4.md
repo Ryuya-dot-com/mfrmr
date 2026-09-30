@@ -95,6 +95,19 @@ active development worktree remains. No branch was reset, deleted or merged.
 | Features and missing scores | PAM/hierarchical/PCA/k-means, setting and imputation comparisons, assigned-response review/fitting/eligible pooling. | Preserve IDs, coding/scaling, roster, observed scores and pooling target in saved outputs. No filling unassigned ratings, inferential group effects, extended-model MI or pooled Person scores by implication. |
 | Beginner/API consistency | Existing guides, recommended aliases, saved objects and accessible plotting foundation. | One recommended route per task; explicit omitted/NULL/default meanings and actual plotted values; compatible old calls; no internal execution language in help/NEWS. Author review is not novice participant evidence. |
 
+### GPCM operations still unavailable
+
+These names match the current capability registry. Each row identifies what
+would have to change; listing it here does not supply implementation or evidence.
+The older 0.2.2 technical supplement and historical checklist counts do not
+cover newly added capabilities or close a current decision.
+
+| Capability area | Current decision and requirement |
+| --- | --- |
+| Formal structural confidence intervals for corrected JML | Unfinished D1 work within the agreed scope. Fix the correction order/procedure, covariance target and residual-bias handling before evaluating formal coverage. Local RootSE and conditional portable EAP do not provide these intervals. Change of the agreed outcome requires the dated user decision below. |
+| FACETS output-contract score-side review | Unavailable for GPCM. Package-native score export does not establish FACETS numerical equivalence. Reopen only for a specified transformation/uncertainty target with matched external evidence. It is not required for native 0.2.4 scoring. |
+| Posterior-predictive and Bayesian workflows | Bayesian estimation and replicated-data model checks remain deferred. Existing fixed-calibration same-data posterior response diagnostics are descriptive and do not implement those procedures. A new discrepancy, conditioning set and calibrated decision claim require separate design/evidence. |
+
 ## Integration milestones and exit conditions
 
 These D identifiers are the only release-level checkpoints. Older repeated
@@ -218,9 +231,11 @@ profile and a Windows-only manual workflow dispatch, with manuals enabled and
 RTMB >= 2.0/nleqslv present. The shared timing decision now requires the whole
 check minus installation, including rounding uncertainty; the earlier
 examples/tests/vignettes-only rule was insufficient. Its partial-log success
-must not be reused. See the runtime record for the corrected regression and
-the eight unchanged repository scope/prose failures that still require D2
-reconciliation. A successful package timing run will not close those concerns.
+must not be reused. The runtime record also retains eight pre-existing
+repository assertion failures. Their affected checks now pass after reconciling
+the portable-scope wording, prose count and GPCM roadmap lookup: current
+capabilities use this plan rather than the 0.2.2 supplement or unrelated
+checklist counts. This closes those documentation inconsistencies, not D1/D2.
 
 ### 1. Fix the inferential procedure and unresolved consumer decisions (D1/D2)
 

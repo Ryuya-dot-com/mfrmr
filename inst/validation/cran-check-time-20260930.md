@@ -214,3 +214,28 @@ an estimator defect or excuse a failed package check.
 
 This preparation is not a Windows result or a final release qualification.
 The dedicated validation branch and measured run will be recorded below.
+
+### First Windows attempt and scope reconciliation
+
+Commit `3887eb00` was pushed to
+`validation/0.2.4-cran-time-20260930` and dispatched as
+[run 36648171479](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36648171479).
+The run stopped before building or checking: TinyTeX installed successfully,
+but the following forced Bash step could not resolve Windows `tlmgr`.
+Use the runner's native shell for that step, as in the upstream action example.
+This is an infrastructure failure, with no package timing or test outcome.
+The complete first-attempt log is retained in
+`validation-results/windows-cran-timing-20260930/first-run.log`.
+
+The eight repository assertion failures identified above were then addressed:
+README states the eligible portable MML/JML scopes explicitly, the redundant
+pass count is retained internally rather than in cran-comments, and current
+GPCM review reads the 0.2.4 internal plan. That plan maps all three unavailable
+capability areas to decisions and required evidence. Counting historical
+checklist rows no longer stands in for matching actual missing capabilities.
+The older records were not rewritten. A negative test removes the corrected-JML
+row and confirms that review still fails. The four affected readiness tests
+pass 55 assertions; the other readiness tests were not needlessly repeated.
+Runner control tests pass 22 assertions, including evidence retention after
+an actual check WARNING as well as a time overrun. No package estimator or
+numerical experiment changed in this follow-up.

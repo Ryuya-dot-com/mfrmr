@@ -90,7 +90,6 @@ jobs:
         run: |
           tlmgr update --self
           tlmgr install inconsolata times helvetic courier fancyvrb microtype
-        shell: bash
 
       - name: Exact source-tarball R CMD check (G4 confirmation held)
         env:
