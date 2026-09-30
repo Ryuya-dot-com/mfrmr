@@ -95,7 +95,7 @@ jobs:
         if: inputs.cran-timing
         run: |
           tlmgr update --self
-          tlmgr install inconsolata times helvetic courier fancyvrb microtype
+          tlmgr install inconsolata times helvetic courier fancyvrb microtype makeindex
 
       - name: Exact source-tarball R CMD check (G4 confirmation held)
         if: ${{ !inputs.manual-only }}
@@ -120,27 +120,23 @@ jobs:
             Tools = Sys.which(c("texi2dvi", "texify", "makeindex", "pdflatex")),
             DefaultTexi2dvi = getOption("texi2dvi")
           )), file.path(out, "environment.txt"))
-          results <- lapply(c("default", "emulation"), function(mode) {
-            build <- file.path(out, mode)
-            dir.create(build)
-            pdf <- file.path(out, paste0(mode, ".pdf"))
-            log <- file.path(out, paste0(mode, ".log"))
-            started <- proc.time()[["elapsed"]]
-            status <- withr::with_envvar(c(R_TEXI2DVICMD =
-              if (mode == "emulation") "emulation" else NA_character_), {
-              system2(file.path(R.home("bin"), "Rcmd.exe"),
-                c("Rd2pdf", "--no-preview", "--no-clean", "--force",
-                  shQuote(paste0("--build-dir=", build)),
-                  shQuote(paste0("--output=", pdf)), "."),
-                stdout = log, stderr = log)
-            })
-            data.frame(Mode = mode, Status = status, PDFExists = file.exists(pdf),
-              Elapsed = proc.time()[["elapsed"]] - started)
-          })
-          results <- do.call(rbind, results)
+          stopifnot(nzchar(Sys.which("makeindex")))
+          build <- file.path(out, "default")
+          dir.create(build)
+          pdf <- file.path(out, "default.pdf")
+          log <- file.path(out, "default.log")
+          started <- proc.time()[["elapsed"]]
+          status <- system2(file.path(R.home("bin"), "Rcmd.exe"),
+            c("Rd2pdf", "--no-preview", "--no-clean", "--force",
+              shQuote(paste0("--build-dir=", build)),
+              shQuote(paste0("--output=", pdf)), "."),
+            stdout = log, stderr = log)
+          results <- data.frame(Mode = "default", Status = status,
+            PDFExists = file.exists(pdf), IndexExists = file.exists(file.path(build, "Rd2.ind")),
+            Elapsed = proc.time()[["elapsed"]] - started)
           write.csv(results, file.path(out, "results.csv"), row.names = FALSE)
           print(results)
-          stopifnot(any(results$Status == 0 & results$PDFExists))
+          stopifnot(results$Status == 0, results$PDFExists, results$IndexExists)
 
       - name: International input and moved-folder replay
         if: ${{ !inputs.cran-timing }}

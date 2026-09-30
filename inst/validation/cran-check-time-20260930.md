@@ -312,3 +312,29 @@ redundant fitting, and measure affected repairs before another assembled run.
 Static analysis and other overhead together are also material; even deleting
 the test phase would leave only about 28 seconds of headroom on this run,
 before repairing the incomplete manual checks. D3/D4 remain open.
+
+### Isolated manual diagnosis and static profile
+
+[Manual-only run 36651986027](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36651986027)
+at `c506000e` skipped archive building and the complete package check. It ran
+indexed `R CMD Rd2pdf` through both default and emulated TeX control, preserving
+the intermediate directory. Both failed in about 16 seconds because
+`makeindex` was absent, now confirmed by both `Sys.which()` and the direct
+error `unable to run 'makeindex' on 'Rd2.idx'`. This identifies a CI toolchain
+dependency, not an Rd mathematical-content error. The records are in
+`validation-results/windows-cran-timing-20260930/manual-diagnostic/` and
+`manual-diagnostic-run.log`. Add makeindex to TinyTeX setup and verify the
+canonical indexed route only; the diagnostic no longer needs a second TeX
+mode once the cause is known. Its CI job is explicitly named manual diagnosis,
+so a successful manual-only run cannot be mistaken for complete check timing.
+
+One local static-analysis profile used R's own
+`tools:::.check_code_usage_in_package()` on the previously checked installation.
+It took 24.620 elapsed seconds with no reported code-usage problems. Rprof's
+sampled CPU stacks attribute 12.26 of 22.42 sampled seconds to codetools'
+`incLocalSrcInfo`, including data-frame conversion and row binding. This is a
+local warm-session profile of one check routine, not a repeat of the whole
+58-second local or 214-second Windows phase. It does not identify an individual
+package function to rewrite or justify disabling codetools. Raw profile,
+session, result and summary are retained under `static-profile/` beside the
+Windows records. Use it to guide profiling, not as an achieved optimization.

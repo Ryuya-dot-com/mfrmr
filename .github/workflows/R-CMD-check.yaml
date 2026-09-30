@@ -67,7 +67,7 @@ jobs:
 
   windows-cran-timing:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_timing }}
-    name: Windows complete CRAN timing
+    name: ${{ inputs.manual_only && 'Windows manual diagnosis' || 'Windows complete CRAN timing' }}
     uses: ./.github/workflows/R-CMD-check-cell.yaml
     with:
       os: windows-latest
