@@ -1,5 +1,9 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Adaptive MML fitting and calibration checks perform fewer repeated matrix
+  calculations for RSM, PCM and GPCM. The likelihood, integration rules and
+  numerical accuracy requirements are unchanged.
+
 * Numerical integration sensitivity checks for RSM and PCM no longer emit
   an unnecessary warning about a missing slope column.
 

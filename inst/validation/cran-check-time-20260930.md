@@ -8,6 +8,8 @@ Current outcome: the measured Windows check took about 1,472 seconds and did
 not pass. Its README assertion is repaired and its missing manual indexer was
 fixed and verified separately. No complete clean or under-budget Windows rerun
 is claimed; the runtime shortfall remains the release-engineering priority.
+A subsequent adaptive-MML optimization improved one local calibration-review
+benchmark by 22%; it has not been measured in a full check or on Windows.
 
 ## Source and measurement
 
@@ -357,3 +359,74 @@ the failed whole-check status, the pending HTML math-rendering check or the
 unmet runtime ceiling. Development source records and cran-comments distinguish
 these separate outcomes; no main push, release-tag change or CRAN submission
 was made.
+
+### Adaptive gradient projection: same objective, fewer matrix products
+
+Starting source is `99c9df32`. The only production change in this follow-up is
+in `mfrmr_make_adaptive_mml_evaluator()` in `R/core-adaptive-quadrature.R`.
+Previously each Person and quadrature node separately projected category
+derivatives through the same sparse cumulative and log-slope designs. The
+replacement first forms posterior-weighted derivatives, then projects once
+per Person. The log-slope term averages residual-times-logit products; it does
+not multiply separate averages. Posterior mode, scale and their derivatives,
+prior derivatives, likelihood, quadrature orders and tolerances are retained.
+No new approximation, reused fit-review cache or test exclusion is introduced.
+
+The control is the previously checked installation under
+`validation-results/cran-time-20260930/candidate/mfrmr.Rcheck`. The candidate
+replaces only this evaluator in that installation's namespace for measurement.
+The retained `mfrm-conditional-scoring-gpcm.rds` fit supplies a real calibrated
+GPCM; the measured operation is its complete local calibration review, including
+curvature and integration checks. Three paired measurements alternate execution
+order, with garbage collection outside each measurement and one thread:
+
+| Iteration | Original elapsed seconds | Aggregated elapsed seconds |
+| --- | ---: | ---: |
+| 1 | 4.333 | 3.388 |
+| 2 | 4.367 | 3.395 |
+| 3 | 4.434 | 3.400 |
+| Median | 4.367 | 3.395 |
+
+This is a 22.3% reduction for that operation on the local Mac, not an estimated
+Windows or complete-check saving. At the retained coordinates and two perturbed
+parameter vectors, objective differences are zero and the maximum absolute
+gradient difference is 5.33e-14. Calibration-review eligibility and text agree;
+numerical fields agree within 1e-10 absolute tolerance. An initial relative-only
+comparison flagged roundoff in nearly zero integration-gradient differences;
+the absolute differences were inspected, rather than changing a production
+tolerance or treating the relative discrepancy as a substantive change.
+
+The unchanged adaptive-fitting, adaptive-quadrature-review, conditional-scoring,
+scoring-prior and GPCM-profile-interval files pass 399 expectations with no
+failures, warnings or skips. They include independent finite differences of
+the whole moving-node objective for RSM/PCM/GPCM at orders 1/3/15, nonunit and
+zero weights, signed interactions, fixed facet and step anchors, population
+regression, covariance, EAP/draws, portable RSM/PCM replay and output identity.
+No fitting or source-review test was mocked as part of the production speedup;
+existing test isolation stays unchanged. Help signatures/defaults are unchanged;
+NEWS describes the computational improvement without internal milestone labels.
+The changed evaluator also passes R's code-usage analysis with no reported issues.
+
+Artifacts and reproduction scripts are in
+`validation-results/cran-time-20260930/runtime-followup/`: `compare.R`,
+`calibration-timings.csv`, `gradient-comparison.csv`, `review-comparison.rds`,
+`affected-tests.rds`, logs and session information. No full check, Windows run,
+new sampling study, main push, tag change or submission was performed here.
+
+The static per-function diagnostic used the original installed namespace and
+R's codetools checks with the same relevant check flags. All 2,401 functions
+were examined with no issues. Timed calls totalled 24.444 seconds; the ten
+slowest totalled 1.467 seconds (6.0%), with no single function above 0.219 seconds.
+These are diagnostic call timings, not the complete static check. The driver
+used `system.time()` per function, whose default pre-timing garbage collection
+introduced substantial overhead (187.490 user CPU / 1,878.777 elapsed seconds
+for the driver). That outer duration is invalid as a package-performance
+comparison and must not be reused as one. A preliminary tracing attempt did
+not capture calls through the compiled caller and was discarded. Keep this
+diagnostic's ranking only; avoid repeating its costly instrumentation.
+
+The result gives no evidence that a few giant functions dominate the static
+phase. The 600-second prerequisite remains open: obtain Windows per-file test
+timings and use the existing feature contracts to remove excessive fixture or
+repeated-study work, while measuring static/manual/other overhead separately.
+Do not extrapolate this one 22% improvement into an under-budget release.

@@ -123,6 +123,12 @@ was not checked; it is now requested for subsequent timing runs. These repairs
 do not turn the original result into a clean check or resolve the 600-second
 ceiling. No complete rerun or current-source Win-builder result is claimed.
 
+A subsequent adaptive-MML optimization reduces repeated matrix calculations
+without changing integration rules or tolerances. Targeted numerical and API
+checks pass. A local retained-calibration comparison improved from 4.367 to
+3.395 seconds (median of three runs per implementation); this does not measure
+the complete suite or establish the required Windows runtime.
+
 The September 24 Windows result skipped six tests because RTMB was 1.9 rather
 than the required >= 2.0. The rc.6 September 26 results do not have those RTMB
 skips; their five other skips are described above. Final evidence must record

@@ -353,16 +353,33 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
       normalizer <- logsumexp(joint)
       posterior <- exp(joint - normalizer)
       value <- value - normalizer
+      # Projection is linear: average category derivatives before multiplying
+      # by the same sparse designs. Keep the slope's residual-times-logit
+      # average separate; a product of averages would change the gradient.
+      residual_mean <- matrix(0, length(rows), config$n_cat)
+      slope_mean <- numeric(length(rows))
+      observed <- cbind(seq_along(rows), local_idx$score_k + 1L)
       for (q in seq_along(rule$nodes)) {
         residual <- -nodes$prob_list[[q]]
-        observed <- cbind(seq_along(rows), local_idx$score_k + 1L)
         residual[observed] <- residual[observed] + 1
-        fixed_derivative <- project(residual * w, nodes$linear_part_list[[q]]) +
-          z[q] / sigma * mean_derivative + (z[q]^2 - 1) / 2 * variance_derivative
-        node_derivative <- mode_derivative + sigma * scale * rule$nodes[q] * log_scale_derivative
-        gradient <- gradient - posterior[q] * (fixed_derivative +
-          nodes$score[q] / sigma * node_derivative + log_scale_derivative)
+        residual_mean <- residual_mean + posterior[q] * residual
+        if (length(slices$log_slopes)) {
+          slope_mean <- slope_mean + posterior[q] *
+            rowSums(residual * nodes$linear_part_list[[q]])
+        }
       }
+      fixed_derivative <- as.numeric(Matrix::crossprod(designs[[i]]$cumulative,
+        as.vector(residual_mean[, -1L, drop = FALSE] * (w * slope))))
+      if (length(slices$log_slopes)) {
+        fixed_derivative <- fixed_derivative + as.numeric(Matrix::crossprod(
+          designs[[i]]$log_slope, slope_mean * (w * slope)))
+      }
+      fixed_derivative <- fixed_derivative +
+        sum(posterior * z) / sigma * mean_derivative +
+        sum(posterior * (z^2 - 1)) / 2 * variance_derivative
+      gradient <- gradient - fixed_derivative -
+        sum(posterior * nodes$score) / sigma * mode_derivative -
+        sum(posterior * (scale * nodes$score * rule$nodes + 1)) * log_scale_derivative
     }
     if (!is.finite(value) || any(!is.finite(gradient))) {
       stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))

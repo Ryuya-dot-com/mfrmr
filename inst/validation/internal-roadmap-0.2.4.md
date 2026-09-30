@@ -241,7 +241,23 @@ another broad statistical study instead. This prerequisite proceeds separately
 from unresolved D1 methods. Local timing does not close the Windows ceiling
 or qualify the unfinished statistical scope.
 
-The next Windows measurement uses the existing check runner's `cran-timing`
+The next local optimization aggregates adaptive-MML category derivatives before
+sparse projection. It preserves the finite-sum objective, mode/scale derivatives,
+quadrature rules and admission tolerances. On one retained GPCM calibration,
+three alternating before/after measurements reduced the local review median
+from 4.367 to 3.395 seconds (22%). Independent gradient, covariance, scoring and
+output checks pass; this is neither a whole-test-phase reduction nor Windows
+qualification. No test was removed or mocked to obtain that speedup.
+Per-function code-usage profiling found distributed cost across 2,401 functions;
+the ten slowest accounted for about 6% of timed calls. A wholesale decomposition
+of a few large functions therefore lacks evidence as the immediate remedy.
+Next, obtain test-file timings on Windows from the installed package and map
+the dominant tests to their required feature checks before shrinking fixtures
+or moving repeated studies. Retain one real fit/uncertainty path per admitted
+feature. Run the assembled Windows check only after affected measurements
+support a materially smaller total; the remaining budget is still unresolved.
+
+The next complete Windows measurement uses the existing check runner's `cran-timing`
 profile and a Windows-only manual workflow dispatch, with manuals enabled and
 RTMB >= 2.0/nleqslv present. The shared timing decision now requires the whole
 check minus installation, including rounding uncertainty; the earlier
