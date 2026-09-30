@@ -1,5 +1,14 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Two-family GPCM now permits `mml_engine = "direct"` with
+  `mml_integration = "adaptive"` in `fit_mfrm()`. This uses the existing
+  moving-node likelihood and gradient while retaining the fixed N(0,1)
+  population and both slope owners. Summaries, conditional curves, saved
+  reports and quadrature-order refits retain the actual engine and integration
+  method. Fixed-grid EM remains available. Adaptive two-family component
+  intervals and posterior residual diagnostics are unavailable; numerical
+  convergence does not establish identification or interval coverage.
+
 * `mml_quadrature_sensitivity()` and its GPCM alias now accept
   `adaptive_quad_points` for two slope families. The existing adaptive
   integration calculation uses both slope components and compares integrals

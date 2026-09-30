@@ -1251,3 +1251,80 @@ capability table contains the new scope, and the guide renders to HTML. The
 initial test failures concerned expected console/error wording and were
 corrected before the passing run; numerical-reference assertions passed.
 No whole-package test or independent coverage simulation was repeated.
+
+## September 30: adaptive two-family calibration
+
+**Question and scope.** Can the existing adaptive likelihood and gradient
+estimate the same two-family model accurately, after the fixed-grid error
+identified above? The user prioritized a general-purpose API, not additional
+domain-specific features. The response equation, two ordered slope owners,
+fixed N(0,1), unit weights and absence of anchors remain unchanged. This is
+MML with direct optimization; it is not a moving-node EM algorithm.
+
+**Derivative and fitting procedure.** The shared evaluator differentiates the
+finite adaptive GH sum, including posterior-mode, local-width and Jacobian
+derivatives. Independent Richardson differences of the diagnostic objective
+agree within 1e-6 for binary and four-category responses, incomplete crossings,
+non-default owner labels and orders 1/3/15. Low-order checks expose omitted
+moving-node terms. No alternate derivative or likelihood kernel was added.
+
+`gmfrm-adaptive-calibration-20260930.R` uses the retained 135-Person,
+1,370-rating empirical data. Two adaptive-order-31 fits start from the saved
+fixed-order-61/121 EM fits. A third fit uses the public API's neutral start
+and adaptive order 61. All use the existing BFGS direct optimizer, maxit 500,
+reltol 1e-10 and its existing gradient checks/polishing. There is no wall-time
+cap, newly simulated dataset or exclusion of unsuccessful runs. The two
+initial scripts, their hashes, completed fit objects, independent integration
+results and session information are retained in
+`validation-results/gmfrm-adaptive-calibration-20260930/`; reruns load completed
+fits rather than overwrite/refit them.
+
+| Starting values | Adaptive fitting order | Fitted NLL | Literal continuous NLL | Maximum free-coordinate difference from neutral-start fit | Fitting seconds |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Saved 61-node EM | 31 | 1177.482530 | 1177.482535 | 2.54e-6 | 35.234 |
+| Saved 121-node EM | 31 | 1177.482530 | 1177.482535 | 3.65e-6 | 51.155 |
+| Public neutral start | 61 | 1177.482535 | 1177.482535 | 0 | 77.597 |
+
+At every retained solution, all 135 continuous integrations return `OK`.
+The reference uses literal category logits and `stats::integrate()` over the
+real line, independently of the package probability kernel and GH rules.
+Maximum per-Person log-integral discrepancies across the three solutions are
+8.37e-6 (adaptive 31), 2.31e-8 (61), and 1.52e-11 (121). The total-gradient
+61-to-121 difference is at most 6.95e-7. The public fit's largest per-Person
+score at order 121 is 5.34e-7. Its local full marginal Hessian at order 61 has
+eigenvalues 7.846 to 830.402 and curvature-scaled gradient length 2.47e-5.
+These support a numerically stable local solution in this case; they establish
+neither a unique global solution, absence of boundaries, sampling coverage nor
+correctness of the empirical response model. Timing is descriptive only.
+
+**API and output integration.** `fit_mfrm()` accepts the explicit combination
+`mml_engine = "direct", mml_integration = "adaptive"` for the same two-family
+model. It reuses the direct optimizer and common fit assembly; fixed-grid EM
+is unchanged. Adaptive direct MML uses `reltol`, and fixed-grid EM uses
+`em_score_tol`; supplying the other engine's tolerance is rejected. Saved
+metadata, replay, `summary()`/`print()`, conditional curves, result reports and
+quadrature-order refits retain the actual engine and integration method.
+Reports no longer describe a direct fit as EM or claim numerical success on
+optimizer code alone. The shared fit class and public function names remain.
+
+Adaptive two-family Wald bounds remain unavailable with a specific reason;
+profile requests and posterior residual diagnostics reject this unsupported
+scope. No fixed-grid covariance is relabelled as adaptive. New-Person scoring,
+model ranking and ordinary fit/bias outputs remain unsupported. The next
+mathematical decision is adaptive observed-information/integration qualification
+and corresponding interval/residual contracts, before replaying the existing
+coverage/design scenarios. Corrected-JML centering is a separate open issue.
+
+**Verification.** The two new adaptive gradient/workflow files and existing
+GMFRM public workflow, EM, quadrature-sensitivity, component-interval and GPCM
+capability files pass. The capability file retains three `On CRAN` skips for
+unrelated one-family reporting/design/signal-detection scenarios; those were
+not rerun. New checks include saved-data likelihood identity, distinct fixed
+and adaptive integrals, arbitrary owner names, unavailable profile/residual/
+Person-scoring routes, conditional ggplot objects, output wording, tolerance
+validation, RDS/replay and integration-preserving refits. Initial failures
+were outdated error-message expectations and an expectation of missing profile
+bounds where the existing profile contract correctly raises an error; no
+numerical-reference assertion failed. Help generation, five changed Rd parses
+and HTML guide rendering succeed. No whole-package suite, CRAN check or fresh
+coverage simulation was run.

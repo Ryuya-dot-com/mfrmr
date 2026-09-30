@@ -291,17 +291,6 @@ mfrm_gmfrm_fit_result <- function(problem, result) {
     mml_integration = "fixed", mml_engine_requested = "em", mml_engine_used = "em",
     optimizer_requested = "BFGS", optimizer_used = "BFGS",
     em_score_tolerance = score_tol, em_mstep_maxit = result$controls$mstep_maxit)
-  config$method_input <- "MML"
-  config$posterior_basis <- "fixed_standard_normal"
-  config$step_facet_source <- "explicit"
-  config$step_facet_note <- "The second slope facet owns the category steps."
-  config$gpcm_mml_identification_requested <- "fixed_standard_normal"
-  config$gpcm_estimator_family <- "marginal_maximum_likelihood"
-  config$gpcm_slope_action <- "complete_adjacent_predictor"
-  config$gpcm_latent_dimension_count <- 1L
-  config$gpcm_statistical_penalty <- "none"
-  config$gpcm_finite_parameter_box <- FALSE
-  config$gpcm_extreme_person_policy <- "posterior_eap_under_population_model"
   opt <- list(par = result$par, value = -state$logLik,
     convergence = if (score_met) 0L else if (identical(result$reason, "iteration_limit")) 1L else 2L,
     counts = c("function" = NA_integer_, "gradient" = NA_integer_), message = result$reason,
@@ -314,8 +303,29 @@ mfrm_gmfrm_fit_result <- function(problem, result) {
     gradient = state$gradient, reltol = NA_real_, optimizer_method = "BFGS",
     convergence_basis = "marginal_score_per_person", gradient_tolerance = score_tol)
 
+  mfrm_gmfrm_assemble_fit(problem, config, opt, result$controls,
+    result$nonlinear_transformation)
+}
+
+# The two numerical engines share model identity and output restrictions;
+# the optimizer and integration metadata always describe the actual objective.
+mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformation) {
+  common <- problem$common
+  prep <- common$prep; sizes <- common$sizes
+  quad <- problem$specification$quadrature
+  config$method_input <- "MML"
+  config$posterior_basis <- "fixed_standard_normal"
+  config$step_facet_source <- "explicit"
+  config$step_facet_note <- "The second slope facet owns the category steps."
+  config$gpcm_mml_identification_requested <- "fixed_standard_normal"
+  config$gpcm_estimator_family <- "marginal_maximum_likelihood"
+  config$gpcm_slope_action <- "complete_adjacent_predictor"
+  config$gpcm_latent_dimension_count <- 1L
+  config$gpcm_statistical_penalty <- "none"
+  config$gpcm_finite_parameter_box <- FALSE
+  config$gpcm_extreme_person_policy <- "posterior_eap_under_population_model"
   config$estimability_audit <- audit_mfrm_estimability(prep, common$idx, config, sizes)
-  config$estimability_audit$nonlinear_transformation <- result$nonlinear_transformation
+  config$estimability_audit$nonlinear_transformation <- transformation
   config$category_support_audit <- audit_mfrm_category_support(prep, config, sizes)
   data_review <- build_mfrm_data_review(prep,
     estimability_audit = config$estimability_audit,
@@ -338,7 +348,7 @@ mfrm_gmfrm_fit_result <- function(problem, result) {
       specs = config$interaction_specs),
     readiness = readiness, config = config, prep = prep, data_review = data_review, opt = opt,
     population = list(active = FALSE, posterior_basis = "fixed_standard_normal"),
-    gmfrm = list(specification = result$specification, controls = result$controls)),
+    gmfrm = list(specification = problem$specification, controls = controls)),
     class = c("mfrm_fit", "list"))
 }
 
@@ -350,31 +360,33 @@ mfrm_fit_product_slopes <- function(args, supplied) {
       length(args$facets) != 2L || !setequal(owners, args$facets)) {
     stop("Two slope families require model = 'GPCM', method = 'MML', and exactly two distinct slope_facet names matching facets.", call. = FALSE)
   }
-  if (!identical(args$mml_engine, "em") ||
+  em <- identical(args$mml_engine, "em") && identical(args$mml_integration, "fixed")
+  adaptive <- identical(args$mml_engine, "direct") && identical(args$mml_integration, "adaptive")
+  if ((!em && !adaptive) ||
       !identical(args$gpcm_mml_identification, "fixed_standard_normal") ||
-      !identical(args$mml_integration, "fixed") ||
       !identical(args$step_facet, owners[2]) ||
       !identical(args$noncenter_facet, owners[2])) {
-    stop(paste0("Two slope families require mml_engine = 'em', gpcm_mml_identification = 'fixed_standard_normal', ",
-      "mml_integration = 'fixed', and both step_facet and noncenter_facet equal to the second slope facet ('",
+    stop(paste0("Two slope families require fixed integration with mml_engine = 'em', or adaptive integration with mml_engine = 'direct'; ",
+      "gpcm_mml_identification = 'fixed_standard_normal', and both step_facet and noncenter_facet equal to the second slope facet ('",
       owners[2], "'). The first family has geometric mean one; the second is free on the fixed ability scale."), call. = FALSE)
   }
   allowed <- c("data", "person", "facets", "score", "rating_min", "rating_max",
     "keep_original", "category_policy", "model", "method", "step_facet", "slope_facet",
     "noncenter_facet", "quad_points", "maxit", "optimizer", "mml_engine",
-    "gpcm_mml_identification", "mml_integration", "em_score_tol")
+    "gpcm_mml_identification", "mml_integration", if (em) "em_score_tol" else "reltol")
   unsupported <- setdiff(supplied, allowed)
   if (length(unsupported)) {
     stop("These arguments are not supported by the two-family route: ",
       paste(unsupported, collapse = ", "),
-      ". It uses observed unweighted ratings, no anchors or population covariates, and no automatic diagnostics. Use em_score_tol for its stopping tolerance.", call. = FALSE)
+      ". It uses observed unweighted ratings, no anchors or population covariates, and no automatic diagnostics. Use em_score_tol for fixed-grid EM or reltol for adaptive direct MML.", call. = FALSE)
   }
-  if (!args$optimizer %in% c("auto", "BFGS") || args$quad_points < 2L) {
-    stop("Two-family EM requires optimizer = 'auto' or 'BFGS' and at least two quadrature points.", call. = FALSE)
+  if ((em && !args$optimizer %in% c("auto", "BFGS")) || args$quad_points < 2L) {
+    stop("Two-family EM requires optimizer = 'auto' or 'BFGS'; both engines require at least two quadrature points.", call. = FALSE)
   }
-  tol <- args$em_score_tol %||% 1e-6
+  tol <- if (em) args$em_score_tol %||% 1e-6 else args$reltol
   if (!is.numeric(tol) || is.complex(tol) || length(tol) != 1L || !is.finite(tol) || tol <= 0) {
-    stop("`em_score_tol` must be a finite positive number.", call. = FALSE)
+    stop(if (em) "`em_score_tol` must be a finite positive number." else
+      "`reltol` must be a finite positive number.", call. = FALSE)
   }
   if (!is.null(args$rating_min) && (!is.numeric(args$rating_min) || is.complex(args$rating_min) ||
       length(args$rating_min) != 1L || !is.finite(args$rating_min) || args$rating_min != 0)) {
@@ -407,15 +419,29 @@ mfrm_fit_product_slopes <- function(args, supplied) {
   if (identical(category$readiness$CategoryState[1], "unsupported_coordinate")) {
     mfrmr_stop_unsupported_category(category)
   }
-  result <- mfrm_gmfrm_em(problem, maxit = args$maxit, score_tol = tol)
-  fit <- mfrm_gmfrm_fit_result(problem, result)
+  if (em) {
+    result <- mfrm_gmfrm_em(problem, maxit = args$maxit, score_tol = tol)
+    fit <- mfrm_gmfrm_fit_result(problem, result)
+  } else {
+    config <- common$config
+    config$estimation_control <- list(maxit = args$maxit, reltol = tol,
+      quad_points = args$quad_points, quadrature = problem$specification$quadrature,
+      mml_integration = "adaptive", mml_engine_requested = "direct", mml_engine_used = "direct",
+      optimizer_requested = args$optimizer)
+    opt <- run_mfrm_optimization(problem$start, "MML", common$idx, config,
+      common$sizes, args$quad_points, args$maxit, tol, args$optimizer)
+    config$estimation_control$optimizer_used <- opt$optimizer_plan$Used
+    fit <- mfrm_gmfrm_assemble_fit(problem, config, opt,
+      list(maxit = args$maxit, reltol = tol),
+      mfrmr_nonlinear_transformation_audit(opt$par, common$sizes, config, "log_slopes"))
+  }
   # Retain a replayable public call; defaults in the single-family route do not
   # describe this likelihood and must not be substituted on reconstruction.
   replay <- args[allowed]
   replay$data <- NULL
   replay$rating_min <- 0
   replay$rating_max <- max_score
-  replay$em_score_tol <- tol
+  if (em) replay$em_score_tol <- tol else replay$reltol <- tol
   replay$package_version <- as.character(utils::packageVersion("mfrmr"))
   fit$config$replay_inputs <- replay
   fit$config$source_columns <- list(person = args$person, facets = args$facets, score = args$score, weight = NULL)

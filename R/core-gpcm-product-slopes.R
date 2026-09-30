@@ -9,7 +9,10 @@ stop_if_product_slopes <- function(fit, helper) {
   stop_if_jml_adjustment(fit, helper)
   if (mfrm_has_product_slopes(fit)) {
     stop(new_gpcm_scope_error(paste0("`", helper, "` is not available for two slope families. ",
-      "Use summary(fit), confint(fit) for separately checked experimental slope intervals, mfrm_response_diagnostics(fit) for descriptive posterior residuals, and mfrm_curve_intervals(fit, newdata) for fitted curves without intervals; ",
+      "Use summary(fit) and mfrm_curve_intervals(fit, newdata) for fitted curves without intervals; ",
+      if (!mfrmr_adaptive_integration(fit$config))
+        "confint(fit) separately checks experimental slope intervals, and mfrm_response_diagnostics(fit) supplies descriptive posterior residuals. " else
+        "Adaptive two-family fits do not yet supply component intervals or posterior residual diagnostics. ",
       "saved curves can be passed to mfrm_results(fit, include = c('fit', 'plots'), compute = 'never', intervals = curves)."),
       helper = helper, status = "blocked", area = "Two-family GPCM outputs"))
   }
@@ -208,7 +211,7 @@ mfrm_gpcm_product_inference <- function(fit) {
       identical(config$estimation_control$mml_integration, "fixed") &&
       is.null(config$weight_col) && all(fit$prep$data$Weight == 1) &&
       identical(config$noncenter_facet, config$slope_facet[2]),
-      "Two-family intervals require the original fixed-N(0,1), unweighted MML-EM model.")) return(refuse())
+      "Two-family intervals currently require fixed-grid, unweighted MML-EM with N(0,1); adaptive-fit component intervals are unavailable.")) return(refuse())
   specification <- fit$gmfrm$specification
   reference <- tryCatch(do.call(mfrm_gmfrm_common_setup,
     specification[setdiff(names(specification),"quadrature")]), error=function(e) NULL)

@@ -107,21 +107,23 @@ parameter-level \code{SEEligible} state remains unchanged.
 }
 \section{Two slope families}{
 
-For a two-family GPCM, fixed-grid refits preserve the ordered slope owners,
-fixed N(0,1) population, score ladder, \code{em_score_tol} and EM iteration limit.
+For a two-family GPCM, refits preserve the ordered slope owners,
+fixed N(0,1) population, score ladder, engine, integration method and stopping
+controls (\code{em_score_tol} for fixed-grid EM or \code{reltol} for adaptive direct MML).
 Each refit starts from the usual neutral initialization, not the reference
 estimate. Component slopes retain \code{SlopeOwner} and \code{ScaleReference}: the
 first family has geometric mean one; the second is free on the fixed ability
 scale. Category-probability comparisons use the product of both slopes.
 
-\code{intervals} contains the separately checked experimental \code{confint()} result
+For fixed-grid EM, \code{intervals} contains the separately checked experimental \code{confint()} result
 for each grid, including failed checks, cautions and missing bounds. For
 example, after comparing \code{quad_points = c(31, 61)}, use
 \code{plot(out$intervals$q61)} and
 \code{apa_table(out$intervals$q61, which = "numerical_checks")}. These checks also
 evaluate q versus 2q-1 at that fit's saved parameters without another refit.
 Passing these checks does not establish sampling coverage or resolve
-other warnings about the fitted model.
+other warnings about the fitted model. Adaptive two-family refits retain
+missing component intervals with the reason that this inference route is unavailable.
 Person-score comparisons in \code{summary} remain unavailable for two families:
 EAP and posterior-SD changes there are \code{NA}, not zero. With
 \code{adaptive_quad_points}, the separate \code{quadrature_review} table evaluates

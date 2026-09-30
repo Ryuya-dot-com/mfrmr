@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 `mfrmr` includes a Generalized Partial Credit Model (GPCM; Muraki 1992) in which
 one selected facet supplies level-specific discriminations. MML permits a
 different facet to supply category steps; JML requires a shared owner. A
-provisional two-family MML--EM route is described separately below; its fitted
+provisional two-family MML route is described separately below; its fitted
 curves do not include intervals. For the one-family route, MML information
 criteria can be compared when the likelihood and local-solution checks pass.
 `confint(fit, parm = "slopes")` provides approximate relative-slope intervals
@@ -294,10 +294,25 @@ mfrm_report(res)
 
 `maxit` counts outer EM iterations. `em_score_tol` controls the largest absolute
 marginal-score component divided by the number of candidates; `reltol` is not
-a control for this route. EM uses ascent-checked numerical BFGS M steps.
+a control for fixed-grid EM. EM uses ascent-checked numerical BFGS M steps.
 Inspect the numerical stopping result and retain nonconverged outcomes.
 Numerical convergence alone does not certify identification, an adequate
 quadrature order, interval coverage or the one-ability assumption.
+
+To use adaptive integration, keep the same model arguments and replace
+`mml_engine = "em"` with `mml_engine = "direct", mml_integration = "adaptive"`.
+Remove `em_score_tol`; use `reltol` for the direct optimizer (default `1e-9`).
+This adjusts each candidate's integration grid during estimation, retaining
+the same normal population and response model. It directly maximizes the
+marginal likelihood; it is not an adaptive EM algorithm.
+
+Both engines connect to `summary()`, conditional curves and saved reports.
+`mml_quadrature_sensitivity()` preserves the chosen engine and integration
+method when refitting at additional orders. **Adaptive two-family fits do not
+yet provide component-slope intervals or posterior residual diagnostics.**
+The fixed-grid EM interval/profile and residual examples below apply only to
+that engine. Do not change a saved fit's integration label to enable them.
+Convergence, stability across orders and sampling coverage are separate checks.
 
 The curve function keeps its existing name and result class, but **does not
 provide intervals for two families**: SEs and bounds are missing and
@@ -1397,7 +1412,8 @@ use multiplicative task and rater slope blocks,
 \(\alpha_i\alpha_r\), together with rater severity and rater-specific steps.
 The one-family mfrmr GPCM can separate the slope owner from the step owner
 under MML; JML requires `slope_facet == step_facet`. The provisional two-family
-MML--EM route jointly estimates the two slope blocks in this equation on a
+MML route jointly estimates the two slope blocks in this equation, using
+fixed-grid EM or adaptive direct maximization, on a
 fixed standard-normal ability scale. Neither route introduces a
 multidimensional ability vector. Selecting criterion slopes and rater steps
 therefore remains a restricted many-facet GPCM, with the entire adjacent-category

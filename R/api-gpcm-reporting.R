@@ -134,10 +134,14 @@ mfrm_gpcm_results_attach <- function(out, inputs) {
 
 # Keep the ordinary fit-report templates from recommending unsupported outputs.
 mfrm_gpcm_product_report <- function(x, style) {
-  numerical <- isTRUE(x$fit$summary$Converged)
+  adaptive <- mfrmr_adaptive_integration(x$fit$config)
+  numerical <- isTRUE(x$fit$summary$Converged) &&
+    identical(x$fit$opt$optimizer_diagnostics$ConvergenceSeverity, "pass")
   intervals <- Filter(function(z) inherits(z,"mfrm_slope_intervals"),x$gpcm_inference %||% list())
   n_intervals <- sum(vapply(intervals,function(z) sum(attr(z,"diagnostics")$CIEligible),integer(1)))
-  interval_note <- if (length(intervals)) paste(n_intervals,
+  interval_note <- if (adaptive) {
+    "Component-slope and curve intervals are unavailable for adaptive two-family fitting. Fixed-grid EM interval checks do not qualify this integration method."
+  } else if (length(intervals)) paste(n_intervals,
     "experimental slope intervals are available; inspect the saved checks and unavailable rows. Curve intervals remain unavailable.") else
     "No slope intervals were attached. Curve intervals are unavailable. Use confint(fit) for the separately checked experimental slope approximation."
   first_screen <- data.frame(
@@ -145,13 +149,16 @@ mfrm_gpcm_product_report <- function(x, style) {
     Status = c("review", if (numerical) "ok" else "review", if (n_intervals) "caveat" else "unavailable", "unavailable"),
     Readiness = c("Provisional analysis", "Numerical only", "Output-specific checks", "Not supported"),
     MainIssue = c("This report retains numerical estimates, conditional curves and explicitly attached experimental slope intervals.",
-      if (numerical) "The per-Person marginal-score stopping rule was met." else
+      if (adaptive) {
+        if (numerical) "Direct adaptive MML met its optimizer and gradient checks." else
+          "Direct adaptive MML did not pass its numerical convergence checks."
+      } else if (numerical) "The per-Person marginal-score stopping rule was met." else
         "EM stopped without meeting the per-Person marginal-score tolerance.",
       interval_note,
       "Ordinary diagnostics, Wright/Pathway maps, model ranking and new-person scoring are unavailable."),
     NextAction = c("Read the model settings and numerical status before the saved curves.",
       if (numerical) "Convergence does not establish identification, model adequacy or inferential reliability." else
-        "Review the EM stopping result and retain this fit as numerically unresolved.",
+        "Review the stopping result and retain this fit as numerically unresolved.",
       "Retain unavailable bounds and labels for contexts not observed together.",
       "Do not infer support for these outputs from the one-family GPCM workflow."),
     PrimaryRoute = c("report$tables$fit_summary_settings_overview", "report$tables$fit_summary_readiness",

@@ -24,9 +24,10 @@ Three pillars must advance together:
 3. Rater feedback and assessment decisions: understandable diagnostics,
    recipient-appropriate reports and reproducible calibration reuse.
 
-Educational performance assessment is the reference use; a substantively
-different application/design checks generality. Renaming columns alone does
-not establish applicability to music, clinical assessment or judged sport.
+Educational performance assessment is the reference use. The immediate goal
+is a general-purpose API with an explicit model/estimand contract; coverage of
+additional application domains is not a release gate. Empirical examples can
+reveal numerical or design failures, but cannot validate a model for a domain.
 Features, clustering and assigned-score MI support these pillars. They do not
 supply a fourth independent model-development queue or a common reliability
 coefficient linking incompatible estimands.
@@ -101,7 +102,7 @@ active development worktree remains. No branch was reset, deleted or merged.
 | Outcome | Implemented scope | Required closure or explicit decision |
 | --- | --- | --- |
 | RSM/PCM and one-family GPCM | Existing RSM/PCM routes; MML separate slope/step owners; scoped inference/comparison and profiles; portable MML and scoped JML EAP. One-family GPCM EM falls back to direct. | Preserve actual engine, scale, prior, anchor and conditional-uncertainty identity in all supported consumers. Keep adverse coverage findings. Do not infer single-family EM from two-family EM. |
-| Two-family GMFRM fitting | Explicit ordered owners, fixed N(0,1), MML--EM, common fit class, arbitrary column names, no anchors, unit weights, exactly two non-Person facets. | Finish target-specific statistical admission and consumer decisions; local rank and numerical agreement do not establish global identification or sampling performance. |
+| Two-family GMFRM fitting | Explicit ordered owners, fixed N(0,1), fixed-grid EM or adaptive direct MML, common fit class, arbitrary column names, no anchors, unit weights, exactly two non-Person facets. | Finish target-specific statistical admission and consumer decisions; local rank and numerical agreement do not establish global identification or sampling performance. |
 | Two-family outputs | Summary/print; conditional category/information curves without intervals; experimental component Wald/profile intervals; descriptive same-data posterior response diagnostics; plot/report/export/reopen. | Location/curve intervals, ordinary fit/bias/Q3/PCA, Wright/Pathway, model ranking/LRT, new-Person/portable scoring and individual sheets remain open or unsupported. For each, specify the target and required implementation/evidence or an explicit release-scope decision; do not inherit support from the shared fit class. |
 | Corrected JML | Shared-owner explicit-order adjusted-equation estimator, matching local full-Jacobian covariance, point/distribution output, conditional residuals, new-Person EAP and portable format 5. | Resolve residual-bias treatment and formal inferential scope. No validated automatic order selector, structural CIs, corrected Person ML/WLE, corrected RSM/PCM, anchors or separate-owner corrected JML. Keep a valid point if covariance fails. |
 | Multivariate G/D studies | One/two random facets, crossed or Child-within-Parent with Persons crossed; ANOVA/MINQUE(0); composites/differences; complete future plans; 2D plots; prespecified crossed normal-theory paired-delta intervals. | Complete the existing data-to-plan-to-report route with metric-specific availability, raw covariance estimates, score units, explicit future counts and cost assumptions. General fixed/nested structures, unequal future rosters and a joint latent GMFRM/G model are not implemented. |
@@ -388,6 +389,34 @@ refitting, but does not identify the accurately integrated optimum or promote
 interval eligibility. Next mathematical work must qualify the calibration
 procedure against accurate integration before another coverage study;
 diagnostic posterior moments do not establish two-family Person scoring.
+
+**Calibration progress:** two-family moving-node gradients now pass independent
+Richardson differences for binary and polytomous responses, incomplete crossings,
+non-default owner names, and orders 1/3/15. Reusing the existing direct optimizer
+and adaptive evaluator, both saved EM starts at adaptive order 31 and the
+public neutral-start fit at order 61 converge to nearby solutions: maximum
+free-coordinate difference below 3.7e-6 and common continuous NLL 1177.482535.
+All 135 Person integrals were compared against a literal continuous reference;
+maximum log-integral discrepancy was 2.31e-8 at order 61 and 1.52e-11 at 121.
+The retained local Hessian is positive definite; this is not a global solution,
+boundary, sampling-coverage or model-adequacy certificate.
+
+`fit_mfrm(..., mml_engine = "direct", mml_integration = "adaptive")` now uses
+that existing evaluator with the same two-family model. Engine/integration,
+replay, summaries, conditional curves, reports and order-sensitivity refits
+are preserved. Fixed-grid EM retains its existing interval and diagnostic
+scope. Adaptive component-slope intervals and posterior residual diagnostics
+remain unavailable explicitly, rather than inheriting fixed-grid checks.
+
+**Next D1/D2 decision:** qualify adaptive full observed-information and
+quadrature-stability checks on the retained solutions, then establish whether
+component intervals and descriptive residuals can share the adaptive objective.
+Do not add a new domain-specific API or start a fresh coverage grid first.
+Only after the calibration/inference procedure is fixed should existing sparse
+assignment and population-SD scenarios be replayed for that procedure. Corrected
+JML centering and structural-versus-root uncertainty remain separate unresolved
+work; this calibration improvement closes neither. Evidence and execution
+scripts: [GMFRM record](gmfrm-mml-em-20260927.md#september-30-adaptive-two-family-calibration).
 
 #### Consequential ranking: define the decision before evaluating it
 

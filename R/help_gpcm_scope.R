@@ -60,13 +60,14 @@
 #'
 #' Portable calibration has its own row and [mfrm_calibration_capabilities()]
 #' gives estimator-specific source restrictions. Two slope families are available
-#' provisionally through [fit_mfrm()] with fixed-standard-normal MML--EM, exactly
-#' two facets, no anchors and unit weights. Use `summary(fit)`, then
+#' provisionally through [fit_mfrm()] with fixed-standard-normal MML, exactly
+#' two facets, no anchors and unit weights. Choose fixed-grid EM or adaptive
+#' direct MML explicitly; see [fit_mfrm()]. Use `summary(fit)`, then
 #' `curves <- mfrm_curve_intervals(fit, newdata)` and `plot(curves)`. Despite the
 #' function name, this route returns fitted values with unavailable intervals.
 #' Attach them with `mfrm_results(fit, include = c("fit", "plots"),
 #' compute = "never", intervals = curves)` for reports and saved exports.
-#' Separately use `ci <- confint(fit)` for experimental component-slope intervals
+#' For fixed-grid EM, separately use `ci <- confint(fit)` for experimental component-slope intervals
 #' and attach `intervals = list(slopes = ci, curves = curves)`. Local numerical
 #' checks do not establish global identification or sampling coverage; failed
 #' checks retain missing bounds.
@@ -75,12 +76,13 @@
 #' It retains nuisance reoptimization, numerical checks, unavailable endpoints
 #' and a same-target Wald comparison. Neither method has qualified coverage.
 #' Use [mml_quadrature_sensitivity()] to compare
-#' fixed-grid refits with the same EM controls and save each grid's interval
-#' checks. Optional `adaptive_quad_points` also adds fixed-calibration
+#' refits with the same engine and integration method. Fixed-grid EM retains
+#' each grid's experimental interval checks; adaptive fits retain missing bounds. Optional `adaptive_quad_points` also adds fixed-calibration
 #' integration checks for two families; the posterior moments in that review
 #' are numerical diagnostics, not a Person-scoring workflow. Person-score
-#' comparisons and adaptive fitting remain unavailable for two families.
-#' [mfrm_response_diagnostics()] supplies same-data posterior
+#' comparisons remain unavailable for two families. Adaptive two-family fitting
+#' does not yet supply component intervals or posterior residual diagnostics.
+#' For fixed-grid EM, [mfrm_response_diagnostics()] supplies same-data posterior
 #' predictive residuals with fixed calibration, including descriptive Infit/Outfit
 #' without reference cutoffs. Attach the saved object through `response_diagnostics`
 #' to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and
@@ -371,7 +373,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
   status_summary <- status_summary[status_summary$Routes > 0L, , drop = FALSE]
 
   cat("mfrmr GPCM workflow availability\n")
-  cat("Most rows describe one slope family; two-family MML-EM has a separate provisional scope.\n")
+  cat("Most rows describe one slope family; two-family MML has a separate provisional scope.\n")
   cat("MML IC comparison and PCM/GPCM tests have separate checks; relative-slope intervals use separate MML checks.\n\n")
   print.data.frame(status_summary, row.names = FALSE)
 
@@ -665,14 +667,14 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "Experimental corrected shared-owner JML uses distinct adjusted-equation checks and preserves the explicit correction order (file format 5)."
       ),
       paste(
-        "Provisional MML-EM fitting for exactly two fixed slope facets, with fixed N(0,1),",
+        "Provisional fixed-grid EM or adaptive direct MML for exactly two fixed slope facets, with fixed N(0,1),",
         "unit weights, no anchors or population covariates and observed zero-based scores.",
         "The first family's slopes have geometric mean one; the second owns steps and has free slopes.",
         "Summary and fitted curves connect to saved results/reports; curve intervals are unavailable.",
-        "confint(fit) separately checks experimental component-slope intervals; global identification and coverage remain unestablished.",
+        "Fixed-grid EM supports separately checked experimental component-slope intervals; adaptive fits retain missing bounds. Global identification and coverage remain unestablished.",
         "method = 'profile' and a named slope value profile one owner/level, with nuisance reoptimization and saved Wald comparison; coverage improvement is not established.",
-        "mml_quadrature_sensitivity() compares fixed-grid refits and retains component intervals and their checks; optional adaptive_quad_points adds fixed-calibration integration diagnostics, not Person scoring or adaptive fitting.",
-        "mfrm_response_diagnostics() integrates ability with both slope families fixed; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests.",
+        "mml_quadrature_sensitivity() preserves the fitting engine/integration method; optional adaptive_quad_points adds fixed-calibration integration diagnostics, not Person scoring or a change of estimator.",
+        "For fixed-grid EM, mfrm_response_diagnostics() integrates ability with both slope families fixed; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests. Adaptive two-family residual diagnostics remain unavailable.",
         "Ordinary fit diagnostics, model ranking, new-person scoring and portable two-family calibration are not supported."
       ),
       paste(
@@ -682,11 +684,11 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "None is a bias-corrected structural confidence interval."
       ),
       paste(
-        "Two-family GPCM requires mml_engine = 'em' and fixed-standard-normal identification.",
-        "It uses ascent-checked numerical M steps and per-Person marginal-score stopping;",
+        "Two-family GPCM uses fixed-grid EM or adaptive direct MML with fixed-standard-normal identification.",
+        "EM uses ascent-checked M steps and per-Person marginal-score stopping; adaptive direct MML uses reltol and optimizer gradient checks;",
         "numerical convergence does not establish inferential reliability.",
         "One-family EM/hybrid requests still use direct optimization and record that fallback.",
-        "Two-family direct/hybrid fitting is not supported."
+        "Adaptive EM and two-family hybrid fitting are not supported."
       )
     ),
     RecommendedRoute = c(
@@ -797,7 +799,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "MML inference if its population assumptions suit the analysis; do not transfer MML intervals to JML."
       ),
       paste(
-        "Use direct MML for one-family GPCM or the explicitly scoped EM route for two families;",
+        "Use direct MML for one-family GPCM; two families permit fixed-grid EM or adaptive direct MML;",
         "inspect the actual engine and ConvergenceBasis in summary(fit)."
       )
     ),

@@ -134,7 +134,7 @@ Thus \code{slope_facet = "Criterion"} gives criterion-specific slopes, whereas
 MML allows a distinct \code{step_facet};
 JML requires \code{slope_facet == step_facet}. Criterion and rater slope
 blocks can also be estimated together with an ordered pair of column
-names; see "Two slope families" below for the explicit MML-EM contract.
+names; see "Two slope families" below for the explicit MML contract.
 With one family, slopes are identified on the log scale with their
 geometric mean fixed to 1, so the table reports relative discrimination
 across the selected facet's levels rather than unrelated absolute weights.}
@@ -216,7 +216,9 @@ brief examples are for demonstration only and should not be copied into a
 substantive analysis without an explicit computational protocol.}
 
 \item{reltol}{Portable tolerance setting for the initial optimizer stage.
-For the two-family route, omit this argument and use \code{em_score_tol}.
+For two-family fixed-grid EM, omit this argument and use \code{em_score_tol}.
+Adaptive two-family direct MML uses \code{reltol} and the direct optimizer's
+gradient check.
 The default is \code{1e-9}. For BFGS this is passed as \code{reltol}; for L-BFGS-B
 it is mapped to \code{factr} and \code{pgtol}, whose actual values are recorded in
 the fit. When this setting is at least as strict as the public default
@@ -642,8 +644,9 @@ predictor. There is still one ability dimension. Column names and data
 column order do not select these roles.
 
 This route requires exactly those two non-Person facets, \code{model = "GPCM"},
-\code{method = "MML"}, \code{mml_engine = "em"},
-\code{gpcm_mml_identification = "fixed_standard_normal"}, fixed integration,
+\code{method = "MML"}, \code{gpcm_mml_identification = "fixed_standard_normal"},
+either fixed integration with \code{mml_engine = "em"} or
+\code{mml_integration = "adaptive"} with \code{mml_engine = "direct"},
 and both \code{step_facet} and \code{noncenter_facet} set to the second slope facet.
 These options must be chosen explicitly; the one-family defaults are not
 silently replaced. Use observed, unweighted integer scores on a scale from
@@ -654,7 +657,13 @@ checks can assess that scale. Unobserved assignments are not zero scores.
 Anchors, population covariates, shrinkage, interactions, positive/dummy
 facets, checkpoints and automatic diagnostics are not supported in this route;
 explicitly supplying their arguments, including unused policy controls,
-produces an error. Its stopping control is \code{em_score_tol}, not \code{reltol}.
+produces an error. Fixed-grid EM uses \code{em_score_tol}; adaptive direct MML
+uses \code{reltol} and the direct optimizer's gradient check. Passing the other
+engine's tolerance is an error. Adaptive integration preserves the same
+N(0,1) population and response equation while moving each Person's grid.
+It is direct maximization of the marginal likelihood, not adaptive EM.
+Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare refits at different orders;
+it preserves the chosen integration method and engine.
 
 \code{summary(fit)} and \code{print(fit)} retain numerical status and the two slope
 references. \code{\link[=mfrm_curve_intervals]{mfrm_curve_intervals()}} evaluates provisional category or
@@ -662,7 +671,7 @@ per-rating information curves at supplied abilities; all their intervals
 are unavailable. Use \code{plot(curves)} and
 \code{mfrm_results(fit, include = c("fit", "plots"), compute = "never", intervals = list(curves = curves))} to report saved curves. Their values can
 be inspected even after nonconvergence, but are not qualified estimates.
-Separately request \code{confint(fit)} for experimental component-slope intervals
+For fixed-grid EM, separately request \code{confint(fit)} for experimental component-slope intervals
 from the full observed marginal information. Their numerical checks do not
 qualify global identification or sampling coverage; failed checks retain
 missing bounds. Attach the result alongside curves for saved plots/reports.
@@ -670,13 +679,16 @@ To profile one component instead, explicitly request
 \code{confint(fit, method = "profile", slope = c(Task = "t1"))}, replacing the
 named owner and level with your fitted identifiers. This reoptimizes other
 coefficients; it is an experimental local interval without established coverage.
-\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} integrates each Person's ability posterior at
+For fixed-grid EM, \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} integrates each Person's ability posterior at
 the saved calibration for descriptive residuals. Both slopes are retained;
 unavailable integration stays explicit. There are no reference fit cutoffs.
 Attach this result through \code{response_diagnostics} in the results call above.
+Adaptive two-family fitting supplies summaries and conditional curves;
+its component-slope intervals and posterior residual diagnostics are
+unavailable. Fixed-grid interval checks cannot qualify an adaptive fit.
 Other parameter intervals, model ranking/LRT, ordinary fit/bias diagnostics,
 Wright/Pathway plots, later-person scoring and portable two-family calibration
-are unavailable. Numerical agreement of the EM implementation is not a
+are unavailable. Numerical agreement of the fitting implementation is not a
 general identification, convergence or coverage guarantee. See
 \code{vignette("mfrmr-gpcm-scope")} for a complete example and interpretation.
 }

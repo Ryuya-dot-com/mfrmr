@@ -215,7 +215,7 @@ test_that("crossing indices reject relabelled levels and implicit two-family set
   expect_error(build_indices(reversed, "Rater", owners, gpcm_spec = spec), "level ordering")
   expect_error(fit_mfrm(d, person = "Person", facets = owners, score = "Score",
     model = "GPCM", step_facet = "Rater", slope_facet = owners),
-    "Two slope families require mml_engine")
+    "Two slope families require")
 })
 
 test_that("optimizer coordinates distinguish slope owners and their constraints", {

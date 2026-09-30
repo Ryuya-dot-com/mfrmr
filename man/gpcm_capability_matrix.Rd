@@ -82,12 +82,13 @@ statistics is not a plot of slope uncertainty.
 
 Portable calibration has its own row and \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}
 gives estimator-specific source restrictions. Two slope families are available
-provisionally through \code{\link[=fit_mfrm]{fit_mfrm()}} with fixed-standard-normal MML--EM, exactly
-two facets, no anchors and unit weights. Use \code{summary(fit)}, then
+provisionally through \code{\link[=fit_mfrm]{fit_mfrm()}} with fixed-standard-normal MML, exactly
+two facets, no anchors and unit weights. Choose fixed-grid EM or adaptive
+direct MML explicitly; see \code{\link[=fit_mfrm]{fit_mfrm()}}. Use \code{summary(fit)}, then
 \code{curves <- mfrm_curve_intervals(fit, newdata)} and \code{plot(curves)}. Despite the
 function name, this route returns fitted values with unavailable intervals.
 Attach them with \code{mfrm_results(fit, include = c("fit", "plots"), compute = "never", intervals = curves)} for reports and saved exports.
-Separately use \code{ci <- confint(fit)} for experimental component-slope intervals
+For fixed-grid EM, separately use \code{ci <- confint(fit)} for experimental component-slope intervals
 and attach \code{intervals = list(slopes = ci, curves = curves)}. Local numerical
 checks do not establish global identification or sampling coverage; failed
 checks retain missing bounds.
@@ -96,12 +97,13 @@ profiles one two-family component, using the actual owner/level names.
 It retains nuisance reoptimization, numerical checks, unavailable endpoints
 and a same-target Wald comparison. Neither method has qualified coverage.
 Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare
-fixed-grid refits with the same EM controls and save each grid's interval
-checks. Optional \code{adaptive_quad_points} also adds fixed-calibration
+refits with the same engine and integration method. Fixed-grid EM retains
+each grid's experimental interval checks; adaptive fits retain missing bounds. Optional \code{adaptive_quad_points} also adds fixed-calibration
 integration checks for two families; the posterior moments in that review
 are numerical diagnostics, not a Person-scoring workflow. Person-score
-comparisons and adaptive fitting remain unavailable for two families.
-\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
+comparisons remain unavailable for two families. Adaptive two-family fitting
+does not yet supply component intervals or posterior residual diagnostics.
+For fixed-grid EM, \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
 predictive residuals with fixed calibration, including descriptive Infit/Outfit
 without reference cutoffs. Attach the saved object through \code{response_diagnostics}
 to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and

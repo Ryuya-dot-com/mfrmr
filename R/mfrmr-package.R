@@ -325,11 +325,14 @@
 #' scale with geometric mean 1. This makes
 #' `GPCM` a slope-aware sensitivity/extension route, not a replacement for the
 #' equal-weighting `RSM`/`PCM` interpretation.
-#' A separate provisional two-family MML--EM route fits the multiplicative
+#' A separate provisional two-family MML route fits the multiplicative
 #' Uto--Ueno equation with explicit fixed-N(0,1) identification, exactly two
 #' facets and second-owner steps. The first family's slopes have geometric mean
-#' one and the second family's slopes are free. It supplies summary and
-#' conditional fitted curves without intervals; the one-family diagnostic,
+#' one and the second family's slopes are free. Fixed-grid EM and adaptive
+#' direct MML supply summaries and conditional fitted curves without intervals.
+#' Fixed-grid EM has separately checked experimental component-slope intervals
+#' and descriptive residuals; these outputs are unavailable for adaptive fits.
+#' The one-family diagnostic,
 #' inference and portable-scoring routes below do not apply to it. See the
 #' Two slope families section of [fit_mfrm()]. Unit slopes reduce to the
 #' equal-discrimination PCM kernel.

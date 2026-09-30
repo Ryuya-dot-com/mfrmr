@@ -292,8 +292,10 @@ from the ratings and their declared G-study design.
 Multivariate here means several observed score criteria, such as fluency
 and accuracy, whose source-specific covariances are estimated together.
 Multiple GPCM slope owners still describe a single latent ability.
-The provisional two-family MML--EM route supports only summary and conditional
-fitted curves with saved reports; it does not inherit the one-family
+Both provisional two-family MML engines support summaries and conditional
+fitted curves with saved reports. Fixed-grid EM additionally supports
+separately checked experimental component intervals and descriptive residuals;
+adaptive direct MML does not yet supply those outputs. Neither inherits the one-family
 diagnostic/inference workflow below. See \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} and the
 Two slope families section in \code{\link[=fit_mfrm]{fit_mfrm()}}.
 Neither the estimated slopes nor their sampling covariance can substitute
