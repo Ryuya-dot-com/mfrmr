@@ -130,11 +130,12 @@ test_that("profile API validates its target and retains unresolved endpoint reas
   saved <- readRDS(test_path('fixtures','gpcm-profile-separate.rds'))
   result <- attr(saved,'profile')
   local_mocked_bindings(mfrm_gpcm_profile_search=function(...) result,.package='mfrmr')
-  before <- serialize(fit,NULL)
+  # Version 2 compares stored values without ALTREP materialization state.
+  before <- serialize(fit, NULL, version = 2)
   out <- confint(fit,method='profile',slope=slope)
   expect_equal(as.vector(out),as.vector(saved))
   expect_match(attr(out,'target'),'Criterion C1')
-  expect_identical(serialize(fit,NULL),before)
+  expect_identical(serialize(fit, NULL, version = 2), before)
   result$endpoints$Status[1] <- 'crossing_not_found'; result$endpoints$Bound[1] <- NA_real_
   expect_warning(unresolved <- confint(fit,method='profile',slope=slope),'no cutoff crossing')
   expect_true(is.na(unresolved[1,1])); expect_true(is.finite(unresolved[1,2]))

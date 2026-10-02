@@ -150,10 +150,11 @@ test_that("invalid evidence, parameters and coarse scoring do not become portabl
 
 test_that("public extraction qualifies native GPCM without a blanket review waiver", {
   f <- readRDS(test_path("fixtures", "mfrm-conditional-scoring-gpcm.rds"))
-  before <- serialize(f$fit, NULL)
+  # Version 2 compares stored values without ALTREP materialization state.
+  before <- serialize(f$fit, NULL, version = 2)
   draft <- extract_mfrm_calibration(f$fit)
   expect_identical(draft$eligibility$source_readiness_status, "conditional")
-  expect_identical(serialize(f$fit, NULL), before)
+  expect_identical(serialize(f$fit, NULL, version = 2), before)
   expect_equal(nrow(review_mfrm_calibration(draft)), 0)
   failed <- f$fit; failed$readiness$fit$NumericalState <- "failed"
   expect_error(extract_mfrm_calibration(failed), "passing conditional calibration checks")
