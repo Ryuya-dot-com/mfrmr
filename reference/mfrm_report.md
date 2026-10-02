@@ -459,7 +459,7 @@ recipient <- as.character(fit$prep$levels$Rater[1])
 sheet <- mfrm_report(res, style = "rater", facet = "Rater",
                      rater = recipient, output = "html", max_cases = 0)
 sheet$path
-#> [1] "/tmp/Rtmp6ld0vl/mfrmr_rater_1b9f1148e6ba.html"
+#> [1] "/tmp/Rtmp3b8iPq/mfrmr_rater_1b2d66cb307f.html"
 # Review in a browser, then choose a permanent path for continuing work.
 recipient_file <- tempfile(fileext = ".html")
 stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))

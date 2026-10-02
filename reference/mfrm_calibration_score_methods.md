@@ -201,7 +201,7 @@ new_rows <- dat[dat$Person %in% ids[19:20], , drop = FALSE]
 scores <- score_mfrm_calibration(calibration, new_rows)
 summary(scores)
 #> mfrmr Portable Calibration Score Summary
-#>   Calibration: mfrmr-calibration-v1:rsm:mml:20261002022042283710
+#>   Calibration: mfrmr-calibration-v1:rsm:mml:20261002045420509003
 #>   Model / estimator: RSM / MML
 #>   Persons: 2 scored (0 requiring review); 0 not scored
 #> 
