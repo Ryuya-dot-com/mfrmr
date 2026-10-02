@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Predict category probabilities for observed or replacement raters</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-random-rater-prediction.R" class="external-link"><code>R/api-random-rater-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-random-rater-prediction.R" class="external-link"><code>R/api-random-rater-prediction.R</code></a></small>
       <div class="d-none name"><code>predict.mfrm_random_rater.Rd</code></div>
     </div>
 
@@ -109,7 +109,10 @@ from 7 to 121; default 41. Compare orders when needed.</p></dd>
     <p>A list with <code>probabilities</code> (rows by categories), <code>expected_scores</code>,
 <code>newdata</code>, <code>ability</code>, <code>settings</code> and matching <code>source</code> metadata for
 <code><a href="mfrm_results.html">mfrm_results()</a></code>. No model is refitted. Save this list
-together with the fitted model and prediction inputs.</p>
+together with the fitted model and prediction inputs. The settings record
+the effect-sharing unit and whether integration uses the observed rater's
+conditional distribution or the replacement-rater population. These are
+preserved in the prediction settings table of <code><a href="mfrm_results.html">mfrm_results()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

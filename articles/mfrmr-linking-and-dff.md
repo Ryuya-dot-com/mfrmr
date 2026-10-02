@@ -13,7 +13,81 @@ For a broader workflow guide, see
 For the shorter help-page map, see
 [`help("mfrmr_linking_and_dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md).
 
-## Minimal setup
+## Start with the assignment, before fitting
+
+There are two different meanings of an anchor. A **common person**
+supplies ratings that connect raters; their ability can remain unknown
+and estimated. A **fixed anchor** supplies a known parameter value to
+`fit_mfrm(anchors = ...)`. The latter is not needed merely because
+several raters score the same person.
+
+For example, the following existing simulation routes describe three
+practical assignments. Four common persons and eight raters illustrate
+the syntax; they are not recommended minimum counts. The common-person
+example uses more rating rows than the other examples, so this is not an
+equal-budget precision comparison.
+
+``` r
+
+library(mfrmr)
+
+common <- build_mfrm_sim_spec(
+  n_person = 40, n_rater = 8, n_criterion = 3, raters_per_person = 2,
+  assignment = "sparse_linked",
+  sparse_controls = list(link_persons = 4, link_raters_per_person = 8,
+                         assignment_mode = "balanced")
+)
+rotating <- build_mfrm_sim_spec(
+  n_person = 40, n_rater = 8, n_criterion = 3, raters_per_person = 2,
+  assignment = "rotating"
+)
+random <- build_mfrm_sim_spec(
+  n_person = 40, n_rater = 8, n_criterion = 3, raters_per_person = 2,
+  assignment = "sparse_linked",
+  sparse_controls = list(link_persons = 0, assignment_mode = "random")
+)
+
+# Use common, rotating, or random here to inspect the chosen assignment.
+ratings <- simulate_mfrm_data(sim_spec = common, seed = 27309)
+data_review <- describe_mfrm_data(
+  ratings, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", include_agreement = FALSE
+)
+data_review$design_connectivity
+#>      Basis     Facet PersonNodes FacetLevelNodes Edges Components
+#> 1 observed     Rater          40               8   104          1
+#> 2 observed Criterion          40               3   120          1
+#>   LargestComponentPersons LargestComponentLevels LargestComponentPercent
+#> 1                      40                      8                     100
+#> 2                      40                      3                     100
+#>   Connected
+#> 1      TRUE
+#> 2      TRUE
+```
+
+The common-person design gives four persons all eight raters and the
+other 36 persons two raters each. The rotating and random designs give
+each person two raters. A random draw does not guarantee that all raters
+are connected or equally busy. For actual data, supply the planned
+assignment to `describe_mfrm_data(expected_design = ...)` to distinguish
+missing assigned ratings from cells that were never assigned.
+
+Eckes’s discussion of rating designs distinguishes distributed overlap,
+a single common examinee, disconnected groups and task-nested spiral
+assignments (2023 edition, Section 9.1, Table 9.1, pp. 151–155). The
+rotating generator here uses the selected raters on all generated
+criteria. Use an explicit `design_skeleton` for task-specific
+assignments; do not equate ordinary rotation with every spiral design.
+Check model identification as well as graph connections, especially when
+raters are nested within tasks.
+
+Connectedness means paths exist, not that those paths carry enough
+information. Review reliance on a small linking set, its composition,
+and sensitivity to loss of a linking person or rater. The ability to
+generate a sparse design is not a guarantee that a particular estimator
+or its intervals work well for it.
+
+## Fit and diagnose the observed ratings
 
 ``` r
 

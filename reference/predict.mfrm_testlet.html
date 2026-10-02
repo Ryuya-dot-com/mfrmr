@@ -48,7 +48,7 @@ within each Person/testlet block and conditioning on fitted calibration."><meta 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Score Persons using a fixed testlet calibration</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-testlet-scoring.R" class="external-link"><code>R/api-testlet-scoring.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-testlet-scoring.R" class="external-link"><code>R/api-testlet-scoring.R</code></a></small>
       <div class="d-none name"><code>predict.mfrm_testlet.Rd</code></div>
     </div>
 
@@ -131,6 +131,10 @@ prediction-source metadata for <code><a href="mfrm_results.html">mfrm_results()<
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>All supplied rows for a Person are scored jointly. This does not
 append to cached responses or condition on a stored local-effect mode.
+The saved settings retain this integration, effect-sharing and roster
+interpretation. <code><a href="mfrm_results.html">mfrm_results()</a></code> retains the complete <code>scoring_data</code> as
+its <code>scoring_roster</code> table, including explicitly omitted scores, alongside
+observed block counts. Column names and row order are preserved.
 To add ratings for an existing Person, supply that Person's complete set
 of ratings once, with memberships that correctly identify effects shared
 within that set. Scores from separate calls are not automatically linked

@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Portable calibration and fresh-session scoring</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/mfrmr-portable-calibration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/vignettes/mfrmr-portable-calibration.Rmd" class="external-link"><code>vignettes/mfrmr-portable-calibration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-portable-calibration.Rmd</code></div>
     </div>
 
@@ -88,15 +88,56 @@ model, validates and freezes it, saves it, and then scores new Persons
 without the source fit or training responses. The scoring phase uses
 only the saved artifact and the new response rows.</p>
 <p>The portable workflow is deliberately narrower than fitted-object
-scoring. It supports one observed score scale and one latent dimension
-for <code>RSM</code> or <code>PCM</code> fitted by <code>MML</code>
-under the fixed standard-normal scoring basis. It does not currently
-create portable artifacts for estimated-population or latent- regression
-fits, <code>JML</code>, or <code>GPCM</code>.</p>
-<p>Supported direct and group facet anchors and two-way facet
-interactions are retained in the calibration. New responses must use its
-recorded non-Person facet levels. Preserving an interaction for scoring
-does not establish its statistical significance or the model’s
+scoring. It supports one observed score scale and one latent dimension.
+<code>RSM</code> and <code>PCM</code> MML use the fixed standard-normal
+calibration basis (file format 1). In the development version,
+<code>GPCM</code> MML also supports an estimated intercept-only normal
+population (file format 2), one positive slope family and shared or
+separate slope/step owners. GPCM requires unit weights and no anchors or
+interactions. RSM/PCM JML also supports post-hoc EAP from a portable
+artifact (file format 3), with a finite identified source, unit weights
+and no anchors or interactions. Shared-owner GPCM JML uses file format 4
+after passing its conditional joint-likelihood and curvature checks.
+Experimental corrected shared-owner GPCM JML uses file format 5 with
+fresh adjusted-equation checks, an explicit correction order and a
+separate post-hoc normal reference prior. Its finite EAPs are not
+corrected Person maxima; calibration uncertainty and residual bias are
+not included in posterior intervals. See the corrected-JML example in
+<code><a href="../articles/mfrmr-gpcm-scope.html">vignette("mfrmr-gpcm-scope", package = "mfrmr")</a></code>.
+Estimated-population RSM/PCM and latent regression remain
+fitted-object-only routes.</p>
+<p>Experimental two-family GPCM MML uses file format 6 with the same
+public lifecycle below. It retains two ordered slope owners,
+second-owner steps, the original category coding and fixed N(0,1) prior.
+The first owner’s locations and log slopes are centered; the second
+owner’s locations and slopes remain free. Source identity/convergence
+and finer-integration checks must pass before extraction; review-only
+sources cannot be frozen. Each scoring batch must pass its own EAP/SD
+integration checks. Both fixed-grid EM and adaptive direct MML retain
+their scoring integration method.</p>
+<p>The artifact contains no training responses or Person estimates.
+Known facet levels may form new combinations, flagged by
+<code>row_dispositions$ObservedContext</code>; this is a model-based
+extension, not empirical validation of those combinations. Unit weights
+are required, with no prior override or repeated-event extension. Facet
+names must not collide with the reserved scoring/disposition columns
+listed in <code><a href="../reference/mfrm_calibration_workflow.html">?mfrm_calibration_workflow</a></code>. Validation and
+freezing do not qualify sampling coverage, global identification or
+population transport, and intervals exclude calibration uncertainty.
+Older readers refuse format 6; formats 1–5 retain their interpretation.
+See the two-family example in the GPCM scope vignette.</p>
+<p>For a JML source, EAP holds the calibration fixed and adds a
+standard-normal reference prior by default, or uses an explicit
+<code>scoring_prior</code>. JML did not estimate that distribution. This
+is not ML/WLE scoring or a replay of the original joint Person
+estimates. A full fit saved with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code> and a portable
+calibration are different objects; only the latter omits training
+responses and Person estimates. See the GPCM scope vignette for the
+MML/JML feature comparison.</p>
+<p>For RSM/PCM MML, supported direct and group facet anchors and two-way
+facet interactions are retained in the calibration. New responses must
+use its recorded non-Person facet levels. Preserving an interaction for
+scoring does not establish its statistical significance or the model’s
 suitability for another population.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
@@ -104,20 +145,24 @@ suitability for another population.</p>
 <span><span class="fu"><a href="../reference/mfrm_calibration_capabilities.html">mfrm_calibration_capabilities</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Model"</span>, <span class="st">"Estimator"</span>, <span class="st">"ScoringBasis"</span>, <span class="st">"PortableCalibration"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;     Model Estimator                              ScoringBasis</span></span>
-<span><span class="co">#&gt; 1     RSM       MML                     fixed standard normal</span></span>
-<span><span class="co">#&gt; 2     PCM       MML                     fixed standard normal</span></span>
-<span><span class="co">#&gt; 3 RSM/PCM       MML estimated population or latent regression</span></span>
-<span><span class="co">#&gt; 4    GPCM       MML             fixed or estimated population</span></span>
-<span><span class="co">#&gt; 5 RSM/PCM       JML                    post-hoc scoring prior</span></span>
-<span><span class="co">#&gt; 6    GPCM       JML                    post-hoc scoring prior</span></span>
+<span><span class="co">#&gt;                 Model     Estimator                              ScoringBasis</span></span>
+<span><span class="co">#&gt; 1                 RSM           MML                     fixed standard normal</span></span>
+<span><span class="co">#&gt; 2                 PCM           MML                     fixed standard normal</span></span>
+<span><span class="co">#&gt; 3             RSM/PCM           MML estimated population or latent regression</span></span>
+<span><span class="co">#&gt; 4                GPCM           MML    frozen estimated intercept-only normal</span></span>
+<span><span class="co">#&gt; 5             RSM/PCM           JML        post-hoc standard normal reference</span></span>
+<span><span class="co">#&gt; 6                GPCM           JML        post-hoc standard normal reference</span></span>
+<span><span class="co">#&gt; 7                GPCM Corrected JML        post-hoc standard normal reference</span></span>
+<span><span class="co">#&gt; 8 GPCM (two families)           MML                     fixed standard normal</span></span>
 <span><span class="co">#&gt;   PortableCalibration</span></span>
 <span><span class="co">#&gt; 1           available</span></span>
 <span><span class="co">#&gt; 2           available</span></span>
 <span><span class="co">#&gt; 3         unavailable</span></span>
-<span><span class="co">#&gt; 4         unavailable</span></span>
-<span><span class="co">#&gt; 5         unavailable</span></span>
-<span><span class="co">#&gt; 6         unavailable</span></span></code></pre></div>
+<span><span class="co">#&gt; 4           available</span></span>
+<span><span class="co">#&gt; 5           available</span></span>
+<span><span class="co">#&gt; 6           available</span></span>
+<span><span class="co">#&gt; 7           available</span></span>
+<span><span class="co">#&gt; 8           available</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="calibration-session">Calibration session<a class="anchor" aria-label="anchor" href="#calibration-session"></a>
 </h2>
@@ -400,11 +445,13 @@ adjust the scoring mean and variance, but it does not learn a skewed
 population shape. Its score intervals still condition on the estimated
 calibration and population parameters and exclude uncertainty from
 estimating them. Training and scoring populations also need not match.
-Such fitted-object scoring currently requires
-<code>readiness_policy = "review"</code> in
-<code><a href="../reference/predict_mfrm_units.html">predict_mfrm_units()</a></code> and cannot be exported as a portable
-calibration; see the latent-regression workflow in
-<code><a href="../reference/fit_mfrm.html">?fit_mfrm</a></code>.</p>
+Conditional fitted-object scoring can pass fresh local likelihood,
+gradient, information and integration checks without requiring a review
+override. GPCM fits passing these checks can also be exported within the
+scope above. This does not certify a global maximum or resolve
+unevaluated boundary/identification audits. Those original states remain
+in the artifact; loading checks the stored records, not the omitted
+training data.</p>
 <p>For example, a calibration may come from last year’s cohort while
 this year’s cohort has a different ability distribution. With an
 intercept-only population model, scoring the new response batch retains
@@ -416,8 +463,140 @@ the new cohort, and examine sensitivity when that assumption is
 uncertain. A larger training sample can estimate last year’s population
 more precisely without resolving a difference between the two
 populations.</p>
-<p>For a separate scoring script, the essential code is:</p>
+<div class="section level3">
+<h3 id="reuse-a-gpcm-calibration-for-a-later-cohort">Reuse a GPCM calibration for a later cohort<a class="anchor" aria-label="anchor" href="#reuse-a-gpcm-calibration-for-a-later-cohort"></a>
+</h3>
+<p>Suppose a team uses the same rubric and known raters to score next
+year’s performances. The calibration describes the relationships between
+categories, facet effects and ability. The later session applies those
+fixed relationships; it does not recalibrate raters or estimate the new
+cohort’s distribution.</p>
+<p>Use the full planned calibration sample, not the 18-person RSM
+illustration above. Each row in <code>calibration_responses</code>
+represents an assigned rating, with columns <code>Person</code>,
+<code>Rater</code>, <code>Criterion</code> and <code>Score</code>. This
+model gives criteria their own discriminations and raters their own
+category thresholds. For rater-owned discriminations instead, set
+<code>slope_facet = "Rater"</code>. The 0–2 category ladder is an
+example: specify the actual rubric’s score range.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span><span class="va">calibration_responses</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span></span>
+<span>  <span class="st">"calibration-responses.csv"</span>, colClasses <span class="op">=</span> <span class="st">"character"</span>, na.strings <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  check.names <span class="op">=</span> <span class="cn">FALSE</span>, fileEncoding <span class="op">=</span> <span class="st">"UTF-8-BOM"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">gpcm_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">calibration_responses</span>,</span>
+<span>  person <span class="op">=</span> <span class="st">"Person"</span>, facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, score <span class="op">=</span> <span class="st">"Score"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"GPCM"</span>, method <span class="op">=</span> <span class="st">"MML"</span>,</span>
+<span>  step_facet <span class="op">=</span> <span class="st">"Rater"</span>, slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  rating_min <span class="op">=</span> <span class="fl">0</span>, rating_max <span class="op">=</span> <span class="fl">2</span>, category_policy <span class="op">=</span> <span class="st">"preserve"</span>,</span>
+<span>  mml_integration <span class="op">=</span> <span class="st">"adaptive"</span>, quad_points <span class="op">=</span> <span class="fl">31</span>,</span>
+<span>  maxit <span class="op">=</span> <span class="fl">400</span>, reltol <span class="op">=</span> <span class="fl">1e-10</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">gpcm_fit</span>, profile <span class="op">=</span> <span class="st">"fit"</span>, detail <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span></code></pre></div>
+<p>These settings are a starting configuration, not a convergence or
+sample-size guarantee. Inspect the fit and its warnings. Extraction
+checks the calibration before it can be frozen; increasing only the
+later scoring grid cannot repair a failed calibration check. A profile
+interval for a discrimination is a separate experimental option, not a
+required step in scoring or an interval for a new person’s ability. Once
+<code>gpcm_fit</code> has passed calibration review:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">draft</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">extract_mfrm_calibration</a></span><span class="op">(</span></span>
+<span>  <span class="va">gpcm_fit</span>, calibration_id <span class="op">=</span> <span class="st">"rubric-calibration"</span>,</span>
+<span>  source_fit_id <span class="op">=</span> <span class="st">"training-cohort"</span>, scoring_quad_points <span class="op">=</span> <span class="fl">141</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">review_mfrm_calibration</a></span><span class="op">(</span><span class="va">draft</span><span class="op">)</span></span>
+<span><span class="va">calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span><span class="va">draft</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">save_mfrm_calibration</a></span><span class="op">(</span><span class="va">calibration</span>, <span class="st">"gpcm-calibration.rds"</span><span class="op">)</span></span></code></pre></div>
+<p>In a <strong>new R session</strong>, read that artifact and the later
+cohort’s responses:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span><span class="co"># A later session needs only this file and the new response rows.</span></span>
+<span><span class="va">calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">load_mfrm_calibration</a></span><span class="op">(</span><span class="st">"gpcm-calibration.rds"</span><span class="op">)</span></span>
+<span><span class="va">new_responses</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span></span>
+<span>  <span class="st">"new-responses.csv"</span>, colClasses <span class="op">=</span> <span class="st">"character"</span>, na.strings <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  check.names <span class="op">=</span> <span class="cn">FALSE</span>, fileEncoding <span class="op">=</span> <span class="st">"UTF-8-BOM"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span></span>
+<span>  <span class="va">calibration</span>, <span class="va">new_responses</span>, missing_response <span class="op">=</span> <span class="st">"omit"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">score_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span>
+<span><span class="va">score_review</span></span>
+<span><span class="va">score_review</span><span class="op">$</span><span class="va">review</span></span>
+<span><span class="va">score_review</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">score_integration_review</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"interval"</span>, preset <span class="op">=</span> <span class="st">"publication"</span>, top_n <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Keep full-precision scores and every Person's disposition, including those</span></span>
+<span><span class="co"># without scores. The complete object supports later review and plotting.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">scores</span><span class="op">$</span><span class="va">estimates</span>, <span class="st">"person-scores.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, na <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">scores</span><span class="op">$</span><span class="va">person_dispositions</span>, <span class="st">"person-review.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, na <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">scores</span>, <span class="st">"scored-cohort.rds"</span><span class="op">)</span></span></code></pre></div>
+<p>The omission policy applies to assigned ratings whose score is
+missing. It does not impute scores or repair informative missingness.
+Leave unassigned rating combinations absent rather than manufacturing
+observations. A person with only missing assigned scores remains
+<code>not_scored</code> in the review table, with no plotted point. A
+person entirely absent from the input is not invented by the scorer.
+Keep the review file with the score file so unavailable results do not
+disappear. Identifiers <code>001</code>, <code>1</code> and the literal
+<code>NA</code> stay distinct with the character-column import
+above.</p>
+<p><code>top_n = Inf</code> displays every available score; the default
+is at most 40, with review cases prioritized. For a large cohort use a
+legible subset and retain the complete tables. After
+<code>readRDS("scored-cohort.rds")</code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>,
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and <code><a href="../reference/as_ggplot.html">as_ggplot()</a></code> reuse saved results
+without fitting or scoring again.</p>
+<p>The summary distinguishes the actual reported-score integration check
+from the additional fixed-versus-adaptive grid comparison. For an
+adaptive scorer, a difference from an unused fixed grid does not
+contradict passing agreement of the reported EAP/SD with higher-order
+adaptive references.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">retained</span> <span class="op">&lt;-</span> <span class="va">scores</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">retained_prior_identity</span></span>
+<span></span>
+<span><span class="co"># Sensitivity analysis on the same calibration scale, not a new population fit.</span></span>
+<span><span class="va">alternative</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span></span>
+<span>  <span class="va">calibration</span>, <span class="va">new_responses</span>, missing_response <span class="op">=</span> <span class="st">"omit"</span>,</span>
+<span>  scoring_prior <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="va">retained</span><span class="op">$</span><span class="va">mean</span> <span class="op">+</span> <span class="fl">0.5</span>, sd <span class="op">=</span> <span class="va">retained</span><span class="op">$</span><span class="va">sd</span> <span class="op">*</span> <span class="fl">1.25</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">alternative</span><span class="op">)</span></span></code></pre></div>
+<p>The shift of 0.5 logits and 25% wider SD illustrate a declared
+assumption; they are not recommended prior values. Compare the same
+people, retain both priors and justify substantive scenarios. These
+posterior score intervals condition on the calibration and prior. They
+differ from confidence intervals for estimated slopes or facet
+parameters.</p>
+<p>For the <strong>training-model report</strong>, use
+<code>mfrm_results(gpcm_fit)</code> and <code><a href="../reference/mfrm_report.html">mfrm_report()</a></code> in
+the calibration session. For the <strong>later score batch</strong>, use
+the dedicated summary, plots, CSV tables and saved score object above.
+<code><a href="../reference/mfrm_report.html">mfrm_report()</a></code> does not accept portable score batches; a
+report of the training fit does not become a report of the new
+cohort.</p>
+<p>There are two distinct checks. Extraction evaluates the estimated
+calibration using the training fit. Scoring checks the new response
+patterns under the actual prior. A calibration that passes the first
+check can still require a finer scoring grid for extreme new patterns.
+If scoring stops with <code>SCORING_INTEGRATION_FAILED</code>, extract
+again with more <code>scoring_quad_points</code> and repeat validation
+and freezing; 141 is an example, not a universal adequate order. There
+is no review override for failed portable numerical checks. Passing them
+does not remove endpoint or sparse-response review labels.</p>
+<p>The default retains the estimated normal mean and SD from
+calibration. <code>scoring_prior</code> supplies an assumption for
+sensitivity analysis; it does not estimate the later cohort’s
+distribution or change the saved calibration. Both original and actual
+prior values remain in score tables, summaries and plot data. Intervals
+condition on these fixed values and exclude uncertainty from estimating
+the calibration and its population. The same prior option is available
+for current RSM/PCM artifacts; older artifacts using grid-endpoint
+intervals require re-extraction first.</p>
+<p>For a separate scoring script, the essential code is:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">load_mfrm_calibration</a></span><span class="op">(</span><span class="st">"reviewed-calibration.rds"</span><span class="op">)</span></span>
@@ -448,6 +627,7 @@ CSV back, also preserve identifier columns as text.</p>
 ambiguous duplicates, and malformed artifacts fail closed. Missing
 responses require an explicit <code>missing_response = "omit"</code>
 policy.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="if-scoring-stops-or-asks-for-review">If scoring stops or asks for review<a class="anchor" aria-label="anchor" href="#if-scoring-stops-or-asks-for-review"></a>
@@ -539,6 +719,124 @@ recorded fixed point calibration and prior; its uncertainty interval
 excludes calibration-parameter uncertainty. Validate the intended score
 use, population transport, and decision consequences outside this
 numerical workflow.</p>
+</div>
+<div class="section level2">
+<h2 id="when-the-calibration-was-estimated-with-jml">When the calibration was estimated with JML<a class="anchor" aria-label="anchor" href="#when-the-calibration-was-estimated-with-jml"></a>
+</h2>
+<p>Suppose raters have already scored one cohort, and you want to score
+a later cohort using their existing severity estimates. RSM/PCM JML can
+now use the same extract/validate/freeze/save/load/score functions.
+Extraction checks a current, finite, identified source and freshly
+evaluates its joint likelihood and gradient. It does not use
+<code><a href="../reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code>, because JML calibration does
+not integrate over a population distribution. An unresolved source is
+refused, not automatically switched to MML or made acceptable by a
+scoring prior.</p>
+<p>The following PCM example uses 14 synthetic learners for a small
+illustration, not as a sample-size recommendation. Its 141-node scoring
+grid is also an example, not a generally sufficient setting. Each new
+batch receives integration checks; if those fail, inspect the error and
+increase <code>scoring_quad_points</code> when extracting.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span><span class="va">jml_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span>
+<span><span class="va">jml_data</span> <span class="op">&lt;-</span> <span class="va">jml_data</span><span class="op">[</span><span class="va">jml_data</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">jml_data</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">14</span><span class="op">]</span>, <span class="op">]</span></span>
+<span><span class="va">jml_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">jml_data</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"PCM"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  maxit <span class="op">=</span> <span class="fl">500</span>, reltol <span class="op">=</span> <span class="fl">1e-10</span><span class="op">)</span></span>
+<span><span class="va">jml_draft</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">extract_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_fit</span>, scoring_quad_points <span class="op">=</span> <span class="fl">141</span><span class="op">)</span></span>
+<span><span class="va">jml_calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_draft</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">save_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_calibration</span>, <span class="st">"jml-calibration.rds"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># In a new session, supply your later cohort's ratings instead of these example rows.</span></span>
+<span><span class="va">jml_new</span> <span class="op">&lt;-</span> <span class="va">jml_data</span><span class="op">[</span><span class="va">jml_data</span><span class="op">$</span><span class="va">Person</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">jml_data</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="op">]</span></span>
+<span><span class="va">jml_new</span><span class="op">$</span><span class="va">Person</span> <span class="op">&lt;-</span> <span class="st">"NEXT01"</span></span>
+<span><span class="va">jml_saved</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">load_mfrm_calibration</a></span><span class="op">(</span><span class="st">"jml-calibration.rds"</span><span class="op">)</span></span>
+<span><span class="va">jml_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_saved</span>, <span class="va">jml_new</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">jml_scores</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">jml_scores</span>, main <span class="op">=</span> <span class="st">"New-cohort EAP scores"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">jml_alternative</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span><span class="va">jml_saved</span>, <span class="va">jml_new</span>,</span>
+<span>  scoring_prior <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">0.25</span>, sd <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">jml_scores</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"Estimate"</span>, <span class="st">"SD"</span>, <span class="st">"PriorMean"</span>, <span class="st">"PriorSD"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">jml_alternative</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Person"</span>, <span class="st">"Estimate"</span>, <span class="st">"SD"</span>, <span class="st">"PriorMean"</span>, <span class="st">"PriorSD"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p>For a ggplot without headings or a caption, use
+<code>as_ggplot(jml_scores) + ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)</code>.
+Keep the interval interpretation in the surrounding report if you remove
+it from the figure.</p>
+<p>The default N(0,1) prior is a reference assumption on the JML
+calibration scale, not an estimate of either cohort’s distribution. A
+different explicit prior changes the EAP target without changing the
+saved calibration. Report that choice alongside the scores. Posterior
+SDs and intervals condition on the calibration; they do not account for
+JML calibration bias or uncertainty in raters and steps. Extreme
+new-response patterns can have finite EAP scores and review flags; this
+does not turn an infinite JML estimate into a finite maximum-likelihood
+estimate. Formal JML slope intervals remain unavailable.</p>
+<div class="section level3">
+<h3 id="using-gpcm-jml-slopes-in-the-same-workflow">Using GPCM JML slopes in the same workflow<a class="anchor" aria-label="anchor" href="#using-gpcm-jml-slopes-in-the-same-workflow"></a>
+</h3>
+<p>GPCM JML can now preserve one shared slope/step owner and its
+relative slopes in a portable calibration. The following example uses
+criterion-specific slopes and steps. The same workflow supports a rater
+owner; different slope and step owners remain MML-only.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gpcm_jml_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">jml_data</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"GPCM"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  maxit <span class="op">=</span> <span class="fl">600</span>, reltol <span class="op">=</span> <span class="fl">1e-11</span><span class="op">)</span></span>
+<span><span class="va">gpcm_jml_calibration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">freeze_mfrm_calibration</a></span><span class="op">(</span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">validate_mfrm_calibration</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">extract_mfrm_calibration</a></span><span class="op">(</span><span class="va">gpcm_jml_fit</span>, scoring_quad_points <span class="op">=</span> <span class="fl">141</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mfrm_calibration_workflow.html">save_mfrm_calibration</a></span><span class="op">(</span><span class="va">gpcm_jml_calibration</span>, <span class="st">"gpcm-jml-calibration.rds"</span><span class="op">)</span></span>
+<span><span class="va">gpcm_jml_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/mfrm_calibration_workflow.html">load_mfrm_calibration</a></span><span class="op">(</span><span class="st">"gpcm-jml-calibration.rds"</span><span class="op">)</span>, <span class="va">jml_new</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">gpcm_jml_scores</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">gpcm_jml_scores</span>, main <span class="op">=</span> <span class="st">"New-cohort GPCM JML EAP scores"</span><span class="op">)</span></span></code></pre></div>
+<p>A GPCM JML fit may still report incomplete global identification or
+boundary checks. The conditional scoring route does not change that
+finding: it checks the current joint likelihood, gradient and full local
+curvature, and rejects known Person, additive or slope boundary
+certificates. This distinction matters: even positive local curvature
+can coexist with a certified infinite Person estimate. The fit’s finite
+optimizer trace does not override that certificate. If the source does
+not pass, inspect its diagnostics; an explicitly requested fitted-object
+<code>readiness_policy = "review"</code> result is not a portable
+calibration.</p>
+<p>After qualification, scores are conditional on the frozen calibration
+and the reference or explicitly supplied normal prior. Source audit
+states remain in saved scores and summaries, and every batch checks
+integration accuracy. These checks do not qualify slope confidence
+intervals, establish a unique global maximum, validate the new cohort’s
+prior or remove JML bias. Computing source curvature can be expensive
+with many Persons because it uses a dense joint matrix; freezing the
+calibration lets later scoring avoid that calculation.</p>
+</div>
+<div class="section level3">
+<h3 id="what-supports-these-scores">What supports these scores?<a class="anchor" aria-label="anchor" href="#what-supports-these-scores"></a>
+</h3>
+<p>Bock and Mislevy (1982, pp. 432-433) explain EAP and posterior-SD
+scoring from fixed response functions and a specified prior, including
+multiple-category responses. That is the basis of the scoring
+calculation. Their adaptive-testing examples do not establish that JML
+calibration is unbiased, that N(0,1) matches your next cohort, or that
+posterior intervals have nominal frequentist coverage in your rating
+design. The numerical cutoffs used to qualify a source are package
+checks, not statistical thresholds prescribed by that paper.</p>
+<p>It is useful to compare the same fixed calibration and prior in TAM
+or ConQuest. Agreement then checks score computation; it does not
+establish agreement of their estimation methods. In particular, ConQuest
+does not estimate free item scores under JML, while TAM’s JML defaults
+include extreme-score adjustment and item-parameter bias correction. A
+finite EAP for an extreme <em>new</em> response pattern also does not
+qualify a training calibration with an infinite JML Person estimate.
+Refusing to export that calibration is the current workflow’s scope; it
+does not assert that every structural parameter is inestimable.</p>
+<p>Bock, R. D., &amp; Mislevy, R. J. (1982). Adaptive EAP estimation of
+ability in a microcomputer environment. <em>Applied Psychological
+Measurement, 6</em>(4), 431-444. <a href="https://doi.org/10.1177/014662168200600405" class="external-link">doi:10.1177/014662168200600405</a>.
+See also <a href="https://alexanderrobitzsch.github.io/TAM/reference/tam.jml.html" class="external-link">TAM’s
+JML help</a> and the <a href="https://conquestmanual.acer.org/s4-00.html" class="external-link">ConQuest command
+reference</a>.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

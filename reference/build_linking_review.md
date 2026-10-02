@@ -85,7 +85,7 @@ Use existing package-native outputs in this order:
 - `group_view_index`: stable wave/link/facet/source-family grouping
   routes.
 
-- `plot_map`: which existing plotting helper should be used next.
+- `plot_map`: which plotting function to use for each result.
 
 - `reporting_map`: what is covered here versus which manuscript-oriented
   helper should be used separately.

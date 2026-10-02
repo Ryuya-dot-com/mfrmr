@@ -185,6 +185,21 @@ location parameter. Unlike models with separate local variances, it
 retains a common testlet variance. The cited results do not guarantee
 coverage for a new assessment design or for this implementation.
 
+## Relation to discrimination and shared rater effects
+
+Discrimination changes response sensitivity; it is not a substitute for
+dependence within a performance. This function fits an RSM, not a GPCM
+with additional slopes. Its local effect is shared only within a
+Person/block pair. A Person/task block shared across assessors differs
+from a Person/task/assessor rating-occasion block. Select the identifier
+according to the assessment process; only one nonoverlapping membership
+is supported. A nonzero local variance does not by itself establish
+halo. For one rater effect shared across persons, see
+[`fit_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_random_rater.md).
+The two models cannot currently be combined. See
+[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+for the relationship to fixed discrimination and local independence.
+
 ## Comparison with ordinary MFRM
 
 Hold the observed events, categories, fixed facets, omissions and

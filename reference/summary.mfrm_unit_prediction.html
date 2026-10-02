@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize posterior unit scoring output</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_unit_prediction.Rd</code></div>
     </div>
 
@@ -116,9 +116,17 @@ latent-regression scoring</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Posterior SDs and intervals condition on point estimates of the calibration</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   and prior; their estimation uncertainty is excluded.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fixed-parameter integration review (adaptive minus fixed)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          31            31       1           0            1.360903e-10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          31            61       1           0            1.360911e-10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  MaxAbsEAPChange MaxAbsSDChange</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3.276639e-10   1.296825e-09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3.276640e-10   1.296825e-09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior estimates (first 10)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate    SD  Lower Upper Observations                         Review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01   -0.112 0.683 -1.448 1.235            2 No source restriction recorded</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate    SD  Lower Upper Observations                       Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01   -0.112 0.683 -1.448 1.235            2 Source scoring checks passed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Response rows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  InputRows KeptRows DroppedRows DroppedMissing DroppedBadScore DroppedBadWeight</span>
@@ -128,6 +136,9 @@ latent-regression scoring</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Non-person facets in `new_data` must already exist in the fitted calibration.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Overlapping person IDs are treated as labels in `new_data`; the original</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   fitted person estimates are not updated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Scoring integration compares the reported EAP and SD with adaptive reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   orders under the same calibration and prior. Passing does not validate the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   scoring prior for another population.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

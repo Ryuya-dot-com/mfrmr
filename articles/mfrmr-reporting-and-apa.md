@@ -237,7 +237,7 @@ prec$checks
 #>                                                                                                                                                                                                    Detail
 #> 1 Uncertainty is conditional on the fitted model. Person posterior SDs condition on the fitted calibration; facet standard errors use observed information. Review interval assumptions before reporting.
 #> 2                                                                                                              Numerical convergence checks passed; this alone does not establish valid SEs or intervals.
-#> 3                                                                                                                                               Finite standard errors were available for 100.0% of rows.
+#> 3                                                                                                                                     Finite standard errors were available for 100.0% of non-fixed rows.
 #> 4                                                                                                              Among available pairs, fit-adjusted SEs were at least as large as their unadjusted values.
 #> 5                                                                                                     Among available pairs, fit-adjusted reliability values were not larger than the model-based values.
 #> 6                                                                                                                    Each facet had sample/population summaries for both model and fit-adjusted SE modes.
@@ -447,6 +447,7 @@ apa_table(
   caption = "Separation and reliability by facet",
   note = "Interpret the facet and error basis explicitly; rater separation reliability is not interrater agreement."
 )
+#> Warning: Unknown or uninitialised column: `config`.
 #> Separation and reliability by facet
 #>      Facet Levels Separation Strata Reliability RealReliability
 #>  Criterion      3      2.555  3.740       0.867           0.866
@@ -1079,7 +1080,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] Matrix_1.7-5      jsonlite_2.0.0    dplyr_1.2.1       compiler_4.6.1   
-#>  [5] tidyselect_1.2.1  psych_2.6.5       stringr_1.6.0     parallel_4.6.1   
+#>  [5] tidyselect_1.2.1  psych_2.6.9       stringr_1.6.0     parallel_4.6.1   
 #>  [9] tidyr_1.3.2       jquerylib_0.1.4   systemfonts_1.3.2 textshaping_1.0.5
 #> [13] yaml_2.3.12       fastmap_1.2.0     lattice_0.22-9    R6_2.6.1         
 #> [17] generics_0.1.4    knitr_1.52        tibble_3.3.1      desc_1.4.3       

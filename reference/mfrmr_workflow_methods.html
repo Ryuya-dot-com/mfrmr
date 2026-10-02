@@ -50,7 +50,7 @@ The later sections describe diagnostics, reporting, and specialist routes."><met
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow and Method Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/help_workflow_methods.R" class="external-link"><code>R/help_workflow_methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/help_workflow_methods.R" class="external-link"><code>R/help_workflow_methods.R</code></a></small>
       <div class="d-none name"><code>mfrmr_workflow_methods.Rd</code></div>
     </div>
 
@@ -161,6 +161,20 @@ the ability distribution at N(0,1). Both extended RSMs instead estimate
 ability variance by default (<code>person_sd = NULL</code>). Their model-comparison
 tutorials show how to match population assumptions. Changing only the
 fitting function can change more than the rater/dependence structure.</p></li>
+<li><p><strong>Estimator choice:</strong> MML is the current default, not the result of
+an automatic comparison of estimators. It uses a population model for
+abilities. JML estimates each person's ability as a separate parameter;
+it does not fit a population distribution during calibration. Choosing
+JML does not automatically correct the bias associated with few ratings
+per person. Without <code>jml_correction_order</code>, JML is uncorrected and its
+location SEs are exploratory. Shared-owner GPCM also supports an explicit,
+experimental correction order. Its <code>RootSE</code> describes local variation
+around the adjusted-equation root; residual bias may remain and structural
+confidence intervals are not supplied. See the estimator discussion in
+<code><a href="fit_mfrm.html">fit_mfrm()</a></code>.
+Neither a larger model nor a smaller reported SE establishes a better
+analysis. Choose from the assessment question, rating design and modeling
+assumptions, rather than from whether the user is a beginner or expert.</p></li>
 <li><p><strong>Rating scale:</strong> supply <code>rating_min</code>, <code>rating_max</code> and <code>category_policy</code>
 from the rubric in both data review and ordinary fitting. Omitted bounds
 use the observed range. The ordinary default <code>category_policy = NULL</code>
@@ -309,7 +323,29 @@ under normal random effects with two crossed facets, see
 and do not estimate reliability on its latent scale.
 In particular, a testlet variance is on the latent logit scale and cannot
 be substituted for an observed-score G-study component. Start G/D analyses
-from the ratings and their declared G-study design.</p>
+from the ratings and their declared G-study design.
+Multivariate here means several observed score criteria, such as fluency
+and accuracy, whose source-specific covariances are estimated together.
+Multiple GPCM slope owners still describe a single latent ability.
+Both provisional two-family MML engines support summaries and conditional
+fitted curves with saved reports, separately checked experimental component
+log-Wald and location/contrast intervals, and descriptive posterior residuals.
+Component profiles require fixed-grid EM. Separately checked fitted-object
+and portable new-Person EAP intervals condition on the calibration and prior;
+they exclude calibration uncertainty and have unqualified coverage and
+population transport. Neither inherits the one-family
+diagnostic/inference workflow below. See <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> and the
+Two slope families section in <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.
+Neither the estimated slopes nor their sampling covariance can substitute
+for G-study score covariance components. Score weights specify the intended
+composite; they are not discrimination estimates. There is no automatic
+GMFRM-to-G-study conversion or joint estimation in these APIs.
+Hirai and Koizumi (2013, <a href="https://doi.org/10.1080/15434303.2013.824973" class="external-link">doi:10.1080/15434303.2013.824973</a>
+) illustrate
+complementary multivariate G-theory and MFRM analyses. Their G-study omitted
+raters, so its generalization scope differs from a person-by-rater-by-task
+analysis. For the relationship and literature, see
+<code><a href="../articles/mfrmr-gpcm-scope.html">vignette("mfrmr-gpcm-scope", package = "mfrmr")</a></code>.</p>
 <p>To group persons, raters or tasks by external attributes, use <code><a href="mfrm_features.html">mfrm_features()</a></code>
 followed by <code><a href="mfrm_cluster.html">mfrm_cluster_pam()</a></code> or <code><a href="mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical()</a></code> for mixed
 attributes. <code><a href="mfrm_pca.html">mfrm_pca()</a></code> and <code><a href="mfrm_cluster_kmeans.html">mfrm_cluster_kmeans()</a></code> use selected numeric

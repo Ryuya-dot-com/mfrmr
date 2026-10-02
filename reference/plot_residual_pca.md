@@ -95,8 +95,8 @@ Plot types:
 
 - `"scree"`: component vs eigenvalue line plot
 
-- `"parallel_scree"`: observed eigenvalues with residual-permutation
-  parallel-analysis mean and upper cutoff
+- `"parallel_scree"`: observed eigenvalues with the selected reference's
+  mean and upper cutoff (residual permutation or model bootstrap)
 
 - `"parallel_excess"`: observed eigenvalue minus the parallel-analysis
   cutoff by component
@@ -116,8 +116,11 @@ used.
 - `plot_type = "parallel_scree"` or `"parallel_excess"`: use only after
   running
   [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md)
-  with `parallel = TRUE`. Components above the residual-permutation
-  cutoff are candidates for follow-up, not proof of multidimensionality.
+  with `parallel = TRUE`. Components above the selected reference cutoff
+  are candidates for follow-up, not proof of multidimensionality.
+  Model-bootstrap plots label the refitted reference explicitly;
+  unavailable comparisons are explained in `parallel_status` and
+  `bootstrap_trials`.
 
 - `plot_type = "loadings"`: identifies variables/elements driving each
   component; inspect both sign and absolute magnitude.
@@ -228,7 +231,7 @@ head(pa$data)
 #> [1] "Overall Residual PCA (Parallel Scree)"
 #> 
 #> $subtitle
-#> [1] "Conditional residual-permutation reference; fitted-model uncertainty omitted"
+#> [1] "Conditional permutation reference; fitted-model uncertainty omitted.\nComponentwise cutoffs; no adjustment for scanning components"
 #> 
 #> $legend
 #>                                     label            role  aesthetic   value

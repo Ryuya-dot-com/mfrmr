@@ -35,6 +35,14 @@ links, monitoring drift, and screening differential facet functioning
 
 ## Recommended linking route
 
+Before fitting, use
+[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
+on the rating table and inspect `design_connectivity`. Supply
+`expected_design` if the planned assignment is available, so unassigned
+cells and missing assigned ratings are distinct. A connected graph alone
+does not establish identification of all model parameters, adequate
+precision, or absence of informative assignment.
+
 1.  Fit with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
     and diagnose with
@@ -93,6 +101,47 @@ connectedness.
 [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md)
 checks syntax and receiving-data support, not those substantive
 assumptions.
+
+## Common persons, rotating assignments, and random assignments
+
+These are ways to collect ratings, not instructions to fix a parameter.
+For example, asking all eight raters to score the same four performances
+creates common-person links. Their abilities can still be estimated; do
+not pass them to `anchors` unless known values really are intended.
+
+Existing
+[`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
+choices let you inspect these structures:
+
+- Common persons: `assignment = "sparse_linked"` with
+  `sparse_controls = list(link_persons = 4, link_raters_per_person = 8)`.
+  Set `n_rater = 8` and specify the ordinary `raters_per_person`
+  separately. The counts illustrate syntax, not a recommended number of
+  linking persons.
+
+- Overlapping rotation: `assignment = "rotating"` with
+  `raters_per_person = 2` assigns successive subsets of raters.
+
+- Random subsets: `assignment = "sparse_linked"` with
+  `sparse_controls = list(link_persons = 0, assignment_mode = "random")`.
+  This does not guarantee connectedness or equal workloads for every
+  draw.
+
+- Task-specific or externally planned assignments:
+  `assignment = "skeleton"` accepts an explicit Person-by-facet
+  template. The ordinary rotating generator assigns the chosen raters
+  across all generated criteria; it is not a general implementation of
+  task-nested spiral designs.
+
+Generate ratings with
+[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
+and inspect them with
+[`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md).
+Use the linking vignette for runnable examples. A generator can
+represent a design without qualifying an estimator for it. Compare both
+the amount and placement of overlap, and what happens when a critical
+common person or rater is unavailable. Keep rating costs equal when the
+question is which allocation uses a fixed budget better.
 
 ## Design the link, not only the anchor count
 
@@ -243,6 +292,9 @@ not defensible, analyze one coherent linking facet at a time.
   [`vignette("mfrmr-linking-and-dff", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.md).
 
 ## References
+
+Eckes, T. (2023). *Introduction to Many-Facet Rasch Measurement*,
+Section 9.1, pp. 151–155, Table 9.1. Peter Lang. ISBN 978-3-631-90305-6.
 
 Myford, C. M., & Wolfe, E. W. (2000). Strengthening the ties that bind:
 Improving the linking network in sparsely connected rating designs. *ETS

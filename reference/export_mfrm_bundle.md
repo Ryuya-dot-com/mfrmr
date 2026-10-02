@@ -148,10 +148,10 @@ A named list with class `mfrm_export_bundle`.
 ## Details
 
 This function is the one-call fit-level archive and HTML route. It
-reuses existing `mfrmr` helpers instead of reimplementing estimation or
-diagnostics. When `diagnostics = NULL`, the exporter computes the
-diagnostics it needs, then writes the requested CSV/text/replay
-artifacts and a lightweight HTML page from the fitted object. Use
+reuses `mfrmr` functions for estimation and diagnostics. When
+`diagnostics = NULL`, the exporter computes the diagnostics it needs,
+then writes the requested CSV/text/replay artifacts and a lightweight
+HTML page from the fitted object. Use
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
 and
 [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)

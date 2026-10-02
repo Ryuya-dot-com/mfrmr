@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Linking and DFF</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/mfrmr-linking-and-dff.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/vignettes/mfrmr-linking-and-dff.Rmd" class="external-link"><code>vignettes/mfrmr-linking-and-dff.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-linking-and-dff.Rmd</code></div>
     </div>
 
@@ -97,9 +97,79 @@ screening</li>
 shorter help-page map, see
 <code><a href="../reference/mfrmr_linking_and_dff.html">help("mfrmr_linking_and_dff", package = "mfrmr")</a></code>.</p>
 <div class="section level2">
-<h2 id="minimal-setup">Minimal setup<a class="anchor" aria-label="anchor" href="#minimal-setup"></a>
+<h2 id="start-with-the-assignment-before-fitting">Start with the assignment, before fitting<a class="anchor" aria-label="anchor" href="#start-with-the-assignment-before-fitting"></a>
 </h2>
+<p>There are two different meanings of an anchor. A <strong>common
+person</strong> supplies ratings that connect raters; their ability can
+remain unknown and estimated. A <strong>fixed anchor</strong> supplies a
+known parameter value to <code>fit_mfrm(anchors = ...)</code>. The
+latter is not needed merely because several raters score the same
+person.</p>
+<p>For example, the following existing simulation routes describe three
+practical assignments. Four common persons and eight raters illustrate
+the syntax; they are not recommended minimum counts. The common-person
+example uses more rating rows than the other examples, so this is not an
+equal-budget precision comparison.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">common</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span>
+<span>  n_person <span class="op">=</span> <span class="fl">40</span>, n_rater <span class="op">=</span> <span class="fl">8</span>, n_criterion <span class="op">=</span> <span class="fl">3</span>, raters_per_person <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  assignment <span class="op">=</span> <span class="st">"sparse_linked"</span>,</span>
+<span>  sparse_controls <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>link_persons <span class="op">=</span> <span class="fl">4</span>, link_raters_per_person <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>                         assignment_mode <span class="op">=</span> <span class="st">"balanced"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">rotating</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span>
+<span>  n_person <span class="op">=</span> <span class="fl">40</span>, n_rater <span class="op">=</span> <span class="fl">8</span>, n_criterion <span class="op">=</span> <span class="fl">3</span>, raters_per_person <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  assignment <span class="op">=</span> <span class="st">"rotating"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">random</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mfrm_sim_spec.html">build_mfrm_sim_spec</a></span><span class="op">(</span></span>
+<span>  n_person <span class="op">=</span> <span class="fl">40</span>, n_rater <span class="op">=</span> <span class="fl">8</span>, n_criterion <span class="op">=</span> <span class="fl">3</span>, raters_per_person <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  assignment <span class="op">=</span> <span class="st">"sparse_linked"</span>,</span>
+<span>  sparse_controls <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>link_persons <span class="op">=</span> <span class="fl">0</span>, assignment_mode <span class="op">=</span> <span class="st">"random"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Use common, rotating, or random here to inspect the chosen assignment.</span></span>
+<span><span class="va">ratings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mfrm_data.html">simulate_mfrm_data</a></span><span class="op">(</span>sim_spec <span class="op">=</span> <span class="va">common</span>, seed <span class="op">=</span> <span class="fl">27309</span><span class="op">)</span></span>
+<span><span class="va">data_review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/describe_mfrm_data.html">describe_mfrm_data</a></span><span class="op">(</span></span>
+<span>  <span class="va">ratings</span>, person <span class="op">=</span> <span class="st">"Person"</span>, facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
+<span>  score <span class="op">=</span> <span class="st">"Score"</span>, include_agreement <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">data_review</span><span class="op">$</span><span class="va">design_connectivity</span></span>
+<span><span class="co">#&gt;      Basis     Facet PersonNodes FacetLevelNodes Edges Components</span></span>
+<span><span class="co">#&gt; 1 observed     Rater          40               8   104          1</span></span>
+<span><span class="co">#&gt; 2 observed Criterion          40               3   120          1</span></span>
+<span><span class="co">#&gt;   LargestComponentPersons LargestComponentLevels LargestComponentPercent</span></span>
+<span><span class="co">#&gt; 1                      40                      8                     100</span></span>
+<span><span class="co">#&gt; 2                      40                      3                     100</span></span>
+<span><span class="co">#&gt;   Connected</span></span>
+<span><span class="co">#&gt; 1      TRUE</span></span>
+<span><span class="co">#&gt; 2      TRUE</span></span></code></pre></div>
+<p>The common-person design gives four persons all eight raters and the
+other 36 persons two raters each. The rotating and random designs give
+each person two raters. A random draw does not guarantee that all raters
+are connected or equally busy. For actual data, supply the planned
+assignment to <code>describe_mfrm_data(expected_design = ...)</code> to
+distinguish missing assigned ratings from cells that were never
+assigned.</p>
+<p>Eckes’s discussion of rating designs distinguishes distributed
+overlap, a single common examinee, disconnected groups and task-nested
+spiral assignments (2023 edition, Section 9.1, Table 9.1, pp. 151–155).
+The rotating generator here uses the selected raters on all generated
+criteria. Use an explicit <code>design_skeleton</code> for task-specific
+assignments; do not equate ordinary rotation with every spiral design.
+Check model identification as well as graph connections, especially when
+raters are nested within tasks.</p>
+<p>Connectedness means paths exist, not that those paths carry enough
+information. Review reliance on a small linking set, its composition,
+and sensitivity to loss of a linking person or rater. The ability to
+generate a sparse design is not a guarantee that a particular estimator
+or its intervals work well for it.</p>
+</div>
+<div class="section level2">
+<h2 id="fit-and-diagnose-the-observed-ratings">Fit and diagnose the observed ratings<a class="anchor" aria-label="anchor" href="#fit-and-diagnose-the-observed-ratings"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bias_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span>
@@ -124,7 +194,7 @@ shorter help-page map, see
 </h2>
 <p>Use <code><a href="../reference/subset_connectivity_report.html">subset_connectivity_report()</a></code> before interpreting
 subgroup or cross-form contrasts.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_connectivity_report.html">subset_connectivity_report</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sc</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Subset"</span>, <span class="st">"Observations"</span>, <span class="st">"ObservationPercent"</span><span class="op">)</span><span class="op">]</span></span>
@@ -148,7 +218,7 @@ scale.</li>
 <p><code><a href="../reference/make_anchor_table.html">make_anchor_table()</a></code> mechanically exports fitted values
 in the direct-anchor schema. Its output is a candidate table, not a
 validated anchor set.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">anchors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_anchor_table.html">make_anchor_table</a></span><span class="op">(</span><span class="va">fit</span>, facets <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">anchors</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 3</span></span></span>
@@ -220,7 +290,7 @@ intervals or positive/negative classifications. For compatibility, its
 former SE and test columns contain <code>NA</code>. Recompute older
 residual results with <code><a href="../reference/analyze_dff.html">analyze_dff()</a></code> using the existing fit
 and original data; no model refit is needed.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dff_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_dff.html">analyze_dff</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  <span class="va">diag</span>,</span>
@@ -279,7 +349,7 @@ constraints because those structures cannot yet be replayed and linked
 completely within subgroups. The default GPCM-MML identification
 intercept is handled separately. Residual DFF remains a screening
 alternative; see <code><a href="../reference/analyze_dff.html">?analyze_dff</a></code> for the exact scope.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dff_refit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_dff.html">analyze_dff</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  <span class="va">diag</span>,</span>
@@ -312,7 +382,7 @@ alternative; see <code><a href="../reference/analyze_dff.html">?analyze_dff</a><
 </h2>
 <p>If the level-wise screen points to a specific facet, follow up with
 the interaction table and narrative report.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dif_interaction_table.html">dif_interaction_table</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
 <span>  <span class="va">diag</span>,</span>
@@ -346,7 +416,7 @@ the interaction table and narrative report.</p>
 the additive model. When the interaction hypothesis is specified in
 advance, use <code>facet_interactions</code> to estimate the named
 two-way non-person facet interaction in the model likelihood.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
 <span>  <span class="va">bias_df</span>,</span>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
@@ -393,7 +463,7 @@ levels have documented cross-wave identity and unchanged meaning.</p>
 <code>ej2021_study2</code> here. They are independent legacy synthetic
 studies; reused raw labels do not identify common persons, raters, or
 anchors and do not link their scales.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">declared_common_facets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Criterion"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>

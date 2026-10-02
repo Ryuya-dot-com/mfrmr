@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute diagnostics for an <code>mfrm_fit</code> object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>diagnose_mfrm.Rd</code></div>
     </div>
 
@@ -133,7 +133,15 @@ reporting fits because it enables <code><a href="plot_marginal_fit.html">plot_ma
     <p>An object of class <code>mfrm_diagnostics</code> including:</p><ul><li><p><code>obs</code>: observed/expected/residual-level table</p></li>
 <li><p><code>measures</code>: facet/person fit table (<code>Infit</code>, <code>Outfit</code>, <code>ZSTD</code>,
 <code>PTMEA</code>, <code>ModelSE</code>, <code>RealSE</code>, <code>CI_Lower</code>, <code>CI_Upper</code>, <code>CI_Level</code>,
-<code>CI_Method</code>)</p></li>
+<code>CI_Method</code>). <code>Fixed = TRUE</code> identifies location values fixed by anchors
+or identification constraints. Their sampling SEs and normal intervals
+are <code>NA</code> (not estimated, not a numerical failure). Free levels retain
+their estimator-specific SEs. Aggregate reliability/separation and facet
+variability tests are unavailable for facets containing fixed values;
+response-fit diagnostics remain available. This convention differs from
+<code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code>, which represents a fixed target's conditional
+covariance as zero, also without an interval. Neither route propagates
+uncertainty in supplied anchor values.</p></li>
 <li><p><code>overall_fit</code>: overall fit summary</p></li>
 <li><p><code>fit</code>: element-level fit diagnostics</p></li>
 <li><p><code>reliability</code>: facet-level model/real separation and reliability</p></li>

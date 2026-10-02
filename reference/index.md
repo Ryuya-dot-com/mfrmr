@@ -122,6 +122,18 @@ facet estimates and contrasts.
 - [`plot(`*`<mfrm_facet_intervals>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_facet_intervals.md)
   : Plot fixed-facet interval methods
 
+## Response probabilities and residuals
+
+Describe observed ratings using each supported model’s probability
+definition, without automatic fit cutoffs.
+
+- [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  [`summary(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  [`print(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+  : Describe fitted response probabilities and residuals
+- [`plot(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_diagnostics.md)
+  : Plot descriptive response residual summaries
+
 ## Shared random raters
 
 Estimate a rater population and distinguish observed-rater feedback from
@@ -142,13 +154,6 @@ replacement-rater probabilities.
   : Estimate abilities for people already included in a fitted RSM
 - [`mfrmr_model_maps`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_model_maps.md)
   : Wright and Pathway maps for extended RSMs
-- [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
-  [`summary(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
-  [`print(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
-  : Describe posterior predictive residuals for ordinary and extended
-  RSMs
-- [`plot(`*`<mfrm_response_diagnostics>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_diagnostics.md)
-  : Plot descriptive posterior predictive residual summaries
 - [`plot(`*`<mfrm_random_rater_scores>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_random_rater_scores.md)
   : Plot Person scores from a shared-rater model
 - [`confint(`*`<mfrm_random_rater>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_random_rater.md)
@@ -763,7 +768,7 @@ and compatibility helpers.
   : Compare prespecified multivariate D-study plans
 
 - [`plot(`*`<mfrm_multivariate_d_comparison>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_multivariate_d_comparison.md)
-  : Plot differences between prespecified D-study plans
+  : Plot prespecified D-study plans and their differences
 
 - [`plot(`*`<apa_table>`*`)`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.apa_table.md)
   : Plot an APA/FACETS table object using base R

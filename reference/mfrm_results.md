@@ -51,7 +51,9 @@ mfrm_results(
   `"all"`. Section names include `"fit"`, `"diagnostics"`, `"tables"`,
   `"precision"`, `"reporting"`, `"categories"`, `"plots"`,
   `"facets_fit"`, `"bias"`, `"misfit"`, `"linking"`, `"network"`, and
-  `"apa"`.
+  `"apa"`. When omitted, `NULL` or empty for a two-family GPCM fit, this
+  selects `c("fit", "plots")`. Explicit presets and sections remain
+  scope-checked.
 
 - response_time:
 
@@ -96,7 +98,9 @@ mfrm_results(
   behavior; `"never"` collects only sections that can be built without
   computing diagnostics and marks every requested dependent section as
   `"not_computed"`. Matching supplied or stored diagnostics are still
-  reused under `"never"`.
+  reused under `"never"`. For two-family GPCM fits, both settings
+  collect saved results without fitting, integration or diagnostic
+  calculation; ordinary diagnostics remain `"not_available"`.
 
 - predictions:
 
@@ -113,9 +117,11 @@ mfrm_results(
   [`mfrm_random_rater_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_random_rater_intervals.md)
   result from the exact supplied random-rater fit. For a native GPCM
   fit, accepts saved slope intervals, curve intervals, a GPCM bootstrap
-  result, or a named list of these. All must match the exact fitted
-  data, parameters, population and integration settings. For native
-  RSM/PCM fits, accepts a saved
+  result, or a named list of these. Two-family GPCM also accepts
+  [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+  for locations and within-facet contrasts. All must match the exact
+  fitted data, parameters, population and integration settings. For
+  native RSM/PCM fits, accepts a saved
   [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
   result or a named list of them. No bootstrap or interval calculation
   is run by this function.
@@ -126,7 +132,11 @@ mfrm_results(
   [`score_mfrm_persons()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_persons.md)
   result for an extension, or
   [`score_mfrm_random_rater()`](https://ryuya-dot-com.github.io/mfrmr/reference/score_mfrm_random_rater.md)
-  output, with matching source calibration. For testlets this is an
+  output, with matching source calibration. Two-family GPCM also accepts
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+  output or a format-6
+  [`score_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+  result with matching saved source identity. For testlets this is an
   alias for `predictions`; supply it once. Shared raters can also attach
   response `predictions` and rater `intervals`. No Person scoring is run
   here. Complete source-roster identity is required for the additional
@@ -151,10 +161,20 @@ mfrm_results(
   [`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
   output matching the fit's calibration and exact source roster. It is
   identity-checked and reused without integration. Ordinary RSM MML and
-  testlet/shared-rater fits support these descriptive summaries, without
-  reference cutoffs. Use `compute = "never"` to also avoid computing
-  ordinary plug-in diagnostics. Saved posterior summaries appear in
-  `response_*` tables and `plot(..., type = "response_diagnostics")`.
+  testlet/shared-rater fits and two-family GPCM MML support these
+  posterior summaries; corrected JML instead supplies conditional
+  plug-in summaries. None has reference cutoffs. Two-family results
+  default to `include = c("fit", "plots")` and only collect saved
+  quantities. Use `compute = "never"` to also avoid computing ordinary
+  plug-in diagnostics. Saved posterior summaries appear in `response_*`
+  tables and `plot(..., type = "response_diagnostics")`.
+  `tables$response_overview` counts selected, available, unresolved,
+  missing-score, zero-variance and unselected rows; partial output
+  requires review. Older saved results without this table recover the
+  overview and matching status from their retained diagnostic rows
+  during summary, reporting, export or supported viewing, without
+  re-estimation. The original object is unchanged; newly exported
+  results include the recovered metadata.
 
 - calibration_intervals:
 
@@ -184,7 +204,7 @@ Depending on `output`, an `mfrm_results` object, a
 `mfrm_results()` is a high-level result object. It does not introduce a
 new estimator or a new validity rule. It fits only when `fit` is a data
 frame, computes diagnostics automatically when needed, and collects
-output from existing helpers such as
+output from functions such as
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md),
 [`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md),
 [`precision_review_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/precision_review_report.md),
@@ -383,6 +403,85 @@ refitting or changing the selected intervals. These are pointwise
 fixed-facet intervals, not simultaneous rater decisions or uncertainty
 for replacement raters. Ordinary map and fit displays keep their own
 meanings and are not recalculated with the attached covariance.
+
+## Corrected JML results
+
+For an explicit correction fitted by
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
+this helper collects saved estimates, numerical status and the RootSE
+interpretation without computing ordinary diagnostics. Unavailable
+requested sections are labelled in `status`.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) offers
+`"slopes"`, `"locations"` and `"steps"`, with point or
+cumulative-distribution displays and
+[`as_ggplot()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_ggplot.md)
+conversion.
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+and
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+retain the estimator, correction order, unavailable inference and
+covariance-failure reasons. Saved replay reloads the result without
+refitting. Attach saved
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+output through `response_diagnostics` to include conditional
+probabilities, expected scores and descriptive Infit/Outfit. The source
+and probability definition are checked; collection never recomputes
+probabilities. Use `plot(res, type = "response_diagnostics")` for paired
+or scatter views, retaining available Infit when Outfit is undefined.
+Ordinary diagnostic, comparison, prediction and interval attachments and
+individual rater sheets are unavailable; a numerical solution is not a
+rater-quality judgment.
+
+## Provisional two-family results
+
+For a two-slope-family GPCM fit, `mfrm_results(fit)` collects its saved
+estimates and numerical status, with `include = c("fit", "plots")` when
+omitted. Neither `compute` setting fits, integrates or calculates
+diagnostics. The `gpcm_fitted_slopes`, `gpcm_fitted_locations` and
+`gpcm_fitted_steps` tables retain all saved non-Person estimates when
+`"fit"` is included. Locations retain their centering reference; steps
+identify their owner and level and are centered offsets within that
+level. Separately computed experimental
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+results may be attached through `intervals = list(locations = ci)`; step
+intervals remain unavailable. Reports and CSV exports retain these
+values; the report shows at most 20 rows of each table with an explicit
+notice. Explicit unsupported sections or attachments are rejected.
+Attach saved
+[`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
+results through `intervals`; these contain provisional fitted values
+without intervals. Summary, tables, named curve plots, reports and saved
+exports retain that limitation. Separately requested `confint(fit)`
+results can be attached as
+`intervals = list(slopes = ci, curves = curves)`. Their experimental
+component-slope approximation, owner identities, numerical checks and
+unavailable outcomes follow the saved tables, plots and report. If
+exactly one saved curve, slope/location-interval or response-diagnostic
+plot is available, `plot(res)` displays it. With multiple saved plots,
+select `type` from `summary(res)$plot_map`; no new curves or diagnostics
+are calculated. Replay code saves and reloads the complete result,
+including the fit's owner identities, estimation settings and unresolved
+numerical status. Attach saved conditional new-Person output as
+`scores = scores`, from
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+or the format-6 portable calibration workflow. The source identity must
+match this fit's calibration, data, category/owner coding, integration
+settings and recorded status. Collection does not repeat source checks
+or scoring. Older scores without the identity still support their
+standalone methods; regenerate them before attachment (also re-extract
+an older portable calibration), without re-estimating the fit.
+`person_scores` and `scoring_*` tables retain unrounded estimates,
+conditional interval meanings, source/batch checks, omissions and review
+labels in reports, CSV exports and saved replay. Native scoring records
+omitted row counts but does not enumerate a not-scored Person roster;
+portable scoring retains it. This attachment adds tables and reports; it
+does not add a score plot route. The intervals exclude calibration
+uncertainty; coverage and population transport remain unqualified.
+[`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+provides the separately checked portable route without retaining
+training responses. Ordinary diagnostics, Wright/Pathway maps and model
+comparison are unavailable. The starter export uses the available saved
+curves instead of requesting an unsupported Wright map.
 
 ## Saved GPCM inference
 

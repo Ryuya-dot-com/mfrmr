@@ -49,8 +49,8 @@ mfrm_report(
   validity-argument boundary, `"reviewer"` emphasizes reviewer response
   preparation, and `"technical"` emphasizes appendix/reproducibility
   routes. `"rater"` creates a standalone individual feedback sheet from
-  saved native additive RSM/PCM results; it requires `facet` and
-  `rater`.
+  saved native additive RSM/PCM or two-family GPCM MML results; it
+  requires `facet` and `rater`.
 
 - output:
 
@@ -90,11 +90,12 @@ mfrm_report(
 - interval:
 
   Optional name of a saved fixed-facet interval attachment in
-  `x$facet_intervals` for a rater sheet. The attachment must contain the
-  selected individual coefficient, not just a difference involving it. A
-  single matching attachment is used automatically. Multiple matching
-  attachments require an explicit choice. No interval is calculated
-  here.
+  `x$facet_intervals` for an additive-model rater sheet, or a saved
+  component slope interval in `x$gpcm_inference` for two-family GPCM.
+  The attachment must contain the selected individual coefficient, not
+  just a difference involving it. A single matching attachment is used
+  automatically. Multiple matching attachments require an explicit
+  choice. No interval is calculated here.
 
 ## Value
 
@@ -129,9 +130,13 @@ The intended workflow is:
 Report rows deliberately distinguish evidence from claims. The testlet
 and random-rater route is a smaller stored-result report: all supported
 styles (excluding `"rater"`) retain numerical checks, data usage,
-interval meanings and supplied predictions/intervals. It does not supply
-ordinary residual diagnostics or fit/APA wording templates;
-`template_index` is empty. See the model-specific section in
+interval meanings and supplied predictions/intervals. When saved scores
+include a scoring roster, the `scoring_roster` table preserves its rows,
+identifiers and omitted scores; testlet `scoring_blocks` separately
+summarizes observed blocks. Older results without a roster do not
+reconstruct one from calibration rows. It does not supply ordinary
+residual diagnostics or fit/APA wording templates; `template_index` is
+empty. See the model-specific section in
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
 for supported tables and plots.
 
@@ -192,6 +197,34 @@ into a single pass/fail statement; bias screens are not treated as final
 fairness conclusions; pathway/misfit rows are case-review prompts; and
 drift/equating claims require multiple fitted forms or waves.
 
+## Two-family GPCM reports
+
+Reports retain all saved non-Person fitted locations, category steps and
+component slopes. Locations identify their centering constraint; steps
+identify their owner and level and are centered offsets, not standalone
+thresholds. Separately computed experimental location/contrast intervals
+from
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+may be attached; step intervals remain unavailable. The Markdown view
+shows up to 20 rows per table with a notice; complete tables remain in
+`$tables` and CSV exports. Report styles do not change inferential
+support.
+
+## Corrected JML reports
+
+Results from an explicit `jml_correction_order` have an
+estimator-specific report of saved estimates, numerical status and
+RootSE interpretation. The report does not contain ordinary fit tests or
+structural confidence intervals. The `"rater"` style is unavailable for
+this estimator. Saved
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+output adds conditional response means, probabilities and descriptive
+residual summaries, with unavailable indices and their reasons retained.
+These do not classify rater quality. See
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+and the **Corrected JML** section of
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+
 ## Individual rater sheets
 
 Use
@@ -210,16 +243,16 @@ file retains fitted data and identifiers for the analyst; it is not the
 recipient's sheet. Reloading and reporting reuse the saved analysis
 without updating it for new ratings.
 
-The sheet includes scoring tendency (severity), exposure, available
-saved fixed-facet uncertainty, ordinary Infit/Outfit, category use and
-selected unexpected ratings. Severity is oriented so that positive
-values mean lower expected scores. Its zero is the fitted model
-reference, not necessarily the average of the other raters; custom
-centering and anchors matter. Model scores and expected scores stay on
-the fitted category coding. The category table also shows the original
-numeric scores when a mapping exists. Exposure and category percentages
-count retained rows without weights; weight sums are reported
-separately. Neither is planned-design completion.
+The additive RSM/PCM sheet includes scoring tendency (severity),
+exposure, available saved fixed-facet uncertainty, ordinary
+Infit/Outfit, category use and selected unexpected ratings. Severity is
+oriented so that positive values mean lower expected scores. Its zero is
+the fitted model reference, not necessarily the average of the other
+raters; custom centering and anchors matter. Model scores and expected
+scores stay on the fitted category coding. The category table also shows
+the original numeric scores when a mapping exists. Exposure and category
+percentages count retained rows without weights; weight sums are
+reported separately. Neither is planned-design completion.
 
 Supply matching
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
@@ -235,9 +268,39 @@ cautions are not copied into the recipient's sheet. Missing sections
 explain the missing input. Ineligible source fits retain a prominent
 review notice. Severity is not rater quality, and no automatic misfit
 cutoff, exclusion decision or diagnostic accuracy claim is added. These
-sheets do not support GPCM, fitted interactions, imported fits, testlet
-or shared-random-rater models; use their specific results and reports
-because their effects and diagnostics differ.
+sheets do not support one-family GPCM, fitted interactions, imported
+fits, testlet or shared-random-rater models; use their specific results
+and reports because their effects and diagnostics differ.
+
+For two-family GPCM MML, the same entry creates an experimental
+descriptive sheet. Select the modeled rater facet explicitly; either
+slope owner is supported. It separates the fitted location from the
+component slope, retains their distinct centering references, and
+reports category use, retained exposure and how many levels of the other
+facet were observed. Category-step offsets are shown only when this
+facet owns the steps. They are centered offsets, not standalone
+thresholds. This individual sheet does not display location or step
+intervals; use the analyst report for separately requested location
+intervals. A larger slope is not evidence of competence or accuracy.
+
+Attach saved
+[`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md)
+output through `intervals` in
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+to include a matching experimental component-slope interval. `interval`
+chooses among named attachments; pointwise/Bonferroni meaning,
+profile/log-Wald method and unavailable bounds are retained. No location
+interval or test of rater differences is implied. Attach saved
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+output through `response_diagnostics` for same-data posterior residual
+summaries and cases. The sheet counts saved, available, unresolved and
+not-included rows separately; a summary average is unavailable if any
+saved row for that recipient is unresolved. These residuals have no
+expectation-one reference or calibrated cutoff, exclude calibration
+uncertainty and do not predict independent future ratings. Creating or
+reopening a sheet does not fit, integrate, compute intervals or diagnose
+new responses. Inspect the complete analyst results before sharing a
+sheet; numerical convergence does not qualify feedback decisions.
 
 All four output formats use only selected numeric summaries and fixed
 explanatory text. They omit the source fit, Person identifiers, other
@@ -396,7 +459,7 @@ recipient <- as.character(fit$prep$levels$Rater[1])
 sheet <- mfrm_report(res, style = "rater", facet = "Rater",
                      rater = recipient, output = "html", max_cases = 0)
 sheet$path
-#> [1] "/tmp/RtmpkdbPhC/mfrmr_rater_1ade7ea0ec8d.html"
+#> [1] "/tmp/Rtmp0zMWEq/mfrmr_rater_1b707337b918.html"
 # Review in a browser, then choose a permanent path for continuing work.
 recipient_file <- tempfile(fileext = ".html")
 stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))

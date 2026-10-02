@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Sample approximate plausible values under fitted posterior scoring</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>sample_mfrm_plausible_values.Rd</code></div>
     </div>
 
@@ -70,7 +70,8 @@
 <span>  interval_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  scoring_quad_points <span class="op">=</span> <span class="fl">31L</span>,</span>
 <span>  readiness_policy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"review"</span><span class="op">)</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scoring_prior <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,7 +119,9 @@ can reconstruct the minimal scored-person table internally. This is the
 scoring-time table for <code>new_data</code>, not the fit object's replay/export
 provenance table. For categorical background variables, supply values on
 the same coding scale used at fit time; the fitted factor levels and
-contrasts are reused when building the scoring design matrix.</p></dd>
+contrasts are reused when building the scoring design matrix.
+Fitted standardization and polynomial/spline bases are also reused;
+they are not re-estimated from the scoring cohort.</p></dd>
 
 
 <dt id="arg-person-id">person_id<a class="anchor" aria-label="anchor" href="#arg-person-id"></a></dt>
@@ -152,12 +155,19 @@ from <code>fit</code>.</p></dd>
 
 <dt id="arg-readiness-policy">readiness_policy<a class="anchor" aria-label="anchor" href="#arg-readiness-policy"></a></dt>
 <dd><p>Source-fit readiness policy passed to
-<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>. Estimated-population fits currently require
-<code>"review"</code>; the returned notes and eligibility labels retain that restriction.</p></dd>
+<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>. Conditional calibration and scoring-integration
+checks are shared with that function and retained in the returned settings.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional seed for reproducible posterior draws.</p></dd>
+
+
+<dt id="arg-scoring-prior">scoring_prior<a class="anchor" aria-label="anchor" href="#arg-scoring-prior"></a></dt>
+<dd><p>Optional normal scoring prior, <code>list(mean = ..., sd = ...)</code>,
+passed to <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>. <code>NULL</code> retains the fitted scoring prior.
+Estimates and draws retain both the original and the supplied prior;
+checks of the fitted calibration and numerical accuracy are unchanged.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -175,13 +185,14 @@ latent-regression scoring; <code>NULL</code> otherwise</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code>sample_mfrm_plausible_values()</code> is a thin public wrapper around
-<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> that exposes the fitted-object posterior draws as
+    <p><code>sample_mfrm_plausible_values()</code> uses <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> to return
+draws from each Person's posterior distribution as
 a standalone object. It is useful when downstream workflows want repeated
 latent-value imputations rather than just one posterior EAP summary.</p>
 <p>In the current <code>mfrmr</code> implementation these are <strong>approximate plausible
 values</strong> drawn from the fitted quadrature-grid posterior under the scoring
-basis implied by <code>fit</code>. For ordinary <code>MML</code> fits this is the fitted marginal
+basis implied by <code>fit</code>, unless <code>scoring_prior</code> explicitly supplies another
+normal prior. With the default prior, for ordinary <code>MML</code> fits this is the fitted marginal
 calibration; for latent-regression <code>MML</code> fits it is the fitted conditional
 normal population model for the scored persons; for <code>JML</code> fits it is the
 fixed facet/step calibration together with a standard normal reference prior
@@ -264,14 +275,16 @@ variables from complex samples</em>. Psychometrika, 56(2), 177-196.</p></li>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pv</span> <span class="op">&lt;-</span> <span class="fu">sample_mfrm_plausible_values</span><span class="op">(</span><span class="va">toy_fit</span>, <span class="va">new_units</span>, n_draws <span class="op">=</span> <span class="fl">3</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pv</span><span class="op">)</span><span class="op">$</span><span class="va">draw_summary</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 18</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 23</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Person Draws MeanValue SDValue LowerValue UpperValue IntervalLevel</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> NEW01      3    -<span style="color: #BB0000;">0.373</span>   0.323      -<span style="color: #BB0000;">0.56</span>          0          0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 11 more variables: DrawSummaryBasis &lt;chr&gt;, CalibrationMethod &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Prior &lt;chr&gt;, PriorMean &lt;dbl&gt;, PriorSD &lt;dbl&gt;, WeightedLikelihood &lt;lgl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   UncertaintyBasis &lt;chr&gt;, ScoringAlgorithm &lt;chr&gt;, SourceScoringReady &lt;lgl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   EstimateUse &lt;chr&gt;, DrawBasis &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 16 more variables: DrawSummaryBasis &lt;chr&gt;, CalibrationMethod &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Prior &lt;chr&gt;, PriorMean &lt;dbl&gt;, PriorSD &lt;dbl&gt;, PriorSource &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   RetainedPrior &lt;chr&gt;, RetainedPriorMean &lt;dbl&gt;, RetainedPriorSD &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   WeightedLikelihood &lt;lgl&gt;, UncertaintyBasis &lt;chr&gt;, ScoringAlgorithm &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   SourceScoringReady &lt;lgl&gt;, ScoreIntegrationReady &lt;lgl&gt;, EstimateUse &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DrawBasis &lt;chr&gt;</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

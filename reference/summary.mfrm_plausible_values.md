@@ -80,8 +80,8 @@ summary(pv)
 #>   calculation method for interval reporting.
 #> 
 #> Posterior estimates (first 10)
-#>  Person Estimate    SD  Lower Upper Observations                         Review
-#>   NEW01   -0.112 0.683 -1.448 1.235            2 No source restriction recorded
+#>  Person Estimate    SD  Lower Upper Observations                       Review
+#>   NEW01   -0.112 0.683 -1.448 1.235            2 Source scoring checks passed
 #> 
 #> Response rows
 #>  InputRows KeptRows DroppedRows DroppedMissing DroppedBadScore DroppedBadWeight
@@ -99,4 +99,7 @@ summary(pv)
 #>   fitted person estimates are not updated.
 #>   The `draws` component contains quadrature-grid posterior draws that can be
 #>   used as approximate plausible-value summaries.
+#>   Scoring integration compares the reported EAP and SD with adaptive reference
+#>   orders under the same calibration and prior. Passing does not validate the
+#>   scoring prior for another population.
 ```

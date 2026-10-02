@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build comprehensive first-screen MFRM results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>mfrm_results.Rd</code></div>
     </div>
 
@@ -99,7 +99,8 @@ presets are <code>"standard"</code>, <code>"publication"</code>, <code>"validati
 Section names include <code>"fit"</code>, <code>"diagnostics"</code>, <code>"tables"</code>,
 <code>"precision"</code>, <code>"reporting"</code>, <code>"categories"</code>, <code>"plots"</code>,
 <code>"facets_fit"</code>, <code>"bias"</code>, <code>"misfit"</code>, <code>"linking"</code>, <code>"network"</code>,
-and <code>"apa"</code>.</p></dd>
+and <code>"apa"</code>. When omitted, <code>NULL</code> or empty for a two-family GPCM fit, this selects
+<code>c("fit", "plots")</code>. Explicit presets and sections remain scope-checked.</p></dd>
 
 
 <dt id="arg-response-time">response_time<a class="anchor" aria-label="anchor" href="#arg-response-time"></a></dt>
@@ -143,7 +144,9 @@ available data frames, or <code>"html"</code> for a temporary HTML report.</p></
 standard behavior; <code>"never"</code> collects only sections that can be built
 without computing diagnostics and marks every requested dependent section
 as <code>"not_computed"</code>. Matching supplied or stored diagnostics are still
-reused under <code>"never"</code>.</p></dd>
+reused under <code>"never"</code>. For two-family GPCM fits, both settings collect
+saved results without fitting, integration or diagnostic calculation;
+ordinary diagnostics remain <code>"not_available"</code>.</p></dd>
 
 
 <dt id="arg-predictions">predictions<a class="anchor" aria-label="anchor" href="#arg-predictions"></a></dt>
@@ -158,7 +161,8 @@ before attachment; the fit itself does not need to be re-estimated.</p></dd>
 <dd><p>Optional saved <code><a href="mfrm_random_rater_intervals.html">mfrm_random_rater_intervals()</a></code> result from
 the exact supplied random-rater fit. For a native GPCM fit, accepts saved
 slope intervals, curve intervals, a GPCM bootstrap result, or a named list
-of these. All must match the exact fitted data, parameters, population and
+of these. Two-family GPCM also accepts <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> for locations
+and within-facet contrasts. All must match the exact fitted data, parameters, population and
 integration settings. For native RSM/PCM fits, accepts a saved
 <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> result or a named list of them. No bootstrap
 or interval calculation is run by this function.</p></dd>
@@ -167,6 +171,8 @@ or interval calculation is run by this function.</p></dd>
 <dt id="arg-scores">scores<a class="anchor" aria-label="anchor" href="#arg-scores"></a></dt>
 <dd><p>Optional saved <code><a href="score_mfrm_persons.html">score_mfrm_persons()</a></code> result for an extension,
 or <code><a href="score_mfrm_random_rater.html">score_mfrm_random_rater()</a></code> output, with matching source calibration.
+Two-family GPCM also accepts <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> output or a format-6
+<code><a href="mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code> result with matching saved source identity.
 For testlets this is an alias for <code>predictions</code>; supply it once. Shared
 raters can also attach response <code>predictions</code> and rater <code>intervals</code>.
 No Person scoring is run here. Complete source-roster identity is required
@@ -187,10 +193,19 @@ retain aligned predictive quantities; select <code>metric</code> for other indic
 <dd><p>Optional saved <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code>
 output matching the fit's calibration and exact source roster. It is
 identity-checked and reused without integration. Ordinary RSM MML and
-testlet/shared-rater fits support these descriptive summaries, without
-reference cutoffs. Use <code>compute = "never"</code> to also avoid computing ordinary
+testlet/shared-rater fits and two-family GPCM MML support these
+posterior summaries; corrected JML instead supplies conditional plug-in
+summaries. None has reference cutoffs. Two-family results default to
+<code>include = c("fit", "plots")</code> and only collect saved quantities.
+Use <code>compute = "never"</code> to also avoid computing ordinary
 plug-in diagnostics. Saved posterior summaries appear in
-<code>response_*</code> tables and <code>plot(..., type = "response_diagnostics")</code>.</p></dd>
+<code>response_*</code> tables and <code>plot(..., type = "response_diagnostics")</code>.
+<code>tables$response_overview</code> counts selected, available, unresolved,
+missing-score, zero-variance and unselected rows; partial output requires
+review. Older saved results without this table recover the overview and
+matching status from their retained diagnostic rows during summary, reporting,
+export or supported viewing, without re-estimation. The original object is
+unchanged; newly exported results include the recovered metadata.</p></dd>
 
 
 <dt id="arg-calibration-intervals">calibration_intervals<a class="anchor" aria-label="anchor" href="#arg-calibration-intervals"></a></dt>
@@ -220,7 +235,7 @@ unavailable for ordinary MFRM fits.</p></dd>
     <p><code>mfrm_results()</code> is a high-level result object. It does not introduce a new
 estimator or a new validity rule. It fits only when <code>fit</code> is a data frame,
 computes diagnostics automatically when needed, and collects output from
-existing helpers such as <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>,
+functions such as <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>,
 <code><a href="fit_measures_table.html">fit_measures_table()</a></code>, <code><a href="precision_review_report.html">precision_review_report()</a></code>, and
 <code><a href="reporting_checklist.html">reporting_checklist()</a></code>. Sections that are unsupported for a particular fit
 are retained in the <code>status</code> table as <code>not_available</code> rather than stopping
@@ -381,6 +396,73 @@ reloads saved results without refitting or changing the selected intervals.
 These are pointwise fixed-facet intervals, not simultaneous rater decisions
 or uncertainty for replacement raters. Ordinary map and fit displays keep
 their own meanings and are not recalculated with the attached covariance.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="corrected-jml-results">Corrected JML results<a class="anchor" aria-label="anchor" href="#corrected-jml-results"></a></h2>
+
+
+<p>For an explicit correction fitted by <code><a href="fit_mfrm.html">fit_mfrm()</a></code>, this helper collects
+saved estimates, numerical status and the RootSE interpretation without
+computing ordinary diagnostics. Unavailable requested sections are labelled
+in <code>status</code>. <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> offers <code>"slopes"</code>, <code>"locations"</code> and <code>"steps"</code>, with
+point or cumulative-distribution displays and <code><a href="as_ggplot.html">as_ggplot()</a></code> conversion.
+<code><a href="mfrm_report.html">mfrm_report()</a></code> and <code><a href="export_mfrm_results.html">export_mfrm_results()</a></code> retain the estimator, correction
+order, unavailable inference and covariance-failure reasons. Saved replay
+reloads the result without refitting. Attach saved <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code>
+output through <code>response_diagnostics</code> to include conditional probabilities,
+expected scores and descriptive Infit/Outfit. The source and probability
+definition are checked; collection never recomputes probabilities. Use
+<code>plot(res, type = "response_diagnostics")</code> for paired or scatter views,
+retaining available Infit when Outfit is undefined. Ordinary diagnostic, comparison,
+prediction and interval attachments and individual rater sheets are
+unavailable; a numerical solution is not a rater-quality judgment.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="provisional-two-family-results">Provisional two-family results<a class="anchor" aria-label="anchor" href="#provisional-two-family-results"></a></h2>
+
+
+<p>For a two-slope-family GPCM fit, <code>mfrm_results(fit)</code> collects its saved
+estimates and numerical status, with <code>include = c("fit", "plots")</code> when
+omitted. Neither <code>compute</code> setting fits, integrates or calculates diagnostics.
+The <code>gpcm_fitted_slopes</code>, <code>gpcm_fitted_locations</code> and <code>gpcm_fitted_steps</code>
+tables retain all saved non-Person estimates when <code>"fit"</code> is included.
+Locations retain their centering reference; steps identify their owner and
+level and are centered offsets within that level. Separately computed
+experimental <code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> results may be attached through
+<code>intervals = list(locations = ci)</code>; step intervals remain unavailable.
+Reports and CSV exports retain these values;
+the report shows at most 20 rows of each table with an explicit notice.
+Explicit unsupported sections or attachments are rejected. Attach saved
+<code><a href="mfrm_curve_intervals.html">mfrm_curve_intervals()</a></code> results through
+<code>intervals</code>; these contain provisional fitted values without intervals.
+Summary, tables, named curve plots, reports and saved exports retain that
+limitation. Separately requested <code>confint(fit)</code> results can be attached as
+<code>intervals = list(slopes = ci, curves = curves)</code>. Their experimental
+component-slope approximation, owner identities, numerical checks and
+unavailable outcomes follow the saved tables, plots and report.
+If exactly one saved curve, slope/location-interval or response-diagnostic plot is
+available, <code>plot(res)</code> displays it. With multiple saved plots, select <code>type</code>
+from <code>summary(res)$plot_map</code>; no new curves or diagnostics are calculated.
+Replay code saves and reloads the complete result, including the fit's
+owner identities, estimation settings and unresolved numerical status.
+Attach saved conditional new-Person output as <code>scores = scores</code>, from
+<code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> or the format-6 portable calibration workflow.
+The source identity must match this fit's calibration, data, category/owner
+coding, integration settings and recorded status. Collection does not repeat
+source checks or scoring. Older scores without the identity still support
+their standalone methods; regenerate them before attachment (also re-extract
+an older portable calibration), without re-estimating the fit.
+<code>person_scores</code> and <code>scoring_*</code> tables retain unrounded estimates, conditional
+interval meanings, source/batch checks, omissions and review labels in reports,
+CSV exports and saved replay. Native scoring records omitted row counts but
+does not enumerate a not-scored Person roster; portable scoring retains it.
+This attachment adds tables and reports; it does not add a score plot route.
+The intervals exclude calibration uncertainty; coverage and population
+transport remain unqualified. <code><a href="mfrm_calibration_workflow.html">extract_mfrm_calibration()</a></code> provides the
+separately checked portable route without retaining training responses.
+Ordinary diagnostics, Wright/Pathway maps and model comparison are unavailable.
+The starter export uses the available saved curves instead of requesting
+an unsupported Wright map.</p>
     </div>
     <div class="section level2">
     <h2 id="saved-gpcm-inference">Saved GPCM inference<a class="anchor" aria-label="anchor" href="#saved-gpcm-inference"></a></h2>

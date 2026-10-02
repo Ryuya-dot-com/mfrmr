@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize an <code>mfrm_fit</code> object in a user-friendly format</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_fit.Rd</code></div>
     </div>
 
@@ -129,7 +129,10 @@ is <code>FALSE</code> for privacy-safe console output.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>summary.mfrm_fit</code> with:</p><ul><li><p><code>overview</code>: global model/fit indicators</p></li>
+    <p>An object of class <code>summary.mfrm_fit</code> with:</p><ul><li><p><code>overview</code>: global model/fit indicators. For MML, <code>MMLEngineUsed</code> records
+the actual algorithm, <code>IterationsBasis</code> explains what is counted, and
+<code>ConvergenceBasis</code> identifies the numerical stopping rule. Numerical
+convergence does not establish identification or interval eligibility</p></li>
 <li><p><code>status</code>: concise front-door status block for quick review</p></li>
 <li><p><code>decision</code>: plain-language interpretation, formal-inference status,
 reason, and highest-priority next action derived from the stored readiness
@@ -158,7 +161,11 @@ use</p></li>
 <li><p><code>step_overview</code>: threshold/step diagnostics by PCM/GPCM <code>StepFacet</code>
 ladder, or for the common RSM ladder</p></li>
 <li><p><code>slope_overview</code>: parameter-readiness and explicitly labelled optimizer-
-trace summary for <code>GPCM</code> discriminations</p></li>
+trace summary for <code>GPCM</code> discriminations. <code>SlopeOwner</code> identifies the facet
+whose levels carry slopes. <code>Min</code>, <code>Max</code> and <code>GeometricMean</code> summarize
+primary estimates; the <code>Optimizer*</code> fields retain numerical iterates when
+primary estimates are unavailable. The scale reference is an identification
+constraint, not evidence that estimates or intervals are reliable</p></li>
 <li><p><code>inference_evidence</code>: for <code>GPCM</code> MML, a compact separation of optimizer
 stationarity, retained-point local rank, observed-information curvature,
 slope-boundary screening, and the final readiness decision. Supportive
@@ -230,7 +237,12 @@ measures</p></li>
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<ul><li><p><code>overview</code>: convergence plus the versioned information-criterion contract.
+<p>Corrected JML has a separate summary of saved <code>tables</code> and numerical
+<code>attempts</code>, with the correction order and the meaning of RootSE. All profiles
+show the same saved summary and never compute ordinary diagnostics. Use
+<code>include_person = TRUE</code> for conditional Person profiles without Person SEs.
+See the <strong>Corrected JML</strong> section of <code><a href="fit_mfrm.html">fit_mfrm()</a></code>. The entries below describe
+the ordinary, uncorrected fitting routes.</p><ul><li><p><code>overview</code>: convergence plus the versioned information-criterion contract.
 For eligible fixed-facet MML fits, BIC/SABIC use unique Persons, not
 response rows; JML, non-unit observation weights, and legacy objects do
 not enter the common MML ranking panel. <code>ICSelectable</code> additionally

@@ -19,7 +19,8 @@ sample_mfrm_plausible_values(
   interval_level = 0.95,
   scoring_quad_points = 31L,
   readiness_policy = c("error", "review"),
-  seed = NULL
+  seed = NULL,
+  scoring_prior = NULL
 )
 ```
 
@@ -68,7 +69,8 @@ sample_mfrm_plausible_values(
   replay/export provenance table. For categorical background variables,
   supply values on the same coding scale used at fit time; the fitted
   factor levels and contrasts are reused when building the scoring
-  design matrix.
+  design matrix. Fitted standardization and polynomial/spline bases are
+  also reused; they are not re-estimated from the scoring cohort.
 
 - person_id:
 
@@ -105,12 +107,20 @@ sample_mfrm_plausible_values(
 
   Source-fit readiness policy passed to
   [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
-  Estimated-population fits currently require `"review"`; the returned
-  notes and eligibility labels retain that restriction.
+  Conditional calibration and scoring-integration checks are shared with
+  that function and retained in the returned settings.
 
 - seed:
 
   Optional seed for reproducible posterior draws.
+
+- scoring_prior:
+
+  Optional normal scoring prior, `list(mean = ..., sd = ...)`, passed to
+  [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
+  `NULL` retains the fitted scoring prior. Estimates and draws retain
+  both the original and the supplied prior; checks of the fitted
+  calibration and numerical accuracy are unchanged.
 
 ## Value
 
@@ -136,22 +146,24 @@ An object of class `mfrm_plausible_values` with components:
 
 ## Details
 
-`sample_mfrm_plausible_values()` is a thin public wrapper around
+`sample_mfrm_plausible_values()` uses
 [`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
-that exposes the fitted-object posterior draws as a standalone object.
-It is useful when downstream workflows want repeated latent-value
-imputations rather than just one posterior EAP summary.
+to return draws from each Person's posterior distribution as a
+standalone object. It is useful when downstream workflows want repeated
+latent-value imputations rather than just one posterior EAP summary.
 
 In the current `mfrmr` implementation these are **approximate plausible
 values** drawn from the fitted quadrature-grid posterior under the
-scoring basis implied by `fit`. For ordinary `MML` fits this is the
-fitted marginal calibration; for latent-regression `MML` fits it is the
-fitted conditional normal population model for the scored persons; for
-`JML` fits it is the fixed facet/step calibration together with a
-standard normal reference prior on the quadrature grid. They should be
-interpreted as posterior uncertainty summaries for the scored persons,
-not as deterministic future truth values and not as a claim of full
-many-facet plausible-values equivalence with population-model software.
+scoring basis implied by `fit`, unless `scoring_prior` explicitly
+supplies another normal prior. With the default prior, for ordinary
+`MML` fits this is the fitted marginal calibration; for
+latent-regression `MML` fits it is the fitted conditional normal
+population model for the scored persons; for `JML` fits it is the fixed
+facet/step calibration together with a standard normal reference prior
+on the quadrature grid. They should be interpreted as posterior
+uncertainty summaries for the scored persons, not as deterministic
+future truth values and not as a claim of full many-facet
+plausible-values equivalence with population-model software.
 
 In other words, the `JML` path here is a practical scoring approximation
 layered on top of the fitted joint-likelihood calibration, whereas the
@@ -230,12 +242,14 @@ new_units <- data.frame(
 )
 pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 summary(pv)$draw_summary
-#> # A tibble: 1 × 18
+#> # A tibble: 1 × 23
 #>   Person Draws MeanValue SDValue LowerValue UpperValue IntervalLevel
 #>   <chr>  <dbl>     <dbl>   <dbl>      <dbl>      <dbl>         <dbl>
 #> 1 NEW01      3    -0.373   0.323      -0.56          0          0.95
-#> # ℹ 11 more variables: DrawSummaryBasis <chr>, CalibrationMethod <chr>,
-#> #   Prior <chr>, PriorMean <dbl>, PriorSD <dbl>, WeightedLikelihood <lgl>,
-#> #   UncertaintyBasis <chr>, ScoringAlgorithm <chr>, SourceScoringReady <lgl>,
-#> #   EstimateUse <chr>, DrawBasis <chr>
+#> # ℹ 16 more variables: DrawSummaryBasis <chr>, CalibrationMethod <chr>,
+#> #   Prior <chr>, PriorMean <dbl>, PriorSD <dbl>, PriorSource <chr>,
+#> #   RetainedPrior <chr>, RetainedPriorMean <dbl>, RetainedPriorSD <dbl>,
+#> #   WeightedLikelihood <lgl>, UncertaintyBasis <chr>, ScoringAlgorithm <chr>,
+#> #   SourceScoringReady <lgl>, ScoreIntegrationReady <lgl>, EstimateUse <chr>,
+#> #   DrawBasis <chr>
 ```

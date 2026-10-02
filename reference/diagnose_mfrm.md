@@ -85,7 +85,17 @@ An object of class `mfrm_diagnostics` including:
 
 - `measures`: facet/person fit table (`Infit`, `Outfit`, `ZSTD`,
   `PTMEA`, `ModelSE`, `RealSE`, `CI_Lower`, `CI_Upper`, `CI_Level`,
-  `CI_Method`)
+  `CI_Method`). `Fixed = TRUE` identifies location values fixed by
+  anchors or identification constraints. Their sampling SEs and normal
+  intervals are `NA` (not estimated, not a numerical failure). Free
+  levels retain their estimator-specific SEs. Aggregate
+  reliability/separation and facet variability tests are unavailable for
+  facets containing fixed values; response-fit diagnostics remain
+  available. This convention differs from
+  [`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md),
+  which represents a fixed target's conditional covariance as zero, also
+  without an interval. Neither route propagates uncertainty in supplied
+  anchor values.
 
 - `overall_fit`: overall fit summary
 

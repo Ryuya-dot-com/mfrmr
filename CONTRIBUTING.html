@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="logo.png" class="logo" alt=""><h1>Contributing to mfrmr</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/CONTRIBUTING.md" class="external-link"><code>CONTRIBUTING.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/CONTRIBUTING.md" class="external-link"><code>CONTRIBUTING.md</code></a></small>
     </div>
 
 <div id="contributing-to-mfrmr" class="section level1">
@@ -99,7 +99,7 @@
 <li>Choose verification from the changed behavior and its callers. Use focused regressions for bounded fixes and reuse unaffected results. Do not repeat the complete test suite for each small fix, documentation edit, or result record.</li>
 <li>CRAN-time <code>testthat</code> and ordinary push/PR CI run the representative workflow and selected contracts from <code>tests/testthat.R</code>. For broad changes or a batched release review, explicitly enable <code>full_suite</code> when manually running <code>R-CMD-check</code>; only Ubuntu release then uses <code>NOT_CRAN=true</code>. Record the reason and source revision for a full run. Historical full-suite evidence remains tied to its original source and must not be relabelled as a new run.</li>
 <li>Source-tree-only historical and research validation tests are excluded from the package. Run them only for the affected area, with their recorded source version and optional runtime.</li>
-<li>Before release, run an <code>--as-cran</code> check with timing enabled and ensure the ordinary and <code>donttest</code> examples both execute. Treat the summed CRAN-side package workload for ordinary examples, <code>donttest</code> examples, tests, and vignette rebuilding above 600 seconds as a release concern. Retain the sum of all timed top-level check components as diagnostic context, but do not charge dependency, installation, manual, or other check-infrastructure time to this package-controlled threshold. Do not apply the threshold to the deliberately exhaustive <code>NOT_CRAN=true</code> regression job.</li>
+<li>Before release, run an <code>--as-cran</code> check with timing enabled and ensure the ordinary and <code>donttest</code> examples both execute. The current release plan requires the complete check itself to stay below 600 seconds, with a 480-second local target. Include static analysis, examples, tests, vignette rebuilding, manuals and other check overhead; report dependency setup, build and installation separately. Preserve phase timings and actual skips. See <code>inst/validation/internal-roadmap-0.2.4.md</code> for the recorded pretest rejection and the current D3/D4 requirements. Do not apply this ceiling to the deliberately exhaustive <code>NOT_CRAN=true</code> regression job.</li>
 <li>When reusing executed articles with <code>--no-build-vignettes</code>, retain their <code>build/vignette.rds</code> index as well as <code>inst/doc</code>. Verify that its source, output and extracted R filenames match the current packaged articles; copying the HTML alone does not produce a complete vignette distribution.</li>
 </ul></div>
 <div class="section level2">

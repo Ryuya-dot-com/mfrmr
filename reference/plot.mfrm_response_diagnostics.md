@@ -1,4 +1,4 @@
-# Plot descriptive posterior predictive residual summaries
+# Plot descriptive response residual summaries
 
 Compare residual summaries across selected groups without reference
 cutoffs.
@@ -95,4 +95,10 @@ one nor a universal acceptable range is established. No interval,
 warning region or statistical test is drawn. Hiding annotations changes
 only the display;
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
-retains the probability definition and limitations.
+retains the probability definition and limitations. For corrected JML,
+probabilities instead condition on corrected calibration and reprofiled
+Person point estimates; no latent effects are integrated. The paired
+view displays each available index independently, so an available Infit
+is retained when zero conditional variance makes Outfit undefined. The
+scatter view requires both indices. The caption reports partial
+availability, and the saved table retains its reasons.

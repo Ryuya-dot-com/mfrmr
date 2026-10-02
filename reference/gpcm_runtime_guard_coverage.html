@@ -48,7 +48,7 @@ supported alternative for each route."><meta property="og:image" content="https:
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Unavailable GPCM Routes and Alternatives</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/help_gpcm_scope.R" class="external-link"><code>R/help_gpcm_scope.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/help_gpcm_scope.R" class="external-link"><code>R/help_gpcm_scope.R</code></a></small>
       <div class="d-none name"><code>gpcm_runtime_guard_coverage.Rd</code></div>
     </div>
 
@@ -86,18 +86,22 @@ currently available analysis route.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">gpcm_runtime_guard_coverage</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                          Area                          Helper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    FACETS output-contract score-side review facets_output_contract_review()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Posterior-predictive and Bayesian workflows                            &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  blocked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 deferred</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                               Boundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Limited to direct scorefile export rather than the full FACETS-style output-contract review. Direct scorefile export is available with caveats, but contract-wide coverage and metric claims still require a broader free-discrimination score-side review contract.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                            mfrmr does not currently provide posterior-predictive checks or MCMC estimation for GPCM.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Area</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 FACETS output-contract score-side review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              Posterior-predictive and Bayesian workflows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Formal structural confidence intervals for corrected JML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            Helper   Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 facets_output_contract_review()  blocked</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                            &lt;NA&gt; deferred</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                            &lt;NA&gt; deferred</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                                                   Boundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                     Limited to direct scorefile export rather than the full FACETS-style output-contract review. Direct scorefile export is available with caveats, but contract-wide coverage and metric claims still require a broader free-discrimination score-side review contract.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                                                                                mfrmr does not currently provide posterior-predictive checks or MCMC estimation for GPCM.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Formal corrected-JML structural intervals are unavailable. The explicit corrected estimator reports local adjusted-equation RootSE, not established structural coverage. Uncorrected JML location SEs and post-hoc Person intervals answer different questions. None is a bias-corrected structural confidence interval.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                             RecommendedRoute</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 Use direct fair-average tables and graph-only compatibility outputs; use package-native scorefile export with its stated caveats, and keep full FACETS output-contract reviews on the `RSM` / `PCM` route.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                             Use the current MML fitting and fitted-object posterior scoring routes, or use external Bayesian software when posterior sampling is required.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                          Use current JML outputs within their descriptive scope, or explicitly choose MML inference if its population assumptions suit the analysis; do not transfer MML intervals to JML.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -159,6 +159,23 @@ assessment. Start with the choices that change the analysis:
   match population assumptions. Changing only the fitting function can
   change more than the rater/dependence structure.
 
+- **Estimator choice:** MML is the current default, not the result of an
+  automatic comparison of estimators. It uses a population model for
+  abilities. JML estimates each person's ability as a separate
+  parameter; it does not fit a population distribution during
+  calibration. Choosing JML does not automatically correct the bias
+  associated with few ratings per person. Without
+  `jml_correction_order`, JML is uncorrected and its location SEs are
+  exploratory. Shared-owner GPCM also supports an explicit, experimental
+  correction order. Its `RootSE` describes local variation around the
+  adjusted-equation root; residual bias may remain and structural
+  confidence intervals are not supplied. See the estimator discussion in
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+  Neither a larger model nor a smaller reported SE establishes a better
+  analysis. Choose from the assessment question, rating design and
+  modeling assumptions, rather than from whether the user is a beginner
+  or expert.
+
 - **Rating scale:** supply `rating_min`, `rating_max` and
   `category_policy` from the rubric in both data review and ordinary
   fitting. Omitted bounds use the observed range. The ordinary default
@@ -359,7 +376,32 @@ These analyses do not require an MFRM fit and do not estimate
 reliability on its latent scale. In particular, a testlet variance is on
 the latent logit scale and cannot be substituted for an observed-score
 G-study component. Start G/D analyses from the ratings and their
-declared G-study design.
+declared G-study design. Multivariate here means several observed score
+criteria, such as fluency and accuracy, whose source-specific
+covariances are estimated together. Multiple GPCM slope owners still
+describe a single latent ability. Both provisional two-family MML
+engines support summaries and conditional fitted curves with saved
+reports, separately checked experimental component log-Wald and
+location/contrast intervals, and descriptive posterior residuals.
+Component profiles require fixed-grid EM. Separately checked
+fitted-object and portable new-Person EAP intervals condition on the
+calibration and prior; they exclude calibration uncertainty and have
+unqualified coverage and population transport. Neither inherits the
+one-family diagnostic/inference workflow below. See
+[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+and the Two slope families section in
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+Neither the estimated slopes nor their sampling covariance can
+substitute for G-study score covariance components. Score weights
+specify the intended composite; they are not discrimination estimates.
+There is no automatic GMFRM-to-G-study conversion or joint estimation in
+these APIs. Hirai and Koizumi (2013,
+[doi:10.1080/15434303.2013.824973](https://doi.org/10.1080/15434303.2013.824973)
+) illustrate complementary multivariate G-theory and MFRM analyses.
+Their G-study omitted raters, so its generalization scope differs from a
+person-by-rater-by-task analysis. For the relationship and literature,
+see
+[`vignette("mfrmr-gpcm-scope", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md).
 
 To group persons, raters or tasks by external attributes, use
 [`mfrm_features()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_features.md)

@@ -121,8 +121,10 @@ Supported `which` values:
   also retain `"trials"`, `"checks"` and `"source_checks"` when
   recorded, `"sampling"`, and `"availability"` for slope intervals or
   `"test"` for a null-model LRT. Extended results also expose
-  `"settings"`, and `"clusters"`/`"contrasts"` when present. Target and
-  method columns are preserved.
+  `"settings"`, and `"clusters"`/`"contrasts"` when present. Saved
+  profile intervals also expose `"profile"`, `"profile_endpoints"`,
+  `"profile_checks"` and `"wald"`. Target and method columns are
+  preserved.
 
 ## Interpreting output
 

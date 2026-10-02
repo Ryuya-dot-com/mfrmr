@@ -70,8 +70,18 @@ An `mfrm_multivariate_d_comparison` list with `comparisons` (one row per
 comparison plan and metric), `covariance` (joint sampling covariance of
 those differences), `design_grid`, `reference`, selected score/composite
 and weights, `level`, `method`, and component/sampling-covariance
-diagnostics. [`summary()`](https://rdrr.io/r/base/summary.html) returns
-the comparison table. `Status` describes interval availability; point
+diagnostics. `source_design` and `source_rows` retain the source method,
+observed level counts, completeness, score convention and row-use
+totals, without raw ratings or identifiers.
+[`print()`](https://rdrr.io/r/base/print.html) displays these separately
+from the future plans and includes composite weights. Save the full
+comparison with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html); a
+CSV of [`summary()`](https://rdrr.io/r/base/summary.html) alone does not
+retain this context or the confidence level and approximation
+assumptions. Earlier saved comparisons without source context remain
+readable and say it is absent.
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the
+comparison table. `Status` describes interval availability; point
 differences can remain available without an interval.
 
 ## Details
@@ -171,7 +181,9 @@ summary(comparison)
 #> 6  0.02645516 Available 0.037138595 -0.04633515  0.09924547
 #> 7 -0.04397091 Available 0.011934932 -0.06736295 -0.02057887
 #> 8 -0.04714496 Available 0.066016840 -0.17653559  0.08224567
-plot(comparison)
+plot(comparison) # G/Phi for each plan, including the reference.
 
 plot(comparison, type = "sem")
+
+plot(comparison, view = "differences") # Paired difference intervals.
 ```

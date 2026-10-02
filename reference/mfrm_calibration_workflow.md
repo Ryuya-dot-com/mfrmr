@@ -3,9 +3,16 @@
 These functions implement a strict lifecycle for a saved, versioned
 calibration. `extract_mfrm_calibration()` creates a draft from an
 eligible `RSM` or `PCM` MML fit under the fixed standard-normal scoring
-basis. `validate_mfrm_calibration()` and `freeze_mfrm_calibration()` are
-separate, fail-closed transitions. Only a frozen artifact can be passed
-to `score_mfrm_calibration()`.
+basis, or a one-family GPCM MML fit with an estimated intercept-only
+normal population that passes the conditional source checks in
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
+Experimental two-family GPCM MML retains a fixed N(0,1) prior and its
+own source checks. RSM/PCM and shared-owner GPCM JML support portable
+post-hoc EAP with a standard-normal reference prior; explicit corrected
+GPCM JML preserves its correction order and uses adjusted-equation
+checks, as described below. `validate_mfrm_calibration()` and
+`freeze_mfrm_calibration()` are separate, fail-closed transitions. Only
+a frozen artifact can be passed to `score_mfrm_calibration()`.
 
 ## Usage
 
@@ -43,7 +50,8 @@ score_mfrm_calibration(
   interval_level = 0.95,
   missing_response = "error",
   event_id = NULL,
-  adaptive_quad_points = NULL
+  adaptive_quad_points = NULL,
+  scoring_prior = NULL
 )
 ```
 
@@ -78,7 +86,9 @@ score_mfrm_calibration(
 
 - quadrature_review:
 
-  An `mfrm_quadrature_sensitivity` from
+  Required for RSM/PCM MML, optional for GPCM MML (which checks the
+  fitted calibration directly); not used when checking JML fits. An
+  `mfrm_quadrature_sensitivity` from
   [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
   for the same data and model. `fit` must be the exact highest-grid fit
   stored in this object. The package checks this procedural evidence but
@@ -139,13 +149,28 @@ score_mfrm_calibration(
   example `c(31, 61)`, used only by `score_mfrm_calibration()`. Adds an
   unrounded `quadrature_review` comparing stored-grid results with
   mode/curvature-adapted integration for each Person. Inspect both
-  fixed/adaptive differences and changes between adaptive orders. The
-  artifact, reported scores/intervals and readiness are unchanged;
-  adaptive results are diagnostics conditional on the same point
-  calibration. Only Persons with scored responses have numerical review
-  rows. `Status = "computed"` means the calculation finished, not that
+  fixed/adaptive differences and changes between adaptive orders. This
+  does not change the artifact or replace the reported scores/intervals;
+  adaptive results condition on the same point calibration. For GPCM or
+  an explicitly supplied scoring prior, reference orders are added
+  automatically and the comparison governs numerical score acceptance.
+  Only Persons with scored responses have numerical review rows.
+  `Status = "computed"` means the calculation finished, not that
   accuracy is certified; an unavailable row retains the reason in
   `Detail`.
+
+- scoring_prior:
+
+  Optional `list(mean = ..., sd = ...)` for `score_mfrm_calibration()`.
+  `NULL` retains the artifact's normal prior. Values use the unchanged
+  calibration scale and must be finite with positive SD and
+  representable positive variance. A supplied prior automatically
+  receives numerical scoring checks and does not modify the frozen
+  artifact. Legacy artifacts with discrete grid-endpoint intervals
+  require re-extraction before using this option. The prior is common to
+  all scored persons; covariate-dependent overrides are not supported.
+  Two-family GPCM format 6 requires `scoring_prior = NULL` and retains
+  the fixed N(0,1) prior.
 
 ## Value
 
@@ -164,13 +189,63 @@ a compact `quadrature_overview`.
 
 ## Details
 
-The portable 0.2.4 workflow supports one observed score scale, one
-latent dimension, known non-Person facet levels, and stored two-way
-facet interactions. Estimated-population or latent-regression MML, JML,
-and `GPCM` remain available only through their fitted-object routes; see
+The portable workflow supports one observed score scale, one latent
+dimension and known non-Person facet levels. RSM/PCM MML retain stored
+anchors and two-way facet interactions in file format 1. One-family GPCM
+MML uses file format 2, retaining both step and slope owners, positive
+geometric-mean-one relative slopes and the estimated population mean and
+SD. The slope multiplies the entire adjacent-category predictor.
+Portable GPCM requires unit weights and no anchors or interactions.
+One-family MML uses an estimated intercept-only normal population.
+Shared-owner GPCM JML uses file format 4 and a post-hoc N(0,1) reference
+prior; its distinct checks are described below. Experimental two-family
+GPCM MML uses file format 6, with two ordered slope owners, second-owner
+steps and the fixed N(0,1) prior. The first owner's locations and log
+slopes are centered; the second owner's locations and slopes remain
+free. Both fitting engines retain their fixed or adaptive scoring
+algorithm. Source identity/convergence and finer-integration checks must
+pass; review-only sources cannot be exported for frozen scoring. No
+separate `quadrature_review` is accepted for this route. The file
+contains component slopes and observed facet combinations, without
+training responses, Person estimates or an executable fit. Known levels
+may form new combinations; `row_dispositions$ObservedContext` identifies
+whether each pair occurred in calibration. New combinations are
+model-based, not empirically validated. Prior overrides and `event_id`
+extensions are unsupported; repeated Person- facet cells are rejected.
+Facet names must not collide with scoring/disposition columns (`Person`,
+`Score`, `Weight`, `InputRow`, `EventId`, `Disposition`, `ReasonCode`,
+`CalibrationId`, `ObservedContext`).
+
+For format 6, use the same extract, validate, freeze, save, load and
+score functions as below. Each new batch must pass its own integration
+checks; validation and freezing do not establish sampling coverage,
+global identification, boundary absence or population transport.
+Posterior intervals exclude calibration uncertainty. Older readers
+refuse format 6; existing formats 1–5 keep their original
+interpretation. RSM/PCM JML uses file format 3, with unit weights, no
+anchors or interactions, a finite identified source and a post-hoc
+N(0,1) reference prior. This prior is not estimated by JML.
+Estimated-population RSM/PCM and latent regression use fitted-object
+routes; other structures follow their documented capabilities. See
 [`mfrm_calibration_capabilities()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_capabilities.md).
 
-Before extraction, run
+One-family GPCM MML extraction freshly evaluates the native fit's local
+likelihood, gradient, unregularized information and source-integration
+stability using the same conditional source checks as
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md).
+A failed or unresolved source cannot be frozen by selecting a review
+policy. The artifact retains the passing extraction decision, numerical
+comparison, and original global boundary/identification states. Reading
+it validates these records against its stored identity; it does not
+refit the source or claim a global maximum, valid population transport
+or calibration intervals. Every GPCM scoring call also checks EAP/SD
+against two adaptive reference orders under the actual scoring prior.
+Failed score integration stops with `SCORING_INTEGRATION_FAILED`;
+extract with more `scoring_quad_points` before retrying. Endpoint and
+sparse-pattern review labels remain separate from numerical accuracy.
+File format 1 retains its original default semantics.
+
+For RSM/PCM MML extraction, run
 [`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
 on user-selected grids and inspect its continuous differences. Pass the
 exact highest-grid fit in that object together with `quadrature_review`.
@@ -181,11 +256,70 @@ declare the fit numerically stable: the package does not choose the
 application-specific tolerance or decide whether more grids are needed.
 Archive the review separately when it is part of the audit trail,
 because response-linked fits are deliberately not embedded in the
-portable artifact.
+portable artifact. GPCM uses the fresh source checks above and does not
+require an additional refitting study. If supplied, `quadrature_review`
+is still validated.
+
+RSM/PCM JML extraction requires current passing input, identification,
+category, boundary and numerical checks from the fitted-object scoring
+policy. It freshly evaluates the joint likelihood and gradient: the
+stored objective must agree within 1e-6 and the maximum absolute
+gradient must be \<= 1e-4. These are numerical source criteria, not
+interval-coverage or bias guarantees. Boundary or unresolved sources are
+refused; there is no review override. No MML quadrature review is used
+because JML does not integrate over Persons during calibration. Every
+new JML score batch receives adaptive-reference EAP/SD checks under the
+actual scoring prior. Increase `scoring_quad_points` on extraction if
+the scoring grid is inadequate. Source checks and the prior origin
+persist through saving, loading and score summaries; replay checks the
+stored evidence without re-estimating the training model.
+
+Experimental corrected GPCM JML uses file format 5 and its own source
+checks. Extraction reconstructs the adjusted equation from the observed
+ratings and checks the saved root, full equation Jacobian and parameter
+tables. The maximum mean-equation residual must be \<= 1e-7 and the
+remaining Newton step \<= 1e-5. These are numerical checks, not a global
+uniqueness or bias guarantee. An unavailable covariance does not erase a
+valid calibration. The artifact records correction order,
+assignment-sampling assumption, local-root status and numerical checks
+without training responses or Person estimates. It is never labelled an
+ordinary JML likelihood maximum. Its EAP and continuous posterior
+intervals use a separate normal scoring prior; they exclude calibration
+uncertainty and do not supply corrected Person ML/WLE or structural
+confidence intervals. Older file formats retain their original checks.
+See
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+for corrected estimation limits.
+
+For shared-owner uncorrected GPCM JML, extraction checks the joint
+likelihood and gradient, and positive-definite, unregularized curvature
+over all free Person and structural parameters (reciprocal condition
+number \> 1e-10). Recorded Person, additive or slope boundary
+certificates prevent automatic scoring; finite optimizer traces cannot
+override them. Detected identification failure, inadequate categories,
+failed numerical checks and unsupported structures also prevent
+extraction. Otherwise, global identification/boundary audits labelled as
+incomplete stay incomplete in the artifact. This qualifies conditional
+EAP only, not global optimality or formal JML slope inference. Source
+curvature currently uses a dense joint matrix, so its memory cost grows
+quadratically with the number of free parameters, including Persons.
+Frozen-artifact scoring does not repeat that calculation or use training
+data. The objective, gradient and condition-number cutoffs are package
+numerical criteria, not statistical thresholds established by the
+scoring literature. A refused source does not imply that all its
+structural parameters are inestimable: portable scoring does not
+currently qualify boundary-profile calibrations with infinite
+training-Person estimates.
 
 Posterior EAP estimates, posterior standard deviations, and intervals
-are conditional on the frozen point calibration and its recorded fixed
-standard-normal prior. They do not include calibration-parameter
+are conditional on the frozen point calibration and the scoring prior.
+For GPCM MML, the prior mean and SD estimated during calibration are
+frozen; a new cohort does not reestimate or replace them. Use
+`scoring_prior` to examine another shared normal prior without changing
+the artifact. The original and scoring prior identities remain separate
+in estimates and settings, including summaries, plot data and exports. A
+supplied prior is an analyst assumption, not a population estimate.
+Intervals exclude both population-parameter and calibration-parameter
 uncertainty. Loading validates structure and semantic consistency, but
 does not authenticate an artifact from an untrusted source. New v2
 scoring algorithms invert the continuous posterior CDF for equal-tail
@@ -193,6 +327,45 @@ intervals. EAP and SD retain the stored quadrature rule. Saved v1
 artifacts preserve their discrete grid interval endpoints and carry a
 note that the continuous posterior mass can differ from the requested
 interval level.
+
+## Statistical basis and external comparisons
+
+Bock and Mislevy (1982, pp. 432-433) describe posterior-mean and
+posterior-SD scoring from fixed response functions and a specified
+prior, including multiple-category responses. This supports the scoring
+layer; it does not validate JML calibration bias, the default reference
+prior for a new cohort, or the numerical tolerances used to check a
+fitted calibration. Their adaptive testing simulations do not establish
+coverage for sparse many-facet designs. Muraki (1992) supplies the GPCM
+model basis and an EM estimation method, not evidence that many-facet
+JML intervals have accurate coverage.
+
+External checks of fixed probabilities, likelihoods and EAP/SD must
+align the response functions and prior. They do not compare free JML
+estimation. ConQuest documents that JML cannot estimate item scores (the
+free scores used for GPCM discrimination). TAM's `tam.jml()` uses a
+supplied loading array and defaults to extreme-score adjustment and
+item-bias correction; its default output is not the same estimator as
+unadjusted JML. Do not infer agreement of estimators from agreement of
+fixed-calibration scores.
+
+## References
+
+Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability
+in a microcomputer environment. *Applied Psychological Measurement*,
+6(4), 431-444.
+[doi:10.1177/014662168200600405](https://doi.org/10.1177/014662168200600405)
+.
+
+Muraki, E. (1992). A generalized partial credit model: Application of an
+EM algorithm. *Applied Psychological Measurement*, 16(2), 159-176.
+[doi:10.1177/014662169201600206](https://doi.org/10.1177/014662169201600206)
+.
+
+[TAM joint maximum likelihood
+documentation](https://alexanderrobitzsch.github.io/TAM/reference/tam.jml.html)
+and [ACER ConQuest command
+reference](https://conquestmanual.acer.org/s4-00.html).
 
 ## See also
 

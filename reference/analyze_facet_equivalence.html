@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Analyze practical equivalence within a facet</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-facet-equivalence.R" class="external-link"><code>R/api-facet-equivalence.R</code></a></small>
       <div class="d-none name"><code>analyze_facet_equivalence.Rd</code></div>
     </div>
 
@@ -79,7 +79,8 @@ with unregularized observed-information covariance and estimable contrasts.</p><
 <dd><p>Optional matching output from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code>. Supplied
 diagnostics must retain all target-facet levels, model-based SEs and
 ordinary-inference eligibility. Estimates and covariance are always taken
-from <code>fit</code>; supplying diagnostics cannot override its restrictions.</p></dd>
+from <code>fit</code>; supplying diagnostics cannot override its restrictions.
+Fixed levels instead require their fixed-value labels and absent sampling SEs.</p></dd>
 
 
 <dt id="arg-facet">facet<a class="anchor" aria-label="anchor" href="#arg-facet"></a></dt>
@@ -186,7 +187,12 @@ or a material difference. <code>chi_square</code> addresses exact equality, whil
 <li><p><code>chi_square</code>: joint Wald heterogeneity test and descriptive separation.</p></li>
 <li><p><code>rope</code> / <code>forest</code>: <code>Measure</code>, marginal <code>SE</code> and <code>CI_Lower</code>/<code>CI_Upper</code>, plus
 <code>Deviation</code>, <code>DeviationSE</code> and <code>DeviationCI_Lower</code>/<code>DeviationCI_Upper</code> for
-proximity to the equally weighted facet mean.</p></li>
+the difference from the estimated facet mean. <code>Fixed</code> marks an anchored
+or constraint-fixed location: its conditional marginal <code>SE</code> is zero and
+its marginal interval is absent. Its deviation from an estimated mean,
+or contrast with an estimated level, can still have nonzero uncertainty.
+The forest plot displays these deviations, not the anchored locations.
+No uncertainty in supplied anchor values is propagated.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="recommended-next-step">Recommended next step<a class="anchor" aria-label="anchor" href="#recommended-next-step"></a></h2>

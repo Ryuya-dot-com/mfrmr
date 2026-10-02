@@ -56,7 +56,7 @@ one."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr/l
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract reusable data from an mfrmr plot object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
       <div class="d-none name"><code>plot_data.Rd</code></div>
     </div>
 
@@ -127,15 +127,15 @@ data. When <code>NULL</code>, the full plot-data list is returned.</p></dd>
 <span class="r-in"><span><span class="co"># Extract the plotted locations as a table</span></span></span>
 <span class="r-in"><span><span class="va">locations</span> <span class="op">&lt;-</span> <span class="fu">plot_data</span><span class="op">(</span><span class="va">wright</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locations</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 37</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 38</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span>
@@ -147,15 +147,15 @@ data. When <code>NULL</code>, the full plot-data list is returned.</p></dd>
 <span class="r-in"><span><span class="co"># For table extraction alone, no graphics device is needed</span></span></span>
 <span class="r-in"><span><span class="va">locations_only</span> <span class="op">&lt;-</span> <span class="fu">plot_data</span><span class="op">(</span><span class="va">fit</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locations_only</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 37</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 38</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span>

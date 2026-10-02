@@ -77,7 +77,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Visual Diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-visual-diagnostics.Rmd</code></div>
     </div>
 
@@ -161,9 +161,9 @@ Browse all selected plot routes
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">figures</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"ResultFunction"</span>, <span class="st">"GGPlot"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="60%">
-<col width="28%">
-<col width="12%">
+<col width="69%">
+<col width="21%">
+<col width="9%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">Question</th>
@@ -229,7 +229,8 @@ model</td>
 <td align="left">dedicated</td>
 </tr>
 <tr class="even">
-<td align="left">Review response fit under an extended model</td>
+<td align="left">Review response residuals under supported RSMs,
+two-family GPCM MML or corrected GPCM JML</td>
 <td align="left">mfrm_response_diagnostics</td>
 <td align="left">dedicated</td>
 </tr>
@@ -308,8 +309,7 @@ composite</td>
 <td align="left">dedicated</td>
 </tr>
 <tr class="odd">
-<td align="left">Compare D-study scenarios with difference
-intervals</td>
+<td align="left">Compare D-study plans including the reference</td>
 <td align="left">mfrm_multivariate_d_compare</td>
 <td align="left">unavailable</td>
 </tr>
@@ -412,15 +412,15 @@ two levels are separated or indistinguishable.</li>
 <p>The locations used in the figure remain available as a table:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">wright</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 37</span></span></span>
-<span><span class="co">#&gt;   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 38</span></span></span>
+<span><span class="co">#&gt;   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span></span>
@@ -502,13 +502,13 @@ exclusions.</li>
 </ul>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">fit_pathway</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        Facet        Level    Measure        SE     CI_Lower    CI_Upper</span></span>
-<span><span class="co">#&gt; 55 Criterion      Content -0.3441471 0.1110060 -0.561714733 -0.12657937</span></span>
-<span><span class="co">#&gt; 56 Criterion     Language  0.1204520 0.1093843 -0.093937224  0.33484130</span></span>
-<span><span class="co">#&gt; 57 Criterion Organization  0.2236950 0.1103080  0.007495279  0.43989475</span></span>
-<span><span class="co">#&gt; 5     Person         P005 -0.1749607 0.4416568 -1.040592055  0.69067075</span></span>
-<span><span class="co">#&gt; 6     Person         P006  0.6768100 0.5261392 -0.354403760  1.70802383</span></span>
-<span><span class="co">#&gt; 7     Person         P007 -0.9630394 0.4541031 -1.853065098 -0.07301365</span></span>
+<span><span class="co">#&gt;        Facet        Level    Measure Fixed        SE     CI_Lower    CI_Upper</span></span>
+<span><span class="co">#&gt; 55 Criterion      Content -0.3441471 FALSE 0.1110060 -0.561714733 -0.12657937</span></span>
+<span><span class="co">#&gt; 56 Criterion     Language  0.1204520 FALSE 0.1093843 -0.093937224  0.33484130</span></span>
+<span><span class="co">#&gt; 57 Criterion Organization  0.2236950 FALSE 0.1103080  0.007495279  0.43989475</span></span>
+<span><span class="co">#&gt; 5     Person         P005 -0.1749607 FALSE 0.4416568 -1.040592055  0.69067075</span></span>
+<span><span class="co">#&gt; 6     Person         P006  0.6768100 FALSE 0.5261392 -0.354403760  1.70802383</span></span>
+<span><span class="co">#&gt; 7     Person         P007 -0.9630394 FALSE 0.4541031 -1.853065098 -0.07301365</span></span>
 <span><span class="co">#&gt;    CI_Level  N     Infit    Outfit  InfitZSTD  OutfitZSTD  DF_Infit DF_Outfit</span></span>
 <span><span class="co">#&gt; 55     0.95 94 0.7295356 0.7428322 -1.5566485 -1.89173498 58.455401        94</span></span>
 <span><span class="co">#&gt; 56     0.95 94 0.8547918 0.8231355 -0.7605703 -1.24336119 57.903717        94</span></span>
@@ -551,6 +551,27 @@ exclusions.</li>
 <span><span class="co">#&gt; 5      Within selected review band  0.6729031       0.4361632</span></span>
 <span><span class="co">#&gt; 6                   Infit MnSq low  0.7608383       0.5121424</span></span>
 <span><span class="co">#&gt; 7  Infit MnSq low; Outfit MnSq low  1.2288187       0.6165886</span></span>
+<span><span class="co">#&gt;                     SE_Method PrecisionTier SupportsFormalInference</span></span>
+<span><span class="co">#&gt; 55 Observed information (MML)   model_based                    TRUE</span></span>
+<span><span class="co">#&gt; 56 Observed information (MML)   model_based                    TRUE</span></span>
+<span><span class="co">#&gt; 57 Observed information (MML)   model_based                    TRUE</span></span>
+<span><span class="co">#&gt; 5          Posterior SD (EAP)   model_based                    TRUE</span></span>
+<span><span class="co">#&gt; 6          Posterior SD (EAP)   model_based                    TRUE</span></span>
+<span><span class="co">#&gt; 7          Posterior SD (EAP)   model_based                    TRUE</span></span>
+<span><span class="co">#&gt;                SEUse                             CIBasis             CIUse</span></span>
+<span><span class="co">#&gt; 55 primary_reporting Normal interval from model-based SE primary_reporting</span></span>
+<span><span class="co">#&gt; 56 primary_reporting Normal interval from model-based SE primary_reporting</span></span>
+<span><span class="co">#&gt; 57 primary_reporting Normal interval from model-based SE primary_reporting</span></span>
+<span><span class="co">#&gt; 5  primary_reporting Normal interval from model-based SE primary_reporting</span></span>
+<span><span class="co">#&gt; 6  primary_reporting Normal interval from model-based SE primary_reporting</span></span>
+<span><span class="co">#&gt; 7  primary_reporting Normal interval from model-based SE primary_reporting</span></span>
+<span><span class="co">#&gt;    CIEligible                     CILabel            CI_Method</span></span>
+<span><span class="co">#&gt; 55       TRUE Model-based normal interval Normal approximation</span></span>
+<span><span class="co">#&gt; 56       TRUE Model-based normal interval Normal approximation</span></span>
+<span><span class="co">#&gt; 57       TRUE Model-based normal interval Normal approximation</span></span>
+<span><span class="co">#&gt; 5        TRUE Model-based normal interval Normal approximation</span></span>
+<span><span class="co">#&gt; 6        TRUE Model-based normal interval Normal approximation</span></span>
+<span><span class="co">#&gt; 7        TRUE Model-based normal interval Normal approximation</span></span>
 <span><span class="co">#&gt;    InfitZSTDDiff_FACETS_minus_ENGINE OutfitZSTDDiff_FACETS_minus_ENGINE</span></span>
 <span><span class="co">#&gt; 55                                NA                                 NA</span></span>
 <span><span class="co">#&gt; 56                                NA                                 NA</span></span>
@@ -572,48 +593,27 @@ exclusions.</li>
 <span><span class="co">#&gt; 5                                        NA          FALSE               FALSE</span></span>
 <span><span class="co">#&gt; 6                                        NA          FALSE               FALSE</span></span>
 <span><span class="co">#&gt; 7                                        NA          FALSE               FALSE</span></span>
-<span><span class="co">#&gt;    FlagChangedByDf DfSensitivityStatus                  SE_Method PrecisionTier</span></span>
-<span><span class="co">#&gt; 55           FALSE       not_available Observed information (MML)   model_based</span></span>
-<span><span class="co">#&gt; 56           FALSE       not_available Observed information (MML)   model_based</span></span>
-<span><span class="co">#&gt; 57           FALSE       not_available Observed information (MML)   model_based</span></span>
-<span><span class="co">#&gt; 5            FALSE       not_available         Posterior SD (EAP)   model_based</span></span>
-<span><span class="co">#&gt; 6            FALSE       not_available         Posterior SD (EAP)   model_based</span></span>
-<span><span class="co">#&gt; 7            FALSE       not_available         Posterior SD (EAP)   model_based</span></span>
-<span><span class="co">#&gt;    SupportsFormalInference             SEUse</span></span>
-<span><span class="co">#&gt; 55                    TRUE primary_reporting</span></span>
-<span><span class="co">#&gt; 56                    TRUE primary_reporting</span></span>
-<span><span class="co">#&gt; 57                    TRUE primary_reporting</span></span>
-<span><span class="co">#&gt; 5                     TRUE primary_reporting</span></span>
-<span><span class="co">#&gt; 6                     TRUE primary_reporting</span></span>
-<span><span class="co">#&gt; 7                     TRUE primary_reporting</span></span>
-<span><span class="co">#&gt;                                CIBasis             CIUse Converged</span></span>
-<span><span class="co">#&gt; 55 Normal interval from model-based SE primary_reporting      TRUE</span></span>
-<span><span class="co">#&gt; 56 Normal interval from model-based SE primary_reporting      TRUE</span></span>
-<span><span class="co">#&gt; 57 Normal interval from model-based SE primary_reporting      TRUE</span></span>
-<span><span class="co">#&gt; 5  Normal interval from model-based SE primary_reporting      TRUE</span></span>
-<span><span class="co">#&gt; 6  Normal interval from model-based SE primary_reporting      TRUE</span></span>
-<span><span class="co">#&gt; 7  Normal interval from model-based SE primary_reporting      TRUE</span></span>
-<span><span class="co">#&gt;               CI_Method                     CILabel  FitValue ElementType</span></span>
-<span><span class="co">#&gt; 55 Normal approximation Model-based normal interval 0.7295356 Facet level</span></span>
-<span><span class="co">#&gt; 56 Normal approximation Model-based normal interval 0.8547918 Facet level</span></span>
-<span><span class="co">#&gt; 57 Normal approximation Model-based normal interval 1.0155312 Facet level</span></span>
-<span><span class="co">#&gt; 5  Normal approximation Model-based normal interval 0.5638368      Person</span></span>
-<span><span class="co">#&gt; 6  Normal approximation Model-based normal interval 0.4878576      Person</span></span>
-<span><span class="co">#&gt; 7  Normal approximation Model-based normal interval 0.3851674      Person</span></span>
-<span><span class="co">#&gt;    FitScale FitStatistic FitColumn FitDistance Flagged FitDirection</span></span>
-<span><span class="co">#&gt; 55     mnsq        Infit     Infit   0.2704644   FALSE  within_band</span></span>
-<span><span class="co">#&gt; 56     mnsq        Infit     Infit   0.1452082   FALSE  within_band</span></span>
-<span><span class="co">#&gt; 57     mnsq        Infit     Infit   0.0155312   FALSE  within_band</span></span>
-<span><span class="co">#&gt; 5      mnsq        Infit     Infit   0.4361632   FALSE  within_band</span></span>
-<span><span class="co">#&gt; 6      mnsq        Infit     Infit   0.5121424    TRUE      overfit</span></span>
-<span><span class="co">#&gt; 7      mnsq        Infit     Infit   0.6148326    TRUE      overfit</span></span>
-<span><span class="co">#&gt;           Panel Shape    LabelText</span></span>
-<span><span class="co">#&gt; 55 All elements    21      Content</span></span>
-<span><span class="co">#&gt; 56 All elements    21     Language</span></span>
-<span><span class="co">#&gt; 57 All elements    21 Organization</span></span>
-<span><span class="co">#&gt; 5  All elements    15             </span></span>
-<span><span class="co">#&gt; 6  All elements    15         P006</span></span>
-<span><span class="co">#&gt; 7  All elements    15         P007</span></span></code></pre></div>
+<span><span class="co">#&gt;    FlagChangedByDf DfSensitivityStatus Converged  FitValue ElementType FitScale</span></span>
+<span><span class="co">#&gt; 55           FALSE       not_available      TRUE 0.7295356 Facet level     mnsq</span></span>
+<span><span class="co">#&gt; 56           FALSE       not_available      TRUE 0.8547918 Facet level     mnsq</span></span>
+<span><span class="co">#&gt; 57           FALSE       not_available      TRUE 1.0155312 Facet level     mnsq</span></span>
+<span><span class="co">#&gt; 5            FALSE       not_available      TRUE 0.5638368      Person     mnsq</span></span>
+<span><span class="co">#&gt; 6            FALSE       not_available      TRUE 0.4878576      Person     mnsq</span></span>
+<span><span class="co">#&gt; 7            FALSE       not_available      TRUE 0.3851674      Person     mnsq</span></span>
+<span><span class="co">#&gt;    FitStatistic FitColumn FitDistance Flagged FitDirection        Panel Shape</span></span>
+<span><span class="co">#&gt; 55        Infit     Infit   0.2704644   FALSE  within_band All elements    21</span></span>
+<span><span class="co">#&gt; 56        Infit     Infit   0.1452082   FALSE  within_band All elements    21</span></span>
+<span><span class="co">#&gt; 57        Infit     Infit   0.0155312   FALSE  within_band All elements    21</span></span>
+<span><span class="co">#&gt; 5         Infit     Infit   0.4361632   FALSE  within_band All elements    15</span></span>
+<span><span class="co">#&gt; 6         Infit     Infit   0.5121424    TRUE      overfit All elements    15</span></span>
+<span><span class="co">#&gt; 7         Infit     Infit   0.6148326    TRUE      overfit All elements    15</span></span>
+<span><span class="co">#&gt;       LabelText</span></span>
+<span><span class="co">#&gt; 55      Content</span></span>
+<span><span class="co">#&gt; 56     Language</span></span>
+<span><span class="co">#&gt; 57 Organization</span></span>
+<span><span class="co">#&gt; 5              </span></span>
+<span><span class="co">#&gt; 6          P006</span></span>
+<span><span class="co">#&gt; 7          P007</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="figure-category-curves">Category probabilities<a class="anchor" aria-label="anchor" href="#figure-category-curves"></a>
@@ -833,8 +833,298 @@ follow-up.</li>
 <li>Scree review should usually be paired with loading review for the
 component of interest.</li>
 </ul>
-<p>For interaction screening, use the packaged bias example.</p>
+<div class="section level3">
+<h3 id="checking-one-substantive-dimension-without-fitting-a-multidimensional-model">Checking one substantive dimension without fitting a
+multidimensional model<a class="anchor" aria-label="anchor" href="#checking-one-substantive-dimension-without-fitting-a-multidimensional-model"></a>
+</h3>
+<p>A single intended construct is a substantive hypothesis, not a result
+of choosing a one-dimensional estimator. Ask whether one ability
+provides a useful account of the ratings for the intended score and
+decision. Also ask whether remaining associations arise from common
+tasks, performances, assessors or category use. Several slopes do not
+create several abilities, and one ability plus a testlet effect is not
+the same hypothesis as two substantive abilities.</p>
+<p>Current diagnostic entry points are available, but there is no
+dedicated API that certifies unidimensionality or selects a latent
+dimension count:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Question</th>
+<th>Current mfrmr route</th>
+<th>Interpretation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Is there organized residual variation?</td>
+<td>
+<code><a href="../reference/analyze_residual_pca.html">analyze_residual_pca()</a></code> and
+<code><a href="../reference/plot_residual_pca.html">plot_residual_pca()</a></code>; optionally
+<code>parallel = TRUE</code>.</td>
+<td>Exploratory PCA of standardized residuals. The default reference
+permutes residual columns.
+<code>parallel_method = "model_bootstrap"</code> generates ratings and
+refits supported RSM/PCM MML models; it is not yet a calibrated
+dimensionality test.</td>
+</tr>
+<tr class="even">
+<td>Which levels have associated residuals?</td>
+<td>
+<code><a href="../reference/q3_statistic.html">q3_statistic()</a></code> and
+<code><a href="../reference/plot_local_dependence_heatmap.html">plot_local_dependence_heatmap()</a></code> with an explicit
+<code>facet</code>.</td>
+<td>Standardized residuals are averaged within Person/level cells and
+correlated across shared persons. This differs from original
+raw-residual Yen Q3. Default facet Rater asks about raters, not
+automatically about rubric dimensions.</td>
+</tr>
+<tr class="odd">
+<td>Which category or rating-context margins are poorly reproduced?</td>
+<td>
+<code>diagnose_mfrm(..., diagnostic_mode = "both")</code>,
+<code><a href="../reference/plot_marginal_fit.html">plot_marginal_fit()</a></code> and
+<code><a href="../reference/plot_marginal_pairwise.html">plot_marginal_pairwise()</a></code>.</td>
+<td>Descriptive marginal screens. Their scales omit parts of
+joint/calibration uncertainty; they are not a calibrated M2/C2 omnibus
+test.</td>
+</tr>
+<tr class="even">
+<td>Is a substantive two-dimensional model preferable?</td>
+<td>No native multidimensional GMFRM fitting/comparison route yet.</td>
+<td>Requires a specified alternative and comparable likelihood or
+predictive targets; PCA does not supply that comparison.</td>
+</tr>
+</tbody>
+</table>
+<p>A supported first-pass workflow, with the paired facet chosen to
+match the question, is:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
+<span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span><span class="va">diag</span>, mode <span class="op">=</span> <span class="st">"both"</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                           parallel_reps <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">9028</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span>
+<span><span class="co"># Replace Criterion with the fitted facet relevant to the question.</span></span>
+<span><span class="va">q3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/q3_statistic.html">q3_statistic</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span>
+<span><span class="va">q3</span><span class="op">$</span><span class="va">pairs</span></span></code></pre></div>
+<p>Two hundred permutations are an example setting, not a qualification
+threshold. Check missing comparisons, overlap counts, aggregation and
+the reported reference method before interpreting a cutoff. A small
+first component or few flags can reflect low power or restricted
+exposure. A large component does not identify its cause. Neither
+counting eigenvalues above one/two nor adding one to the number of
+residual components estimates the number of substantive abilities. The
+extended testlet/shared-rater models use their own posterior response
+diagnostics; the ordinary residual-PCA/Q3 contract is not inherited.</p>
+<p>For a supported RSM/PCM MML fit, a second reference asks:
+<strong>would similar residual structure arise when this fitted
+one-ability model generates the ratings and is estimated again?</strong>
+The Person’s generated ability is shared across their rating rows; it is
+not redrawn separately for every rating.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># fit must be an RSM/PCM MML fit with fixed standard-normal population,</span></span>
+<span><span class="co"># fixed quadrature, additive facets, unit weights, and no anchors or shrinkage.</span></span>
+<span><span class="va">reference</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_residual_pca.html">analyze_residual_pca</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit</span>, mode <span class="op">=</span> <span class="st">"both"</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  parallel_method <span class="op">=</span> <span class="st">"model_bootstrap"</span>, parallel_reps <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">9028</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">reference</span><span class="op">$</span><span class="va">bootstrap_settings</span></span>
+<span><span class="va">reference</span><span class="op">$</span><span class="va">bootstrap_trials</span>       <span class="co"># All attempts, including failures and warnings</span></span>
+<span><span class="va">reference</span><span class="op">$</span><span class="va">parallel_status</span>        <span class="co"># Availability separately for each PCA scope</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">reference</span>, type <span class="op">=</span> <span class="st">"overall_parallel_scree"</span><span class="op">)</span></span>
+<span><span class="co"># If the reference is available:</span></span>
+<span><span class="co"># as_ggplot(plot(reference, type = "overall_parallel_scree", draw = FALSE))</span></span></code></pre></div>
+<p>This is more expensive than permuting residuals: 200 replicates mean
+200 model refits, shared across the requested overall/facet analyses. It
+is an example, not a universal recommended budget or an error-rate
+guarantee. The method currently excludes GPCM, JML, estimated population
+models, adaptive quadrature, anchors and extended testlet/shared-rater
+fits. Generating parameters are fitted point estimates; refitting
+propagates their sampling variation under that null.</p>
+<p>The existing analyzed assignment is held fixed. Missing scores and
+unassigned ratings are not filled, so this does not test or correct a
+missingness mechanism. All source/replicate fits must pass numerical
+convergence checks. Every planned replicate is recorded; if a scope
+cannot be calculated in any replicate, its reference cutoff is withheld.
+Inspect the recorded reason instead of dropping failed replicates.
+Undefined or indefinite sparse correlation matrices remain unavailable.
+Increasing the replicate count does not repair them.</p>
+<p>The plotted cutoff is a <strong>componentwise exploratory
+reference</strong>, not a multiplicity-adjusted decision across
+components or facets. A component above it motivates investigating task
+dependence, rater effects, assignment and substantive dimensions; it
+does not identify which explanation is correct. The first component and
+an any-component rule answer different questions: one can miss a
+departure that the other flags. Choosing whichever rule looks most
+striking after viewing the results changes the decision procedure.
+General false-flag rates and sensitivity across those scenarios still
+require qualification. Q3 and residual-network references are not
+supplied by this PCA option.</p>
+<div class="section level4">
+<h4 id="shared-persons-sparse-assignment-and-the-choice-of-pca-columns">Shared Persons, sparse assignment and the choice of PCA columns<a class="anchor" aria-label="anchor" href="#shared-persons-sparse-assignment-and-the-choice-of-pca-columns"></a>
+</h4>
+<p>A <strong>shared Person</strong> rated by several assessors connects
+observations. A <strong>fixed parameter anchor</strong> constrains a
+parameter to a supplied numerical value. These are different uses of the
+word anchor: the model-bootstrap route supports the former through the
+retained assignment, but currently excludes the latter. No generated
+Person ability is fixed to an observed estimate.</p>
+<p>Consider four assessors. Rotating pairs R1/R2, R2/R3, R3/R4 and R4/R1
+connect all assessors, but R1/R3 and R2/R4 have no Persons in common. An
+estimable MFRM can therefore have an unavailable residual PCA across
+assessors or across combined assessor/criterion columns. A few Persons
+rated by everyone define those pairs, yet correlations based on
+different small overlaps can still produce a matrix that is not positive
+semidefinite. Neither connectedness nor one shared Person certifies that
+a residual-correlation matrix is usable.</p>
+<p>If the question concerns rubric criteria and every Person has all
+criteria, a Person-by-Criterion matrix may remain available. It averages
+residuals over the available assessors; it answers a different question
+and may conceal assessor-specific structure. Choose this aggregation for
+its scientific target, not after another analysis happens to fail:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">reference</span><span class="op">$</span><span class="va">parallel_status</span></span>
+<span><span class="co"># For a prespecified criterion-level question, if that reference is available:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">reference</span>, type <span class="op">=</span> <span class="st">"facet_parallel_scree"</span>, facet <span class="op">=</span> <span class="st">"Criterion"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="a-residual-block-is-not-automatically-another-substantive-ability">A residual block is not automatically another substantive
+ability<a class="anchor" aria-label="anchor" href="#a-residual-block-is-not-automatically-another-substantive-ability"></a>
+</h4>
+<p>The same response distribution can sometimes have both a testlet and
+a multiple-trait interpretation. For example, with independent
+standard-normal variables, set</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>b</mi></msub><mo>=</mo><msqrt><mi>ρ</mi></msqrt><mspace width="0.167em"></mspace><mi>θ</mi><mo>+</mo><msqrt><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow></msqrt><mspace width="0.167em"></mspace><msub><mi>u</mi><mi>b</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>b</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mspace width="1.0em"></mspace><mn>0</mn><mo>&lt;</mo><mi>ρ</mi><mo>&lt;</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+z_b = \sqrt{\rho}\,\theta + \sqrt{1-\rho}\,u_b,
+\qquad b=1,2,\quad 0&lt;\rho&lt;1.
+</annotation></semantics></math></p>
+<p>Each block predictor has variance one and their correlation is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>.
+Using
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>b</mi></msub><annotation encoding="application/x-tex">z_b</annotation></semantics></math>
+for the criteria in block
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
+gives either a shared component plus Person-by-block effects, or two
+correlated block traits with the same response probabilities. This
+equality holds for this specified structure; it does not equate all
+testlet and multidimensional models. The broader relationships are
+discussed by <a href="https://doi.org/10.1111/j.1745-3984.2010.00118.x" class="external-link">Rijmen
+(2010)</a>.</p>
+<p>Consequently, even an excellent residual screen cannot decide from
+these ratings alone whether the blocks represent two intended
+constructs, common performance effects or another shared influence. Task
+design, theory, external variables and additional measurements
+distinguish interpretations. A positive residual flag is evidence to
+investigate the fitted model; a small or absent flag can also reflect
+limited sensitivity. Fitting a multidimensional model is useful for a
+specified alternative, but does not automatically resolve this
+interpretation problem.</p>
+<p>Other approaches address different parts of this question:</p>
+<ul>
+<li>
+<strong>Model-generated reference checks:</strong> simulate complete
+person response patterns under the fitted one-dimensional model,
+preserve the declared assignment/observation pattern, refit and
+recompute a prespecified residual statistic. This can assess whether the
+residual structure exceeds that expected after estimation. A
+design-specific calibrated workflow is not yet provided by the
+residual-PCA/Q3 API; more residual permutations cannot replace it. <a href="https://doi.org/10.1177/0146621616677520" class="external-link">Christensen, Makransky
+and Horton (2017)</a> demonstrate why a universal Q3 cutoff is
+unsuitable and discuss parametric bootstrap references. Their
+raw-residual statistic is not mfrmr’s adaptation.</li>
+<li>
+<strong>Limited-information fit:</strong> tests such as M2/M2*/C2
+compare fitted low-order margins with observed margins. They can
+challenge a one-dimensional model without fitting a multidimensional
+alternative, but rejection is not a diagnosis of multidimensionality.
+See the <a href="https://philchalmers.github.io/mirt/docs/reference/M2.html" class="external-link">mirt
+M2 documentation</a> for model/category-specific availability. A valid
+many-facet adaptation must address repeated ratings, sparse opportunity
+counts and parameter uncertainty.</li>
+<li>
+<strong>Prespecified subdomain and external-variable
+checks:</strong> examine whether person ordering, score precision or
+substantive conclusions change across theoretically defined
+task/criterion subsets. Put scores on a justified common scale and
+account for their dependence and unequal precision. A naive t-test on
+separately estimated EAPs, especially after selecting subsets from the
+same residuals, is not a calibrated dimensionality test.</li>
+<li>
+<strong>Explicit alternative models:</strong> ordinal factor
+analysis or multidimensional IRT can compare theoretically justified
+loading structures. They require a defensible response unit and
+treatment of rater/testlet dependence. TAM or mirt can be used for
+matched structures externally; a generic factor model of averaged scores
+is not automatically an alternative fit to the same many-facet
+likelihood. Native multidimensional GMFRM is a later extension.</li>
+</ul>
+<p>Thus a multidimensional fitter is needed to estimate and compare that
+specific alternative, but <strong>it is not a prerequisite for checking
+the adequacy of the one-dimensional model</strong>. Even after fitting
+alternatives, do not assume an ordinary parameter-count chi-square test:
+a one-dimensional reduction can put a latent correlation at one or leave
+added loadings unidentified. Match scales, response events, populations
+and numerical integration, and separate exploratory model discovery from
+confirmation on new data or held-out complete units.</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="residual-networks-ega-and-the-assignment-graph-answer-different-questions">Residual networks, EGA and the assignment graph answer different
+questions<a class="anchor" aria-label="anchor" href="#residual-networks-ega-and-the-assignment-graph-answer-different-questions"></a>
+</h3>
+<p>A graph consists of nodes and edges, but their meanings must be
+specified. The assignment graph records who rated what; its connectivity
+concerns linking. A score-correlation graph describes observed
+associations. A residual graph instead describes associations left after
+a fitted response model. A residual Pearson correlation edge and a
+partial-correlation edge conditional on all other residual variables are
+different estimands. None is automatically causal.</p>
+<p><a href="https://doi.org/10.1371/journal.pone.0174035" class="external-link">Exploratory
+Graph Analysis (EGA; Golino and Epskamp, 2017)</a> uses estimated
+networks and community detection to explore dimension structure.
+Applying the idea to fitted residuals asks about <em>remaining</em>
+structure and is not the same procedure as EGA on the original item
+responses. The existing <code><a href="../reference/mfrm_network_analysis.html">mfrm_network_analysis()</a></code>,
+<code><a href="../reference/rater_network_analysis.html">rater_network_analysis()</a></code> and
+<code><a href="../reference/rater_halo_network_analysis.html">rater_halo_network_analysis()</a></code> do not implement a residual
+EGA procedure. There is currently no native residual-network/EGA
+API.</p>
+<p>For example, residual associations among accuracy criteria across
+different tasks and assessors may motivate a second substantive-domain
+hypothesis. Associations confined to one performance may instead
+motivate a testlet model. Associations organized by assessor or
+assignment panel require review of those effects. These patterns guide
+follow-up; the graph alone cannot distinguish all competing
+explanations. Communities, centrality and edge density are not proof of
+dimensions, rater quality or an omitted causal mechanism. No edges can
+also reflect regularization or weak data rather than independence.</p>
+<p>Before a residual-network workflow is admitted, specify nodes
+(criterion, task-by-criterion, or another justified unit), residual
+type, aggregation and pairwise person counts. Sparse pairwise
+correlations may be undefined or form an invalid correlation matrix. Do
+not encode unassigned cells as zero, treat a missing edge as a zero
+association, or silently repair a matrix and then claim the same
+estimand. Record regularization and community choices; examine edge and
+community stability with resampling appropriate to the shared effects. A
+single nominal sample size can misrepresent strongly unequal pair
+overlap.</p>
+<p><a href="https://r-ega.net/reference/bootEGA.html" class="external-link">bootEGA</a> offers
+network/dimension stability analyses, but applying it to a fixed
+residual matrix does not propagate uncertainty from fitting the MFRM.
+Its empirical-correlation bootstrap is not a one-dimensional MFRM null
+simulation. Finally, <a href="https://doi.org/10.1007/s11336-017-9557-x" class="external-link">residual network
+modeling (Epskamp, Rhemtulla and Borsboom, 2017)</a> models residual
+dependencies jointly with latent variables. Drawing a graph from fitted
+residuals does not fit such a joint model or produce its likelihood. A
+future mfrmr network view should reuse the checked residual/overlap
+outputs and provide a signed heatmap/table alongside the network, with
+the same edge values and uncertainty. It should remain exploratory until
+its statistical reference is qualified.</p>
+<p>For interaction screening, use the packaged bias example.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bias_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_bias"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_bias</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
@@ -864,6 +1154,7 @@ levels drives most flagged interaction cells.</li>
 corresponding tables and narrative reports.</li>
 </ul>
 </div>
+</div>
 <div class="section level2">
 <h2 id="custom-figures-without-losing-the-evidence-boundary">5. Custom figures without losing the evidence boundary<a class="anchor" aria-label="anchor" href="#custom-figures-without-losing-the-evidence-boundary"></a>
 </h2>
@@ -873,10 +1164,10 @@ or print workflow needs grayscale output. For journal figures, teaching
 material, dashboards, or lab-specific styles, use
 <code>draw = FALSE</code> and the plot-data accessors instead of editing
 screenshots.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/custom-plot-data-1.png" class="r-plt" alt="Monochrome Wright map of person, facet and step locations on the common logit scale. The accompanying code extracts the plotted locations for custom displays." width="672"></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">wright_payload</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"wright"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_data_components.html">plot_data_components</a></span><span class="op">(</span><span class="va">wright_payload</span><span class="op">)</span></span>
@@ -920,8 +1211,8 @@ screenshots.</p>
 <span><span class="co">#&gt; 5       22     22      TRUE     plot_data(x, component = "person_exclusions")</span></span>
 <span><span class="co">#&gt; 6        6      6     FALSE           plot_data(x, component = "person_hist")</span></span>
 <span><span class="co">#&gt; 7        7      7      TRUE          plot_data(x, component = "person_stats")</span></span>
-<span><span class="co">#&gt; 8       37     37      TRUE             plot_data(x, component = "locations")</span></span>
-<span><span class="co">#&gt; 9       43     43      TRUE          plot_data(x, component = "label_points")</span></span>
+<span><span class="co">#&gt; 8       38     38      TRUE             plot_data(x, component = "locations")</span></span>
+<span><span class="co">#&gt; 9       44     44      TRUE          plot_data(x, component = "label_points")</span></span>
 <span><span class="co">#&gt; 10      16     16      TRUE         plot_data(x, component = "group_summary")</span></span>
 <span><span class="co">#&gt; 11      NA      3     FALSE          plot_data(x, component = "group_levels")</span></span>
 <span><span class="co">#&gt; 12      NA      2     FALSE               plot_data(x, component = "y_range")</span></span>
@@ -976,50 +1267,50 @@ screenshots.</p>
 <span><span class="co">#&gt; 29                           Use for captions, QA checks, or report text.</span></span>
 <span><span class="co">#&gt; 30                                                                       </span></span>
 <span><span class="co">#&gt; 31                           Use for captions, QA checks, or report text.</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ColumnNames</span></span>
-<span><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span></span>
-<span><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span></span>
-<span><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span></span>
-<span><span class="co">#&gt; 4                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span></span>
-<span><span class="co">#&gt; 5                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span></span>
-<span><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           breaks, counts, density, mids, xname, equidist</span></span>
-<span><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                         N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD</span></span>
-<span><span class="co">#&gt; 8                                                                    Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus</span></span>
-<span><span class="co">#&gt; 9  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced</span></span>
-<span><span class="co">#&gt; 10                                                                                                                                                                                                                                                                                                                                                                                           Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap</span></span>
-<span><span class="co">#&gt; 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 13                                                                                                                                                                                                                                                                                                                                                                                                       Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy</span></span>
-<span><span class="co">#&gt; 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Component, Shown, Total, Omitted, RequestedTopN, Complete</span></span>
-<span><span class="co">#&gt; 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           label, role, aesthetic, value</span></span>
-<span><span class="co">#&gt; 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      axis, value, label, linetype, role</span></span>
-<span><span class="co">#&gt; 25                                                                                                                                                                                                                                                Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField</span></span>
-<span><span class="co">#&gt; 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Domain, Status</span></span>
-<span><span class="co">#&gt; 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
-<span><span class="co">#&gt; 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  show_title, show_notes</span></span>
-<span><span class="co">#&gt; 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Type, Text</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ColumnNames</span></span>
+<span><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </span></span>
+<span><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </span></span>
+<span><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </span></span>
+<span><span class="co">#&gt; 4                                                                                                                                                                                      Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span></span>
+<span><span class="co">#&gt; 5                                                                                                                                                                                      Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span></span>
+<span><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  breaks, counts, density, mids, xname, equidist</span></span>
+<span><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD</span></span>
+<span><span class="co">#&gt; 8                                                                    Group, Label, PlotType, Estimate, SE, Fixed, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus</span></span>
+<span><span class="co">#&gt; 9  Group, Label, PlotType, Estimate, SE, Fixed, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced</span></span>
+<span><span class="co">#&gt; 10                                                                                                                                                                                                                                                                                                                                                                                                  Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap</span></span>
+<span><span class="co">#&gt; 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 13                                                                                                                                                                                                                                                                                                                                                                                                              Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy</span></span>
+<span><span class="co">#&gt; 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      Component, Shown, Total, Omitted, RequestedTopN, Complete</span></span>
+<span><span class="co">#&gt; 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  label, role, aesthetic, value</span></span>
+<span><span class="co">#&gt; 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             axis, value, label, linetype, role</span></span>
+<span><span class="co">#&gt; 25                                                                                                                                                                                                                                                       Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField</span></span>
+<span><span class="co">#&gt; 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Domain, Status</span></span>
+<span><span class="co">#&gt; 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               </span></span>
+<span><span class="co">#&gt; 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         show_title, show_notes</span></span>
+<span><span class="co">#&gt; 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     Type, Text</span></span>
 <span></span>
 <span><span class="va">locations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">wright_payload</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locations</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 37</span></span></span>
-<span><span class="co">#&gt;   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 38</span></span></span>
+<span><span class="co">#&gt;   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span></span>
@@ -1044,7 +1335,7 @@ screenshots.</p>
 <span><span class="co">#&gt; 6 expected_score     Common -5.75 1.010755</span></span></code></pre></div>
 <p>When you build a custom figure, keep the helper’s guidance tables
 with the plot data:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">wright_payload</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "wright_style"          "renderer"              "visual_contract"      </span></span>
 <span><span class="co">#&gt;  [4] "person"                "person_exclusions"     "person_hist"          </span></span>
@@ -1070,7 +1361,7 @@ and reporting role used by the package-native plot.</p>
 <p>Use <code>options(mfrmr.plot_preset = "monochrome")</code> to set a
 common default in the development version. This example restores the
 previous option when it ends:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">local</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="va">old</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>mfrmr.plot_preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old</span><span class="op">)</span><span class="op">)</span></span>
@@ -1105,12 +1396,12 @@ screening thresholds or the user’s global ggplot theme.</p>
 <code><a href="../reference/plot_facets_chisq.html">plot_facets_chisq()</a></code>, <code><a href="../reference/plot_bubble.html">plot_bubble()</a></code>,
 <code><a href="../reference/plot_bias_interaction.html">plot_bias_interaction()</a></code> and
 <code><a href="../reference/plot_facet_quality_dashboard.html">plot_facet_quality_dashboard()</a></code>.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_bubble.html">plot_bubble</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, view <span class="op">=</span> <span class="st">"infit_outfit"</span>,</span>
 <span>                     title <span class="op">=</span> <span class="cn">NULL</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">plain</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/title-controls-1.png" class="r-plt" alt="Infit and Outfit mean squares for fitted facet levels, with the title omitted. Bubble sizes reflect rating counts; reference lines and the saved descriptive review band remain unchanged." width="672"></p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Reuse the saved values, screening references and interval settings.</span></span>
 <span><span class="va">plain</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">reference_lines</span></span>
 <span><span class="co">#&gt;   axis value                 label linetype      role</span></span>
@@ -1146,7 +1437,7 @@ measures; FairZ uses zero reference measures. FairZ is an expected score
 on the internal score scale, not a z-score. Observed-minus-fair gaps
 also reflect assignment and person mix, so they do not by themselves
 establish rater bias.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_fair</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_fair_average.html">plot_fair_average</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, metric <span class="op">=</span> <span class="st">"FairZ"</span>,</span>
 <span>  plot_type <span class="op">=</span> <span class="st">"measure"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span>,</span>
@@ -1232,7 +1523,7 @@ separately from the MFRM likelihood. Rapid and slow response-time flags
 are descriptive quality-control prompts; they do not change measures and
 should not be treated as proof of disengagement, cheating, or
 speededness.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">toy_rt</span> <span class="op">&lt;-</span> <span class="va">toy</span></span>
 <span><span class="va">toy_rt</span><span class="op">$</span><span class="va">ResponseTime</span> <span class="op">&lt;-</span> <span class="fl">12</span> <span class="op">+</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">toy_rt</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">7</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">toy_rt</span><span class="op">$</span><span class="va">Score</span><span class="op">)</span></span>
@@ -1287,7 +1578,7 @@ speededness.</p>
 <span><span class="co">#&gt; - Score-level summaries are descriptive and should not be read as response-time model parameters.</span></span>
 <span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-1.png" class="r-plt" alt="Distribution of synthetic response times with selected lower and upper quantile screens. These thresholds describe this example and do not diagnose careless responding." width="672"></p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_response_time_review.html">plot_response_time_review</a></span><span class="op">(</span><span class="va">rt</span>, type <span class="op">=</span> <span class="st">"person"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/response-time-review-2.png" class="r-plt" alt="Person-level summaries of synthetic response times. Compare flagged patterns with their rating counts and context before drawing substantive conclusions." width="672"></p>
 <p>Interpretation:</p>
@@ -1309,7 +1600,7 @@ large raw severity estimate can be a noisy estimate rather than a stable
 facet signal. The shrinkage funnel shows how far empirical-Bayes pooling
 moved each level toward the facet mean and whether the uncertainty
 remains wide after pooling.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_eb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_empirical_bayes_shrinkage.html">apply_empirical_bayes_shrinkage</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">shrink</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_shrinkage_funnel.html">plot_shrinkage_funnel</a></span><span class="op">(</span></span>
@@ -1369,7 +1660,7 @@ training. These eight fictional raters illustrate the mechanics; their
 groups are not estimates of severity, ability or rater quality. Choose
 attributes and their coding for the substantive question before
 interpreting a tree.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">backgrounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"R"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>,</span>
 <span>  Years <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span>, <span class="fl">10</span>, <span class="fl">12</span>, <span class="fl">15</span><span class="op">)</span>,</span>
@@ -1378,7 +1669,7 @@ interpreting a tree.</p>
 <span>    levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Basic"</span>, <span class="st">"Advanced"</span>, <span class="st">"Specialist"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_features.html">mfrm_features</a></span><span class="op">(</span><span class="va">backgrounds</span>, <span class="st">"Rater"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Years"</span>, <span class="st">"Training"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">hierarchy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_cluster_hierarchical.html">mfrm_cluster_hierarchical</a></span><span class="op">(</span><span class="va">features</span>, k <span class="op">=</span> <span class="fl">3</span>, linkage <span class="op">=</span> <span class="st">"average"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hierarchy_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">hierarchy</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/feature-hierarchy-1.png" class="r-plt" alt="Average-linkage dendrogram for eight fictional raters, based on Gower dissimilarities in experience and ordered training level. Labelled leaves identify raters and boxes show the requested three groups; heights are dissimilarities, not significance levels." width="672"></p>
 <p>Three groups were requested; the diagram does not select that number
@@ -1387,7 +1678,7 @@ linkage can change the branches. The full tree and memberships in leaf
 order are available for inspection. The development version supports
 both the base plot and a dedicated ggplot conversion of this saved
 tree.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">hierarchy_plot</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   ID Cluster Silhouette</span></span>
 <span><span class="co">#&gt; 7 R7       3  0.7428571</span></span>
@@ -1399,7 +1690,7 @@ tree.</p>
 <span><span class="co">#&gt; 5 R5       2  0.7500000</span></span>
 <span><span class="co">#&gt; 6 R6       2  0.6190476</span></span>
 <span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">hierarchy_plot</span>, component <span class="op">=</span> <span class="st">"tree"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">hierarchy_figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_ggplot.html">as_ggplot</a></span><span class="op">(</span><span class="va">hierarchy_plot</span>, component <span class="op">=</span> <span class="st">"tree"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="cn">NULL</span>, subtitle <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
@@ -1424,12 +1715,12 @@ changed facet counts. The packaged MGENOVA manual example has two
 scores, V and W, observed for Persons crossed with Tasks. Here the
 target is their equal-weight composite. There is no rater facet in this
 example.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tasks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"mgenova-table12.csv"</span>, package <span class="op">=</span> <span class="st">"mfrmr"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">gstudy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_multivariate_gstudy.html">mfrm_multivariate_gstudy</a></span><span class="op">(</span><span class="va">tasks</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V"</span>, <span class="st">"W"</span><span class="op">)</span>, rater <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="va">planned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mfrm_multivariate_d_study.html">mfrm_multivariate_d_study</a></span><span class="op">(</span><span class="va">gstudy</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Tasks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span>, weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>V <span class="op">=</span> <span class="fl">0.5</span>, W <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">planning_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">planned</span>, type <span class="op">=</span> <span class="st">"coefficients"</span>, preset <span class="op">=</span> <span class="st">"monochrome"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mfrmr-visual-diagnostics_files/figure-html/d-study-planning-1.png" class="r-plt" alt="G and Phi coefficients for an equally weighted V and W composite at three, six and twelve planned Tasks. Separate panels distinguish relative and absolute decisions; points identify requested designs, and lines guide the eye." width="672"></p>
 <p>G concerns relative comparisons among Persons; Phi concerns absolute
@@ -1438,7 +1729,7 @@ while holding the estimated covariance components and composite weights
 fixed. These are observed-score projections, not MFRM ability
 reliability or a guarantee for a new task population. Uncertainty in the
 estimated components is omitted.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">planning_plot</span>, component <span class="op">=</span> <span class="st">"table"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Scenario Tasks      Kind     Score UniverseVariance RelativeErrorVariance</span></span>
 <span><span class="co">#&gt; 3        1     3 Composite Composite        0.3438889            0.34987654</span></span>
@@ -1467,7 +1758,7 @@ ggplot conversion is currently unavailable.</p>
 </h2>
 <p>A batch returned by <code><a href="../reference/mfrm_calibration_workflow.html">score_mfrm_calibration()</a></code> is not a
 fitted-model diagnostic object. Review it through its own methods:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"interval"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scores</span>, type <span class="op">=</span> <span class="st">"precision"</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span>

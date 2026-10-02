@@ -644,7 +644,7 @@ precision_toy$checks
 #>                                                                                                                                                                                                    Detail
 #> 1 Uncertainty is conditional on the fitted model. Person posterior SDs condition on the fitted calibration; facet standard errors use observed information. Review interval assumptions before reporting.
 #> 2                                                                                                              Numerical convergence checks passed; this alone does not establish valid SEs or intervals.
-#> 3                                                                                                                                               Finite standard errors were available for 100.0% of rows.
+#> 3                                                                                                                                     Finite standard errors were available for 100.0% of non-fixed rows.
 #> 4                                                                                                              Among available pairs, fit-adjusted SEs were at least as large as their unadjusted values.
 #> 5                                                                                                     Among available pairs, fit-adjusted reliability values were not larger than the model-based values.
 #> 6                                                                                                                    Each facet had sample/population summaries for both model and fit-adjusted SE modes.

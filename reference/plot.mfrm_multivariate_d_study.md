@@ -112,6 +112,25 @@ horizontal axis, compare points along one line to change tasks while
 keeping raters constant. Compare lines at the same task count to change
 raters.
 
+Multivariate means several score criteria, not a requirement for a 3D
+plot. Use these 2D panels to compare counts while holding the other
+facet fixed. With many lines, specify a smaller set of relevant plans
+when creating the D-study and inspect scores/composites separately. This
+method does not draw a heatmap or 3D surface. For uncertainty in a
+prespecified change, use
+[`mfrm_multivariate_d_compare()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_d_compare.md)
+and its plot method; an SEM curve is not a confidence band.
+[`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md)
+supplies exact values, including unavailable estimates, and
+`preset = "monochrome"` retains line/point distinctions.
+
+Coefficients also depend on variation among persons. If universe-score
+variance increases while error variance stays constant, G and Phi
+increase but SEM does not decrease. Therefore, comparing coefficients
+across different populations does not isolate improvement in the
+assessment. Read the SEMs, score units and target population alongside
+the coefficients.
+
 Scenarios retain the G-study's crossed or nested structure, with
 complete balanced future conditions shared by every person and score.
 For a nested facet, the axis or legend says "per" to identify its count

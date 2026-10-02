@@ -70,9 +70,17 @@ summary(pred_units)
 #>   Posterior SDs and intervals condition on point estimates of the calibration
 #>   and prior; their estimation uncertainty is excluded.
 #> 
+#> Fixed-parameter integration review (adaptive minus fixed)
+#>  FixedNodes AdaptiveNodes Persons Unavailable MaxAbsLogMarginalChange
+#>          31            31       1           0            1.360903e-10
+#>          31            61       1           0            1.360911e-10
+#>  MaxAbsEAPChange MaxAbsSDChange
+#>     3.276639e-10   1.296825e-09
+#>     3.276640e-10   1.296825e-09
+#> 
 #> Posterior estimates (first 10)
-#>  Person Estimate    SD  Lower Upper Observations                         Review
-#>   NEW01   -0.112 0.683 -1.448 1.235            2 No source restriction recorded
+#>  Person Estimate    SD  Lower Upper Observations                       Review
+#>   NEW01   -0.112 0.683 -1.448 1.235            2 Source scoring checks passed
 #> 
 #> Response rows
 #>  InputRows KeptRows DroppedRows DroppedMissing DroppedBadScore DroppedBadWeight
@@ -82,4 +90,7 @@ summary(pred_units)
 #>   Non-person facets in `new_data` must already exist in the fitted calibration.
 #>   Overlapping person IDs are treated as labels in `new_data`; the original
 #>   fitted person estimates are not updated.
+#>   Scoring integration compares the reported EAP and SD with adaptive reference
+#>   orders under the same calibration and prior. Passing does not validate the
+#>   scoring prior for another population.
 ```

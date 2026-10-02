@@ -40,16 +40,20 @@ helper. In either case, read `Boundary` for the reason and
 
 ``` r
 gpcm_runtime_guard_coverage()
-#>                                          Area                          Helper
-#> 1    FACETS output-contract score-side review facets_output_contract_review()
-#> 2 Posterior-predictive and Bayesian workflows                            <NA>
-#>     Status
-#> 1  blocked
-#> 2 deferred
-#>                                                                                                                                                                                                                                                               Boundary
-#> 1 Limited to direct scorefile export rather than the full FACETS-style output-contract review. Direct scorefile export is available with caveats, but contract-wide coverage and metric claims still require a broader free-discrimination score-side review contract.
-#> 2                                                                                                                                                                            mfrmr does not currently provide posterior-predictive checks or MCMC estimation for GPCM.
+#>                                                       Area
+#> 1                 FACETS output-contract score-side review
+#> 2              Posterior-predictive and Bayesian workflows
+#> 3 Formal structural confidence intervals for corrected JML
+#>                            Helper   Status
+#> 1 facets_output_contract_review()  blocked
+#> 2                            <NA> deferred
+#> 3                            <NA> deferred
+#>                                                                                                                                                                                                                                                                                                                   Boundary
+#> 1                                                     Limited to direct scorefile export rather than the full FACETS-style output-contract review. Direct scorefile export is available with caveats, but contract-wide coverage and metric claims still require a broader free-discrimination score-side review contract.
+#> 2                                                                                                                                                                                                                                mfrmr does not currently provide posterior-predictive checks or MCMC estimation for GPCM.
+#> 3 Formal corrected-JML structural intervals are unavailable. The explicit corrected estimator reports local adjusted-equation RootSE, not established structural coverage. Uncorrected JML location SEs and post-hoc Person intervals answer different questions. None is a bias-corrected structural confidence interval.
 #>                                                                                                                                                                                             RecommendedRoute
 #> 1 Use direct fair-average tables and graph-only compatibility outputs; use package-native scorefile export with its stated caveats, and keep full FACETS output-contract reviews on the `RSM` / `PCM` route.
 #> 2                                                             Use the current MML fitting and fitted-object posterior scoring routes, or use external Bayesian software when posterior sampling is required.
+#> 3                          Use current JML outputs within their descriptive scope, or explicitly choose MML inference if its population assumptions suit the analysis; do not transfer MML intervals to JML.
 ```

@@ -59,7 +59,11 @@ A list with `probabilities` (rows by categories), `expected_scores`,
 `newdata`, `ability`, `settings` and matching `source` metadata for
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
 No model is refitted. Save this list together with the fitted model and
-prediction inputs.
+prediction inputs. The settings record the effect-sharing unit and
+whether integration uses the observed rater's conditional distribution
+or the replacement-rater population. These are preserved in the
+prediction settings table of
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md).
 
 ## Details
 

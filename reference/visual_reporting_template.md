@@ -318,7 +318,7 @@ mfrmr_interval_guide("visual")[, c("Route", "PrimaryHelper", "DefaultLevel")]
 #> 13                                                                                 plot_rater_trajectory(..., ci_level = 0.95)
 #> 14 plot_shrinkage_funnel(..., show_ci = TRUE, ci_level = 0.95); plot(fit, type = "shrinkage", show_ci = TRUE, ci_level = 0.95)
 #> 15                           compute_facet_icc(ci_method = "boot", ci_level = 0.95); plot(analyze_hierarchical_structure(...))
-#> 16                                                         mfrm_facet_intervals(fit, facet, method = "sandwich", level = 0.95)
+#> 16                                                            mfrm_facet_intervals(fit, facet, method = "model", level = 0.95)
 #> 17                                                                         pool_mfrm_imputed(analyses, facet, ci_level = 0.95)
 #> 18                                                                                 confint(fit, parm = "raters", level = 0.95)
 #> 19                                                      mfrm_random_rater_intervals(fit, nsim = 499, seed = 123, level = 0.95)

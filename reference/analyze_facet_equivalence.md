@@ -31,7 +31,8 @@ analyze_facet_equivalence(
   Supplied diagnostics must retain all target-facet levels, model-based
   SEs and ordinary-inference eligibility. Estimates and covariance are
   always taken from `fit`; supplying diagnostics cannot override its
-  restrictions.
+  restrictions. Fixed levels instead require their fixed-value labels
+  and absent sampling SEs.
 
 - facet:
 
@@ -140,8 +141,13 @@ mean.
 
 - `rope` / `forest`: `Measure`, marginal `SE` and `CI_Lower`/`CI_Upper`,
   plus `Deviation`, `DeviationSE` and
-  `DeviationCI_Lower`/`DeviationCI_Upper` for proximity to the equally
-  weighted facet mean.
+  `DeviationCI_Lower`/`DeviationCI_Upper` for the difference from the
+  estimated facet mean. `Fixed` marks an anchored or constraint-fixed
+  location: its conditional marginal `SE` is zero and its marginal
+  interval is absent. Its deviation from an estimated mean, or contrast
+  with an estimated level, can still have nonzero uncertainty. The
+  forest plot displays these deviations, not the anchored locations. No
+  uncertainty in supplied anchor values is propagated.
 
 ## Recommended next step
 

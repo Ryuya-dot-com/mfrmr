@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot fitted MFRM results with base R</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-plotting-fit-family.R" class="external-link"><code>R/api-plotting-fit-family.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-plotting-fit-family.R" class="external-link"><code>R/api-plotting-fit-family.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_fit.Rd</code></div>
     </div>
 
@@ -461,6 +461,22 @@ types (<code>"facet"</code>, <code>"person"</code>, <code>"step"</code>, <code>"
 compact location-specific displays.</p>
     </div>
     <div class="section level2">
+    <h2 id="corrected-jml-plots">Corrected JML plots<a class="anchor" aria-label="anchor" href="#corrected-jml-plots"></a></h2>
+
+
+<p>A fit with an explicit <code>jml_correction_order</code> uses <code>type = "slopes"</code>
+(default), <code>"locations"</code> or <code>"steps"</code>. Locations show one <code>facet</code>, defaulting
+to the first declared facet. <code>style = "points"</code> shows estimates without
+intervals; <code>"distribution"</code> shows their empirical cumulative distribution.
+These displays do not classify rater quality. They support <code>title</code>, <code>caption</code>,
+<code>show_title</code>, <code>show_notes</code>, <code>show_labels</code>, <code>sort</code>, <code>palette</code>, <code>preset</code>,
+<code>text_scale</code>, <code>point_size</code>, and draw-free <code><a href="as_ggplot.html">as_ggplot()</a></code> conversion. Slopes
+use a reference of one; location/step displays use zero. Ordinary plot types,
+<code>show_ci = TRUE</code>, and unrelated plot controls are rejected for this estimator.
+The figure retains point estimates if their RootSE is unavailable; it cannot
+be drawn if no unambiguous point solution was obtained.</p>
+    </div>
+    <div class="section level2">
     <h2 id="graphics-layout">Graphics layout<a class="anchor" aria-label="anchor" href="#graphics-layout"></a></h2>
 
 
@@ -565,15 +581,15 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 <span class="r-in"><span><span class="co"># Optional: get plot data instead of drawing a figure</span></span></span>
 <span class="r-in"><span><span class="va">wright</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">wright</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">locations</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 37</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 38</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span>

@@ -50,7 +50,7 @@ agreement, quality or recommended scoring weights."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Display saved GPCM intervals and bootstrap results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-gpcm-reporting.R" class="external-link"><code>R/api-gpcm-reporting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-gpcm-reporting.R" class="external-link"><code>R/api-gpcm-reporting.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_slope_intervals.Rd</code></div>
     </div>
 
@@ -71,7 +71,9 @@ agreement, quality or recommended scoring weights.</p>
 <span>    <span class="st">" | "</span><span class="op">)</span>,</span>
 <span>  reference <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  draw <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"interval"</span>, <span class="st">"profile"</span><span class="op">)</span>,</span>
+<span>  caption <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'mfrm_gpcm_bootstrap'</span></span>
@@ -111,6 +113,20 @@ no quality threshold or scoring-policy cutoff is selected.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>For bootstrap slope results, passed to <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> to select its
 target and level. Otherwise unused.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>For saved slope intervals, <code>"interval"</code> displays bounds;
+<code>"profile"</code> displays saved likelihood evaluations and the same-target Wald
+limits. The default is <code>"profile"</code> for saved profile calculations and
+<code>"interval"</code> otherwise. This never initiates profiling.</p></dd>
+
+
+<dt id="arg-caption">caption<a class="anchor" aria-label="anchor" href="#arg-caption"></a></dt>
+<dd><p>For saved slope intervals, optional caption. NULL removes it.
+Two-family intervals state the distinct family references by default.
+Profile plots supply a
+default explanation of line styles and missing coordinates when omitted.</p></dd>
 
 </dl></div>
     <div class="section level2">

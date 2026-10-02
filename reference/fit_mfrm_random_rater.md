@@ -229,6 +229,19 @@ numerical check cannot assess those population assumptions. Earlier
 saved fits without ability-population parameters retain their original
 known N(0,1) meaning for predictions, profiles and bootstrap refits.
 
+## Relation to testlets and discrimination
+
+A shared severity effect is not a random discrimination parameter. This
+RSM does not estimate GPCM slopes. Its rater effect spans persons,
+whereas
+[`fit_mfrm_testlet()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm_testlet.md)
+uses a distinct effect for each Person/block pair, even when the block
+is named Rater. These sharing structures lead to different marginal
+likelihoods and prediction targets; the two routes cannot currently be
+combined. See
+[`gpcm_capability_matrix()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_capability_matrix.md)
+for the relationship to fixed slope families and local independence.
+
 ## Comparison with fixed-rater MFRM
 
 Compare the same observed rating events, categories, fixed facets and

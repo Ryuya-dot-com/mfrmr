@@ -159,6 +159,11 @@ summary rather than as a design-free abstract test function.
 
 ## Interpreting output
 
+Category variance is computed from squared deviations about its mean to
+retain small positive information near an endpoint category. This avoids
+cancellation in raw second moments; it does not eliminate floating-point
+underflow or account for calibration uncertainty.
+
 - `$tif`: design-weighted precision curve data with theta, Information,
   and SE.
 

@@ -32,7 +32,14 @@ summary(object, ...)
   An inference-ready RSM/PCM MML fit from
   [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
   using a fixed standard-normal person distribution, fixed quadrature
-  and unit observation weights.
+  and unit observation weights. Experimental two-family GPCM MML also
+  supports `method = "model"` with fixed-grid EM or direct adaptive
+  integration; see "Two-family location targets" below. Experimental
+  direct MML native locations additionally support estimated
+  intercept-only normal RSM/PCM and one-family GPCM with fixed N(0,1) or
+  an estimated intercept-only normal population, using fixed or adaptive
+  integration; see "Native locations" below for their scope and separate
+  numerical checks.
 
 - facet:
 
@@ -48,7 +55,10 @@ summary(object, ...)
 - method:
 
   `"model"` (default) uses ordinary observed information; `"sandwich"`
-  uses independent-cluster marginal-likelihood scores.
+  uses independent-cluster marginal-likelihood scores. The experimental
+  native-location and two-family extensions support only `"model"`;
+  sandwich support remains limited to the ordinary fixed-population
+  RSM/PCM route.
 
 - clusters:
 
@@ -89,6 +99,13 @@ category scores or ability estimates. Scores are absent for
 `method = "model"`. When weak information passes numerical refinement,
 `cautions` and `information_review` retain the warning and checks.
 `InferenceCaution` also accompanies the interval table when applicable.
+Two-family results additionally retain `checks`, `numerical_checks`,
+`score_rank`, source identity, scale references and interval refusal
+reasons. Their table includes `CIEligible`; failed numerical checks
+leave bounds and SEs missing while preserving the fitted point
+estimates. Native-location results retain checks, numerical comparisons,
+full and target covariance, target Jacobian and source identity, without
+an empirical Person-score rank requirement.
 
 ## Details
 
@@ -112,14 +129,97 @@ regularity. It permits dependence within the declared unit but does not
 establish independence between units. A small number of units can give
 poor intervals even with nonsingular covariance. If their scores do not
 span the free-parameter space, sandwich intervals are unavailable; point
-estimates and the reason remain. Singular/regularized observed
-information or an ineligible source fit causes an error. Targets fixed
-by constraints have no inferential interval. Known anchors exclude
-anchor uncertainty. An ill-conditioned but numerically verified
-unregularized inverse can be used with a warning. Successful inversion
-does not establish reliable normal intervals. Review interval width,
-boundary proximity and quadrature sensitivity; changing to sandwich
-covariance does not remove this concern.
+estimates and the reason remain. For ordinary fixed-population RSM/PCM,
+singular/regularized observed information or an ineligible source fit
+causes an error. Targets fixed by constraints have no inferential
+interval. Known anchors exclude anchor uncertainty. An ill-conditioned
+but numerically verified unregularized inverse can be used with a
+warning. Successful inversion does not establish reliable normal
+intervals. Review interval width, boundary proximity and quadrature
+sensitivity; changing to sandwich covariance does not remove this
+concern.
+
+## Native locations
+
+For estimated intercept-only normal RSM/PCM and one-family GPCM MML,
+`method = "model"` supplies experimental pointwise normal intervals for
+locations or contrasts on the model's native ability scale. One-family
+GPCM also admits the explicit fixed-N(0,1) restriction
+(`gpcm_mml_identification = "fixed_standard_normal"`). Shared or
+separate slope/step owners are supported, with geometric-mean-one
+relative slopes. Use direct MML, fixed or adaptive integration, unit
+weights, additive centered facets and centered steps. Anchors,
+interactions, latent regression and sandwich covariance are unavailable
+in this added route.
+
+The covariance transforms the inverse full joint marginal information,
+including all estimated population, slope and step coordinates. A
+location-only inverse or independent printed SEs cannot replace it. The
+source, category support, local solution and unregularized information
+must pass checks; covariance and score changes are also checked at a
+finer integration order at the same fitted parameter vector. This
+model-information procedure has no empirical Person-score rank
+requirement. A numerical refusal preserves the native point and its
+reason with unavailable SE/bounds. Constraint-fixed targets have no
+inferential interval.
+
+These numerical checks do not establish sampling coverage, global
+identification or robustness to misspecification. Native locations are
+not divided by the estimated population SD; standardized targets would
+additionally need that SD's uncertainty and cross-covariances. A
+location difference need not produce a uniform rating difference with
+unequal slopes or steps. The calculation does not refit or change the
+saved fit/readiness. Save and attach `ci` with
+`mfrm_results(fit, intervals = list(locations = ci), compute = "never")`;
+select `plot(res, type = "facet_locations")` for RSM/PCM or
+`"gpcm_locations"` for one-family GPCM. Reports and exports retain the
+native scale, experimental status and unavailable outputs.
+
+## Two-family location targets
+
+For native two-family GPCM MML, select either modeled non-Person facet.
+The first slope owner's locations sum to zero; the second owner's
+locations are uncentered on the fixed N(0,1) ability scale. These
+locations are measured before multiplication by both slope components.
+Increasing a location lowers expected ratings when ability, slopes and
+other effects stay fixed. A contrast between actual raters need not
+imply a uniform difference in expected ratings: their slopes and
+category-step offsets may also differ. Neither zero nor a location
+difference defines rater quality or accuracy.
+
+Let `J` expand the free location coordinates under their fitted
+constraints and `C` be the requested contrast matrix. The target
+covariance is `C J V J' C'`, where `V` is the location block extracted
+*after inverting the full joint marginal information*. Slopes, steps and
+the other facet remain estimated nuisance parameters. Inverting a
+location-only Hessian, adding independent printed SEs, or using the EM
+conditional-objective Hessian would omit their joint estimation
+uncertainty.
+
+The source fit must pass the same identity, category support, local
+score rank, stationarity, full-information and finer-quadrature checks
+used for experimental two-family slope intervals in
+[`confint.mfrm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/confint.mfrm_fit.md).
+The full covariance is checked, but passing these numerical checks does
+not establish repeated-sample coverage for locations or contrasts.
+Evidence for component slope intervals does not qualify these different
+targets. These are experimental pointwise normal approximations, with no
+sandwich, profile, multiplicity or automatic significance decision. A
+failed check retains estimates and reasons with unavailable intervals,
+even if the coarse-grid information could be inverted. Constraint-fixed
+targets have no interval. The calculation does not refit or change
+quadrature in the saved fit.
+
+For example, use `ci <- mfrm_facet_intervals(fit, "Rater")`, or supply a
+named zero-sum row of `contrasts` for a difference. Plot and save `ci`
+directly, or attach it with
+`mfrm_results(fit, intervals = list(locations = ci))` and select
+`plot(res, type = "gpcm_locations")`. The model must actually contain
+the specified facet. Location intervals do not add category-step/curve
+bands, Person uncertainty, Wright maps or tests of rater competence.
+Individual two-family rater sheets currently display component-slope
+intervals only; use the analyst report for these location and contrast
+results.
 
 ## What robustness means here
 
@@ -142,15 +242,15 @@ helper reuses the fitted grid.
 
 ## Bounded evaluation
 
-A 1,600-dataset RSM/PCM comparison used 80/320 independent persons,
-three fixed raters and two criteria. In its combined
-skewed-ability/sparse-design scenario, sandwich coverage of generating
-contrasts ranged from 87.0 to 95.5 percent despite all intervals being
-available. Coverage of the independently calculated working-model
-targets ranged from 93.0 to 97.5 percent. These are ranges across
-conditions/contrasts, not uncertainty bounds or universal operating
-characteristics. At 200 datasets per condition, MCSE near 95 percent is
-about 1.54 percentage points. See
+For the RSM/PCM route, a 1,600-dataset comparison used 80/320
+independent persons, three fixed raters and two criteria. In its
+combined skewed-ability/sparse-design scenario, sandwich coverage of
+generating contrasts ranged from 87.0 to 95.5 percent despite all
+intervals being available. Coverage of the independently calculated
+working-model targets ranged from 93.0 to 97.5 percent. These are ranges
+across conditions/contrasts, not uncertainty bounds or universal
+operating characteristics. At 200 datasets per condition, MCSE near 95
+percent is about 1.54 percentage points. See
 [`vignette("mfrmr-facet-intervals", package = "mfrmr")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-facet-intervals.md)
 for the design, interpretation and a complete rater-feedback example.
 
@@ -163,12 +263,14 @@ and
 to display or extract the saved result, and
 [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
 for tables. Set `title = NULL`, `subtitle = NULL` or `caption = NULL` in
-the plot to omit that text. Attach one result or a named list to
+the plot to omit that text. For RSM/PCM, attach one result or a named
+list to
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),
 for example
 `mfrm_results(fit, intervals = list(raters = intervals), include = c("fit", "plots"), compute = "never")`.
 The route `plot(res, type = "facet_raters")` shows the selected
-intervals.
+intervals. For two-family GPCM, the corresponding plot type is
+`"gpcm_raters"`.
 [`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
 and
 [`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)

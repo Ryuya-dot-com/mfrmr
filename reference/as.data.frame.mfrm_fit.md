@@ -36,7 +36,14 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 A data.frame with columns `Facet`, `Level`, `Estimate`, and `Extreme`.
 The `Extreme` column is populated for person rows from the extreme-score
 flag (`"Min"` / `"Max"` / `NA`); non-person facet rows carry `NA` in
-that column by design.
+that column by design. Corrected-JML fits additionally retain estimator,
+correction order, point/covariance status, uncertainty target and
+structural `RootSE` columns. Person `RootSE` is missing; extreme Person
+flags are `"low"` / `"high"` / `"none"`. The `estimation_note` attribute
+explains the local-root uncertainty and remaining bias. Ordinary
+diagnostic attachments do not apply to this estimator; see the Corrected
+JML section of
+[`fit_mfrm`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
 
 ## Details
 

@@ -54,7 +54,7 @@ refitting a model."><meta property="og:image" content="https://ryuya-dot-com.git
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review and plot portable fixed-calibration scores</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-calibration-methods.R" class="external-link"><code>R/api-calibration-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-calibration-methods.R" class="external-link"><code>R/api-calibration-methods.R</code></a></small>
       <div class="d-none name"><code>mfrm_calibration_score_methods.Rd</code></div>
     </div>
 
@@ -161,7 +161,16 @@ two outer quadrature nodes with the recorded review threshold. Review
 dispositions are highlighted in every view.</p>
 <p>These are score-batch review displays, not calibration-fit diagnostics.
 Posterior SDs and intervals are conditional on the frozen point calibration
-and its recorded prior. They exclude calibration-parameter uncertainty.
+and the actual scoring prior. They exclude calibration-parameter uncertainty.
+For GPCM or an explicitly supplied scoring prior, summaries and plot data
+retain both original and actual prior values without rounding, the per-Person
+integration checks, and (for GPCM) the source decision recorded at extraction.
+These records describe conditional scoring, not a new evaluation of the
+training fit or the suitability of its population for another cohort.
+<code>summary(x)$settings$score_integration_review</code> compares the reported EAP/SD
+with higher-order adaptive references. The separate <code>quadrature_review</code>
+compares adaptive and fixed grids; for an adaptive scorer, that fixed grid
+did not produce the reported scores. Printing distinguishes the two checks.
 Persons with no valid responses have no score coordinate and are retained
 in <code>summary(x)$review</code> and in the plot payload's
 <code>unplotted_dispositions</code> component.</p>
@@ -235,7 +244,7 @@ appearance, not estimates, confidence levels or diagnostic thresholds.</p>
 <span class="r-in"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="mfrm_calibration_workflow.html">score_mfrm_calibration</a></span><span class="op">(</span><span class="va">calibration</span>, <span class="va">new_rows</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrmr Portable Calibration Score Summary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Calibration: mfrmr-calibration-v1:rsm:mml:20260926105014279093</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calibration: mfrmr-calibration-v1:rsm:mml:20261002003617891290</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Model / estimator: RSM / MML</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Persons: 2 scored (0 requiring review); 0 not scored</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

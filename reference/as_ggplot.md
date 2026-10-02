@@ -46,7 +46,9 @@ as_ggplot(x, type = NULL, component = NULL, ...)
 - x:
 
   An `mfrm_plot_data` object, or an mfrmr object with a draw-free plot
-  method.
+  method. Corrected-JML slope, location and step plots retain their
+  point or cumulative-distribution view, labels, reference and
+  interpretation note; conversion does not add confidence intervals.
 
 - type:
 
@@ -100,8 +102,9 @@ excluded rows, display controls and alternative text; see
 Threshold-sensitivity tile and curve payloads also preserve their
 selected view, display controls and text alternatives; see
 [`plot.mfrm_screening_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_screening_sensitivity.md).
-Posterior predictive residual displays preserve their descriptive
-meaning and lack of reference cutoffs; see
+Response residual displays preserve their posterior or conditional
+plug-in probability definition and lack of reference cutoffs. Paired
+views retain available Infit when Outfit is undefined; see
 [`plot.mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot.mfrm_response_diagnostics.md).
 Testlet conversions retain unavailable rows, prior-only symbols and the
 conditional-interval note; they do not estimate diagnostics or add
@@ -121,19 +124,23 @@ for other tables. Difference-interval plots from
 use their base [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 method or
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md);
-automatic conversion is not supported. External-feature PCA scree,
-scores and loadings views have dedicated conversions. They preserve
-selected axes, retained-component symbols, saved group colours and
-shapes, labels and transformation metadata. Scores retain equal axis
-units; loading coefficients are not correlations. The default and
-`component = "table"` use the same complete PCA view. Use
-`ggplot2::labs(title = NULL, subtitle = NULL)` to remove headings from
-the returned ggplot. No PCA or clustering is refitted. External-feature
-dendrogram conversion retains the stored merges, heights, leaf order and
-group boxes, including tied-height cuts. The default and
-`component = "tree"` use the same complete view. Labels follow the saved
-setting; no tree is refitted or partition selected. Source metadata
-remain available with
+automatic conversion is not supported. Residual-PCA scree, reference,
+excess and loadings plots have dedicated conversions with the default or
+`component = "data"`. They preserve saved eigenvalues, reference
+cutoffs, signed loadings and display encodings; method identifiers are
+not inferred as plotted variables. No PCA is recomputed.
+External-feature PCA scree, scores and loadings views have dedicated
+conversions. They preserve selected axes, retained-component symbols,
+saved group colours and shapes, labels and transformation metadata.
+Scores retain equal axis units; loading coefficients are not
+correlations. The default and `component = "table"` use the same
+complete PCA view. Use `ggplot2::labs(title = NULL, subtitle = NULL)` to
+remove headings from the returned ggplot. No PCA or clustering is
+refitted. External-feature dendrogram conversion retains the stored
+merges, heights, leaf order and group boxes, including tied-height cuts.
+The default and `component = "tree"` use the same complete view. Labels
+follow the saved setting; no tree is refitted or partition selected.
+Source metadata remain available with
 [`plot_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data.md).
 Heights are not significance or branch support. Imputation co-membership
 heatmaps have dedicated conversion with the default or

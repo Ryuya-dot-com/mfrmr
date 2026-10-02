@@ -77,10 +77,10 @@ testlet_fit <- fit_mfrm_testlet(
 )
 testlet_fit$checks
 #> $LogLikDifference
-#> [1] 4.695266e-10
+#> [1] 4.69413e-10
 #> 
 #> $GradientDifference
-#> [1] 2.796459e-08
+#> [1] 2.796461e-08
 #> 
 #> $MomentDifference
 #> [1] 2.454624e-09
@@ -253,10 +253,10 @@ scores$table
 #> 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399
 #> 4   P004       16        4 0.7909065     0.3236000  0.166906739 1.436372
 #>                  Status IntegrationDifference Reason
-#> 1 available_conditional          2.664535e-15       
-#> 2 available_conditional          2.664535e-15       
-#> 3 available_conditional          4.996004e-15       
-#> 4 available_conditional          5.107026e-15
+#> 1 available_conditional          1.885644e-15       
+#> 2 available_conditional          1.887379e-15       
+#> 3 available_conditional          3.552714e-15       
+#> 4 available_conditional          3.552714e-15
 plot(scores)
 ```
 
@@ -376,9 +376,9 @@ review$table
 #> 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399
 #> 4   P004        0        0 0.0000000     0.9823014 -1.925275381 1.925275
 #>                  Status IntegrationDifference Reason
-#> 1 available_conditional          4.440892e-15       
-#> 2 available_conditional          2.664535e-15       
-#> 3 available_conditional          4.996004e-15       
+#> 1 available_conditional          1.974549e-15       
+#> 2 available_conditional          1.887379e-15       
+#> 3 available_conditional          3.552714e-15       
 #> 4            prior_only          0.000000e+00
 review$data_usage
 #>    Input Observed  Omitted 
@@ -438,10 +438,10 @@ plot_data(saved_plot)$table
 #> 3   P003       16        4 1.0950556     0.3379523  0.447620707 1.773399
 #> 4   P004       16        4 0.7909065     0.3236000  0.166906739 1.436372
 #>                  Status IntegrationDifference Reason
-#> 1 available_conditional          2.664535e-15       
-#> 2 available_conditional          2.664535e-15       
-#> 3 available_conditional          4.996004e-15       
-#> 4 available_conditional          5.107026e-15
+#> 1 available_conditional          1.885644e-15       
+#> 2 available_conditional          1.887379e-15       
+#> 3 available_conditional          3.552714e-15       
+#> 4 available_conditional          3.552714e-15
 ```
 
 ## Connect to the common graphics and table workflow
@@ -466,7 +466,7 @@ return the stored results without drawing or refitting:
 plot_data_components(scores)
 #>          PlotName         Component                Role ObjectType Rows Columns
 #> 1  testlet_scores             table        primary_data data.frame    4      10
-#> 2  testlet_scores          settings            settings  list:list   NA       9
+#> 2  testlet_scores          settings            settings  list:list   NA      12
 #> 3  testlet_scores            labels    scalar_or_vector  character   NA      NA
 #> 4  testlet_scores             title    scalar_or_vector  character   NA      NA
 #> 5  testlet_scores              xlab    scalar_or_vector  character   NA      NA
@@ -483,7 +483,7 @@ plot_data_components(scores)
 #> 16 testlet_scores   reference_lines          annotation data.frame    0       5
 #>    Length IsTabular                                      Accessor
 #> 1      10      TRUE             plot_data(x, component = "table")
-#> 2       9     FALSE          plot_data(x, component = "settings")
+#> 2      12     FALSE          plot_data(x, component = "settings")
 #> 3       4     FALSE            plot_data(x, component = "labels")
 #> 4       1     FALSE             plot_data(x, component = "title")
 #> 5       1     FALSE              plot_data(x, component = "xlab")
@@ -515,23 +515,23 @@ plot_data_components(scores)
 #> 14                                                                       
 #> 15                 Use to reproduce color, line-type, or legend mappings.
 #> 16 Use with primary data to draw thresholds, labels, and reference lines.
-#>                                                                                                                                                     ColumnNames
-#> 1                                                      Person, Observed, Testlets, Estimate, ConditionalSD, Lower, Upper, Status, IntegrationDifference, Reason
-#> 2  level, quad_points, check_points, missing, calibration_uncertainty, estimated_variance_boundary, estimated_person_variance_boundary, person_variance, target
-#> 3                                                                                                                                                              
-#> 4                                                                                                                                                              
-#> 5                                                                                                                                                              
-#> 6                                                                                                                                                              
-#> 7                                                                                                                                                              
-#> 8                                                                                                                                                    Type, Text
-#> 9                                                                                                                                                              
-#> 10                                          style, sort, rows, palette, show_title, show_notes, show_labels, reference, text_scale, point_size, limits, padding
-#> 11                                                                                                      Label, Estimate, Width, Shape, Colour, Included, Reason
-#> 12                                                                                                                                         Estimate, Cumulative
-#> 13                                                                                                                                         Estimate, Cumulative
-#> 14                                                                                                                                                             
-#> 15                                                                                                                                label, role, aesthetic, value
-#> 16                                                                                                                           axis, value, label, linetype, role
+#>                                                                                                                                                                                                       ColumnNames
+#> 1                                                                                                        Person, Observed, Testlets, Estimate, ConditionalSD, Lower, Upper, Status, IntegrationDifference, Reason
+#> 2  level, quad_points, check_points, missing, calibration_uncertainty, effect_sharing, local_effect_integration, roster, estimated_variance_boundary, estimated_person_variance_boundary, person_variance, target
+#> 3                                                                                                                                                                                                                
+#> 4                                                                                                                                                                                                                
+#> 5                                                                                                                                                                                                                
+#> 6                                                                                                                                                                                                                
+#> 7                                                                                                                                                                                                                
+#> 8                                                                                                                                                                                                      Type, Text
+#> 9                                                                                                                                                                                                                
+#> 10                                                                                            style, sort, rows, palette, show_title, show_notes, show_labels, reference, text_scale, point_size, limits, padding
+#> 11                                                                                                                                                        Label, Estimate, Width, Shape, Colour, Included, Reason
+#> 12                                                                                                                                                                                           Estimate, Cumulative
+#> 13                                                                                                                                                                                           Estimate, Cumulative
+#> 14                                                                                                                                                                                                               
+#> 15                                                                                                                                                                                  label, role, aesthetic, value
+#> 16                                                                                                                                                                             axis, value, label, linetype, role
 score_table <- plot_data(scores, component = "table")
 plot_data(testlet_fit, component = "table", facet = "Rater")
 #>     Parameter Facet Level   Estimate         SE Upper Lower
@@ -653,14 +653,14 @@ model_comparison$effects
 #> 7     Rater          R03      0.17863651       0.18223377    6.938894e-18
 #> 8     Rater          R04      0.31163997       0.31618617    6.938894e-18
 #>   CenterComparison   Reference  Comparison        Mean   Difference
-#> 1     1.734723e-17  0.23250785  0.23698253  0.23474519  0.004474682
-#> 2     1.734723e-17 -0.38809689 -0.39556320 -0.39183004 -0.007466312
-#> 3     1.734723e-17  0.09102647  0.09277729  0.09190188  0.001750824
-#> 4     1.734723e-17  0.06456257  0.06580338  0.06518297  0.001240805
-#> 5     1.387779e-17 -0.18292092 -0.18556593 -0.18424342 -0.002645009
-#> 6     1.387779e-17 -0.30735556 -0.31285402 -0.31010479 -0.005498464
-#> 7     1.387779e-17  0.17863651  0.18223377  0.18043514  0.003597266
-#> 8     1.387779e-17  0.31163997  0.31618617  0.31391307  0.004546207
+#> 1     2.081668e-17  0.23250785  0.23698253  0.23474519  0.004474682
+#> 2     2.081668e-17 -0.38809689 -0.39556320 -0.39183004 -0.007466312
+#> 3     2.081668e-17  0.09102647  0.09277729  0.09190188  0.001750824
+#> 4     2.081668e-17  0.06456257  0.06580338  0.06518297  0.001240805
+#> 5     2.775558e-17 -0.18292092 -0.18556593 -0.18424342 -0.002645009
+#> 6     2.775558e-17 -0.30735556 -0.31285402 -0.31010479 -0.005498464
+#> 7     2.775558e-17  0.17863651  0.18223377  0.18043514  0.003597266
+#> 8     2.775558e-17  0.31163997  0.31618617  0.31391307  0.004546207
 #>          ReferenceKind       ComparisonKind                Status Reason
 #> 1 Fixed facet estimate Fixed facet estimate available_descriptive       
 #> 2 Fixed facet estimate Fixed facet estimate available_descriptive       
@@ -998,11 +998,11 @@ summary(report, view = "reader")
 #>         Numerical checks     ok                    Numerical only
 #>  Interval interpretation caveat Conditional on stated assumptions
 #>    Model-fit diagnostics caveat                  Descriptive only
-#>                                                                                MainIssue
-#>                                  Numerical checks satisfied; model adequacy not assessed
-#>                                 Numerical convergence does not establish model adequacy.
-#>                        Read the target and uncertainty basis for each reported quantity.
-#>  Same-data posterior predictive residuals have no calibrated reference cutoffs or tests.
+#>                                                                                                                                                                                                              MainIssue
+#>                                                                                                                                                                Numerical checks satisfied; model adequacy not assessed
+#>                                                                                                                                                               Numerical convergence does not establish model adequacy.
+#>                                                                                                                                                      Read the target and uncertainty basis for each reported quantity.
+#>  768 of 768 selected rows have standardized residuals; 0 unresolved, 0 missing scores, 0 zero-variance rows. 0 source rows were not selected. Same-data description with calibration fixed; no calibrated fit cutoffs.
 #>                                                                                NextAction
 #>                         Review numerical checks, interval meanings and the rating design.
 #>                                            Inspect all stored checks and boundary status.
@@ -1012,7 +1012,7 @@ summary(report, view = "reader")
 #>     report$tables$interpretation
 #>   report$tables$numerical_checks
 #>     report$tables$interval_basis
-#>  report$tables$response_measures
+#>  report$tables$response_overview
 #> 
 #> Claim readiness
 #>        Readiness Claims                                 ExampleClaim
@@ -1022,15 +1022,15 @@ summary(report, view = "reader")
 #>                     Area Status
 #>  Interval interpretation caveat
 #>    Model-fit diagnostics caveat
-#>                                                                                MainIssue
-#>                        Read the target and uncertainty basis for each reported quantity.
-#>  Same-data posterior predictive residuals have no calibrated reference cutoffs or tests.
+#>                                                                                                                                                                                                              MainIssue
+#>                                                                                                                                                      Read the target and uncertainty basis for each reported quantity.
+#>  768 of 768 selected rows have standardized residuals; 0 unresolved, 0 missing scores, 0 zero-variance rows. 0 source rows were not selected. Same-data description with calibration fixed; no calibrated fit cutoffs.
 #>                                                                                NextAction
 #>                   Retain interval limitations, unavailable rows and omitted-score counts.
 #>  Review selected-row summaries and unavailable rows; do not apply ordinary-model cutoffs.
 #>                     PrimaryRoute
 #>     report$tables$interval_basis
-#>  report$tables$response_measures
+#>  report$tables$response_overview
 archive_dir <- tempfile("testlet-report-")
 archive <- export_mfrm_results(res, archive_dir, preset = "starter",
   acknowledge_sensitive = TRUE) # Synthetic example; real exports retain IDs

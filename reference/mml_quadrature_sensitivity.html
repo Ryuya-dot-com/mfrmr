@@ -52,7 +52,7 @@ identification, anchor, interaction, optimizer, and population settings."><meta 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review MML sensitivity to the quadrature grid</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-quadrature-sensitivity.R" class="external-link"><code>R/api-quadrature-sensitivity.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-quadrature-sensitivity.R" class="external-link"><code>R/api-quadrature-sensitivity.R</code></a></small>
       <div class="d-none name"><code>mml_quadrature_sensitivity.Rd</code></div>
     </div>
 
@@ -121,7 +121,9 @@ orders &gt;= 3, for example <code>c(31, 61)</code>. Adds a per-Person
 <code>quadrature_review</code> at each fit's fixed parameters, comparing a fixed-prior
 grid with mode/curvature-adapted grids. This separates integration error
 from parameter changes during refitting. Inspect changes between adaptive
-orders too; neither grid is certified exact.</p></dd>
+orders too; neither grid is certified exact.
+Also available for two slope families as a numerical diagnostic; it does
+not add Person scoring or change the fitted integration method.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -135,10 +137,13 @@ mode/curvature and computation status. Unavailable rows retain their reason.
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> also supplies a compact <code>quadrature_overview</code>;</p></li>
 <li><p><code>runs</code>: likelihood, gradient, curvature, population-scale, and readiness
 details for each fit;</p></li>
-<li><p><code>slopes</code>: relative-slope estimates, raw diagnostic SEs and freshly checked
+<li><p><code>slopes</code>: component-slope estimates, raw diagnostic SEs and freshly checked
 95% model intervals. The summary reports endpoint changes among jointly
-eligible levels and counts changes in interval availability;</p></li>
-<li><p><code>conditions</code>: warnings and messages emitted by the explicit refits;</p></li>
+eligible levels and counts changes in interval availability. One-family
+slopes have geometric mean one; two-family scale references differ;</p></li>
+<li><p><code>intervals</code>: for two families, saved <code>mfrm_slope_intervals</code> objects named
+by quadrature count, with their numerical checks and cautions;</p></li>
+<li><p><code>conditions</code>: warnings and messages from refitting and result extraction;</p></li>
 <li><p><code>fits</code>: the reference and refitted <code>mfrm_fit</code> objects;</p></li>
 <li><p><code>settings</code> and <code>notes</code>: the fixed comparison contract and interpretation
 boundary.</p></li>
@@ -150,8 +155,8 @@ existing <code><a href="apa_table.html">apa_table()</a></code> list route (for e
     <p>This is an explicit refit diagnostic: neither <code><a href="summary.mfrm_fit.html">summary.mfrm_fit()</a></code> nor
 <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> invokes it automatically. It reports continuous changes
 rather than classifying a fit as quadrature-stable or unstable. In
-particular, it does not set a practical cutoff, promote slope standard
-errors, or override the fit-readiness record.</p>
+particular, it does not select a cutoff for acceptable changes, make
+unavailable standard errors valid, or resolve other warnings about the fit.</p>
 <p>The probability comparison evaluates every observed combination of
 non-Person facet levels on the same theta grid. It includes fitted two-way
 facet interactions and, for GPCM, the complete-predictor slope action.
@@ -164,6 +169,46 @@ Older fits without that data cannot be replayed.</p>
 <p>Raw slope and population-SD standard errors are computed from each local
 observed-information Hessian for diagnostic comparison only. The public
 parameter-level <code>SEEligible</code> state remains unchanged.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="two-slope-families">Two slope families<a class="anchor" aria-label="anchor" href="#two-slope-families"></a></h2>
+
+
+<p>For a two-family GPCM, refits preserve the ordered slope owners,
+fixed N(0,1) population, score ladder, engine, integration method and stopping
+controls (<code>em_score_tol</code> for fixed-grid EM or <code>reltol</code> for adaptive direct MML).
+Each refit reconstructs the source initialization policy from the observed
+data. Fixed-grid EM uses the neutral vector; adaptive fits retain either
+neutral-only or neutral-plus-EM initialization. Older adaptive fits without
+this setting retain the earlier neutral-only procedure. The reference
+estimate is not used as a new starting vector. Component slopes retain
+<code>SlopeOwner</code> and <code>ScaleReference</code>: the
+first family has geometric mean one; the second is free on the fixed ability
+scale. Category-probability comparisons use the product of both slopes.</p>
+<p>For both two-family engines, <code>intervals</code> contains the separately checked experimental <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> result
+for each grid, including failed checks, cautions and missing bounds. For
+example, after comparing <code>quad_points = c(31, 61)</code>, use
+<code>plot(out$intervals$q61)</code> and
+<code>apa_table(out$intervals$q61, which = "numerical_checks")</code>. These checks also
+evaluate q versus 2q-1 at that fit's saved parameters without another refit.
+Passing these checks does not establish sampling coverage or resolve
+other warnings about the fitted model. Adaptive fits use their moving-node
+objective for both the information and the higher-order comparison.
+Person-score comparisons in <code>summary</code> remain unavailable for two families:
+EAP and posterior-SD changes there are <code>NA</code>, not zero. With
+<code>adaptive_quad_points</code>, the separate <code>quadrature_review</code> table evaluates
+posterior moments and log marginal likelihoods at each unchanged calibration.
+These diagnostic integrals do not enable <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code> or supply
+Person intervals.
+The effective slope is the product of both facet slopes; moving the
+integration grid retains the original N(0,1) density and its Jacobian.
+This does not provide adaptive EM, update estimates or repair their intervals.</p>
+<p>More quadrature points improve the numerical approximation, not the amount
+of observed information. In a sparse design, a small group of candidates
+rated many times may need a finer grid than candidates with few ratings.
+Inspect interval availability and measured changes; no fixed point count
+is guaranteed to be adequate for every design. See the GPCM scope vignette
+for a same-data example and its sampling limitations.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

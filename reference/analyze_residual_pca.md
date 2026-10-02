@@ -17,7 +17,7 @@ analyze_residual_pca(
   parallel = FALSE,
   parallel_reps = 200L,
   parallel_quantile = 0.95,
-  parallel_method = c("residual_permutation"),
+  parallel_method = c("residual_permutation", "model_bootstrap"),
   seed = NULL
 )
 ```
@@ -45,28 +45,31 @@ analyze_residual_pca(
 
 - parallel:
 
-  Logical; if `TRUE`, add residual-permutation parallel analysis to the
-  PCA tables.
+  Logical; if `TRUE`, add a simulation reference to the PCA tables.
 
 - parallel_reps:
 
-  Number of residual permutations used when `parallel = TRUE`.
+  Number of permutations or simulated-and-refitted data sets when
+  `parallel = TRUE`. Each model-bootstrap replicate requires a full fit.
 
 - parallel_quantile:
 
-  Upper permutation quantile used as the exploratory comparison cutoff.
+  Upper reference quantile used as the exploratory comparison cutoff.
   The default (`0.95`) follows the common parallel analysis convention.
 
 - parallel_method:
 
-  Parallel-analysis reference method. Currently `"residual_permutation"`
-  is implemented: standardized residuals are permuted within each
-  residual column, preserving each column's residual distribution and
-  missingness pattern while breaking residual association.
+  Reference method. `"residual_permutation"` (default) permutes
+  standardized residuals within each column, preserving residual
+  distributions and missingness. `"model_bootstrap"` generates ratings
+  and refits a supported RSM/PCM MML model; supply the original fit, not
+  detached diagnostics. See Model-generated reference below for
+  restrictions.
 
 - seed:
 
-  Optional integer seed for reproducible residual permutations.
+  Optional integer seed for reproducible simulation. When supplied, the
+  caller's random-number state is restored after the calculation.
 
 ## Value
 
@@ -88,11 +91,12 @@ A named list with:
   `parallel_by_facet_table`, and `parallel_status`: returned for every
   call; the parallel tables are populated when `parallel = TRUE`
 
-- `errors`: named list of any per-facet PCA errors that were caught and
-  turned into `NA_real_` rows in the variance tables (e.g.,
-  [`psych::principal()`](https://rdrr.io/pkg/psych/man/principal.html)
-  failure on a near-singular residual matrix). The list is empty when
-  every facet PCA succeeded.
+- `bootstrap_trials`, `bootstrap_settings`: attempted replicate/scope
+  records and generation settings for the model bootstrap; otherwise
+  `NULL`.
+
+- `errors`: explanations for unavailable overall or facet PCA analyses;
+  unavailable analyses have empty variance tables.
 
 - `warnings`: named list of non-fatal PCA warnings captured from the
   underlying PCA engine. These indicate exploratory boundary conditions,
@@ -145,26 +149,27 @@ Output tables use:
 - `Cumulative`: cumulative variance proportion
 
 When `parallel = TRUE`, the variance tables additionally include
-conditional permutation-reference summaries:
+reference summaries (the method is retained in `ParallelMethod`):
 
-- `ParallelMean`: mean permuted-residual eigenvalue
+- `ParallelMean`: mean reference eigenvalue
 
-- `ParallelCutoff`: `parallel_quantile` cutoff of permuted eigenvalues
+- `ParallelCutoff`: `parallel_quantile` cutoff of reference eigenvalues
 
 - `ExcessOverParallelCutoff`: observed eigenvalue minus the cutoff
 
 - `ExceedsParallelCutoff`: whether the observed eigenvalue exceeds the
-  permutation cutoff
+  selected reference cutoff
 
-The comparison conditions on the fitted residuals and missingness
-pattern; it does not simulate responses or refit the model. It does not
-account for fitted-parameter uncertainty and is not a calibrated
-dimensionality test. If any requested permutation has unavailable or
-invalid correlations, the comparison is withheld rather than
-conditioning on successful permutations. `parallel_status` retains the
-successful count and the reason. More permutations improve numerical
-stability of the reference quantile, but do not establish error-rate
-control for the fitted model.
+With `parallel_method = "residual_permutation"`, the comparison
+conditions on the fitted residuals and missingness pattern; it does not
+simulate responses or refit the model. It does not account for
+fitted-parameter uncertainty and is not a calibrated dimensionality
+test. If any requested permutation has unavailable or invalid
+correlations, the comparison is withheld rather than conditioning on
+successful permutations. `parallel_status` retains the successful count
+and the reason. More permutations improve numerical stability of the
+reference quantile, but do not establish error-rate control for the
+fitted model.
 
 For `mode = "facet"` or `"both"`, `by_facet_table` additionally includes
 a `Facet` column.
@@ -196,6 +201,64 @@ Finally, inspect loadings via
 [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md)
 to identify which variables/elements drive each component.
 
+## Model-generated reference
+
+`parallel_method = "model_bootstrap"` is an exploratory
+parametric-bootstrap reference for native RSM/PCM MML fits with a fixed
+standard-normal population, fixed quadrature, additive facets and unit
+weights. Anchors, dummy/positive facets, shrinkage, estimated population
+models, GPCM, JML and extended testlet/shared-rater models are not
+supported by this reference yet.
+
+Each replicate draws one independent standard-normal ability per Person
+and shares it across that Person's retained rating rows. Fitted facet
+and step parameters generate conditionally independent ratings. The
+model is refitted with the original identification, category map,
+quadrature and optimization settings. Standardized residuals use the
+same scoring and aggregation as the observed analysis. One refit
+supplies every requested PCA scope.
+
+The reference conditions on the analyzed assignment and observation
+pattern: it does not fill unassigned or missing ratings or simulate
+informative missingness. Sparse designs remain usable only when the
+required residual correlations are defined and their matrix is positive
+semidefinite. Source and refitted models must pass numerical convergence
+checks. The observed PCA itself can be unavailable despite successful
+fitting, for example because the assignment lacks shared-Person pairs.
+This is reported separately from refit failure. Every planned replicate
+is retained in `bootstrap_trials`, including warnings and failures. An
+affected scope has no reference cutoff if any replicate fails;
+successful replicates are not substituted or selected to form its
+reference. Raw eigenvalue draws, with missing rows for failures, are
+stored under each PCA bundle's `parallel$draws`.
+
+Refitting includes variation from parameter estimation under the fitted
+null; generating parameters themselves are plug-in estimates, not
+posterior draws. Cutoffs are componentwise reference quantiles, not
+multiplicity-adjusted tests. Scanning every component does not preserve
+the nominal false-flag probability of one component. Absence of a flag
+is not evidence that all model assumptions hold. Few replicates give
+unstable tail quantiles. Neither a fixed number of replicates nor this
+algorithm establishes calibrated false-flag rates or proves
+unidimensionality. Inspect convergence, quadrature sensitivity, overlap
+and competing dependence explanations before substantive use.
+
+## Dimensionality and network follow-up
+
+Checking a one-dimensional model does not require fitting a
+multidimensional alternative first. Residual structure can also reflect
+testlet, rater or assignment effects; neither the component count nor
+the count plus one is an estimated number of substantive abilities.
+Combine the screen with
+[`q3_statistic()`](https://ryuya-dot-com.github.io/mfrmr/reference/q3_statistic.md),
+marginal-fit review and substantive task/criterion evidence. The current
+permutation reference does not replace a fitted-model parametric
+bootstrap. No native residual-network/EGA or calibrated dimensionality
+decision is supplied here. Residual communities would describe remaining
+associations, not automatically latent dimensions. See
+[`vignette("mfrmr-visual-diagnostics")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md)
+for alternatives and their scope.
+
 ## References
 
 The residual-PCA idea follows the Rasch residual-structure literature,
@@ -208,8 +271,10 @@ The optional parallel analysis follows Horn's data-driven eigenvalue
 comparison logic and later recommendations to compare observed
 eigenvalues with high quantiles of a reference distribution. Here that
 reference is generated by within-column permutation of standardized
-residuals. The cited factor-retention literature does not calibrate this
-many-facet residual comparison as a fitted-model test.
+residuals by default. The optional model bootstrap instead regenerates
+ratings and refits the supported model. The cited factor-retention
+literature does not calibrate either many-facet residual comparison as a
+fitted-model test.
 
 - Horn, J. L. (1965). A rationale and test for the number of factors in
   factor analysis. *Psychometrika*, 30, 179-185.

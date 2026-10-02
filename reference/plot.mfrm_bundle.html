@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot report/table bundles with base R defaults</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_bundle.Rd</code></div>
     </div>
 
@@ -111,7 +111,12 @@ loadings views via <code><a href="plot_residual_pca.html">plot_residual_pca()</a
 and row/category/missing-row plots</p></li>
 <li><p><code>mfrm_facets_fit_review</code> -&gt; FACETS-style df-sensitivity plot</p></li>
 <li><p><code>mfrm_fit_measures</code> -&gt; fit-status counts, Infit/Outfit scatter, measure
-intervals, and FACETS-style df-sensitivity plots</p></li>
+normal bands, and FACETS-style df-sensitivity plots. For <code>type = "measure_ci"</code>,
+the caption retains the source interval interpretation (including exploratory
+JML bands); fixed values use open diamonds and finite estimates without
+intervals use crosses. <code>main = ""</code> omits the title and <code>show_notes = FALSE</code>
+hides the caption without removing it from saved data. Changing <code>ci_level</code>
+does not change inferential eligibility. See <code><a href="fit_measures_table.html">fit_measures_table()</a></code>.</p></li>
 <li><p><code>mfrm_iteration_report</code> -&gt; replayed-iteration trajectories</p></li>
 <li><p><code>mfrm_subset_connectivity</code> -&gt; subset-observation/connectivity plots</p></li>
 <li><p><code>mfrm_facet_statistics</code> -&gt; facet statistic profile plots</p></li>

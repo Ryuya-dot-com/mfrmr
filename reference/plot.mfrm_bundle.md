@@ -87,7 +87,14 @@ bundle class:
 - `mfrm_facets_fit_review` -\> FACETS-style df-sensitivity plot
 
 - `mfrm_fit_measures` -\> fit-status counts, Infit/Outfit scatter,
-  measure intervals, and FACETS-style df-sensitivity plots
+  measure normal bands, and FACETS-style df-sensitivity plots. For
+  `type = "measure_ci"`, the caption retains the source interval
+  interpretation (including exploratory JML bands); fixed values use
+  open diamonds and finite estimates without intervals use crosses.
+  `main = ""` omits the title and `show_notes = FALSE` hides the caption
+  without removing it from saved data. Changing `ci_level` does not
+  change inferential eligibility. See
+  [`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md).
 
 - `mfrm_iteration_report` -\> replayed-iteration trajectories
 

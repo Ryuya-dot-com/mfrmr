@@ -134,6 +134,20 @@ thresholds. A formal raw-residual Q3 procedure would require a
 separately implemented and validated design-specific bootstrap; mfrmr
 does not currently provide that procedure.
 
+## Dimensionality and network interpretation
+
+Choose `facet` for the question: pairing Rater levels describes rater
+residual associations, not a count of rubric dimensions. Associations
+may reflect additional ability structure, shared performance effects,
+rater effects or assignment patterns. A thresholded correlation graph is
+not a partial-correlation network or a fitted residual-network model;
+its community count is not a dimensionality test. Missing pairs are not
+zero edges. See
+[`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md)
+and
+[`vignette("mfrmr-visual-diagnostics")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-visual-diagnostics.md)
+for complementary checks and the limits of exploratory network analysis.
+
 ## References
 
 - Yen, W. M. (1984). Effects of local item dependence on the fit and

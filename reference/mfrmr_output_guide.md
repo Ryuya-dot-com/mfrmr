@@ -120,7 +120,8 @@ Use `mfrmr_output_guide("feedback")` when preparing rater feedback.
 Start with the question and the fitted model: severity, response misfit
 and the accuracy of a warning rule are different quantities. A severe
 rater need not misfit, and an observed flag does not establish poor
-rater quality. For an individual native additive RSM/PCM sheet, use
+rater quality. For an individual native additive RSM/PCM or experimental
+two-family GPCM sheet, use
 `mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")`. The
 selected sheet omits source identifiers; the comprehensive result and
 export bundle retain the original analysis. Use
@@ -221,7 +222,7 @@ feedback[, c("Question", "MainFunction", "DecisionBoundary")]
 #>                                                                                Question
 #> 82                How uncertain are fixed-rater severities or prespecified differences?
 #> 83 Which ordinary-model rating patterns need review, and do flags depend on the cutoff?
-#> 84             Which rating patterns need review under a shared-rater or testlet model?
+#> 84     Which response residuals need review under supported RSMs or corrected GPCM JML?
 #> 85               How uncertain is an observed rater's severity in a shared-rater model?
 #> 86             How often does a warning rule flag unaffected or detect affected raters?
 #> 87                                             How can I prepare a sheet for one rater?
@@ -232,46 +233,46 @@ feedback[, c("Question", "MainFunction", "DecisionBoundary")]
 #> 85                   confint(); mfrm_random_rater_intervals()
 #> 86 mfrm_screening_performance(); mfrm_screening_sensitivity()
 #> 87                                              mfrm_report()
-#>                                                                                                                                                                                                                                                                        DecisionBoundary
-#> 82                                              Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.
-#> 83                            Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.
-#> 84                                                                                       Posterior predictive Infit/Outfit are descriptive and differ from ordinary plug-in indices. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.
-#> 85 Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.
-#> 86                         Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.
-#> 87                                      No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.
+#>                                                                                                                                                                                                                                                                                                                                                           DecisionBoundary
+#> 82 Pointwise fixed-facet intervals, not simultaneous classifications or random-rater population inference. Native estimated-population locations are not standardized by fitted SD. Sandwich SEs do not correct a biased estimate or MNAR. GPCM location differences do not imply uniform rating differences when slopes/steps vary; experimental coverage is unqualified.
+#> 83                                                                                                               Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.
+#> 84                                               Posterior predictive and corrected-JML conditional Infit/Outfit have different probability definitions. Zero-variance corrected-JML rows can leave Infit defined but Outfit unavailable; no rows are silently dropped. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.
+#> 85                                                                                    Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.
+#> 86                                                                                                            Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.
+#> 87                                                                                                                         No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.
 
 figures <- mfrmr_output_guide("plots")
 figures[, c("Question", "ResultFunction", "GGPlot")]
-#>                                                       Question
-#> 1             Compare persons, facet levels and category steps
-#> 2                          Show expected scores across ability
-#> 3                   Review severity together with response fit
-#> 4                                 Inspect category functioning
-#> 5           Compare fixed-rater estimates and interval methods
-#> 6                                  Show GPCM slope uncertainty
-#> 7             Show GPCM probability or information uncertainty
-#> 8              Compare observed raters in a shared-rater model
-#> 9                        Inspect testlet-model facet estimates
-#> 10  Review conditional Person scores from a shared-rater model
-#> 11       Review conditional Person scores from a testlet model
-#> 12                 Review response fit under an extended model
-#> 13                 Compare ordinary and extended model results
-#> 14       Compare screening rules across known-truth conditions
-#> 15                 Show screening performance with uncertainty
-#> 16 Show pooled fixed-facet intervals after multiple imputation
-#> 17               Inspect separation of external-feature groups
-#> 18                  Describe an external feature within groups
-#> 19              Inspect a hierarchy of external-feature groups
-#> 20          Inspect group stability across feature imputations
-#> 21      Choose how many external-feature components to inspect
-#> 22              Locate entities on external-feature components
-#> 23               Identify features contributing to a component
-#> 24            Plan facet counts with an observed-score D-study
-#> 25      Plan reliability for a multivariate score or composite
-#> 26              Plan absolute or relative error in score units
-#> 27         Compare D-study scenarios with difference intervals
-#> 28             Inspect observed coverage across rating subsets
-#> 29                   Customize the underlying precision values
+#>                                                                                     Question
+#> 1                                           Compare persons, facet levels and category steps
+#> 2                                                        Show expected scores across ability
+#> 3                                                 Review severity together with response fit
+#> 4                                                               Inspect category functioning
+#> 5                                         Compare fixed-rater estimates and interval methods
+#> 6                                                                Show GPCM slope uncertainty
+#> 7                                           Show GPCM probability or information uncertainty
+#> 8                                            Compare observed raters in a shared-rater model
+#> 9                                                      Inspect testlet-model facet estimates
+#> 10                                Review conditional Person scores from a shared-rater model
+#> 11                                     Review conditional Person scores from a testlet model
+#> 12 Review response residuals under supported RSMs, two-family GPCM MML or corrected GPCM JML
+#> 13                                               Compare ordinary and extended model results
+#> 14                                     Compare screening rules across known-truth conditions
+#> 15                                               Show screening performance with uncertainty
+#> 16                               Show pooled fixed-facet intervals after multiple imputation
+#> 17                                             Inspect separation of external-feature groups
+#> 18                                                Describe an external feature within groups
+#> 19                                            Inspect a hierarchy of external-feature groups
+#> 20                                        Inspect group stability across feature imputations
+#> 21                                    Choose how many external-feature components to inspect
+#> 22                                            Locate entities on external-feature components
+#> 23                                             Identify features contributing to a component
+#> 24                                          Plan facet counts with an observed-score D-study
+#> 25                                    Plan reliability for a multivariate score or composite
+#> 26                                            Plan absolute or relative error in score units
+#> 27                                             Compare D-study plans including the reference
+#> 28                                           Inspect observed coverage across rating subsets
+#> 29                                                 Customize the underlying precision values
 #>                 ResultFunction      GGPlot
 #> 1                     fit_mfrm   dedicated
 #> 2                     fit_mfrm   dedicated

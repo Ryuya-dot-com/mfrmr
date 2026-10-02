@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize approximate plausible values from posterior scoring</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_plausible_values.Rd</code></div>
     </div>
 
@@ -125,8 +125,8 @@ latent-regression scoring</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   calculation method for interval reporting.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior estimates (first 10)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate    SD  Lower Upper Observations                         Review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01   -0.112 0.683 -1.448 1.235            2 No source restriction recorded</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Person Estimate    SD  Lower Upper Observations                       Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   NEW01   -0.112 0.683 -1.448 1.235            2 Source scoring checks passed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Response rows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  InputRows KeptRows DroppedRows DroppedMissing DroppedBadScore DroppedBadWeight</span>
@@ -144,6 +144,9 @@ latent-regression scoring</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   fitted person estimates are not updated.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   The `draws` component contains quadrature-grid posterior draws that can be</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   used as approximate plausible-value summaries.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Scoring integration compares the reported EAP and SD with adaptive reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   orders under the same calibration and prior. Passing does not validate the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   scoring prior for another population.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

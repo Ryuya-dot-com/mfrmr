@@ -52,7 +52,7 @@ which includes tables, reports, reviews and exports. It does not analyze data.'>
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Choose an mfrmr output helper by user goal</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
       <div class="d-none name"><code>mfrmr_output_guide.Rd</code></div>
     </div>
 
@@ -155,7 +155,7 @@ Use <code>mfrmr_output_guide("feedback")</code> when preparing rater feedback. S
 with the question and the fitted model: severity, response misfit and the
 accuracy of a warning rule are different quantities. A severe rater need
 not misfit, and an observed flag does not establish poor rater quality.
-For an individual native additive RSM/PCM sheet, use
+For an individual native additive RSM/PCM or experimental two-family GPCM sheet, use
 <code>mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")</code>.
 The selected sheet omits source identifiers; the comprehensive result and
 export bundle retain the original analysis.
@@ -251,7 +251,7 @@ the source function's help before interpretation.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                Question</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 82                How uncertain are fixed-rater severities or prespecified differences?</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 83 Which ordinary-model rating patterns need review, and do flags depend on the cutoff?</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 84             Which rating patterns need review under a shared-rater or testlet model?</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84     Which response residuals need review under supported RSMs or corrected GPCM JML?</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 85               How uncertain is an observed rater's severity in a shared-rater model?</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 86             How often does a warning rule flag unaffected or detect affected raters?</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 87                                             How can I prepare a sheet for one rater?</span>
@@ -262,46 +262,46 @@ the source function's help before interpretation.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 85                   confint(); mfrm_random_rater_intervals()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 86 mfrm_screening_performance(); mfrm_screening_sensitivity()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 87                                              mfrm_report()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                        DecisionBoundary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 82                                              Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 83                            Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 84                                                                                       Posterior predictive Infit/Outfit are descriptive and differ from ordinary plug-in indices. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 85 Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 86                         Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 87                                      No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                                                                                           DecisionBoundary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 82 Pointwise fixed-facet intervals, not simultaneous classifications or random-rater population inference. Native estimated-population locations are not standardized by fitted SD. Sandwich SEs do not correct a biased estimate or MNAR. GPCM location differences do not imply uniform rating differences when slopes/steps vary; experimental coverage is unqualified.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 83                                                                                                               Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 84                                               Posterior predictive and corrected-JML conditional Infit/Outfit have different probability definitions. Zero-variance corrected-JML rows can leave Infit defined but Outfit unavailable; no rows are silently dropped. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 85                                                                                    Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 86                                                                                                            Known truth is required: real-data flags alone cannot estimate these rates. Monte Carlo intervals describe simulation uncertainty, not severity uncertainty. Unavailable screens are retained, and raters within one replication are not independent trials.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 87                                                                                                                         No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">figures</span> <span class="op">&lt;-</span> <span class="fu">mfrmr_output_guide</span><span class="op">(</span><span class="st">"plots"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">figures</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Question"</span>, <span class="st">"ResultFunction"</span>, <span class="st">"GGPlot"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                       Question</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1             Compare persons, facet levels and category steps</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                          Show expected scores across ability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                   Review severity together with response fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                 Inspect category functioning</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5           Compare fixed-rater estimates and interval methods</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                  Show GPCM slope uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7             Show GPCM probability or information uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8              Compare observed raters in a shared-rater model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                        Inspect testlet-model facet estimates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10  Review conditional Person scores from a shared-rater model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11       Review conditional Person scores from a testlet model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                 Review response fit under an extended model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                 Compare ordinary and extended model results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14       Compare screening rules across known-truth conditions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                 Show screening performance with uncertainty</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 Show pooled fixed-facet intervals after multiple imputation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17               Inspect separation of external-feature groups</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                  Describe an external feature within groups</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19              Inspect a hierarchy of external-feature groups</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20          Inspect group stability across feature imputations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21      Choose how many external-feature components to inspect</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22              Locate entities on external-feature components</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23               Identify features contributing to a component</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24            Plan facet counts with an observed-score D-study</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25      Plan reliability for a multivariate score or composite</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26              Plan absolute or relative error in score units</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27         Compare D-study scenarios with difference intervals</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28             Inspect observed coverage across rating subsets</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                   Customize the underlying precision values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                     Question</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                           Compare persons, facet levels and category steps</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                        Show expected scores across ability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                 Review severity together with response fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                               Inspect category functioning</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                         Compare fixed-rater estimates and interval methods</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                Show GPCM slope uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                           Show GPCM probability or information uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                            Compare observed raters in a shared-rater model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                      Inspect testlet-model facet estimates</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                Review conditional Person scores from a shared-rater model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                     Review conditional Person scores from a testlet model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 Review response residuals under supported RSMs, two-family GPCM MML or corrected GPCM JML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                               Compare ordinary and extended model results</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                     Compare screening rules across known-truth conditions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                               Show screening performance with uncertainty</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                               Show pooled fixed-facet intervals after multiple imputation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                             Inspect separation of external-feature groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                Describe an external feature within groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19                                            Inspect a hierarchy of external-feature groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                        Inspect group stability across feature imputations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21                                    Choose how many external-feature components to inspect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22                                            Locate entities on external-feature components</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23                                             Identify features contributing to a component</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24                                          Plan facet counts with an observed-score D-study</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25                                    Plan reliability for a multivariate score or composite</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26                                            Plan absolute or relative error in score units</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27                                             Compare D-study plans including the reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28                                           Inspect observed coverage across rating subsets</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29                                                 Customize the underlying precision values</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ResultFunction      GGPlot</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                     fit_mfrm   dedicated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                     fit_mfrm   dedicated</span>

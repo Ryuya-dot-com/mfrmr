@@ -149,6 +149,23 @@ This helper gives users a direct table route for the common FACETS-style
 question: which raters, criteria, or other facet elements show underfit
 or overfit? It uses the fit statistics already computed by
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md).
+`Fixed` identifies values supplied by anchors or identification
+constraints. Their sampling SEs and intervals are not applicable;
+response-fit statistics remain available. Recompute older diagnostics to
+obtain these labels. The table also retains `SE_Method`,
+`PrecisionTier`, `SEUse`, `CIBasis`, `CIUse`, `CIEligible`, `CILabel`,
+`CI_Method` and `SupportsFormalInference` from the diagnostics. For JML,
+normal bands remain exploratory screening summaries, not qualified
+confidence intervals for the true parameter. Changing `ci_level` changes
+their width, not their inferential status. Older inputs without this
+metadata are labelled as having an unrecorded basis; finite SEs alone do
+not establish formal inference.
+
+`plot(x, type = "measure_ci")` retains these explanations in its caption
+and saved data. Fixed values use open diamonds without intervals; other
+finite estimates without intervals use crosses. Use `main = ""` to omit
+the title or `show_notes = FALSE` to hide the caption while retaining
+its text in the saved plot data.
 
 Directional labels use the selected `flag_basis`. By default, high mean
 squares are labeled `underfit` and low mean squares `overfit`;
@@ -204,80 +221,97 @@ fit <- fit_mfrm(
 )
 fm <- fit_measures_table(fit, facet = "Rater")
 fm$facets_table
-#>   Facet Level    Measure      S.E.   Lower CI    Upper CI CI Level Obs
-#> 1 Rater   R05  0.1348932 0.2298500 -0.3156044  0.58539090     0.95  44
-#> 2 Rater   R01 -0.5968433 0.2231594 -1.0342276 -0.15945899     0.95  47
-#> 3 Rater   R06  0.3677868 0.2401725 -0.1029426  0.83851627     0.95  38
-#> 4 Rater   R04  0.1692568 0.2164848 -0.2550456  0.59355929     0.95  47
-#> 5 Rater   R02 -0.3339430 0.2066065 -0.7388843  0.07099831     0.95  56
-#> 6 Rater   R03  0.2588494 0.2123514 -0.1573516  0.67505041     0.95  50
-#>   Infit MnSq  Infit ZStd Outfit MnSq Outfit ZStd Infit df Outfit df
-#> 1  0.6437494 -1.37224963   0.6364430 -1.89645401 25.59501        44
-#> 2  0.7558296 -0.96473720   0.7419517 -1.30848364 30.84427        47
-#> 3  0.8062824 -0.57564164   0.7890478 -0.91654625 21.28480        38
-#> 4  0.9195966 -0.22988795   0.9036096 -0.41438157 29.38610        47
-#> 5  0.9659519 -0.06996692   1.0267816  0.20346215 36.77909        56
-#> 6  1.0003529  0.08533360   0.9692421 -0.08872733 31.54496        50
-#>   Fit df method Max ZStd shift Flag changed by df Max df rel shift
-#> 1        engine             NA              FALSE               NA
-#> 2        engine             NA              FALSE               NA
-#> 3        engine             NA              FALSE               NA
-#> 4        engine             NA              FALSE               NA
-#> 5        engine             NA              FALSE               NA
-#> 6        engine             NA              FALSE               NA
-#>       df review  Fit Status               Review Reason
-#> 1 not_available within_band Within selected review band
-#> 2 not_available within_band Within selected review band
-#> 3 not_available within_band Within selected review band
-#> 4 not_available within_band Within selected review band
-#> 5 not_available within_band Within selected review band
-#> 6 not_available within_band Within selected review band
+#>   Facet Level    Measure Fixed      S.E.   Lower CI    Upper CI CI Level
+#> 1 Rater   R05  0.1348932 FALSE 0.2298500 -0.3156044  0.58539090     0.95
+#> 2 Rater   R01 -0.5968433 FALSE 0.2231594 -1.0342276 -0.15945899     0.95
+#> 3 Rater   R06  0.3677868 FALSE 0.2401725 -0.1029426  0.83851627     0.95
+#> 4 Rater   R04  0.1692568 FALSE 0.2164848 -0.2550456  0.59355929     0.95
+#> 5 Rater   R02 -0.3339430 FALSE 0.2066065 -0.7388843  0.07099831     0.95
+#> 6 Rater   R03  0.2588494 FALSE 0.2123514 -0.1573516  0.67505041     0.95
+#>       Interval interpretation                   SE basis Obs Infit MnSq
+#> 1 Model-based normal interval Observed information (MML)  44  0.6437494
+#> 2 Model-based normal interval Observed information (MML)  47  0.7558296
+#> 3 Model-based normal interval Observed information (MML)  38  0.8062824
+#> 4 Model-based normal interval Observed information (MML)  47  0.9195966
+#> 5 Model-based normal interval Observed information (MML)  56  0.9659519
+#> 6 Model-based normal interval Observed information (MML)  50  1.0003529
+#>    Infit ZStd Outfit MnSq Outfit ZStd Infit df Outfit df Fit df method
+#> 1 -1.37224963   0.6364430 -1.89645401 25.59501        44        engine
+#> 2 -0.96473720   0.7419517 -1.30848364 30.84427        47        engine
+#> 3 -0.57564164   0.7890478 -0.91654625 21.28480        38        engine
+#> 4 -0.22988795   0.9036096 -0.41438157 29.38610        47        engine
+#> 5 -0.06996692   1.0267816  0.20346215 36.77909        56        engine
+#> 6  0.08533360   0.9692421 -0.08872733 31.54496        50        engine
+#>   Max ZStd shift Flag changed by df Max df rel shift     df review  Fit Status
+#> 1             NA              FALSE               NA not_available within_band
+#> 2             NA              FALSE               NA not_available within_band
+#> 3             NA              FALSE               NA not_available within_band
+#> 4             NA              FALSE               NA not_available within_band
+#> 5             NA              FALSE               NA not_available within_band
+#> 6             NA              FALSE               NA not_available within_band
+#>                 Review Reason
+#> 1 Within selected review band
+#> 2 Within selected review band
+#> 3 Within selected review band
+#> 4 Within selected review band
+#> 5 Within selected review band
+#> 6 Within selected review band
 fm$underfit
 #>  [1] Facet                                   
 #>  [2] Level                                   
 #>  [3] Measure                                 
-#>  [4] SE                                      
-#>  [5] CI_Lower                                
-#>  [6] CI_Upper                                
-#>  [7] CI_Level                                
-#>  [8] N                                       
-#>  [9] Infit                                   
-#> [10] Outfit                                  
-#> [11] InfitZSTD                               
-#> [12] OutfitZSTD                              
-#> [13] DF_Infit                                
-#> [14] DF_Outfit                               
-#> [15] DF_Infit_ENGINE                         
-#> [16] DF_Outfit_ENGINE                        
-#> [17] DF_Infit_FACETS                         
-#> [18] DF_Outfit_FACETS                        
-#> [19] InfitZSTD_ENGINE                        
-#> [20] OutfitZSTD_ENGINE                       
-#> [21] InfitZSTD_FACETS                        
-#> [22] OutfitZSTD_FACETS                       
-#> [23] FitDfMethod                             
-#> [24] FitZSTDTransform                        
-#> [25] InfitBand                               
-#> [26] OutfitBand                              
-#> [27] InfitZSTDBand                           
-#> [28] OutfitZSTDBand                          
-#> [29] Underfit                                
-#> [30] Overfit                                 
-#> [31] FitStatus                               
-#> [32] ScreenComplete                          
-#> [33] ZSTDOnly                                
-#> [34] ReviewReason                            
-#> [35] MaxAbsZSTD                              
-#> [36] MaxMnSqDistance                         
-#> [37] InfitZSTDDiff_FACETS_minus_ENGINE       
-#> [38] OutfitZSTDDiff_FACETS_minus_ENGINE      
-#> [39] MaxAbsZSTDDiff_FACETS_vs_ENGINE         
-#> [40] MaxAbsLogDFRatio_ENGINE_over_FACETS     
-#> [41] MaxDFRelativeDifference_ENGINE_vs_FACETS
-#> [42] EngineFlagAbsZ                          
-#> [43] FacetsStyleFlagAbsZ                     
-#> [44] FlagChangedByDf                         
-#> [45] DfSensitivityStatus                     
+#>  [4] Fixed                                   
+#>  [5] SE                                      
+#>  [6] CI_Lower                                
+#>  [7] CI_Upper                                
+#>  [8] CI_Level                                
+#>  [9] N                                       
+#> [10] Infit                                   
+#> [11] Outfit                                  
+#> [12] InfitZSTD                               
+#> [13] OutfitZSTD                              
+#> [14] DF_Infit                                
+#> [15] DF_Outfit                               
+#> [16] DF_Infit_ENGINE                         
+#> [17] DF_Outfit_ENGINE                        
+#> [18] DF_Infit_FACETS                         
+#> [19] DF_Outfit_FACETS                        
+#> [20] InfitZSTD_ENGINE                        
+#> [21] OutfitZSTD_ENGINE                       
+#> [22] InfitZSTD_FACETS                        
+#> [23] OutfitZSTD_FACETS                       
+#> [24] FitDfMethod                             
+#> [25] FitZSTDTransform                        
+#> [26] InfitBand                               
+#> [27] OutfitBand                              
+#> [28] InfitZSTDBand                           
+#> [29] OutfitZSTDBand                          
+#> [30] Underfit                                
+#> [31] Overfit                                 
+#> [32] FitStatus                               
+#> [33] ScreenComplete                          
+#> [34] ZSTDOnly                                
+#> [35] ReviewReason                            
+#> [36] MaxAbsZSTD                              
+#> [37] MaxMnSqDistance                         
+#> [38] SE_Method                               
+#> [39] PrecisionTier                           
+#> [40] SupportsFormalInference                 
+#> [41] SEUse                                   
+#> [42] CIBasis                                 
+#> [43] CIUse                                   
+#> [44] CIEligible                              
+#> [45] CILabel                                 
+#> [46] CI_Method                               
+#> [47] InfitZSTDDiff_FACETS_minus_ENGINE       
+#> [48] OutfitZSTDDiff_FACETS_minus_ENGINE      
+#> [49] MaxAbsZSTDDiff_FACETS_vs_ENGINE         
+#> [50] MaxAbsLogDFRatio_ENGINE_over_FACETS     
+#> [51] MaxDFRelativeDifference_ENGINE_vs_FACETS
+#> [52] EngineFlagAbsZ                          
+#> [53] FacetsStyleFlagAbsZ                     
+#> [54] FlagChangedByDf                         
+#> [55] DfSensitivityStatus                     
 #> <0 rows> (or 0-length row.names)
 
 # Include FACETS-style df/ZSTD companion columns for comparison.

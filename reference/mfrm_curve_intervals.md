@@ -40,13 +40,16 @@ plot(
 
 - fit:
 
-  An eligible native GPCM MML fit.
+  A native GPCM MML fit. Two-family fits supply provisional point curves
+  only; intervals and covariance adjustments are unavailable.
 
 - newdata:
 
   Data frame with each fitted non-Person facet and a numeric `Theta`
   column. Each row is one rating context at one known ability value. Use
   original facet labels. Unknown levels and missing inputs are refused.
+  Previously unobserved combinations of known levels are allowed and
+  labelled in the returned `contexts` table.
 
 - type:
 
@@ -85,14 +88,20 @@ plot(
 - caption:
 
   Optional plot caption. If omitted, unavailable intervals are counted
-  and explained. NULL removes the caption without removing markers or
-  the reasons in the saved table.
+  and explained, along with unobserved combinations of fitted levels.
+  Two-family point-only curves instead state that calibration intervals
+  are unavailable for the entire plot, without marking every curve
+  point. NULL removes the caption without removing markers or the
+  reasons in the saved table.
 
 ## Value
 
 A `mfrm_curve_intervals` list with `table`, `settings`, and the exact
-`newdata`. Its plot method returns a ggplot with the plotted data
-available in `plot$data`; titles can be omitted and the plot can be
+`newdata`, plus `contexts` identifying each `InputRow` as an observed or
+unobserved combination of fitted facet levels (`ObservedContext`). This
+records the retained rating design, not statistical identification or
+interval reliability. Its plot method returns a ggplot with the plotted
+data available in `plot$data`; titles can be omitted and the plot can be
 customized.
 
 ## Details
@@ -126,9 +135,16 @@ limitations; an available interval is not a finite-sample coverage
 certification. Printing and the default plot subtitle identify the
 approximation. Custom plot text may omit that description; retain the
 method and its limitations in the figure legend or accompanying report.
-Crosses mark retained estimates whose intervals are unavailable. Ribbons
-stop at unavailable grid points; a missing ribbon does not mean zero
-uncertainty. Consult the table's `InferenceReview` for each reason.
+For one-family curves, crosses mark retained estimates whose intervals
+are unavailable. Two-family curves have no calibration intervals; the
+default subtitle and caption state this without covering curves in
+crosses. A context with only one supplied ability value retains colored
+points. Panel labels put each facet on its own line. With many rating
+contexts, supply the comparisons of interest in `newdata` or enlarge the
+exported figure; plotting does not select or discard contexts
+automatically. Ribbons stop at unavailable grid points; a missing ribbon
+does not mean zero uncertainty. Consult the table's `InferenceReview`
+for each reason.
 
 A numerically verified but ill-conditioned information inverse can
 supply intervals with a warning, as described in
@@ -137,6 +153,18 @@ The warning is saved in `cautions` and the table's `InferenceReview`,
 and appears in printing and the default plot subtitle. A custom
 subtitle, including NULL, changes the display without removing saved
 diagnostics.
+
+## Two slope families
+
+For a two-family fit, the two component slopes are multiplied in each
+specified context. The shared evaluator returns provisional fitted
+values, including after numerical nonconvergence; it does not certify
+their reliability. `SE`, `Lower` and `Upper` remain missing and
+`CIEligible` is false. Printing and default plot text identify this
+scope without claiming nominal intervals. Sandwich and simultaneous
+adjustments are not available. The existing plot, saved-data, report and
+export routes preserve these values and missing intervals. A slope value
+of one is not a rater-quality threshold.
 
 ## See also
 

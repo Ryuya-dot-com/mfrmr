@@ -52,7 +52,7 @@ environment."><meta property="og:image" content="https://ryuya-dot-com.github.io
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Convert mfrm_fit to a tidy data.frame</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-plotting.R" class="external-link"><code>R/api-plotting.R</code></a></small>
       <div class="d-none name"><code>as.data.frame.mfrm_fit.Rd</code></div>
     </div>
 
@@ -95,7 +95,14 @@ environment.</p>
 <code>Estimate</code>, and <code>Extreme</code>. The <code>Extreme</code> column
 is populated for person rows from the extreme-score flag
 (<code>"Min"</code> / <code>"Max"</code> / <code>NA</code>); non-person
-facet rows carry <code>NA</code> in that column by design.</p>
+facet rows carry <code>NA</code> in that column by design.
+Corrected-JML fits additionally retain estimator, correction order,
+point/covariance status, uncertainty target and structural <code>RootSE</code>
+columns. Person <code>RootSE</code> is missing; extreme Person flags are
+<code>"low"</code> / <code>"high"</code> / <code>"none"</code>. The <code>estimation_note</code>
+attribute explains the local-root uncertainty and remaining bias. Ordinary
+diagnostic attachments do not apply to this estimator; see the Corrected
+JML section of <code><a href="fit_mfrm.html">fit_mfrm</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -107,10 +107,20 @@ Review dispositions are highlighted in every view.
 
 These are score-batch review displays, not calibration-fit diagnostics.
 Posterior SDs and intervals are conditional on the frozen point
-calibration and its recorded prior. They exclude calibration-parameter
-uncertainty. Persons with no valid responses have no score coordinate
-and are retained in `summary(x)$review` and in the plot payload's
-`unplotted_dispositions` component.
+calibration and the actual scoring prior. They exclude
+calibration-parameter uncertainty. For GPCM or an explicitly supplied
+scoring prior, summaries and plot data retain both original and actual
+prior values without rounding, the per-Person integration checks, and
+(for GPCM) the source decision recorded at extraction. These records
+describe conditional scoring, not a new evaluation of the training fit
+or the suitability of its population for another cohort.
+`summary(x)$settings$score_integration_review` compares the reported
+EAP/SD with higher-order adaptive references. The separate
+`quadrature_review` compares adaptive and fixed grids; for an adaptive
+scorer, that fixed grid did not produce the reported scores. Printing
+distinguishes the two checks. Persons with no valid responses have no
+score coordinate and are retained in `summary(x)$review` and in the plot
+payload's `unplotted_dispositions` component.
 
 The summary object retains every returned score and review disposition.
 Its estimates table preserves the available estimate and uncertainty
@@ -191,7 +201,7 @@ new_rows <- dat[dat$Person %in% ids[19:20], , drop = FALSE]
 scores <- score_mfrm_calibration(calibration, new_rows)
 summary(scores)
 #> mfrmr Portable Calibration Score Summary
-#>   Calibration: mfrmr-calibration-v1:rsm:mml:20260926105014279093
+#>   Calibration: mfrmr-calibration-v1:rsm:mml:20261002003617891290
 #>   Model / estimator: RSM / MML
 #>   Persons: 2 scored (0 requiring review); 0 not scored
 #> 

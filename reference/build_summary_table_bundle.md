@@ -290,7 +290,7 @@ bundle$table_index
 #> 6       facet_overview    2    7   facet_distribution
 #> 7      person_overview    1   10  person_distribution
 #> 8        step_overview    1    5   category_structure
-#> 10   settings_overview    1   31  estimation_settings
+#> 10   settings_overview    1   33  estimation_settings
 #> 11       reporting_map    6    3        reporting_map
 #> 12             caveats    0    8     analysis_caveats
 #> 13      facet_extremes    8    3 extreme_facet_levels
@@ -320,7 +320,7 @@ summary(bundle)$role_summary
 #> 6    extreme_person_low      1        10        20
 #> 5   extreme_person_high      1        10        20
 #> 4  extreme_facet_levels      1         8         3
-#> 3   estimation_settings      1         1        31
+#> 3   estimation_settings      1         1        33
 #> 2    category_structure      1         1         5
 #> 1      analysis_caveats      1         0         8
 # }

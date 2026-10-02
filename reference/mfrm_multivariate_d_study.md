@@ -74,7 +74,13 @@ row and metric-specific status, and `ComponentPSD`), `covariances`
 vector or matrix, reordered to the G-study score order),
 `component_diagnostics`, and `gstudy` (the source result).
 [`summary()`](https://rdrr.io/r/base/summary.html) returns
-`coefficients`.
+`coefficients`. [`print()`](https://rdrr.io/r/base/print.html) also
+shows source level/row counts, future-plan conventions and the supplied
+composite weights. Save the full result with `saveRDS(d)` and reopen
+with [`readRDS()`](https://rdrr.io/r/base/readRDS.html) to preserve that
+context. A CSV of `summary(d)` contains the coefficient table only;
+accompany it with the weights, source design and row usage, future
+design and score convention.
 
 ## Details
 
@@ -93,7 +99,10 @@ introduce conditions absent from the G-study.
 Read `summary(d)` together with `plot(d)`:
 
 - `G` concerns consistency of relative ordering, such as ranking
-  examinees.
+  examinees. It is not the probability of identifying the best person or
+  the winner of a competition. Close leading scores can remain hard to
+  distinguish even when G is high; this function provides no Person-rank
+  intervals.
 
 - `Phi` concerns absolute score levels and also counts shifts from
   easier tasks or more lenient raters as error. It is not pass/fail
@@ -135,17 +144,19 @@ For crossed covariance component matrices `P`, `R`, `T`, `PR`, `PT`,
 covariance is `PR/n_r + PT/n_t + E/(n_r*n_t)`. Absolute-error covariance
 adds `R/n_r + T/n_t + RT/(n_r*n_t)`. The G-study number of persons does
 not divide individual-score universe variance. Holding a count constant
-does not turn its random facet into a fixed facet. For a Person-by-Task
-G-study, `E` combines Person-by-Task interaction and within-cell error:
-relative-error covariance is `E/n_t`, absolute-error covariance is
-`(T + E)/n_t`, and universe-score covariance remains `P`. The same
-formulas apply to a Person-by-Rater design or to facets selected by
-`facets`, with names replaced in the declared order. For a single facet
-F and its planned count n, relative error is `E/n` and absolute error is
-`(F + E)/n`. A D-study cannot introduce an absent facet. For fixed tasks
-represented by score columns in a Person-by-Rater model, vary only
-`Raters`. The task set remains fixed, and each planned rater scores all
-tasks. See "Fixed tasks as score components" in
+does not turn its random facet into a fixed facet. Composite weights
+define linear score combinations. They do not implement score-dependent
+panel trimming or an entire competition scoring rule. For a
+Person-by-Task G-study, `E` combines Person-by-Task interaction and
+within-cell error: relative-error covariance is `E/n_t`, absolute-error
+covariance is `(T + E)/n_t`, and universe-score covariance remains `P`.
+The same formulas apply to a Person-by-Rater design or to facets
+selected by `facets`, with names replaced in the declared order. For a
+single facet F and its planned count n, relative error is `E/n` and
+absolute error is `(F + E)/n`. A D-study cannot introduce an absent
+facet. For fixed tasks represented by score columns in a Person-by-Rater
+model, vary only `Raters`. The task set remains fixed, and each planned
+rater scores all tasks. See "Fixed tasks as score components" in
 [`mfrm_multivariate_gstudy()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_multivariate_gstudy.md)
 for the target and allocation requirements.
 

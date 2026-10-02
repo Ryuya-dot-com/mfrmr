@@ -54,7 +54,7 @@ observation pattern."><meta property="og:image" content="https://ryuya-dot-com.g
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute design-weighted precision curves for ordered many-facet fits</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>compute_information.Rd</code></div>
     </div>
 
@@ -216,7 +216,10 @@ information formula that Muraki 1993 specializes to the GPCM.)</p></li>
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<ul><li><p><code>$tif</code>: design-weighted precision curve data with theta, Information, and SE.</p></li>
+<p>Category variance is computed from squared deviations about its mean to
+retain small positive information near an endpoint category. This avoids
+cancellation in raw second moments; it does not eliminate floating-point
+underflow or account for calibration uncertainty.</p><ul><li><p><code>$tif</code>: design-weighted precision curve data with theta, Information, and SE.</p></li>
 <li><p><code>$iif</code>: design-weighted facet-level contribution curves for the fitted
 non-person facets.</p></li>
 <li><p>Higher information implies more precise measurement at that theta.</p></li>

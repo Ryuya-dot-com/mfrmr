@@ -73,7 +73,11 @@ fit_mfrm(
   checkpoint = NULL,
   gpcm_mml_identification = c("free_population", "fixed_standard_normal"),
   mml_integration = c("fixed", "adaptive"),
-  category_policy = NULL
+  category_policy = NULL,
+  em_score_tol = NULL,
+  jml_correction_order = NULL,
+  jml_correction_sampling = c("fixed_rosters", "random_rosters"),
+  gpcm_mml_start = NULL
 )
 ```
 
@@ -184,13 +188,14 @@ fit_mfrm(
   Slope facet for the `GPCM` branch. mfrmr estimates one positive slope
   for every level of this designated facet. Thus
   `slope_facet = "Criterion"` gives criterion-specific slopes, whereas
-  `slope_facet = "Rater"` gives rater-specific slopes. The current route
-  accepts exactly one slope-owning facet. MML allows a distinct
-  `step_facet`; JML requires `slope_facet == step_facet`. Criterion and
-  rater slope blocks cannot be estimated simultaneously. Slopes are
-  identified on the log scale with their geometric mean fixed to 1, so
-  the table reports relative discrimination across the selected facet's
-  levels rather than unrelated absolute weights.
+  `slope_facet = "Rater"` gives rater-specific slopes. For one slope
+  family, MML allows a distinct `step_facet`; JML requires
+  `slope_facet == step_facet`. Criterion and rater slope blocks can also
+  be estimated together with an ordered pair of column names; see "Two
+  slope families" below for the explicit MML contract. With one family,
+  slopes are identified on the log scale with their geometric mean fixed
+  to 1, so the table reports relative discrimination across the selected
+  facet's levels rather than unrelated absolute weights.
 
 - facet_interactions:
 
@@ -289,65 +294,73 @@ fit_mfrm(
 
 - maxit:
 
-  Computational ceiling on optimizer iterations. The default is `400`.
-  This is not a convergence criterion or a model-selection control: a
-  fit that reaches the ceiling remains non-ready until the common
-  convergence and terminal-gradient checks pass. Smaller values used in
-  brief examples are for demonstration only and should not be copied
-  into a substantive analysis without an explicit computational
+  Computational ceiling on optimizer iterations. The default is `400`;
+  for two-family EM this counts outer EM iterations. Two-family adaptive
+  initialization also allows this many EM seed iterations; it then
+  applies separately to every direct optimizer stage at each start. For
+  corrected JML it applies separately to each recorded root-solving
+  stage. This is not a convergence criterion or a model-selection
+  control: a fit that reaches the ceiling remains non-ready until the
+  common convergence and terminal-gradient checks pass. Smaller values
+  used in brief examples are for demonstration only and should not be
+  copied into a substantive analysis without an explicit computational
   protocol.
 
 - reltol:
 
-  Portable tolerance setting for the initial optimizer stage. The
-  default is `1e-9`. For BFGS this is passed as `reltol`; for L-BFGS-B
-  it is mapped to `factr` and `pgtol`, whose actual values are recorded
-  in the fit. When this setting is at least as strict as the public
-  default (`reltol <= 1e-9`), optimizer code zero followed by a failed
-  common terminal-gradient review triggers a bounded warm-started polish
-  ladder. The best non-worsening stage under the recorded selection rule
-  is retained. Requested and selected-stage settings remain in
-  `fit$summary`, and the complete stage history remains in
-  `fit$opt$optimizer_polish`. If ordinary polishing still stalls,
-  fixed-grid, fixed-standard-normal RSM/PCM MML fits with at most 64
-  free parameters can use one local curvature step to restart the
-  selected optimizer. The step requires positive-definite,
-  well-conditioned curvature, a smaller gradient and an objective that
-  does not worsen beyond floating-point roundoff. The original
-  convergence and terminal-gradient criteria still apply; failed
-  proposals retain their reasons in the stage history. Fixed-grid GPCM
-  MML fits with at most 64 free parameters also check numerical
-  curvature after optimizer code zero. Negative curvature can trigger up
-  to three BFGS restarts in rescaled search coordinates, even when the
-  raw gradient is small. Each restart uses the requested `maxit`
-  ceiling. A replacement must pass the original gradient/convergence
-  checks, have no detected negative curvature and not worsen the
-  objective beyond roundoff. Failed recovery retains the estimate with a
-  numerical warning. This changes only the search coordinates, not the
-  model or information matrix used for inference. It does not establish
-  a global optimum, adequate quadrature, or valid confidence intervals.
-  Inspect the `SmallestCurvature`, `CurvatureScale` and
-  `CurvatureReviewError` fields in the stage history alongside the
-  objective and terminal gradient.
+  Portable tolerance setting for the initial optimizer stage. For
+  two-family fixed-grid EM, omit this argument and use `em_score_tol`.
+  Adaptive two-family direct MML uses `reltol` and the direct
+  optimizer's gradient check. The default is `1e-9`. For BFGS this is
+  passed as `reltol`; for L-BFGS-B it is mapped to `factr` and `pgtol`,
+  whose actual values are recorded in the fit. When this setting is at
+  least as strict as the public default (`reltol <= 1e-9`), optimizer
+  code zero followed by a failed common terminal-gradient review
+  triggers a bounded warm-started polish ladder. The best non-worsening
+  stage under the recorded selection rule is retained. Requested and
+  selected-stage settings remain in `fit$summary`, and the complete
+  stage history remains in `fit$opt$optimizer_polish`. If ordinary
+  polishing still stalls, fixed-grid RSM/PCM or adaptive GPCM MML fits
+  with a fixed population and at most 64 free parameters can use one
+  local curvature step to restart the selected optimizer. The step
+  requires positive-definite, well-conditioned curvature, a smaller
+  gradient and an objective that does not worsen beyond floating-point
+  roundoff. The original convergence and terminal-gradient criteria
+  still apply; failed proposals retain their reasons in the stage
+  history. Fixed-grid GPCM MML fits with at most 64 free parameters also
+  check numerical curvature after optimizer code zero. Negative
+  curvature can trigger up to three BFGS restarts in rescaled search
+  coordinates, even when the raw gradient is small. Each restart uses
+  the requested `maxit` ceiling. A replacement must pass the original
+  gradient/convergence checks, have no detected negative curvature and
+  not worsen the objective beyond roundoff. Failed recovery retains the
+  estimate with a numerical warning. This changes only the search
+  coordinates, not the model or information matrix used for inference.
+  It does not establish a global optimum, adequate quadrature, or valid
+  confidence intervals. Inspect the `SmallestCurvature`,
+  `CurvatureScale` and `CurvatureReviewError` fields in the stage
+  history alongside the objective and terminal gradient.
 
 - optimizer:
 
-  Direct-optimization method. `"auto"` (default) uses the limited-memory
-  `"L-BFGS-B"` method for MML and for larger JML parameter vectors (at
-  least 200 free parameters), while retaining BFGS for smaller JML fits.
-  Use `"BFGS"` or `"L-BFGS-B"` to request one method explicitly. The
-  method actually used is recorded in `fit$summary$OptimizerMethod`. For
-  L-BFGS-B, inspect `OptimizerFactr` and `OptimizerPgtol` rather than
-  interpreting `EffectiveReltol` as a native
-  [`stats::optim()`](https://rdrr.io/r/stats/optim.html) control.
+  Direct-optimization method. `"auto"` (default) uses the BFGS M step
+  for the two-family EM route. For other routes it uses the
+  limited-memory `"L-BFGS-B"` method for MML and for larger JML
+  parameter vectors (at least 200 free parameters), while retaining BFGS
+  for smaller JML fits. Use `"BFGS"` or `"L-BFGS-B"` to request one
+  method explicitly. The method actually used is recorded in
+  `fit$summary$OptimizerMethod`. For L-BFGS-B, inspect `OptimizerFactr`
+  and `OptimizerPgtol` rather than interpreting `EffectiveReltol` as a
+  native [`stats::optim()`](https://rdrr.io/r/stats/optim.html) control.
 
 - mml_engine:
 
   MML optimization engine for `method = "MML"`: `"direct"` (default)
   uses the selected direct optimizer on the marginal log-likelihood,
-  `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, and
+  `"em"` uses an EM loop for `RSM` / `PCM` with `population = NULL`, or
+  the explicitly scoped two-family GPCM route described below, and
   `"hybrid"` uses EM as a warm start before the direct optimizer.
-  Unsupported combinations currently fall back to `"direct"` and record
+  Unsupported one-family combinations fall back to `"direct"` and record
   that fallback in `fit$summary`. Direct, hybrid, and EM engines all
   require the common terminal-gradient check for the Numerical component
   of fit readiness; EM relative log-likelihood convergence alone does
@@ -374,7 +387,12 @@ fit_mfrm(
   and character predictors are expanded through
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html);
   categorical xlevels and contrasts are stored for replay and scoring.
-  Required when `population_formula` is supplied.
+  Prediction-aware transformations such as
+  [`scale()`](https://rdrr.io/r/base/scale.html),
+  [`poly()`](https://rdrr.io/r/stats/poly.html) and
+  [`splines::ns()`](https://rdrr.io/r/splines/ns.html) retain their
+  training basis when scoring new persons. Required when
+  `population_formula` is supplied.
 
 - person_id:
 
@@ -460,14 +478,16 @@ fit_mfrm(
   freedom used by a conventional fixed-latent- variance GPCM; in the
   documented item-only overlap it is a one-to-one reparameterization of
   ConQuest `scoresfree` GPCM. An explicitly supplied
-  `population_formula` is retained under this convention.
-  `"fixed_standard_normal"` is the legacy restricted branch: it requires
-  `population_formula = NULL`, fixes the person distribution to
+  `population_formula` is retained under this convention. With one slope
+  family, `"fixed_standard_normal"` is the legacy restricted branch: it
+  requires `population_formula = NULL`, fixes the person distribution to
   \\N(0,1)\\, and also fixes the slope geometric mean to one. The latter
   is then a substantive relative-discrimination restriction rather than
-  an identification requirement. This argument does not change JML,
-  whose geometric-mean-one slope constraint is required to identify its
-  freely estimated person coordinates.
+  an identification requirement. With two families, fixed N(0,1) instead
+  accompanies a geometric-mean-one first family and free second-family
+  slopes. This argument does not change JML, whose geometric-mean-one
+  slope constraint is required to identify its freely estimated person
+  coordinates.
 
 - mml_integration:
 
@@ -481,11 +501,16 @@ fit_mfrm(
   posterior person summaries, fitted-object scoring, and supported
   portable calibration. `quad_points` remains the order; neither
   integration mode guarantees adequate accuracy at a particular order.
-  Compare orders before reporting. Adaptive fits with nonlinear
-  coordinates have no completed probability- map identification audit;
-  GPCM also lacks an adaptive slope-boundary audit. These fits remain
-  review-only for formal parameter inference. ConQuest exports currently
-  require fixed integration.
+  Compare orders before reporting. During adaptive optimization, trial
+  values that cause numerical overflow are rejected so the search can
+  shorten its step. Starting values must still be evaluable, and final
+  estimates must pass the usual convergence checks; rejecting a trial
+  does not establish a parameter boundary or impose a discrimination
+  upper limit. Adaptive fits with nonlinear coordinates have no
+  completed probability- map identification audit; GPCM also lacks an
+  adaptive slope-boundary audit. These fits remain review-only for
+  formal parameter inference. ConQuest exports currently require fixed
+  integration.
 
 - category_policy:
 
@@ -500,6 +525,62 @@ fit_mfrm(
   [`describe_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/describe_mfrm_data.md)
   and
   [`review_mfrm_anchors()`](https://ryuya-dot-com.github.io/mfrmr/reference/review_mfrm_anchors.md).
+
+- em_score_tol:
+
+  Stopping tolerance for the two-family GPCM MML-EM route only. `NULL`
+  selects `1e-6` for that route. Stops when the largest absolute
+  derivative of the negative marginal log likelihood, divided by the
+  number of Persons, is at most this value. It does not control interval
+  eligibility. The ascent-checked BFGS M step allows 100 iterations with
+  `reltol = 1e-12`; both the marginal likelihood and EM auxiliary
+  objective must not decrease beyond numerical roundoff. If BFGS stops
+  before the requested score accuracy, usable positive curvature can
+  refine the auxiliary objective with the same E-step counts. The ascent
+  checks still apply. Dense curvature refinement is limited to 1–64 free
+  parameters; otherwise the ordinary M-step proposal is retained. The
+  saved `fit$opt$em_trace` records refinement attempts and failures;
+  `mstep_score` is the proposal's auxiliary-objective score before any
+  step halving. Other model routes require `NULL`.
+
+- jml_correction_order:
+
+  `NULL` (default) leaves the usual estimator unchanged. A positive
+  integer explicitly selects an experimental profile-score adjustment
+  for shared-owner `model = "GPCM", method = "JML"`. There is no
+  automatic choice of order. See **Corrected JML** for the input
+  restrictions, uncertainty meaning and connected outputs.
+
+- jml_correction_sampling:
+
+  Sampling assumption for corrected JML's Person covariance:
+  `"fixed_rosters"` (default) centers contributions within each observed
+  assignment pattern; `"random_rosters"` centers globally when
+  assignment patterns are sampled. This changes covariance, not the
+  point equation. The fixed-roster calculation needs at least two
+  Persons per pattern. Both describe new independent Persons, including
+  variation in their ability composition; neither estimates the variance
+  from reassessing the same Persons at fixed abilities. Omit this
+  argument when no correction is requested.
+
+- gpcm_mml_start:
+
+  Initial values for two-family adaptive direct MML only. `NULL`
+  (default) selects `"neutral_em"`: optimize from both the neutral
+  vector and a same-data fixed-grid EM vector, and select the lowest
+  finite adaptive negative log likelihood, retaining its convergence
+  status. `"neutral"` retains the earlier neutral-only initialization.
+  Numerical optimizer repairs still apply; exact historical reproduction
+  requires the original source. An EM vector is only a start; its
+  fixed-grid likelihood is never compared with an adaptive likelihood.
+  The seed uses the requested quadrature order, `maxit` outer
+  iterations, 100 M-step iterations and per-Person score tolerance
+  `1e-6`. A finite seed need not have converged. Each direct start uses
+  the requested optimizer, `reltol` and its existing polishing sequence.
+  All starts, errors, warnings, stage histories, seed trace and elapsed
+  costs are stored in `fit$opt$mml_initialization`; results and reports
+  include its comparison table. This comparison does not prove a global
+  optimum or interval validity.
 
 ## Value
 
@@ -551,20 +632,20 @@ An object of class `mfrm_fit` (named list) with:
   unattained for the evaluated case. The converse is deliberately not
   used: failure to find a path in the evaluated families, or retention
   of a finite optimizer point, does not establish existence of a finite
-  global maximum for the non-concave GPCM likelihood. These technical
-  records do not promote readiness, uncertainty, MML, or cross-software
-  claims. `config$boundary_audit$gpcm_terminal_gradient_stability`
-  reconstructs the same fixed JML objective and analytic terminal
-  gradient, checks stored optimizer/polish summaries and deterministic
-  central-difference probes, and reports gradient norms by
-  free-parameter block. Positive boundary certificates take precedence
-  over a finite-point zero or small gradient; otherwise a coherent small
-  gradient is retained-point first-order evidence only. The
-  implementation threshold is not a frozen scientific criterion and the
-  audit does not certify a finite global maximum, boundary absence,
-  uncertainty, external comparability, or readiness. The conditional JML
-  boundary checks are not reused for MML.
-  `confint(fit, parm = "slopes")` and
+  global maximum for the non-concave GPCM likelihood. These JML
+  diagnostic records do not supply uncertainty estimates, MML results or
+  evidence of agreement with other software.
+  `config$boundary_audit$gpcm_terminal_gradient_stability` reconstructs
+  the same fixed JML objective and analytic terminal gradient, checks
+  stored optimizer/polish summaries and deterministic central-difference
+  probes, and reports gradient norms by free-parameter block. Positive
+  boundary certificates take precedence over a finite-point zero or
+  small gradient; otherwise a coherent small gradient is retained-point
+  first-order evidence only. The numerical tolerance is not a
+  statistical significance threshold. These checks do not establish a
+  finite global maximum, boundary absence, uncertainty, external
+  comparability, or readiness. The conditional JML boundary checks are
+  not reused for MML. `confint(fit, parm = "slopes")` and
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
   separately check the current local MML solution before supplying
   approximate pointwise relative-slope intervals. `CIEligible` and
@@ -620,6 +701,205 @@ and propagated as a Data review state. They are not treated as
 independent replication evidence. A legitimate re-rating or replicated
 scoring event should be represented by an event, occasion, or other
 distinguishing facet before fitting.
+
+## Corrected JML
+
+When each Person has few ratings, ordinary JML can retain structural
+bias even with many Persons. The explicit `jml_correction_order` option
+adjusts the profile-score equation to address this source of bias. It
+changes the estimator, not the response model. A higher order is not
+necessarily more accurate: bias, variance and numerical stability can
+change in different directions. Choose the order as part of the analysis
+plan and examine sensitivity; neither AIC nor the smallest RootSE
+chooses a justified order.
+
+This experimental route requires the optional `nleqslv` package,
+observed integer scores, declared `rating_min` and `rating_max`,
+additive fixed facets, and a single explicit `step_facet` that also owns
+the slopes. Facet names are unrestricted. Use
+`category_policy = "preserve"` to retain the declared score ladder. All
+facet locations and each step ladder sum to zero; slopes have geometric
+mean one. Persons are independent sampling units, with conditionally
+independent ratings within Person. Only observed assignments contribute;
+unassigned or missing scores are not imputed. Repeated cell rows are
+treated as independent responses, not correlated repeated measurements.
+Fixed anchors, nonunit weights, interactions, shrinkage, separate
+slope/step owners, corrected RSM/PCM, and ordinary optimizer controls
+are unavailable. Explicit unsupported arguments produce an error rather
+than being ignored.
+
+For an order \\k\\, the equation uses \\U_k=(I-K\_\beta)^k U_0\\, where
+\\U_0\\ is the negative profile-likelihood score and \\K\_\beta\\
+averages over responses at their profiled Person MLE. This is the MLE
+plug-in construction discussed by Dhaene and Weidner (2023, section
+8.1), applied here to the declared GPCM structure. Exact owner-total
+enumeration is limited to 5,000 joint states per assignment pattern;
+larger calculations stop explicitly. No approximate pruning is
+substituted. The full equation Jacobian and empirical Person
+contributions give a sandwich covariance, with the selected
+assignment-sampling assumption. This is not an inverse likelihood
+Hessian or a general proof of bias removal.
+
+For example, `"fixed_rosters"` describes new cohorts with the same
+number of Persons assigned to each rater/task combination. It does not
+hold each Person's ability fixed across repeated cohorts. Ability
+distributions are unspecified and may differ between assignment
+patterns. With `"random_rosters"`, both Persons and their assignments
+are sampled from the same joint population; assignment need not be
+independent of ability. Neither option models shared random raters or
+dependent Persons. The empirical sandwich has no small-sample
+degrees-of-freedom correction. Its fixed-roster interpretation requires
+enough independent Persons within each pattern; two Persons is a
+computational minimum, not an assurance of accurate uncertainty. Taking
+`"random_rosters"` solely to obtain a RootSE changes the sampling
+assumption and is not a repair for sparse information.
+
+Use `summary(fit)$tables` for locations, steps, relative slopes and the
+uncertainty explanation; `include_person = TRUE` adds Person profiles.
+`RootSE` describes local variation around the adjusted-equation
+solution, which may remain biased for the true structural parameter.
+`LogRootSE` describes log-slope variation. Neither is supplied as a
+standard error with established structural coverage; no confidence
+limits are constructed. Persons are reprofiled at the adjusted
+calibration, with infinite limits for extreme scores and no invented
+Person SE. Numerical attempts remain available in
+`summary(fit)$attempts` and `fit$jml_adjustment`.
+
+A valid point estimate is retained if covariance is unavailable, with
+its reason. Different accepted roots yield missing primary estimates
+rather than selection by the ordinary likelihood. Agreement between
+starting values is a local check, not proof of a unique global solution.
+A failure remains a reportable fitted object with missing estimates and
+its attempts.
+
+`plot(fit, type = "slopes")`, `"locations"` (select one `facet`) and
+`"steps"` show point estimates. Choose `style = "distribution"` for an
+empirical cumulative view; `as_ggplot(plot(fit, draw = FALSE))` is
+supported. Use `mfrm_results(fit)` then
+[`mfrm_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_report.md)
+or
+[`export_mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_results.md)
+to retain these meanings through reporting and saved replay. For
+conditional probabilities and descriptive residuals on the observed
+fitted rows, use
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+and attach the saved result with
+`mfrm_results(fit, response_diagnostics = result)`. This holds corrected
+calibration and Person profiles fixed; no posterior averaging,
+uncertainty intervals or fit cutoffs are supplied. Extreme-score
+probabilities remain available; zero variance prevents standardization,
+with separate availability for Infit and Outfit. See that helper's help
+before interpreting a summary. For new Persons,
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+and
+[`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+provide conditional EAP scoring after their corrected-equation source
+checks. These scores add a separate normal reference prior. Their
+posterior intervals condition on calibration and do not establish
+structural coverage or remove residual bias. The portable artifact omits
+training responses and Person estimates; its own summary and score plots
+retain the correction order. Ordinary fit tests, Wright/Pathway maps,
+structural confidence intervals, likelihood ranking and corrected Person
+ML/WLE remain unavailable. The default MML and uncorrected JML workflows
+are unchanged.
+
+## Two slope families
+
+To estimate, for example, criterion and assessor discrimination
+together, use `slope_facet = c("Criterion", "Assessor")`. The order
+declares roles: the first facet has centered locations and slopes with
+geometric mean one; the second has free locations/slopes and owns the
+centered category steps. The product of their slopes multiplies the
+complete adjacent-category predictor. There is still one ability
+dimension. Column names and data column order do not select these roles.
+
+This route requires exactly those two non-Person facets,
+`model = "GPCM"`, `method = "MML"`,
+`gpcm_mml_identification = "fixed_standard_normal"`, either fixed
+integration with `mml_engine = "em"` or `mml_integration = "adaptive"`
+with `mml_engine = "direct"`, and both `step_facet` and
+`noncenter_facet` set to the second slope facet. These options must be
+chosen explicitly; the one-family defaults are not silently replaced.
+Use observed, unweighted integer scores on a scale from zero to
+`rating_max`, without missing IDs, duplicate person-facet rows or
+surrounding ID whitespace. Categories are not collapsed; if any are
+absent, declare `rating_max` and `category_policy = "preserve"` so
+category-support checks can assess that scale. Unobserved assignments
+are not zero scores. Anchors, population covariates, shrinkage,
+interactions, positive/dummy facets, checkpoints and automatic
+diagnostics are not supported in this route; explicitly supplying their
+arguments, including unused policy controls, produces an error.
+Fixed-grid EM uses `em_score_tol`; adaptive direct MML uses `reltol` and
+the direct optimizer's gradient check. Passing the other engine's
+tolerance is an error. Adaptive integration preserves the same N(0,1)
+population and response equation while moving each Person's grid. It is
+direct maximization of the marginal likelihood, not adaptive EM. By
+default it compares neutral and EM-derived starts through that same
+adaptive objective; see `gpcm_mml_start`. A better unfinished solution
+is retained as unfinished, rather than replaced by a worse converged
+candidate. If a retained starting point is better than all terminal
+candidates beyond roundoff, the returned fit remains numerically
+unresolved. A failed alternative is disclosed; if every direct attempt
+fails, the error carries an `initialization` record. Neither fixed-grid
+likelihoods nor interval outcomes select a candidate. Extreme slopes and
+weak information can still prevent inference even after a successful
+start comparison. Use
+[`mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/mml_quadrature_sensitivity.md)
+to compare refits at different orders; it preserves the chosen
+integration method, engine and initialization policy.
+
+`summary(fit)` and `print(fit)` retain numerical status and the two
+slope references.
+[`mfrm_curve_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_curve_intervals.md)
+evaluates provisional category or per-rating information curves at
+supplied abilities; all their intervals are unavailable. Use
+`plot(curves)` and
+`mfrm_results(fit, include = c("fit", "plots"), compute = "never", intervals = list(curves = curves))`
+to report saved curves. Their values can be inspected even after
+nonconvergence, but are not qualified estimates. Separately request
+`confint(fit)` for experimental component log-Wald intervals from the
+full observed marginal information. Their numerical checks do not
+qualify global identification or sampling coverage; failed checks retain
+missing bounds. Attach the result alongside curves for saved
+plots/reports. For fixed-grid EM, to profile one component instead,
+explicitly request
+`confint(fit, method = "profile", slope = c(Task = "t1"))`, replacing
+the named owner and level with your fitted identifiers. This reoptimizes
+other coefficients; it is an experimental local interval without
+established coverage.
+[`mfrm_response_diagnostics()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_response_diagnostics.md)
+integrates each Person's ability posterior at the saved calibration for
+descriptive residuals. Both slopes are retained; unavailable integration
+stays explicit. There are no reference fit cutoffs. Attach this result
+through `response_diagnostics` in the results call above. Adaptive
+two-family log-Wald checks use the moving-node marginal objective and
+compare adaptive quadrature orders. Posterior residuals preserve the
+fitted integration method and complete conditioning record, with
+separate row-wise integration checks. Adaptive profile intervals remain
+unavailable.
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+separately supplies experimental conditional new-Person EAP and
+posterior intervals with the retained N(0,1) prior, known levels, unit
+weights and separate source/batch checks; calibration uncertainty is
+excluded.
+[`mfrm_facet_intervals()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_facet_intervals.md)
+separately supplies experimental model-based intervals for either
+owner's locations and within-facet contrasts, retaining slope/step
+nuisance uncertainty. Failed numerical checks leave missing bounds;
+location differences need not imply uniform rating differences. Attach
+these intervals to
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+for plots, reports and exports. Step/curve intervals, sandwich
+inference, model ranking/LRT, ordinary fit/bias diagnostics and
+Wright/Pathway plots remain unavailable.
+[`extract_mfrm_calibration()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_workflow.md)
+provides a separately checked portable two-family route. Matching native
+or portable scores can be attached with
+`mfrm_results(fit, scores = scores)` without rescoring. Numerical
+agreement of the fitting implementation is not a general identification,
+convergence or coverage guarantee. See
+[`vignette("mfrmr-gpcm-scope")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.md)
+for a complete example and interpretation.
 
 ## Choose the arguments by their purpose
 
@@ -730,17 +1010,18 @@ loading-only formulation in which the slope multiplies ability while
 rater severity and other intercept terms remain unscaled. Such a
 formulation, including TAM multifacet `GPCM.design` constructions with
 separate linear intercept and slope designs, is a different model unless
-an algebraic reduction establishes equivalence. In this many-facet GPCM,
-exactly one facet supplies slopes. MML permits a different step owner;
-JML requires a shared owner. It is not the broader Uto–Ueno generalized
-MFRM, whose task and rater slopes enter multiplicatively and whose step
-owner must be stated separately. Setting every current slope to one
-recovers the package's equal-discrimination PCM kernel; it does not
-establish support for the omitted second slope block, multidimensional
-traits, or response-style parameters. Under the default
-`gpcm_mml_identification = "free_population"` branch, the population
-standard deviation carries the common discrimination scale while the
-geometric-mean-one slopes describe relative discrimination.
+an algebraic reduction establishes equivalence. In this one-family
+many-facet GPCM, exactly one facet supplies slopes. MML permits a
+different step owner; JML requires a shared owner. It is not the broader
+Uto–Ueno generalized MFRM, whose task and rater slopes enter
+multiplicatively and whose step owner must be stated separately. The
+provisional two-family route above fits that product equation with its
+own scale and output restrictions. Setting every slope to one recovers
+the equal-discrimination PCM kernel; neither route supplies
+multidimensional traits or response-style parameters. Under the default
+one-family `gpcm_mml_identification = "free_population"` branch, the
+population standard deviation carries the common discrimination scale
+while the geometric-mean-one slopes describe relative discrimination.
 Equivalently, on a standardized latent variable the absolute slopes are
 \\\sigma\alpha_g\\. Under
 `gpcm_mml_identification = "fixed_standard_normal"`, both the population
@@ -925,24 +1206,40 @@ items per person) and therefore need not vanish by adding persons alone.
 Wright & Stone (1979) and Wright & Masters (1982, ch. 5) document an
 empirical \\(L-1)/L\\ correction that approximately removes the bias for
 the dichotomous Rasch model; mfrmr does **not** apply that correction
-(no `bias_correction` argument exists). The JML branch also does not
-produce a profile-likelihood Hessian for the structural parameters: SEs
-reported under JML are observation-table approximations (\\1/\sqrt{\sum
-\mathrm{Var}(X\_{pi})}\\) and are marked as exploratory in the
-diagnostics output.
+(no `bias_correction` argument exists). A common positive multiplier is
+not a correction for relative GPCM slopes: multiplying all slopes by the
+same factor leaves their ratios unchanged, and rescaling them to
+geometric mean one returns the original slopes. A correction for
+relative slopes therefore needs its own justification.
 
-`fit_mfrm()` does not replace extreme response scores before JML
-fitting. For a freely estimated Person with all-minimum or all-maximum
-responses, the primary estimate is `-Inf` or `Inf`; a finite optimizer
-value is only a computational trace. Fixed Person anchors retain their
-supplied values, and coupled constraints require their own boundary
-review. A finite display from `fair_average_table(..., xtreme = ...)`,
-or placement at the end of a Wright map, does not change the fitted
-model or correct JML bias. When comparing software, report
-response-score adjustment and post-fit bias correction separately,
-including how the correction defines exposure when responses are missing
-or unequal across Persons. Matching the label "JML" alone does not
-establish matching estimates or uncertainty.
+Uncorrected JML facet/location SEs use observation-table information:
+\$\$\mathrm{SE}\_{g} \approx \left\[\sum\_{r \in g} w_r a_r^2
+\mathrm{Var}(X_r \mid \widehat\eta_r)\right\]^{-1/2}.\$\$ Here \\g\\ is
+a facet level, \\r\\ an observed response row, \\w_r\\ its weight, and
+\\a_r\\ its GPCM slope (one for RSM/PCM). Only finite information
+contributions are used. These exploratory SEs treat the other fitted
+parameters as fixed; they are not slope SEs or a joint covariance
+adjusted for estimating Person and structural parameters together. The
+local joint-curvature check used for portable GPCM JML scoring does not
+supply such an inferential covariance. Values fixed by anchors or
+identification constraints are not estimated: diagnostic tables mark
+them `Fixed = TRUE` and leave their sampling SEs and intervals missing,
+rather than assigning an observation-information SE.
+
+Nuisance-parameter adjustment and estimation bias are separate issues.
+Haberman (2004, Sections 1.4-1.5) shows for a binary Rasch setting that,
+with fixed test length, JML can concentrate around a biased limit as the
+number of persons grows. Even a variance appropriate to that limit does
+not establish coverage of the true parameter. This result motivates
+checking test length separately from sample size; it does not validate a
+correction or an interval for sparse many-facet GPCM. Formal JML slope
+intervals are not currently available in mfrmr.
+
+When comparing software, report response-score adjustment and post-fit
+bias correction separately, including how the correction defines
+exposure when responses are missing or unequal across Persons. Matching
+the label "JML" alone does not establish matching estimates or
+uncertainty.
 
 Practical recommendation:
 
@@ -964,6 +1261,56 @@ Practical recommendation:
   person parameters. A third-party CML fit can be imported from `eRm`
   with
   [`import_erm_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/import_erm_fit.md).
+
+## All-minimum and all-maximum Persons
+
+`fit_mfrm()` has no public option to remove Persons before fitting
+because all their responses are at the minimum or maximum. Both JML and
+MML retain those observed responses. Extreme-response flags use the
+usable rows after data preparation; missing responses do not count as
+intermediate scores. Declare `rating_min` and `rating_max` from the
+rubric so that an observed maximum is not mistaken for the intended
+scale maximum. Inspect `fit$facets$person$Extreme` for `"low"`,
+`"high"`, or `"none"`.
+
+**Ordinary JML.** `fit_mfrm()` does not replace extreme response scores
+before JML fitting. For an independently free Person with all-minimum or
+all-maximum responses, the primary `Estimate` is `-Inf` or `Inf`;
+`OptimizerEstimate` retains the finite computational trace, not a finite
+Person MLE. Fixed Person anchors retain their supplied values, and
+coupled constraints require their own boundary review. The Person
+audit's `BoundaryState = "has_exclusions"` identifies nonfinite
+parameters; it does not mean that these Persons or their input rows were
+deleted. Finite structural estimates alone do not establish a finite
+joint maximum.
+
+**Corrected JML.** In the supported shared-owner GPCM route, extreme
+Persons also remain in the data and assignment-pattern accounting. Their
+profiled abilities have infinite limits and their structural estimating-
+equation contributions are zero at those limits. This boundary
+calculation is not an input filter or a general proof of bias removal.
+
+**MML.** Extreme Persons contribute to the marginal likelihood through
+integration over the specified or estimated population distribution.
+Their reported abilities are posterior EAPs, with posterior SDs rather
+than frequentist Person-MLE standard errors. A proper normal population
+model with finite parameters gives finite EAPs, subject to valid
+numerical integration; an extreme response pattern alone does not
+require deletion. This does not guarantee convergence, identification or
+valid structural intervals for the fitted model. Removing these Persons
+would change the observed sample and marginal likelihood.
+
+New-Person scoring with
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+is a separate operation. With an eligible calibration and an admitted
+scoring prior, it can return finite EAPs for extreme new Persons,
+including after JML calibration. Those scores do not replace the
+original JML Person MLEs. Calibration-source checks and scoring-batch
+integration checks must both pass; increasing scoring nodes does not
+resolve a boundary in the source calibration. A finite display from
+`fair_average_table(..., xtreme = ...)`, or placement at the end of a
+Wright map, likewise does not change the fitted model or correct JML
+bias.
 
 ## Model-estimated facet interactions
 
@@ -1128,6 +1475,17 @@ For an initial latent-regression run, keep the setup explicit:
 6.  Report `summary(fit)$population_coefficients` as coefficients of the
     conditional-normal latent population model, not as a post hoc
     regression on EAP or MLE scores.
+
+With covariates, the estimated `sigma2` is the residual variance of
+ability conditional on those covariates, not the marginal population
+variance. Marginal variance also depends on the distribution of the
+covariates. Standardization and polynomial/spline bases learned during
+fitting are reused for new persons; changing the scoring cohort does not
+redefine them. For custom transformations, supply a prediction-aware R
+transformation or precompute predictors with fixed training constants.
+Older saved fits can reconstruct transformed terms only from retained
+person data that reproduce the training design; otherwise scoring
+requests a new calibration fit.
 
 For an intercept-only model, `population_formula = ~ 1` estimates a
 single population mean and variance. Training still requires a
@@ -1449,6 +1807,17 @@ marginal-likelihood framework of Bock and Aitkin (1981).
 - Bock, R. D., & Aitkin, M. (1981). *Marginal maximum likelihood
   estimation of item parameters: Application of an EM algorithm*.
   Psychometrika, 46(4), 443-459.
+
+- Dhaene, G., & Weidner, M. (2023). *Approximate functional
+  differencing*. SERIEs, 14, 379-416.
+  [doi:10.1007/s13209-023-00283-1](https://doi.org/10.1007/s13209-023-00283-1)
+  .
+
+- Haberman, S. J. (2004). *Joint and conditional maximum likelihood
+  estimation for the Rasch model for binary responses*. ETS Research
+  Report RR-04-20.
+  [doi:10.1002/j.2333-8504.2004.tb01947.x](https://doi.org/10.1002/j.2333-8504.2004.tb01947.x)
+  .
 
 - Linacre, J. M. (1989). *Many-facet Rasch measurement*. MESA Press.
 

@@ -99,14 +99,15 @@ non-CRAN tests.
   from the package. Run them only for the affected area, with their
   recorded source version and optional runtime.
 - Before release, run an `--as-cran` check with timing enabled and
-  ensure the ordinary and `donttest` examples both execute. Treat the
-  summed CRAN-side package workload for ordinary examples, `donttest`
-  examples, tests, and vignette rebuilding above 600 seconds as a
-  release concern. Retain the sum of all timed top-level check
-  components as diagnostic context, but do not charge dependency,
-  installation, manual, or other check-infrastructure time to this
-  package-controlled threshold. Do not apply the threshold to the
-  deliberately exhaustive `NOT_CRAN=true` regression job.
+  ensure the ordinary and `donttest` examples both execute. The current
+  release plan requires the complete check itself to stay below 600
+  seconds, with a 480-second local target. Include static analysis,
+  examples, tests, vignette rebuilding, manuals and other check
+  overhead; report dependency setup, build and installation separately.
+  Preserve phase timings and actual skips. See
+  `inst/validation/internal-roadmap-0.2.4.md` for the recorded pretest
+  rejection and the current D3/D4 requirements. Do not apply this
+  ceiling to the deliberately exhaustive `NOT_CRAN=true` regression job.
 - When reusing executed articles with `--no-build-vignettes`, retain
   their `build/vignette.rds` index as well as `inst/doc`. Verify that
   its source, output and extracted R filenames match the current

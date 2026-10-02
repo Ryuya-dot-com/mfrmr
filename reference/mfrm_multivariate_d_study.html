@@ -54,7 +54,7 @@ measurement conditions, such as tasks, raters, or occasions. No model is refitte
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plan measurement conditions with a multivariate D-study</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-multivariate-gtheory.R" class="external-link"><code>R/api-multivariate-gtheory.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-multivariate-gtheory.R" class="external-link"><code>R/api-multivariate-gtheory.R</code></a></small>
       <div class="d-none name"><code>mfrm_multivariate_d_study.Rd</code></div>
     </div>
 
@@ -132,7 +132,12 @@ row and metric-specific status, and <code>ComponentPSD</code>), <code>covariance
 (three matrices per scenario), <code>design_grid</code>,
 <code>weights</code> (the supplied vector or matrix, reordered to the G-study score
 order), <code>component_diagnostics</code>,
-and <code>gstudy</code> (the source result). <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns <code>coefficients</code>.</p>
+and <code>gstudy</code> (the source result). <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns <code>coefficients</code>.
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> also shows source level/row counts, future-plan conventions and
+the supplied composite weights. Save the full result with <code>saveRDS(d)</code>
+and reopen with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS()</a></code> to preserve that context. A CSV of
+<code>summary(d)</code> contains the coefficient table only; accompany it with the
+weights, source design and row usage, future design and score convention.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -145,7 +150,10 @@ For <code>facets = c(Rater = "Assessor", Occasion = "Session")</code>, use
 <code>expand.grid(Rater = c(1, 2), Occasion = c(2, 4))</code>. The same workflow
 applies to any supported one- or two-facet model; extra columns cannot
 introduce conditions absent from the G-study.</p>
-<p>Read <code>summary(d)</code> together with <code>plot(d)</code>:</p><ul><li><p><code>G</code> concerns consistency of relative ordering, such as ranking examinees.</p></li>
+<p>Read <code>summary(d)</code> together with <code>plot(d)</code>:</p><ul><li><p><code>G</code> concerns consistency of relative ordering, such as ranking examinees.
+It is not the probability of identifying the best person or the winner
+of a competition. Close leading scores can remain hard to distinguish
+even when G is high; this function provides no Person-rank intervals.</p></li>
 <li><p><code>Phi</code> concerns absolute score levels and also counts shifts from easier
 tasks or more lenient raters as error. It is not pass/fail accuracy.</p></li>
 <li><p><code>RelativeSEM</code> and <code>AbsoluteSEM</code> express these errors in the units of the
@@ -184,6 +192,8 @@ and <code>E</code>, universe-score covariance is <code>P</code>. Relative-error 
 <code>R/n_r + T/n_t + RT/(n_r*n_t)</code>. The G-study number of persons does not
 divide individual-score universe variance. Holding a count constant does
 not turn its random facet into a fixed facet.
+Composite weights define linear score combinations. They do not implement
+score-dependent panel trimming or an entire competition scoring rule.
 For a Person-by-Task G-study, <code>E</code> combines Person-by-Task interaction and
 within-cell error: relative-error covariance is <code>E/n_t</code>, absolute-error
 covariance is <code>(T + E)/n_t</code>, and universe-score covariance remains <code>P</code>.

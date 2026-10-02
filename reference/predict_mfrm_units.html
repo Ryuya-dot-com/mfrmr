@@ -46,7 +46,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Score future or partially observed units under the fitted scoring basis</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-prediction.R" class="external-link"><code>R/api-prediction.R</code></a></small>
       <div class="d-none name"><code>predict_mfrm_units.Rd</code></div>
     </div>
 
@@ -71,7 +71,8 @@
 <span>  readiness_policy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"review"</span><span class="op">)</span>,</span>
 <span>  n_draws <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  adaptive_quad_points <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  adaptive_quad_points <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scoring_prior <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -122,7 +123,9 @@ one-row-per-person table internally from the scored person IDs. This is the
 scoring-time table for <code>new_data</code>, not the fit object's replay/export
 provenance table. For categorical background variables, supply values on
 the same coding scale used at fit time; the fitted factor levels and
-contrasts are reused when building the scoring design matrix.</p></dd>
+contrasts are reused when building the scoring design matrix.
+Fitted standardization and polynomial/spline bases are also reused;
+they are not re-estimated from the scoring cohort.</p></dd>
 
 
 <dt id="arg-person-id">person_id<a class="anchor" aria-label="anchor" href="#arg-person-id"></a></dt>
@@ -155,10 +158,12 @@ The fixed or adaptive integration mode is inherited from <code>fit</code>.</p></
 handled. <code>"error"</code> (default) refuses scoring. <code>"review"</code> permits an
 explicitly review-only fitted-object calculation and labels the returned
 estimates and settings accordingly; it does not make the source fit ready.
-Estimated-population fits currently require <code>"review"</code> because their
-identification, boundary and numerical-accuracy acceptance rule is incomplete.
-Earlier population-model predictions labelled scoring-ready must be
-regenerated with explicit review before summary or export.</p></dd>
+GPCM MML and intercept-only normal population models may pass the
+conditional-scoring checks described below even when their global inference
+audit remains incomplete. Population models with background covariates
+still require explicit review. Invalid calibration parameters or inconsistent
+stored prior parameters are refused under either policy. Older population
+results without the new check records retain their review-only restriction.</p></dd>
 
 
 <dt id="arg-n-draws">n_draws<a class="anchor" aria-label="anchor" href="#arg-n-draws"></a></dt>
@@ -176,7 +181,22 @@ orders &gt;= 3, for example <code>c(31, 61)</code>. Adds <code>quadrature_review
 a fixed-prior grid with grids centered and scaled to each Person's
 posterior. Calibration parameters and the prior are held fixed. Inspect
 both fixed/adaptive differences and movement between adaptive orders;
-this diagnostic does not replace estimates, intervals, draws, or readiness.</p></dd>
+this diagnostic does not replace estimates, intervals or draws. Every
+scoring call automatically adds reference orders and uses them to check
+numerical score accuracy, including ordinary RSM/PCM with the retained
+prior; see below.</p></dd>
+
+
+<dt id="arg-scoring-prior">scoring_prior<a class="anchor" aria-label="anchor" href="#arg-scoring-prior"></a></dt>
+<dd><p>Optional <code>list(mean = ..., sd = ...)</code> specifying one
+normal scoring prior shared by all scored persons, on the unchanged
+calibration ability scale. <code>sd</code> is a standard deviation, not a variance.
+<code>NULL</code> (default) retains the MML scoring prior; JML uses a post-hoc
+standard-normal reference prior. Both values must be
+finite; SD and its representable variance must be positive. Overrides of
+population models with background covariates are not supported. A supplied
+prior does not refit the calibration, estimate a new population, or bypass
+source checks. Numerical scoring checks run under the supplied prior.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -201,7 +221,8 @@ latent-regression scoring; <code>NULL</code> otherwise</p></li>
 available, the fitted one-dimensional population model to score new or
 partially observed persons via Expected A Posteriori (EAP) summaries on a
 quadrature grid.</p>
-<p>When the original fit uses ordinary <code>method = "MML"</code>, the posterior
+<p>With the default <code>scoring_prior = NULL</code>, when the original fit uses ordinary
+<code>method = "MML"</code>, the posterior
 summaries use that fitted MML calibration and a standard normal scoring
 prior, unless a population model was fitted. When the original fit
 uses the latent-regression MML branch, the scoring prior is the fitted
@@ -233,10 +254,137 @@ values under the fitted scoring basis. They should be interpreted as
 posterior uncertainty summaries, not as deterministic future truth values.</p>
 <p>For <code>JML</code> fits, this scoring stage is intentionally post hoc: <code>mfrmr</code> uses
 the fitted facet and step parameters from the joint-likelihood fit, then
-adds a standard normal reference prior only for the scoring layer so that
+adds a standard normal reference prior by default (or the explicit
+<code>scoring_prior</code>) only for the scoring layer so that
 new or partially observed units can be summarized on a quadrature grid.
 This is a practical fitted-object EAP procedure, not a claim that the
-original <code>JML</code> fit itself estimated a population model.</p>
+original <code>JML</code> fit itself estimated a population model. It does not reproduce
+the training Person joint maximum-likelihood estimates or provide ML/WLE
+scoring for new Persons. Posterior uncertainty conditions on the fitted
+calibration; it does not include calibration-parameter uncertainty.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="experimental-two-family-scoring">Experimental two-family scoring<a class="anchor" aria-label="anchor" href="#experimental-two-family-scoring"></a></h2>
+
+
+<p>Two-family GPCM MML supports new Persons with known non-Person facet levels,
+unit weights and the retained fixed N(0,1) prior. Both slope components,
+facet locations and the second owner's category steps remain fixed. New
+combinations of known levels are allowed under the fitted product model;
+this does not validate those combinations empirically. Repeated Person-facet
+combinations are rejected. Missing responses are omitted with a warning and
+row review; Persons without valid responses receive no prior-only score.
+Unknown levels or scores outside the original category coding are rejected.
+Prior overrides and person-level population inputs are not supported.</p>
+<p>The saved specification, point estimates, objective and convergence must
+agree before either readiness policy permits scoring. A finer rule (normally
+<code>max(q + 10, 2 * q - 1)</code>) must change the source negative log likelihood per
+Person by at most 1e-6 and have maximum absolute gradient per Person at most
+1e-6 for conditional source scoring. Source-readiness or refinement failures
+require explicit <code>readiness_policy = "review"</code>; invalid calibration records
+or failed convergence cannot be enabled by review. No covariance is required.
+Each new batch also receives the EAP/SD integration checks described below.
+These tolerances are numerical checks, not statistical validity thresholds.</p>
+<p>EAP, posterior SD and continuous equal-tail intervals condition on the point
+calibration and fixed prior, excluding calibration uncertainty. Numerical
+checks do not complete the identification/boundary audits or establish
+sampling coverage, population transport or decision accuracy. Settings retain
+both owners, component slopes, locations, steps, category coding, observed
+calibration combinations and separate source/batch checks through saveRDS()
+and summary(). <code><a href="mfrm_calibration_workflow.html">extract_mfrm_calibration()</a></code> provides the corresponding
+portable format 6 route after passing source checks. Use
+<code>mfrm_results(fit, scores = scores)</code> to attach matching saved native or
+format-6 scores for reports and exports without rescoring. The saved source
+identity, calibration and scoring records must agree with the supplied fit;
+source/batch checks, omitted rows and review-only labels remain visible.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="conditional-scoring-and-source-checks">Conditional scoring and source checks<a class="anchor" aria-label="anchor" href="#conditional-scoring-and-source-checks"></a></h2>
+
+
+<p>A finite calibration can define a person's posterior score without proving
+that the calibration is the unique global optimum. For one-family GPCM MML and models
+with an estimated intercept-only normal population, this function checks the
+current likelihood, gradient and unregularized joint information using the
+same local-solution machinery as <code><a href="compare_mfrm.html">compare_mfrm()</a></code>. Detected identification
+deficiencies, inadequate categories and failed convergence do not pass.
+Boundary and identification audits labelled "not evaluated" remain so;
+they are not relabelled as completed by these local checks.</p>
+<p>Shared-owner GPCM JML can also use conditional scoring with unit weights and
+no anchors/interactions. Fresh joint objective/gradient and unregularized
+full-curvature checks must pass; known Person/additive/slope boundary
+certificates are not overridden by finite optimizer coordinates. Incomplete
+global identification/boundary audits remain incomplete. Source curvature
+includes free Person parameters and uses a dense matrix; saved portable
+calibration avoids repeating it. No MML integration check or formal slope
+interval is inferred from this JML calculation.</p>
+<p>One-family MML calibration checks also compare the retained solution at its fitting order
+and a higher order (normally <code>2 * q - 1</code>, at least <code>q + 10</code>; <code>q + 10</code> is
+used if the larger rule is not representable). They require NLL movement
+&lt;= 1e-5, gradient movement &lt;= 1e-4 and a higher-order gradient &lt;= 1e-4,
+in addition to the existing local-solution criteria. These are numerical
+screening tolerances, not statistical coverage or global-existence guarantees.</p>
+<p>For every native scoring route, after a calibration passes, the actual reported EAP and SD are compared
+with adaptive reference orders under the same calibration and scoring prior.
+The reference includes the scoring order (at least 3 for this comparison)
+and a higher order chosen by the same rule. EAP/SD discrepancies and changes
+in adaptive EAP, SD and log marginal likelihood must each be &lt;= 1e-5.
+Increase <code>scoring_quad_points</code> if this check fails. <code>readiness_policy = "review"</code> retains and labels those scores for inspection instead of stopping.
+Nonfinite posterior calculations or invalid parameters cannot be enabled by review.</p>
+<p><code>settings$local_calibration_review</code> records the source checks and
+<code>settings$score_integration_review</code> records the per-Person numerical checks.
+New outputs set <code>settings$score_integration_required = TRUE</code>; their saved
+checks must remain with the scores. Older outputs without these checks can
+still be summarized, but are not retrospectively numerically qualified.
+<code>SourceScoringReady</code> concerns the calibration; <code>ScoreIntegrationReady</code>
+concerns the reported scores. <code>EstimateUse</code> identifies any scores requiring
+integration review. These records accompany summaries, draws and exports.
+The conditional route has <code>source_scoring_status = "conditional"</code> and does
+not change the fit's global <code>InferenceReady</code> or boundary/identification status.
+Information-matrix work respects <code>mfrmr.max_information_bytes</code>; unavailable
+checks require explicit review, rather than accepting a stale covariance.</p>
+<p>For example, a rubric calibration that passes these checks can score new
+respondents while holding its estimated normal prior fixed. Passing does
+not establish that the next cohort has the same ability distribution.
+Calibration and prior estimation uncertainty remain excluded from posterior
+intervals, and no portable GPCM calibration artifact is created here.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="scoring-a-later-cohort">Scoring a later cohort<a class="anchor" aria-label="anchor" href="#scoring-a-later-cohort"></a></h2>
+
+
+<p>By default the scoring prior is retained from the fitted model; this function does not
+estimate a new cohort's population mean or spread from <code>new_data</code>. For
+example, a calibration from an advanced class may not supply a suitable
+prior for a beginning class, even when both classes use the same rubric.
+With only a few ratings, scores can depend substantially on that prior.
+The number of ratings alone is not an information measure: their calibrated
+difficulties, discriminations and observed categories also matter.
+Inspect extreme response patterns separately; increasing the rating count
+does not guarantee less prior sensitivity for every person.</p>
+<p>A narrower prior can yield narrower posterior intervals without any new
+rating evidence. This is greater certainty under a stronger assumption,
+not evidence that the assessment became more informative. Changing the
+prior while fixing calibration is a sensitivity analysis; estimating the
+calibration again changes a different part of the analysis. Neither action
+alone establishes coverage for a new cohort.</p>
+<p>Use <code>scoring_prior = list(mean = 0.5, sd = 1.5)</code>, for example, to inspect
+another normal-prior assumption while retaining the calibration. Choose
+plausible values for your setting; these example numbers are not a default
+recommendation. Compare the same response rows under both priors. The
+supplied prior is labelled as an analyst assumption, even if its numbers
+equal the retained prior. It does not repair a poorly estimated calibration.</p>
+<p><code>PriorMean</code>/<code>PriorSD</code> describe the prior actually used for scoring;
+<code>RetainedPriorMean</code>/<code>RetainedPriorSD</code> describe the original scoring prior.
+<code>PriorSource</code> distinguishes <code>"retained"</code> from <code>"user_supplied"</code>.
+<code>RetainedPrior</code> distinguishes an estimated normal population from the
+standard normal reference (including post hoc JML scoring). These unrounded
+columns accompany estimates, posterior draws and their summaries.
+<code>settings$prior_comparison</code> records both priors by person, and
+<code>settings$retained_posterior_basis</code> records the original basis. Do not edit
+<code>fit$population</code>: its consistency with the retained calibration is checked
+independently of <code>scoring_prior</code>. Saving a prediction with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code> stores
+a result; it does not create a portable GPCM calibration for future scoring.</p>
     </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -296,7 +444,8 @@ fitted one-dimensional population model.</p>
 
 <p>The posterior summaries follow the usual quadrature-based EAP scoring
 framework used in item response modeling under calibrated parameters
-(for example Bock &amp; Aitkin, 1981). When <code>fit</code> uses the latent-regression
+(Bock &amp; Mislevy, 1982, pp. 432-433; Bock &amp; Aitkin, 1981).
+When <code>fit</code> uses the latent-regression
 branch, <code>mfrmr</code> scores under the fitted conditional normal population model
 in the general plausible-values spirit discussed by Mislevy (1991). Optional
 posterior draws are exposed as quadrature-grid plausible-value-style
@@ -305,7 +454,15 @@ ConQuest numerical equivalence. When the source fit is <code>JML</code>, the sam
 literature supports
 the quadrature-based scoring layer, but the standard normal prior is a
 package-level reference prior introduced for post hoc scoring rather than an
-estimated population distribution.</p><ul><li><p>Bock, R. D., &amp; Aitkin, M. (1981). <em>Marginal maximum likelihood estimation
+estimated population distribution.
+The local JML objective, gradient and curvature cutoffs are package
+numerical criteria, not literature-derived guarantees of calibration
+accuracy or interval coverage. The scoring literature does not establish
+the completeness of the source boundary audit.</p><ul><li><p>Bock, R. D., &amp; Mislevy, R. J. (1982). <em>Adaptive EAP estimation of ability
+in a microcomputer environment</em>. Applied Psychological Measurement,
+6(4), 431-444. <a href="https://doi.org/10.1177/014662168200600405" class="external-link">doi:10.1177/014662168200600405</a>
+.</p></li>
+<li><p>Bock, R. D., &amp; Aitkin, M. (1981). <em>Marginal maximum likelihood estimation
 of item parameters: Application of an EM algorithm</em>. Psychometrika, 46(4),
 443-459.</p></li>
 <li><p>Mislevy, R. J. (1991). <em>Randomization-based inference about latent
@@ -313,6 +470,22 @@ variables from complex samples</em>. Psychometrika, 56(2), 177-196.</p></li>
 <li><p>Muraki, E. (1992). <em>A generalized partial credit model: Application of an
 EM algorithm</em>. Applied Psychological Measurement, 16(2), 159-176.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="corrected-jml">Corrected JML<a class="anchor" aria-label="anchor" href="#corrected-jml"></a></h2>
+
+
+<p>An experimental shared-owner corrected GPCM calibration can score new
+Persons after fresh checks of its adjusted equation, full Jacobian and
+saved parameter identities. These checks never apply an unadjusted
+likelihood-stationarity requirement to the corrected root. Unit weights
+and known facet levels are required; unresolved roots cannot be enabled by
+<code>readiness_policy = "review"</code>. No model is refitted. The returned EAPs
+use the corrected point calibration and a separate normal reference prior,
+not the original profiled Person estimates. Continuous posterior intervals
+exclude calibration uncertainty and residual calibration bias. The correction
+order and estimator remain recorded in the score table and saved settings.
+<code><a href="mfrm_calibration_workflow.html">extract_mfrm_calibration()</a></code> provides the corresponding portable route.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code>, <code><a href="fit_mfrm.html">fit_mfrm()</a></code>,
@@ -345,6 +518,20 @@ EM algorithm</em>. Applied Psychological Measurement, 16(2), 159-176.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> NEW01    -<span style="color: #BB0000;">0.17</span>  -<span style="color: #BB0000;">1.50</span>  1.18</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> NEW02     0.301 -<span style="color: #BB0000;">1.04</span>  1.68</span>
+<span class="r-in"><span><span class="co"># Compare assumptions on the same response rows, without refitting.</span></span></span>
+<span class="r-in"><span><span class="va">alternative</span> <span class="op">&lt;-</span> <span class="fu">predict_mfrm_units</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">toy_fit</span>, <span class="va">new_units</span>, scoring_prior <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">0.5</span>, sd <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Retained prior"</span> <span class="op">=</span> <span class="va">pred_units</span><span class="op">$</span><span class="va">estimates</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"Alternative prior"</span> <span class="op">=</span> <span class="va">alternative</span><span class="op">$</span><span class="va">estimates</span>, .id <span class="op">=</span> <span class="st">"Scenario"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">comparison</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">Scenario</span>, <span class="va">Estimate</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_pointrange</a></span><span class="op">(</span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">Lower</span>, ymax <span class="op">=</span> <span class="va">Upper</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span> <span class="va">Person</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="st">"Posterior EAP"</span>,</span></span>
+<span class="r-in"><span>    caption <span class="op">=</span> <span class="st">"95% posterior intervals conditional on calibration and each prior"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="predict_mfrm_units-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

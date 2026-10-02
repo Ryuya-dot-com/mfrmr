@@ -16,7 +16,9 @@ plot(
     " | "),
   reference = NULL,
   draw = TRUE,
-  ...
+  ...,
+  type = c("interval", "profile"),
+  caption = NULL
 )
 
 # S3 method for class 'mfrm_gpcm_bootstrap'
@@ -60,6 +62,20 @@ plot(
   For bootstrap slope results, passed to
   [`confint()`](https://rdrr.io/r/stats/confint.html) to select its
   target and level. Otherwise unused.
+
+- type:
+
+  For saved slope intervals, `"interval"` displays bounds; `"profile"`
+  displays saved likelihood evaluations and the same-target Wald limits.
+  The default is `"profile"` for saved profile calculations and
+  `"interval"` otherwise. This never initiates profiling.
+
+- caption:
+
+  For saved slope intervals, optional caption. NULL removes it.
+  Two-family intervals state the distinct family references by default.
+  Profile plots supply a default explanation of line styles and missing
+  coordinates when omitted.
 
 ## Value
 

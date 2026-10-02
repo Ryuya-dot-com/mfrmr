@@ -56,7 +56,7 @@ expects. This is not the raw-residual Yen (1984) Q3 statistic."><meta property="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr standardized/aggregated-residual Q3-style screen</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-q3.R" class="external-link"><code>R/api-q3.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-q3.R" class="external-link"><code>R/api-q3.R</code></a></small>
       <div class="d-none name"><code>q3_statistic.Rd</code></div>
     </div>
 
@@ -191,6 +191,19 @@ summary</strong> rather than a direct substitute for the published Q3
 thresholds. A formal raw-residual Q3 procedure would require a separately
 implemented and validated design-specific bootstrap; mfrmr does not
 currently provide that procedure.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="dimensionality-and-network-interpretation">Dimensionality and network interpretation<a class="anchor" aria-label="anchor" href="#dimensionality-and-network-interpretation"></a></h2>
+
+
+<p>Choose <code>facet</code> for the question: pairing Rater levels describes rater
+residual associations, not a count of rubric dimensions. Associations may
+reflect additional ability structure, shared performance effects, rater
+effects or assignment patterns. A thresholded correlation graph is not a
+partial-correlation network or a fitted residual-network model; its community
+count is not a dimensionality test. Missing pairs are not zero edges.
+See <code><a href="analyze_residual_pca.html">analyze_residual_pca()</a></code> and <code><a href="../articles/mfrmr-visual-diagnostics.html">vignette("mfrmr-visual-diagnostics")</a></code>
+for complementary checks and the limits of exploratory network analysis.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

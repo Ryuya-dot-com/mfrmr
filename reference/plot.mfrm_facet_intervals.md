@@ -80,7 +80,10 @@ line is a reference, not a threshold of practical importance or a
 rater-quality rule. No fit or covariance is recalculated. Target order
 is preserved. Weak-information cautions remain in the returned data and
 appear in the default subtitle. Custom or omitted subtitles change
-display only.
+display only. For experimental two-family GPCM locations, the axis uses
+fixed-N(0,1) ability units and the default subtitle states the location
+reference and unqualified coverage. These are not uniform
+expected-rating differences.
 
 ## Session plot defaults
 

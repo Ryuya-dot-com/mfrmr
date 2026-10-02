@@ -67,15 +67,15 @@ wright <- plot(fit)
 # Extract the plotted locations as a table
 locations <- plot_data(wright, component = "locations")
 head(locations)
-#> # A tibble: 6 × 37
-#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
-#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
-#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
-#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
-#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
-#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
-#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
-#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
+#> # A tibble: 6 × 38
+#>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl> <lgl>    <dbl> <chr>      <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181 FALSE     0.95 Observati… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166 FALSE     0.95 Observati… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  
 #> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
 #> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
 #> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
@@ -87,15 +87,15 @@ head(locations)
 # For table extraction alone, no graphics device is needed
 locations_only <- plot_data(fit, component = "locations")
 head(locations_only)
-#> # A tibble: 6 × 37
-#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
-#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
-#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
-#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
-#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
-#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
-#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
-#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
+#> # A tibble: 6 × 38
+#>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl> <lgl>    <dbl> <chr>      <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181 FALSE     0.95 Observati… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166 FALSE     0.95 Observati… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  
 #> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
 #> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
 #> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,

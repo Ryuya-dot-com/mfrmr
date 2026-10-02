@@ -363,7 +363,7 @@ figure.](mfrmr-random-raters_files/figure-html/severity-custom-1.png)
 
 # Text alternatives and the full table can accompany the exported image:
 plot_data(figure)$alt_text
-#> [1] "Shared-rater severity (interval view). 4 of 4 estimates displayed; 0 prior only; 0 omitted from this view. Point estimates only; individual-rater interval coverage is not established "
+#> [1] "Shared-rater severity (interval view). 4 of 4 estimates displayed; 0 omitted from this view. Point estimates only; individual-rater interval coverage is not established "
 plot_data(figure)$table
 #>   Rater Persons   Estimate ConditionalSD PredictionSE Lower Upper
 #> 1   R01      48 -0.1603837     0.1228652    0.1492869    NA    NA
@@ -1382,9 +1382,9 @@ summary(report, view = "reader")
 #>  Style OverallStatus
 #>     qc        caveat
 #>                                                        FirstAction ReviewAreas
-#>  Review numerical checks, interval meanings and the rating design.           0
+#>  Review numerical checks, interval meanings and the rating design.           1
 #>  NotComputedAreas CaveatAreas OptionalAreas UnavailableAreas OkAreas
-#>                 0           2             0                0       1
+#>                 0           1             0                0       1
 #>                                                      SourceInclude
 #>  fit, diagnostics, tables, precision, reporting, categories, plots
 #> 
@@ -1400,12 +1400,12 @@ summary(report, view = "reader")
 #>                  Overall caveat            Target-specific review
 #>         Numerical checks     ok                    Numerical only
 #>  Interval interpretation caveat Conditional on stated assumptions
-#>    Model-fit diagnostics caveat                  Descriptive only
-#>                                                                                MainIssue
-#>                                  Numerical checks satisfied; model adequacy not assessed
-#>                                 Numerical convergence does not establish model adequacy.
-#>                        Read the target and uncertainty basis for each reported quantity.
-#>  Same-data posterior predictive residuals have no calibrated reference cutoffs or tests.
+#>    Model-fit diagnostics review                  Descriptive only
+#>                                                                                                                                                                                                              MainIssue
+#>                                                                                                                                                                Numerical checks satisfied; model adequacy not assessed
+#>                                                                                                                                                               Numerical convergence does not establish model adequacy.
+#>                                                                                                                                                      Read the target and uncertainty basis for each reported quantity.
+#>  16 of 16 selected rows have standardized residuals; 0 unresolved, 0 missing scores, 0 zero-variance rows. 752 source rows were not selected. Same-data description with calibration fixed; no calibrated fit cutoffs.
 #>                                                                                NextAction
 #>                         Review numerical checks, interval meanings and the rating design.
 #>                                            Inspect all stored checks and boundary status.
@@ -1415,7 +1415,7 @@ summary(report, view = "reader")
 #>     report$tables$interpretation
 #>   report$tables$numerical_checks
 #>     report$tables$interval_basis
-#>  report$tables$response_measures
+#>  report$tables$response_overview
 #> 
 #> Claim readiness
 #>        Readiness Claims                                 ExampleClaim
@@ -1424,16 +1424,16 @@ summary(report, view = "reader")
 #> Immediate actions
 #>                     Area Status
 #>  Interval interpretation caveat
-#>    Model-fit diagnostics caveat
-#>                                                                                MainIssue
-#>                        Read the target and uncertainty basis for each reported quantity.
-#>  Same-data posterior predictive residuals have no calibrated reference cutoffs or tests.
+#>    Model-fit diagnostics review
+#>                                                                                                                                                                                                              MainIssue
+#>                                                                                                                                                      Read the target and uncertainty basis for each reported quantity.
+#>  16 of 16 selected rows have standardized residuals; 0 unresolved, 0 missing scores, 0 zero-variance rows. 752 source rows were not selected. Same-data description with calibration fixed; no calibrated fit cutoffs.
 #>                                                                                NextAction
 #>                   Retain interval limitations, unavailable rows and omitted-score counts.
 #>  Review selected-row summaries and unavailable rows; do not apply ordinary-model cutoffs.
 #>                     PrimaryRoute
 #>     report$tables$interval_basis
-#>  report$tables$response_measures
+#>  report$tables$response_overview
 archive_dir <- tempfile("random-rater-report-")
 archive <- export_mfrm_results(res, archive_dir, preset = "starter",
   acknowledge_sensitive = TRUE) # Synthetic example; real exports retain IDs

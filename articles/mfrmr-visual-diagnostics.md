@@ -91,7 +91,7 @@ knitr::kable(figures[, c("Question", "ResultFunction", "GGPlot")])
 | Inspect testlet-model facet estimates | fit_mfrm_testlet | dedicated |
 | Review conditional Person scores from a shared-rater model | score_mfrm_random_rater | dedicated |
 | Review conditional Person scores from a testlet model | predict.mfrm_testlet | dedicated |
-| Review response fit under an extended model | mfrm_response_diagnostics | dedicated |
+| Review response residuals under supported RSMs, two-family GPCM MML or corrected GPCM JML | mfrm_response_diagnostics | dedicated |
 | Compare ordinary and extended model results | compare_mfrm | dedicated |
 | Compare screening rules across known-truth conditions | mfrm_screening_sensitivity | dedicated |
 | Show screening performance with uncertainty | mfrm_screening_performance | unavailable |
@@ -106,7 +106,7 @@ knitr::kable(figures[, c("Question", "ResultFunction", "GGPlot")])
 | Plan facet counts with an observed-score D-study | mfrm_d_study | unavailable |
 | Plan reliability for a multivariate score or composite | mfrm_multivariate_d_study | dedicated |
 | Plan absolute or relative error in score units | mfrm_multivariate_d_study | dedicated |
-| Compare D-study scenarios with difference intervals | mfrm_multivariate_d_compare | unavailable |
+| Compare D-study plans including the reference | mfrm_multivariate_d_compare | unavailable |
 | Inspect observed coverage across rating subsets | subset_connectivity_report | generic |
 | Customize the underlying precision values | compute_information | generic |
 
@@ -205,15 +205,15 @@ The locations used in the figure remain available as a table:
 ``` r
 
 head(plot_data(wright, component = "locations"))
-#> # A tibble: 6 × 37
-#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
-#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
-#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
-#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
-#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
-#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
-#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
-#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
+#> # A tibble: 6 × 38
+#>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl> <lgl>    <dbl> <chr>      <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181 FALSE     0.95 Observati… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166 FALSE     0.95 Observati… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  
 #> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
 #> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
 #> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
@@ -320,13 +320,13 @@ Interpretation:
 ``` r
 
 head(plot_data(fit_pathway, component = "table"))
-#>        Facet        Level    Measure        SE     CI_Lower    CI_Upper
-#> 55 Criterion      Content -0.3441471 0.1110060 -0.561714733 -0.12657937
-#> 56 Criterion     Language  0.1204520 0.1093843 -0.093937224  0.33484130
-#> 57 Criterion Organization  0.2236950 0.1103080  0.007495279  0.43989475
-#> 5     Person         P005 -0.1749607 0.4416568 -1.040592055  0.69067075
-#> 6     Person         P006  0.6768100 0.5261392 -0.354403760  1.70802383
-#> 7     Person         P007 -0.9630394 0.4541031 -1.853065098 -0.07301365
+#>        Facet        Level    Measure Fixed        SE     CI_Lower    CI_Upper
+#> 55 Criterion      Content -0.3441471 FALSE 0.1110060 -0.561714733 -0.12657937
+#> 56 Criterion     Language  0.1204520 FALSE 0.1093843 -0.093937224  0.33484130
+#> 57 Criterion Organization  0.2236950 FALSE 0.1103080  0.007495279  0.43989475
+#> 5     Person         P005 -0.1749607 FALSE 0.4416568 -1.040592055  0.69067075
+#> 6     Person         P006  0.6768100 FALSE 0.5261392 -0.354403760  1.70802383
+#> 7     Person         P007 -0.9630394 FALSE 0.4541031 -1.853065098 -0.07301365
 #>    CI_Level  N     Infit    Outfit  InfitZSTD  OutfitZSTD  DF_Infit DF_Outfit
 #> 55     0.95 94 0.7295356 0.7428322 -1.5566485 -1.89173498 58.455401        94
 #> 56     0.95 94 0.8547918 0.8231355 -0.7605703 -1.24336119 57.903717        94
@@ -369,6 +369,27 @@ head(plot_data(fit_pathway, component = "table"))
 #> 5      Within selected review band  0.6729031       0.4361632
 #> 6                   Infit MnSq low  0.7608383       0.5121424
 #> 7  Infit MnSq low; Outfit MnSq low  1.2288187       0.6165886
+#>                     SE_Method PrecisionTier SupportsFormalInference
+#> 55 Observed information (MML)   model_based                    TRUE
+#> 56 Observed information (MML)   model_based                    TRUE
+#> 57 Observed information (MML)   model_based                    TRUE
+#> 5          Posterior SD (EAP)   model_based                    TRUE
+#> 6          Posterior SD (EAP)   model_based                    TRUE
+#> 7          Posterior SD (EAP)   model_based                    TRUE
+#>                SEUse                             CIBasis             CIUse
+#> 55 primary_reporting Normal interval from model-based SE primary_reporting
+#> 56 primary_reporting Normal interval from model-based SE primary_reporting
+#> 57 primary_reporting Normal interval from model-based SE primary_reporting
+#> 5  primary_reporting Normal interval from model-based SE primary_reporting
+#> 6  primary_reporting Normal interval from model-based SE primary_reporting
+#> 7  primary_reporting Normal interval from model-based SE primary_reporting
+#>    CIEligible                     CILabel            CI_Method
+#> 55       TRUE Model-based normal interval Normal approximation
+#> 56       TRUE Model-based normal interval Normal approximation
+#> 57       TRUE Model-based normal interval Normal approximation
+#> 5        TRUE Model-based normal interval Normal approximation
+#> 6        TRUE Model-based normal interval Normal approximation
+#> 7        TRUE Model-based normal interval Normal approximation
 #>    InfitZSTDDiff_FACETS_minus_ENGINE OutfitZSTDDiff_FACETS_minus_ENGINE
 #> 55                                NA                                 NA
 #> 56                                NA                                 NA
@@ -390,48 +411,27 @@ head(plot_data(fit_pathway, component = "table"))
 #> 5                                        NA          FALSE               FALSE
 #> 6                                        NA          FALSE               FALSE
 #> 7                                        NA          FALSE               FALSE
-#>    FlagChangedByDf DfSensitivityStatus                  SE_Method PrecisionTier
-#> 55           FALSE       not_available Observed information (MML)   model_based
-#> 56           FALSE       not_available Observed information (MML)   model_based
-#> 57           FALSE       not_available Observed information (MML)   model_based
-#> 5            FALSE       not_available         Posterior SD (EAP)   model_based
-#> 6            FALSE       not_available         Posterior SD (EAP)   model_based
-#> 7            FALSE       not_available         Posterior SD (EAP)   model_based
-#>    SupportsFormalInference             SEUse
-#> 55                    TRUE primary_reporting
-#> 56                    TRUE primary_reporting
-#> 57                    TRUE primary_reporting
-#> 5                     TRUE primary_reporting
-#> 6                     TRUE primary_reporting
-#> 7                     TRUE primary_reporting
-#>                                CIBasis             CIUse Converged
-#> 55 Normal interval from model-based SE primary_reporting      TRUE
-#> 56 Normal interval from model-based SE primary_reporting      TRUE
-#> 57 Normal interval from model-based SE primary_reporting      TRUE
-#> 5  Normal interval from model-based SE primary_reporting      TRUE
-#> 6  Normal interval from model-based SE primary_reporting      TRUE
-#> 7  Normal interval from model-based SE primary_reporting      TRUE
-#>               CI_Method                     CILabel  FitValue ElementType
-#> 55 Normal approximation Model-based normal interval 0.7295356 Facet level
-#> 56 Normal approximation Model-based normal interval 0.8547918 Facet level
-#> 57 Normal approximation Model-based normal interval 1.0155312 Facet level
-#> 5  Normal approximation Model-based normal interval 0.5638368      Person
-#> 6  Normal approximation Model-based normal interval 0.4878576      Person
-#> 7  Normal approximation Model-based normal interval 0.3851674      Person
-#>    FitScale FitStatistic FitColumn FitDistance Flagged FitDirection
-#> 55     mnsq        Infit     Infit   0.2704644   FALSE  within_band
-#> 56     mnsq        Infit     Infit   0.1452082   FALSE  within_band
-#> 57     mnsq        Infit     Infit   0.0155312   FALSE  within_band
-#> 5      mnsq        Infit     Infit   0.4361632   FALSE  within_band
-#> 6      mnsq        Infit     Infit   0.5121424    TRUE      overfit
-#> 7      mnsq        Infit     Infit   0.6148326    TRUE      overfit
-#>           Panel Shape    LabelText
-#> 55 All elements    21      Content
-#> 56 All elements    21     Language
-#> 57 All elements    21 Organization
-#> 5  All elements    15             
-#> 6  All elements    15         P006
-#> 7  All elements    15         P007
+#>    FlagChangedByDf DfSensitivityStatus Converged  FitValue ElementType FitScale
+#> 55           FALSE       not_available      TRUE 0.7295356 Facet level     mnsq
+#> 56           FALSE       not_available      TRUE 0.8547918 Facet level     mnsq
+#> 57           FALSE       not_available      TRUE 1.0155312 Facet level     mnsq
+#> 5            FALSE       not_available      TRUE 0.5638368      Person     mnsq
+#> 6            FALSE       not_available      TRUE 0.4878576      Person     mnsq
+#> 7            FALSE       not_available      TRUE 0.3851674      Person     mnsq
+#>    FitStatistic FitColumn FitDistance Flagged FitDirection        Panel Shape
+#> 55        Infit     Infit   0.2704644   FALSE  within_band All elements    21
+#> 56        Infit     Infit   0.1452082   FALSE  within_band All elements    21
+#> 57        Infit     Infit   0.0155312   FALSE  within_band All elements    21
+#> 5         Infit     Infit   0.4361632   FALSE  within_band All elements    15
+#> 6         Infit     Infit   0.5121424    TRUE      overfit All elements    15
+#> 7         Infit     Infit   0.6148326    TRUE      overfit All elements    15
+#>       LabelText
+#> 55      Content
+#> 56     Language
+#> 57 Organization
+#> 5              
+#> 6          P006
+#> 7          P007
 ```
 
 ### Category probabilities
@@ -701,6 +701,264 @@ Interpretation:
 - Scree review should usually be paired with loading review for the
   component of interest.
 
+### Checking one substantive dimension without fitting a multidimensional model
+
+A single intended construct is a substantive hypothesis, not a result of
+choosing a one-dimensional estimator. Ask whether one ability provides a
+useful account of the ratings for the intended score and decision. Also
+ask whether remaining associations arise from common tasks,
+performances, assessors or category use. Several slopes do not create
+several abilities, and one ability plus a testlet effect is not the same
+hypothesis as two substantive abilities.
+
+Current diagnostic entry points are available, but there is no dedicated
+API that certifies unidimensionality or selects a latent dimension
+count:
+
+| Question | Current mfrmr route | Interpretation |
+|----|----|----|
+| Is there organized residual variation? | [`analyze_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/analyze_residual_pca.md) and [`plot_residual_pca()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_residual_pca.md); optionally `parallel = TRUE`. | Exploratory PCA of standardized residuals. The default reference permutes residual columns. `parallel_method = "model_bootstrap"` generates ratings and refits supported RSM/PCM MML models; it is not yet a calibrated dimensionality test. |
+| Which levels have associated residuals? | [`q3_statistic()`](https://ryuya-dot-com.github.io/mfrmr/reference/q3_statistic.md) and [`plot_local_dependence_heatmap()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_local_dependence_heatmap.md) with an explicit `facet`. | Standardized residuals are averaged within Person/level cells and correlated across shared persons. This differs from original raw-residual Yen Q3. Default facet Rater asks about raters, not automatically about rubric dimensions. |
+| Which category or rating-context margins are poorly reproduced? | `diagnose_mfrm(..., diagnostic_mode = "both")`, [`plot_marginal_fit()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_fit.md) and [`plot_marginal_pairwise()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_marginal_pairwise.md). | Descriptive marginal screens. Their scales omit parts of joint/calibration uncertainty; they are not a calibrated M2/C2 omnibus test. |
+| Is a substantive two-dimensional model preferable? | No native multidimensional GMFRM fitting/comparison route yet. | Requires a specified alternative and comparable likelihood or predictive targets; PCA does not supply that comparison. |
+
+A supported first-pass workflow, with the paired facet chosen to match
+the question, is:
+
+``` r
+
+diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
+pca <- analyze_residual_pca(diag, mode = "both", parallel = TRUE,
+                           parallel_reps = 200, seed = 9028)
+summary(pca)
+# Replace Criterion with the fitted facet relevant to the question.
+q3 <- q3_statistic(fit, diagnostics = diag, facet = "Criterion")
+q3$pairs
+```
+
+Two hundred permutations are an example setting, not a qualification
+threshold. Check missing comparisons, overlap counts, aggregation and
+the reported reference method before interpreting a cutoff. A small
+first component or few flags can reflect low power or restricted
+exposure. A large component does not identify its cause. Neither
+counting eigenvalues above one/two nor adding one to the number of
+residual components estimates the number of substantive abilities. The
+extended testlet/shared-rater models use their own posterior response
+diagnostics; the ordinary residual-PCA/Q3 contract is not inherited.
+
+For a supported RSM/PCM MML fit, a second reference asks: **would
+similar residual structure arise when this fitted one-ability model
+generates the ratings and is estimated again?** The Person’s generated
+ability is shared across their rating rows; it is not redrawn separately
+for every rating.
+
+``` r
+
+# fit must be an RSM/PCM MML fit with fixed standard-normal population,
+# fixed quadrature, additive facets, unit weights, and no anchors or shrinkage.
+reference <- analyze_residual_pca(
+  fit, mode = "both", parallel = TRUE,
+  parallel_method = "model_bootstrap", parallel_reps = 200, seed = 9028
+)
+reference$bootstrap_settings
+reference$bootstrap_trials       # All attempts, including failures and warnings
+reference$parallel_status        # Availability separately for each PCA scope
+plot(reference, type = "overall_parallel_scree")
+# If the reference is available:
+# as_ggplot(plot(reference, type = "overall_parallel_scree", draw = FALSE))
+```
+
+This is more expensive than permuting residuals: 200 replicates mean 200
+model refits, shared across the requested overall/facet analyses. It is
+an example, not a universal recommended budget or an error-rate
+guarantee. The method currently excludes GPCM, JML, estimated population
+models, adaptive quadrature, anchors and extended testlet/shared-rater
+fits. Generating parameters are fitted point estimates; refitting
+propagates their sampling variation under that null.
+
+The existing analyzed assignment is held fixed. Missing scores and
+unassigned ratings are not filled, so this does not test or correct a
+missingness mechanism. All source/replicate fits must pass numerical
+convergence checks. Every planned replicate is recorded; if a scope
+cannot be calculated in any replicate, its reference cutoff is withheld.
+Inspect the recorded reason instead of dropping failed replicates.
+Undefined or indefinite sparse correlation matrices remain unavailable.
+Increasing the replicate count does not repair them.
+
+The plotted cutoff is a **componentwise exploratory reference**, not a
+multiplicity-adjusted decision across components or facets. A component
+above it motivates investigating task dependence, rater effects,
+assignment and substantive dimensions; it does not identify which
+explanation is correct. The first component and an any-component rule
+answer different questions: one can miss a departure that the other
+flags. Choosing whichever rule looks most striking after viewing the
+results changes the decision procedure. General false-flag rates and
+sensitivity across those scenarios still require qualification. Q3 and
+residual-network references are not supplied by this PCA option.
+
+#### Shared Persons, sparse assignment and the choice of PCA columns
+
+A **shared Person** rated by several assessors connects observations. A
+**fixed parameter anchor** constrains a parameter to a supplied
+numerical value. These are different uses of the word anchor: the
+model-bootstrap route supports the former through the retained
+assignment, but currently excludes the latter. No generated Person
+ability is fixed to an observed estimate.
+
+Consider four assessors. Rotating pairs R1/R2, R2/R3, R3/R4 and R4/R1
+connect all assessors, but R1/R3 and R2/R4 have no Persons in common. An
+estimable MFRM can therefore have an unavailable residual PCA across
+assessors or across combined assessor/criterion columns. A few Persons
+rated by everyone define those pairs, yet correlations based on
+different small overlaps can still produce a matrix that is not positive
+semidefinite. Neither connectedness nor one shared Person certifies that
+a residual-correlation matrix is usable.
+
+If the question concerns rubric criteria and every Person has all
+criteria, a Person-by-Criterion matrix may remain available. It averages
+residuals over the available assessors; it answers a different question
+and may conceal assessor-specific structure. Choose this aggregation for
+its scientific target, not after another analysis happens to fail:
+
+``` r
+
+reference$parallel_status
+# For a prespecified criterion-level question, if that reference is available:
+plot(reference, type = "facet_parallel_scree", facet = "Criterion")
+```
+
+#### A residual block is not automatically another substantive ability
+
+The same response distribution can sometimes have both a testlet and a
+multiple-trait interpretation. For example, with independent
+standard-normal variables, set
+
+``` math
+z_b = \sqrt{\rho}\,\theta + \sqrt{1-\rho}\,u_b,
+\qquad b=1,2,\quad 0<\rho<1.
+```
+
+Each block predictor has variance one and their correlation is $`\rho`$.
+Using $`z_b`$ for the criteria in block $`b`$ gives either a shared
+component plus Person-by-block effects, or two correlated block traits
+with the same response probabilities. This equality holds for this
+specified structure; it does not equate all testlet and multidimensional
+models. The broader relationships are discussed by [Rijmen
+(2010)](https://doi.org/10.1111/j.1745-3984.2010.00118.x).
+
+Consequently, even an excellent residual screen cannot decide from these
+ratings alone whether the blocks represent two intended constructs,
+common performance effects or another shared influence. Task design,
+theory, external variables and additional measurements distinguish
+interpretations. A positive residual flag is evidence to investigate the
+fitted model; a small or absent flag can also reflect limited
+sensitivity. Fitting a multidimensional model is useful for a specified
+alternative, but does not automatically resolve this interpretation
+problem.
+
+Other approaches address different parts of this question:
+
+- **Model-generated reference checks:** simulate complete person
+  response patterns under the fitted one-dimensional model, preserve the
+  declared assignment/observation pattern, refit and recompute a
+  prespecified residual statistic. This can assess whether the residual
+  structure exceeds that expected after estimation. A design-specific
+  calibrated workflow is not yet provided by the residual-PCA/Q3 API;
+  more residual permutations cannot replace it. [Christensen, Makransky
+  and Horton (2017)](https://doi.org/10.1177/0146621616677520)
+  demonstrate why a universal Q3 cutoff is unsuitable and discuss
+  parametric bootstrap references. Their raw-residual statistic is not
+  mfrmr’s adaptation.
+- **Limited-information fit:** tests such as M2/M2\*/C2 compare fitted
+  low-order margins with observed margins. They can challenge a
+  one-dimensional model without fitting a multidimensional alternative,
+  but rejection is not a diagnosis of multidimensionality. See the [mirt
+  M2
+  documentation](https://philchalmers.github.io/mirt/docs/reference/M2.html)
+  for model/category-specific availability. A valid many-facet
+  adaptation must address repeated ratings, sparse opportunity counts
+  and parameter uncertainty.
+- **Prespecified subdomain and external-variable checks:** examine
+  whether person ordering, score precision or substantive conclusions
+  change across theoretically defined task/criterion subsets. Put scores
+  on a justified common scale and account for their dependence and
+  unequal precision. A naive t-test on separately estimated EAPs,
+  especially after selecting subsets from the same residuals, is not a
+  calibrated dimensionality test.
+- **Explicit alternative models:** ordinal factor analysis or
+  multidimensional IRT can compare theoretically justified loading
+  structures. They require a defensible response unit and treatment of
+  rater/testlet dependence. TAM or mirt can be used for matched
+  structures externally; a generic factor model of averaged scores is
+  not automatically an alternative fit to the same many-facet
+  likelihood. Native multidimensional GMFRM is a later extension.
+
+Thus a multidimensional fitter is needed to estimate and compare that
+specific alternative, but **it is not a prerequisite for checking the
+adequacy of the one-dimensional model**. Even after fitting
+alternatives, do not assume an ordinary parameter-count chi-square test:
+a one-dimensional reduction can put a latent correlation at one or leave
+added loadings unidentified. Match scales, response events, populations
+and numerical integration, and separate exploratory model discovery from
+confirmation on new data or held-out complete units.
+
+### Residual networks, EGA and the assignment graph answer different questions
+
+A graph consists of nodes and edges, but their meanings must be
+specified. The assignment graph records who rated what; its connectivity
+concerns linking. A score-correlation graph describes observed
+associations. A residual graph instead describes associations left after
+a fitted response model. A residual Pearson correlation edge and a
+partial-correlation edge conditional on all other residual variables are
+different estimands. None is automatically causal.
+
+[Exploratory Graph Analysis (EGA; Golino and Epskamp,
+2017)](https://doi.org/10.1371/journal.pone.0174035) uses estimated
+networks and community detection to explore dimension structure.
+Applying the idea to fitted residuals asks about *remaining* structure
+and is not the same procedure as EGA on the original item responses. The
+existing
+[`mfrm_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_network_analysis.md),
+[`rater_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_network_analysis.md)
+and
+[`rater_halo_network_analysis()`](https://ryuya-dot-com.github.io/mfrmr/reference/rater_halo_network_analysis.md)
+do not implement a residual EGA procedure. There is currently no native
+residual-network/EGA API.
+
+For example, residual associations among accuracy criteria across
+different tasks and assessors may motivate a second substantive-domain
+hypothesis. Associations confined to one performance may instead
+motivate a testlet model. Associations organized by assessor or
+assignment panel require review of those effects. These patterns guide
+follow-up; the graph alone cannot distinguish all competing
+explanations. Communities, centrality and edge density are not proof of
+dimensions, rater quality or an omitted causal mechanism. No edges can
+also reflect regularization or weak data rather than independence.
+
+Before a residual-network workflow is admitted, specify nodes
+(criterion, task-by-criterion, or another justified unit), residual
+type, aggregation and pairwise person counts. Sparse pairwise
+correlations may be undefined or form an invalid correlation matrix. Do
+not encode unassigned cells as zero, treat a missing edge as a zero
+association, or silently repair a matrix and then claim the same
+estimand. Record regularization and community choices; examine edge and
+community stability with resampling appropriate to the shared effects. A
+single nominal sample size can misrepresent strongly unequal pair
+overlap.
+
+[bootEGA](https://r-ega.net/reference/bootEGA.html) offers
+network/dimension stability analyses, but applying it to a fixed
+residual matrix does not propagate uncertainty from fitting the MFRM.
+Its empirical-correlation bootstrap is not a one-dimensional MFRM null
+simulation. Finally, [residual network modeling (Epskamp, Rhemtulla and
+Borsboom, 2017)](https://doi.org/10.1007/s11336-017-9557-x) models
+residual dependencies jointly with latent variables. Drawing a graph
+from fitted residuals does not fit such a joint model or produce its
+likelihood. A future mfrmr network view should reuse the checked
+residual/overlap outputs and provide a signed heatmap/table alongside
+the network, with the same edge values and uncertainty. It should remain
+exploratory until its statistical reference is qualified.
+
 For interaction screening, use the packaged bias example.
 
 ``` r
@@ -802,8 +1060,8 @@ plot_data_components(wright_payload)
 #> 5       22     22      TRUE     plot_data(x, component = "person_exclusions")
 #> 6        6      6     FALSE           plot_data(x, component = "person_hist")
 #> 7        7      7      TRUE          plot_data(x, component = "person_stats")
-#> 8       37     37      TRUE             plot_data(x, component = "locations")
-#> 9       43     43      TRUE          plot_data(x, component = "label_points")
+#> 8       38     38      TRUE             plot_data(x, component = "locations")
+#> 9       44     44      TRUE          plot_data(x, component = "label_points")
 #> 10      16     16      TRUE         plot_data(x, component = "group_summary")
 #> 11      NA      3     FALSE          plot_data(x, component = "group_levels")
 #> 12      NA      2     FALSE               plot_data(x, component = "y_range")
@@ -858,50 +1116,50 @@ plot_data_components(wright_payload)
 #> 29                           Use for captions, QA checks, or report text.
 #> 30                                                                       
 #> 31                           Use for captions, QA checks, or report text.
-#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ColumnNames
-#> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-#> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-#> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-#> 4                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
-#> 5                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
-#> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           breaks, counts, density, mids, xname, equidist
-#> 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                         N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD
-#> 8                                                                    Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
-#> 9  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced
-#> 10                                                                                                                                                                                                                                                                                                                                                                                           Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap
-#> 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 13                                                                                                                                                                                                                                                                                                                                                                                                       Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy
-#> 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Component, Shown, Total, Omitted, RequestedTopN, Complete
-#> 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           label, role, aesthetic, value
-#> 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      axis, value, label, linetype, role
-#> 25                                                                                                                                                                                                                                                Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField
-#> 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Domain, Status
-#> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-#> 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  show_title, show_notes
-#> 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Type, Text
+#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ColumnNames
+#> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+#> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+#> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+#> 4                                                                                                                                                                                      Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
+#> 5                                                                                                                                                                                      Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
+#> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  breaks, counts, density, mids, xname, equidist
+#> 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD
+#> 8                                                                    Group, Label, PlotType, Estimate, SE, Fixed, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
+#> 9  Group, Label, PlotType, Estimate, SE, Fixed, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced
+#> 10                                                                                                                                                                                                                                                                                                                                                                                                  Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap
+#> 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 13                                                                                                                                                                                                                                                                                                                                                                                                              Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy
+#> 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      Component, Shown, Total, Omitted, RequestedTopN, Complete
+#> 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  label, role, aesthetic, value
+#> 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             axis, value, label, linetype, role
+#> 25                                                                                                                                                                                                                                                       Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField
+#> 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Domain, Status
+#> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 29                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+#> 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         show_title, show_notes
+#> 31                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     Type, Text
 
 locations <- plot_data(wright_payload, component = "locations")
 head(locations)
-#> # A tibble: 6 × 37
-#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
-#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
-#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
-#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
-#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
-#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
-#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
-#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
+#> # A tibble: 6 × 38
+#>   Group Label PlotType    Estimate    SE Fixed CI_Level SE_Method  PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl> <lgl>    <dbl> <chr>      <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181 FALSE     0.95 Observati… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166 FALSE     0.95 Observati… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185 FALSE     0.95 Observati… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199 FALSE     0.95 Observati… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179 FALSE     0.95 Observati… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219 FALSE     0.95 Observati… exploratory  
 #> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
 #> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
 #> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,

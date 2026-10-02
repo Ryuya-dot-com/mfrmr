@@ -80,7 +80,11 @@ summary(
 
 An object of class `summary.mfrm_fit` with:
 
-- `overview`: global model/fit indicators
+- `overview`: global model/fit indicators. For MML, `MMLEngineUsed`
+  records the actual algorithm, `IterationsBasis` explains what is
+  counted, and `ConvergenceBasis` identifies the numerical stopping
+  rule. Numerical convergence does not establish identification or
+  interval eligibility
 
 - `status`: concise front-door status block for quick review
 
@@ -124,7 +128,12 @@ An object of class `summary.mfrm_fit` with:
   ladder, or for the common RSM ladder
 
 - `slope_overview`: parameter-readiness and explicitly labelled
-  optimizer- trace summary for `GPCM` discriminations
+  optimizer- trace summary for `GPCM` discriminations. `SlopeOwner`
+  identifies the facet whose levels carry slopes. `Min`, `Max` and
+  `GeometricMean` summarize primary estimates; the `Optimizer*` fields
+  retain numerical iterates when primary estimates are unavailable. The
+  scale reference is an identification constraint, not evidence that
+  estimates or intervals are reliable
 
 - `inference_evidence`: for `GPCM` MML, a compact separation of
   optimizer stationarity, retained-point local rank,
@@ -224,6 +233,14 @@ object and prints:
   measures
 
 ## Interpreting output
+
+Corrected JML has a separate summary of saved `tables` and numerical
+`attempts`, with the correction order and the meaning of RootSE. All
+profiles show the same saved summary and never compute ordinary
+diagnostics. Use `include_person = TRUE` for conditional Person profiles
+without Person SEs. See the **Corrected JML** section of
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+The entries below describe the ordinary, uncorrected fitting routes.
 
 - `overview`: convergence plus the versioned information-criterion
   contract. For eligible fixed-facet MML fits, BIC/SABIC use unique

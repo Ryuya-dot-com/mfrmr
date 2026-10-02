@@ -81,15 +81,20 @@ when `draw = FALSE`. Saved scoring results need no live optimizer.
 ## Details
 
 All supplied rows for a Person are scored jointly. This does not append
-to cached responses or condition on a stored local-effect mode. To add
-ratings for an existing Person, supply that Person's complete set of
-ratings once, with memberships that correctly identify effects shared
-within that set. Scores from separate calls are not automatically linked
-within a Person or testlet. No fixed effects are re-estimated. Unequal
-block sizes do not imply equal block weights. The influence of an
-additional response depends on its block and the fitted model;
-integrating local effects is not a general correction for assignment or
-content bias. See
+to cached responses or condition on a stored local-effect mode. The
+saved settings retain this integration, effect-sharing and roster
+interpretation.
+[`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md)
+retains the complete `scoring_data` as its `scoring_roster` table,
+including explicitly omitted scores, alongside observed block counts.
+Column names and row order are preserved. To add ratings for an existing
+Person, supply that Person's complete set of ratings once, with
+memberships that correctly identify effects shared within that set.
+Scores from separate calls are not automatically linked within a Person
+or testlet. No fixed effects are re-estimated. Unequal block sizes do
+not imply equal block weights. The influence of an additional response
+depends on its block and the fitted model; integrating local effects is
+not a general correction for assignment or content bias. See
 [`vignette("mfrmr-testlet-applications")`](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-testlet-applications.md)
 for a complete-roster comparison of one-point changes in five- versus
 two-criterion tasks.

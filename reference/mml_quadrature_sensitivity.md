@@ -65,7 +65,9 @@ gpcm_mml_quadrature_sensitivity(
   fit's fixed parameters, comparing a fixed-prior grid with
   mode/curvature-adapted grids. This separates integration error from
   parameter changes during refitting. Inspect changes between adaptive
-  orders too; neither grid is certified exact.
+  orders too; neither grid is certified exact. Also available for two
+  slope families as a numerical diagnostic; it does not add Person
+  scoring or change the fitted integration method.
 
 ## Value
 
@@ -85,12 +87,17 @@ An object of class `mfrm_quadrature_sensitivity` containing:
 - `runs`: likelihood, gradient, curvature, population-scale, and
   readiness details for each fit;
 
-- `slopes`: relative-slope estimates, raw diagnostic SEs and freshly
+- `slopes`: component-slope estimates, raw diagnostic SEs and freshly
   checked 95% model intervals. The summary reports endpoint changes
   among jointly eligible levels and counts changes in interval
-  availability;
+  availability. One-family slopes have geometric mean one; two-family
+  scale references differ;
 
-- `conditions`: warnings and messages emitted by the explicit refits;
+- `intervals`: for two families, saved `mfrm_slope_intervals` objects
+  named by quadrature count, with their numerical checks and cautions;
+
+- `conditions`: warnings and messages from refitting and result
+  extraction;
 
 - `fits`: the reference and refitted `mfrm_fit` objects;
 
@@ -112,8 +119,8 @@ nor
 [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
 invokes it automatically. It reports continuous changes rather than
 classifying a fit as quadrature-stable or unstable. In particular, it
-does not set a practical cutoff, promote slope standard errors, or
-override the fit-readiness record.
+does not select a cutoff for acceptable changes, make unavailable
+standard errors valid, or resolve other warnings about the fit.
 
 The probability comparison evaluates every observed combination of
 non-Person facet levels on the same theta grid. It includes fitted
@@ -129,6 +136,50 @@ checked by Person. Older fits without that data cannot be replayed.
 Raw slope and population-SD standard errors are computed from each local
 observed-information Hessian for diagnostic comparison only. The public
 parameter-level `SEEligible` state remains unchanged.
+
+## Two slope families
+
+For a two-family GPCM, refits preserve the ordered slope owners, fixed
+N(0,1) population, score ladder, engine, integration method and stopping
+controls (`em_score_tol` for fixed-grid EM or `reltol` for adaptive
+direct MML). Each refit reconstructs the source initialization policy
+from the observed data. Fixed-grid EM uses the neutral vector; adaptive
+fits retain either neutral-only or neutral-plus-EM initialization. Older
+adaptive fits without this setting retain the earlier neutral-only
+procedure. The reference estimate is not used as a new starting vector.
+Component slopes retain `SlopeOwner` and `ScaleReference`: the first
+family has geometric mean one; the second is free on the fixed ability
+scale. Category-probability comparisons use the product of both slopes.
+
+For both two-family engines, `intervals` contains the separately checked
+experimental [`confint()`](https://rdrr.io/r/stats/confint.html) result
+for each grid, including failed checks, cautions and missing bounds. For
+example, after comparing `quad_points = c(31, 61)`, use
+`plot(out$intervals$q61)` and
+`apa_table(out$intervals$q61, which = "numerical_checks")`. These checks
+also evaluate q versus 2q-1 at that fit's saved parameters without
+another refit. Passing these checks does not establish sampling coverage
+or resolve other warnings about the fitted model. Adaptive fits use
+their moving-node objective for both the information and the
+higher-order comparison. Person-score comparisons in `summary` remain
+unavailable for two families: EAP and posterior-SD changes there are
+`NA`, not zero. With `adaptive_quad_points`, the separate
+`quadrature_review` table evaluates posterior moments and log marginal
+likelihoods at each unchanged calibration. These diagnostic integrals do
+not enable
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+or supply Person intervals. The effective slope is the product of both
+facet slopes; moving the integration grid retains the original N(0,1)
+density and its Jacobian. This does not provide adaptive EM, update
+estimates or repair their intervals.
+
+More quadrature points improve the numerical approximation, not the
+amount of observed information. In a sparse design, a small group of
+candidates rated many times may need a finer grid than candidates with
+few ratings. Inspect interval availability and measured changes; no
+fixed point count is guaranteed to be adequate for every design. See the
+GPCM scope vignette for a same-data example and its sampling
+limitations.
 
 ## See also
 

@@ -50,7 +50,7 @@ information. This is uncertainty in a fitted curve, not a Person score interval.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Uncertainty in GPCM category probabilities and information curves</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-gpcm-curve-intervals.R" class="external-link"><code>R/api-gpcm-curve-intervals.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-gpcm-curve-intervals.R" class="external-link"><code>R/api-gpcm-curve-intervals.R</code></a></small>
       <div class="d-none name"><code>mfrm_curve_intervals.Rd</code></div>
     </div>
 
@@ -95,13 +95,16 @@ information. This is uncertainty in a fitted curve, not a Person score interval.
 
 
 <dl><dt id="arg-fit">fit<a class="anchor" aria-label="anchor" href="#arg-fit"></a></dt>
-<dd><p>An eligible native GPCM MML fit.</p></dd>
+<dd><p>A native GPCM MML fit. Two-family fits supply provisional point
+curves only; intervals and covariance adjustments are unavailable.</p></dd>
 
 
 <dt id="arg-newdata">newdata<a class="anchor" aria-label="anchor" href="#arg-newdata"></a></dt>
 <dd><p>Data frame with each fitted non-Person facet and a numeric
 <code>Theta</code> column. Each row is one rating context at one known ability value.
-Use original facet labels. Unknown levels and missing inputs are refused.</p></dd>
+Use original facet labels. Unknown levels and missing inputs are refused.
+Previously unobserved combinations of known levels are allowed and labelled
+in the returned <code>contexts</code> table.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -137,14 +140,20 @@ types distinguish series in addition to color. The default is colorblind friendl
 
 <dt id="arg-caption">caption<a class="anchor" aria-label="anchor" href="#arg-caption"></a></dt>
 <dd><p>Optional plot caption. If omitted, unavailable intervals are
-counted and explained. NULL removes the caption without removing markers
+counted and explained, along with unobserved combinations of fitted levels.
+Two-family point-only curves instead state that calibration intervals
+are unavailable for the entire plot, without marking every curve point.
+NULL removes the caption without removing markers
 or the reasons in the saved table.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>mfrm_curve_intervals</code> list with <code>table</code>, <code>settings</code>, and the exact
-<code>newdata</code>. Its plot method returns a ggplot with the plotted data available
+<code>newdata</code>, plus <code>contexts</code> identifying each <code>InputRow</code> as an observed or
+unobserved combination of fitted facet levels (<code>ObservedContext</code>). This
+records the retained rating design, not statistical identification or
+interval reliability. Its plot method returns a ggplot with the plotted data available
 in <code>plot$data</code>; titles can be omitted and the plot can be customized.</p>
     </div>
     <div class="section level2">
@@ -175,7 +184,13 @@ interval is not a finite-sample coverage certification.
 Printing and the default plot subtitle identify the approximation.
 Custom plot text may omit that description; retain the method and its
 limitations in the figure legend or accompanying report.
-Crosses mark retained estimates whose intervals are unavailable. Ribbons
+For one-family curves, crosses mark retained estimates whose intervals
+are unavailable. Two-family curves have no calibration intervals; the
+default subtitle and caption state this without covering curves in crosses.
+A context with only one supplied ability value retains colored points.
+Panel labels put each facet on its own line. With many rating contexts,
+supply the comparisons of interest in <code>newdata</code> or enlarge the exported
+figure; plotting does not select or discard contexts automatically. Ribbons
 stop at unavailable grid points; a missing ribbon does not mean zero
 uncertainty. Consult the table's <code>InferenceReview</code> for each reason.</p>
 <p>A numerically verified but ill-conditioned information inverse can
@@ -183,6 +198,19 @@ supply intervals with a warning, as described in <code><a href="confint.mfrm_fit
 The warning is saved in <code>cautions</code> and the table's <code>InferenceReview</code>, and
 appears in printing and the default plot subtitle. A custom subtitle,
 including NULL, changes the display without removing saved diagnostics.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="two-slope-families">Two slope families<a class="anchor" aria-label="anchor" href="#two-slope-families"></a></h2>
+
+
+<p>For a two-family fit, the two component slopes are multiplied in each
+specified context. The shared evaluator returns provisional fitted values,
+including after numerical nonconvergence; it does not certify their
+reliability. <code>SE</code>, <code>Lower</code> and <code>Upper</code> remain missing and <code>CIEligible</code> is
+false. Printing and default plot text identify this scope without claiming
+nominal intervals. Sandwich and simultaneous adjustments are not available.
+The existing plot, saved-data, report and export routes preserve these values
+and missing intervals. A slope value of one is not a rater-quality threshold.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

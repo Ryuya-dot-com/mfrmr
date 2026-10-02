@@ -76,7 +76,7 @@ record into interpretation, formal-inference, reason, and next-action text."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build report-ready output from <code>mfrm_results()</code></h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>mfrm_report.Rd</code></div>
     </div>
 
@@ -128,7 +128,8 @@ record into interpretation, formal-inference, reason, and next-action text.</p>
 validity-argument boundary, <code>"reviewer"</code> emphasizes reviewer response
 preparation, and <code>"technical"</code> emphasizes appendix/reproducibility routes.
 <code>"rater"</code> creates a standalone individual feedback sheet from saved
-native additive RSM/PCM results; it requires <code>facet</code> and <code>rater</code>.</p></dd>
+native additive RSM/PCM or two-family GPCM MML results; it requires
+<code>facet</code> and <code>rater</code>.</p></dd>
 
 
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
@@ -166,7 +167,8 @@ omit individual cases. This is not a misfit threshold.</p></dd>
 
 <dt id="arg-interval">interval<a class="anchor" aria-label="anchor" href="#arg-interval"></a></dt>
 <dd><p>Optional name of a saved fixed-facet interval attachment in
-<code>x$facet_intervals</code> for a rater sheet. The attachment must contain the
+<code>x$facet_intervals</code> for an additive-model rater sheet, or a saved component
+slope interval in <code>x$gpcm_inference</code> for two-family GPCM. The attachment must contain the
 selected individual coefficient, not just a difference involving it.
 A single matching attachment is used automatically. Multiple matching
 attachments require an explicit choice. No interval is calculated here.</p></dd>
@@ -196,7 +198,11 @@ when that reporting question is needed.</p></li>
 testlet and random-rater route is a smaller stored-result report: all
 supported styles (excluding <code>"rater"</code>)
 retain numerical checks, data usage, interval meanings and supplied
-predictions/intervals. It does not supply ordinary residual diagnostics or
+predictions/intervals. When saved scores include a scoring roster, the
+<code>scoring_roster</code> table preserves its rows, identifiers and omitted scores;
+testlet <code>scoring_blocks</code> separately summarizes observed blocks. Older
+results without a roster do not reconstruct one from calibration rows.
+It does not supply ordinary residual diagnostics or
 fit/APA wording templates; <code>template_index</code> is empty. See the model-specific
 section in <code><a href="mfrm_results.html">mfrm_results()</a></code> for supported tables and plots.</p>
 <p>For ordinary models, the
@@ -256,6 +262,31 @@ as final fairness conclusions; pathway/misfit rows are case-review prompts;
 and drift/equating claims require multiple fitted forms or waves.</p>
     </div>
     <div class="section level2">
+    <h2 id="two-family-gpcm-reports">Two-family GPCM reports<a class="anchor" aria-label="anchor" href="#two-family-gpcm-reports"></a></h2>
+
+
+<p>Reports retain all saved non-Person fitted locations, category steps and
+component slopes. Locations identify their centering constraint; steps
+identify their owner and level and are centered offsets, not standalone
+thresholds. Separately computed experimental location/contrast intervals from
+<code><a href="mfrm_facet_intervals.html">mfrm_facet_intervals()</a></code> may be attached; step intervals remain unavailable. The Markdown view
+shows up to 20 rows per table with a notice; complete tables remain in
+<code>$tables</code> and CSV exports. Report styles do not change inferential support.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="corrected-jml-reports">Corrected JML reports<a class="anchor" aria-label="anchor" href="#corrected-jml-reports"></a></h2>
+
+
+<p>Results from an explicit <code>jml_correction_order</code> have an estimator-specific
+report of saved estimates, numerical status and RootSE interpretation.
+The report does not contain ordinary fit tests or structural confidence
+intervals. The <code>"rater"</code> style is unavailable for this estimator.
+Saved <code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code> output adds conditional response means,
+probabilities and descriptive residual summaries, with unavailable indices
+and their reasons retained. These do not classify rater quality. See
+<code><a href="mfrm_results.html">mfrm_results()</a></code> and the <strong>Corrected JML</strong> section of <code><a href="fit_mfrm.html">fit_mfrm()</a></code>.</p>
+    </div>
+    <div class="section level2">
     <h2 id="individual-rater-sheets">Individual rater sheets<a class="anchor" aria-label="anchor" href="#individual-rater-sheets"></a></h2>
 
 
@@ -270,7 +301,7 @@ the complete <code>res</code> with <code><a href="https://rdrr.io/r/base/readRDS
 The RDS file retains fitted data and identifiers for the analyst; it is not
 the recipient's sheet. Reloading and reporting reuse the saved analysis
 without updating it for new ratings.</p>
-<p>The sheet includes scoring tendency (severity), exposure, available saved
+<p>The additive RSM/PCM sheet includes scoring tendency (severity), exposure, available saved
 fixed-facet uncertainty, ordinary Infit/Outfit, category use and selected
 unexpected ratings. Severity is oriented so that positive values mean lower
 expected scores. Its zero is the fitted model reference, not necessarily
@@ -288,9 +319,32 @@ numerical cautions before sharing; free-form cautions are not copied into
 the recipient's sheet. Missing sections explain the missing input. Ineligible
 source fits retain a prominent review notice. Severity is not rater quality,
 and no automatic misfit cutoff, exclusion decision or diagnostic accuracy
-claim is added. These sheets do not support GPCM, fitted interactions,
+claim is added. These sheets do not support one-family GPCM, fitted interactions,
 imported fits, testlet or shared-random-rater models; use their specific
 results and reports because their effects and diagnostics differ.</p>
+<p>For two-family GPCM MML, the same entry creates an experimental descriptive
+sheet. Select the modeled rater facet explicitly; either slope owner is
+supported. It separates the fitted location from the component slope,
+retains their distinct centering references, and reports category use,
+retained exposure and how many levels of the other facet were observed.
+Category-step offsets are shown only when this facet owns the steps. They
+are centered offsets, not standalone thresholds. This individual sheet does
+not display location or step intervals; use the analyst report for separately
+requested location intervals. A larger slope is not evidence of competence or accuracy.</p>
+<p>Attach saved <code><a href="confint.mfrm_fit.html">confint.mfrm_fit()</a></code> output through <code>intervals</code> in
+<code><a href="mfrm_results.html">mfrm_results()</a></code> to include a matching experimental component-slope interval.
+<code>interval</code> chooses among named attachments; pointwise/Bonferroni meaning,
+profile/log-Wald method and unavailable bounds are retained. No location
+interval or test of rater differences is implied. Attach saved
+<code><a href="mfrm_response_diagnostics.html">mfrm_response_diagnostics()</a></code> output through <code>response_diagnostics</code> for
+same-data posterior residual summaries and cases. The sheet counts saved,
+available, unresolved and not-included rows separately; a summary average
+is unavailable if any saved row for that recipient is unresolved. These
+residuals have no expectation-one reference or calibrated cutoff, exclude
+calibration uncertainty and do not predict independent future ratings.
+Creating or reopening a sheet does not fit, integrate, compute intervals
+or diagnose new responses. Inspect the complete analyst results before
+sharing a sheet; numerical convergence does not qualify feedback decisions.</p>
 <p>All four output formats use only selected numeric summaries and fixed
 explanatory text. They omit the source fit, Person identifiers, other rater
 identifiers, original row numbers, task labels and free-form source notes.
@@ -445,7 +499,7 @@ with other report styles, even when explicitly supplied as <code>NULL</code>.</p
 <span class="r-in"><span><span class="va">sheet</span> <span class="op">&lt;-</span> <span class="fu">mfrm_report</span><span class="op">(</span><span class="va">res</span>, style <span class="op">=</span> <span class="st">"rater"</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>,</span></span>
 <span class="r-in"><span>                     rater <span class="op">=</span> <span class="va">recipient</span>, output <span class="op">=</span> <span class="st">"html"</span>, max_cases <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sheet</span><span class="op">$</span><span class="va">path</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpkdbPhC/mfrmr_rater_1ade7ea0ec8d.html"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp0zMWEq/mfrmr_rater_1b707337b918.html"</span>
 <span class="r-in"><span><span class="co"># Review in a browser, then choose a permanent path for continuing work.</span></span></span>
 <span class="r-in"><span><span class="va">recipient_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".html"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.copy</a></span><span class="op">(</span><span class="va">sheet</span><span class="op">$</span><span class="va">path</span>, <span class="va">recipient_file</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></span>

@@ -86,11 +86,24 @@ before extraction, then follow
 to review, validate, freeze, save, load, and score the artifact. Review
 the returned batch with
 [mfrm_calibration_score_methods](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_calibration_score_methods.md)
-before using its estimates. Estimated- population or latent-regression
-MML, JML, and `GPCM` remain fitted-object-only scoring routes in 0.2.4.
-Artifact score uncertainty is conditional on the frozen point
-calibration and its recorded prior; loading validates consistency but
-does not authenticate an untrusted file.
+before using its estimates. One-family GPCM MML also supports an
+estimated intercept-only normal population, shared or separate
+slope/step owners, unit weights and no anchors/interactions, subject to
+conditional source and per-batch numerical scoring checks. Estimated-
+population RSM/PCM and latent-regression MML remain fitted-object-only.
+RSM/PCM JML supports portable post-hoc EAP with a standard-normal
+reference prior, unit weights, no anchors/interactions and passing
+finite identified source checks. Shared-owner GPCM JML also supports
+conditional portable EAP after its joint-likelihood/curvature checks,
+preserving incomplete global audits. Explicit corrected GPCM JML instead
+uses adjusted-equation checks and preserves the correction order in
+format 5; residual calibration bias may remain. That reference prior is
+not estimated by JML. Experimental two-family GPCM MML uses format 6
+with both ordered slope owners and a fixed N(0,1) prior, separate
+source/batch checks and no prior overrides. Artifact score uncertainty
+is conditional on the frozen point calibration and its recorded prior;
+loading validates consistency but does not authenticate an untrusted
+file.
 
 ## Advanced scope
 
@@ -497,9 +510,9 @@ category set taken from the observed data.
 
 **Generalized Partial Credit Model (GPCM)**
 
-Under `GPCM` (Muraki, 1992), the same adjacent-category partial-credit
-kernel is multiplied by a positive slope \\\alpha_g\\ for the designated
-slope-facet level \\g\\:
+With one slope family under `GPCM` (Muraki, 1992), the adjacent-category
+partial-credit kernel is multiplied by a positive slope \\\alpha_g\\ for
+the designated slope-facet level \\g\\:
 
 \$\$\ln\frac{P(X\_{nij} = k)}{P(X\_{nij} = k-1)} = \alpha_g(\theta_n -
 \delta_j - \beta_i - \tau\_{hk}).\$\$
@@ -508,10 +521,24 @@ MML allows a slope owner \\g\\ distinct from the step owner \\h\\; JML
 requires `slope_facet == step_facet`. Slopes are identified on the log
 scale with geometric mean 1. This makes `GPCM` a slope-aware
 sensitivity/extension route, not a replacement for the equal-weighting
-`RSM`/`PCM` interpretation. It does not jointly estimate the
-multiplicative task and rater slopes of the broader Uto–Ueno generalized
-MFRM. Unit slopes reduce to the equal-discrimination PCM kernel. Under
-default MML, an intercept-only person distribution
+`RSM`/`PCM` interpretation. A separate provisional two-family MML route
+fits the multiplicative Uto–Ueno equation with explicit fixed-N(0,1)
+identification, exactly two facets and second-owner steps. The first
+family's slopes have geometric mean one and the second family's slopes
+are free. Fixed-grid EM and adaptive direct MML supply summaries and
+conditional fitted curves without intervals. Both support separately
+checked experimental component log-Wald and location/contrast intervals
+and descriptive posterior residuals; component profiles require
+fixed-grid EM.
+[`predict_mfrm_units()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_units.md)
+and the portable calibration workflow supply experimental conditional
+new-Person EAP and posterior intervals, excluding calibration
+uncertainty. Coverage and population transport remain unqualified. The
+one-family diagnostic and inference routes below do not apply to it. See
+the Two slope families section of
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md).
+Unit slopes reduce to the equal-discrimination PCM kernel. Under default
+one-family MML, an intercept-only person distribution
 \\N(\beta_0,\sigma^2)\\ is estimated. The geometric-mean-one slopes are
 relative discriminations and \\\sigma\alpha_g\\ are their equivalent
 fixed-latent-standard-deviation values, so the conventional common
@@ -520,11 +547,12 @@ discrimination degree of freedom is retained. The legacy
 \\\sigma=1\\ and the slope geometric mean to one and is therefore a
 narrower relative-discrimination model. Under JML, geometric-mean-one is
 required to resolve the scale of jointly estimated person coordinates.
-"Bounded" refers to this deliberately limited model/workflow scope, not
-to finite optimizer box constraints. The GPCM JML objective is
-unpenalized. Certified extreme-person or facet recession is reported
-through typed primary boundary results; a finite optimizer iterate is
-retained only as a numerical trace and is not a finite JML maximum.
+The former "bounded" label described limited model/workflow scope, not
+finite optimizer box constraints. Use GPCM with explicit scope
+restrictions. The GPCM JML objective is unpenalized. Certified
+extreme-person or facet recession is reported through typed primary
+boundary results; a finite optimizer iterate is retained only as a
+numerical trace and is not a finite JML maximum.
 
 **Ordered-response scope**
 

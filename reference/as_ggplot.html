@@ -50,7 +50,7 @@ the default; the returned ggplot can be restyled or composed downstream."><meta 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Convert draw-free mfrmr plot data to ggplot2</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-as-ggplot.R" class="external-link"><code>R/api-as-ggplot.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-gpcm-reporting.R" class="external-link"><code>R/api-gpcm-reporting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-as-ggplot.R" class="external-link"><code>R/api-as-ggplot.R</code></a>, <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-gpcm-reporting.R" class="external-link"><code>R/api-gpcm-reporting.R</code></a></small>
       <div class="d-none name"><code>as_ggplot.Rd</code></div>
     </div>
 
@@ -101,7 +101,10 @@ the default; the returned <code>ggplot</code> can be restyled or composed downst
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>An <code>mfrm_plot_data</code> object, or an mfrmr object with a draw-free
-plot method.</p></dd>
+plot method.
+Corrected-JML slope, location and step plots retain their point or
+cumulative-distribution view, labels, reference and interpretation note;
+conversion does not add confidence intervals.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -149,8 +152,9 @@ controls and alternative text; see <code><a href="plot.mfrm_extended_comparison.
 Threshold-sensitivity tile and curve payloads also preserve their selected
 view, display controls and text alternatives; see
 <code><a href="plot.mfrm_screening_sensitivity.html">plot.mfrm_screening_sensitivity()</a></code>.
-Posterior predictive residual displays preserve their descriptive meaning
-and lack of reference cutoffs; see <code><a href="plot.mfrm_response_diagnostics.html">plot.mfrm_response_diagnostics()</a></code>.
+Response residual displays preserve their posterior or conditional plug-in
+probability definition and lack of reference cutoffs. Paired views retain
+available Infit when Outfit is undefined; see <code><a href="plot.mfrm_response_diagnostics.html">plot.mfrm_response_diagnostics()</a></code>.
 Testlet conversions retain unavailable
 rows, prior-only symbols and the conditional-interval note; they do not
 estimate diagnostics or add calibration uncertainty. Extended-model interval,
@@ -164,6 +168,10 @@ For multivariate D-study plots, an explicit <code>component = "series"</code> ke
 this dedicated conversion; use <code><a href="plot_data.html">plot_data()</a></code> for other tables.
 Difference-interval plots from <code><a href="mfrm_multivariate_d_compare.html">mfrm_multivariate_d_compare()</a></code> use their
 base <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method or <code><a href="plot_data.html">plot_data()</a></code>; automatic conversion is not supported.
+Residual-PCA scree, reference, excess and loadings plots have dedicated
+conversions with the default or <code>component = "data"</code>. They preserve saved
+eigenvalues, reference cutoffs, signed loadings and display encodings; method
+identifiers are not inferred as plotted variables. No PCA is recomputed.
 External-feature PCA scree, scores and loadings views have dedicated
 conversions. They preserve selected axes, retained-component symbols,
 saved group colours and shapes, labels and transformation metadata.

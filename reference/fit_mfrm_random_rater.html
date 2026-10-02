@@ -54,7 +54,7 @@ performance instead, see fit_mfrm_testlet()."><meta property="og:image" content=
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a rating-scale model with shared random rater severity</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/08a5ee9bdae04fe615114e01323022b0dd4efcfd/R/api-random-rater.R" class="external-link"><code>R/api-random-rater.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-random-rater.R" class="external-link"><code>R/api-random-rater.R</code></a></small>
       <div class="d-none name"><code>fit_mfrm_random_rater.Rd</code></div>
     </div>
 
@@ -272,6 +272,18 @@ panels can violate its assumptions even when the assignment is connected.
 A successful numerical check cannot assess those population assumptions.
 Earlier saved fits without ability-population parameters retain their
 original known N(0,1) meaning for predictions, profiles and bootstrap refits.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="relation-to-testlets-and-discrimination">Relation to testlets and discrimination<a class="anchor" aria-label="anchor" href="#relation-to-testlets-and-discrimination"></a></h2>
+
+
+<p>A shared severity effect is not a random discrimination parameter.
+This RSM does not estimate GPCM slopes. Its rater effect spans persons,
+whereas <code><a href="fit_mfrm_testlet.html">fit_mfrm_testlet()</a></code> uses a distinct effect for each Person/block
+pair, even when the block is named Rater. These sharing structures lead
+to different marginal likelihoods and prediction targets; the two routes
+cannot currently be combined. See <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> for the
+relationship to fixed slope families and local independence.</p>
     </div>
     <div class="section level2">
     <h2 id="comparison-with-fixed-rater-mfrm">Comparison with fixed-rater MFRM<a class="anchor" aria-label="anchor" href="#comparison-with-fixed-rater-mfrm"></a></h2>
