@@ -42,6 +42,25 @@ example in `vignette("mfrmr-gpcm-scope", package = "mfrmr")`.
 Estimated-population
 RSM/PCM and latent regression remain fitted-object-only routes.
 
+Experimental two-family GPCM MML uses file format 6 with the same public
+lifecycle below. It retains two ordered slope owners, second-owner steps,
+the original category coding and fixed N(0,1) prior. The first owner's locations
+and log slopes are centered; the second owner's locations and slopes remain
+free. Source identity/convergence and finer-integration checks must pass before
+extraction; review-only sources cannot be frozen. Each scoring batch must pass
+its own EAP/SD integration checks. Both fixed-grid EM and adaptive direct MML
+retain their scoring integration method.
+
+The artifact contains no training responses or Person estimates. Known facet
+levels may form new combinations, flagged by `row_dispositions$ObservedContext`;
+this is a model-based extension, not empirical validation of those combinations.
+Unit weights are required, with no prior override or repeated-event extension.
+Facet names must not collide with the reserved scoring/disposition columns
+listed in `?mfrm_calibration_workflow`. Validation and freezing do not qualify
+sampling coverage, global identification or population transport, and intervals
+exclude calibration uncertainty. Older readers refuse format 6; formats 1--5
+retain their interpretation. See the two-family example in the GPCM scope vignette.
+
 For a JML source, EAP holds the calibration fixed and adds a standard-normal
 reference prior by default, or uses an explicit `scoring_prior`. JML did not
 estimate that distribution. This is not ML/WLE scoring or a replay of the

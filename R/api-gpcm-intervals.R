@@ -172,8 +172,11 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' This method recomputes uncertainty for saved fits; it does not trust old
 #' interval flags or alter the supplied object.
 #' @section Experimental two-family slope intervals:
-#' For the fixed-standard-normal MML--EM model with two slope facets,
+#' For the fixed-standard-normal MML model with two slope facets,
 #' `confint(fit)` requests log-Wald intervals for both sets of component slopes.
+#' Fixed-grid EM and direct adaptive fits use their own fitted marginal objective.
+#' For adaptive fits, differentiation includes movement of the quadrature nodes,
+#' their scale and the integration Jacobian; it does not freeze the fitted nodes.
 #' It uses the inverse full observed marginal information, including all
 #' locations, steps and cross-family covariance; it does not invert the
 #' frozen EM Q function or the slope block alone. The first family's log
@@ -184,7 +187,7 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #'
 #' The default `method = "model"` uses `scale = "standardized"`, without
 #' contrasts or cluster adjustments. Bonferroni adjusts for all component
-#' slopes in that call. An explicit `method = "profile"` profiles one named
+#' slopes in that call. For fixed-grid EM only, an explicit `method = "profile"` profiles one named
 #' owner/level, retaining both families' scale constraints and reoptimizing
 #' all remaining slopes, locations and steps. The N(0,1) population is fixed,
 #' not an estimated nuisance parameter. Use, for example,
@@ -193,10 +196,12 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' The result preserves owner, level, scale reference and the same-target
 #' Wald comparison through saved plots, reports and exports. This is a
 #' component interval, not an interval for the product of two slopes.
-#' Effective slope-product, location and curve intervals, sandwich intervals
-#' and model ranking are not supplied for this model.
+#' Experimental location and within-facet contrast intervals use
+#' [mfrm_facet_intervals()] and have their own target-specific limitations.
+#' Effective slope-product and curve intervals, sandwich intervals and model
+#' ranking are not supplied for this model.
 #'
-#' Checks reevaluate the source identity, category support, EM convergence and
+#' Checks reevaluate the source identity, category support, engine-specific convergence and
 #' unregularized marginal information. The observed Person-score Jacobian
 #' must span all free coordinates at relative SVD tolerances 1e-10, 1e-8 and
 #' 1e-6, using numerical derivative steps 1e-5 and 5e-6. Columns are normalized
@@ -206,7 +211,7 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' check does not prove structural nonidentifiability.
 #'
 #' The fresh mean marginal score must meet the smaller of `em_score_tol` and
-#' 1e-6; the full score scaled by its covariance must have length at most
+#' 1e-6 for EM, or 1e-6 for adaptive direct fitting; the full score scaled by its covariance must have length at most
 #' 0.01. Values above 1e-4 retain an additional warning and
 #' `OptimizationCaution = TRUE` in the numerical checks. This length is
 #' \eqn{\sqrt{g^T V g}}, where g is the full negative-log-likelihood gradient
@@ -214,13 +219,14 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' bounds the Newton displacement of any component log slope in its own SE
 #' units. A small residual does not establish a global optimum or accurate
 #' coverage. The infinity-norm inverse residual must be at most 1e-6. At the saved
-#' parameters, the quadrature grid is increased from q to 2q-1 without refitting.
+#' parameters, the quadrature order is increased from q to 2q-1 without refitting,
+#' preserving the fitted integration method.
 #' The change in the score, measured with the original covariance, and the
 #' spectral norm of the covariance change, standardized by the original
 #' information, must each be at most 0.01. A failed integration check calls for
 #' refitting with more points. [mml_quadrature_sensitivity()] preserves the
-#' model and EM controls while comparing fixed-grid refits; its `intervals`
-#' entries retain each grid's interval checks for plotting and reporting.
+#' model, engine and integration controls while comparing refits; its `intervals`
+#' entries retain each order's interval checks for plotting and reporting.
 #' The score workspace is also subject to
 #' `mfrmr.max_information_bytes`.
 #'
@@ -235,8 +241,10 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' at both quadrature orders. The shared profile algorithm and failure rules
 #' described below also apply. No superiority to Wald or general coverage is
 #' established, and this does not make a rejected near-zero-slope source eligible.
-#' The two-family optimizer uses a per-Person objective scale internally;
+#' The two-family EM optimizer uses a per-Person objective scale internally;
 #' likelihood ratios and all acceptance checks use the total likelihood.
+#' Adaptive two-family profiles are unavailable; an adaptive log-Wald result
+#' does not qualify constrained profile searches or their integration checks.
 #'
 #' Every available two-family interval carries an experimental warning:
 #' global identification, absence of boundary alternatives and sampling
@@ -447,6 +455,8 @@ confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
     covariance_scale = if (target$log_scale) "log" else "identity")
   if (product) {
     attr(out, "settings")$two_family <- TRUE
+    attr(out, "settings")$integration <- object$config$estimation_control$mml_integration
+    attr(out, "settings")$engine <- object$config$estimation_control$mml_engine_used
     attr(out, "scale_note") <- paste0(object$config$slope_facet[1],
       ": geometric mean one; ",object$config$slope_facet[2],
       ": free slopes with ability SD fixed at one. The families have different reference meanings.")

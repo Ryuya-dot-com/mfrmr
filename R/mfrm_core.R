@@ -509,6 +509,7 @@ compact_population_spec <- function(population = NULL, person_levels = character
         if (isTRUE(pop$active)) "population_model" else "legacy_mml"
     ),
     formula = pop$formula %||% NULL,
+    terms = pop$terms %||% NULL,
     person_id = person_id,
     design_matrix = pop$design_matrix %||% NULL,
     design_columns = pop$design_columns %||%
@@ -9452,7 +9453,10 @@ mfrm_refine_mml_information <- function(par, fn, gr, hessian) {
         "still make Wald intervals unreliable; review interval width, boundary",
         "proximity and quadrature sensitivity.")
     } else {
-      "Ill-conditioned information did not pass refinement, inversion or scaled-gradient checks; ordinary inference remains unavailable."
+      sprintf(paste("Ill-conditioned information did not pass refinement, inversion or scaled-gradient checks:",
+        "relative curvature change %.3g (limit 1e-3), inverse residual %.3g (limit 1e-6),",
+        "standardized Newton displacement %.3g (limit 1e-4). Ordinary inference remains unavailable."),
+        summary$RelativeChange, summary$InverseResidual, summary$CurvatureScaledGradient)
     }
     if (summary$Verified) covariance else NULL
   }, error = function(e) {
@@ -9472,7 +9476,7 @@ mfrm_mml_information_caution <- function(information) {
   character()
 }
 
-compute_mml_parameter_covariance <- function(res) {
+compute_mml_parameter_covariance <- function(res, retained_matrices = 0L) {
   method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
   if (!identical(method, "MML")) {
     return(list(
@@ -9510,7 +9514,12 @@ compute_mml_parameter_covariance <- function(res) {
   }
   # Allow eight dense p-by-p matrices for Hessian/inversion workspace. The
   # likelihood data and quadrature allocation are additional, not covered here.
-  workspace <- 8 * 8 * as.double(p)^2
+  if (!is.numeric(retained_matrices) || is.complex(retained_matrices) || length(retained_matrices) != 1L ||
+      !is.finite(retained_matrices) || retained_matrices < 0 ||
+      retained_matrices != floor(retained_matrices)) {
+    stop("`retained_matrices` must be a nonnegative integer.", call. = FALSE)
+  }
+  workspace <- (8 + retained_matrices) * 8 * as.double(p)^2
   if (workspace > budget || length(res$opt$par) != p || any(!is.finite(res$opt$par))) {
     return(list(cov = NULL, hessian = NULL, sizes = sizes,
       param_slices = build_param_slices(sizes), status = "unavailable",
@@ -9577,7 +9586,7 @@ compute_mml_parameter_covariance <- function(res) {
                       only.values = TRUE)$values) > 0)) {
     # Refinement retains several Hessians and factorization workspaces. Apply
     # the same user budget before these additional dense allocations.
-    refinement_workspace <- 20 * 8 * as.double(p)^2
+    refinement_workspace <- (20 + retained_matrices) * 8 * as.double(p)^2
     if (refinement_workspace > budget) {
       refined <- list(cov = NULL, hessian = hess,
         review = data.frame(Verified = FALSE, RelativeChange = NA_real_,
@@ -9601,11 +9610,12 @@ compute_mml_parameter_covariance <- function(res) {
   # qualification; no second differentiation or optimizer run is needed.
   solution_information <- tryCatch({
     eig <- eigen(symmetrize_matrix(hess), symmetric = TRUE, only.values = TRUE)$values
+    gradient <- gr(res$opt$par, idx, config, sizes, quad)
     list(status = "evaluated_diagnostic_only", free_dimension = length(res$opt$par),
-      inverse_review = inverse_review,
+      inverse_review = inverse_review, gradient = gradient,
       evaluation_summary = data.frame(
         ReevaluatedObjective = fn(res$opt$par, idx, config, sizes, quad),
-        GradientMaxAbs = max(abs(gr(res$opt$par, idx, config, sizes, quad)))),
+        GradientMaxAbs = max(abs(gradient))),
       eigenvalue_summary = data.frame(Smallest = min(eig), AbsoluteScale = max(abs(eig))))
   }, error = function(e) list(status = "unavailable", detail = conditionMessage(e)))
 

@@ -2,41 +2,67 @@
 % Please edit documentation in R/api-plotting-multivariate-d-compare.R
 \name{plot.mfrm_multivariate_d_comparison}
 \alias{plot.mfrm_multivariate_d_comparison}
-\title{Plot differences between prespecified D-study plans}
+\title{Plot prespecified D-study plans and their differences}
 \usage{
-\method{plot}{mfrm_multivariate_d_comparison}(x, type = c("coefficients", "sem"), draw = TRUE, preset = "standard", ...)
+\method{plot}{mfrm_multivariate_d_comparison}(
+  x,
+  type = c("coefficients", "sem"),
+  draw = TRUE,
+  preset = "standard",
+  view = c("plans", "differences"),
+  ...
+)
 }
 \arguments{
 \item{x}{A result from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}.}
 
-\item{type}{\code{"coefficients"} for G/Phi or \code{"sem"} for SEM differences.}
+\item{type}{\code{"coefficients"} for G/Phi or \code{"sem"} for SEM.}
 
 \item{draw}{Draw the figure; \code{FALSE} returns its data only.}
 
 \item{preset}{Plot style: \code{"standard"}, \code{"publication"}, \code{"compact"}, or
 \code{"monochrome"}.}
 
+\item{view}{\code{"plans"} (default) shows point projections on their original
+scale, with a diamond for the reference. \code{"differences"} shows paired
+changes and their approximate intervals.}
+
 \item{...}{Reserved; additional arguments are rejected.}
 }
 \value{
 Invisibly, an \code{mfrm_plot_data} object. \code{\link[=plot_data]{plot_data()}} extracts the exact
-plotted \code{table}, \code{unavailable} rows, \code{design_grid}, \code{reference}, \code{weights},
-title and labels. Base graphics are supported; automatic ggplot conversion
+comparison \code{table}, point-projection \code{series} (including the reference),
+\code{unavailable} rows for the selected view, \code{interval_unavailable} rows,
+\code{design_grid}, \code{reference}, \code{weights}, title and labels.
+Base graphics are supported; automatic ggplot conversion
 is not provided for this plot.
 }
 \description{
-Show each plan's change from a reference, with approximate pointwise intervals.
-The vertical zero line represents no change; an interval crossing it does not
+Show G/Phi or SEM for every plan, including the reference. Use
+\code{view = "differences"} for changes from the reference with approximate
+pointwise intervals. In that view, the vertical zero line represents no
+change; an interval crossing it does not
 establish equivalence. Positive G/Phi differences or negative SEM differences
 favor the comparison plan. The method requires normal random effects.
 }
 \details{
+The plan view connects supplied plans in their original row order.
+Both facet counts appear on the horizontal axis; lines are visual guides,
+not an interpolated response to changing one count. For conventional D-study
+curves that vary one count while holding the other constant, use
+\code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}}. The plan view has no sampling intervals:
+adding the reference estimate to a difference interval would not produce
+a confidence interval for the individual plan.
+
 Plans and score weights must have been specified before inspecting
-the results. Intervals are not simultaneous over plans or metrics. A point
-without an interval is retained and marked as unavailable; missing values
-are never replaced by zero. Each panel has its own horizontal scale.
+the results. In the difference view, intervals are not simultaneous over
+plans or metrics. A point
+without an interval is retained as an open circle; an asterisk marks rows
+with unavailable intervals. Missing values are never replaced by zero.
+Each difference panel has its own horizontal scale.
 Original score units apply to SEM differences. The figure identifies the
-score/composite, its weights and the reference counts.
+score/composite, its weights and the reference counts. All plotted plans
+are future complete crossed plans, even when the source design is incomplete.
 }
 \section{Session plot defaults}{
 

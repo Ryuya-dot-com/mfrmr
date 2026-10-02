@@ -163,8 +163,8 @@ mfrm_jml_results <- function(fit, include, response_diagnostics=NULL) {
     mfrm_validate_response_diagnostics(fit,response_diagnostics)
     tables <- c(tables,mfrm_response_diagnostic_tables(response_diagnostics))
     components$response_diagnostics <- response_diagnostics
-    status <- rbind(status,mfrm_results_status_row("response_diagnostics","available",
-      "Saved conditional residual summaries; calibration and Person profiles fixed; no reference cutoffs."))
+    status <- rbind(status,mfrm_results_status_row("response_diagnostics",
+      tables$response_overview$Status,tables$response_overview$Detail))
     plot_map <- rbind(plot_map,data.frame(Type="response_diagnostics",Available="plots" %in% include,
       RequiredArtifact=FALSE,Route='plot(res, type = "response_diagnostics")',
       Detail="Descriptive conditional Infit/Outfit; paired or scatter view; missing values remain visible in the data."))

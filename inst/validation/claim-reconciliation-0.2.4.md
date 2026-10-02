@@ -1,5 +1,12 @@
 # 0.2.4 integrated claim and evidence ledger
 
+**Current interpretation (September 30):** this is a chronological evidence
+ledger. Each closure or publication statement below belongs to its dated
+source and scope. The expanded 0.2.4 remains under development; its current
+decisions and release gates are in the
+[active internal plan](internal-roadmap-0.2.4.md). Earlier frozen archives and
+local closures do not qualify the later two-family or corrected-JML changes.
+
 Date: 2026-09-24. **GitHub rc.5 remains published; the successor API/GPCM source
 has completed local integration checks, and CRAN submission remains open.**
 A subsequent [GPCM inference audit](#september-24-gpcm-inference-follow-up-audit)

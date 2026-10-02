@@ -37,6 +37,25 @@ mvgt_common_task_data <- function() {
   read.csv(path)
 }
 
+test_that("D-study printing keeps score weights and source counts distinct from plans", {
+  g <- mfrm_multivariate_gstudy(mvgt_common_task_data(), c("V", "W"), rater = NULL)
+  weights <- cbind(Equal = c(V = .5, W = .5), Difference = c(V = -1, W = 1))
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 12)), weights)
+  before <- serialize(d, NULL)
+  output <- capture.output(print(d))
+  expect_match(paste(output, collapse = "\n"), "Person = 10, Task = 6", fixed = TRUE)
+  expect_match(paste(output, collapse = "\n"), "Source rows: 60 used of 60 ; 0 explicitly omitted.", fixed = TRUE)
+  expect_true(any(grepl("Future complete balanced plans", output, fixed = TRUE)))
+  expect_true(any(grepl("Composite weights (not normalized)", output, fixed = TRUE)))
+  expect_true(all(capture.output(print(weights)) %in% output))
+  expect_identical(summary(d), d$coefficients)
+  expect_identical(serialize(d, NULL), before)
+  vector <- mfrm_multivariate_d_study(g, weights = weights[, "Difference"])
+  expected <- matrix(c(-1, 1), 2, 1, dimnames = list(c("V", "W"), "Composite"))
+  expect_true(all(capture.output(print(expected)) %in% capture.output(print(vector))))
+  expect_false(any(grepl("Composite weights", capture.output(print(mfrm_multivariate_d_study(g))), fixed = TRUE)))
+})
+
 test_that("common-task raw data reproduce mGENOVA Appendix E G-study and D-study values", {
   # Brennan (2001), Manual for mGENOVA 2.1, Table 12 (p. 32), Appendix E
   # (pp. 74-77): synthetic data from Generalizability Theory, Table 9.3.

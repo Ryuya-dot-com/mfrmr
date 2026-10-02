@@ -45,6 +45,13 @@ An \code{mfrm_multivariate_d_comparison} list with \code{comparisons} (one row
 per comparison plan and metric), \code{covariance} (joint sampling covariance
 of those differences), \code{design_grid}, \code{reference}, selected score/composite
 and weights, \code{level}, \code{method}, and component/sampling-covariance diagnostics.
+\code{source_design} and \code{source_rows} retain the source method, observed level
+counts, completeness, score convention and row-use totals, without raw
+ratings or identifiers. \code{print()} displays these separately from the future
+plans and includes composite weights. Save the full comparison with
+\code{saveRDS()}; a CSV of \code{summary()} alone does not retain this context or
+the confidence level and approximation assumptions. Earlier saved
+comparisons without source context remain readable and say it is absent.
 \code{summary()} returns the comparison table. \code{Status} describes interval
 availability; point differences can remain available without an interval.
 }
@@ -119,8 +126,9 @@ d <- mfrm_multivariate_d_study(g,
 comparison <- mfrm_multivariate_d_compare(d, reference = 1,
   assumption = "normal")
 summary(comparison)
-plot(comparison)
+plot(comparison) # G/Phi for each plan, including the reference.
 plot(comparison, type = "sem")
+plot(comparison, view = "differences") # Paired difference intervals.
 }
 \seealso{
 \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=plot.mfrm_multivariate_d_comparison]{plot.mfrm_multivariate_d_comparison()}}

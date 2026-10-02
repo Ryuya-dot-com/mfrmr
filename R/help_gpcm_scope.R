@@ -57,36 +57,63 @@
 #' and `plot()` methods; attach selected results to [mfrm_results()] for
 #' [mfrm_report()] and [export_mfrm_results()]. A plot of locations or fit
 #' statistics is not a plot of slope uncertainty.
+#' [mfrm_facet_intervals()] separately supplies experimental native-scale
+#' model intervals for one-family MML locations and within-facet contrasts.
+#' Direct fixed/adaptive MML, centered additive facets/steps and unit weights
+#' are required, with an estimated intercept-only normal population or the
+#' explicit fixed-N(0,1) restriction. Shared/separate slope and step owners are
+#' supported. Full-information and finer-grid checks preserve refusal reasons;
+#' sampling coverage and standardized-location intervals remain unqualified.
 #'
 #' Portable calibration has its own row and [mfrm_calibration_capabilities()]
 #' gives estimator-specific source restrictions. Two slope families are available
 #' provisionally through [fit_mfrm()] with fixed-standard-normal MML, exactly
 #' two facets, no anchors and unit weights. Choose fixed-grid EM or adaptive
 #' direct MML explicitly; see [fit_mfrm()]. Use `summary(fit)`, then
+#' inspect adaptive initialization in `fit$opt$mml_initialization`: the default
+#' compares neutral and EM-derived starts with the same adaptive likelihood,
+#' retaining failed starts and the selected candidate's convergence status.
+#' The saved initialization policy also follows quadrature-order refits. Use
 #' `curves <- mfrm_curve_intervals(fit, newdata)` and `plot(curves)`. Despite the
 #' function name, this route returns fitted values with unavailable intervals.
-#' Attach them with `mfrm_results(fit, include = c("fit", "plots"),
-#' compute = "never", intervals = curves)` for reports and saved exports.
-#' For fixed-grid EM, separately use `ci <- confint(fit)` for experimental component-slope intervals
+#' Attach them with `mfrm_results(fit, intervals = curves)` for reports and
+#' saved exports. Without attachments, `mfrm_results(fit)` collects the saved
+#' fit and its numerical status; neither call calculates new diagnostics.
+#' Separately use `ci <- confint(fit)` for experimental component log-Wald intervals
 #' and attach `intervals = list(slopes = ci, curves = curves)`. Local numerical
 #' checks do not establish global identification or sampling coverage; failed
 #' checks retain missing bounds.
-#' An explicit `confint(fit, method = "profile", slope = c(Task = "t1"))`
+#' For fixed-grid EM, an explicit `confint(fit, method = "profile", slope = c(Task = "t1"))`
 #' profiles one two-family component, using the actual owner/level names.
 #' It retains nuisance reoptimization, numerical checks, unavailable endpoints
 #' and a same-target Wald comparison. Neither method has qualified coverage.
 #' Use [mml_quadrature_sensitivity()] to compare
-#' refits with the same engine and integration method. Fixed-grid EM retains
-#' each grid's experimental interval checks; adaptive fits retain missing bounds. Optional `adaptive_quad_points` also adds fixed-calibration
+#' refits with the same engine and integration method. Both routes retain
+#' each order's experimental log-Wald checks. Optional `adaptive_quad_points` also adds fixed-calibration
 #' integration checks for two families; the posterior moments in that review
 #' are numerical diagnostics, not a Person-scoring workflow. Person-score
 #' comparisons remain unavailable for two families. Adaptive two-family fitting
-#' does not yet supply component intervals or posterior residual diagnostics.
-#' For fixed-grid EM, [mfrm_response_diagnostics()] supplies same-data posterior
+#' does not yet supply profile intervals.
+#' For both engines, [mfrm_response_diagnostics()] supplies same-data posterior
 #' predictive residuals with fixed calibration, including descriptive Infit/Outfit
-#' without reference cutoffs. Attach the saved object through `response_diagnostics`
-#' to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and
-#' portable two-family calibration remain unavailable. Shared-owner corrected
+#' without reference cutoffs. It retains the fitted integration method and
+#' complete Person conditioning record, including when selecting output rows.
+#' Attach the saved object through `response_diagnostics`
+#' to the results call above for plots, reports and exports.
+#' [predict_mfrm_units()] separately supplies experimental conditional new-Person
+#' EAP, posterior SD and continuous posterior intervals under the retained
+#' N(0,1) prior, with source/batch numerical checks and no calibration uncertainty.
+#' [extract_mfrm_calibration()] provides portable two-family format 6 with the
+#' same fixed prior and separate source/batch checks.
+#' [mfrm_facet_intervals()] supplies separately checked experimental normal
+#' intervals for either owner's locations or prespecified within-facet contrasts.
+#' It uses the constrained location block of the inverse full marginal information;
+#' failed numerical checks retain point estimates with missing intervals.
+#' Attach the result as `intervals = list(locations = ci)` for saved reports and
+#' plots. Coverage is unqualified; location differences are not uniform rating
+#' differences when slopes or steps vary. Ordinary fit diagnostics, step/curve
+#' intervals and model ranking
+#' remain unavailable. Shared-owner corrected
 #' JML has an explicit experimental point-estimation and reporting route through
 #' `jml_correction_order`; formal structural intervals remain unavailable.
 #' Its descriptive response diagnostics and conditional EAP scoring use their
@@ -132,10 +159,11 @@
 #' It also shows how to import the empirical writing table
 #' `sirt::data.ratings1` from that separately installed package, preserve its
 #' categories, and review unequal assignment. The example distinguishes new
-#' fitted response curves from evidence of predictive accuracy. Numerical
-#' convergence did not resolve its integration-sensitive curves or incomplete
-#' residual summaries, so the example does not endorse rater feedback from
-#' those estimates. All score datasets bundled with mfrmr are synthetic.
+#' fitted response curves from evidence of predictive accuracy. The original
+#' fixed-grid fits had integration-sensitive curves and incomplete residual
+#' summaries. A subsequent adaptive fit resolved the retained numerical example;
+#' that agreement does not validate model fit or feedback decisions. All score
+#' datasets bundled with mfrmr are synthetic.
 #'
 #' @section Rankings and consequential decisions:
 #' An official competition result, highest latent ability and a future winner
@@ -146,7 +174,7 @@
 #' Differences need covariance and selection-aware uncertainty; independently
 #' drawing from printed SEs omits shared calibration uncertainty.
 #' There is no winner-probability or simultaneous Person-rank confidence-set
-#' API. Two-family Person scoring is also unavailable. Available one-family
+#' API. Available one-family and experimental two-family new-Person
 #' EAP intervals condition on the calibration and prior; they do not provide
 #' a validated winner-selection procedure. Preserve competition-specific
 #' aggregation, rounding, tie rules and advancement separately from modelled
@@ -487,7 +515,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "estimation_iteration_report()",
       paste("mfrm_calibration_capabilities(); extract_mfrm_calibration();",
         "save_mfrm_calibration(); load_mfrm_calibration(); score_mfrm_calibration()"),
-      "fit_mfrm(); summary(); mfrm_curve_intervals(); mfrm_response_diagnostics(); mfrm_results(); mfrm_report(); export_mfrm_results()",
+      "fit_mfrm(); summary(); mfrm_curve_intervals(); mfrm_response_diagnostics(); predict_mfrm_units(); sample_mfrm_plausible_values(); extract_mfrm_calibration(); score_mfrm_calibration(); mfrm_results(); mfrm_report(); export_mfrm_results()",
       NA_character_,
       "fit_mfrm(mml_engine = 'em', slope_facet = c(first_owner, second_owner))"
     ),
@@ -671,11 +699,16 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "unit weights, no anchors or population covariates and observed zero-based scores.",
         "The first family's slopes have geometric mean one; the second owns steps and has free slopes.",
         "Summary and fitted curves connect to saved results/reports; curve intervals are unavailable.",
-        "Fixed-grid EM supports separately checked experimental component-slope intervals; adaptive fits retain missing bounds. Global identification and coverage remain unestablished.",
-        "method = 'profile' and a named slope value profile one owner/level, with nuisance reoptimization and saved Wald comparison; coverage improvement is not established.",
+        "Both routes support separately checked experimental component log-Wald intervals using their fitted integration method. Global identification and coverage remain unestablished.",
+        "mfrm_facet_intervals() separately supplies experimental model-based location and within-facet contrast intervals from the inverse full marginal information. Failed numerical checks retain points and missing bounds; no sandwich or step/curve intervals are supplied.",
+        "For fixed-grid EM, method = 'profile' and a named slope value profile one owner/level, with nuisance reoptimization and saved Wald comparison; adaptive profiles remain unavailable and coverage improvement is not established.",
         "mml_quadrature_sensitivity() preserves the fitting engine/integration method; optional adaptive_quad_points adds fixed-calibration integration diagnostics, not Person scoring or a change of estimator.",
-        "For fixed-grid EM, mfrm_response_diagnostics() integrates ability with both slope families fixed; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests. Adaptive two-family residual diagnostics remain unavailable.",
-        "Ordinary fit diagnostics, model ranking, new-person scoring and portable two-family calibration are not supported."
+        "For both engines, mfrm_response_diagnostics() integrates ability with both slope families fixed, retaining the fitted integration method and complete Person record; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests.",
+        "predict_mfrm_units() separately supplies experimental new-Person EAP, posterior SD and continuous posterior intervals under the retained N(0,1) prior with known levels and unit weights. Source/batch numerical checks are distinct; intervals exclude calibration uncertainty and do not establish coverage or population transport.",
+        "Portable format 6 retains both slope components, category coding and fixed N(0,1) prior after passing source checks; every new batch is checked independently. Prior overrides and repeated-event extensions are unsupported.",
+        "mfrm_results(fit, scores = scores) collects matching saved native or format-6 Person scores for tables, reports and exports without rescoring; source/batch checks and review-only labels remain attached.",
+        "mfrm_report(..., style = 'rater', facet = ..., rater = ...) provides experimental individual feedback from saved two-family results, separating location, component slope, category use, exposure and descriptive posterior residuals. Saved component-slope intervals remain experimental; no competence or training-effect decision is supplied.",
+        "Ordinary fit diagnostics and model ranking are not supported."
       ),
       paste(
         "Formal corrected-JML structural intervals are unavailable.",

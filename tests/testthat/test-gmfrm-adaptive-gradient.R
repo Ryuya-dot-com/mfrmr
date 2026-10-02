@@ -33,5 +33,17 @@ test_that("two-family adaptive gradients include moving nodes in free coordinate
       expect_lt(abs(result$value - objective(par)), 1e-10)
       expect_lt(max(abs(result$gradient - numeric)), 1e-6)
     }
+    # At high order the moving-node information must also approach the
+    # independent complete-data-minus-missing-information calculation.
+    cfg <- setup$config; cfg$estimation_control <- list(mml_integration = "adaptive")
+    params <- expand_params(par, setup$sizes, cfg)
+    basis <- mfrmr_adaptive_quadrature_basis(setup$idx, cfg, params,
+      gauss_hermite_normal(61L), compute_base_eta(setup$idx, params, cfg))
+    reference <- gmfrm_louis_reference(problem$specification, par, basis$nodes, basis$log_weights)
+    evaluate <- mfrmr_make_adaptive_mml_evaluator(setup$idx, cfg, setup$sizes, 61L)
+    hessian <- optimHess(par, function(x) evaluate(x)$value, function(x) evaluate(x)$gradient,
+      control = list(ndeps = rep(1e-4, length(par))))
+    expect_equal(hessian, reference$information, tolerance = 1e-6)
+    expect_equal(evaluate(par)$gradient, -colSums(reference$scores), tolerance = 1e-7)
   }
 })

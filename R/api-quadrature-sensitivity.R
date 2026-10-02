@@ -110,6 +110,12 @@ mfrmr_gqs_validate <- function(fit, data, quad_points,
 mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
   replay <- fit$config$replay_inputs
   if (mfrm_has_product_slopes(fit)) {
+    if (mfrmr_adaptive_integration(fit$config)) {
+      policy <- fit$config$estimation_control$gpcm_mml_start %||% "neutral"
+      mfrmr_gqs_assert(is.null(replay$gpcm_mml_start) || identical(replay$gpcm_mml_start, policy),
+        "The saved adaptive initialization and replay settings must agree.")
+      replay$gpcm_mml_start <- policy
+    }
     replay$package_version <- NULL
     replay$data <- data
     replay$quad_points <- as.integer(nodes)
@@ -767,20 +773,24 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' For a two-family GPCM, refits preserve the ordered slope owners,
 #' fixed N(0,1) population, score ladder, engine, integration method and stopping
 #' controls (`em_score_tol` for fixed-grid EM or `reltol` for adaptive direct MML).
-#' Each refit starts from the usual neutral initialization, not the reference
-#' estimate. Component slopes retain `SlopeOwner` and `ScaleReference`: the
+#' Each refit reconstructs the source initialization policy from the observed
+#' data. Fixed-grid EM uses the neutral vector; adaptive fits retain either
+#' neutral-only or neutral-plus-EM initialization. Older adaptive fits without
+#' this setting retain the earlier neutral-only procedure. The reference
+#' estimate is not used as a new starting vector. Component slopes retain
+#' `SlopeOwner` and `ScaleReference`: the
 #' first family has geometric mean one; the second is free on the fixed ability
 #' scale. Category-probability comparisons use the product of both slopes.
 #'
-#' For fixed-grid EM, `intervals` contains the separately checked experimental `confint()` result
+#' For both two-family engines, `intervals` contains the separately checked experimental `confint()` result
 #' for each grid, including failed checks, cautions and missing bounds. For
 #' example, after comparing `quad_points = c(31, 61)`, use
 #' `plot(out$intervals$q61)` and
 #' `apa_table(out$intervals$q61, which = "numerical_checks")`. These checks also
 #' evaluate q versus 2q-1 at that fit's saved parameters without another refit.
 #' Passing these checks does not establish sampling coverage or resolve
-#' other warnings about the fitted model. Adaptive two-family refits retain
-#' missing component intervals with the reason that this inference route is unavailable.
+#' other warnings about the fitted model. Adaptive fits use their moving-node
+#' objective for both the information and the higher-order comparison.
 #' Person-score comparisons in `summary` remain unavailable for two families:
 #' EAP and posterior-SD changes there are `NA`, not zero. With
 #' `adaptive_quad_points`, the separate `quadrature_review` table evaluates

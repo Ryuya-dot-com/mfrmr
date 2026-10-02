@@ -21,6 +21,9 @@
 #'   No fit or covariance is recalculated. Target order is preserved.
 #'   Weak-information cautions remain in the returned data and appear in the
 #'   default subtitle. Custom or omitted subtitles change display only.
+#'   For experimental two-family GPCM locations, the axis uses fixed-N(0,1)
+#'   ability units and the default subtitle states the location reference and
+#'   unqualified coverage. These are not uniform expected-rating differences.
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
 plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
@@ -35,8 +38,18 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
     reference = 0, show_legend = TRUE, ...) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
-  if (missing(subtitle) && length(x$cautions)) subtitle <- paste(subtitle,
-    "Weak information: review interval reliability.", sep = "\n")
+  default_subtitle <- missing(subtitle)
+  native <- identical(x$settings$procedure, "mml_native_location_model_v1")
+  if (default_subtitle && length(x$cautions)) subtitle <- paste(subtitle,
+    if (isTRUE(x$settings$two_family)) "Experimental two-family locations; coverage unqualified." else
+      if (native) "Experimental native locations; coverage unqualified." else
+      "Weak information: review interval reliability.", sep = "\n")
+  if (default_subtitle && isTRUE(x$settings$two_family)) subtitle <- paste(subtitle,
+    if (x$settings$location_reference == "sum_to_zero_across_levels")
+      "Locations sum to zero across this family's levels." else
+      "Uncentered locations on the fixed N(0,1) ability scale.", sep = "\n")
+  if (default_subtitle && native) subtitle <- paste(subtitle,
+    "Centered locations in native ability units; not divided by population SD.", sep = "\n")
   if (any(!vapply(list(comparison, draw, show_legend), function(a)
       is.logical(a) && length(a) == 1L && !is.na(a), logical(1)))) {
     stop("`comparison`, `draw` and `show_legend` must be TRUE or FALSE.", call. = FALSE)
@@ -57,7 +70,9 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
     contrasts = x$contrasts, settings = x$settings, comparison = show_model,
     cautions = x$cautions, information_review = x$information_review,
     title = title, subtitle = subtitle, caption = caption, reference = reference,
-    show_legend = show_legend, xlab = "Estimate (logits)", preset = style$name))
+    show_legend = show_legend, xlab = if (isTRUE(x$settings$two_family))
+      "Location / contrast (fixed N(0,1) scale)" else if (native)
+      "Location / contrast (native ability units)" else "Estimate (logits)", preset = style$name))
   if (!draw) return(invisible(out))
   apply_plot_preset(style)
   status_note <- !is.null(caption)
@@ -70,7 +85,7 @@ plot.mfrm_facet_intervals <- function(x, comparison = TRUE, draw = TRUE,
     if (show_model) c(tab$ModelLower, tab$ModelUpper)), finite = TRUE)
   if (diff(limits) == 0) limits <- limits + c(-0.1, 0.1)
   graphics::plot(tab$Estimate, y, type = "n", xlim = limits,
-    ylim = c(0.5, nrow(tab) + 0.5), yaxt = "n", xlab = "Estimate (logits)",
+    ylim = c(0.5, nrow(tab) + 0.5), yaxt = "n", xlab = out$data$xlab,
     ylab = "", main = "")
   if (!is.null(reference)) graphics::abline(v = reference, col = style$grid, lty = 2)
   offset <- if (show_model) .1 else 0

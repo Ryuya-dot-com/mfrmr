@@ -95,6 +95,17 @@ test_that("extreme profiles retain probabilities and defined Infit without inven
   extreme_only <- mfrm_response_diagnostics(f,rows=which(zero),group_by=facet)
   expect_true(all(is.na(extreme_only$measures$Infit)))
   expect_true(all(is.na(extreme_only$measures$Outfit)))
+  extreme_results <- mfrm_results(f, response_diagnostics = extreme_only)
+  overview <- extreme_results$tables$response_overview
+  expect_equal(overview$ZeroVariance, sum(zero))
+  expect_equal(overview$Unresolved, 0L)
+  expect_equal(overview$Available, 0L)
+  expect_identical(overview$Status, "review")
+  expect_identical(extreme_results$status$Status[extreme_results$status$Section == "response_diagnostics"], "review")
+  old <- extreme_results; old$tables$response_overview <- NULL
+  old$status$Status[old$status$Section == "response_diagnostics"] <- "available"
+  expect_identical(summary(old)$status$Status[summary(old)$status$Section == "response_diagnostics"], "review")
+  expect_identical(mfrm_report(old)$tables$response_overview, overview)
   expect_false(any(c("Flag","ZSTD","p_value") %in% names(d$measures)))
   for(style in c("paired","scatter")) {
     p <- plot(d,style=style,draw=FALSE)
@@ -130,6 +141,7 @@ test_that("saved corrected response diagnostics retain source identity through o
   res <- mfrm_results(f,response_diagnostics=d,compute="never")
   expect_identical(res$tables$response_measures,d$measures)
   expect_identical(res$tables$response_residuals,d$rows)
+  expect_identical(res$status$Status[res$status$Section == "response_diagnostics"], "review")
   expect_s3_class(plot(res,type="response_diagnostics",draw=FALSE),"mfrm_plot_data")
   report <- mfrm_report(res)
   expect_match(report$markdown,"Conditional fitted probabilities")

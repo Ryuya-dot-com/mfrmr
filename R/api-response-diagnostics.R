@@ -5,7 +5,7 @@
 #' GPCM JML conditions on saved calibration and reprofiled Person estimates.
 #' @param fit A numerically ready native RSM MML [fit_mfrm()],
 #'   [fit_mfrm_testlet()] or [fit_mfrm_random_rater()] result, a converged
-#'   two-family GPCM MML--EM fit, or a shared-owner
+#'   two-family GPCM fixed-grid EM or adaptive direct MML fit, or a shared-owner
 #'   GPCM fit with an explicit `jml_correction_order` and an available point solution.
 #' @param rows Distinct original input row numbers to return, or `NULL` for
 #'   all assigned rows. This selects outputs only: every observed source rating
@@ -82,13 +82,22 @@
 #' Only fitted observed rows are returned, preserving the original identifiers
 #' and incomplete assignment pattern. No unassigned cell is filled.
 #'
-#' The saved EM solution and point calibration must agree with their fitting
+#' The saved solution and point calibration must agree with their fitting
 #' specification. A slope covariance or slope interval is not required.
+#' Fixed-grid EM and adaptive direct MML retain their respective integration
+#' methods. Adaptive grids use the complete Person posterior's mode and curvature,
+#' preserving the original N(0,1) prior through density-ratio and Jacobian weights.
+#' Source likelihood and engine-specific gradient checks are recomputed before
+#' prediction. Stored convergence flags alone do not establish a usable source.
 #' This has the same scope as the two-family fit: two fixed slope facets,
 #' unit weights, no anchors or covariates, and observed zero-based categories.
 #' `quad_points` checks response integration at the retained parameters; it
 #' does not refit the calibration. If integration is unresolved, increase it
-#' explicitly. Separately use [mml_quadrature_sensitivity()] to examine whether
+#' explicitly. The returned probabilities use `2 * quad_points + 1` points;
+#' the lower order supplies the row-wise check. Selecting fewer output rows
+#' does not shorten the posterior's conditioning record or change its grid.
+#' Settings retain the integration method through plots, reports and exports.
+#' Separately use [mml_quadrature_sensitivity()] to examine whether
 #' the fitted calibration changes across quadrature grids.
 #'
 #' Inspect `rows` for unavailable predictions before reading `measures`.
@@ -147,6 +156,15 @@
 #'   `probabilities`, grouped `measures`, settings and exact source metadata.
 #'   Save with `saveRDS()`; attach via
 #'   `mfrm_results(fit, response_diagnostics = result, compute = "never")`.
+#'   The resulting `mfrm_results` object contains `tables$response_overview`,
+#'   distinguishing available standardized residuals, unresolved calculations,
+#'   missing scores, zero-variance rows and source rows not selected. Partial
+#'   results require review; availability does not establish model adequacy.
+#'   No probabilities or residuals are recomputed for this table.
+#'   Older saved `mfrm_results` objects without this table recover the overview
+#'   and status from retained diagnostic rows when summarized, reported, exported
+#'   or opened in a supported results viewer. The original object is not modified;
+#'   newly exported results include the recovered overview and status.
 #'   Supply two saved outputs to [compare_mfrm()] for aligned ordinary versus
 #'   extended RSM comparisons, using the same selected events and group_by.
 #'   Corrected-JML and two-family GPCM comparisons are not supported by that route.
@@ -254,7 +272,8 @@ mfrm_response_diagnostics <- function(fit, rows = NULL, group_by = NULL,
       probability_tolerance = 1e-7,
       group_by = group_by, calibration_uncertainty = FALSE,
       target = "Same-data posterior predictive replicate; original latent effects shared; calibration fixed",
-      integration = if (product) "Fixed N(0,1) ability quadrature; both slope families, locations and steps held fixed" else if (ordinary) "Normal ability quadrature; fixed facets and calibration held fixed" else if (testlet) "Nested normal quadrature" else "Normalized category-specific joint-rater Laplace integrals with ability quadrature",
+      integration = if (product) paste0(if (mfrmr_adaptive_integration(fit$config))
+        "Adaptive" else "Fixed-grid", " quadrature under N(0,1); both slope families, locations and steps held fixed") else if (ordinary) "Normal ability quadrature; fixed facets and calibration held fixed" else if (testlet) "Nested normal quadrature" else "Normalized category-specific joint-rater Laplace integrals with ability quadrature",
       limitation = "Descriptive only; no expectation-one reference, cutoffs, ZSTD or p-values. Numerical agreement does not certify approximation accuracy.",
       selection = "Selected original rows summarized; all observed source ratings condition every prediction")),
     class = "mfrm_response_diagnostics")

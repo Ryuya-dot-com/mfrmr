@@ -764,8 +764,10 @@ run_mfrm_direct_optimization <- function(start,
 
   if (isTRUE(polish_triggered) &&
       identical(selected$diagnostics$ConvergenceReason, "code_zero_large_gradient") &&
-      identical(method, "MML") && config$model %in% c("RSM", "PCM") &&
-      !mfrmr_adaptive_integration(config) && !isTRUE(config$population_spec$active) &&
+      identical(method, "MML") &&
+      ((config$model %in% c("RSM", "PCM") && !mfrmr_adaptive_integration(config)) ||
+       (identical(config$model, "GPCM") && mfrmr_adaptive_integration(config))) &&
+      !isTRUE(config$population_spec$active) &&
       length(start) <= 64L) {
     candidate <- run_stage(
       par = selected$opt$par, stage_method = selected$method,

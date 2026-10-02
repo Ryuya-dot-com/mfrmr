@@ -578,4 +578,5 @@ importFrom(utils,
   tail,
   write.csv
 )
+importMethodsFrom(Matrix,"%*%")
 useDynLib(mfrmr, .registration = TRUE)

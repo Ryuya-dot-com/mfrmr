@@ -65,18 +65,21 @@ test_that("public fit and artifact scoring share an optional unrounded review", 
   for (model in c("RSM", "PCM")) {
     fit <- fit_mfrm(data, "Person", c("Rater", "Criterion"), "Score", model = model,
                     step_facet = if (model == "PCM") "Criterion" else NULL)
-    ordinary <- predict_mfrm_units(fit, data)
-    reviewed <- predict_mfrm_units(fit, data, adaptive_quad_points = c(15L, 31L))
+    # This comparison needs a scoring grid that passes the batch accuracy check.
+    # Calibration stays fixed; coarse-grid refusals have separate regressions.
+    ordinary <- predict_mfrm_units(fit, data, scoring_quad_points = 121L)
+    reviewed <- predict_mfrm_units(fit, data, scoring_quad_points = 121L,
+      adaptive_quad_points = c(121L, 241L))
     expect_identical(ordinary$estimates, reviewed$estimates)
     expect_identical(ordinary$settings$source_scoring_ready, reviewed$settings$source_scoring_ready)
     expect_identical(summary(reviewed)$quadrature_review, reviewed$quadrature_review)
     expect_equal(reviewed$quadrature_review$FixedEAP[
                    match(ordinary$estimates$Person, reviewed$quadrature_review$Person)],
                  unname(ordinary$estimates$Estimate), tolerance = 1e-12)
-    draft <- mfrmr:::mfrmr_extract_calibration_draft(fit)
+    draft <- mfrmr:::mfrmr_extract_calibration_draft(fit, scoring_quad_points = 121L)
     calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
     before <- calibration
-    scored <- score_mfrm_calibration(calibration, data, adaptive_quad_points = c(15L, 31L))
+    scored <- score_mfrm_calibration(calibration, data, adaptive_quad_points = c(121L, 241L))
     expect_identical(calibration, before)
     expect_identical(scored$estimates, score_mfrm_calibration(calibration, data)$estimates)
     numerical <- vapply(reviewed$quadrature_review, is.numeric, TRUE)
@@ -91,10 +94,11 @@ test_that("public fit and artifact scoring share an optional unrounded review", 
       selected <- data[rev(which(data$Person %in% unique(data$Person)[c(2L, 7L)])), ]
       selected$Wt <- rep(c(0.25, 1.75, 3), length.out = nrow(selected))
       fitted_weighted <- predict_mfrm_units(
-        fit, selected, weight = "Wt", adaptive_quad_points = c(15L, 31L)
+        fit, selected, weight = "Wt", scoring_quad_points = 121L,
+        adaptive_quad_points = c(121L, 241L)
       )
       artifact_weighted <- score_mfrm_calibration(
-        calibration, selected, weight = "Wt", adaptive_quad_points = c(15L, 31L)
+        calibration, selected, weight = "Wt", adaptive_quad_points = c(121L, 241L)
       )
       a <- artifact_weighted$quadrature_review
       b <- fitted_weighted$quadrature_review
@@ -104,7 +108,7 @@ test_that("public fit and artifact scoring share an optional unrounded review", 
       selected$Score[selected$Person == selected$Person[1L]] <- NA
       omitted <- score_mfrm_calibration(
         calibration, selected, weight = "Wt", missing_response = "omit",
-        adaptive_quad_points = c(15L, 31L)
+        adaptive_quad_points = c(121L, 241L)
       )
       expect_equal(nrow(omitted$quadrature_review), 2L)
       expect_true(all(omitted$quadrature_review$Person != selected$Person[1L]))

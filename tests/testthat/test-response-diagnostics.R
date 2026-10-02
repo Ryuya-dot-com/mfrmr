@@ -54,6 +54,11 @@ test_that("row selection retains evidence, category origins and missing or faile
   expect_equal(selected$probabilities, all$probabilities[c(3, 1, 13), ])
   expect_equal(selected$rows$Status, c("available_conditional", "available_conditional", "missing_score"))
   expect_true(is.na(selected$measures$Infit[2]))
+  selected_results <- mfrm_results(f, response_diagnostics = selected)
+  overview <- selected_results$tables$response_overview
+  expect_equal(unname(unlist(overview[1:7])), c(13, 3, 2, 0, 1, 0, 10))
+  expect_identical(overview$Status, "review")
+  expect_identical(selected_results$status$Status[selected_results$status$Section == "response_diagnostics"], "review")
   # Reoriginating the categories changes means, not residual variances.
   shifted <- f; shifted$input$score_levels <- 5:6
   shifted$input$data$Score <- shifted$input$data$Score + 5
@@ -71,6 +76,12 @@ test_that("row selection retains evidence, category origins and missing or faile
   expect_true(all(bad$rows$Status[1:12] == "unavailable"))
   expect_match(bad$rows$Reason[1], "unresolved reference")
   expect_true(all(is.na(bad$measures$Infit)))
+  result <- mfrm_results(f, response_diagnostics = bad)
+  expect_identical(result$status$Status[result$status$Section == "response_diagnostics"], "not_available")
+  expect_equal(result$tables$response_overview$Unresolved, 12L)
+  expect_equal(result$tables$response_overview$Missing, 1L)
+  expect_identical(mfrm_report(result)$tables$response_overview, result$tables$response_overview)
+  expect_identical(mfrm_report(result)$first_screen$Status[4L], "unavailable")
 })
 
 test_that("zero variance, partial failures and unconverged quadrature cannot make valid summaries", {
@@ -103,6 +114,7 @@ test_that("zero effects reduce to independently integrated Rasch predictions", {
   zero <- mfrm_response_diagnostics(response_testlet_fixture(v = 0, ps = 0))
   expect_equal(zero$rows$ExpectedScore, rep(plogis(-.2), 12))
   expect_true(all(zero$rows$Status == "available_conditional"))
+  expect_identical(mfrm_response_diagnostic_overview(zero)$Status, "available")
   skip_if_not_installed("RTMB", "2.0")
   r <- response_random_fixture(sd = 0, ps = .7)
   calc <- mfrm_response_diagnostics(r, rows = 1)
@@ -155,6 +167,53 @@ test_that("category-specific Laplace integrals include the hypothetical shared r
     as.numeric(mfrm_response_diagnostics(f, rows = 4)$probabilities))
 })
 
+test_that("older saved response results restore consistent display metadata without recalculation", {
+  fit <- response_testlet_fixture(missing = TRUE)
+  d <- mfrm_response_diagnostics(fit, rows = c(1, 13), group_by = "Person")
+  current <- mfrm_results(fit, response_diagnostics = d)
+  old <- current
+  old$tables$response_overview <- NULL
+  old$table_index <- mfrm_results_table_index(old$tables)
+  at <- old$status$Section == "response_diagnostics"
+  old$status$Status[at] <- "available"
+  old$status$Detail[at] <- "Saved diagnostics."
+  old$tables$section_status <- old$status
+  before <- serialize(old, NULL)
+  local_mocked_bindings(mfrm_response_diagnostics = function(...) stop("no new diagnostics"),
+    mfrm_testlet_response_probabilities = function(...) stop("no integration"),
+    fit_mfrm_testlet = function(...) stop("no fitting"), .package = "mfrmr")
+  expect_identical(summary(old)$status, current$status)
+  report <- mfrm_report(old)
+  expect_identical(report$tables$response_overview, current$tables$response_overview)
+  expect_identical(report$tables$section_status, current$status)
+  expect_identical(report$source$fit, old$fit)
+  expect_identical(report$source$diagnostics, old$diagnostics)
+  expect_identical(mfrm_results_restore_response_overview(report$source), report$source)
+  html <- mfrm_results_html(old)
+  expect_identical(html$summary$status, current$status)
+  expect_match(html$html, "response_overview")
+  unlink(html$path)
+  folder <- withr::local_tempdir()
+  exported <- export_mfrm_results(old, output_dir = folder,
+    include = c("summary", "tables", "report", "replay"), acknowledge_sensitive = TRUE)
+  for (key in c("summary_status", "table_section_status")) {
+    path <- exported$written_files$Path[exported$written_files$Component == key]
+    expect_length(path, 1L)
+    expect_identical(read.csv(path)$Status, current$status$Status)
+  }
+  path <- exported$written_files$Path[exported$written_files$Component == "results_rds"]
+  restored <- readRDS(path)
+  expect_identical(restored$tables$response_overview, current$tables$response_overview)
+  expect_identical(restored$diagnostics, d)
+  replay <- exported$written_files$Path[exported$written_files$Component == "replay_code"]
+  env <- new.env(parent = globalenv())
+  withr::with_dir(folder, sys.source(replay, envir = env))
+  expect_identical(env$res, restored)
+  expect_identical(serialize(old, NULL), before)
+  no_diagnostics <- mfrm_results(fit)
+  expect_identical(mfrm_results_restore_response_overview(no_diagnostics), no_diagnostics)
+})
+
 test_that("stored diagnostic plots and reports preserve limits and exact source identity", {
   f <- response_testlet_fixture(missing = TRUE)
   d <- mfrm_response_diagnostics(f, group_by = "Person")
@@ -162,7 +221,8 @@ test_that("stored diagnostic plots and reports preserve limits and exact source 
   expect_equal(res$tables$response_measures, d$measures)
   expect_equal(res$tables$response_residuals, d$rows)
   expect_equal(res$tables$response_probabilities$Probability, as.vector(d$probabilities))
-  expect_match(mfrm_report(res)$markdown, "no calibrated reference cutoffs")
+  expect_match(mfrm_report(res)$markdown, "no calibrated fit cutoffs")
+  expect_identical(mfrm_report(res)$first_screen$Status[4L], "review")
   different <- f; different$input$assigned_data$Score[1] <- 1
   expect_error(mfrm_results(different, diagnostics = d), "exact source roster")
   different <- f; different$input$data$Score[1] <- 1

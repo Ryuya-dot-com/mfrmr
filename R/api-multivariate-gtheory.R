@@ -775,6 +775,11 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   `weights` (the supplied vector or matrix, reordered to the G-study score
 #'   order), `component_diagnostics`,
 #'   and `gstudy` (the source result). `summary()` returns `coefficients`.
+#'   `print()` also shows source level/row counts, future-plan conventions and
+#'   the supplied composite weights. Save the full result with `saveRDS(d)`
+#'   and reopen with `readRDS()` to preserve that context. A CSV of
+#'   `summary(d)` contains the coefficient table only; accompany it with the
+#'   weights, source design and row usage, future design and score convention.
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #'   Chapters 9--11.
 #'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
@@ -1019,16 +1024,42 @@ summary.mfrm_multivariate_gstudy <- function(object, ...) {
 #' @export
 print.mfrm_multivariate_d_study <- function(x, ...) {
   cat("Multivariate observed-score D-study\n")
+  .mfrm_mvgt_print_source(x$gstudy$design, x$gstudy$data_usage$counts)
+  cat("Future complete balanced plans; counts apply to every person and score.\n")
   convention <- x$gstudy$design$score_convention
   if (is.null(convention)) convention <- paste("Means over common random",
     paste(tolower(names(x$design_grid)), collapse = " and "))
   cat(paste0(convention, "; weights are used as supplied.\n"))
+  if (!is.null(x$weights)) {
+    cat("Composite weights (not normalized):\n")
+    print(if (is.matrix(x$weights)) x$weights else
+      matrix(x$weights, ncol = 1L, dimnames = list(names(x$weights), "Composite")))
+  }
   if (any(!x$component_diagnostics$PositiveSemidefinite)) {
     cat("Warning: non-PSD covariance components. Values use raw projections; inspect component_diagnostics.\n")
   }
   print(x$coefficients, row.names = FALSE)
   cat("Point projections conditional on estimated covariance components; no confidence intervals.\n")
   invisible(x)
+}
+
+.mfrm_mvgt_print_source <- function(design, rows) {
+  if (is.null(design)) {
+    cat("Source design not recorded in this saved comparison; consult the original G-study.\n")
+    return(invisible(NULL))
+  }
+  cat("Source G-study:", design$method, "\n")
+  cat("Observed level counts (not future replication):",
+    paste(names(design$counts), design$counts, sep = " = ", collapse = ", "), "\n")
+  if (!is.null(design$nesting)) cat("The observed child count is the total across parents.\n")
+  if (!is.null(rows)) {
+    cat("Source rows:", rows[["UsedRows"]], "used of", rows[["InputRows"]],
+      ";", rows[["ExcludedRows"]], "explicitly omitted.\n")
+  } else if (!is.null(design$rows)) cat("Source rows analyzed:", design$rows, "\n")
+  if (identical(design$complete, FALSE) || identical(design$balanced, FALSE)) {
+    cat("The observed source is incomplete or unequal; future counts do not reproduce its observed assignments.\n")
+  }
+  invisible(NULL)
 }
 
 #' @rdname mfrm_multivariate_d_study

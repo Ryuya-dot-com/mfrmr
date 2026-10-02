@@ -246,7 +246,7 @@ NULL
 #' with the question and the fitted model: severity, response misfit and the
 #' accuracy of a warning rule are different quantities. A severe rater need
 #' not misfit, and an observed flag does not establish poor rater quality.
-#' For an individual native additive RSM/PCM sheet, use
+#' For an individual native additive RSM/PCM or experimental two-family GPCM sheet, use
 #' `mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")`.
 #' The selected sheet omits source identifiers; the comprehensive result and
 #' export bundle retain the original analysis.
@@ -543,7 +543,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     UseWhen = c(
       "You need to distinguish the narrow portable-artifact envelope from fitted-object scoring.",
-      "A one-scale RSM/PCM MML fit has reviewed fixed-standard-normal grid movement, an estimated-normal GPCM MML fit passes conditional source checks, or an RSM/PCM or shared-owner GPCM JML fit passes its estimator-specific source checks.",
+      "A one-scale RSM/PCM MML fit has reviewed fixed-standard-normal grid movement; one-family estimated-normal or experimental two-family fixed-standard-normal GPCM MML passes its source checks; RSM/PCM or shared-owner GPCM JML passes its estimator-specific checks.",
       "A frozen artifact must move to a separate scoring session or controlled storage location.",
       "New response rows use only known facet levels and the calibration's recorded score map.",
       "A score batch must be reviewed before estimates are used in reporting or decisions."
@@ -1152,7 +1152,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Numeric observed scores, Person IDs, declared facet columns, future counts and score weights."),
     NextStep = c("summary() for reviews and comparisons; plot() and plot_data() for fitted PCA, partitions and imputation co-membership. Retain the transformation and grouping with saveRDS(); export selected tables with write.csv(). See vignette('mfrmr-external-features').",
       "Inspect summary(analyses) for every completion; summary(pooled); plot(pooled); plot_data(pooled); saveRDS(pooled); write.csv(summary(pooled), ...). See vignette('mfrmr-response-imputation').",
-      "Inspect source components and row usage; summary(d); plot(d); plot_data(d); as_ggplot(d) for D-study scenario plots; saveRDS(d); write.csv(summary(d), ...). See help('mfrm_multivariate_d_study')."),
+      "print(d) for source/future counts and weights; summary(d) for coefficients; plot(d); plot_data(d); as_ggplot(d) for scenario plots. Save the full D-study or comparison with saveRDS(); write.csv(summary(d), ...) exports only the table, so retain its design, weights and assumptions alongside it. See help('mfrm_multivariate_d_study')."),
     GPCMStatus = c("not_applicable", "unavailable; fixed-standard-normal RSM/PCM MML only", "not_applicable"),
     Notes = c("Descriptive groups, not abilities, rater quality or validated latent classes. Pair the same feature imputations when comparing settings; do not pool cluster labels or PCA bases. Use dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() supports PCA scree/scores/loadings, saved dendrograms, imputation co-membership, silhouettes and numeric/categorical profiles.",
       "Pool eligible non-Person facet targets and full covariances only; no EAP, cluster-label or fit-statistic pooling. No unassigned-cell filling, general coverage guarantee or extended-model pooling. The pooled object uses dedicated tables/plots and RDS saving, not mfrm_results(); as_ggplot() preserves saved pointwise MI intervals and inference settings.",
@@ -1176,25 +1176,25 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     UseWhen = c(
       "The target is a specified fixed rater or contrast, conditional on the fitted facet levels.",
       "Review ordinary Infit/Outfit and directional flags; choose lower/upper and flag_basis explicitly when a rule is prespecified.",
-      "Review same-data residuals under their probability definition: posterior integration for supported RSMs, or conditional fitted probabilities for corrected JML.",
+      "Review same-data residuals under their probability definition: posterior integration for supported RSMs or two-family GPCM MML, or conditional fitted probabilities for corrected JML.",
       "The target is an observed rater's latent severity relative to the modeled rater population, not a fixed-facet coefficient.",
       "A simulation provides prespecified truth and every planned replication/target, including failed or unavailable screens."),
     TypicalInput = c(
-      "Inference-ready fixed-standard-normal RSM/PCM MML fit with unit weights and fixed quadrature; facet name and optional named contrast matrix.",
+      "Ordinary fixed-standard-normal RSM/PCM MML, experimental direct MML estimated-intercept-population RSM/PCM or one-family GPCM, or experimental two-family GPCM MML; unit weights, facet name and optional named contrast matrix. One-family GPCM also admits fixed N(0,1).",
       "Ordinary mfrm_fit or matching diagnose_mfrm() result; select the actual rater facet column.",
-      "A supported ordinary/extended RSM fit or an explicit corrected GPCM JML point solution; optional observed-row and grouping selections.",
+      "A supported ordinary/extended RSM fit, two-family GPCM fixed-grid EM or adaptive direct MML fit, or explicit corrected GPCM JML point solution; optional observed-row and grouping selections.",
       "A shared-rater fit; saved mfrm_random_rater_intervals output for bootstrap review without new refits.",
       "Planned roster with known Affected status plus saved flags, or saved Infit/Outfit and explicit threshold profiles."),
     NextStep = c(
-      "Choose method = 'model' or 'sandwich' explicitly; sandwich assumes independent declared clusters. Inspect summary(intervals), plot(intervals), as_ggplot(intervals) and apa_table(intervals). Attach with mfrm_results(fit, intervals = list(raters = intervals), compute = 'never'); use plot(res, type = 'facet_raters') and export_mfrm_results(res) for the same saved inference. Ordinary Wright/Pathway uncertainty is separate. For supplied missing-score completions, see the imputation guide.",
+      "Choose method = 'model' or 'sandwich' for ordinary fixed-population RSM/PCM; estimated-population and one-/two-family GPCM extensions permit only experimental 'model' intervals. Inspect summary(intervals), plot(intervals), as_ggplot(intervals) and apa_table(intervals). Attach with mfrm_results(fit, intervals = list(raters = intervals), compute = 'never'); plot type is 'facet_raters' for RSM/PCM or 'gpcm_raters' for GPCM. Export preserves saved checks and unavailable bounds. Ordinary Wright/Pathway uncertainty is separate.",
       "Inspect settings, threshold_profiles and profile_summary_by_facet; keep underfit and overfit separate. Use the ordinary results pathway plot with matching diagnostics. Save the full review, not just flagged rows.",
-      "Save diagnostics; inspect summary(diagnostics), plot(diagnostics) and plot_data(diagnostics). Attach with mfrm_results(fit, response_diagnostics = diagnostics, compute = 'never') for reports and residual plots. Model-aware pathway maps remain limited to supported RSM extensions.",
+      "Save diagnostics; inspect summary(diagnostics), plot(diagnostics) and plot_data(diagnostics). Attach with mfrm_results(fit, response_diagnostics = diagnostics, compute = 'never') for reports and residual plots; inspect tables$response_overview for available, unresolved and unselected rows. Model-aware pathway maps remain limited to supported RSM extensions.",
       "Begin with point estimates in summary(fit) and plot(fit). confint(fit, parm = 'raters') requests the normal approximation; bootstrap fitting is separate and can be costly. Retain all bootstrap trials and unavailable or infinite endpoints when saving/reporting.",
       "Inspect target and family rates together with availability and all-trial bounds; plot(performance), plot_data(performance), and saveRDS(performance). Compare threshold profiles without automatically choosing the best one."),
-    GPCMStatus = c("unavailable; RSM/PCM MML only", "supported_with_caveat",
-      "corrected JML conditional residuals only", "not_applicable", "not_applicable"),
+    GPCMStatus = c("experimental one-/two-family MML locations; no JML structural-CI support", "supported_with_caveat",
+      "two-family MML posterior residuals; corrected JML conditional residuals", "not_applicable", "not_applicable"),
     Notes = c(
-      "Pointwise fixed-facet intervals, not simultaneous rater classifications or random-rater population inference. Sandwich SEs do not correct a biased estimate, informative assignment or MNAR missingness. No general coverage guarantee.",
+      "Pointwise fixed-facet intervals, not simultaneous classifications or random-rater population inference. Native estimated-population locations are not standardized by fitted SD. Sandwich SEs do not correct a biased estimate or MNAR. GPCM location differences do not imply uniform rating differences when slopes/steps vary; experimental coverage is unqualified.",
       "Flags are descriptive review prompts, not probabilities of poor rater quality. Severity is not misfit. Threshold sensitivity on observed data does not estimate false-flag or detection rates; GPCM retains its separate capability and inference limits.",
       "Posterior predictive and corrected-JML conditional Infit/Outfit have different probability definitions. Zero-variance corrected-JML rows can leave Infit defined but Outfit unavailable; no rows are silently dropped. No classic cutoffs, ZSTD tests, automatic exclusion or calibrated diagnostic accuracy is supplied.",
       "Individual-rater intervals are not automatic. Normal and bootstrap approximations remain unqualified for general coverage; average prediction coverage does not establish coverage at each fixed severity. Do not substitute conditional Person intervals or population-SD profiles.",
@@ -1206,9 +1206,9 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     Scope = "feedback", Question = "How can I prepare a sheet for one rater?",
     OutputFamily = "review", MainFunction = "mfrm_report()",
     UseWhen = "Share selected saved summaries with one recipient after reviewing the assessment context.",
-    TypicalInput = "mfrm_results from a native additive RSM/PCM fit, with optional matching diagnostics and individual fixed-facet intervals.",
+    TypicalInput = "mfrm_results from native additive RSM/PCM or two-family GPCM MML. Attach matching model-specific diagnostics and intervals explicitly.",
     NextStep = "Use mfrm_report(res, style = 'rater', facet = 'Rater', rater = 'R01', output = 'html'). Review its path before copying the standalone HTML file. Choose audience = 'researcher' for technical guidance or max_cases = 0 to omit individual ratings.",
-    GPCMStatus = "unavailable; additive RSM/PCM only",
+    GPCMStatus = "experimental descriptive two-family MML sheets; one-family GPCM unavailable",
     Notes = "No refitting, interval calculation, automatic warning cutoff or rater-quality classification. The sheet omits source identifiers; patterns may still be recognizable. Do not distribute the comprehensive source bundle as an individual sheet.",
     stringsAsFactors = FALSE))
 
@@ -1275,7 +1275,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   out$DecisionBoundary[out$ObjectRole %in% "explicit opt-in interactive entry"] <-
     "Collects column choices interactively; move replay code into an explicit script before reporting."
   out$DecisionBoundary[out$ObjectRole %in% "portable calibration lifecycle"] <-
-    "Creates fixed-standard-normal RSM/PCM MML, conditional estimated-normal GPCM MML, or reference-prior RSM/PCM and shared-owner GPCM JML artifacts within their documented scope; incomplete GPCM global audits remain recorded. Every refusal must be resolved before freezing."
+    "Creates fixed-standard-normal RSM/PCM MML, conditional estimated-normal one-family or experimental fixed-standard-normal two-family GPCM MML, or reference-prior RSM/PCM and shared-owner GPCM JML artifacts within their documented scope; incomplete GPCM global audits remain recorded. Every refusal must be resolved before freezing."
   out$DecisionBoundary[out$ObjectRole %in% "calibration persistence"] <-
     "Preserves and validates a calibration lifecycle object; loading is not authentication of an untrusted file."
   out$DecisionBoundary[out$ObjectRole %in% "artifact-only posterior scoring"] <-

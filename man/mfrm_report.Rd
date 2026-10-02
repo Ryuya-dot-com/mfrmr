@@ -24,7 +24,8 @@ mfrm_report(
 validity-argument boundary, \code{"reviewer"} emphasizes reviewer response
 preparation, and \code{"technical"} emphasizes appendix/reproducibility routes.
 \code{"rater"} creates a standalone individual feedback sheet from saved
-native additive RSM/PCM results; it requires \code{facet} and \code{rater}.}
+native additive RSM/PCM or two-family GPCM MML results; it requires
+\code{facet} and \code{rater}.}
 
 \item{output}{Return format: \code{"object"} for an \code{mfrm_report} object,
 \code{"markdown"} for a character scalar, \code{"html"} for a temporary HTML file,
@@ -48,7 +49,8 @@ sheet, ordered by absolute standardized residual. Default 5; use 0 to
 omit individual cases. This is not a misfit threshold.}
 
 \item{interval}{Optional name of a saved fixed-facet interval attachment in
-\code{x$facet_intervals} for a rater sheet. The attachment must contain the
+\code{x$facet_intervals} for an additive-model rater sheet, or a saved component
+slope interval in \code{x$gpcm_inference} for two-family GPCM. The attachment must contain the
 selected individual coefficient, not just a difference involving it.
 A single matching attachment is used automatically. Multiple matching
 attachments require an explicit choice. No interval is calculated here.}
@@ -161,6 +163,17 @@ collapsed into a single pass/fail statement; bias screens are not treated
 as final fairness conclusions; pathway/misfit rows are case-review prompts;
 and drift/equating claims require multiple fitted forms or waves.
 }
+\section{Two-family GPCM reports}{
+
+Reports retain all saved non-Person fitted locations, category steps and
+component slopes. Locations identify their centering constraint; steps
+identify their owner and level and are centered offsets, not standalone
+thresholds. Separately computed experimental location/contrast intervals from
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} may be attached; step intervals remain unavailable. The Markdown view
+shows up to 20 rows per table with a notice; complete tables remain in
+\verb{$tables} and CSV exports. Report styles do not change inferential support.
+}
+
 \section{Corrected JML reports}{
 
 Results from an explicit \code{jml_correction_order} have an estimator-specific
@@ -187,7 +200,7 @@ The RDS file retains fitted data and identifiers for the analyst; it is not
 the recipient's sheet. Reloading and reporting reuse the saved analysis
 without updating it for new ratings.
 
-The sheet includes scoring tendency (severity), exposure, available saved
+The additive RSM/PCM sheet includes scoring tendency (severity), exposure, available saved
 fixed-facet uncertainty, ordinary Infit/Outfit, category use and selected
 unexpected ratings. Severity is oriented so that positive values mean lower
 expected scores. Its zero is the fitted model reference, not necessarily
@@ -206,9 +219,34 @@ numerical cautions before sharing; free-form cautions are not copied into
 the recipient's sheet. Missing sections explain the missing input. Ineligible
 source fits retain a prominent review notice. Severity is not rater quality,
 and no automatic misfit cutoff, exclusion decision or diagnostic accuracy
-claim is added. These sheets do not support GPCM, fitted interactions,
+claim is added. These sheets do not support one-family GPCM, fitted interactions,
 imported fits, testlet or shared-random-rater models; use their specific
 results and reports because their effects and diagnostics differ.
+
+For two-family GPCM MML, the same entry creates an experimental descriptive
+sheet. Select the modeled rater facet explicitly; either slope owner is
+supported. It separates the fitted location from the component slope,
+retains their distinct centering references, and reports category use,
+retained exposure and how many levels of the other facet were observed.
+Category-step offsets are shown only when this facet owns the steps. They
+are centered offsets, not standalone thresholds. This individual sheet does
+not display location or step intervals; use the analyst report for separately
+requested location intervals. A larger slope is not evidence of competence or accuracy.
+
+Attach saved \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} output through \code{intervals} in
+\code{\link[=mfrm_results]{mfrm_results()}} to include a matching experimental component-slope interval.
+\code{interval} chooses among named attachments; pointwise/Bonferroni meaning,
+profile/log-Wald method and unavailable bounds are retained. No location
+interval or test of rater differences is implied. Attach saved
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} output through \code{response_diagnostics} for
+same-data posterior residual summaries and cases. The sheet counts saved,
+available, unresolved and not-included rows separately; a summary average
+is unavailable if any saved row for that recipient is unresolved. These
+residuals have no expectation-one reference or calibrated cutoff, exclude
+calibration uncertainty and do not predict independent future ratings.
+Creating or reopening a sheet does not fit, integrate, compute intervals
+or diagnose new responses. Inspect the complete analyst results before
+sharing a sheet; numerical convergence does not qualify feedback decisions.
 
 All four output formats use only selected numeric summaries and fixed
 explanatory text. They omit the source fit, Person identifiers, other rater

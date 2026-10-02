@@ -65,6 +65,13 @@
 #'   per comparison plan and metric), `covariance` (joint sampling covariance
 #'   of those differences), `design_grid`, `reference`, selected score/composite
 #'   and weights, `level`, `method`, and component/sampling-covariance diagnostics.
+#'   `source_design` and `source_rows` retain the source method, observed level
+#'   counts, completeness, score convention and row-use totals, without raw
+#'   ratings or identifiers. `print()` displays these separately from the future
+#'   plans and includes composite weights. Save the full comparison with
+#'   `saveRDS()`; a CSV of `summary()` alone does not retain this context or
+#'   the confidence level and approximation assumptions. Earlier saved
+#'   comparisons without source context remain readable and say it is absent.
 #'   `summary()` returns the comparison table. `Status` describes interval
 #'   availability; point differences can remain available without an interval.
 #' @seealso [mfrm_multivariate_d_study()], [plot.mfrm_multivariate_d_comparison()]
@@ -88,8 +95,9 @@
 #' comparison <- mfrm_multivariate_d_compare(d, reference = 1,
 #'   assumption = "normal")
 #' summary(comparison)
-#' plot(comparison)
+#' plot(comparison) # G/Phi for each plan, including the reference.
 #' plot(comparison, type = "sem")
+#' plot(comparison, view = "differences") # Paired difference intervals.
 #' @export
 mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
                                        composite = NULL, assumption, level = .95) {
@@ -185,6 +193,8 @@ mfrm_multivariate_d_compare <- function(x, reference = 1L, score = NULL,
   structure(list(comparisons = table, covariance = covariance, design_grid = d$design_grid,
     reference = as.integer(reference), score = selected, kind = kind, weights = w,
     level = level, method = "Normal-theory paired delta approximation",
+    source_design = g$design[c("method", "counts", "rows", "complete", "balanced",
+      "nesting", "score_convention")], source_rows = g$data_usage$counts,
     component_diagnostics = d$component_diagnostics, sampling_covariance_psd = covariance_psd),
     class = "mfrm_multivariate_d_comparison")
 }
@@ -254,7 +264,14 @@ summary.mfrm_multivariate_d_comparison <- function(object, ...) object$compariso
 #' @export
 print.mfrm_multivariate_d_comparison <- function(x, ...) {
   cat("D-study differences from reference scenario", x$reference, "\n")
+  .mfrm_mvgt_print_source(x$source_design, x$source_rows)
   cat(x$kind, ": ", x$score, "\n", sep = "")
+  if (identical(x$kind, "Composite")) {
+    cat("Composite weights (not normalized):\n")
+    print(x$weights)
+  }
+  cat("Future complete crossed plans; counts apply to every person and score.\n")
+  if (!is.null(x$source_design$score_convention)) cat(x$source_design$score_convention, "\n")
   print(x$design_grid)
   print(x$comparisons, row.names = FALSE)
   cat(format(100 * x$level), "% approximate pointwise intervals; normal random effects required.\n", sep = "")

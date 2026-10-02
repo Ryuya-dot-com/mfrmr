@@ -217,6 +217,8 @@ mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
   product <- mfrm_has_product_slopes(fit)
   labels <- as.character(fit$config$gpcm_spec$levels)
   if (product) {
+    if (mfrmr_adaptive_integration(fit$config)) stop(
+      "Adaptive two-family profile intervals are unavailable; use method = 'model' for separately checked experimental log-Wald intervals.", call. = FALSE)
     owner <- names(slope)
     if (!is.character(slope) || length(slope) != 1L || is.na(slope) ||
         length(owner) != 1L || is.na(owner) || !owner %in% fit$config$slope_facet ||

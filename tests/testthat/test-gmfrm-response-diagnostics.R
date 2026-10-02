@@ -14,37 +14,6 @@ gmfrm_response_fixture <- local({
   }
 })
 
-# Independent continuous posterior integrals: literal adjacent-category logits,
-# no fitted probability evaluator, GH rule, or EAP substitution.
-gmfrm_response_reference <- function(fit, row) {
-  data <- fit$gmfrm$specification$data
-  indices <- which(data$Person == data$Person[row])
-  logp <- function(theta, i) {
-    location <- sum(vapply(c("Task", "Rater"), function(f)
-      fit$facets$others$Estimate[fit$facets$others$Facet == f & fit$facets$others$Level == data[[f]][i]], numeric(1)))
-    slope <- prod(vapply(c("Task", "Rater"), function(f)
-      fit$slopes$Estimate[fit$slopes$SlopeOwner == f & fit$slopes$SlopeFacet == data[[f]][i]], numeric(1)))
-    steps <- fit$steps$Estimate[fit$steps$StepFacet == data$Rater[i]]
-    z <- c(0, cumsum(slope * (theta - location - steps)))
-    z - max(z) - log(sum(exp(z - max(z))))
-  }
-  density <- function(theta) exp(sum(vapply(indices, function(i)
-    logp(theta, i)[data$Score[i] + 1L], numeric(1))) + dnorm(theta, log = TRUE))
-  integrate_one <- function(fun) integrate(Vectorize(fun), -Inf, Inf, rel.tol = 1e-10, abs.tol = 1e-13)$value
-  denominator <- integrate_one(density)
-  probabilities <- vapply(0:2, function(k) integrate_one(function(theta)
-    density(theta) * exp(logp(theta, row)[k + 1L])) / denominator, numeric(1))
-  mean <- sum((0:2) * probabilities)
-  conditional_variance <- integrate_one(function(theta) {
-    p <- exp(logp(theta, row)); mu <- sum((0:2) * p)
-    density(theta) * sum(((0:2) - mu)^2 * p)
-  }) / denominator
-  eap <- integrate_one(function(theta) theta * density(theta)) / denominator
-  list(probabilities = probabilities, mean = mean,
-    variance = sum(((0:2) - mean)^2 * probabilities),
-    conditional_variance = conditional_variance, plugin = exp(logp(eap, row)))
-}
-
 test_that("two-family response moments integrate the complete Person posterior", {
   x <- gmfrm_response_fixture(); f <- x$fit; d <- x$diagnostics
   expect_true(all(d$rows$Status == "available_conditional"))
@@ -55,7 +24,7 @@ test_that("two-family response moments integrate the complete Person posterior",
   expect_match(d$settings$limitation, "no expectation-one")
   for (at in 1:3) {
     reference <- gmfrm_response_reference(f, x$rows[at])
-    expect_equal(unname(d$probabilities[at, ]), reference$probabilities, tolerance = 1e-8)
+    expect_equal(unname(d$probabilities[at, ]), unname(reference$probabilities[1, ]), tolerance = 1e-8)
     expect_equal(d$rows$ExpectedScore[at], reference$mean, tolerance = 1e-8)
     expect_equal(d$rows$PredictiveVariance[at], reference$variance, tolerance = 1e-8)
     expect_gt(reference$variance - reference$conditional_variance, .001)
@@ -84,9 +53,42 @@ test_that("integration failures remain in rows and group denominators", {
   unresolved <- bad$measures$Available < bad$measures$Observed
   expect_true(all(is.na(bad$measures$Infit[unresolved])))
   expect_true(all(is.na(bad$measures$Outfit[unresolved])))
+  result <- mfrm_results(x$fit, response_diagnostics = bad)
+  overview <- result$tables$response_overview
+  expect_equal(overview$Available + overview$Unresolved, nrow(bad$rows))
+  expect_equal(overview$Unresolved, sum(bad$rows$Status == "unavailable"))
+  expect_equal(overview$Selected + overview$NotIncluded, nrow(bad$source_data))
+  expect_identical(result$status$Status[result$status$Section == "response_diagnostics"], overview$Status)
+  report <- mfrm_report(result)
+  expect_identical(report$first_screen$MainIssue[report$first_screen$Area == "Response residuals"], overview$Detail)
+  expect_match(report$markdown, overview$Detail, fixed = TRUE)
   expect_error(mfrm_response_diagnostics(x$fit, rows = c(1, 1)), "distinct original")
   expect_error(mfrm_response_diagnostics(x$fit, group_by = "Score"), "identifier")
   expect_error(mfrm_response_diagnostics(x$fit, quad_points = 6), "Invalid quad_points")
+})
+
+test_that("all-unavailable two-family residuals remain unavailable in report overviews", {
+  x <- gmfrm_response_fixture()
+  local_mocked_bindings(mfrm_gmfrm_response_probabilities = function(...) stop("unresolved integration"),
+    .package = "mfrmr")
+  d <- mfrm_response_diagnostics(x$fit, rows = x$rows, group_by = "Rater")
+  result <- mfrm_results(x$fit, response_diagnostics = d)
+  expect_identical(result$status$Status[result$status$Section == "response_diagnostics"], "not_available")
+  report <- mfrm_report(result)
+  expect_identical(report$first_screen$Status[report$first_screen$Area == "Response residuals"], "unavailable")
+  expect_equal(report$tables$response_overview$Unresolved, length(x$rows))
+  expect_equal(report$tables$response_overview$Available, 0L)
+  expect_identical(report$tables$response_residuals, d$rows)
+  # Older saved results obtain the same overview from their retained rows.
+  result$tables$response_overview <- NULL
+  result$status$Status[result$status$Section == "response_diagnostics"] <- "available"
+  before <- serialize(result, NULL)
+  expect_identical(summary(result)$status$Status[summary(result)$status$Section == "response_diagnostics"], "not_available")
+  expect_identical(mfrm_report(result)$tables$response_overview, report$tables$response_overview)
+  viewer <- mfrm_results_viewer_payload(result)
+  expect_identical(viewer$summary$status, summary(result)$status)
+  expect_identical(viewer$tables$response_overview, report$tables$response_overview)
+  expect_identical(serialize(result, NULL), before)
 })
 
 test_that("two-family diagnostics retain arbitrary owner names and incomplete assignments", {
@@ -149,8 +151,11 @@ test_that("saved GMFRM residuals connect to plots reports and exports without re
   expect_error(mfrm_results(f, include = "fit", compute = "never", diagnostics = d, response_diagnostics = d), "only once")
   for (style in c("paired", "scatter")) {
     p <- plot(res, type = "response_diagnostics", style = style, draw = FALSE)
+    expect_identical(plot_data(plot(res, style=style, draw=FALSE)), plot_data(p))
     expect_s3_class(p, "mfrm_plot_data")
     expect_s3_class(as_ggplot(p), "ggplot")
+    expect_identical(ggplot2::ggplot_build(as_ggplot(res, style=style))$data,
+      ggplot2::ggplot_build(as_ggplot(p))$data)
     expect_match(plot_data(p)$caption, "no reference cutoffs")
   }
   report <- mfrm_report(res)
@@ -180,7 +185,7 @@ test_that("two-family saved response reports reopen in a fresh process", {
     res <- readRDS(path)
     list(summary = summary(res$response_diagnostics),
       report = mfrmr::mfrm_report(res)$tables$response_measures,
-      caption = mfrmr::plot_data(plot(res, type = "response_diagnostics", draw = FALSE))$caption)
+      caption = mfrmr::plot_data(plot(res, draw = FALSE))$caption)
   }
   environment(worker) <- baseenv()
   out <- callr::r(worker, args = list(normalizePath(find.package("mfrmr")), path), libpath = .libPaths())

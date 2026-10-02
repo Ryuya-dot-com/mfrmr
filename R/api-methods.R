@@ -9050,7 +9050,9 @@ mfrm_gpcm_mml_inference_evidence <- function(object) {
     Interpretation = c(
       "Necessary numerical condition; not an inference decision.",
       "Supportive retained-point local rank; not global identification.",
-      paste(
+      if (mfrm_has_product_slopes(object)) {
+        "Recorded curvature is numerical evidence only. Inspect the saved checks from separately requested experimental confint(fit) slope intervals."
+      } else paste(
         "Diagnostic local curvature only; inspect Optimizer*SE in",
         "diagnose_mfrm(fit)$parameter_uncertainty."
       ),
@@ -9618,6 +9620,9 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     GpcmMmlIdentification = as.character(
       config$gpcm_mml_identification %||% "not_recorded"
     ),
+    GpcmMmlInitialization = as.character(config$estimation_control$gpcm_mml_start %||%
+      if (mfrm_has_product_slopes(object) && mfrmr_adaptive_integration(config)) "neutral (legacy)" else "not_applicable"),
+    GpcmMmlSelectedStart = as.character(object$opt$mml_initialization$selected %||% NA_character_),
     GpcmCommonDiscrimination = as.character(
       config$gpcm_common_discrimination %||% "not_recorded"
     ),
@@ -10164,7 +10169,8 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     next_actions <- c(
       "Review numerical convergence separately from parameter and interval readiness.",
       "Read each slope facet on its stated reference scale; retain unavailable primary estimates.",
-      "Use mfrm_curve_intervals(fit, newdata) for provisional response curves without intervals; ordinary diagnostics, parameter intervals and Wright/Pathway plots are not available."
+      "Use mfrm_curve_intervals(fit, newdata) for provisional response curves without intervals; ordinary diagnostics and Wright/Pathway plots are not available.",
+      "Separately request confint(fit) for experimental component-slope intervals; numerical checks do not establish sampling coverage."
     )
     reporting_map$CompanionOutput <- "Two-family diagnostics are not available"
     reporting_map$CompanionOutput[reporting_map$Area == "Model identification / convergence"] <-

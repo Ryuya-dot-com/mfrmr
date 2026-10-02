@@ -135,6 +135,11 @@ test_that("predictive plots and reports reuse saved quantities without cutoffs",
   r <- mfrm_results(o,response_diagnostics=a,compute="never")
   expect_identical(r$response_diagnostics, a)
   expect_identical(mfrm_report(r)$tables$response_measures, a$measures)
+  expect_identical(r$tables$response_overview$Status, "available")
+  expect_match(mfrm_report(r)$markdown, r$tables$response_overview$Detail, fixed=TRUE)
+  old <- r; old$tables$response_overview <- NULL
+  expect_identical(mfrm_report(old)$tables$response_overview, r$tables$response_overview)
+  expect_identical(summary(old)$status, summary(r)$status)
   expect_s3_class(plot(r,type="response_diagnostics",draw=FALSE), "mfrm_plot_data")
   er <- mfrm_results(e,response_diagnostics=b,comparison=x,compute="never")
   expect_identical(er$tables$comparison_response_probabilities,x$responses$probabilities)

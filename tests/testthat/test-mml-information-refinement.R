@@ -32,6 +32,8 @@ test_that("unresolved information cannot become an accepted regularized inverse"
   expect_false(out$review$Verified)
   expect_gt(out$review$CurvatureScaledGradient,1e-4)
   expect_null(out$cov)
+  expect_match(out$review$Detail,"standardized Newton displacement 0.1 (limit 1e-4)",fixed=TRUE)
+  expect_match(out$review$Detail,"inverse residual",fixed=TRUE)
   bad <- mfrm_refine_mml_information(c(0,0),function(p) stop("domain"),
     function(p) stop("domain"),h)
   expect_false(bad$review$Verified)

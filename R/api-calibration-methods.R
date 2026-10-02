@@ -2,6 +2,7 @@
 
 mfrmr_validate_calibration_score_assumptions <- function(x) {
   s <- x$settings
+  if (identical(s$schema_version, 6L)) prediction_validate_interval_record(x)
   if (!identical(s$estimator, "JML") && !identical(s$family, "GPCM") && is.null(s$scoring_prior) &&
       is.null(s$score_integration_review)) return(invisible(x))
   valid <- tryCatch({
@@ -21,7 +22,7 @@ mfrmr_validate_calibration_score_assumptions <- function(x) {
       all(e$PriorMean == actual$mean & e$PriorSD == actual$sd &
         e$RetainedPriorMean == retained$mean & e$RetainedPriorSD == retained$sd) &&
       (!identical(s$family, "GPCM") ||
-        ((if (identical(s$schema_version,5L)) mfrm_jml_scoring_evidence_valid else if (identical(s$estimator, "JML")) mfrmr_calibration_gpcm_jml_evidence_valid else mfrmr_calibration_source_evidence_valid)(s$source_scoring_evidence) &&
+        ((if (identical(s$schema_version,6L)) mfrmr_calibration_gmfrm_evidence_valid else if (identical(s$schema_version,5L)) mfrm_jml_scoring_evidence_valid else if (identical(s$estimator, "JML")) mfrmr_calibration_gpcm_jml_evidence_valid else mfrmr_calibration_source_evidence_valid)(s$source_scoring_evidence) &&
           identical(s$source_scoring_evidence, s$semantic_components$source_scoring_review$source_scoring_evidence))) &&
       (!identical(s$estimator, "JML") || identical(s$family, "GPCM") ||
         (mfrmr_calibration_jml_evidence_valid(s$source_scoring_evidence) &&
@@ -35,6 +36,15 @@ mfrmr_validate_calibration_score_assumptions <- function(x) {
   if (identical(s$schema_version,5L)) valid <- valid &&
     all(c("CalibrationMethod","CorrectionOrder") %in% names(x$estimates)) &&
     isTRUE(all(x$estimates$CalibrationMethod=="Corrected JML" & x$estimates$CorrectionOrder==s$source_scoring_evidence$local_calibration_review$correction_order))
+  if (identical(s$schema_version,6L)) valid <- valid &&
+    identical(s$semantic_components$schema$schema_version, 6L) &&
+    identical(s$family, "GPCM") && identical(s$estimator, "MML") &&
+    is.null(s$scoring_prior) && is.null(s$event_id_column) &&
+    identical(s$prior_identity, list(type = "fixed_standard_normal", mean = 0, sd = 1)) &&
+    identical(s$semantic_components$product_structure$slope_composition, "product") &&
+    identical(s$scoring_algorithm, s$semantic_components$scoring_algorithm) &&
+    identical(s$quadrature_order, s$semantic_components$quadrature$quadrature_order) &&
+    identical(s$engine_identity, "artifact_coordinates_v6")
   if (!isTRUE(valid)) stop("Portable scoring output has missing or inconsistent prior or numerical-check records; score again from the frozen calibration.", call. = FALSE)
   invisible(x)
 }
@@ -128,6 +138,8 @@ mfrmr_calibration_score_print_prior <- function(settings) {
   print_wrapped_line(paste0("Scoring prior: ", if (is.null(settings$scoring_prior)) "retained normal" else "user-supplied normal",
     " (mean ", prior$mean, ", SD ", prior$sd, "). Retained prior: mean ", retained$mean, ", SD ", retained$sd, "."))
   if (identical(settings$schema_version,5L)) print_wrapped_line(mfrm_jml_scoring_note(settings$source_scoring_evidence))
+  if (identical(settings$schema_version,6L)) print_wrapped_line(
+    "Experimental two-family EAP on the fixed N(0,1) scale; sampling coverage and population transport are not established.")
   if (identical(settings$estimator, "JML")) print_wrapped_line(
     "JML-calibrated post-hoc EAP: the reference prior was not estimated by JML; these are not ML/WLE scores.")
   if (identical(settings$family, "GPCM")) print_wrapped_line(
@@ -426,7 +438,8 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
   }
   if (!is.null(object$settings$score_integration_review)) {
     for (name in c("schema_version", "semantic_components", "source_scoring_evidence", "score_integration_review",
-                    "scoring_prior", "prior_identity", "retained_prior_identity")) {
+                    "scoring_prior", "prior_identity", "retained_prior_identity",
+                    "engine_identity", "event_id_column")) {
       out$settings[name] <- object$settings[name]
     }
   }
@@ -732,6 +745,8 @@ plot.mfrm_calibration_score <- function(
   if (identical(x$settings$schema_version,5L)) uncertainty_note <- paste(
     uncertainty_note,paste0("Corrected JML (order ",x$settings$source_scoring_evidence$local_calibration_review$correction_order,
       "); residual calibration bias may remain."),sep="\n")
+  if (identical(x$settings$schema_version,6L)) uncertainty_note <- paste(
+    uncertainty_note, "Experimental two-family model; sampling coverage and population transport are not established.", sep = "\n")
   selection_summary <- data.frame(
     ScoredPersons = as.integer(nrow(full)),
     PlottedPersons = as.integer(nrow(plotted)),

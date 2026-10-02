@@ -117,12 +117,49 @@ mfrm_validate_response_diagnostics <- function(fit, diagnostics) {
   invisible(TRUE)
 }
 
+mfrm_response_diagnostic_overview <- function(diagnostics) {
+  rows <- diagnostics$rows
+  available <- sum(rows$Status == "available_conditional")
+  missing <- sum(rows$Status == "missing_score")
+  zero <- sum(rows$Status == "zero_variance")
+  unresolved <- nrow(rows) - available - missing - zero
+  omitted <- nrow(diagnostics$source_data) - nrow(rows)
+  status <- if (available + zero == 0L) "not_available" else
+    if (unresolved + missing + zero + omitted > 0L) "review" else "available"
+  detail <- paste0(available, " of ", nrow(rows),
+    " selected rows have standardized residuals; ", unresolved, " unresolved, ",
+    missing, " missing scores, ", zero, " zero-variance rows. ", omitted,
+    " source rows were not selected. Same-data description with calibration fixed; no calibrated fit cutoffs.")
+  data.frame(SourceRows = nrow(diagnostics$source_data), Selected = nrow(rows),
+    Available = available, Unresolved = unresolved, Missing = missing,
+    ZeroVariance = zero, NotIncluded = omitted, Status = status, Detail = detail)
+}
+
+# Older results retain the diagnostic rows but lack their availability overview.
+# Reconstruct display metadata on a local copy; never refit or reintegrate.
+mfrm_results_restore_response_overview <- function(x) {
+  if (!is.null(x$tables$response_overview)) return(x)
+  diagnostics <- x$response_diagnostics
+  if (is.null(diagnostics) && inherits(x$diagnostics, "mfrm_response_diagnostics"))
+    diagnostics <- x$diagnostics
+  if (is.null(diagnostics)) return(x)
+  overview <- mfrm_response_diagnostic_overview(diagnostics)
+  x$tables$response_overview <- overview
+  row <- mfrm_results_status_row("response_diagnostics", overview$Status, overview$Detail)
+  at <- match("response_diagnostics", x$status$Section)
+  if (is.na(at)) x$status <- rbind(x$status, row) else x$status[at, names(row)] <- row
+  if (!is.null(x$tables$section_status)) x$tables$section_status <- x$status
+  x$table_index <- mfrm_results_table_index(x$tables)
+  x
+}
+
 mfrm_response_diagnostic_tables <- function(diagnostics) {
   p <- diagnostics$probabilities
   settings <- diagnostics$settings
   if (identical(settings$probability_method,"corrected_jml_plugin"))
     settings$probability_method <- "Conditional fitted probabilities at corrected calibration and Person profiles"
-  list(response_residuals = diagnostics$rows,
+  list(response_overview = mfrm_response_diagnostic_overview(diagnostics),
+    response_residuals = diagnostics$rows,
     response_measures = diagnostics$measures,
     response_probabilities = data.frame(
       InputRow = rep(diagnostics$rows$InputRow, ncol(p)),

@@ -182,9 +182,9 @@ mfrm_extended_results <- function(fit, include, predictions, intervals, scores =
     tables <- c(tables, mfrm_response_diagnostic_tables(diagnostics))
   }
   status <- rbind(status, mfrm_results_status_row("response_diagnostics",
-    if (is.null(diagnostics)) "not_computed" else "available",
+    if (is.null(diagnostics)) "not_computed" else tables$response_overview$Status,
     if (is.null(diagnostics)) "No saved response diagnostics supplied; no integration performed." else
-      "Saved same-data posterior predictive residuals; unavailable rows retained; no calibrated fit test or cutoffs."))
+      tables$response_overview$Detail))
   tables$section_status <- status
   matching_scores <- !is.null(person_scores) && isTRUE(tryCatch(mfrm_validate_person_scores(fit,person_scores),error=function(e) FALSE))
   locations <- tryCatch(mfrm_model_locations(fit,if(matching_scores) person_scores else NULL),error=function(e) NULL)
@@ -276,6 +276,7 @@ mfrm_extended_results_plot <- function(x, type, ...) {
 }
 
 mfrm_extended_report <- function(x, style) {
+  tables <- x$tables
   numerical <- isTRUE(x$fit$checks$NumericalReady) && isTRUE(x$fit$checks$InformationPositive)
   first_screen <- data.frame(Area = c("Overall", "Numerical checks", "Interval interpretation", "Model-fit diagnostics"),
     Status = c(if (numerical) "caveat" else "review", if (numerical) "ok" else "review", "caveat", "unavailable"),
@@ -287,23 +288,26 @@ mfrm_extended_report <- function(x, style) {
     PrimaryRoute = c("report$tables$interpretation", "report$tables$numerical_checks",
       "report$tables$interval_basis", "report$tables$section_status"))
   if (!is.null(x$diagnostics)) {
-    first_screen$Status[4L] <- "caveat"
+    overview <- mfrm_response_diagnostic_overview(x$diagnostics)
+    tables$response_overview <- overview
+    first_screen$Status[4L] <- switch(overview$Status,
+      available = "caveat", not_available = "unavailable", "review")
     first_screen$Readiness[4L] <- "Descriptive only"
-    first_screen$MainIssue[4L] <- "Same-data posterior predictive residuals have no calibrated reference cutoffs or tests."
+    first_screen$MainIssue[4L] <- overview$Detail
     first_screen$NextAction[4L] <- "Review selected-row summaries and unavailable rows; do not apply ordinary-model cutoffs."
-    first_screen$PrimaryRoute[4L] <- "report$tables$response_measures"
+    first_screen$PrimaryRoute[4L] <- "report$tables$response_overview"
   }
-  report_index <- data.frame(Area = names(x$tables), PrimaryTable = paste0("report$tables$", names(x$tables)))
+  report_index <- data.frame(Area = names(tables), PrimaryTable = paste0("report$tables$", names(tables)))
   out <- structure(list(title = paste("mfrmr", x$model_family, "Report"), style = style,
     source_include = x$include, decision = x$decision, first_screen = first_screen,
     report_index = report_index, template_index = data.frame(),
     claim_readiness = data.frame(Claim = "Model adequacy and general interval coverage", Readiness = "Not established"),
-    tables = x$tables, source = x), class = "mfrm_report")
+    tables = tables, source = x), class = "mfrm_report")
   out$markdown <- paste(c(paste0("# ", out$title),
     "This report collects stored results. Report style does not change estimation or establish model adequacy.",
     mfrm_report_markdown_table(first_screen),
-    unlist(lapply(names(x$tables), function(nm) c(paste0("## ", gsub("_", " ", nm)),
-      mfrm_report_markdown_table(x$tables[[nm]]),
-      if (nrow(x$tables[[nm]]) > 20) "First 20 rows shown; all rows are retained in report$tables and CSV exports.")))), collapse = "\n\n")
+    unlist(lapply(names(tables), function(nm) c(paste0("## ", gsub("_", " ", nm)),
+      mfrm_report_markdown_table(tables[[nm]]),
+      if (nrow(tables[[nm]]) > 20) "First 20 rows shown; all rows are retained in report$tables and CSV exports.")))), collapse = "\n\n")
   out
 }

@@ -1,6 +1,9 @@
 # Saved GPCM inference is displayed and exported without refitting or changing
 # the ordinary fit diagnostics. Tables always retain the requested target/method.
 mfrm_gpcm_inference_tables <- function(x) {
+  if (inherits(x, "mfrm_facet_intervals") && (isTRUE(x$settings$two_family) ||
+      identical(x$settings$procedure, "mml_native_location_model_v1")))
+    return(mfrm_facet_interval_tables(x))
   if (inherits(x, "mfrm_slope_intervals")) {
     tab <- attr(x, "diagnostics")
     tab <- tab[intersect(c("SlopeFacet", "SlopeOwner", "SlopeLevel", "ScaleReference", "Estimate", "SE", "LogSE", "CI_Lower", "CI_Upper",
@@ -31,6 +34,8 @@ mfrm_gpcm_inference_tables <- function(x) {
         IndependentClusters = if (is.null(settings$clusters)) NA_integer_ else length(unique(settings$clusters$Cluster)),
         BootstrapSeed = settings$seed %||% NA_integer_)
       if (!is.null(settings$recheck)) tables$settings$Reanalysis <- settings$recheck
+      if (!is.null(settings$integration)) tables$settings$Integration <- settings$integration
+      if (!is.null(settings$engine)) tables$settings$Engine <- settings$engine
       if (!is.null(settings$diagnostic_checks_scope))
         tables$settings$DiagnosticChecksScope <- settings$diagnostic_checks_scope
       if (!is.null(settings$clusters)) tables$clusters <- settings$clusters
@@ -85,7 +90,7 @@ mfrm_gpcm_results_inputs <- function(fit, intervals) {
   if (!inherits(fit, "mfrm_fit") || !identical(fit$config$model, "GPCM")) {
     stop("Saved GPCM inference requires its native GPCM fit.", call. = FALSE)
   }
-  supported <- c("mfrm_slope_intervals", "mfrm_curve_intervals", "mfrm_gpcm_bootstrap")
+  supported <- c("mfrm_slope_intervals", "mfrm_curve_intervals", "mfrm_gpcm_bootstrap", "mfrm_facet_intervals")
   if (inherits(intervals, supported)) intervals <- list(inference = intervals)
   if (!is.list(intervals) || !length(intervals) || is.null(names(intervals)) ||
       anyNA(names(intervals)) || anyDuplicated(tolower(names(intervals))) ||
@@ -96,15 +101,165 @@ mfrm_gpcm_results_inputs <- function(fit, intervals) {
   names(intervals) <- tolower(names(intervals))
   source <- mfrm_gpcm_inference_source(fit)
   for (x in intervals) {
+    native <- inherits(x, "mfrm_facet_intervals") &&
+      identical(x$settings$procedure, "mml_native_location_model_v1")
+    if (inherits(x, "mfrm_facet_intervals") && !isTRUE(x$settings$two_family) && !native)
+      stop("Attach native location intervals with a declared procedure and source identity.", call. = FALSE)
     saved <- if (inherits(x, "mfrm_slope_intervals")) attr(x, "source") else
       if (inherits(x, "mfrm_gpcm_bootstrap")) mfrm_gpcm_inference_source(x$source) else x$source
-    if (!identical(source, saved)) stop(
+    expected <- if (native) mfrm_native_location_identity(fit) else source
+    if (!identical(expected, saved)) stop(
       "Saved GPCM inference must match the fitted parameters, data, population and integration settings. Recompute older intervals without source metadata.", call. = FALSE)
   }
   intervals
 }
 
+mfrm_gpcm_results_score_tables <- function(fit, scores) {
+  if (!mfrm_has_product_slopes(fit) ||
+      !inherits(scores, c("mfrm_unit_prediction", "mfrm_calibration_score")))
+    stop("Two-family `scores` must be saved predict_mfrm_units() output or a format-6 score_mfrm_calibration() result.", call. = FALSE)
+  portable <- inherits(scores, "mfrm_calibration_score")
+  if (portable) {
+    mfrmr_validate_calibration_score(scores)
+    if (!identical(scores$settings$schema_version, 6L))
+      stop("Two-family results require portable scoring format 6.", call. = FALSE)
+    source <- scores$settings$source_scoring_evidence
+    estimates <- scores$estimates
+    review <- sum(scores$person_dispositions$Disposition == "scored_review")
+    not_scored <- sum(scores$person_dispositions$Disposition == "not_scored")
+    notes <- scores$notes
+  } else {
+    if (!identical(scores$settings$source_scoring_policy_basis, "two_family_conditional_eap_v1"))
+      stop("Two-family results require scores from the two-family calibration.", call. = FALSE)
+    prediction_validate_population_output(scores)
+    source <- list(status = scores$settings$source_scoring_status,
+      local_calibration_review = scores$settings$local_calibration_review,
+      source_audit_states = scores$settings$source_audit_states)
+    estimates <- prediction_estimate_table(scores)
+    review <- sum(estimates$EstimateUse != "fitted_object_scoring")
+    # Native scoring records row omissions; it does not return a not-scored roster.
+    not_scored <- NA_integer_
+    notes <- prediction_output_notes(scores)
+  }
+  identity <- source$local_calibration_review$source_identity
+  if (is.null(identity) || !identical(identity, prediction_gmfrm_source_identity(fit)))
+    stop("Saved scores must match this fit's calibration, data, owner/category coding, integration and source status. Re-score older outputs without source identity; the fit need not be re-estimated.", call. = FALSE)
+  settings <- scores$settings
+  params <- expand_params(fit$opt$par, build_param_sizes(fit$config), fit$config)
+  if (portable) {
+    # Compare the saved operational coordinates as well as the source fingerprint.
+    # A valid edited artifact can still describe a different calibration.
+    semantic <- settings$semantic_components
+    model <- semantic$facet_order_roles_levels_signs
+    facets <- as.character(fit$config$facet_names)
+    levels <- do.call(rbind, lapply(facets, function(facet) data.frame(
+      Facet = facet, Level = as.character(fit$config$facet_levels[[facet]]),
+      LevelIndex = seq_along(fit$config$facet_levels[[facet]]))))
+    roles <- data.frame(Facet = facets,
+      Role = ifelse(facets == fit$config$step_facet, "facet_and_step_owner", "facet"),
+      OrderIndex = seq_along(facets))
+    score_map <- as.data.frame(fit$prep$score_map)
+    score_map$OrderIndex <- seq_len(nrow(score_map))
+    score_map <- score_map[c("OriginalScore", "InternalScore", "OrderIndex")]
+    contexts <- unique(as.data.frame(lapply(fit$prep$data[fit$config$slope_facet],
+      as.character), check.names = FALSE))
+    rownames(contexts) <- NULL
+    coordinates <- mfrmr_calibration_extract_coordinates(fit, params)
+    matching <- identical(semantic$parameter_coordinates, coordinates) &&
+      identical(model, list(facet_names = facets, facet_roles = roles, facet_levels = levels,
+        facet_signs = fit$config$facet_signs[facets], step_owner = fit$config$step_facet)) &&
+      identical(semantic$slope_specification, list(slope_owner = fit$config$slope_facet,
+        slope_action = "full_adjacent_predictor")) &&
+      identical(semantic$response_map, list(score_map = score_map,
+        rating_min = as.integer(fit$prep$rating_min), rating_max = as.integer(fit$prep$rating_max),
+        n_categories = as.integer(fit$config$n_cat))) &&
+      identical(semantic$product_structure, list(slope_composition = "product",
+        observed_contexts = contexts, source_columns = mfrmr_calibration_normalize_source_columns(fit))) &&
+      identical(semantic$identification_constraints, mfrmr_calibration_product_identification(
+        fit$config$slope_facet, fit$config$facet_levels, fit$config$n_cat - 1L)) &&
+      identical(semantic$typed_anchors, mfrmr_calibration_extract_anchors(fit)) &&
+      identical(semantic$interaction_map, mfrmr_calibration_extract_interactions(fit, coordinates))
+  } else matching <- identical(settings$two_family_calibration,
+    prediction_gmfrm_calibration(fit, params))
+  if (!matching)
+    stop("Saved scoring calibration records do not match this fit. Attach scores from the matching calibration; editing a source identity does not change the calibration used for scoring.", call. = FALSE)
+  tables <- list(
+    person_scores = estimates,
+    scoring_overview = data.frame(Scored = nrow(estimates), Review = review,
+      NotScored = not_scored, Status = if (review > 0 || isTRUE(not_scored > 0)) "review" else "conditional",
+      SourceStatus = source$status),
+    scoring_settings = data.frame(Route = if (portable) "portable_format_6" else "fitted_object",
+      SourceIdentity = identity, CalibrationId = settings$calibration_id %||% NA_character_,
+      PriorMean = 0, PriorSD = 1, ScoringAlgorithm = settings$scoring_algorithm,
+      QuadratureOrder = settings$scoring_quad_points %||% settings$quadrature_order,
+      IntervalLevel = settings$interval_level,
+      UncertaintyBasis = "conditional_on_fixed_calibration"),
+    scoring_source_checks = source$local_calibration_review$integration %||% data.frame(),
+    scoring_source_audits = data.frame(Domain = names(source$source_audit_states),
+      Status = unname(source$source_audit_states)),
+    scoring_integration = settings$score_integration_review,
+    scoring_row_review = scores$row_review,
+    scoring_notes = data.frame(Note = unique(c(notes,
+      if (!portable) "Native row omissions are recorded in scoring_row_review; NotScored is not enumerated by this route.")))
+  )
+  if (portable) {
+    tables$scoring_person_dispositions <- scores$person_dispositions
+    tables$scoring_row_dispositions <- scores$row_dispositions
+  }
+  tables
+}
+
+mfrm_gpcm_results_attach_scores <- function(out, scores) {
+  if (is.null(scores)) return(out)
+  tables <- mfrm_gpcm_results_score_tables(out$fit, scores)
+  out$scores <- out$components$scores <- scores
+  out$tables <- c(out$tables, tables)
+  out$table_index <- mfrm_results_table_index(out$tables)
+  out$status <- rbind(out$status, mfrm_results_status_row("person_scores",
+    tables$scoring_overview$Status,
+    "Saved two-family conditional EAP; source/batch checks and review labels retained. Calibration uncertainty excluded; no rescoring."))
+  out$notes <- unique(c(out$notes, "Saved new-Person scores are conditional on fixed calibration and the N(0,1) prior. Review-only results remain review-only; coverage and population transport are not established."))
+  out
+}
+
+mfrm_gpcm_results_validate_scores <- function(x) {
+  if (!mfrm_has_product_slopes(x$fit)) return(invisible(x))
+  if (is.null(x$scores) && is.null(x$components$scores) &&
+      !any(names(x$tables) == "person_scores" | startsWith(names(x$tables), "scoring_"))) return(invisible(x))
+  tables <- mfrm_gpcm_results_score_tables(x$fit, x$scores)
+  if (!identical(x$components$scores, x$scores) ||
+      !identical(x$tables[names(tables)], tables) ||
+      !identical(x$status$Status[x$status$Section == "person_scores"], tables$scoring_overview$Status))
+    stop("Saved scoring tables are inconsistent with the attached scores. Rebuild mfrm_results() with the matching saved scores; no rescoring is needed.", call. = FALSE)
+  invisible(x)
+}
+
+mfrm_gpcm_product_point_tables <- function(fit) {
+  list(
+    fitted_slopes = data.frame(Facet = fit$slopes$SlopeOwner, Level = fit$slopes$SlopeFacet,
+      FittedSlope = fit$slopes$OptimizerEstimate,
+      Interval = "See attached slope-interval tables, if requested"),
+    fitted_locations = data.frame(Facet = fit$facets$others$Facet,
+      Level = fit$facets$others$Level, FittedLocation = fit$facets$others$Estimate,
+      Constraint = ifelse(fit$facets$others$Facet == fit$config$slope_facet[1],
+        "Sum to zero across levels", "Uncentered; fixed N(0,1) ability"),
+      Interval = "See attached location-interval tables, if requested"),
+    fitted_steps = data.frame(StepOwner = fit$config$step_facet,
+      StepLevel = fit$steps$StepFacet, Step = fit$steps$Step,
+      FittedStep = fit$steps$Estimate, Interval = "Not available"))
+}
+
 mfrm_gpcm_results_attach <- function(out, inputs) {
+  if (mfrm_has_product_slopes(out$fit)) {
+    if ("fit" %in% out$include) {
+      points <- mfrm_gpcm_product_point_tables(out$fit)
+      names(points) <- paste0("gpcm_", names(points))
+      out$tables <- c(out$tables, points)
+    }
+    if (!is.null(out$fit$opt$mml_initialization))
+      out$tables$gpcm_initialization <- out$fit$opt$mml_initialization$table
+    out$table_index <- mfrm_results_table_index(out$tables)
+  }
   if (is.null(inputs)) return(out)
   out$gpcm_inference <- inputs
   for (name in names(inputs)) {
@@ -127,67 +282,90 @@ mfrm_gpcm_results_attach <- function(out, inputs) {
   }
   out$table_index <- mfrm_results_table_index(out$tables)
   out$notes <- unique(c(out$notes,
-    if (mfrm_has_product_slopes(out$fit)) "Two-family curves remain provisional without intervals; separately requested slope intervals use an experimental approximation with saved numerical checks. No automatic rater-quality decision is supported." else
+    unlist(lapply(Filter(function(x) inherits(x, "mfrm_facet_intervals"), inputs),
+      `[[`, "cautions"), use.names = FALSE),
+    if (mfrm_has_product_slopes(out$fit)) "Two-family curves remain provisional without intervals; separately requested slope or location intervals use experimental approximations with saved numerical checks. No automatic rater-quality decision is supported." else
     "GPCM slope/curve uncertainty is separate from Wright/Pathway location and fit displays. Approximate intervals do not classify raters or choose scoring weights."))
   out
 }
 
 # Keep the ordinary fit-report templates from recommending unsupported outputs.
 mfrm_gpcm_product_report <- function(x, style) {
+  mfrm_gpcm_results_validate_scores(x)
+  points <- mfrm_gpcm_product_point_tables(x$fit)
   adaptive <- mfrmr_adaptive_integration(x$fit$config)
   numerical <- isTRUE(x$fit$summary$Converged) &&
     identical(x$fit$opt$optimizer_diagnostics$ConvergenceSeverity, "pass")
   intervals <- Filter(function(z) inherits(z,"mfrm_slope_intervals"),x$gpcm_inference %||% list())
   n_intervals <- sum(vapply(intervals,function(z) sum(attr(z,"diagnostics")$CIEligible),integer(1)))
-  interval_note <- if (adaptive) {
-    "Component-slope and curve intervals are unavailable for adaptive two-family fitting. Fixed-grid EM interval checks do not qualify this integration method."
-  } else if (length(intervals)) paste(n_intervals,
+  interval_note <- if (length(intervals)) paste(n_intervals,
     "experimental slope intervals are available; inspect the saved checks and unavailable rows. Curve intervals remain unavailable.") else
     "No slope intervals were attached. Curve intervals are unavailable. Use confint(fit) for the separately checked experimental slope approximation."
+  locations <- Filter(function(z) inherits(z, "mfrm_facet_intervals"), x$gpcm_inference %||% list())
+  n_locations <- sum(vapply(locations, function(z) sum(z$table$CIEligible), integer(1)))
+  interval_note <- paste(interval_note, if (length(locations)) paste(n_locations,
+    "experimental location/contrast intervals are available; inspect their fixed-scale references and saved checks.") else
+    "No location intervals were attached; use mfrm_facet_intervals() for the separately checked experimental approximation.")
   first_screen <- data.frame(
     Area = c("Overall", "Numerical fit", "Calibration intervals", "Other outputs"),
-    Status = c("review", if (numerical) "ok" else "review", if (n_intervals) "caveat" else "unavailable", "unavailable"),
+    Status = c("review", if (numerical) "ok" else "review", if (n_intervals + n_locations) "caveat" else "unavailable", "unavailable"),
     Readiness = c("Provisional analysis", "Numerical only", "Output-specific checks", "Not supported"),
-    MainIssue = c("This report retains numerical estimates, conditional curves and explicitly attached experimental slope intervals.",
+    MainIssue = c("This report retains numerical estimates, conditional curves and explicitly attached experimental slope or location intervals.",
       if (adaptive) {
         if (numerical) "Direct adaptive MML met its optimizer and gradient checks." else
           "Direct adaptive MML did not pass its numerical convergence checks."
       } else if (numerical) "The per-Person marginal-score stopping rule was met." else
         "EM stopped without meeting the per-Person marginal-score tolerance.",
       interval_note,
-      "Ordinary diagnostics, Wright/Pathway maps, model ranking and new-person scoring are unavailable."),
+      "Ordinary diagnostics, Wright/Pathway maps and model ranking are unavailable."),
     NextAction = c("Read the model settings and numerical status before the saved curves.",
       if (numerical) "Convergence does not establish identification, model adequacy or inferential reliability." else
         "Review the stopping result and retain this fit as numerically unresolved.",
       "Retain unavailable bounds and labels for contexts not observed together.",
-      "Do not infer support for these outputs from the one-family GPCM workflow."),
+      "Conditional new-Person EAP is separately available through predict_mfrm_units() or the portable calibration workflow with source/batch checks. Attach matching saved output through scores in mfrm_results()."),
     PrimaryRoute = c("report$tables$fit_summary_settings_overview", "report$tables$fit_summary_readiness",
       "report$tables", "gpcm_capability_matrix()"))
   selected <- c("fit_summary_overview", "fit_summary_settings_overview", "fit_summary_readiness",
     "fit_summary_decision", "fit_summary_slope_overview", "fit_summary_caveats")
   tables <- c(x$tables[intersect(selected, names(x$tables))],
     list(slope_estimates = x$fit$slopes),
-    x$tables[startsWith(names(x$tables), "gpcm_") | startsWith(names(x$tables), "response_")])
+    x$tables[(startsWith(names(x$tables), "gpcm_") | startsWith(names(x$tables), "response_") |
+      startsWith(names(x$tables), "scoring_") | names(x$tables) == "person_scores") &
+      !names(x$tables) %in% paste0("gpcm_", names(points))])
+  if (!is.null(x$scores)) {
+    first_screen <- rbind(first_screen, data.frame(Area = "New-Person scoring",
+      Status = x$tables$scoring_overview$Status, Readiness = "Conditional on fixed calibration",
+      MainIssue = "Saved EAP, posterior SD and intervals retain their source/batch checks and any review-only or not-scored outcomes.",
+      NextAction = "Review scoring_source_checks, scoring_integration and person_scores. Intervals exclude calibration uncertainty; coverage and population transport are not established.",
+      PrimaryRoute = "report$tables$person_scores"))
+  }
   if (!is.null(x$response_diagnostics)) {
-    first_screen <- rbind(first_screen, data.frame(Area = "Response residuals", Status = "caveat",
+    overview <- mfrm_response_diagnostic_overview(x$response_diagnostics)
+    tables$response_overview <- overview
+    first_screen <- rbind(first_screen, data.frame(Area = "Response residuals",
+      Status = switch(overview$Status, available = "caveat", not_available = "unavailable", "review"),
       Readiness = "Descriptive only",
-      MainIssue = "Saved same-data posterior predictive residuals integrate ability with calibration fixed; no expectation-one reference or fit cutoffs.",
+      MainIssue = overview$Detail,
       NextAction = "Review unavailable rows and integration differences before inspecting grouped summaries.",
-      PrimaryRoute = "report$tables$response_diagnostic_settings"))
+      PrimaryRoute = "report$tables$response_overview"))
   }
   fit <- x$fit
   settings <- data.frame(Setting = c("Model", "Estimation", "Ability population",
     "First slope facet (geometric mean one)", "Second slope facet (free slopes)",
-    "Step facet", "Quadrature points", "EM iterations", "Numerically converged",
-    "Maximum per-Person marginal score", "Stopping tolerance"),
-    Value = c("Two-family GPCM", "MML with generalized EM", "Fixed standard normal",
+    "Step facet", "Quadrature points", if (adaptive) "Optimizer stages (selected start)" else "EM iterations", "Numerically converged",
+    if (adaptive) "Maximum total gradient" else "Maximum per-Person marginal score", "Stopping tolerance"),
+    Value = c("Two-family GPCM", if (adaptive) "MML with direct adaptive quadrature" else "MML with generalized EM", "Fixed standard normal",
       fit$config$slope_facet, fit$config$step_facet,
-      fit$config$estimation_control$quad_points, fit$summary$EMIterations,
+      fit$config$estimation_control$quad_points,
+      if (adaptive) nrow(fit$opt$optimizer_polish$Stages) %||% NA_integer_ else fit$summary$EMIterations,
       fit$summary$Converged, fit$summary$TerminalGradientSupNorm,
       fit$summary$GradientReviewTolerance))
-  slope_values <- data.frame(Facet = fit$slopes$SlopeOwner, Level = fit$slopes$SlopeFacet,
-    FittedSlope = fit$slopes$OptimizerEstimate, Interval = "See attached slope-interval tables, if requested")
-  tables <- c(list(model_settings = settings, fitted_slopes = slope_values), tables)
+  if (adaptive) settings <- rbind(settings, data.frame(
+    Setting = c("Initialization", "Selected start", "Initialization and optimization seconds"),
+    Value = c(fit$config$estimation_control$gpcm_mml_start %||% "neutral (legacy)",
+      fit$opt$mml_initialization$selected %||% "neutral",
+      fit$opt$mml_initialization$total_seconds %||% NA_real_)))
+  tables <- c(list(model_settings = settings), points, tables)
   out <- structure(list(title = "mfrmr Two-family GPCM Report", style = style,
     source_include = x$include, decision = x$tables$fit_summary_decision,
     fit_readiness = x$fit_readiness, fit_readiness_components = x$fit_readiness_components,
@@ -201,10 +379,14 @@ mfrm_gpcm_product_report <- function(x, style) {
     mfrm_report_markdown_table(first_screen),
     "## Provisional GPCM analysis",
     interval_note,
-    "Calibration intervals are unavailable for the response curves. Experimental slope intervals do not establish general coverage. Numerical convergence and curve shape do not qualify rater-quality decisions.",
+    "Calibration intervals are unavailable for the response curves. Experimental slope and location intervals do not establish general coverage. Numerical convergence and curve shape do not qualify rater-quality decisions.",
     "The two fitted slopes multiply each other and the complete adjacent-category predictor. A large slope is not evidence of assessor competence or scoring accuracy.",
-    unlist(lapply(c("model_settings", "fitted_slopes", names(tables)[grepl("^gpcm_.*_(curves|contexts|intervals|profile_endpoints)$", names(tables))],
-      intersect(c("response_diagnostic_settings", "response_measures"), names(tables))),
+    "Fitted locations and category steps are provisional numerical values on the fixed standard-normal ability scale. Separately requested location intervals retain their own checks; step intervals remain unavailable. Location differences do not imply uniform differences in expected ratings when slopes or steps differ. Step values are offsets centered to sum to zero within each step-owner level, not standalone category thresholds. An adjacent-category threshold also includes both facet locations.",
+    unlist(lapply(c("model_settings", names(points), intersect("gpcm_initialization", names(tables)),
+      names(tables)[grepl("^gpcm_.*_(curves|contexts|intervals|contrasts|profile_endpoints)$", names(tables))],
+      intersect(c("response_overview", "response_diagnostic_settings", "response_measures", "scoring_overview",
+        "scoring_settings", "scoring_source_checks", "scoring_source_audits", "scoring_integration",
+        "person_scores", "scoring_row_review", "scoring_person_dispositions", "scoring_notes"), names(tables))),
       function(name) {
         tab <- tables[[name]]
         if (endsWith(name, "profile_endpoints")) tab$Status <- NULL
@@ -376,10 +558,12 @@ as_ggplot.mfrm_gpcm_bootstrap <- as_ggplot.mfrm_slope_intervals
 #' @rdname as_ggplot
 #' @export
 as_ggplot.mfrm_results <- function(x, type = NULL, component = NULL, ...) {
-  if (!is.null(type) && length(type) == 1L && !is.na(type) &&
-      tolower(type) %in% paste0("gpcm_", names(x$gpcm_inference))) {
+  if ((mfrm_has_product_slopes(x$fit) && is.null(type)) ||
+      (!is.null(type) && length(type) == 1L && !is.na(type) &&
+      tolower(type) %in% paste0("gpcm_", names(x$gpcm_inference)))) {
     if (!is.null(component)) stop("Use plot_data() to select a GPCM inference table.", call. = FALSE)
-    return(plot(x, type = type, draw = FALSE, ...))
+    p <- plot(x, type = type, draw = FALSE, ...)
+    return(if (inherits(p, "ggplot")) p else as_ggplot(p))
   }
   NextMethod()
 }

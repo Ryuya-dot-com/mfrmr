@@ -750,6 +750,14 @@ test_that("estimated-population scoring cannot bypass unresolved source validity
   }
   expect_s3_class(build_mfrm_manifest(fit, unit_prediction = reviewed, plausible_values = pv),
                   "mfrm_manifest")
+  # A passed batch check cannot promote an unresolved population calibration.
+  promoted <- reviewed
+  promoted$settings$source_scoring_ready <- TRUE
+  promoted$settings$source_scoring_status <- "ready"
+  promoted$settings$readiness_policy <- "error"
+  promoted$estimates$SourceScoringReady <- TRUE
+  promoted$estimates$EstimateUse <- "fitted_object_scoring"
+  expect_error(summary(promoted), "requires explicit review-only eligibility")
 })
 
 test_that("scoring quadrature is explicit and cannot degenerate to one point", {
@@ -830,6 +838,8 @@ test_that("scoring tables retain interval, prior and draw meanings without inter
     class = "mfrm_plausible_values")
   # Keep the artificial one-person draw sample's prior record aligned.
   pv$settings$prior_comparison <- pv$settings$prior_comparison[1, , drop = FALSE]
+  if (!is.null(pv$settings$score_integration_review))
+    pv$settings$score_integration_review <- pv$settings$score_integration_review[1, , drop = FALSE]
   draw_summary <- summary(pv, digits = 2)
   expect_equal(draw_summary$draw_summary$LowerValue, 9)
   expect_equal(draw_summary$draw_summary$UpperValue, 90)
@@ -847,6 +857,8 @@ test_that("scoring tables retain interval, prior and draw meanings without inter
   # Reconstruct the old schema, which predates separate retained-prior records.
   older$settings$prior_comparison <- NULL
   older$settings$retained_posterior_basis <- NULL
+  older$settings$score_integration_required <- NULL
+  older$settings$score_integration_review <- NULL
   older$estimates <- older$estimates[c("Person", "Estimate", "SD", "Lower", "Upper", "Observations", "WeightedN", "SourceScoringReady", "EstimateUse")]
   expect_no_warning(summary(older))
   expect_identical(unique(summary(older, digits = 0)$estimates$IntervalLevel), level)

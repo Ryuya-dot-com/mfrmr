@@ -4,6 +4,7 @@
 # one-scale, one-dimensional fits. Version 1 retains RSM/PCM MML semantics;
 # version 2 adds GPCM MML; versions 3/4 add RSM/PCM and GPCM JML respectively.
 # Version 5 stores corrected GPCM JML with its own equation-based source checks.
+# Version 6 stores two-family GPCM MML on the fixed N(0,1) scale.
 
 mfrmr_calibration_schema_id <- function() "mfrmr.fixed_calibration"
 
@@ -579,7 +580,8 @@ mfrmr_calibration_default_id <- function(model, method, created_at) {
 
 mfrmr_calibration_normalize_source_columns <- function(fit) {
   src <- fit$config$source_columns %||% fit$prep$source_columns %||% list()
-  facets <- src$facets %||% fit$config$facet_names
+  facets <- if (mfrm_has_product_slopes(fit)) fit$config$facet_names else
+    src$facets %||% fit$config$facet_names
   facets <- as.character(facets)
   if (length(facets) == length(fit$config$facet_names)) {
     names(facets) <- fit$config$facet_names
@@ -649,11 +651,16 @@ mfrmr_calibration_extract_coordinates <- function(fit, params) {
   }
 
   if (identical(fit$config$model, "GPCM")) {
-    owner <- fit$config$slope_facet
-    levels <- fit$config$facet_levels[[owner]]
-    for (i in seq_along(levels)) {
-      add_row(sprintf("slope::level::%d", i), "slope", owner, levels[i],
-        NA_character_, NA_character_, params$slopes[i])
+    owners <- fit$config$slope_facet
+    for (j in seq_along(owners)) {
+      owner <- owners[j]
+      levels <- fit$config$facet_levels[[owner]]
+      values <- if (length(owners) == 1L) params$slopes else params$slope_components[[owner]]$Slope
+      for (i in seq_along(levels)) {
+        key <- if (length(owners) == 1L) sprintf("slope::level::%d", i) else
+          sprintf("slope::owner::%d::level::%d", j, i)
+        add_row(key, "slope", owner, levels[i], NA_character_, NA_character_, values[i])
+      }
     }
   }
 
@@ -790,6 +797,23 @@ mfrmr_calibration_extract_identification <- function(fit) {
   mfrmr_calibration_bind_rows(rows, mfrmr_calibration_identification_template())
 }
 
+mfrmr_calibration_product_identification <- function(owners, levels, n_steps) {
+  n <- lengths(levels[owners])
+  second <- n[2L]
+  data.frame(
+    ConstraintId = c(paste0("facet_constraint::", 1:2),
+      paste0("owned_step_constraint::", seq_len(second)), paste0("slope_constraint::", 1:2)),
+    ParameterClass = c(rep("facet", 2), rep("owned_step", second), rep("slope", 2)),
+    OwnerFacet = c(owners, rep(owners[2], second), owners),
+    ConstraintType = c("sum_to_zero", "uncentered_fixed_population",
+      rep("row_sum_to_zero", second), "sum_to_zero_log_slopes", "free_fixed_population"),
+    Target = c(paste0("facet_levels::", n), paste0("owner_level::", seq_len(second)),
+      "geometric_mean_one", "fixed_standard_normal"),
+    Value = c(NA_real_, NA_real_, rep(0, second), 0, NA_real_),
+    FreeDimension = as.integer(c(n[1] - 1L, n[2], rep(n_steps - 1L, second), n[1] - 1L, n[2])),
+    stringsAsFactors = FALSE, row.names = NULL)
+}
+
 mfrmr_calibration_semantic_components <- function(x) {
   out <- list(
     schema = list(
@@ -816,13 +840,42 @@ mfrmr_calibration_semantic_components <- function(x) {
     )],
     support_profile = x$eligibility$support_profile_id
   )
-  if (x$header$schema_version %in% c(2L, 4L, 5L)) {
+  if (x$header$schema_version %in% c(2L, 4L, 5L, 6L)) {
     out$slope_specification <- x$model[c("slope_owner", "slope_action")]
   }
-  if (x$header$schema_version %in% c(2L, 3L, 4L, 5L)) {
+  if (x$header$schema_version %in% c(2L, 3L, 4L, 5L, 6L)) {
     out$source_scoring_review <- x$eligibility[c("source_readiness_status", "source_scoring_evidence")]
   }
+  if (identical(x$header$schema_version, 6L))
+    out$product_structure <- c(x$model[c("slope_composition", "observed_contexts")],
+      list(source_columns = x$input_schema$source_columns))
   out
+}
+
+mfrmr_calibration_gmfrm_evidence_valid <- function(evidence) {
+  tryCatch({
+    local <- evidence$local_calibration_review
+    check <- local$integration
+    isTRUE(is.list(evidence) && identical(names(evidence), c("policy_basis", "status",
+      "local_calibration_review", "source_audit_states", "inference_ready")) &&
+      identical(evidence$policy_basis, "two_family_conditional_eap_v1") &&
+      identical(evidence$status, "conditional") && isTRUE(local$eligible) &&
+      identical(local$basis, "two_family_point_calibration_v1") &&
+      is.character(local$review) && length(local$review) == 1L && nzchar(local$review) &&
+      is.character(local$caution) && length(local$caution) == 1L && nzchar(local$caution) &&
+      identical(evidence$inference_ready, FALSE) &&
+      identical(names(evidence$source_audit_states), c("identification", "boundary", "numerical")) &&
+      evidence$source_audit_states[["numerical"]] == "ready" &&
+      evidence$source_audit_states[["identification"]] %in% c("identified", "not_evaluated") &&
+      evidence$source_audit_states[["boundary"]] %in% c("finite", "not_applicable", "not_evaluated") &&
+      is.data.frame(check) && nrow(check) == 1L && identical(names(check),
+        c("OriginalOrder", "ComparisonOrder", "NLLChangePerPerson", "ComparisonMeanGradient")) &&
+      all(vapply(check, is.numeric, TRUE)) && all(is.finite(unlist(check))) &&
+      check$OriginalOrder >= 2 && check$OriginalOrder == floor(check$OriginalOrder) &&
+      check$ComparisonOrder > check$OriginalOrder && check$ComparisonOrder == floor(check$ComparisonOrder) &&
+      check$NLLChangePerPerson >= 0 && check$NLLChangePerPerson <= 1e-6 &&
+      check$ComparisonMeanGradient >= 0 && check$ComparisonMeanGradient <= 1e-6)
+  }, error = function(e) FALSE)
 }
 
 mfrmr_calibration_source_evidence_valid <- function(evidence) {
@@ -937,6 +990,9 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   adjusted <- if (mfrm_has_jml_adjustment(fit)) tryCatch(mfrm_jml_scoring_components(fit),
     error=function(e) mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE","fit",conditionMessage(e))) else NULL
   if (!is.null(adjusted)) fit$config <- adjusted$config
+  product <- mfrm_has_product_slopes(fit)
+  product_source <- if (product) tryCatch(prediction_gmfrm_scoring_readiness(fit),
+    error = function(e) mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE", "fit", conditionMessage(e))) else NULL
   model <- toupper(as.character(fit$config$model %||% ""))
   method <- toupper(as.character(fit$config$method %||% ""))
   if (!model %in% c("RSM", "PCM", "GPCM")) {
@@ -983,7 +1039,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   }
 
   if (identical(model, "GPCM")) {
-    if (!jml && (!isTRUE(population$active) ||
+    if (!jml && !product && (!isTRUE(population$active) ||
         !identical(population$design_columns, "(Intercept)") ||
         !is.matrix(population$design_matrix) || ncol(population$design_matrix) != 1L ||
         anyNA(population$design_matrix) || any(population$design_matrix != 1))) {
@@ -993,12 +1049,12 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
     if (jml && !identical(fit$config$slope_facet, fit$config$step_facet))
       mfrmr_calibration_abort("MODEL_STRUCTURE_UNSUPPORTED", "model.slope_owner",
         "portable GPCM JML requires the same slope and step owner")
-    if (!is.character(fit$config$slope_facet) || length(fit$config$slope_facet) != 1L ||
+    if (!product && (!is.character(fit$config$slope_facet) || length(fit$config$slope_facet) != 1L ||
         is.na(fit$config$slope_facet) || !isTRUE(fit$config$gpcm_spec$active) ||
         !identical(fit$config$gpcm_spec$identification, "sum_to_zero_log_slopes") ||
         !identical(fit$config$gpcm_spec$scale_reference, "geometric_mean_one") ||
         !identical(fit$config$gpcm_spec$levels, fit$config$facet_levels[[fit$config$slope_facet]]) ||
-        !fit$config$slope_facet %in% fit$config$facet_names) {
+        !fit$config$slope_facet %in% fit$config$facet_names)) {
       mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "model.slope_owner",
         "GPCM requires one declared slope owner and geometric-mean-one relative slopes")
     }
@@ -1039,10 +1095,12 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   coordinates <- mfrmr_calibration_extract_coordinates(fit, params)
   interactions <- mfrmr_calibration_extract_interactions(fit, coordinates)
   anchors <- mfrmr_calibration_extract_anchors(fit)
-  identification <- mfrmr_calibration_extract_identification(fit)
+  identification <- if (product) mfrmr_calibration_product_identification(
+    fit$config$slope_facet, fit$config$facet_levels, fit$config$n_cat - 1L) else
+    mfrmr_calibration_extract_identification(fit)
   prior_mean <- 0
   prior_sd <- 1
-  if (identical(model, "GPCM") && !jml) {
+  if (identical(model, "GPCM") && !jml && !product) {
     pop <- materialize_population_spec(fit$config, params)
     prior_mean <- unname(as.numeric(pop$coefficients))
     prior_sd <- sqrt(pop$sigma2)
@@ -1052,7 +1110,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
         "GPCM requires a finite population mean and positive finite SD")
     }
   }
-  if (identical(model, "GPCM")) {
+  if (identical(model, "GPCM") && !product) {
     identification <- rbind(identification, data.frame(
       ConstraintId = "relative_slope_constraint", ParameterClass = "slope",
       OwnerFacet = fit$config$slope_facet, ConstraintType = "sum_to_zero_log_slopes",
@@ -1102,7 +1160,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
     isTRUE(mfrm_inference_ready(fit))
   source_scoring <- NULL
   if (identical(model, "GPCM")) {
-    source_scoring <- if (is.null(adjusted)) prediction_source_scoring_readiness(fit) else adjusted$source
+    source_scoring <- if (product) product_source else if (is.null(adjusted)) prediction_source_scoring_readiness(fit) else adjusted$source
     if (!isTRUE(source_scoring$ready) ||
         !identical(source_scoring$status, "conditional") ||
         !isTRUE(source_scoring$local_calibration_review$eligible)) {
@@ -1145,7 +1203,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   x <- list(
     header = list(
       schema_id = mfrmr_calibration_schema_id(),
-      schema_version = if (!is.null(adjusted)) 5L else mfrmr_calibration_schema_version(model, method),
+      schema_version = if (product) 6L else if (!is.null(adjusted)) 5L else mfrmr_calibration_schema_version(model, method),
       object_class = "mfrm_calibration",
       calibration_id = calibration_id,
       semantic_identity_version = mfrmr_calibration_semantic_identity_version()
@@ -1177,7 +1235,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       anchors = anchors
     ),
     scoring_basis = list(
-      type = if (jml) "post_hoc_standard_normal" else if (model == "GPCM") "frozen_estimated_normal" else "fixed_standard_normal",
+      type = if (jml) "post_hoc_standard_normal" else if (model == "GPCM" && !product) "frozen_estimated_normal" else "fixed_standard_normal",
       prior_mean = prior_mean,
       prior_sd = prior_sd,
       scoring_algorithm = if (mfrmr_adaptive_integration(fit$config)) {
@@ -1189,7 +1247,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       weights = as.numeric(quad$weights)
     ),
     eligibility = list(
-      support_profile_id = if (!is.null(adjusted)) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
+      support_profile_id = if (product) "gmfrm_mml_fixed_standard_normal_v6" else if (!is.null(adjusted)) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
         paste0(tolower(model), "_jml_reference_normal_v", if (model == "GPCM") 4L else 3L)
       } else if (identical(model, "GPCM")) {
         "gpcm_mml_frozen_normal_v2"
@@ -1232,6 +1290,12 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       "policy_basis", "status", "local_calibration_review", "source_audit_states", "inference_ready")]
   }
   if (jml && model != "GPCM") x$eligibility$source_scoring_evidence <- source_scoring
+  if (product) {
+    x$model$slope_composition <- "product"
+    x$model$observed_contexts <- unique(as.data.frame(lapply(
+      fit$prep$data[fit$config$slope_facet], as.character), check.names = FALSE))
+    rownames(x$model$observed_contexts) <- NULL
+  }
   x$integrity$semantic_components <- mfrmr_calibration_semantic_components(x)
   class(x) <- c("mfrm_calibration", "list")
   x$validation$refusals <- mfrmr_review_calibration(x)
@@ -1277,12 +1341,13 @@ mfrmr_calibration_expected_sections <- function(version = 1L) {
     ),
     integrity = c("semantic_components", "optional_hash")
   )
-  if (version %in% c(2L, 4L, 5L)) {
+  if (version %in% c(2L, 4L, 5L, 6L)) {
     out$model <- c(out$model, "slope_owner", "slope_action")
   }
-  if (version %in% c(2L, 3L, 4L, 5L)) {
+  if (version %in% c(2L, 3L, 4L, 5L, 6L)) {
     out$eligibility <- c(out$eligibility, "source_scoring_evidence")
   }
+  if (identical(version, 6L)) out$model <- c(out$model, "slope_composition", "observed_contexts")
   out
 }
 
@@ -1388,7 +1453,7 @@ mfrmr_review_calibration <- function(x) {
     add("SCHEMA_TYPE_INVALID", "header.schema_version", "must be one integer")
     return(refusals)
   }
-  if (!version %in% c(1L, 2L, 3L, 4L, 5L)) {
+  if (!version %in% c(1L, 2L, 3L, 4L, 5L, 6L)) {
     add(if (version < 1L) "SCHEMA_MIGRATION_REQUIRED" else "SCHEMA_VERSION_UNSUPPORTED",
       "header.schema_version", "schema version is not supported")
     return(refusals)
@@ -1419,10 +1484,11 @@ mfrmr_review_calibration <- function(x) {
     add("IDENTITY_VERSION_UNKNOWN", "header.semantic_identity_version", "identity algorithm is not registered")
   }
 
-  gpcm <- version %in% c(2L, 4L, 5L) && identical(x$model$family, "GPCM")
+  product <- identical(version, 6L)
+  gpcm <- version %in% c(2L, 4L, 5L, 6L) && identical(x$model$family, "GPCM")
   jml <- version %in% c(3L, 4L, 5L)
   if (!(if (version %in% c(1L, 3L)) x$model$family %in% c("RSM", "PCM") else gpcm)) {
-    add("MODEL_FAMILY_UNSUPPORTED", "model.family", "versions 1 and 3 support RSM/PCM; versions 2, 4 and 5 support GPCM")
+    add("MODEL_FAMILY_UNSUPPORTED", "model.family", "versions 1 and 3 support RSM/PCM; versions 2, 4, 5 and 6 support GPCM")
   }
   if (!identical(x$model$estimator, if (jml) "JML" else "MML")) {
     add("MODEL_ESTIMATOR_UNSUPPORTED", "model.estimator", "estimator must match the file format")
@@ -1626,13 +1692,13 @@ mfrmr_review_calibration <- function(x) {
   }
 
   if (gpcm) {
-    if (!identical(x$scoring_basis$type, if (jml) "post_hoc_standard_normal" else "frozen_estimated_normal") ||
+    if (!identical(x$scoring_basis$type, if (product) "fixed_standard_normal" else if (jml) "post_hoc_standard_normal" else "frozen_estimated_normal") ||
         !scalar_numeric(x$scoring_basis$prior_mean) ||
         !scalar_numeric(x$scoring_basis$prior_sd) || x$scoring_basis$prior_sd <= 0 ||
         !is.finite(x$scoring_basis$prior_sd^2) || x$scoring_basis$prior_sd^2 <= 0) {
       add("SCORING_PRIOR_INVALID", "scoring_basis", "GPCM requires a frozen finite normal mean and positive SD")
     }
-    if (!scalar_character(x$model$slope_owner) || !x$model$slope_owner %in% facet_names ||
+    if ((!product && (!scalar_character(x$model$slope_owner) || !x$model$slope_owner %in% facet_names)) ||
         !identical(x$model$slope_action, "full_adjacent_predictor")) {
       add("IDENTIFICATION_CONTRACT_INVALID", "model.slope_owner", "GPCM requires one declared slope owner and full adjacent-predictor action")
     }
@@ -1640,7 +1706,7 @@ mfrmr_review_calibration <- function(x) {
         is.data.frame(anchors) && nrow(anchors) > 0L) {
       add("MODEL_STRUCTURE_UNSUPPORTED", "constraints", "portable GPCM does not support anchors or interactions")
     }
-    if (scalar_character(x$model$slope_owner) && is.data.frame(levels) &&
+    if (!product && scalar_character(x$model$slope_owner) && is.data.frame(levels) &&
         is.data.frame(identification) && identical(names(identification), identification_columns)) {
     expected_slope_constraint <- data.frame(
       ConstraintId = "relative_slope_constraint", ParameterClass = "slope",
@@ -1707,7 +1773,7 @@ mfrmr_review_calibration <- function(x) {
     add("MODEL_STRUCTURE_UNSUPPORTED", "constraints", "portable JML does not support anchors or interactions")
   if (jml && !identical(x$scoring_basis$scoring_algorithm, "quadrature_eap_v2"))
     add("SCORING_BASIS_UNSUPPORTED", "scoring_basis.scoring_algorithm", "JML requires reference-prior EAP with continuous posterior intervals")
-  expected_support_profile <- if (version == 5L) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
+  expected_support_profile <- if (product) "gmfrm_mml_fixed_standard_normal_v6" else if (version == 5L) "gpcm_corrected_jml_reference_normal_v5" else if (jml) {
     paste0(tolower(x$model$family), "_jml_reference_normal_v", if (gpcm) 4L else 3L)
   } else if (gpcm) {
     "gpcm_mml_frozen_normal_v2"
@@ -1734,7 +1800,7 @@ mfrmr_review_calibration <- function(x) {
   if (jml && !gpcm && !mfrmr_calibration_jml_evidence_valid(x$eligibility$source_scoring_evidence))
     add("SOURCE_READINESS_INELIGIBLE", "eligibility.source_scoring_evidence",
       "JML requires intact passing extraction-time source checks")
-  if (gpcm && !(if (version == 5L) mfrm_jml_scoring_evidence_valid else if (jml) mfrmr_calibration_gpcm_jml_evidence_valid else
+  if (gpcm && !(if (product) mfrmr_calibration_gmfrm_evidence_valid else if (version == 5L) mfrm_jml_scoring_evidence_valid else if (jml) mfrmr_calibration_gpcm_jml_evidence_valid else
       mfrmr_calibration_source_evidence_valid)(x$eligibility$source_scoring_evidence)) {
     add("SOURCE_READINESS_INELIGIBLE", "eligibility.source_scoring_evidence",
       "GPCM requires intact passing extraction-time conditional calibration checks")
@@ -1879,7 +1945,10 @@ mfrmr_review_calibration <- function(x) {
   }
 
   if (gpcm && nrow(refusals) == 0L) {
-    tryCatch(mfrmr_calibration_materialize_scoring(x),
+    tryCatch({
+      if (product) mfrmr_calibration_review_product(x)
+      mfrmr_calibration_materialize_scoring(x)
+    },
       mfrm_calibration_error = function(error) add(error$code, error$field_path, error$detail))
   }
   rownames(refusals) <- NULL
@@ -2115,7 +2184,45 @@ mfrmr_calibration_scoring_levels <- function(x) {
   out
 }
 
+mfrmr_calibration_review_product <- function(x) {
+  owners <- x$model$slope_owner
+  if (!is.character(owners) || length(owners) != 2L || anyNA(owners) || anyDuplicated(owners) ||
+      !identical(owners, x$model$facet_names) || !identical(x$model$step_owner, owners[2]) ||
+      !identical(x$model$slope_composition, "product") || any(x$model$facet_signs != -1) ||
+      !identical(x$scoring_basis$prior_mean, 0) || !identical(x$scoring_basis$prior_sd, 1))
+    mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "model",
+      "Two-family calibration requires ordered owners, second-owner steps, negative facet signs and fixed N(0,1).")
+  if (any(owners %in% c("Person", "Score", "Weight", "InputRow", "EventId",
+      "Disposition", "ReasonCode", "CalibrationId", "ObservedContext")))
+    mfrmr_calibration_abort("MODEL_FACET_ROLE_INVALID", "model.facet_names",
+      "Portable two-family owner names cannot use reserved scoring/disposition column names.")
+  roles <- data.frame(Facet = owners, Role = c("facet", "facet_and_step_owner"), OrderIndex = 1:2)
+  if (!identical(x$model$facet_roles, roles))
+    mfrmr_calibration_abort("MODEL_FACET_ROLE_INVALID", "model.facet_roles",
+      "Facet roles must retain the second owner's category steps.")
+  levels <- mfrmr_calibration_scoring_levels(x)
+  if (any(lengths(levels) < 2L)) mfrmr_calibration_abort("MODEL_FACET_LEVEL_INVALID", "model.facet_levels",
+    "Two-family calibration requires at least two levels in each owner.")
+  expected <- mfrmr_calibration_product_identification(owners, levels, x$response$n_categories - 1L)
+  if (!identical(x$constraints$identification, expected))
+    mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "constraints.identification",
+      "First-owner locations/log slopes must be centered; second-owner locations/slopes are free and its steps are row-centered.")
+  contexts <- x$model$observed_contexts
+  if (!is.data.frame(contexts) || !identical(names(contexts), owners) || !nrow(contexts) ||
+      anyNA(contexts) || anyDuplicated(contexts) ||
+      !all(vapply(owners, function(owner) is.character(contexts[[owner]]) &&
+        all(contexts[[owner]] %in% levels[[owner]]), TRUE)))
+    mfrmr_calibration_abort("MODEL_STRUCTURE_UNSUPPORTED", "model.observed_contexts",
+      "Observed contexts must be distinct combinations of the two declared level dictionaries.")
+  map <- x$response$score_map
+  if (x$response$rating_min != 0L || !identical(map$OriginalScore, map$InternalScore))
+    mfrmr_calibration_abort("RESPONSE_SCORE_MAP_INVALID", "response.score_map",
+      "Two-family calibration retains the original zero-based category codes.")
+  invisible(TRUE)
+}
+
 mfrmr_calibration_materialize_scoring <- function(x) {
+  product <- identical(x$header$schema_version, 6L)
   coordinates <- x$parameters$coordinates
   facet_levels <- mfrmr_calibration_scoring_levels(x)
   facet_values <- vector("list", length(x$model$facet_names))
@@ -2230,25 +2337,35 @@ mfrmr_calibration_materialize_scoring <- function(x) {
 
   slopes <- NULL
   if (identical(x$model$family, "GPCM")) {
-    owner <- x$model$slope_owner
-    rows <- coordinates[coordinates$ParameterClass == "slope", , drop = FALSE]
-    position <- match(facet_levels[[owner]], rows$Level)
-    if (nrow(rows) != length(facet_levels[[owner]]) || anyNA(position) ||
-        anyDuplicated(rows$Level) || anyNA(rows$OwnerFacet) ||
-        any(rows$OwnerFacet != owner) || any(!is.na(rows$Step)) ||
-        any(!is.na(rows$InteractionId)) || any(!is.finite(rows$Value)) ||
-        any(rows$Value <= 0)) {
-      mfrmr_calibration_abort("PARAMETER_COORDINATE_INVALID", "parameters.coordinates",
-        "GPCM requires exactly one positive finite slope per declared slope-owner level")
+    owners <- x$model$slope_owner
+    slopes <- setNames(vector("list", length(owners)), owners)
+    for (owner in owners) {
+      rows <- coordinates[coordinates$ParameterClass == "slope" &
+        !is.na(coordinates$OwnerFacet) & coordinates$OwnerFacet == owner, , drop = FALSE]
+      position <- match(facet_levels[[owner]], rows$Level)
+      if (nrow(rows) != length(facet_levels[[owner]]) || anyNA(position) ||
+          anyDuplicated(rows$Level) || anyNA(rows$OwnerFacet) ||
+          any(rows$OwnerFacet != owner) || any(!is.na(rows$Step)) ||
+          any(!is.na(rows$InteractionId)) || any(!is.finite(rows$Value)) ||
+          any(rows$Value <= 0)) {
+        mfrmr_calibration_abort("PARAMETER_COORDINATE_INVALID", "parameters.coordinates",
+          "GPCM requires exactly one positive finite slope per declared slope-owner level")
+      }
+      slopes[[owner]] <- stats::setNames(rows$Value[position], facet_levels[[owner]])
+      if (identical(owner, owners[1]) && abs(sum(log(slopes[[owner]]))) > 1e-10) {
+        mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "parameters.coordinates",
+          "relative slopes must have geometric mean one")
+      }
     }
-    slopes <- stats::setNames(rows$Value[position], facet_levels[[owner]])
-    if (abs(sum(log(slopes))) > 1e-10) {
-      mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "parameters.coordinates",
-        "relative slopes must have geometric mean one")
-    }
+    if (!product) slopes <- slopes[[1L]]
+  }
+  if (product && (abs(sum(facet_values[[x$model$slope_owner[1]]])) > 1e-10 ||
+      any(abs(rowSums(owned_steps)) > 1e-10))) {
+    mfrmr_calibration_abort("IDENTIFICATION_CONTRACT_INVALID", "parameters.coordinates",
+      "First-owner locations and each second-owner step set must sum to zero.")
   }
 
-  expected_coordinate_count <- sum(lengths(facet_levels)) + length(slopes) +
+  expected_coordinate_count <- sum(lengths(facet_levels)) + (if (product) sum(lengths(slopes)) else length(slopes)) +
     (if (identical(x$model$family, "RSM")) n_steps else {
       length(facet_levels[[x$model$step_owner]]) * n_steps
     }) + sum(x$model$interactions$LevelCountA * x$model$interactions$LevelCountB)
@@ -2305,6 +2422,13 @@ mfrmr_score_calibration <- function(calibration,
   mfrmr_calibration_abort_review(review)
   gpcm <- identical(calibration$model$family, "GPCM")
   jml <- identical(calibration$model$estimator, "JML")
+  product <- identical(calibration$header$schema_version, 6L)
+  if (product && !is.null(scoring_prior))
+    mfrmr_calibration_abort("SCORING_BASIS_UNSUPPORTED", "scoring_prior",
+      "Two-family scoring retains the fixed N(0,1) prior; overrides are not supported.")
+  if (product && !is.null(event_id))
+    mfrmr_calibration_abort("MODEL_STRUCTURE_UNSUPPORTED", "event_id",
+      "Two-family scoring requires one response per Person-facet combination; event extensions are not supported.")
   check_scores <- gpcm || jml || !is.null(scoring_prior)
   prior_mean <- if (is.null(scoring_prior)) calibration$scoring_basis$prior_mean else scoring_prior$mean
   prior_sd <- if (is.null(scoring_prior)) calibration$scoring_basis$prior_sd else scoring_prior$sd
@@ -2599,6 +2723,13 @@ mfrmr_score_calibration <- function(calibration,
   row_dispositions$CalibrationId <- rep(
     calibration$header$calibration_id, nrow(raw)
   )
+  if (product) {
+    # Keys use level indices, so labels shared by different owners cannot collide.
+    keys <- function(values) do.call(paste, c(unname(values), sep = ":"))
+    observed <- lapply(calibration$model$slope_owner, function(owner)
+      match(calibration$model$observed_contexts[[owner]], materialized$facet_levels[[owner]]))
+    row_dispositions$ObservedContext <- keys(facet_index) %in% keys(observed)
+  }
 
   nodes <- calibration$scoring_basis$nodes
   estimates <- data.frame(
@@ -2646,11 +2777,18 @@ mfrmr_score_calibration <- function(calibration,
       } else NULL)
     review_config <- list(model = calibration$model$family,
       n_cat = calibration$response$n_categories, n_person = length(person_labels))
-    review_idx$slope_idx <- if (identical(calibration$model$family, "GPCM")) {
+    review_idx$slope_idx <- if (product) seq_along(score_k) else if (identical(calibration$model$family, "GPCM")) {
       scored_facet_index[[calibration$model$slope_owner]]
     } else NULL
     review_params <- list(steps = materialized$shared_steps,
       steps_mat = materialized$owned_steps, slopes = materialized$slopes)
+    if (product) {
+      review_params$slopes <- Reduce(`*`, lapply(calibration$model$slope_owner, function(owner)
+        materialized$slopes[[owner]][scored_facet_index[[owner]]]))
+      if (any(!is.finite(review_params$slopes) | review_params$slopes <= 0))
+        mfrmr_calibration_abort("SCORING_NUMERICAL_FAILURE", "parameters.coordinates",
+          "Effective slope products must be finite and positive for every scored combination.")
+    }
     population <- if (gpcm || !is.null(scoring_prior)) {
       list(active = TRUE, design_matrix = matrix(1, length(person_labels), 1L),
         person_lookup = seq_along(person_labels),
@@ -2683,7 +2821,7 @@ mfrmr_score_calibration <- function(calibration,
       }
       cumulative_step <- c(0, cumsum(step_values))
       for (node in seq_along(nodes)) {
-        slope <- if (is.null(materialized$slopes)) 1 else materialized$slopes[review_idx$slope_idx[row]]
+        slope <- if (is.null(review_params$slopes)) 1 else review_params$slopes[review_idx$slope_idx[row]]
         logits <- slope * (k_values * (person_nodes[person_index[row], node] + base_eta[row]) - cumulative_step)
         maximum <- max(logits)
         observed_log_probability <- logits[score_k[row] + 1L] -
@@ -2882,11 +3020,13 @@ mfrmr_score_calibration <- function(calibration,
           person = person_col, facets = facet_cols,
           score = score_col, weight = weight_col, event_id = event_id_col
         ),
-        engine_identity = if (jml) paste0("artifact_coordinates_v", calibration$header$schema_version) else if (identical(calibration$header$schema_version, 2L)) {
+        engine_identity = if (jml || product) paste0("artifact_coordinates_v", calibration$header$schema_version) else if (identical(calibration$header$schema_version, 2L)) {
           "artifact_coordinates_v2"
         } else "artifact_coordinates_v1"
       ),
       notes = c(
+        if (product) paste("Experimental two-family scoring retains the ordered slope owners and fixed N(0,1) prior.",
+          "New combinations of known levels are model-based and flagged in row_dispositions$ObservedContext; no empirical validation of these combinations or sampling coverage is implied."),
         if (identical(calibration$header$schema_version,5L)) mfrm_jml_scoring_note(calibration$eligibility$source_scoring_evidence),
         if (jml) paste("JML-calibrated post-hoc EAP uses a reference prior, not a population estimated by JML or ML/WLE scoring.",
           "Replay validates stored source checks, not a fresh joint calibration fit."),

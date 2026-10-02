@@ -2,6 +2,64 @@
 
 Date: 2026-09-27. Internal implementation; not a public API availability claim.
 
+**Latest execution status (October 1):** all new computation is held for the
+[full sample-size and facet-structure review](#october-1-small-cohort-and-facet-structure-review).
+The user relaxed the October 2 18:00 deadline but explicitly requested design
+review before further calculation. This supersedes earlier launch/deadline
+instructions in this chronological record; frozen evidence remains unchanged.
+The [shared MML/JML roadmap](internal-roadmap-0.2.4.md#mml-and-jml-validation-plan)
+owns the current cross-estimator scope and execution sequence. The detailed
+MML proposals below feed that plan; they are not a separate MML-first queue.
+The shared [facet comparisons](internal-roadmap-0.2.4.md#c-facet-structure-with-explicit-workload-controls)
+and [robustness controls](internal-roadmap-0.2.4.md#e-robustness-mechanisms-and-matched-controls)
+now specify workload, population-shape, missingness and dependence contrasts
+for the common model families. They do not qualify the two-family MML route
+or replace its interval qualification. The subsequent
+[D specification](internal-roadmap-0.2.4.md#d-mml-scale-slope-families-and-output-decisions)
+fixes the matched normal-scale mapping, slope-family/null comparisons and
+small-N integer allocations. The current interval rank gate remains a reference
+procedure; changing it still requires justification and validation. The missing
+estimated-population/one-family location-contrast consumer is now an explicit
+implementation priority, not an available output. The shared
+[inference and evidence allocation](internal-roadmap-0.2.4.md#inference-decisions-and-evidence-allocation)
+supersedes older provisional comparison directions below; no computation resumed.
+The [F scoring/reuse specification](internal-roadmap-0.2.4.md#f-person-scoring-future-cohorts-and-saved-reuse)
+now fixes held-out panels, prior/scale comparisons, scoring-node retries and
+calibration-replicate Monte Carlo accounting. Two-family scoring remains
+conditional on fixed point calibration and N(0,1); a structural interval
+refusal alone does not determine its separate source-scoring result.
+The [calibration/refinement specification](internal-roadmap-0.2.4.md#calibration-procedures-and-bounded-numerical-refinement)
+now separates initial, source-reviewed point/scoring and interval-stage results.
+It is a prospective workflow, not a relabelling of the 400-case interval-driven
+replay below. The [source/RNG rules](internal-roadmap-0.2.4.md#source-identity-and-random-number-allocation)
+and [precision allocation](internal-roadmap-0.2.4.md#condition-accounting-and-precision-decisions)
+are specified; actual registries, source bridges and preflight remain pending.
+The [static source audit](internal-roadmap-0.2.4.md#static-source-audit-and-reusable-units)
+finds unchanged reviewed fitting code/binary and component-slope calculations
+relative to the matched replay; it does not call for a blanket 400-case refit.
+New location/scoring consumers and the prospective stopping policy still need
+their own evidence. The 800 prepared core inputs and eight saved jobs remain
+separate from new small-N or rubric conditions. The
+[family allocation ledger](internal-roadmap-0.2.4.md#family-allocation-ledger-and-work-order)
+now records the common A/B and expanded C/D/E working R=100 allocations.
+The [expanded workload account](internal-roadmap-0.2.4.md#expanded-allocation-shared-controls-and-scheduling-priorities)
+deduplicates D's A/B inputs and identical MML fits, retains saved historical
+inputs/stages as source-specific reuse candidates, and includes the additional
+A/B fixed-population fits. Priorities preserve complete small/large-N contrasts;
+the full count is a planning burden, not an approved compute budget or precise
+confirmation. Neither the old core runner nor a fresh confirmation is launched.
+The [native location-interval specification](internal-roadmap-0.2.4.md#native-mml-location-interval-extension-specification)
+now identifies the existing full-covariance/contrast machinery, missing public
+admission and result dispatch, and the proposed local/finer-grid checks for
+estimated-population RSM/PCM and one-family GPCM. Its first added scope is
+experimental native model intervals. The ordinary analytic Person-score helper
+does not include the new population/slope coordinates; sandwich support needs
+the complete-score path and a sampling-law decision. Standardized contrast
+intervals additionally need fitted-SD uncertainty and cross-covariances.
+Retained independent information/constraint fixtures are assigned to numerical
+verification, separately from sampling qualification. No code, public help,
+NEWS claim or two-family interval rule changed during this specification work.
+
 ## Model and sources
 
 For score k=0,...,K, the adjacent predictor is
@@ -1328,3 +1386,1446 @@ bounds where the existing profile contract correctly raises an error; no
 numerical-reference assertion failed. Help generation, five changed Rd parses
 and HTML guide rendering succeed. No whole-package suite, CRAN check or fresh
 coverage simulation was run.
+
+## September 30: adaptive observed information and component intervals
+
+**Question and decision.** Can the adaptive two-family calibration use the
+existing full-information log-Wald procedure without substituting fixed-node
+curvature? The answer is yes for the explicitly experimental local calculation,
+subject to the source-specific numerical checks below. Sampling coverage is
+still unqualified; no new response sample was generated and no model was refit.
+Adaptive constrained profiles and posterior residuals remain unavailable.
+
+**Mathematical target.** Let U_i(theta) be the complete-response score in all
+free calibration coordinates, and J_i(theta) its negative derivative. The
+continuous observed information for Person i is
+E[J_i(theta) | y_i] - Var[U_i(theta) | y_i]. This missing-information identity
+is the method described by [Louis (1982)](https://doi.org/10.1111/j.2517-6161.1982.tb01203.x).
+The independent reference assembles literal category logits, their first and
+second derivatives, and these conditional moments. It calls no package response,
+parameter-expansion, score or Hessian kernel. It includes the mixed derivatives
+between locations/steps and log slopes, and the second derivatives of the
+exponential slopes. Omitting these terms or treating nuisance calibration as
+known would change the information target.
+
+The production covariance reuses `compute_mml_parameter_covariance()` and the
+existing moving-node gradient. It differentiates the finite adaptive likelihood,
+including mode, scale and Jacobian changes. The independent Louis oracle at
+high order approximates the continuous information. These need not coincide at
+low order; the low-order moving-node gradient has its separate Richardson
+checks. The oracle uses the shared integration coordinates/rule, so it is an
+independent response/derivative/information implementation, not a wholly
+independent quadrature algorithm. The previous all-Person continuous integral
+checks remain the independent integration evidence.
+
+**Fixed numerical procedure.** No fitting defaults, automatic retries or
+acceptance thresholds change. Adaptive direct fits must pass their optimizer
+and gradient convergence checks, and then the existing category, source-identity,
+unregularized full-information and two-step Person-score rank checks. The fresh
+maximum mean score is at most 1e-6; standardized Newton displacement is at most
+.01 (with the existing caution above 1e-4); inverse residual is at most 1e-6.
+At unchanged parameters, the fitted adaptive order q is compared with 2q-1.
+Standardized score displacement and covariance change must each be at most .01.
+Failures retain point estimates, missing bounds and reasons. The fixed-grid EM
+route and its min(em_score_tol, 1e-6) requirement remain unchanged. Neither
+method switches integration or refits automatically during `confint()`.
+
+**Retained-data result.** `gmfrm-adaptive-information-20260930.R` reuses the
+public adaptive-61 fit from the preceding section: 135 Persons, 1,370 ratings,
+36 free coordinates and 12 component slopes. The prespecified oracle discrepancy
+limits were 1e-4 for standardized information/covariance, 1e-5 for individual
+scores and 1e-6 for total NLL. All were met:
+
+| Quantity | Result |
+| --- | ---: |
+| Smallest independent observed-information eigenvalue | 7.845930 |
+| Standardized information discrepancy, adaptive 61 / 121 | 2.9325e-6 / 2.9298e-6 |
+| Standardized covariance discrepancy, adaptive 61 | 2.9325e-6 |
+| Maximum Person-score discrepancy | 9.4680e-10 |
+| Adaptive-61 versus reference total NLL difference | 2.0008e-8 |
+| Local score rank / free dimension | 36 / 36 |
+| Standardized Newton displacement | 2.4722e-5 |
+| Adaptive 61-to-121 standardized score displacement | 8.3116e-8 |
+| Adaptive 61-to-121 standardized covariance change | 3.1574e-7 |
+| Available experimental component intervals | 12 / 12 |
+
+The audit took 149.302 seconds in the recorded local environment. Its script,
+input/source hashes, independent matrices, scores, numerical checks, result
+object and session information are retained in
+`validation-results/gmfrm-adaptive-information-20260930/`. Every requested
+component is reported. This empirical result does not establish sampling bias,
+coverage, a unique global solution or suitability for rater feedback.
+
+**Output and scope.** `confint(fit)` and integration-order refits now retain
+adaptive log-Wald intervals, owner/level identity and engine/integration metadata
+through tables, plots, reports and saved exports. Round-trip intervals and
+report text are identical. The profile entry point explicitly refuses adaptive
+two-family fits before entering the fixed-grid constrained evaluator. Curves
+remain without intervals, and ordinary diagnostics, model ranking and portable
+two-family scoring are unchanged. README, capability/help, guide, NEWS and the
+active plans describe the same scope.
+
+**Verification.** The seven targeted files (adaptive gradient/workflow, existing
+GMFRM public workflow, quadrature sensitivity, slope intervals, capability matrix
+and fixed-grid joint profiles) pass 585 assertions without failures or skips.
+They include binary/four-category information references, renamed/overlapping
+owner levels, nonconvergence, mismatched likelihood rejection, a converged
+adaptive-3 fit rejected by the quadrature check, cross-family covariance and
+plot/export/reopen identity. The initial run had one test-only failure: it
+assumed the shared label sorted first in both renamed facets. The corrected
+assertion matches the owner and level rather than their row positions.
+No production calculation or tolerance was changed to pass that assertion.
+The logs and per-file results are retained beside the audit.
+
+`devtools::document()` completed; the six changed Rd files parse and the GPCM
+guide renders to HTML in CRAN mode. This rendering is not fresh execution of
+its long statistical examples. `git diff --check` passes. Unaffected G/D, MI,
+feedback and JML studies were read and reused, not rerun. No full package check,
+independent coverage study, remote CI, commit or publication was performed.
+
+## September 30: adaptive posterior residuals
+
+**Question and implemented target.** Can a saved adaptive two-family fit
+describe its observed ratings without reverting to fixed-grid integration or
+an EAP plug-in? `mfrm_response_diagnostics()` now integrates a replicate rating's
+category probability over the Person's complete same-data ability posterior,
+with calibration fixed. The response equation, both slope owners, original
+N(0,1) population and observed assignment are retained. Selecting output rows
+changes the displayed/summarized set, not the conditioning record or posterior
+grid. It neither adds unassigned ratings nor supplies held-out predictions.
+
+**Procedure and failures.** Source reconstruction checks the original roster,
+categories, facet/step/slope point estimates, model roles and integration
+settings. Adaptive source likelihood and gradient are freshly evaluated using
+the fitting objective and checked against the saved optimizer tolerance;
+stored convergence flags alone cannot admit a stale source. This check does
+not require a covariance or slope interval. Saved-result attachment validates
+identity without repeating the source likelihood or any posterior integral.
+
+The existing adaptive basis supplies mode/curvature nodes with prior density
+ratio and Jacobian weights. The existing response evaluator supplies both
+slope components. For q requested points, compare each category probability
+with 2q+1 points, retain the higher-order result, and require maximum absolute
+change at most 1e-7. The existing normalization, positive-variance and missing
+result checks remain unchanged. Mixture variance includes both expected
+conditional rating variance and variance of conditional means. A group with
+an unavailable observed row retains its full denominator and missing indices.
+No threshold was relaxed and no automatic order escalation/refit was added.
+
+**Independent all-row check.** `gmfrm-adaptive-residuals-20260930.R` reused
+`public-adaptive61.rds` from the calibration review: 135 Persons, 1,370 ratings
+and four categories. The prespecified orders were 7, 61 and 121; no data were
+simulated and no calibration was refit. The generalized continuous reference
+in `helper-gmfrm-response.R` constructs literal logits from labelled saved
+estimates, independently solves for the posterior mode/scale, and integrates
+over the real line with `stats::integrate()`. It calls no package probability,
+mode, parameter-expansion or GH function. All 135 Person references and all
+1,370 rows were retained, including those failing the public order check.
+
+| Requested / check order | Available ratings / 1,370 | Complete criterion/rater groups / 12 | Maximum probability error among returned rows | Maximum mean / mixture-variance error among returned rows |
+| --- | ---: | ---: | ---: | ---: |
+| Adaptive 7 / 15 | 205 | 0 | 4.2742e-9 | 4.2702e-9 / 4.0079e-9 |
+| Adaptive 61 / 123 | 1,369 | 10 | 2.9824e-11 | 2.9790e-11 / 2.7205e-11 |
+| Adaptive 121 / 243 | 1,370 | 12 | 9.8603e-14 | 2.9555e-13 / 4.1262e-13 |
+
+Every returned-row error meets the prespecified 1e-8 reference criterion.
+The 61-point unresolved row has an integration difference 2.6653e-7 and remains
+unavailable; it was not silently repaired in that saved output. The maximum
+121-to-243 difference is 1.3146e-10. At the finest order all rows are returned,
+so its reported maximum includes the entire requested roster. These are
+numerical checks on a retained case, not a universal integration-error bound.
+
+**Separate integration from calibration.** At exactly the same adaptive-fit
+parameters, a numerical fixed-grid 121/243 comparison passes only 251/1,370
+rows. The 243-point probabilities differ from the continuous reference by as
+much as .003544; the largest 121-to-243 change is .047080. The numerical input
+selects a fixed grid for this comparison; no fitted object is relabelled or
+admitted through a different public source check. The earlier 318/1,370 result
+used a different, fixed-EM calibration and remains separate evidence.
+
+| Raters per Person | Ratings | Adaptive 61 available | Adaptive 121 available | Fixed 121/243 passing, same calibration |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 445 | 445 | 445 | 237 |
+| 2 | 270 | 269 | 270 | 14 |
+| 6 | 60 | 60 | 60 | 0 |
+| 7 | 595 | 595 | 595 | 0 |
+
+This addresses the retained concentrated-posterior integration failure, while
+preserving the low-order limitation. It does not test conditional independence,
+population assumptions, rater competence, interval coverage or the effect of
+giving feedback. These remain descriptive same-data residuals without an
+expectation-one reference, fit cutoffs, p-values or calibration uncertainty.
+
+**Workflow verification.** Adaptive workflow, fixed-grid GMFRM response,
+corrected-JML response and ordinary/extended response regression files pass
+(315 successful expectations). The public two-family workflow and capability
+matrix files also pass (328 successful expectations): 643 across six files.
+The two shared-rater RTMB tests skip because RTMB is unavailable in this R
+library; their unchanged numerical branches are not newly qualified here.
+Checks cover owner names with shared labels, exact source identity, altered
+likelihood/parameters/gradient tolerance, selected-row invariance, independent
+mixture moments, incomplete availability, both plot styles, ggplot conversion
+and exported saved results. In a fresh R process, both the partial 61-point
+and complete 121-point empirical results reconstruct their original rows,
+groups, settings, plots and reports with fitting/gradient/integration functions
+replaced by errors. No numerical recomputation occurs during replay.
+
+`devtools::document()` completed, the seven cumulatively changed Rd files parse,
+and the updated GPCM guide renders to HTML in CRAN mode. This does not rerun
+its long statistical examples. `git diff --check` passes. The final test logs
+and reviewed-source hashes accompany the numerical evidence.
+
+The all-row audit took 129.306 seconds locally. Evidence, all Person references,
+source/input hashes, exact executed R-source snapshots, partial/complete
+diagnostics, saved results and fresh-process checks are in
+`validation-results/gmfrm-adaptive-residuals-20260930/`. Later help-only edits
+are distinguished from the hash-matched executed source. Existing evidence
+was reused; no whole-package check, new sampling study or publication occurred.
+
+## September 30: adaptive interval procedure feasibility
+
+**Decision addressed.** Is the public neutral-start adaptive procedure ready
+for a matched all-case replay and then independent coverage evaluation?
+No: the bounded check found a poor flat solution which is not explained by
+quadrature error. The current plan specifies the targets, all numerical gates,
+starting values, existing optimizer polishing, conditional 31/61/121 refits,
+failure denominators, Monte Carlo precision and consumer boundaries. That
+protocol was saved before this run. No new response data were generated.
+
+`gmfrm-adaptive-procedure-20260930.R` used the first two retained replicates in
+each of the four September 28 design/SD conditions and the prespecified
+near-zero-slope rotating-pair SD=.5 replicate 26. All calls used the public
+neutral-start BFGS adaptive fit at order 31, maxit 500 per optimizer stage,
+reltol 1e-10, and all-component model-based 95% intervals. Only a sole
+quadrature-sensitivity failure could trigger the next order; no such failure
+occurred. Numerical checks and public defaults were not changed to admit cases.
+
+| Retained condition | Cases | Converged by raw-gradient check | Cases returning all nine intervals | Final refusal |
+| --- | ---: | ---: | ---: | --- |
+| Common Persons, SD=1 | 2 | 2 | 2 | None |
+| Rotating pairs, SD=1 | 2 | 2 | 2 | None |
+| Common Persons, SD=.5 | 2 | 2 | 2 | None |
+| Rotating pairs, SD=.5, first two replicates | 2 | 2 | 1 | Replicate 1: joint information |
+| Rotating pairs, SD=.5, prespecified replicate 26 | 1 | 1 | 0 | Joint information |
+
+All seven returned sets pass the unchanged rank, stationarity, information and
+31-versus-61 gates. Maximum standardized Newton displacement is 2.58e-5,
+maximum quadrature score shift 7.42e-9 and covariance change 2.56e-8.
+The two refused fits needed regularized near-singular information and retained
+missing intervals. Every point, warning, optimizer stage and failure remains
+saved; no case is replaced. Seven of nine is a feasibility disposition, not
+an estimate of population availability from a representative random sample.
+
+**Counterexample to the neutral-only procedure.** Replicate 1's adaptive
+solution has component slopes from 3.14e-11 to 7.47e7. Compare the two saved
+parameter vectors using the *same* adaptive objective and a literal continuous
+integral over each complete Person record:
+
+| Saved point | Continuous NLL | Adaptive-61 NLL | Maximum per-Person log-integral error |
+| --- | ---: | ---: | ---: |
+| Adaptive neutral start | 1558.971231708 | 1558.971231708 | 1.78e-15 |
+| Retained fixed-grid EM parameters | 1471.593412080 | 1471.593412080 | 1.78e-15 |
+
+The gap is 87.37782 NLL units in favor of a feasible retained point. The latter
+row evaluates its parameters with accurate integration; it does not compare
+two unmatched saved quadrature likelihoods or establish a global optimum.
+The continuous-integral function is reused from the September 30 calibration
+audit, calling no package likelihood/probability kernel. Both 31 and 61 nodes
+give the same conclusion. More quadrature is not a remedy for this example.
+
+**Separate starting-value diagnosis.** After completing the frozen nine-case
+run, use the retained EM parameters as the start of the same adaptive BFGS
+optimizer, with the same data, 31 points, 500 iterations and 1e-10 tolerance.
+It reaches NLL 1471.593412033 and passes all nine component-interval checks.
+Maximum log-slope change from the EM parameters is .0001719. This calculation
+took 27.967 seconds for fitting and 57.541 for inference. It is an internal
+diagnostic, not an available public initialization option or a new evaluated
+retry rule. Its object explicitly has no neutral-start replay call, and its
+starting vector/source are recorded. It does not overwrite the original failure
+or add a success to the seven-of-nine count. Replicate 26's boundary/global
+status remains unresolved; the refusal alone cannot classify it.
+
+**Cost and decision.** The nine-case procedure took 552.207 elapsed seconds
+with two computation workers; summed fitting and inference times were 531.235
+and 528.869 seconds (CPU total 1,057.265 seconds). The eight ordinary cases
+averaged 129.978 elapsed seconds each, range 114.825--186.385. At two workers,
+simple extrapolation yields about 7.2 hours for 400 matched cases and 36.1 hours
+for 2,000 independent cases. Using the observed minimum/maximum yields
+6.4--10.4 and 31.9--51.8 hours respectively, not predictive intervals or hard
+upper bounds. A small concurrent fixed-parameter comparison and ordinary
+workstation activity were not isolated; these are planning measurements.
+Actual grid retries, tails and a changed initialization rule can change cost.
+
+Do not spend that budget on the neutral-only candidate. First fix and test a
+data-based starting-value/solution-selection rule through the public route;
+then refreeze the full procedure and re-estimate cost before either larger
+study. The existing October 2 consultation checkpoint remains applicable.
+The planned 500 independent datasets per condition would target roughly
+one-percentage-point coverage MCSE if at least 475 intervals are returned;
+it is not a completed study or evidence that earlier bias/undercoverage vanished.
+
+**Verification and identity.** The runner checks pass/refinement/terminal/mixed
+failure decisions. A mocked full-flow check additionally verifies actual call
+controls, order progression and retention of a point when inference errors.
+The first fresh-process cache check exposed a bookkeeping issue: pkgload
+copies an identical compiled library to a different temporary path. The
+current runner hashes that library under a stable label while retaining its
+content hash. This changes no fitting or inference function. A two-process
+cache test uses the retained objects as fixtures and requires replay without
+fitting or changes to saved RDS files/timing. It is a cache test, not another
+numerical run. Original numerical evidence and exact executed source remain
+unchanged; future runs use the corrected runner and a new output directory.
+
+Evidence is under `validation-results/gmfrm-adaptive-procedure-20260930/`:
+the pre-execution protocol, input/source hashes and snapshots, nine saved
+stage records, dispositions/timing, independent objective comparison and
+separate starting-value diagnostic with scripts. No package estimator/API was
+changed, no full package check or new coverage simulation was run, and no
+commit or publication was performed. D1/D2 remain open.
+
+## September 30: public adaptive initialization revision
+
+**Problem and implementation.** A small terminal gradient did not distinguish
+the earlier poor flat solution from a better likelihood solution. Public
+two-family adaptive direct MML now optimizes from both the neutral vector and
+a same-data fixed-grid EM vector. Every candidate uses the same requested
+adaptive objective, optimizer and stopping controls. Select the lowest finite
+terminal adaptive NLL; keep a better unfinished candidate's numerical status
+instead of substituting a worse converged point. Exact ties retain neutral.
+A known starting objective lower than every terminal point beyond roundoff
+marks the selected result unresolved. This comparison is independent of truth,
+interval outcomes and fixed-grid likelihood values, and does not establish a
+global maximum.
+
+`gpcm_mml_start=NULL` resolves to `"neutral_em"` only for this route;
+`"neutral"` reproduces the previous public initialization. The EM seed uses
+the requested quadrature, maxit outer iterations, 100 iterations per M-step
+and per-Person score tolerance 1e-6. A finite unfinished EM vector can supply
+a start. Each direct candidate separately retains its requested maxit/reltol
+and existing gradient-polishing sequence. There is no new optimizer, changed
+likelihood, automatic quadrature escalation or relaxed inference threshold.
+
+`fit$opt$mml_initialization` retains every starting vector, adaptive starting
+objective, optimizer result/stage history, error, warning, seed trace and cost.
+Alternative failures are disclosed; an all-start failure condition carries
+the same record. Summaries record the effective choice and selected start;
+results/reports include the comparison table. The report also now correctly
+labels adaptive direct fitting and its total gradient, rather than EM and
+a per-Person score. Saved calls pin the effective policy, and quadrature
+refits of older objects without the field retain neutral initialization.
+
+**Fixed matched check.** Before executing the revised algorithm, the roadmap
+recorded these rules and retained the same nine datasets, initial order 31,
+maxit 500, reltol 1e-10, all-component 95% model intervals and conditional
+31/61/121 quadrature rule. The runner additionally preserves the full error
+condition if fitting fails. The original neutral-only evidence is unchanged;
+the new run has a separate manifest, complete source snapshots and protocol.
+
+**Outcome.** All nine cases completed at order 31; no conditional quadrature
+retry occurred. All nine neutral candidates reproduce the previous saved
+parameter vectors exactly (maximum absolute difference zero). The revised
+selection retains neutral in four cases and the EM-derived candidate in five.
+In seven ordinary cases the selected NLL is unchanged up to 7.60e-11 and all
+nine component intervals remain available. The other two cases change as follows:
+
+| Rotating-pair SD=.5 case | Previous neutral NLL | Revised selected NLL | Current numerical result | Component intervals |
+| --- | ---: | ---: | --- | ---: |
+| Replicate 1 | 1558.971231708 | 1471.593412040 | Total-gradient review fails | 0 / 9 |
+| Prespecified replicate 26 | 1582.001695682 | 1484.228252536 | Joint information fails | 0 / 9 |
+
+The literal continuous likelihood independently reproduces both new NLLs;
+maximum per-Person log-integral error is 1.78e-15 at both 31 and 61 adaptive
+nodes. Thus both improvements are improvements to the same accurately
+integrated likelihood. They do not establish global optimality or coverage.
+Every optimizer returns code zero, but only eight selected solutions pass
+the gradient review. The runner's `Converged` column reflects the optimizer
+flag; `matched-review.csv` separately records `GradientCheck` and the actual
+gradient. Code zero alone is not the numerical convergence decision.
+
+Replicate 1's selected slopes now range from .21247 to 1.28777. Its total
+gradient is 1.5142e-4 against the unchanged 1e-4 threshold after all five
+optimizer stages. The selected estimate is retained with a warning and
+missing intervals; the full-information checks are not reached. The earlier
+separate warm-start diagnostic had a different starting vector and passed;
+it does not qualify this new public procedure's stopping result. Replicate 26
+has slopes from .00135593 to 1.48323 and total gradient 7.29e-6, but its
+unregularized full-information check fails. Its boundary/global-solution
+status is still unresolved. Neither refusal was dropped, replaced by the
+worse neutral solution, or repaired by changing thresholds. Interval
+availability remains seven of nine, a bounded feasibility result rather than
+a representative estimate of availability or sampling coverage.
+
+**Cost and next decision.** The run took 1,016.773 elapsed seconds (16.95
+minutes) on two workers, with 1,182.309 summed fitting seconds and 539.670
+inference seconds; CPU total was 1,720.131 seconds. The eight ordinary cases
+averaged 165.914 seconds, range 132.350--204.260. Replicate 26 took 394.665
+seconds, including 343.334 for fitting, so the ordinary range is not an upper
+bound on difficult cases. Small source/reporting checks and normal workstation
+activity were not isolated from the run.
+
+Simple ordinary-case two-worker projections are 9.2 hours for 400 matched
+datasets and 46.1 hours for 2,000 independent datasets; minimum/maximum
+ordinary-case scenarios are 7.4--11.3 and 36.8--56.7 hours. These omit the
+frequency of difficult cases and unobserved quadrature retries and are not
+predictive intervals. The combined mean projection is about 55.3 hours,
+beyond the October 2 18:00 JST checkpoint if started at this review. Neither
+large study was launched. The observable initialization repair is implemented;
+the retained stationarity failure and weak-information case must inform the
+next numerical/interval decision before spending the coverage-study budget.
+The existing consultation rule continues to apply.
+
+**Verification.** Selection tests retain a lower unfinished point, neutral
+ties, seed/optimizer failures, all-start failure records and a starting point
+better than all returned candidates. Four targeted test files account for
+309 successful expectations after correction of one obsolete test assumption:
+a short-run fixed/adaptive integral discrepancy is now checked on the explicit
+neutral fit, because the new selected EM-derived point happens to agree.
+The exact adaptive-likelihood equality and independent full-covariance and
+response-moment checks remain unchanged. The corrected first workflow block
+and selection tests were rerun; the other successful blocks were reused.
+Both the initial failure log and successful correction log are preserved.
+
+All nine saved fits reconstruct initialization tables, available/unavailable
+intervals and reports in a fresh R process with fitting and adaptive-integration
+functions replaced by errors. RDS round trips preserve the complete candidate
+history and report text. A separate fresh-process runner-cache replay preserves
+all nine result files and their original timing hashes. `devtools::document()`
+completed, the three changed Rd files parse, and the updated GPCM guide renders
+in CRAN mode without rerunning its long numerical examples. `git diff --check`
+passes. No full package check or coverage qualification is claimed.
+
+Evidence and executable checks are in
+`validation-results/gmfrm-adaptive-start-20260930/`, including source/input
+identity, the pre-execution protocol, all candidate/failure records, matched
+comparison, literal-integral check, measured costs and test/replay logs.
+The work changes the development source, not a published 0.2.4 artifact;
+no commit or publication was performed. D1/D2 remain open.
+
+## September 30: adaptive stationarity and weak-information review
+
+**Decision addressed.** Separate a stalled numerical optimizer from an
+unreliable information calculation before changing an interval threshold or
+spending the matched-replay budget. Reuse the two refused fits from the
+initialization review. The independent literal Louis implementation evaluates
+all location, step and slope derivatives at both 31 and 61 adaptive nodes;
+the package's moving-node gradient and existing guarded curvature proposal
+are evaluated at the same saved points. No response data are generated.
+
+| Saved rotating-pair SD=.5 point | Raw total gradient | Largest discrepancy from independent gradient | Smallest / largest independent curvature | Standardized Newton displacement |
+| --- | ---: | ---: | ---: | ---: |
+| Replicate 1 | 1.51422e-4 | 1.32e-14 | .985254 / 256.060 | .000115916 |
+| Replicate 26 | 7.28836e-6 | 1.05e-14 | 6.81342e-8 / 218.112 | .0279766 |
+
+At both points the literal marginal likelihood agrees within 2.28e-13 and
+the maximum entrywise 31-to-61 information change is 5.69e-14. Replicate 1
+has well-conditioned positive information (reciprocal condition .002104).
+Its derivative is correct but has not met the package's raw-gradient rule.
+This is consistent with the relative-objective stopping rule of
+[`stats::optim()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/optim.html)
+preceding the required gradient accuracy. Reusing the existing guarded Newton
+proposal lowers NLL from 1471.593412039654 to 1471.59341203293 and the gradient
+to 2.06e-8, without changing the objective or tolerance. This diagnosis supplies
+a reason to extend an existing repair, rather than just relaxing acceptance.
+
+Replicate 26 is different. Its independently positive information is extremely
+weak (reciprocal condition 2.17e-10). The weakest direction is dominated by
+rater r4's step and location coordinates, coupled to its .00135593 slope;
+the fitted step coordinate is -222.839. The package's Richardson refinement
+passes relative curvature change (5.998e-6 versus 1e-3) and inverse residual
+(1.026e-10 versus 1e-6), but standardized displacement .0279765 exceeds the
+unchanged 1e-4 weak-information threshold. The guarded proposal is rejected.
+A small raw gradient therefore does not justify this point's local Wald
+covariance. The refusal is supported by independently stable weak curvature
+and inadequate stationarity in that metric, not demonstrated quadrature or
+derivative error. A global optimum or a true boundary has still not been proved.
+The two-point numerical diagnosis took 70.631 seconds on two workers.
+
+**Public repair and frozen replay.** Extend the existing single curvature
+restart to adaptive GPCM with a fixed population and at most 64 free
+parameters, after the ordinary polish ladder still ends with
+`code_zero_large_gradient`. This includes the one-family and two-family
+adaptive direct routes. Other existing routes keep their previous behavior.
+The same optimizer and iteration ceiling follow the proposal; positive
+well-conditioned curvature, gradient improvement and no objective increase
+beyond roundoff remain required. Failed proposals and every stage remain
+visible. No new optimizer, dependency, user control, likelihood, information
+matrix or acceptance threshold is introduced.
+
+Weak-information refusals now report the actual curvature-change, inverse
+residual and standardized-displacement values with their unchanged limits.
+This makes the reason reviewable in interval checks and saved reports.
+`gpcm_mml_start="neutral"` still selects neutral-only initialization; exact
+historical optimizer behavior requires its source version, because numerical
+repairs also apply to that starting policy.
+
+The pre-execution protocol selects three refits from saved optimizer states:
+001-common_persons-1, 001-rotating_pairs-0.5 and 002-common_persons-1. Each has
+an EM-derived adaptive candidate that can enter the added branch. Refitting
+uses both original starts and the unchanged public 31/61/121 interval procedure,
+maxit 500 and reltol 1e-10. None of the other six saved cases has a candidate
+meeting the added branch condition; they retain their original fits and source
+identity as reused evidence. Only replicate 26's interval calculation is
+refreshed to verify the expanded refusal detail. This avoids repeating
+unchanged optimization and does not silently relabel old runs as new executions.
+
+**Repaired public result.** All three full public refits pass at order 31 and
+return all nine component intervals. Both ordinary cases retain their NLLs
+within 4.40e-11 while improving their selected total gradients to 2.90e-8
+and 3.49e-8. Replicate 1's recorded sixth stage, `curvature_restart`, changes
+its NLL from 1471.593412039654 to 1471.593412032933 and its total gradient
+from 1.51422e-4 to 1.81924e-7. This is the actual post-restart optimizer result,
+distinct from the preceding diagnostic proposal. All 22 score directions and
+the full unregularized information checks pass. Standardized displacement is
+2.13e-8; the 31/61 score shift and covariance change are 3.73e-10 and 1.24e-12.
+No quadrature retry, information regularization or threshold change occurs.
+
+At this repaired point the independent Louis calculation reproduces the
+gradient (1.81924e-7) and marginal likelihood. Its full nuisance-adjusted
+log-slope covariance agrees with the public covariance to relative matrix
+error 6.46e-7; the largest component log-SE difference is 1.99e-7. The
+reference uses a literal constrained three-by-six log-slope Jacobian, retaining
+all nuisance coordinates, rather than inverting a slope-only block.
+
+Combined with the six explicitly reused fits, the disposition is now eight
+of nine cases returning all component intervals, versus seven previously.
+The refreshed replicate 26 still returns no intervals and now states the
+three measured refinement/inversion/displacement values and limits. Its
+original fit and optimizer history are preserved. This is a bounded numerical
+repair and refusal check; eight of nine is not a representative availability
+estimate, a coverage result or proof that all finite solutions have been found.
+
+**Verification and cost.** The curvature, weak-information, ordinary adaptive,
+two-family adaptive and start-selection test files pass (330 unique successful
+expectations across the two targeted runs). Tests cover the new successful
+restart, rejected indefinite proposals, excluded estimated-population/JML/
+looser-control routes, existing raw-gradient checks, independent covariance,
+arbitrary owner names, export and reopening. All nine current saved-output
+paths preserve interval checks, candidate histories and report text in a fresh
+R process with fitting, covariance and adaptive-integration functions replaced
+by errors. The weak refusal's numeric explanation survives that round trip.
+
+Three refits plus their interval calculations took 439.392 elapsed seconds
+on two workers; the separate weak-information interval refresh took 48.038
+seconds. Affected cases cost 208.005, 225.634 and 230.629 seconds respectively.
+The tests and small documentation checks ran concurrently; these are planning
+measurements, not isolated performance benchmarks. Combining their updated
+costs with the five unchanged ordinary-case records gives a mean of 184.478
+seconds and range 133.827--230.629. The separately retained difficult case
+took 394.665 seconds and is not bounded by that ordinary range.
+
+On that mixed timing basis, simple two-worker scenarios are 10.2 hours for
+the 400-case matched replay and 51.2 hours for 2,000 independent cases;
+ordinary minimum/maximum scenarios are 7.4--12.8 and 37.2--64.1 hours. These
+are not predictive intervals and omit the frequency of difficult cases and
+quadrature retries. No large study has started. The now-fixed numerical
+procedure can proceed to the prespecified all-case matched comparison, retaining
+all failures and paired denominators, before deciding whether independent
+coverage work is warranted. Apply the October 2 consultation rule to the
+actual launch time and workload; the combined mean scenario is about 61.5 hours.
+
+`devtools::document()` and Rd parsing pass; the GPCM guide renders in CRAN
+mode, without executing its long statistical examples. `git diff --check`
+passes. The compiled library matches the earlier archived binary. Evidence
+is in `validation-results/gmfrm-adaptive-stationarity-20260930/`: pre-change
+diagnosis/source, the frozen replay protocol, post-change source/input hashes,
+three new fit/interval records, explicit reuse identities, refreshed refusal,
+independent verification and test/replay logs. No full package check, new
+sampling study, release or commit is claimed. D1/D2 remain open.
+
+## September 30 matched adaptive replay launch
+
+The next prespecified comparison is now running on all 400 retained September
+28 datasets. It started at **21:42:49 JST on September 30**, using two workers
+and the frozen `neutral_em` procedure, with the existing 31/61/121 retry rule
+and unchanged inference gates. Nine verified records are reused with their
+actual source identities; the remaining 391 datasets are refitted. No new
+observations, seeds, acceptance thresholds or optimizer choices were introduced.
+
+The principal comparator is the saved revised fixed-grid EM procedure. Before
+launch all 400 pairs were checked for identical observations, truth, seeds and
+fixed-grid fits; the original strict and revised saved interval outputs gave
+95/400 and 310/400 available datasets respectively. Both historical arms remain
+in the comparison, under separate names. The adaptive arm is not summarized
+until all 400 records are complete. Dataset-level failures remain observations;
+they do not trigger replacement data or a change in the procedure.
+
+The repository-only runner is
+`inst/validation/gmfrm-adaptive-matched-20260930.R`. It snapshots the package
+source, compiled library, procedure and aggregation code; hashes both historical
+input sets and all prior reused evidence; and saves each result atomically.
+Each record retains all quadrature attempts, both start histories, errors,
+warnings and original timings. Resume checks the manifest and frozen inputs;
+a process lock prevents duplicate runs. Computation runs as a detached local
+process, with an idle-sleep assertion only for its lifetime. This is execution
+of the present study, not a scheduled future review or reminder.
+
+The frozen protocol specifies log-scale bias/RMSE/empirical SD separately among
+all numerically qualified finite points and among interval-returned points.
+It also specifies estimated variance, interval width, interval availability,
+conditional coverage, and returned-and-covered frequency for each of nine
+components in each condition. Unavailable intervals have missing conditional
+coverage. Exact binomial Monte Carlo intervals are provided per arm; paired
+differences use the dataset as the unit, with a paired delta-method MCSE for
+conditional ratios with differing denominators. A separate both-available
+contrast is labelled explicitly. The four conditions share random numbers
+within each replicate and are not pooled as independent evidence.
+
+Preflight checks exercised missing intervals, finite unfinished estimates,
+zero-return denominators, the analytic paired-ratio MCSE example, source and
+resume mismatches, and atomic saved-record handling. A temporary 400-record
+accounting fixture using the same saved procedure in both comparison arms
+reproduced both historical totals and returned exactly zero paired differences
+and MCSEs; aggregation refused an incomplete 399-record fixture. Those fixture
+files were deleted and are not adaptive study results. No package algorithm
+changed in this execution step, so the preceding targeted numerical tests are
+reused rather than rerunning the full suite.
+
+Evidence and live results are in
+`validation-results/gmfrm-adaptive-matched-20260930/`: `manifest.rds`, `source/`,
+`protocol-before-execution.md`, `check-aggregation.R`, `preflight.log`, the nine
+explicitly reused records, `launch.json` and `execution.log`. The frozen runner
+will write `rows.csv`, `stages.csv`, `summaries.csv`, `paired.csv` and
+`summary.rds` after all 400 records exist. At launch the remaining workload is
+about 10 hours, with ordinary-case scenarios about 7--13 hours; difficult fits
+and quadrature retries can extend it. This is before the October 2 18:00 JST
+consultation checkpoint on current evidence. The matched replay is informed
+by development on retained examples and cannot supply independent qualification
+of nominal coverage. The 2,000-case independent study has not started; D1/D2
+remain open pending evidence and review.
+
+By 21:46:08 JST the first two new jobs (replicate 3, common Persons and
+rotating pairs at SD=1) had both completed and been saved, in 198.334 and
+153.291 seconds. Both ended at order 31 with all nine intervals. Including
+the nine reused records, 11/400 records were complete at that startup check.
+This verifies execution and persistence, not overall availability or coverage;
+the remaining jobs continue under the same frozen procedure.
+
+## October 1 completed matched replay and independent-study decision
+
+The completed results in this section stand. Its subsequent 4 x 500 launch
+proposal is now held; the [revised scenario design](#october-1-revised-scenario-design)
+below records the current recommendation after the user's scope review.
+
+All 400 retained datasets completed at **11:43:25 JST on October 1**; the
+summary was saved at 11:43:30. The frozen source, 818 input hashes, manifest
+identity and 400 saved result hashes were verified. A separate read-only
+recalculation from `rows.csv` reproduced all 108 condition/component/arm
+summaries, including both point-estimate denominators, exact binomial bounds,
+estimated log variance and interval width. No additional fitting or seed
+generation was needed for this assessment. Evidence remains in
+`validation-results/gmfrm-adaptive-matched-20260930/`, with the review script
+and verification output saved alongside the original summaries.
+
+**Question answered:** did the frozen numerical procedure recover intervals
+lost by fixed-grid EM, and is there a remaining reason to revise it before
+independent evaluation? The principal comparison is adaptive minus revised
+fixed-grid EM on identical observations, rather than a new interval formula.
+All nine intervals were returned for 95/400 historical strict-EM datasets,
+310/400 revised-EM datasets and **399/400 adaptive datasets**. All 400 adaptive
+point estimates met the specified numerical qualification rules. All final
+fits used order 31; the prescribed source/information/integration checks still
+applied. No outer fit-order retry was requested.
+
+The 89 additional returned datasets are all in the common-Person, SD=1
+condition (11/100 to 100/100). Its paired availability difference is .89,
+MCSE .03145. Availability is unchanged for the other three conditions. Among
+datasets with intervals from both procedures, every component's coverage
+indicator is unchanged; the largest absolute log-estimate difference is
+.0022303 and the largest relative log-SE change is .0042879. Across all 399
+adaptive interval-returning datasets, the largest absolute log-estimate
+change from revised EM is .0104607. This supports recovery of numerical
+availability, not a claim that the Wald approximation's coverage improved.
+
+**Remaining statistical evidence:** the table shows ranges over nine distinct
+components within each condition, not pooled independent replications. Bias
+and RMSE use all 100 numerically qualified points. The SE ratio is
+`sqrt(mean(LogSE^2)) / sd(LogEstimate)` on the same interval-returned subset;
+width is the mean width on the log-slope scale. Each coverage denominator is
+100, except rotating pairs at SD=.5, where it is 99.
+
+| Design; ability SD | Returned datasets | Log bias | Log RMSE | RMS model SE / empirical SD | Mean log width | Conditional coverage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Common Persons; 1 | 100/100 | -.0581 to .0169 | .1164–.1997 | .850–1.158 | .432–.793 | .90–.98 |
+| Rotating pairs; 1 | 100/100 | -.0300 to .0108 | .1056–.2187 | .890–1.111 | .459–.835 | .93–.98 |
+| Common Persons; .5 | 100/100 | -.1107 to .0200 | .1310–.3399 | .968–1.094 | .523–1.285 | .93–1.00 |
+| Rotating pairs; .5 | 99/100 | -.1001 to .0169 | .1517–.6701 | .872–1.070 | .566–1.456 | .9091–.9596 |
+
+Three observations constrain the next decision:
+
+* Common Persons, SD=1, Task t3 has negligible mean log bias (-.00206),
+  empirical SD .12982 versus RMS model SE .11034, and 90/100 coverage.
+  Six intervals lie above truth and four below. Its exact 95% Monte Carlo
+  coverage interval is [.8238, .9510]. Mean bias alone does not explain this
+  result; local variance calibration or tail shape warrants independent
+  evaluation. The observed .850 SE ratio is not a proven population constant.
+* Rotating pairs, SD=.5, Task t1 has bias .01694, SE ratio .8718 and 90/99
+  coverage; eight intervals lie above truth and one below. Conversely, common
+  Persons at SD=.5, Rater r3 has bias -.11071 (MCSE .03230) but 99/100
+  coverage. Thus neither near-zero mean bias nor apparent nominal coverage
+  alone establishes adequate inference. No empirical bias correction or
+  SE multiplier is estimated from these diagnostic findings.
+* `026-rotating_pairs-0.5.rds` remains the single joint-information refusal.
+  Its Rater r4 slope is about .001356, versus truth .525. For that component,
+  all-point empirical SD/RMSE are .6659/.6701, while the returned subset has
+  .3069/.3081. Its bias changes from -.1001 to -.0409 when conditioning on
+  interval return. The missing interval is preserved, and the unstable point
+  remains in the all-point summary. Counting only returned intervals would
+  conceal this instability; forcing a covariance would not repair it.
+
+**Decision:** retain the unchanged adaptive fitting/information/log-Wald
+procedure as the candidate for independent evaluation, with experimental
+status and the current refusal policy. The matched evidence does not isolate
+a new calculation error or justify a particular bias/tail correction. It
+does identify finite-sample concerns that an independent evaluation may
+confirm or fail to resolve. The proposed evaluation is the already specified
+four correctly specified conditions, 500 new datasets per condition, seed
+family `93020000 + replicate`. The nine components and shared-random-number
+conditions are not extra replications. No location, curve, simultaneous,
+new-Person or population-transport claim follows from component coverage.
+
+The original practical margins remain unchanged: availability >=.95 and its
+exact 95% lower bound >=.90; the exact 95% conditional-coverage interval must
+be contained in [.92,.98] for each proposed limited claim. Failure or an
+inconclusive result does not trigger automatic extra replications, a changed
+threshold, or a switch to a different interval method. Report adverse bias,
+widths, SE calibration and failed fits alongside any margin decision.
+
+**Revised compute decision:** the 391 new fits took 14.010 elapsed hours on
+two workers. All 400 records contain 28.475 worker-hours of measured fit and
+inference time. Extrapolating those measurements gives **71.2–71.7 elapsed
+hours** for 2,000 new fits at two workers (about 142.4 worker-hours); this is
+a planning estimate, not a runtime confidence interval. Difficult new fits,
+additional quadrature orders, other workloads and suspension can extend it.
+It supersedes the earlier 36–51-hour projections from selected examples.
+The interpretable result would fall after October 2 at 18:00 JST, so the
+existing user consultation rule applies before launch.
+
+The repository-only `gmfrm-adaptive-independent-20261001.R` runner prepares
+new inputs and copies the matched replay's frozen package/procedure exactly.
+It reuses the existing generator, capture, numerical gates, atomic records
+and summary formulas. It records every fit/inference stage, guards resume by
+source/input/manifest identity, and refuses aggregation before all 2,000
+records exist. Its preflight uses retained results and accounting fixtures;
+no new fitting is required for readiness checks. The initial preparation
+stopped because the original generator script's recorded whole-file hash
+differed from the current file. The original script was not archived, so the
+exact textual change cannot be established. The complete generation plan and
+all 400 historical observations/truth tables/seeds were then reproduced
+exactly before freezing the current generator; both file hashes and that
+verification are retained in the new manifest. No fitting or inference
+threshold changed. Preparation does not launch
+the study. **Historical launch status:** this proposal was initially held for
+a compute/deadline decision. The later October 1 instruction below supersedes
+that rationale: the deadline is relaxed, but all new computation is held for
+scientific redesign. Corrected-JML sampling remains paused and D1 remains open.
+
+## October 1 revised scenario design
+
+**Historical proposal, now held:** the later
+[small-cohort review](#october-1-small-cohort-and-facet-structure-review)
+supersedes this section's recommendation to execute the 24-condition design.
+Its completed evidence and frozen inputs remain intact.
+
+**Decision at preparation:** hold the unexecuted 4 x 500 confirmation proposal.
+Its four N=240 cells can support only a narrow conditional claim. Repeating
+them more precisely cannot establish how performance changes with sample size,
+ratings per rater or rating allocation. Retain the unchanged adaptive/log-Wald
+procedure as the candidate, but first examine its domain through the staged
+design below. This supersedes the preceding launch recommendation, not the
+completed matched evidence or the prepared proposal's immutable files.
+
+**Main question:** under a correctly specified two-family GPCM, when does the
+current procedure supply usable and appropriately calibrated slope intervals,
+and which practical designs reveal failures? In particular, does the Task-SE
+shortfall at N=240 diminish as information increases, and do weak slopes or
+concentrated ratings produce point estimates whose instability is hidden by
+conditioning on interval return? Accurate numerical integration is necessary
+but does not answer these sampling questions.
+
+### Conditions and their roles
+
+The core is a complete 3 x 2 x 2 design: **N=120, 240, 480; ability SD=.5, 1;
+common-Person and rotating-pair rosters**. This permits sample-size trends and
+their interaction with ability spread and roster to be inspected, instead of
+treating one-factor changes as proof of general robustness. All core cells
+have three tasks, six raters and scores 0:2. The common-Person roster assigns
+20% of Persons to all six raters and the rest to one rater, equally distributed;
+the rotating roster assigns each Person to an adjacent pair on a six-rater
+ring. Both have 2N Person-rater pairs, 6N scores, and N/3 Persons per rater.
+The original N=240 four cells contribute their existing 100 records each.
+
+Twelve further conditions probe specific limits. Except as stated, they use
+N=240, SD=1, three tasks, six raters and scores 0:2. Their number is a scoped
+set of questions, not a claim that 24 conditions exhaust the model's domain.
+
+| Added conditions | Exact change and comparator | Question / interpretation limit |
+| --- | --- | --- |
+| 2 small-sample | N=60 under both existing rosters; compare the same roster at N=120/240/480 and SD=1. | Where do availability and point stability deteriorate? N=60 x SD=.5 is not covered. |
+| 2 wider-population | SD=1.5 under both existing rosters at N=240; compare SD=.5/1. | Does increasing ability spread change SE calibration or tails? This is not a nonnormal-population condition. |
+| 1 more tasks | Six tasks, rotating pairs; duplicate the original three task parameter settings as three additional levels. | Does more information per Person help? Scores double from 1,440 to 2,880; this is not cost matched. |
+| 1 more raters | Twelve raters, rotating pairs; duplicate the original six rater parameter settings. | What happens with more estimated rater levels and 40 rather than 80 Persons per rater, at the same 1,440 scores? The ring topology changes too. |
+| 1 unequal exposure | Adjacent pair group sizes 70/50/40/30/20/30 instead of 40 each. Rater Person counts become 100/120/90/70/50/50. | How does unequal information affect individual raters when every Person still has two raters and the total cost is unchanged? |
+| 1 weak bridge | Six Persons rated by all six raters; within each of two three-rater groups, 105 Persons get pairs and 12 get one rater. | With 80 Persons per rater and 1,440 scores preserved, what happens when only six Persons connect the groups? Person exposure also changes; do not call this an isolated graph effect or assume graph disconnection alone proves MML nonidentification. |
+| 1 weak slope | Rater r4's generating slope is .2 rather than 1.05; rotating roster. | Is near-zero estimated slope behavior confined to chance extremes, or systematic under weak discrimination? No replacement of failed draws. |
+| 1 rare top category | Add +2.5 to all rater locations; retain the full 0:2 ladder and rotating roster. | How does poor targeting / sparse upper-category support affect output? The shift is fixed before draws; do not condition generation on achieving a chosen observed category count. |
+| 2 writing-roster templates | 135 Persons, five tasks, seven observed raters, scores 0:3, 274 Person-rater pairs / 1,370 scores. Original exposure versus redistribution preserving exact per-rater counts. | Does concentrating repeated ratings on a few Persons matter? Original Person degrees are 89 x 1, 27 x 2, 2 x 6 and 17 x 7; control degrees are 131 x 2 and 4 x 3. This is a synthetic experiment on an empirical roster, not validation of the empirical responses. |
+
+The writing template is the retained `sirt-data.ratings1.rds`, hash
+`45cdfdc65f8ab0c5c86878fa043bdf0b`; observed rater counts are
+41/37/37/41/38/41/39. Only its Person-rater incidence is used. The original
+absent cells are not asserted to be known planned nonassignment. Five-task
+locations span [-.4,.4], log slopes [-.2,.2]; seven-rater locations span
+[-.3,.3], slopes [.75,1.25], and centered step vectors are (-h,0,h), with
+h spanning [.45,.7]. These are declared synthetic parameters, not empirical
+estimates treated as truth. The redistributed roster is a fixed allocation
+algorithm preserving column totals, not a random sample from every feasible
+roster or an asserted optimal allocation.
+It changes Person exposure and pairwise overlap together; interpret it as a
+comparison of allocation designs, not an isolated effect of one concentration
+index.
+
+All other parameters retain the original baseline values. The data generator
+uses the literal adjacent-category recursion. Persons have theta=SD*z,
+z~N(0,1), with allocation independent of z and conditionally independent
+responses. On the fitted fixed-N(0,1) scale, task slopes are unchanged,
+rater slopes are multiplied by SD, and locations/steps are divided by SD.
+Thus different SDs do not imply identical identified slope truths. Centered
+task locations, geometric-mean-one task slopes and centered rater steps are
+preserved, including the larger facet/category conditions. Task and rater
+parameters are fixed across repetitions within a condition; only Persons,
+responses and the specified ability-independent allocation are randomized.
+The ability-SD contrasts do not vary the distribution of rater severity or
+task difficulty. The study therefore does not estimate performance averaged
+over a population of randomly sampled tasks or raters.
+
+Nonnormal populations, ability-associated allocation, score-dependent missing
+ratings, Person-by-performance dependence, category compression and method
+selection are **outside this first screen**. They remain relevant scope limits;
+under misspecification a matching estimand must be specified before labeling
+an interval as covering a parameter. The targeted contrasts above do not test
+all interactions among adverse conditions. No slope-coverage result qualifies
+location, curve, new-Person, simultaneous or consequential feedback claims.
+
+### Replication, accounting and decisions
+
+Use two separately budgeted screening blocks, not 500 repetitions in every
+cell. **Core:** 100 per condition, reusing 400 saved N=240 records and adding
+800 at N=120/480. **Targeted:** 100 in each of the 12 declared conditions,
+adding 1,200. Completing both would therefore use 2,400 records, of which
+2,000 are new. The equality with the old proposal's new-fit count is incidental:
+these have a different scientific purpose, allocation and compute cost.
+The retained four cells were used during development; the mixed screen must
+not be described as independent confirmation. No new baseline rerun is needed
+merely to make all records share the same provenance label.
+
+At coverage .95, 100 returned intervals have MCSE .02179; 95/100 has exact
+95% Monte Carlo bounds [.8872,.9836]. This can reveal large problems and
+patterns, but cannot settle a 3-percentage-point equivalence margin. There is
+no screen-level "coverage qualified" flag, and no absence-of-significance
+claim of acceptable calibration. Interpret the size and precision of bias,
+RMSE, empirical/model SE differences, width and failures jointly. New cells
+are not guaranteed to reveal an effect at this replication count.
+
+Preserve every attempted draw, warning, fit/inference error, check refusal,
+quadrature retry and stage time. Report each task/rater component separately
+(the component count varies with the scenario). Bias/RMSE and tail summaries
+use all numerically qualified points, with the interval-returned subset shown
+separately. Compare empirical SD to RMS model SE on the same returned subset.
+Report conditional coverage and above/below-truth misses among returned
+intervals, as well as availability and returned-and-covered probability over
+all attempts; a withheld interval is not observed conditional noncoverage.
+Keep category frequencies, rater exposure and overlap with failures rather
+than pooling them into a single success rate. No pooling of components or
+conditions creates more independent replications.
+
+New screen seeds are `93100000 + 1000 * SeedGroup + replicate`, with fixed
+scenario IDs in `gmfrm_design_plan()`. New conditions use independent streams,
+except the two writing templates, which share latent Persons and potential
+responses and require paired comparisons. The four historical N=240 cells
+also retain their original shared random numbers; use paired accounting
+within those cells and independent accounting against new cells. Replicates
+are independent within each cell. The original 92810000 and held 93020000
+seed families remain separate.
+
+If a numerical defect calls for a procedure change, retain all results and
+identify the change; do not patch the method halfway through a fixed study or
+silently replace failed datasets. Choose any eventual confirmatory domain
+from the intended user claim, keeping adverse screen evidence visible; do not
+select only favorable cells and generalize to the omitted conditions. Freeze
+the domain, method, seeds, margins and sample size before independent
+confirmation. The number and scope of confirmation cells are intentionally
+not predetermined by the exploratory screen's 24-cell count.
+
+The held confirmation rule itself also needs a realistic power discussion.
+With every interval returned and true coverage .95, the existing requirement
+that the exact 95% binomial interval lie within [.92,.98] has the following
+operating characteristics. These are exact binomial calculations, not a
+simulation of fitted models or joint assurance over all components.
+
+| Returned intervals | MCSE at .95 | Covered-count values satisfying the margin | Probability of satisfying it at true .95 |
+| ---: | ---: | --- | ---: |
+| 100 | .02179 | None | 0 |
+| 250 | .01378 | 239 | .1106 |
+| 500 | .00975 | 472–482 | .7124 |
+| 1,000 | .00689 | 937–970 | .9709 |
+
+Unavailable intervals reduce these denominators, and the separate availability
+rule can also fail. Even 1,000 does not ensure every correlated component
+passes; do not multiply pointwise probabilities as if components were
+independent. This is a reason to match confirmation size to a concrete claim
+and decision risk, not an instruction to double all runs or relax a failed
+margin. Planning follows the question/design/estimand/performance/Monte Carlo
+precision distinction in
+[Morris, White and Crowther (2019)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6492164/);
+the exact intervals use [R's binom.test](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/binom.test.html).
+
+### Execution boundary
+
+`gmfrm-design-screen-20261001.R` generates the 24 scenarios and performs a
+no-fit preflight: roster counts, response ladder, seed reproduction, parameter
+constraints, old three-category equation, identification-scale equivalence,
+and agreement with the package probability kernel. The writing pair is checked
+for identical latent values/truth, preserved per-rater totals and identical
+potential responses on shared cells. It has no fitting command. This makes
+the proposed generating design reviewable; it does not make a full sampling
+runner ready or establish coverage.
+
+A bounded timing pilot uses the **eight new core cells, one draw each**, before
+any long-run compute decision. It uses the matched replay's frozen package,
+binary and exact procedure (31/61/121 quadrature rule, neutral-EM start,
+maxit=500, reltol=1e-10, information checks, .95 model log-Wald intervals).
+No new threshold or estimator is tuned. Keep these first draws as screen
+replicate 1 if the same screen is subsequently launched, retaining failures
+as well as successes. Their timing is a rough planning input, not a coverage
+result, runtime confidence interval or proof of successful recovery.
+
+Before a complete core block, freeze its new inputs and runner and report
+remaining cost using pilot and historical stage times, with a broad sensitivity
+range for one-draw timing and tails. The repository-only
+`gmfrm-core-screen-20261001.R` provides that core-only preparation and execution:
+it generates 800 fixed inputs, retains the 400 existing adaptive row sets,
+reuses all eight pilot results as replicate 1, and leaves 792 new fits. It
+references the already frozen matched package/binary by checked hashes, copies
+its own runner/generator, and checks source/input/manifest identities on load
+and resume. It refuses a complete summary before every planned case exists.
+Accounting fixtures exercise separation of the three sample sizes, the
+retained refusal, entirely unavailable intervals and incomplete-run refusal;
+they create no sampling evidence or coverage-qualification flag.
+
+Before the targeted block, separately
+verify the greater facet counts and four-category procedure: the old frozen
+wrapper explicitly hardcodes `rating_max=2` and cannot be applied unchanged to
+the writing cases. Preserve all other algorithm settings when parameterizing
+the score ladder. Do not extend the old fixed-nine-component, four-condition
+summary assertions to the expanded design without checking the denominators.
+The old 71–72-hour estimate applies only to the old 4 x 500 mixture.
+
+If the expected interpretable result is after **October 2 at 18:00 JST**,
+consult the user before launching the long run, as required by the roadmap.
+Neither a time cutoff nor partial results authorize reducing the declared
+replication count. The two blocks can be scheduled separately for compute
+reasons; report a block not run as unstudied, never as passed. Corrected-JML
+sampling remains paused, and D1/D2 are still open.
+
+**No-fit preflight and core timing completed October 1:** all 24 generating
+conditions passed the roster, ladder, parameter-constraint, reproducibility
+and scale checks using two seeds per condition. Maximum probability-kernel
+discrepancy was 4.44e-16 and identification-scale discrepancy 3.33e-16. The
+eight fixed core timing cases finished at **13:39:34 JST**, using the matched
+replay's 446 frozen package/procedure files and checked loaded binary. All
+eight returned numerically qualified points and all nine component intervals,
+with final fitting order 31 and no outer fit-order retries. This establishes
+execution for these examples, not their coverage. Source/input/result and
+manifest identities were checked. Evidence is in
+`validation-results/gmfrm-design-screen-20261001/`, including the preflight,
+binomial planning calculation and the eight `core-pilot/` records.
+
+| Core timing condition | N=120 fit + inference seconds | N=480 fit + inference seconds |
+| --- | ---: | ---: |
+| Common Persons, SD=.5 | 139.890 | 685.864 |
+| Common Persons, SD=1 | 215.786 | 1,013.719 |
+| Rotating pairs, SD=.5 | 75.116 | 417.509 |
+| Rotating pairs, SD=1 | 158.067 | 797.975 |
+
+The pilot took 35.623 elapsed minutes and .9733 worker-hours. For the remaining
+99 repetitions in each of eight cells (**792 fits**), extrapolating measured
+stage times at two busy workers gives **48.18 hours**. Applying time strictly
+proportional to N to the older 400-case measurements instead gives **35.24
+hours**. These are different planning assumptions, not confidence limits.
+Half/double the new measured per-case times give 24.09/96.36 hours as explicit
+sensitivity scenarios, not probability bounds. One draw per cell cannot
+estimate its runtime distribution; the old N=240 study itself had a median
+181 seconds and maximum 1,941 seconds per case. Additional difficult fits,
+retries, suspension or other workloads may extend the run. Multiplying the
+small pilot's elapsed time by 99 would also preserve its unusually large
+end-of-run load imbalance; the stage-time estimate assumes both workers stay
+busy across the full block, apart from the final jobs.
+
+Both central planning assumptions put interpretable completion after the
+original October 2 18:00 checkpoint. The user subsequently allowed completion
+beyond that time and explicitly requested **no further computation while the
+scientific design is reconsidered**. Keep the remaining core computation on
+hold for that reason. Preserve the eight pilot cases; reuse them if their exact
+conditions/procedure remain relevant, rather than rerunning or replacing them
+based on their successful interval output.
+The held 2,000-fit confirmation proposal and the targeted 1,200-fit block
+have not been launched. No public estimator, CI threshold, help claim or
+release qualification changed in this redesign.
+
+The core-only proposal is now prepared in
+`validation-results/gmfrm-core-screen-20261001/`: 800 frozen input files, the
+checked 400-case baseline table, eight reused pilot records, frozen runner and
+generator, bound execution protocol, and `readiness.rds` / `readiness.log`.
+A fresh R process loaded the frozen package/binary and correctly refused a
+complete summary with only 8/800 new-case records. The initial preparation was
+replaced before any new fitting to include the protocol itself in the source
+identity check; all 800 input hashes stayed identical, and the initial copy is
+preserved at `/tmp/mfrmr-core-preparation-before-protocol-hash-20261001`.
+There is no active core-study run. Its archived entry point remains
+`validation-results/gmfrm-core-screen-20261001/source/runner.R` in the development
+root. **It is not the next launch recommendation.** The deadline relaxation
+does not authorize this proposal, another timing pilot, or generation of a new
+input batch. Preserve the immutable preparation; do not overwrite its protocol
+with the revised scientific scope below.
+
+## October 1 small-cohort and facet-structure review
+
+**Current instruction and status:** mfrmr is a general-purpose R package.
+Prioritize substantive adequacy over the October 2 18:00 JST checkpoint. The
+user requires both the previously studied larger samples and the neglected
+20–60-Person range, with explicit consideration of facet count and levels per
+facet. Small-cohort priority expands the evaluation; it does not replace the
+medium/large-sample scope. Do not run new estimation, simulation, timing or data-generation
+work during this design review. The prepared 2,000-case confirmation and
+800-input core proposal are held; 792 core cases remain unrun. This review
+uses source inspection, retained evidence and literature only. No estimator,
+public capability, inference threshold or release qualification changes here.
+
+### Correct the question before choosing conditions
+
+The preceding design was anchored to the existing N=240, Task-by-Rater study
+and its slope-interval defect. Making N=120/240/480 the core and N=60 a targeted
+stress condition did not address the user's intended small-cohort workflows.
+The empirical/practitioner anchors already included small cohorts; they should
+have influenced the main design. Numerical improvement on the 400 retained
+datasets is useful evidence, but does not establish small-cohort usability.
+The subsequent revision overcorrected by treating larger samples merely as
+context. The user's latest correction restores them as substantive parts of
+the main evaluation, not an optional appendix or evidence to discard.
+
+The primary question is: **across small, medium and large samples and the
+supported facet structures, which model and rating design deliver estimates
+and uncertainty adequate for the intended interpretation, and where do outputs
+need to be withheld or qualified?** N=20–60 receives the missing attention
+without becoming the definition of the package's intended audience.
+Rater severity/contrasts and Person scoring belong alongside discrimination,
+not downstream of an automatic two-family slope-coverage qualification.
+Separate exploratory rubric/rater review from individual consequential
+decisions; a single generic acceptable-coverage rule cannot establish both.
+
+The user's account establishes a development priority, not an independently
+measured proportion of mfrmr users. A relevant published example is the
+[Uto et al. (2024) OSCE study](https://doi.org/10.1371/journal.pone.0309887):
+30 examinees, five raters, 30 rubric items and four score categories; two raters
+assessed everyone and three assessed disjoint groups of ten. This anchors a
+small-N, many-item, unequal-exposure design. Its richer response model uses
+Bayesian EAP estimation with NUTS and declared priors; it does not validate
+mfrmr's current two-family MML or its Wald intervals.
+Published Rasch sample-size heuristics likewise cannot supply a universal
+minimum N for this different model and inference procedure.
+
+### Design dimensions and provisional applied settings
+
+Count **non-Person facets** explicitly below; conventional descriptions may
+count Person as an additional facet. For example, Person x Task x Rater has
+two non-Person facets, while Person x Task x Criterion x Rater has three.
+Criterion levels are rubric dimensions/items, not the ordered score categories.
+The number of facets, levels, slope-owning facets and latent ability dimensions
+are four different quantities.
+
+| Dimension | Candidate scope, not a frozen simulation grid | Question it answers |
+| --- | --- | --- |
+| Independent Persons | N=20, 30, 40, 60, 120, 240, 480 in the main sample-size scope. Reuse the completed N=240 evidence and compatible N=120/480 pilot records. | Where do estimation and uncertainty improve, remain biased, or fail across the range? Neither small-N nor large-N results substitute for the other; N=480 alone does not prove asymptotic behavior. |
+| Non-Person facet count | One-facet reduced reference; Task x Rater or Criterion x Rater; Task x Criterion x Rater; add Occasion only for a concrete repeated-assessment question. | Can distinct sources of variation be represented and separated? More facets are not automatically more ability dimensions. |
+| Levels within facets | Initial candidates: 2/3/6 raters, 2/4 tasks, 3/5 criteria; retain a separate many-item OSCE anchor. Larger rater panels are relevant to training/shared-performance designs. | How do calibration burden and exposure per estimated level change? Values are proposed design contrasts, not measured usage frequencies. |
+| Assignment and workload | Fully crossed small panels; two raters per performance; common-rater/common-Person links; unequal exposure and weak links. Specify Persons and performances per rater as well as total scored cells. | What can be separated using the observed crossings, and what precision is gained by a feasible allocation? |
+| Ordered categories and steps | Three/four/five categories; common versus owner-specific steps; central versus poorly targeted scores. Declare which facet owns steps. | Does a richer rubric help measurement or leave individual step parameters unsupported? Changing step ownership changes the model. |
+| Population and effect variation | Ability SD .5/1/1.5, then targeting/location shifts and selected nonnormal populations; separately change rater severity, task difficulty and log-slope variation. | Which source of heterogeneity causes the change? An ability-SD contrast does not test rater-severity SD. |
+
+The main evaluation has two complementary sample-size comparisons. First,
+hold facet levels, response equation, population and assignment rule fixed
+while varying N; this isolates sample-size trends as far as discrete roster
+constraints allow. Second, increase facet levels/model burden or change the
+assignment together with N to represent larger operational assessments. A
+large overall N can still leave each rater or task with sparse exposure.
+Neither comparison can replace the other, and a fully crossed large-N design
+alone does not qualify a large sparse assessment.
+
+Retain an explicit connection to the historical four conditions: three Tasks,
+six Raters, three categories, ability SD .5/1, and common-Person/rotating-pair
+rosters, with rater-owned steps. Their N=240 records remain substantive
+sampling evidence. Extend matching design definitions across the declared N
+range where feasible, documenting small-N integer allocation differences
+rather than silently changing the population or model. Criterion-owned rubric
+models below are an additional comparison, not replacements for these cases.
+
+Evidence status must remain visible: N=240 has 100 retained datasets in each
+of those four cells; N=120 and N=480 have one timing case per corresponding
+cell, not completed coverage evaluations. Compatible prepared inputs and pilot
+records may be reused once the design is settled, but their existence neither
+authorizes execution nor establishes performance. If the inference procedure
+changes, label and evaluate the new procedure on retained data as appropriate;
+do not pool old/new procedures as one arm or call reused development data
+independent confirmation.
+
+Selected misspecification and exposure contrasts must include larger samples
+as well as small ones: increasing N does not remove a wrong-model target or
+an assignment bias. Runtime/memory under larger facet counts is also a package
+usability question, evaluated separately from statistical accuracy. The upper
+sample size for a specific large-scale use case can be extended with a stated
+purpose; 480 is the present main grid endpoint, not a universal package limit.
+This is the MML validation strand of mfrmr, not a redefinition of the broader
+package or a qualification of its separate G/D, MI and reporting capabilities.
+
+Use cases give these dimensions a purpose. A small classroom with a few tasks
+and two or three common raters differs from rater training where many raters
+score a small set of shared performances. A rubric assessment with Task,
+Criterion and Rater differs from both, even at the same N. The published OSCE
+is a fourth, many-item example. Occasion requires an explicit stable-ability
+or change estimand; a main-effect time column alone does not model individual
+growth. These are design families to resolve, not additional automatic cells.
+
+Two workload contrasts are necessary. If every existing Person receives ratings
+from added raters/tasks, both cost and information increase. At a fixed number
+of rating occasions, adding raters spreads observations across more estimated
+rater effects and changes overlap. Likewise, more rubric marks on the same
+performance are not equivalent to collecting new Persons or new performances.
+Report rater-performance encounters separately from scored rubric cells; equal
+cell counts need not imply equal human workload. When exact exposure/cost/
+connectivity matching is impossible, state what changes instead of claiming an
+isolated facet-level effect. Small N also makes exact balance and linking
+constraints discrete; retain valid unequal allocations rather than silently
+changing N to fit an old six-rater roster.
+
+N counts independent Persons. Repeated scores can inform a Person's ability
+and shared parameters, but do not create independent Persons. Start with
+conditional independence as a declared baseline; examine a Person-by-performance
+term for rubric scores on the same performance in the robustness block. Do not
+silently manufacture independence by treating each criterion rating or each
+occasion as a new Person. Also distinguish inference on the observed fixed
+raters/tasks from generalization to populations of raters/tasks; more levels
+alone do not turn fixed effects into a random-facet model.
+
+### Model comparison and current implementation boundary
+
+Compare supported **RSM, PCM, one-family GPCM and two-family GPCM using MML**
+where they address the same applied question. Include generating cases with
+equal slopes, only the Task/Criterion family varying, only the Rater family
+varying, and both varying. Common and owner-specific category steps must be
+distinguished too: RSM and PCM differ in that restriction, not just slope
+complexity. Compare methods on the same generated observations. This permits
+the possible variance cost of extra parameters to be weighed against bias
+from restrictions, without presuming either model complexity is preferable.
+Existing corrected-JML work remains paused; it is not restarted simply to
+multiply comparison arms. If small-cohort MML proves inadequate for a needed
+output, compare simplifying the model or improving allocation with a justified
+regularized/Bayesian or externally calibrated alternative. Those alternatives
+require their own estimand, prior/anchor sensitivity and uncertainty evaluation;
+they are not automatic remedies or an instruction to build another engine now.
+Likewise, a bootstrap cannot be assumed to repair structural nonidentification.
+A rule that chooses a simpler model after a fit fails would itself need
+procedure-level evaluation. Do not select the best-looking model/interval after
+each draw and report its coverage as that of a fixed prespecified method.
+
+Static source inspection establishes these boundaries:
+
+- `R/core-gmfrm-em.R::mfrm_fit_product_slopes()` requires exactly two non-Person
+  facets, both slope owners, with at least two observed levels each. The second
+  owner has free locations/slopes and owns centered category steps. The ability
+  population is fixed standard normal. Third/fourth additive facets, anchors,
+  interactions and shrinkage are not supported by this route. Repeated rows for
+  the same Person and both facets are also rejected.
+- The ordinary route accepts one or more facets and constructs additive blocks
+  per facet. Existing RSM/PCM MML backend fixtures explicitly include Rater,
+  Task and Criterion (`tests/testthat/test-mml-cpp11-backend.R`). This is source
+  evidence of a broader implementation scope, not a new small-N performance
+  result or validation of every consumer/model combination.
+- `extract_mfrm_sim_spec()` rejects product slopes and currently requires
+  exactly two non-Person facets even for ordinary fits. The old scenario
+  generator is similarly not a ready solution for this broader study.
+
+Thus increasing Task or Rater levels within two facets cannot answer the facet-
+count question. A three-facet ordinary-model study is conceptually distinct
+from extending the two-family engine to additional location-only facets.
+Resolve the latter's scientific need, identification, category ownership and
+output contract before implementation. Do not concatenate Task and Criterion
+to imply their separate effects were estimated, silently remove a requested
+facet, or count a documented unsupported model as numerical nonconvergence.
+
+Parameter burden should be explicit. For the current unanchored two-family
+model with A first-owner levels, B second-owner levels and K score categories,
+the source constraints give `(A-1)+B` locations, the same number of slopes, and
+`B*(K-2)` centered step coordinates: **2(A-1)+BK** calibration parameters.
+For example, the old 3-Task/6-Rater/3-category baseline already has 22.
+Person abilities are integrated, not N additional freely estimated MML
+parameters. This count exposes why rater levels and categories matter, but
+neither N divided by parameter count nor total score count is a universal
+identification or sample-size criterion.
+
+Distinguish the Person-rating assignment graph, the rank of the facet-crossing
+design, category support, local information curvature, and numerical convergence.
+None alone certifies precise inference. Under a common fixed population model,
+absence of shared Persons is not by itself a proof of MML nonidentification;
+apparent comparability can depend strongly on the common-population assumption.
+Conversely, connected data can remain weak or structurally confounded. Nesting
+Rater within Task, for example, must be assessed for the actual estimable
+contrasts and model, not handled as ordinary random missingness.
+
+### Targets, scale and failure accounting
+
+For interpretable location/slope parameters, report bias/RMSE, tails, empirical
+versus estimated SE, interval availability, width and conditional coverage.
+For rater review, prioritize prespecified severity contrasts and their
+uncertainty over ranks alone. If flagging is proposed, specify a practically
+meaningful difference, false-positive/missed-difference costs and multiplicity
+policy first; componentwise coverage does not validate a feedback rule.
+
+For Person scoring, distinguish calibration-cohort and new-Person performance,
+central and extreme abilities, and the ability scale/estimand. Posterior SD or
+fixed-calibration EAP uncertainty does not include calibration uncertainty.
+Evaluate the uncertainty the public method actually supplies; do not label an
+unavailable unconditional interval as covered or quietly substitute a research
+oracle. Known-calibration scoring can later be an explicitly labeled diagnostic
+comparator to separate limited Person responses from calibration error.
+
+Use category probabilities/expected scores for shared response targets when
+model parameters are not commensurate, with prespecified contexts and weights;
+do not claim coverage of a nonexistent component in a simpler/misspecified
+model. Raw locations/slopes from different identification conventions cannot
+be compared directly. In particular, the two-family fixed-N(0,1) transformation
+and one-family geometric-mean-one/free-population convention must be reconciled
+before comparing truth. For RSM/PCM, changing ability SD while fitting a fixed
+unit-SD population may add population misspecification, not merely information
+variation. Choose and document population estimation or the appropriate
+restriction explicitly. Fixed-effect severity remains conditional on the model;
+an apparent rater difference is not automatically a causal training deficit.
+
+Retain all planned attempts, including unsupported category draws, extreme
+estimates and interval refusals. Report preparation/structural refusal,
+optimization failure, integration sensitivity and inference refusal separately.
+Show point performance for all qualified estimates and the interval-returned
+subset; conditional coverage, availability and returned-and-covered frequency
+answer different questions. Keep the original score ladder; no redraw until
+every category appears. Report exposure and category support alongside failures.
+Pointwise intervals are not simultaneous coverage, and many correlated
+parameters within a dataset are not independent simulation replications.
+
+### Follow-up: decisions that can be made without fitting
+
+The continuation of this review remains a source/evidence/algebra review.
+No numerical script, random generation, new derivative evaluation or timing
+pilot has been run. The following findings narrow the study before replication
+counts are chosen; they do not modify the frozen estimator or its checks.
+
+**Observed-score rank is a binding output restriction at small N.**
+`mfrm_gpcm_product_inference()` obtains an N-by-p matrix of observed Person
+marginal-likelihood scores and requires column rank p at both derivative step
+sizes (`R/core-gpcm-product-slopes.R`, the `Local score rank` check).
+Consequently N < p cannot pass this check, irrespective of quadrature order,
+optimizer tolerance or the number of ratings within each Person. This applies
+to the current model-based component log-Wald and facet-location normal
+interval paths sharing this check; it is not a claim about every possible
+interval construction or about point-estimation feasibility.
+
+The dimension consequences below follow algebraically from the source
+constraints, not from simulated datasets. A and B are the first and second
+slope owners; B also owns category steps. All levels are assumed observed.
+
+| Candidate two-family design | Free calibration dimension p=2(A-1)+BK | Consequence at N=20 under the current check |
+| --- | ---: | --- |
+| Historical Task=3, Rater=6, K=3; rater-owned steps | 22 | Cannot return the model-based intervals through this check. |
+| Rater=3, Criterion=3, K=4; criterion-owned steps | 16 | Not excluded by N < p alone; all other numerical and statistical issues remain. |
+| Rater=6, Criterion=3, K=4; criterion-owned steps | 22 | Cannot return the model-based intervals through this check. |
+| Rater=3, Criterion=5, K=4; criterion-owned steps | 24 | Cannot return the model-based intervals through this check. |
+
+At an exact interior stationary point, the Person-score rows sum to zero,
+so their rank is also at most N-1. Approximate numerical stationarity and
+rank tolerances complicate the boundary N=p; a nominal full-rank result near
+that boundary must not be made easier by a less accurate optimizer. Neither
+N>p nor passing the check implies adequate precision or coverage.
+
+This is **not a proof of structural nonidentification** when N<p. The retained
+earlier two-owner example in this record already distinguishes the objects:
+four Persons each observed at all four binary crossings had full-pattern
+marginal score rank 6/6 at the stated interior vector, despite only four
+observed Person-score rows. That result is first-order model information at
+one vector, not an observed-data MLE or a coverage result. It is sufficient to
+show why observed-score rank cannot be substituted for population/full-pattern
+information. An observed-information Hessian and an outer product of observed
+score rows are different finite-sample matrices.
+
+For a full-parameter sandwich covariance, deficient empirical score rank is
+a real limitation of that covariance construction. Requiring the same rank
+as an additional condition for model-Hessian Wald intervals is a conservative
+procedure choice whose role now needs explicit review. **Do not remove the
+check merely to get intervals at N=20.** First determine whether it is an
+essential requirement of the claimed procedure, a diagnostic that has become
+an unnecessarily broad veto, or evidence that the public small-N claim needs
+restriction. Any changed rule is a new inference procedure requiring its own
+retained-case checks and sampling evaluation. Until then, record its known
+small-N exclusions without spending repeated fits to discover them, while
+retaining relevant point-estimation/scoring questions in those designs.
+
+**The public output matrix is narrower than the fitting matrix.** The table
+describes current source contracts, not small-sample qualification. Category,
+identification and numerical prerequisites still apply to every admitted path.
+
+| Fit specification | Non-Person facet structure | Public location/contrast interval helper | Relevant comparison restriction |
+| --- | --- | --- | --- |
+| RSM/PCM MML, fixed N(0,1), fixed quadrature, unit weights | Ordinary additive facets, including three-facet implementation fixtures | `mfrm_facet_intervals()` supports model and Person/cluster sandwich methods | The population mean/SD are assumed known, not estimated from 20–60 Persons. |
+| RSM/PCM MML with `population_formula=~1` | Ordinary additive facets; all non-Person locations centered | The helper rejects active population estimation | Population mean/variance and facet points exist; this does not supply the proposed contrast-CI comparison. |
+| One-family GPCM MML, default free population | Ordinary additive facets, one slope owner; step owner may differ | The helper rejects this model; `confint()` covers slopes only | Public slope intervals and one-family curve intervals do not replace severity-contrast intervals. |
+| Two-family GPCM MML | Exactly two facets, both slope owners; second owns steps | Experimental model-based location/contrast intervals | Subject to the observed-score rank restriction above; no sandwich, and curve calibration intervals remain unavailable. |
+
+Source anchors are `R/api-facet-intervals.R::mfrm_facet_intervals()`,
+`R/api-gpcm-intervals.R::confint.mfrm_fit()`, the population dispatch in
+`R/api-estimation.R`, and `R/api-gpcm-curve-intervals.R`. Do not substitute
+independently combined printed SEs or internal covariance extraction and call
+that a validated public contrast consumer. An internal research calculation
+would have to be named and verified separately. Also, `facet_shrinkage` is
+post-hoc empirical-Bayes shrinkage; its `laplace` alias does not turn the
+estimation into penalized MML or repair a failed likelihood fit.
+
+**Separate a matched scientific comparison from default-workflow behavior.**
+RSM/PCM defaults fix N(0,1); one-family GPCM defaults estimate a normal mean
+and variance with geometric-mean-one slopes. Two-family GPCM fixes N(0,1),
+leaves second-owner locations/slopes free and thereby uses a different
+location/scale representation. Comparing defaults is useful as a user-workflow
+question, but its differences cannot be attributed only to adding slopes.
+
+For the scientific comparison, explicitly specify the ordinary/one-family
+population and reconcile each model's scale with the two-family representation.
+The preferred planning direction is estimated-normal ordinary comparators,
+with `population_formula=~1`, the required Person ID table and centered facets;
+the fixed-population ordinary route is a separately labelled assumption/output
+comparison, not a way to conceal the missing interval consumer. This leaves
+a concrete pre-execution decision about extending that consumer or limiting
+the matched block to currently supported point/scoring/response targets.
+
+One common response target can be defined at population-standardized ability
+z: evaluate an estimated-normal fit at Theta=mu+sigma*z, and the fixed-N(0,1)
+two-family fit at Theta=z, in identical declared rating contexts. This defines
+a percentile-relative response curve, not a prediction at a known absolute
+ability. Corresponding location differences divide by sigma and effective
+slopes multiply by sigma under this transformation. The means, scale and
+nuisance covariance must be propagated if intervals on such transformed targets
+are later proposed; supplying estimated mu+sigma*z as a fixed `Theta` to the
+existing curve helper does not perform that propagation. Use the declared
+generating distribution for truth; do not recenter/rescale every simulated
+cohort to force its realized mean and SD to the population values.
+
+**Proposed applied blocks and the decisions they support.** These specify
+roster/model comparisons, not a frozen Cartesian grid or an authorization to
+generate data. These applied blocks ensure coverage of N=20/30/40/60 and add
+prespecified medium/large-N comparisons where the use case is meaningful.
+They supplement the full-range historical-design extension above. A rater-
+training block need not be inflated artificially to represent a large test;
+large incomplete assessment belongs explicitly in the multi-task/roster work.
+
+| Block | Concrete baseline and controlled comparisons | Main question and supported scope |
+| --- | --- | --- |
+| Single-performance rubric assessment | Three Criterion levels, three Raters, four categories. Compare every Person rated by all three with two raters per Person, the same pair scoring all criteria. Then compare three versus six raters at two raters per Person. | How much do rater severity contrasts and Person scores change with overlap and rater exposure? The all-three comparison changes workload; the three-versus-six comparison preserves rating encounters but changes overlap and rater-level burden. This is the two-facet model-comparison block. |
+| Multiple tasks scored with a rubric | Task x Criterion x Rater, initially two Tasks, three Criteria, three Raters and four categories, with two raters per Person-task. Compare two versus four Tasks; compare three versus five Criteria. | How are task difficulty, criterion difficulty and rater severity separated in small cohorts? Ordinary RSM/PCM and the additive one-family route are the fitting candidates; the current two-family route is excluded by capability, not counted as a failed fit. More tasks and more criteria have different workload/dependence implications. |
+| Rater training on common performances | The same small set of Persons/performances scored by all three or all six raters, with three criteria and four categories. | Does shared evidence allow useful comparisons among the observed raters? Every rater still sees N independent Persons. This is a separate full-panel/workload contrast; do not infer generalization to a population of replacement raters. |
+
+For two-rater assignments, a prespecified balanced-pair schedule should keep
+per-rater Person counts within one where feasible and deliberately preserve
+overlap. For three raters use the three distinct pairs; for six, cycle complete
+round-robin matchings before repeating. Fix the schedule before scores and
+randomize Person labels independently of ability. In the multi-task block,
+the baseline changes partners across tasks where feasible; retaining the same
+pair across all tasks is a separate allocation contrast. Specify pairwise and
+task-specific exposure as well as overall rater totals. Do not assume these
+rosters isolate a graph effect or that randomized labels imply MNAR robustness.
+
+Use **criterion-owned steps** as a primary hypothesis within the rubric block, with
+explicit `step_facet="Criterion"`. For the two-family route this means
+`slope_facet=c("Rater","Criterion")` and
+`noncenter_facet="Criterion"`; the rater slopes then have geometric mean one.
+This is a block-specific modeling choice, not a package-wide preference or a
+claim that category use cannot vary by rater. Retain rater-owned steps in the
+historical-design core and a matched ownership comparison; switching the owner
+is not merely relabelling, and
+the old Task/Rater results cannot validate it. The multi-task rubric has a
+third facet even when the same criterion is used on every task; do not combine
+Task and Criterion IDs to pretend their effects were separated.
+
+The primary questions are severity **contrasts** and Person scoring; component
+slopes and shared response probabilities explain where restrictions help or
+hurt. Prespecify contrasts by design role, not by which fitted rater looks most
+extreme. For scoring, compare calibration-cohort and held-out Persons, reporting
+conditional bias across true ability and uncertainty on its actual public
+definition. Do not manufacture normal confidence intervals from `PosteriorSD`.
+Probability/expected-score recovery is a common point target when component
+parameters differ; rankings alone are not the primary success criterion.
+
+Evaluate equal slopes, one varying family in each direction, and both varying
+within the compatible two-facet block, with a separately stated step structure.
+The three-facet block also needs a genuinely nonzero Task effect so that it does
+not merely demonstrate fitting an unnecessary column. N x rater exposure and
+N x category/criterion burden are core interactions. Ability-associated
+assignment, within-performance dependence and sparse category support then
+receive targeted contrasts and selected combined adverse cases. The OSCE
+example remains a separate many-item/unequal-exposure design anchor; adapting
+its assignment is not replication of its Bayesian interaction model.
+
+Nominal 95% intervals remain a reporting target, not an automatic acceptance
+rule. Practical adequacy additionally depends on the width/error acceptable
+for the actual use; do not invent a universal logit or ranking tolerance.
+Report effect magnitudes and Monte Carlo uncertainty until an application-
+specific decision margin is justified. A later qualification decision must
+freeze that margin and the treatment of unreturned estimates before its
+confirmation sample. The existing 3-percentage-point coverage margin is not
+silently inherited by this broader comparison.
+
+### Staging decisions before any new calculation
+
+1. Resolve the observed-Person-score rank policy and the population/contrast-
+   consumer mismatch for the affected outputs before freezing their sampling
+   comparisons. Keep current checks in place during review. These issues do
+   not erase the distinct questions addressed by larger samples. Use both the
+   historical-design core and the applied blocks to fix primary outputs and
+   matched methods. Three-facet work starts from existing additive models;
+   any two-family extension needs a separate necessity/identification decision.
+2. Specify a correctly modeled core across N=20/30/40/60/120/240/480 with
+   matched design definitions and selected complexity/exposure comparisons.
+   Test N x rater exposure and N x category/parameter burden at multiple sample
+   sizes; single-factor departures alone cannot establish them. Separately
+   examine increasing N with increasing facet levels. Preserve all relevant
+   completed larger-sample evidence and two-family development failures.
+3. Add targeted robustness contrasts for restricted/nonnormal ability,
+   task/rater targeting, ability-associated assignment, assigned-rating
+   missingness, and within-performance dependence. Separate planned
+   nonassignment from missing assigned scores. Use selected combined adverse
+   settings as checks; do not claim robustness from testing each in isolation.
+4. Select primary performance tolerances and replications from their Monte
+   Carlo precision and decision consequences. Keep method comparisons paired
+   by dataset, specify any shared randomness across designs, and reserve fresh
+   data for any later confirmation of a method tuned during exploration.
+   Neither 2,000 total fits nor 100/500 repetitions per cell is a new constraint.
+   Independent new draws are not independent implementation validation.
+5. Only after the design is settled and the current no-computation instruction
+   is lifted, freeze inputs/procedure, perform the necessary execution checks,
+   and launch an appropriately scoped study. The old elapsed-time estimates
+   do not price the new small-cohort/multifacet comparison. Do not start with a
+   timing pilot while scientific choices are still open.
+
+This approach follows the separation of aims, generating mechanisms, estimands,
+methods and performance in
+[Morris, White and Crowther (2019)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6492164/).
+It supplies a planning framework, not a completed small-sample validation.
+The proposed primary outputs, full-range core and applied blocks are specified above.
+Open choices are the observed-score eligibility policy, matched population/
+output contracts, application-specific tolerances, final parameter values and
+allocation schedules, any justified consumer/model extension, and the resulting
+condition/replication allocation. D1/D2 remain open.

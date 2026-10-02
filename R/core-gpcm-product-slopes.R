@@ -10,9 +10,9 @@ stop_if_product_slopes <- function(fit, helper) {
   if (mfrm_has_product_slopes(fit)) {
     stop(new_gpcm_scope_error(paste0("`", helper, "` is not available for two slope families. ",
       "Use summary(fit) and mfrm_curve_intervals(fit, newdata) for fitted curves without intervals; ",
-      if (!mfrmr_adaptive_integration(fit$config))
-        "confint(fit) separately checks experimental slope intervals, and mfrm_response_diagnostics(fit) supplies descriptive posterior residuals. " else
-        "Adaptive two-family fits do not yet supply component intervals or posterior residual diagnostics. ",
+      "confint(fit) separately checks experimental component log-Wald intervals. ",
+      "mfrm_response_diagnostics(fit) supplies descriptive posterior residuals with the fitted integration method. ",
+      if (mfrmr_adaptive_integration(fit$config)) "Adaptive two-family profiles remain unavailable. ",
       "saved curves can be passed to mfrm_results(fit, include = c('fit', 'plots'), compute = 'never', intervals = curves)."),
       helper = helper, status = "blocked", area = "Two-family GPCM outputs"))
   }
@@ -190,7 +190,7 @@ mfrm_gmfrm_common_setup <- function(data, max_score,
        parameter_map = mfrmr_mml_optimizer_parameter_map(prep, idx, config, sizes))
 }
 
-# Qualification for a local log-Wald approximation, not a global boundary or
+# Qualification for a local Wald approximation, not a global boundary or
 # sampling-coverage certificate. Reuse the full marginal information: frozen-Q
 # curvature and the inverse slope block are not the covariance of joint estimates.
 mfrm_gpcm_product_inference <- function(fit) {
@@ -206,12 +206,14 @@ mfrm_gpcm_product_inference <- function(fit) {
     out
   }
   config <- fit$config
+  adaptive <- mfrmr_adaptive_integration(config)
   if (!record("Scope", mfrm_has_product_slopes(fit) &&
       identical(config$method, "MML") && !isTRUE(config$population_spec$active) &&
-      identical(config$estimation_control$mml_integration, "fixed") &&
+      identical(config$posterior_basis, "fixed_standard_normal") &&
+      identical(config$estimation_control$mml_engine_used, if (adaptive) "direct" else "em") &&
       is.null(config$weight_col) && all(fit$prep$data$Weight == 1) &&
       identical(config$noncenter_facet, config$slope_facet[2]),
-      "Two-family intervals currently require fixed-grid, unweighted MML-EM with N(0,1); adaptive-fit component intervals are unavailable.")) return(refuse())
+      "Two-family intervals require unweighted fixed-N(0,1) MML with fixed-grid EM or adaptive direct integration.")) return(refuse())
   specification <- fit$gmfrm$specification
   reference <- tryCatch(do.call(mfrm_gmfrm_common_setup,
     specification[setdiff(names(specification),"quadrature")]), error=function(e) NULL)
@@ -232,7 +234,13 @@ mfrm_gpcm_product_inference <- function(fit) {
       length(index) == nrow(fit$slopes) && !anyNA(index) &&
       isTRUE(all.equal(target$estimate, unname(fit$slopes$Estimate[index]), tolerance=1e-10)),
       "Slope owners, levels, scale constraints and retained estimates must agree.")) return(refuse())
-  if (!record("EM convergence", isTRUE(fit$summary$Converged) &&
+  if (adaptive) {
+    if (!record("Direct convergence", isTRUE(fit$summary$Converged) &&
+        identical(fit$opt$convergence, 0L) &&
+        identical(fit$opt$optimizer_diagnostics$ConvergenceBasis, "optimizer_gradient") &&
+        identical(fit$opt$optimizer_diagnostics$ConvergenceSeverity, "pass"),
+        "Direct adaptive MML must pass its optimizer and gradient convergence checks.")) return(refuse())
+  } else if (!record("EM convergence", isTRUE(fit$summary$Converged) &&
       identical(fit$opt$optimizer_diagnostics$ConvergenceBasis, "marginal_score_per_person"),
       "EM must meet its per-Person marginal-score stopping rule.")) return(refuse())
   category <- audit_mfrm_category_support(fit$prep,config,build_param_sizes(config))
@@ -267,6 +275,7 @@ mfrm_gpcm_product_inference <- function(fit) {
   derivative_error <- max(abs(scaled-scaled_fine))
   q <- config$estimation_control$quad_points
   out$numerical_checks <- data.frame(QuadraturePoints=q,ComparisonPoints=2L*q-1L,
+    Integration=if (adaptive) "adaptive" else "fixed",
     FreeParameters=p,ScoreRank=min(rank$rank_ladder$Rank),DerivativeDifference=derivative_error,
     MaximumMeanScore=NA_real_,CurvatureScaledGradient=NA_real_,InverseResidual=NA_real_,
     QuadratureScoreShift=NA_real_,QuadratureCovarianceChange=NA_real_)
@@ -277,7 +286,7 @@ mfrm_gpcm_product_inference <- function(fit) {
         "A failure does not by itself prove structural nonidentifiability."))) return(refuse())
   gradient <- -colSums(scores)
   scaled_gradient <- sqrt(max(0,drop(crossprod(gradient,info$cov%*%gradient))))
-  tol <- min(fit$gmfrm$controls$score_tol %||% 1e-6,1e-6)
+  tol <- if (adaptive) 1e-6 else min(fit$gmfrm$controls$score_tol %||% 1e-6,1e-6)
   inverse_error <- norm(info$hessian%*%info$cov-diag(p),"I")
   out$numerical_checks$MaximumMeanScore <- max(abs(gradient))/n
   out$numerical_checks$CurvatureScaledGradient <- scaled_gradient
@@ -285,7 +294,8 @@ mfrm_gpcm_product_inference <- function(fit) {
   out$numerical_checks$OptimizationCaution <- scaled_gradient > 1e-4
   if (!record("Stationary local maximum", is.finite(scaled_gradient) &&
       max(abs(gradient))/n <= tol && scaled_gradient <= .01 && inverse_error <= 1e-6,
-      "The fresh per-Person score must meet min(em_score_tol, 1e-6), standardized Newton displacement must be at most 0.01, and inverse residual at most 1e-6. Displacement above 1e-4 retains a warning.")) return(refuse())
+      paste0("The fresh per-Person score must meet ", if (adaptive) "1e-6" else "min(em_score_tol, 1e-6)",
+        ", standardized Newton displacement must be at most 0.01, and inverse residual at most 1e-6. Displacement above 1e-4 retains a warning."))) return(refuse())
   refined_fit <- fit; refined_fit$config$estimation_control$quad_points <- 2L*q-1L
   refined <- tryCatch(compute_mml_parameter_covariance(refined_fit),error=function(e) NULL)
   refined_scores <- tryCatch(mfrm_mml_person_scores_numeric(refined_fit),error=function(e) NULL)
@@ -306,7 +316,7 @@ mfrm_gpcm_product_inference <- function(fit) {
     "Small optimization residual: standardized Newton displacement is %.3g (above 1e-4, at most 0.01). The intervals retain this local numerical approximation.",
     scaled_gradient) else ""
   out$check <- list(eligible=TRUE,
-    review="Experimental local log-Wald approximation from full joint marginal information; sampling coverage is not qualified.",
+    review="Experimental local Wald approximation from full joint marginal information; sampling coverage is not qualified.",
     caution=trimws(paste("Experimental two-family intervals: local numerical checks passed, but global identification, boundary absence and sampling coverage are not established.",
       optimization_caution,paste(mfrm_mml_information_caution(info),collapse=" "))))
   out

@@ -20,7 +20,7 @@ mfrm_response_diagnostics(
 \arguments{
 \item{fit}{A numerically ready native RSM MML \code{\link[=fit_mfrm]{fit_mfrm()}},
 \code{\link[=fit_mfrm_testlet]{fit_mfrm_testlet()}} or \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} result, a converged
-two-family GPCM MML--EM fit, or a shared-owner
+two-family GPCM fixed-grid EM or adaptive direct MML fit, or a shared-owner
 GPCM fit with an explicit \code{jml_correction_order} and an available point solution.}
 
 \item{rows}{Distinct original input row numbers to return, or \code{NULL} for
@@ -48,6 +48,15 @@ An \code{mfrm_response_diagnostics} object with \code{rows}, category
 \code{probabilities}, grouped \code{measures}, settings and exact source metadata.
 Save with \code{saveRDS()}; attach via
 \code{mfrm_results(fit, response_diagnostics = result, compute = "never")}.
+The resulting \code{mfrm_results} object contains \code{tables$response_overview},
+distinguishing available standardized residuals, unresolved calculations,
+missing scores, zero-variance rows and source rows not selected. Partial
+results require review; availability does not establish model adequacy.
+No probabilities or residuals are recomputed for this table.
+Older saved \code{mfrm_results} objects without this table recover the overview
+and status from retained diagnostic rows when summarized, reported, exported
+or opened in a supported results viewer. The original object is not modified;
+newly exported results include the recovered overview and status.
 Supply two saved outputs to \code{\link[=compare_mfrm]{compare_mfrm()}} for aligned ordinary versus
 extended RSM comparisons, using the same selected events and group_by.
 Corrected-JML and two-family GPCM comparisons are not supported by that route.
@@ -122,13 +131,22 @@ the Person's observed ratings; probabilities are not evaluated at the EAP.
 Only fitted observed rows are returned, preserving the original identifiers
 and incomplete assignment pattern. No unassigned cell is filled.
 
-The saved EM solution and point calibration must agree with their fitting
+The saved solution and point calibration must agree with their fitting
 specification. A slope covariance or slope interval is not required.
+Fixed-grid EM and adaptive direct MML retain their respective integration
+methods. Adaptive grids use the complete Person posterior's mode and curvature,
+preserving the original N(0,1) prior through density-ratio and Jacobian weights.
+Source likelihood and engine-specific gradient checks are recomputed before
+prediction. Stored convergence flags alone do not establish a usable source.
 This has the same scope as the two-family fit: two fixed slope facets,
 unit weights, no anchors or covariates, and observed zero-based categories.
 \code{quad_points} checks response integration at the retained parameters; it
 does not refit the calibration. If integration is unresolved, increase it
-explicitly. Separately use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to examine whether
+explicitly. The returned probabilities use \code{2 * quad_points + 1} points;
+the lower order supplies the row-wise check. Selecting fewer output rows
+does not shorten the posterior's conditioning record or change its grid.
+Settings retain the integration method through plots, reports and exports.
+Separately use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to examine whether
 the fitted calibration changes across quadrature grids.
 
 Inspect \code{rows} for unavailable predictions before reading \code{measures}.

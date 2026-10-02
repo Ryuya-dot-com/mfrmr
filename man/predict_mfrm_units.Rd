@@ -54,7 +54,9 @@ one-row-per-person table internally from the scored person IDs. This is the
 scoring-time table for \code{new_data}, not the fit object's replay/export
 provenance table. For categorical background variables, supply values on
 the same coding scale used at fit time; the fitted factor levels and
-contrasts are reused when building the scoring design matrix.}
+contrasts are reused when building the scoring design matrix.
+Fitted standardization and polynomial/spline bases are also reused;
+they are not re-estimated from the scoring cohort.}
 
 \item{person_id}{Optional person-ID column in \code{person_data}. Defaults to
 \code{person} when that column exists, otherwise \code{"Person"} for the canonical
@@ -94,9 +96,10 @@ orders >= 3, for example \code{c(31, 61)}. Adds \code{quadrature_review}, compar
 a fixed-prior grid with grids centered and scaled to each Person's
 posterior. Calibration parameters and the prior are held fixed. Inspect
 both fixed/adaptive differences and movement between adaptive orders;
-this diagnostic does not replace estimates, intervals or draws. The
-conditional-scoring route automatically adds reference orders and uses
-them to check numerical score accuracy; see below.}
+this diagnostic does not replace estimates, intervals or draws. Every
+scoring call automatically adds reference orders and uses them to check
+numerical score accuracy, including ordinary RSM/PCM with the retained
+prior; see below.}
 
 \item{scoring_prior}{Optional \code{list(mean = ..., sd = ...)} specifying one
 normal scoring prior shared by all scored persons, on the unchanged
@@ -186,10 +189,46 @@ the training Person joint maximum-likelihood estimates or provide ML/WLE
 scoring for new Persons. Posterior uncertainty conditions on the fitted
 calibration; it does not include calibration-parameter uncertainty.
 }
+\section{Experimental two-family scoring}{
+
+Two-family GPCM MML supports new Persons with known non-Person facet levels,
+unit weights and the retained fixed N(0,1) prior. Both slope components,
+facet locations and the second owner's category steps remain fixed. New
+combinations of known levels are allowed under the fitted product model;
+this does not validate those combinations empirically. Repeated Person-facet
+combinations are rejected. Missing responses are omitted with a warning and
+row review; Persons without valid responses receive no prior-only score.
+Unknown levels or scores outside the original category coding are rejected.
+Prior overrides and person-level population inputs are not supported.
+
+The saved specification, point estimates, objective and convergence must
+agree before either readiness policy permits scoring. A finer rule (normally
+\code{max(q + 10, 2 * q - 1)}) must change the source negative log likelihood per
+Person by at most 1e-6 and have maximum absolute gradient per Person at most
+1e-6 for conditional source scoring. Source-readiness or refinement failures
+require explicit \code{readiness_policy = "review"}; invalid calibration records
+or failed convergence cannot be enabled by review. No covariance is required.
+Each new batch also receives the EAP/SD integration checks described below.
+These tolerances are numerical checks, not statistical validity thresholds.
+
+EAP, posterior SD and continuous equal-tail intervals condition on the point
+calibration and fixed prior, excluding calibration uncertainty. Numerical
+checks do not complete the identification/boundary audits or establish
+sampling coverage, population transport or decision accuracy. Settings retain
+both owners, component slopes, locations, steps, category coding, observed
+calibration combinations and separate source/batch checks through saveRDS()
+and summary(). \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} provides the corresponding
+portable format 6 route after passing source checks. Use
+\code{mfrm_results(fit, scores = scores)} to attach matching saved native or
+format-6 scores for reports and exports without rescoring. The saved source
+identity, calibration and scoring records must agree with the supplied fit;
+source/batch checks, omitted rows and review-only labels remain visible.
+}
+
 \section{Conditional scoring and source checks}{
 
 A finite calibration can define a person's posterior score without proving
-that the calibration is the unique global optimum. For GPCM MML and models
+that the calibration is the unique global optimum. For one-family GPCM MML and models
 with an estimated intercept-only normal population, this function checks the
 current likelihood, gradient and unregularized joint information using the
 same local-solution machinery as \code{\link[=compare_mfrm]{compare_mfrm()}}. Detected identification
@@ -206,14 +245,14 @@ includes free Person parameters and uses a dense matrix; saved portable
 calibration avoids repeating it. No MML integration check or formal slope
 interval is inferred from this JML calculation.
 
-MML calibration checks also compare the retained solution at its fitting order
+One-family MML calibration checks also compare the retained solution at its fitting order
 and a higher order (normally \code{2 * q - 1}, at least \code{q + 10}; \code{q + 10} is
 used if the larger rule is not representable). They require NLL movement
 <= 1e-5, gradient movement <= 1e-4 and a higher-order gradient <= 1e-4,
 in addition to the existing local-solution criteria. These are numerical
 screening tolerances, not statistical coverage or global-existence guarantees.
 
-After a calibration passes, the actual reported EAP and SD are compared
+For every native scoring route, after a calibration passes, the actual reported EAP and SD are compared
 with adaptive reference orders under the same calibration and scoring prior.
 The reference includes the scoring order (at least 3 for this comparison)
 and a higher order chosen by the same rule. EAP/SD discrepancies and changes
@@ -223,6 +262,9 @@ Nonfinite posterior calculations or invalid parameters cannot be enabled by revi
 
 \code{settings$local_calibration_review} records the source checks and
 \code{settings$score_integration_review} records the per-Person numerical checks.
+New outputs set \code{settings$score_integration_required = TRUE}; their saved
+checks must remain with the scores. Older outputs without these checks can
+still be summarized, but are not retrospectively numerically qualified.
 \code{SourceScoringReady} concerns the calibration; \code{ScoreIntegrationReady}
 concerns the reported scores. \code{EstimateUse} identifies any scores requiring
 integration review. These records accompany summaries, draws and exports.

@@ -110,20 +110,24 @@ parameter-level \code{SEEligible} state remains unchanged.
 For a two-family GPCM, refits preserve the ordered slope owners,
 fixed N(0,1) population, score ladder, engine, integration method and stopping
 controls (\code{em_score_tol} for fixed-grid EM or \code{reltol} for adaptive direct MML).
-Each refit starts from the usual neutral initialization, not the reference
-estimate. Component slopes retain \code{SlopeOwner} and \code{ScaleReference}: the
+Each refit reconstructs the source initialization policy from the observed
+data. Fixed-grid EM uses the neutral vector; adaptive fits retain either
+neutral-only or neutral-plus-EM initialization. Older adaptive fits without
+this setting retain the earlier neutral-only procedure. The reference
+estimate is not used as a new starting vector. Component slopes retain
+\code{SlopeOwner} and \code{ScaleReference}: the
 first family has geometric mean one; the second is free on the fixed ability
 scale. Category-probability comparisons use the product of both slopes.
 
-For fixed-grid EM, \code{intervals} contains the separately checked experimental \code{confint()} result
+For both two-family engines, \code{intervals} contains the separately checked experimental \code{confint()} result
 for each grid, including failed checks, cautions and missing bounds. For
 example, after comparing \code{quad_points = c(31, 61)}, use
 \code{plot(out$intervals$q61)} and
 \code{apa_table(out$intervals$q61, which = "numerical_checks")}. These checks also
 evaluate q versus 2q-1 at that fit's saved parameters without another refit.
 Passing these checks does not establish sampling coverage or resolve
-other warnings about the fitted model. Adaptive two-family refits retain
-missing component intervals with the reason that this inference route is unavailable.
+other warnings about the fitted model. Adaptive fits use their moving-node
+objective for both the information and the higher-order comparison.
 Person-score comparisons in \code{summary} remain unavailable for two families:
 EAP and posterior-SD changes there are \code{NA}, not zero. With
 \code{adaptive_quad_points}, the separate \code{quadrature_review} table evaluates

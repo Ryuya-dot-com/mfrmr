@@ -79,35 +79,63 @@ separately checked MML uncertainty. An interval result has its own \code{print()
 and \code{plot()} methods; attach selected results to \code{\link[=mfrm_results]{mfrm_results()}} for
 \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}. A plot of locations or fit
 statistics is not a plot of slope uncertainty.
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} separately supplies experimental native-scale
+model intervals for one-family MML locations and within-facet contrasts.
+Direct fixed/adaptive MML, centered additive facets/steps and unit weights
+are required, with an estimated intercept-only normal population or the
+explicit fixed-N(0,1) restriction. Shared/separate slope and step owners are
+supported. Full-information and finer-grid checks preserve refusal reasons;
+sampling coverage and standardized-location intervals remain unqualified.
 
 Portable calibration has its own row and \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}
 gives estimator-specific source restrictions. Two slope families are available
 provisionally through \code{\link[=fit_mfrm]{fit_mfrm()}} with fixed-standard-normal MML, exactly
 two facets, no anchors and unit weights. Choose fixed-grid EM or adaptive
 direct MML explicitly; see \code{\link[=fit_mfrm]{fit_mfrm()}}. Use \code{summary(fit)}, then
+inspect adaptive initialization in \code{fit$opt$mml_initialization}: the default
+compares neutral and EM-derived starts with the same adaptive likelihood,
+retaining failed starts and the selected candidate's convergence status.
+The saved initialization policy also follows quadrature-order refits. Use
 \code{curves <- mfrm_curve_intervals(fit, newdata)} and \code{plot(curves)}. Despite the
 function name, this route returns fitted values with unavailable intervals.
-Attach them with \code{mfrm_results(fit, include = c("fit", "plots"), compute = "never", intervals = curves)} for reports and saved exports.
-For fixed-grid EM, separately use \code{ci <- confint(fit)} for experimental component-slope intervals
+Attach them with \code{mfrm_results(fit, intervals = curves)} for reports and
+saved exports. Without attachments, \code{mfrm_results(fit)} collects the saved
+fit and its numerical status; neither call calculates new diagnostics.
+Separately use \code{ci <- confint(fit)} for experimental component log-Wald intervals
 and attach \code{intervals = list(slopes = ci, curves = curves)}. Local numerical
 checks do not establish global identification or sampling coverage; failed
 checks retain missing bounds.
-An explicit \code{confint(fit, method = "profile", slope = c(Task = "t1"))}
+For fixed-grid EM, an explicit \code{confint(fit, method = "profile", slope = c(Task = "t1"))}
 profiles one two-family component, using the actual owner/level names.
 It retains nuisance reoptimization, numerical checks, unavailable endpoints
 and a same-target Wald comparison. Neither method has qualified coverage.
 Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare
-refits with the same engine and integration method. Fixed-grid EM retains
-each grid's experimental interval checks; adaptive fits retain missing bounds. Optional \code{adaptive_quad_points} also adds fixed-calibration
+refits with the same engine and integration method. Both routes retain
+each order's experimental log-Wald checks. Optional \code{adaptive_quad_points} also adds fixed-calibration
 integration checks for two families; the posterior moments in that review
 are numerical diagnostics, not a Person-scoring workflow. Person-score
 comparisons remain unavailable for two families. Adaptive two-family fitting
-does not yet supply component intervals or posterior residual diagnostics.
-For fixed-grid EM, \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
+does not yet supply profile intervals.
+For both engines, \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
 predictive residuals with fixed calibration, including descriptive Infit/Outfit
-without reference cutoffs. Attach the saved object through \code{response_diagnostics}
-to the results call above for plots, reports and exports. Ordinary fit diagnostics, other parameter intervals, model ranking, new-person scoring and
-portable two-family calibration remain unavailable. Shared-owner corrected
+without reference cutoffs. It retains the fitted integration method and
+complete Person conditioning record, including when selecting output rows.
+Attach the saved object through \code{response_diagnostics}
+to the results call above for plots, reports and exports.
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} separately supplies experimental conditional new-Person
+EAP, posterior SD and continuous posterior intervals under the retained
+N(0,1) prior, with source/batch numerical checks and no calibration uncertainty.
+\code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} provides portable two-family format 6 with the
+same fixed prior and separate source/batch checks.
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} supplies separately checked experimental normal
+intervals for either owner's locations or prespecified within-facet contrasts.
+It uses the constrained location block of the inverse full marginal information;
+failed numerical checks retain point estimates with missing intervals.
+Attach the result as \code{intervals = list(locations = ci)} for saved reports and
+plots. Coverage is unqualified; location differences are not uniform rating
+differences when slopes or steps vary. Ordinary fit diagnostics, step/curve
+intervals and model ranking
+remain unavailable. Shared-owner corrected
 JML has an explicit experimental point-estimation and reporting route through
 \code{jml_correction_order}; formal structural intervals remain unavailable.
 Its descriptive response diagnostics and conditional EAP scoring use their
@@ -157,10 +185,11 @@ not yet provide a two-family model comparison or qualified feedback decision.
 It also shows how to import the empirical writing table
 \code{sirt::data.ratings1} from that separately installed package, preserve its
 categories, and review unequal assignment. The example distinguishes new
-fitted response curves from evidence of predictive accuracy. Numerical
-convergence did not resolve its integration-sensitive curves or incomplete
-residual summaries, so the example does not endorse rater feedback from
-those estimates. All score datasets bundled with mfrmr are synthetic.
+fitted response curves from evidence of predictive accuracy. The original
+fixed-grid fits had integration-sensitive curves and incomplete residual
+summaries. A subsequent adaptive fit resolved the retained numerical example;
+that agreement does not validate model fit or feedback decisions. All score
+datasets bundled with mfrmr are synthetic.
 }
 
 \section{Rankings and consequential decisions}{
@@ -173,7 +202,7 @@ do not establish the probability of selecting the correct champion.
 Differences need covariance and selection-aware uncertainty; independently
 drawing from printed SEs omits shared calibration uncertainty.
 There is no winner-probability or simultaneous Person-rank confidence-set
-API. Two-family Person scoring is also unavailable. Available one-family
+API. Available one-family and experimental two-family new-Person
 EAP intervals condition on the calibration and prior; they do not provide
 a validated winner-selection procedure. Preserve competition-specific
 aggregation, rounding, tie rules and advancement separately from modelled

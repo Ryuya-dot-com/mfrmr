@@ -1219,7 +1219,8 @@ mfrm_results_reproducible_code <- function(ctx, include, output = "object") {
 }
 
 mfrm_results_uses_saved_replay <- function(x) {
-  mfrm_has_jml_adjustment(x$fit) || mfrm_extended_fit(x$fit) || !is.null(x$response_diagnostics) ||
+  mfrm_has_jml_adjustment(x$fit) || mfrm_has_product_slopes(x$fit) ||
+    mfrm_extended_fit(x$fit) || !is.null(x$response_diagnostics) ||
     !is.null(x$gpcm_inference) || !is.null(x$facet_intervals)
 }
 
@@ -1333,6 +1334,10 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
       "summary(res$diagnostics)$key_warnings",
       if (isTRUE(no_diag_warning)) "Diagnostics are available and no immediate summary warning was reported." else paste(utils::head(key_warnings, 2L), collapse = " | ")
     )
+  } else if (mfrm_has_product_slopes(fit)) {
+    add("Diagnostics", "not_available", "diagnostics_unsupported",
+      "gpcm_capability_matrix()",
+      "Ordinary diagnostics are not supported for two-family GPCM. Separately saved descriptive response diagnostics do not supply ordinary fit tests.")
   } else {
     diagnostics_not_computed <- nrow(status) > 0L &&
       all(c("Section", "Status") %in% names(status)) &&
@@ -1385,7 +1390,9 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
   } else {
     wright_available
   }
-  add(
+  wright_required <- !"RequiredArtifact" %in% names(plot_map) ||
+    any(plot_map$Type %in% "wright" & plot_map$RequiredArtifact %in% TRUE)
+  if (wright_required) add(
     "Wright map",
     if (!wright_available) {
       "not_available"
@@ -2075,6 +2082,7 @@ mfrm_results_build <- function(ctx, include) {
 }
 
 mfrm_results_html <- function(x) {
+  x <- mfrm_results_restore_response_overview(x)
   summary_obj <- summary(x)
   html_tables <- c(
     list(
@@ -4841,6 +4849,7 @@ mfrm_report_markdown <- function(report) {
 }
 
 mfrm_report_build <- function(x, style) {
+  x <- mfrm_results_restore_response_overview(x)
   if (mfrm_has_jml_adjustment(x$fit)) return(mfrm_jml_report(x,style))
   if (mfrm_has_product_slopes(x$fit)) return(mfrm_gpcm_product_report(x, style))
   if (mfrm_extended_fit(x$fit)) return(mfrm_extended_report(x, style))
@@ -5028,6 +5037,8 @@ mfrm_report_build <- function(x, style) {
   if (!is.null(x$response_diagnostics)) {
     out$markdown <- paste(out$markdown, "## Posterior predictive residuals",
       "Same-data descriptive summaries with calibration fixed; no reference cutoffs or tests. These do not replace the ordinary plug-in fit indices.",
+      tables$response_overview$Detail,
+      mfrm_report_markdown_table(tables$response_overview),
       mfrm_report_markdown_table(tables$response_measures),
       "All selected rows and probabilities remain in report$tables and CSV exports.", sep = "\n\n")
   }
@@ -5346,7 +5357,8 @@ mfrm_report_html <- function(report) {
 #'   validity-argument boundary, `"reviewer"` emphasizes reviewer response
 #'   preparation, and `"technical"` emphasizes appendix/reproducibility routes.
 #'   `"rater"` creates a standalone individual feedback sheet from saved
-#'   native additive RSM/PCM results; it requires `facet` and `rater`.
+#'   native additive RSM/PCM or two-family GPCM MML results; it requires
+#'   `facet` and `rater`.
 #' @param output Return format: `"object"` for an `mfrm_report` object,
 #'   `"markdown"` for a character scalar, `"html"` for a temporary HTML file,
 #'   or `"tables"` for the report's named data-frame list.
@@ -5363,10 +5375,20 @@ mfrm_report_html <- function(report) {
 #'   sheet, ordered by absolute standardized residual. Default 5; use 0 to
 #'   omit individual cases. This is not a misfit threshold.
 #' @param interval Optional name of a saved fixed-facet interval attachment in
-#'   `x$facet_intervals` for a rater sheet. The attachment must contain the
+#'   `x$facet_intervals` for an additive-model rater sheet, or a saved component
+#'   slope interval in `x$gpcm_inference` for two-family GPCM. The attachment must contain the
 #'   selected individual coefficient, not just a difference involving it.
 #'   A single matching attachment is used automatically. Multiple matching
 #'   attachments require an explicit choice. No interval is calculated here.
+#'
+#' @section Two-family GPCM reports:
+#' Reports retain all saved non-Person fitted locations, category steps and
+#' component slopes. Locations identify their centering constraint; steps
+#' identify their owner and level and are centered offsets, not standalone
+#' thresholds. Separately computed experimental location/contrast intervals from
+#' [mfrm_facet_intervals()] may be attached; step intervals remain unavailable. The Markdown view
+#' shows up to 20 rows per table with a notice; complete tables remain in
+#' `$tables` and CSV exports. Report styles do not change inferential support.
 #'
 #' @section Corrected JML reports:
 #' Results from an explicit `jml_correction_order` have an estimator-specific
@@ -5392,7 +5414,7 @@ mfrm_report_html <- function(report) {
 #' the recipient's sheet. Reloading and reporting reuse the saved analysis
 #' without updating it for new ratings.
 #'
-#' The sheet includes scoring tendency (severity), exposure, available saved
+#' The additive RSM/PCM sheet includes scoring tendency (severity), exposure, available saved
 #' fixed-facet uncertainty, ordinary Infit/Outfit, category use and selected
 #' unexpected ratings. Severity is oriented so that positive values mean lower
 #' expected scores. Its zero is the fitted model reference, not necessarily
@@ -5411,9 +5433,34 @@ mfrm_report_html <- function(report) {
 #' the recipient's sheet. Missing sections explain the missing input. Ineligible
 #' source fits retain a prominent review notice. Severity is not rater quality,
 #' and no automatic misfit cutoff, exclusion decision or diagnostic accuracy
-#' claim is added. These sheets do not support GPCM, fitted interactions,
+#' claim is added. These sheets do not support one-family GPCM, fitted interactions,
 #' imported fits, testlet or shared-random-rater models; use their specific
 #' results and reports because their effects and diagnostics differ.
+#'
+#' For two-family GPCM MML, the same entry creates an experimental descriptive
+#' sheet. Select the modeled rater facet explicitly; either slope owner is
+#' supported. It separates the fitted location from the component slope,
+#' retains their distinct centering references, and reports category use,
+#' retained exposure and how many levels of the other facet were observed.
+#' Category-step offsets are shown only when this facet owns the steps. They
+#' are centered offsets, not standalone thresholds. This individual sheet does
+#' not display location or step intervals; use the analyst report for separately
+#' requested location intervals. A larger slope is not evidence of competence or accuracy.
+#'
+#' Attach saved [confint.mfrm_fit()] output through `intervals` in
+#' [mfrm_results()] to include a matching experimental component-slope interval.
+#' `interval` chooses among named attachments; pointwise/Bonferroni meaning,
+#' profile/log-Wald method and unavailable bounds are retained. No location
+#' interval or test of rater differences is implied. Attach saved
+#' [mfrm_response_diagnostics()] output through `response_diagnostics` for
+#' same-data posterior residual summaries and cases. The sheet counts saved,
+#' available, unresolved and not-included rows separately; a summary average
+#' is unavailable if any saved row for that recipient is unresolved. These
+#' residuals have no expectation-one reference or calibrated cutoff, exclude
+#' calibration uncertainty and do not predict independent future ratings.
+#' Creating or reopening a sheet does not fit, integrate, compute intervals
+#' or diagnose new responses. Inspect the complete analyst results before
+#' sharing a sheet; numerical convergence does not qualify feedback decisions.
 #'
 #' All four output formats use only selected numeric summaries and fixed
 #' explanatory text. They omit the source fit, Person identifiers, other rater
@@ -5709,7 +5756,7 @@ mfrm_results_export_index_html <- function(prefix, written_files, plot_errors, e
       "Review and transform every file under the applicable data-handling policy before sharing.</p>"
     ),
     if (corrected_jml) paste0("<p>",html_escape(mfrm_jml_note())," Review the numerical status, then the saved slope, location and step estimates.</p>") else
-    if (point_only) "<p>Review the numerical status, then the saved provisional fitted curves. Curve intervals, ordinary diagnostics and Wright/Pathway maps are unavailable; separately attached slope intervals retain their experimental checks.</p>" else
+    if (point_only) "<p>Review the numerical status, then the saved provisional fitted curves. Curve intervals, ordinary diagnostics and Wright/Pathway maps are unavailable; separately attached slope/location intervals retain their experimental checks.</p>" else
     if (extended) "<p>Review the stored calibration, numerical checks and interval meanings before interpreting the available figures. Model-aware Wright maps show conditional reference locations; fit pathways use descriptive posterior residuals without ordinary-model cutoffs. Only saved Person conditional intervals appear in these maps.</p>" else
       "<p>Use this reading order for the fitted analysis. The Wright map is the required first figure; the remaining plots and tables are follow-up evidence.</p>",
     "<ol>",
@@ -5933,6 +5980,8 @@ export_mfrm_results <- function(x,
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object. Call `mfrm_results()` first.", call. = FALSE)
   }
+  x <- mfrm_results_restore_response_overview(x)
+  mfrm_gpcm_results_validate_scores(x)
   preset_name <- if (is.null(preset)) "none" else match.arg(
     tolower(as.character(preset[1])), c("starter")
   )
@@ -6164,7 +6213,7 @@ export_mfrm_results <- function(x,
               saved$settings$method, ", ", format(100 * saved$settings$level, trim = TRUE),
               "% pointwise normal intervals. Fixed and unavailable targets remain visible.")
           } else if (startsWith(type, "gpcm_") && mfrm_has_product_slopes(x$fit)) {
-            "Two-family results: curves have no calibration intervals; separately saved slope intervals are experimental. Review the target-specific tables and numerical checks."
+            "Two-family results: curves have no calibration intervals; separately saved slope/location intervals are experimental. Review the target-specific tables and numerical checks."
           } else if (startsWith(type, "gpcm_")) {
             "Saved GPCM inference; see the corresponding tables for its target, method, confidence level and unresolved outcomes. This does not classify rater quality or select scoring weights."
           } else {
@@ -6323,7 +6372,8 @@ export_mfrm_results <- function(x,
 #'   Section names include `"fit"`, `"diagnostics"`, `"tables"`,
 #'   `"precision"`, `"reporting"`, `"categories"`, `"plots"`,
 #'   `"facets_fit"`, `"bias"`, `"misfit"`, `"linking"`, `"network"`,
-#'   and `"apa"`.
+#'   and `"apa"`. When omitted, `NULL` or empty for a two-family GPCM fit, this selects
+#'   `c("fit", "plots")`. Explicit presets and sections remain scope-checked.
 #' @param output Return format: `"object"` for an `mfrm_results` object,
 #'   `"summary"` for its compact summary, `"tables"` for a named list of
 #'   available data frames, or `"html"` for a temporary HTML report.
@@ -6468,18 +6518,26 @@ export_mfrm_results <- function(x,
 #' @param response_diagnostics Optional saved [mfrm_response_diagnostics()]
 #'   output matching the fit's calibration and exact source roster. It is
 #'   identity-checked and reused without integration. Ordinary RSM MML and
-#'   testlet/shared-rater fits and two-family GPCM MML--EM support these
+#'   testlet/shared-rater fits and two-family GPCM MML support these
 #'   posterior summaries; corrected JML instead supplies conditional plug-in
-#'   summaries. None has reference cutoffs. Two-family results require
-#'   `include = c("fit", "plots")` and `compute = "never"`.
+#'   summaries. None has reference cutoffs. Two-family results default to
+#'   `include = c("fit", "plots")` and only collect saved quantities.
 #'   Use `compute = "never"` to also avoid computing ordinary
 #'   plug-in diagnostics. Saved posterior summaries appear in
 #'   `response_*` tables and `plot(..., type = "response_diagnostics")`.
+#'   `tables$response_overview` counts selected, available, unresolved,
+#'   missing-score, zero-variance and unselected rows; partial output requires
+#'   review. Older saved results without this table recover the overview and
+#'   matching status from their retained diagnostic rows during summary, reporting,
+#'   export or supported viewing, without re-estimation. The original object is
+#'   unchanged; newly exported results include the recovered metadata.
 #' @param compute Diagnostic computation policy. `"auto"` preserves the
 #'   standard behavior; `"never"` collects only sections that can be built
 #'   without computing diagnostics and marks every requested dependent section
 #'   as `"not_computed"`. Matching supplied or stored diagnostics are still
-#'   reused under `"never"`.
+#'   reused under `"never"`. For two-family GPCM fits, both settings collect
+#'   saved results without fitting, integration or diagnostic calculation;
+#'   ordinary diagnostics remain `"not_available"`.
 #' @param predictions Optional saved predictions for a testlet or random-rater
 #'   fit: the result of `predict(fit, ...)`. Matching calibration, column roles,
 #'   levels, settings and prediction-source metadata are required. Older
@@ -6487,6 +6545,8 @@ export_mfrm_results <- function(x,
 #'   before attachment; the fit itself does not need to be re-estimated.
 #' @param scores Optional saved [score_mfrm_persons()] result for an extension,
 #'   or [score_mfrm_random_rater()] output, with matching source calibration.
+#'   Two-family GPCM also accepts [predict_mfrm_units()] output or a format-6
+#'   [score_mfrm_calibration()] result with matching saved source identity.
 #'   For testlets this is an alias for `predictions`; supply it once. Shared
 #'   raters can also attach response `predictions` and rater `intervals`.
 #'   No Person scoring is run here. Complete source-roster identity is required
@@ -6511,7 +6571,8 @@ export_mfrm_results <- function(x,
 #' @param intervals Optional saved [mfrm_random_rater_intervals()] result from
 #'   the exact supplied random-rater fit. For a native GPCM fit, accepts saved
 #'   slope intervals, curve intervals, a GPCM bootstrap result, or a named list
-#'   of these. All must match the exact fitted data, parameters, population and
+#'   of these. Two-family GPCM also accepts [mfrm_facet_intervals()] for locations
+#'   and within-facet contrasts. All must match the exact fitted data, parameters, population and
 #'   integration settings. For native RSM/PCM fits, accepts a saved
 #'   [mfrm_facet_intervals()] result or a named list of them. No bootstrap
 #'   or interval calculation is run by this function.
@@ -6556,16 +6617,46 @@ export_mfrm_results <- function(x,
 #' unavailable; a numerical solution is not a rater-quality judgment.
 #'
 #' @section Provisional two-family results:
-#' For a two-slope-family GPCM fit, use `include = c("fit", "plots")` and
-#' `compute = "never"`. Attach saved [mfrm_curve_intervals()] results through
+#' For a two-slope-family GPCM fit, `mfrm_results(fit)` collects its saved
+#' estimates and numerical status, with `include = c("fit", "plots")` when
+#' omitted. Neither `compute` setting fits, integrates or calculates diagnostics.
+#' The `gpcm_fitted_slopes`, `gpcm_fitted_locations` and `gpcm_fitted_steps`
+#' tables retain all saved non-Person estimates when `"fit"` is included.
+#' Locations retain their centering reference; steps identify their owner and
+#' level and are centered offsets within that level. Separately computed
+#' experimental [mfrm_facet_intervals()] results may be attached through
+#' `intervals = list(locations = ci)`; step intervals remain unavailable.
+#' Reports and CSV exports retain these values;
+#' the report shows at most 20 rows of each table with an explicit notice.
+#' Explicit unsupported sections or attachments are rejected. Attach saved
+#' [mfrm_curve_intervals()] results through
 #' `intervals`; these contain provisional fitted values without intervals.
 #' Summary, tables, named curve plots, reports and saved exports retain that
 #' limitation. Separately requested `confint(fit)` results can be attached as
 #' `intervals = list(slopes = ci, curves = curves)`. Their experimental
 #' component-slope approximation, owner identities, numerical checks and
 #' unavailable outcomes follow the saved tables, plots and report.
-#' Ordinary diagnostics, Wright/Pathway maps, model comparison,
-#' new-person scoring and portable two-family calibration are unavailable.
+#' If exactly one saved curve, slope/location-interval or response-diagnostic plot is
+#' available, `plot(res)` displays it. With multiple saved plots, select `type`
+#' from `summary(res)$plot_map`; no new curves or diagnostics are calculated.
+#' Replay code saves and reloads the complete result, including the fit's
+#' owner identities, estimation settings and unresolved numerical status.
+#' Attach saved conditional new-Person output as `scores = scores`, from
+#' [predict_mfrm_units()] or the format-6 portable calibration workflow.
+#' The source identity must match this fit's calibration, data, category/owner
+#' coding, integration settings and recorded status. Collection does not repeat
+#' source checks or scoring. Older scores without the identity still support
+#' their standalone methods; regenerate them before attachment (also re-extract
+#' an older portable calibration), without re-estimating the fit.
+#' `person_scores` and `scoring_*` tables retain unrounded estimates, conditional
+#' interval meanings, source/batch checks, omissions and review labels in reports,
+#' CSV exports and saved replay. Native scoring records omitted row counts but
+#' does not enumerate a not-scored Person roster; portable scoring retains it.
+#' This attachment adds tables and reports; it does not add a score plot route.
+#' The intervals exclude calibration uncertainty; coverage and population
+#' transport remain unqualified. [extract_mfrm_calibration()] provides the
+#' separately checked portable route without retaining training responses.
+#' Ordinary diagnostics, Wright/Pathway maps and model comparison are unavailable.
 #' The starter export uses the available saved curves instead of requesting
 #' an unsupported Wright map.
 #'
@@ -6664,6 +6755,8 @@ mfrm_results <- function(fit,
   mfrm_random_rater_interval_level(calibration_level)
   output <- match.arg(tolower(as.character(output[1])), c("object", "summary", "tables", "html"))
   compute <- match.arg(tolower(as.character(compute[1])), c("auto", "never"))
+  if (mfrm_has_product_slopes(fit) && (missing(include) || !length(include)))
+    include <- c("fit", "plots")
   include <- mfrm_results_resolve_include(include)
   if (mfrm_has_jml_adjustment(fit)) {
     if (any(!vapply(list(diagnostics,predictions,intervals,scores,comparison,
@@ -6674,11 +6767,11 @@ mfrm_results <- function(fit,
     return(switch(output,object=out,summary=summary(out),tables=out$tables,html=mfrm_results_html(out)))
   }
   if (mfrm_has_product_slopes(fit)) {
-    if (compute != "never" || any(!include %in% c("fit", "plots")) ||
+    if (any(!include %in% c("fit", "plots")) ||
         (!is.null(diagnostics) && !inherits(diagnostics, "mfrm_response_diagnostics")) ||
-        any(!vapply(list(predictions, scores, comparison,
+        any(!vapply(list(predictions, comparison,
           response_time, response_time_data, response_time_facets, response_time_score), is.null, logical(1)))) {
-      stop("Two-family results require include = c('fit', 'plots'), compute = 'never', and no ordinary diagnostic or scoring attachments. Supply saved curves through intervals and descriptive residuals through response_diagnostics.", call. = FALSE)
+      stop("Two-family results support only 'fit' and 'plots' sections, with no ordinary diagnostics, response predictions or comparisons. Supply saved curves through intervals, descriptive residuals through response_diagnostics and matching Person output through scores.", call. = FALSE)
     }
   }
   if (inherits(diagnostics, "mfrm_response_diagnostics")) {
@@ -6704,8 +6797,8 @@ mfrm_results <- function(fit,
   }
   if (calibration_intervals != "none" || calibration_level != .95) stop("`calibration_intervals` and `calibration_level` select approximations only for testlet and random-rater fits.", call. = FALSE)
   if (!is.null(comparison)) stop("`comparison` can be attached to its matching testlet or random-rater fit.", call. = FALSE)
-  if (!is.null(predictions) || !is.null(scores)) {
-    stop("`predictions` and `scores` are supported only for testlet and random-rater fits.", call. = FALSE)
+  if (!is.null(predictions) || (!is.null(scores) && !mfrm_has_product_slopes(fit))) {
+    stop("`predictions` are supported only for testlet and random-rater fits; `scores` also accepts matching two-family GPCM Person scoring output.", call. = FALSE)
   }
   fixed_intervals <- inherits(fit, "mfrm_fit") && isTRUE(fit$config$model %in% c("RSM", "PCM"))
   facet_intervals <- if (fixed_intervals) mfrm_facet_results_inputs(fit, intervals) else NULL
@@ -6749,14 +6842,16 @@ mfrm_results <- function(fit,
   )
   out <- mfrm_results_build(ctx, include = include)
   out <- mfrm_gpcm_results_attach(out, gpcm_inference)
+  out <- mfrm_gpcm_results_attach_scores(out, scores)
   out <- mfrm_facet_results_attach(out, facet_intervals)
   if (!is.null(response_diagnostics)) {
     out$response_diagnostics <- response_diagnostics
     out$components$response_diagnostics <- response_diagnostics
     out$tables <- c(out$tables, mfrm_response_diagnostic_tables(response_diagnostics))
     out$table_index <- mfrm_results_table_index(out$tables)
-    out$status <- rbind(out$status, mfrm_results_status_row("response_diagnostics", "available",
-      "Saved same-data posterior predictive residuals; descriptive only, without fit cutoffs."))
+    overview <- out$tables$response_overview
+    out$status <- rbind(out$status, mfrm_results_status_row("response_diagnostics",
+      overview$Status, overview$Detail))
     out$plot_map <- dplyr::bind_rows(out$plot_map, data.frame(Type = "response_diagnostics",
       Available = "plots" %in% include, RequiredArtifact = FALSE,
       Route = 'plot(res, type = "response_diagnostics")',
@@ -6925,6 +7020,8 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
   if (!inherits(object, "mfrm_results")) {
     stop("`object` must be an mfrm_results object.", call. = FALSE)
   }
+  object <- mfrm_results_restore_response_overview(object)
+  mfrm_gpcm_results_validate_scores(object)
   view <- match.arg(tolower(as.character(view[1])), c("full", "brief"))
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
@@ -7249,6 +7346,7 @@ plot.mfrm_results <- function(x,
   if (!inherits(x, "mfrm_results")) {
     stop("`x` must be an mfrm_results object.", call. = FALSE)
   }
+  mfrm_gpcm_results_validate_scores(x)
   if (mfrm_has_jml_adjustment(x$fit)) {
     if (!"plots" %in% x$include) stop("This result did not include plots.",call.=FALSE)
     if (identical(type,"response_diagnostics")) {
@@ -7264,6 +7362,19 @@ plot.mfrm_results <- function(x,
   facet_routes <- if (length(x$facet_intervals)) paste0("facet_", names(x$facet_intervals)) else character()
   type_choices <- c("wright", "fit", "pathway", "fit_pathway", "qc", "category", "anchors", "response_time", "tables", "response_diagnostics", gpcm_routes, facet_routes)
   type_missing <- missing(type) || is.null(type)
+  if (isTRUE(type_missing) && mfrm_has_product_slopes(x$fit)) {
+    if (!"plots" %in% x$include) stop("This result did not include plots.", call. = FALSE)
+    saved <- intersect(c(gpcm_routes, "response_diagnostics"),
+      available$Type[available$Available %in% TRUE])
+    if (!length(saved)) stop(
+      "No saved two-family plot is available. Attach saved curves or slope intervals through `intervals`, or descriptive residuals through `response_diagnostics`, in mfrm_results().",
+      call. = FALSE)
+    if (length(saved) > 1L) stop(
+      "Several saved two-family plots are available; choose `type` from: ",
+      paste(saved, collapse = ", "), ". See summary(res)$plot_map.", call. = FALSE)
+    type <- saved
+    type_missing <- FALSE
+  }
   if (isTRUE(type_missing)) {
     person_tbl <- as.data.frame(x$fit$facets$person %||% data.frame(), stringsAsFactors = FALSE)
     facet_tbl <- as.data.frame(x$fit$facets$others %||% data.frame(), stringsAsFactors = FALSE)

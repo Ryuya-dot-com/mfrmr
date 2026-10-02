@@ -50,7 +50,9 @@ can reconstruct the minimal scored-person table internally. This is the
 scoring-time table for \code{new_data}, not the fit object's replay/export
 provenance table. For categorical background variables, supply values on
 the same coding scale used at fit time; the fitted factor levels and
-contrasts are reused when building the scoring design matrix.}
+contrasts are reused when building the scoring design matrix.
+Fitted standardization and polynomial/spline bases are also reused;
+they are not re-estimated from the scoring cohort.}
 
 \item{person_id}{Optional person-ID column in \code{person_data}.}
 

@@ -286,8 +286,7 @@ plot(ci_joint)
 apa_table(ci_joint, which = "checks")
 # For a figure without headings or notes:
 plot(curves, title = NULL, subtitle = NULL, caption = NULL)
-res <- mfrm_results(fit_joint, include = c("fit", "plots"),
-                    compute = "never", intervals = list(slopes = ci_joint, curves = curves))
+res <- mfrm_results(fit_joint, intervals = list(slopes = ci_joint, curves = curves))
 mfrm_report(res)
 # export_mfrm_results(res, output_dir = "joint_results")
 ```
@@ -306,12 +305,38 @@ This adjusts each candidate's integration grid during estimation, retaining
 the same normal population and response model. It directly maximizes the
 marginal likelihood; it is not an adaptive EM algorithm.
 
+Adaptive fitting now runs from both neutral and same-data EM-derived starting
+values and retains the lowest finite adaptive negative log likelihood. The
+selected candidate keeps its convergence status, including when it is unfinished.
+The EM calculation supplies a vector, not a competing fixed-grid likelihood.
+Use `gpcm_mml_start = "neutral"` to retain the earlier neutral-only initialization.
+Numerical optimizer repairs still apply; exact historical reproduction requires
+the original source version.
+Inspect `fit$opt$mml_initialization` for all candidates, errors, stage histories,
+the EM seed trace and elapsed cost; saved results/reports include the comparison
+table. `maxit` applies separately to EM seed iterations and each direct optimizer
+stage. A better starting value does not establish global optimality or coverage.
+
+If ordinary polishing stops before passing the gradient review, adaptive GPCM
+with a fixed population and at most 64 free parameters can use one existing
+curvature restart. It requires positive, well-conditioned curvature, a smaller
+gradient and no likelihood deterioration beyond roundoff; inspect the
+`curvature_restart` row in the optimizer stage history. Failed proposals remain
+visible, and interval checks are unchanged. Weak-information refusals report
+curvature refinement, inverse residual and standardized Newton displacement
+with their numerical limits, so a small raw gradient cannot hide an unfinished
+estimate in a nearly flat direction.
+
 Both engines connect to `summary()`, conditional curves and saved reports.
 `mml_quadrature_sensitivity()` preserves the chosen engine and integration
-method when refitting at additional orders. **Adaptive two-family fits do not
-yet provide component-slope intervals or posterior residual diagnostics.**
-The fixed-grid EM interval/profile and residual examples below apply only to
-that engine. Do not change a saved fit's integration label to enable them.
+method and initialization policy when refitting at additional orders. Both support separately checked
+experimental component log-Wald intervals through `confint(fit)`. Adaptive
+information differentiates the moving integration nodes, their scale and
+Jacobian, and checks higher-order adaptive integration at the saved parameters.
+Both engines also support descriptive posterior residuals. Their response
+integration preserves the fitting method and checks each row at a higher order.
+**Adaptive profiles remain unavailable.** The profile examples below require
+fixed-grid EM. Do not change a saved fit's integration label to enable them.
 Convergence, stability across orders and sampling coverage are separate checks.
 
 The curve function keeps its existing name and result class, but **does not
@@ -468,7 +493,9 @@ plot(ci_finer) # retains missing intervals and cautions
 
 Here the 61-point interval checks also compare 61 with 121 points at the same
 saved parameters; that check does not refit at 121 points. Each requested refit
-uses the usual neutral start. The first family's geometric-mean reference and
+reconstructs the source initialization policy from the same data; this fixed-grid
+EM example uses a neutral start. Older adaptive fits without a recorded policy
+also retain their earlier neutral-only initialization. The first family's geometric-mean reference and
 the second family's fixed-population reference are retained in the slope table.
 `adaptive_quad_points` adds a separate check at each fit's unchanged parameters.
 It adjusts the integration grid to each Person's posterior while preserving
@@ -481,7 +508,8 @@ general error bound. No single point count is guaranteed to suffice.
 Two-family Person-score comparisons remain unavailable in the main comparison
 table; missing EAP/SD changes mean unavailable, not agreement. Posterior moments
 in `quadrature_review` are diagnostic calculations at fixed calibration;
-they do not enable `predict_mfrm_units()` or supply Person intervals.
+they do not supply the separately checked `predict_mfrm_units()` scores or
+Person intervals described below.
 Requesting the review does not change EM's
 fixed-grid estimation, the saved estimates or interval availability.
 Neither warning handling nor additional quadrature points
@@ -548,7 +576,7 @@ includes both rating variation at a given ability and variation in the expected
 rating across the ability posterior.
 
 ```r
-# After the two-family fit has met its EM stopping criterion:
+# After the two-family fit has passed its engine's convergence checks:
 # response <- mfrm_response_diagnostics(fit_joint, group_by = "Assessor")
 # response$rows     # review unavailable rows and integration differences first
 # response$measures
@@ -559,10 +587,15 @@ rating across the ability posterior.
 # mfrm_report(res)
 ```
 
-Use your fitted identifier name for `group_by`. If response integration is
+Use your fitted identifier name for `group_by`. For adaptive direct MML, this
+uses a grid adapted to each candidate's posterior; fixed-grid EM keeps its
+fixed grid. In both cases, all of the candidate's observed ratings condition
+the prediction, even when `rows` returns only a subset. If response integration is
 unresolved, explicitly increase `quad_points` and inspect the new check; the
 fitting grid need not suffice for every response prediction. This recomputes
-probabilities at the saved calibration. In contrast,
+probabilities at the saved calibration. Returned probabilities use the higher
+order (`2 * quad_points + 1`), and unresolved rows and groups remain visible.
+In contrast,
 `mml_quadrature_sensitivity()` refits the calibration across specified grids.
 Neither numerical check establishes model adequacy.
 
@@ -582,11 +615,92 @@ do not test unidimensionality or local independence and exclude calibration
 uncertainty. No slope confidence interval is needed to compute the fixed-point
 probabilities; its availability answers a different question.
 
+### Scoring new Persons with the fitted two-family calibration
+
+`predict_mfrm_units(fit_joint, new_ratings)` supplies experimental EAP scores,
+posterior SDs and continuous equal-tail posterior intervals. It uses only the
+new response rows and holds both slope components, locations and category
+steps fixed. The scoring prior remains N(0,1); a prior override or population
+covariates are not supported. Non-Person levels must be known, scores must use
+the original zero-based coding, and observation weights must be one. Known
+levels may form new combinations under the product model, but these
+combinations have not thereby been checked empirically. Repeated Person-facet
+combinations are rejected; missing responses are omitted with a warning and
+row counts, and a Person without valid rows receives no score.
+
+```{r two-family-new-person, eval=FALSE}
+# new_ratings has the original Person, facet and score columns.
+scores <- predict_mfrm_units(fit_joint, new_ratings, scoring_quad_points = 121)
+summary(scores)
+saveRDS(scores, "two-family-new-person-scores.rds")
+```
+
+The saved calibration must reproduce its specification, point estimates,
+likelihood and numerical convergence. A finer integration rule must change
+the NLL per calibration Person by at most 1e-6, with maximum absolute gradient
+per Person at most 1e-6. A separate check compares each reported EAP and SD
+against two adaptive reference orders (tolerance 1e-5). Source checks and
+scoring checks remain separately recorded. A numerical refinement failure
+requires explicit `readiness_policy = "review"` and keeps the affected result
+flagged; invalid saved calibration or failed convergence is rejected even in
+review mode. These checks do not require slope confidence intervals.
+
+The posterior intervals exclude calibration uncertainty. They do not establish
+frequentist coverage, population transport, global identification, boundary
+absence or decision accuracy. Saved scores retain the calibration roles,
+category coding, numerical checks and limitations without recalculation.
+`sample_mfrm_plausible_values()` uses the same checked route for discrete
+posterior draws; these do not establish a downstream population-analysis method.
+Attach saved scores for results tables, reports and exports:
+
+```{r two-family-score-results, eval=FALSE}
+res <- mfrm_results(fit_joint, scores = scores)
+res$tables$person_scores
+res$tables$scoring_integration
+report <- mfrm_report(res)
+```
+
+The same attachment accepts the format-6 scores below when the source fit is
+available. It checks saved source identity against the fit's calibration,
+data, category/owner coding, integration and recorded status, without repeating
+numerical checks or scoring. Reports and CSV retain unrounded estimates and
+their conditional interpretation, separate source/batch checks and review-only
+labels. Portable results also retain the not-scored roster and row dispositions;
+native results record omitted row counts, without enumerating not-scored Persons.
+The attachment provides tables and reports, not a new score plot route. Older
+scores without source identity remain readable on their standalone route but
+must be regenerated before attachment; re-extract older portable calibrations
+from the saved fit. No refitting is required.
+
+The same conditional target is available from a portable format 6 calibration:
+
+```{r two-family-portable-scoring, eval=FALSE}
+draft <- extract_mfrm_calibration(fit_joint, scoring_quad_points = 121)
+calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+save_mfrm_calibration(calibration, "two-family-calibration.rds")
+
+# In a later R session: the original fit and training data are not needed.
+calibration <- load_mfrm_calibration("two-family-calibration.rds")
+scores <- score_mfrm_calibration(calibration, new_ratings)
+summary(scores)
+```
+
+Extraction requires passing source checks; review-only native scores cannot be
+turned into a frozen calibration. The artifact retains both slope components,
+location/step constraints, category codes, fixed prior and observed facet
+combinations, without training responses or Person estimates. Loading checks
+the stored identity and evidence; it cannot re-evaluate the absent source data.
+Every scored batch must pass integration checks, with no review override.
+`row_dispositions$ObservedContext` marks combinations absent during calibration.
+Prior overrides and repeated-event extensions remain unsupported. Missing
+responses require explicit `missing_response = "omit"`; Persons without valid
+responses are reported as not scored. File validation and freezing do not add
+statistical qualification or calibration uncertainty.
+
 `plot(fit_joint)`, ordinary fit diagnostics, Wright/Pathway maps, location/curve
-intervals, model ranking, later-person scoring and portable two-family
-calibration are not yet available. Unsupported fitting arguments produce an
+intervals and model ranking are not yet available. Unsupported fitting arguments produce an
 error rather than being ignored. Saving and reopening `res` preserves this
-analysis; it does not create a calibration that can score a new cohort.
+analysis; it does not create a portable calibration artifact.
 
 ## Model, estimation method and algorithm are different choices
 
@@ -616,7 +730,7 @@ The current mfrmr routes are:
 | --- | --- |
 | Public RSM / PCM | MML is the default; JML is also available. MML uses direct optimization by default. EM and hybrid are available for supported additive, fixed-population, fixed-integration settings (`population = NULL`). |
 | Public one-slope-family GPCM | MML uses direct optimization. Requests for EM or hybrid currently fall back to direct and record the choice in `fit$summary`. JML is available within its separate restrictions. |
-| Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with numerical generalized EM. The numerical M-step increases its objective rather than requiring an exact maximizer at every iteration. Summary, conditional fitted curves and experimental component-slope intervals are available; other parameter intervals, model ranking and new-person scoring are not. |
+| Provisional two-slope-family GMFRM | Explicit fixed-standard-normal MML with generalized EM or adaptive direct fitting. Summaries, conditional curves, experimental component-slope and location/contrast intervals, and separately checked fitted-object/portable conditional EAP are available. Coverage remains unqualified; curve/step intervals and model ranking remain unavailable. |
 
 Muraki (1992) derives an EM estimation route for GPCM; this does not make EM
 a defining property of the response model. The
@@ -689,8 +803,10 @@ does not by itself increase the number of observations for each Person. Its
 structural SEs currently use exploratory observation-table approximations,
 not a joint-information calculation accounting for estimated Person
 parameters. These default JML calls apply no bias correction; the explicit
-corrected route described above has a different covariance target and excludes
-portable scoring. Certified extreme Person
+corrected route described above has a different covariance target. Its portable
+EAP route conditions on the corrected calibration and a reference prior;
+it does not supply corrected Person ML/WLE or remove residual calibration bias.
+Certified extreme Person
 estimates can be infinite, while finite optimizer traces remain diagnostic.
 See `?fit_mfrm` for these conventions.
 
@@ -707,7 +823,8 @@ vignette for the connected workflow.
 
 ## What can I report under MML?
 
-The following distinctions apply to the current free-slope model under MML.
+The following distinctions apply to one-family GPCM under MML; the experimental
+two-family workflow above has its own interval and diagnostic restrictions.
 They describe mfrmr's available output, not a general impossibility of GPCM
 inference.
 
@@ -1437,8 +1554,19 @@ strongly do the probabilities of higher categories change with ability?
 Two slope families let that change depend on both the task and the assessor.
 The provisional `fit_mfrm()` route supports exploring this formulation.
 Experimental component-slope intervals are available when their numerical
-checks pass. They do not establish a rule for feedback decisions; curve
-intervals and individual two-family feedback sheets remain unavailable.
+checks pass. The separate `mfrm_facet_intervals(fit, "Rater")` route supplies
+experimental normal location intervals or named within-facet contrasts from
+the inverse full marginal information. It retains the fitted location constraints
+and numerical refusal reasons; its sampling coverage is not qualified by the
+component-slope evidence. Attach it through
+`mfrm_results(fit, intervals = list(locations = ci))` and select
+`plot(res, type = "gpcm_locations")`. Location differences do not imply uniform
+expected-rating differences when slopes or category steps also vary.
+Neither interval route establishes a rule for feedback decisions; curve
+intervals remain unavailable. Individual two-family sheets can now collect
+the saved descriptive evidence through `mfrm_report(..., style = "rater",
+facet = "Rater", rater = "r1")`. Select the actual fitted facet and level;
+the sheet does not classify competence or demonstrate a training effect.
 
 | Practical question | What the two-family model can describe | What it does not establish by itself |
 | --- | --- | --- |
@@ -1577,6 +1705,25 @@ establish that either calibration is the maximum of the accurately integrated
 likelihood, nor does it repair unavailable intervals. The same generic
 `adaptive_quad_points` option above supports this distinction for other data.
 
+A subsequent direct adaptive fit on the same data was checked against continuous
+integration and local observed information. Its posterior residuals now use the
+same adaptive integration method. At this saved calibration, response checks
+with `quad_points = 61` return 1,369 of 1,370 rows; `quad_points = 121` returns
+all rows and all 12 criterion/rater summaries. The returned probabilities at
+the latter setting agree with separate continuous integrals within 1e-12.
+This is numerical agreement at fixed calibration, not evidence of predictive
+accuracy, calibrated fit cutoffs or the correctness of a one-ability model.
+Keep the unresolved row from the lower-order run visible; these results do not
+make 121 a universally sufficient order or establish that feedback would improve
+rating practice.
+
+When these saved diagnostics are attached to `mfrm_results()`, the
+`response_overview` table retains the selected and available row counts,
+unresolved calculations, missing scores, zero-variance rows and unselected
+source rows. The report marks the 61-point result as requiring review and
+the complete 121-point result as descriptive with caveats. These labels do
+not change the saved calculations or establish model adequacy.
+
 For a different operational setting, Uto et al. (2024) publish medical
 interview OSCE scores and their data description on
 [Dryad](https://doi.org/10.5061/dryad.tmpg4f56q): two raters cover every examinee
@@ -1655,8 +1802,7 @@ accounts for that selection. Shared calibration uncertainty cannot be
 recovered by independently sampling normal values from printed SEs.
 
 `mfrmr` currently provides no winner-probability or simultaneous athlete-rank
-confidence-set API. Two-family GMFRM also lacks a public Person-scoring route.
-Available one-family EAP intervals condition on point calibration and a
+confidence-set API. One-family and experimental two-family EAP intervals condition on point calibration and a
 specified prior; they do not establish championship-decision accuracy.
 Multivariate G/D studies can examine dependability of supported score
 composites and designs, but a high G coefficient is not the probability of
@@ -1767,7 +1913,7 @@ several substantive abilities automatically.
 
 | Feature | Speaking-assessment example | Current mfrmr route |
 | --- | --- | --- |
-| Two fixed slope families | Task and assessor jointly determine the effective response slope. | Provisional fixed-population MML--EM with summary and conditional curves; no local-dependence correction or interval inference. |
+| Two fixed slope families | Task and assessor jointly determine the effective response slope. | Provisional fixed-population fixed-grid EM or adaptive direct MML with summary, conditional curves and experimental component log-Wald intervals; no local-dependence correction or curve intervals. |
 | Person-local testlet | One candidate's performance affects multiple scores within a task. | `fit_mfrm_testlet()` for RSM, one common local variance and one nonoverlapping block membership per row. |
 | Shared random rater severity | An assessor's usual severity affects everyone they assess. | `fit_mfrm_random_rater()` for approximate RSM MML, with its documented uncertainty limitations. |
 | Random discrimination | Assessors' slopes arise from a specified population distribution. | Not supplied by either two fixed slope families or random rater severity; no current public route. |
@@ -1852,9 +1998,16 @@ error: coefficients depend on person variation as well as error variance.
 Read SEM in score units alongside them. The plot help explains the distinction
 between point projections and intervals for prespecified plan differences.
 
-Individual rater feedback sheets currently support native additive RSM/PCM,
-not GPCM. Use the supported GPCM-specific outputs for discrimination and
-response curves; do not relabel an ordinary-model sheet as a GMFRM report.
+Individual sheets support native additive RSM/PCM and experimental two-family
+GPCM MML through `mfrm_report(res, style = "rater", facet = ..., rater = ...)`.
+The two-family sheet separates location, component slope, category use and
+assignment exposure. Its saved component-slope intervals and same-data posterior
+residuals retain their own limitations. Missing intervals and unresolved response
+rows remain visible; location and step intervals are not displayed in this sheet.
+Separately requested location/contrast intervals belong in the analyst report. The standalone
+sheet excludes source identifiers and the fitted object. Review it before
+distribution; the full results RDS remains an analyst artifact. One-family
+GPCM sheets remain unsupported.
 
 The separate `mfrm_generalizability(fit)` convenience route does accept an
 MFRM fit, but uses its stored ratings (or supplied data) for an observed-score
@@ -1935,7 +2088,7 @@ to one.
 | `step_facet = "Criterion"`, `slope_facet = "Criterion"` | Each criterion has its own relative discrimination and criterion-specific steps. | Supported; inference availability is listed above. |
 | `step_facet = "Rater"`, `slope_facet = "Rater"` | Each rater has its own model-conditional relative discrimination and rater-specific steps. | Code-supported with rater-interpretation caveats; a slope is not automatically evidence of rater consistency. |
 | Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Supported with MML; one slope family and existing output-specific inference checks. JML, weighting reviews and simulation/design workflows are unavailable for this structure. |
-| Criterion slopes and rater slopes together | Effective discrimination is the product of two slope blocks. | Provisional MML--EM on fixed N(0,1), exactly two facets and second-owner steps; summary, fitted curves without intervals and separately checked experimental component-slope intervals. |
+| Criterion slopes and rater slopes together | Effective discrimination is the product of two slope blocks. | Provisional fixed-grid EM or adaptive direct MML on fixed N(0,1), exactly two facets and second-owner steps; summary, fitted curves without intervals and separately checked experimental component log-Wald intervals. |
 
 Every facet that is not selected remains an additive location term inside
 \(\eta\). For example, a criterion-owned GPCM can still estimate rater severity,

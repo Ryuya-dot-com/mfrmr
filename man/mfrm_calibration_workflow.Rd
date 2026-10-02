@@ -121,7 +121,8 @@ SD and representable positive variance. A supplied prior automatically
 receives numerical scoring checks and does not modify the frozen artifact.
 Legacy artifacts with discrete grid-endpoint intervals require re-extraction
 before using this option. The prior is common to all scored persons;
-covariate-dependent overrides are not supported.}
+covariate-dependent overrides are not supported. Two-family GPCM format 6
+requires \code{scoring_prior = NULL} and retains the fixed N(0,1) prior.}
 }
 \value{
 \code{extract_mfrm_calibration()}, \code{validate_mfrm_calibration()},
@@ -140,9 +141,12 @@ fixed/adaptive comparison; \code{summary()} preserves it and adds a compact
 These functions implement a strict lifecycle for a saved, versioned
 calibration. \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} creates a draft from an eligible
 \code{RSM} or \code{PCM} MML fit under the fixed standard-normal scoring basis, or
-a GPCM MML fit with an estimated intercept-only normal population that passes
-the conditional source checks in \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. RSM/PCM JML also
-supports portable post-hoc EAP with a standard-normal reference prior.
+a one-family GPCM MML fit with an estimated intercept-only normal population that passes
+the conditional source checks in \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. Experimental
+two-family GPCM MML retains a fixed N(0,1) prior and its own source checks.
+RSM/PCM and shared-owner GPCM JML support portable post-hoc EAP with a
+standard-normal reference prior; explicit corrected GPCM JML preserves its
+correction order and uses adjusted-equation checks, as described below.
 \code{\link[=validate_mfrm_calibration]{validate_mfrm_calibration()}} and \code{\link[=freeze_mfrm_calibration]{freeze_mfrm_calibration()}} are separate,
 fail-closed transitions. Only a frozen artifact can be passed to
 \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}.
@@ -150,20 +154,42 @@ fail-closed transitions. Only a frozen artifact can be passed to
 \details{
 The portable workflow supports one observed score scale, one latent
 dimension and known non-Person facet levels. RSM/PCM MML retain stored anchors
-and two-way facet interactions in file format 1. GPCM uses file format 2,
+and two-way facet interactions in file format 1. One-family GPCM MML uses file format 2,
 retaining both step and slope owners, positive geometric-mean-one relative
 slopes and the estimated population mean and SD. The slope multiplies the
-entire adjacent-category predictor. GPCM currently requires unit weights,
-no anchors or interactions, and an intercept-only normal population when
-estimated by MML. Shared-owner GPCM JML uses file format 4 and a post-hoc
+entire adjacent-category predictor. Portable GPCM requires unit weights
+and no anchors or interactions. One-family MML uses an estimated intercept-only
+normal population. Shared-owner GPCM JML uses file format 4 and a post-hoc
 N(0,1) reference prior; its distinct checks are described below.
+Experimental two-family GPCM MML uses file format 6, with two ordered slope
+owners, second-owner steps and the fixed N(0,1) prior. The first owner's
+locations and log slopes are centered; the second owner's locations and
+slopes remain free. Both fitting engines retain their fixed or adaptive
+scoring algorithm. Source identity/convergence and finer-integration checks
+must pass; review-only sources cannot be exported for frozen scoring.
+No separate \code{quadrature_review} is accepted for this route. The file contains
+component slopes and observed facet combinations, without training responses,
+Person estimates or an executable fit. Known levels may form new combinations;
+\code{row_dispositions$ObservedContext} identifies whether each pair occurred in
+calibration. New combinations are model-based, not empirically validated.
+Prior overrides and \code{event_id} extensions are unsupported; repeated Person-
+facet cells are rejected. Facet names must not collide with scoring/disposition
+columns (\code{Person}, \code{Score}, \code{Weight}, \code{InputRow}, \code{EventId}, \code{Disposition},
+\code{ReasonCode}, \code{CalibrationId}, \code{ObservedContext}).
+
+For format 6, use the same extract, validate, freeze, save, load and score
+functions as below. Each new batch must pass its own integration checks;
+validation and freezing do not establish sampling coverage, global
+identification, boundary absence or population transport. Posterior
+intervals exclude calibration uncertainty. Older readers refuse format 6;
+existing formats 1--5 keep their original interpretation.
 RSM/PCM JML uses file format 3, with unit weights, no anchors or interactions,
 a finite identified source and a post-hoc N(0,1) reference prior. This prior
 is not estimated by JML. Estimated-population RSM/PCM and latent regression
 use fitted-object routes; other structures follow their documented capabilities.
 See \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}.
 
-GPCM MML extraction freshly evaluates the native fit's local likelihood,
+One-family GPCM MML extraction freshly evaluates the native fit's local likelihood,
 gradient, unregularized information and source-integration stability using
 the same conditional source checks as \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. A failed or
 unresolved source cannot be frozen by selecting a review policy. The

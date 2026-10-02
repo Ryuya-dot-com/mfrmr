@@ -150,6 +150,7 @@ mfrm_results_viewer_payload <- function(x, top_n = 100L) {
       call. = FALSE
     )
   }
+  x <- mfrm_results_restore_response_overview(x)
   top_n <- max(1L, as.integer(top_n[1] %||% 100L))
   sx <- summary(x, top_n = top_n)
   tables <- x$tables %||% list()

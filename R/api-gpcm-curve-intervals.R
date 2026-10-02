@@ -22,6 +22,8 @@
 #' @param draw Draw the ggplot immediately? Default TRUE; FALSE returns it only.
 #' @param caption Optional plot caption. If omitted, unavailable intervals are
 #'   counted and explained, along with unobserved combinations of fitted levels.
+#'   Two-family point-only curves instead state that calibration intervals
+#'   are unavailable for the entire plot, without marking every curve point.
 #'   NULL removes the caption without removing markers
 #'   or the reasons in the saved table.
 #' @param ... Unused.
@@ -53,7 +55,13 @@
 #'   Printing and the default plot subtitle identify the approximation.
 #'   Custom plot text may omit that description; retain the method and its
 #'   limitations in the figure legend or accompanying report.
-#'   Crosses mark retained estimates whose intervals are unavailable. Ribbons
+#'   For one-family curves, crosses mark retained estimates whose intervals
+#'   are unavailable. Two-family curves have no calibration intervals; the
+#'   default subtitle and caption state this without covering curves in crosses.
+#'   A context with only one supplied ability value retains colored points.
+#'   Panel labels put each facet on its own line. With many rating contexts,
+#'   supply the comparisons of interest in `newdata` or enlarge the exported
+#'   figure; plotting does not select or discard contexts automatically. Ribbons
 #'   stop at unavailable grid points; a missing ribbon does not mean zero
 #'   uncertainty. Consult the table's `InferenceReview` for each reason.
 #'
@@ -182,7 +190,8 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       if (x$settings$simultaneous == "none") "pointwise" else "Bonferroni grid points", sep = " | "),
     palette = NULL, draw = TRUE, caption = NULL, ...) {
   rlang::check_dots_empty()
-  if (isTRUE(x$settings$point_only)) {
+  point_only <- isTRUE(x$settings$point_only)
+  if (point_only) {
     if (missing(title)) title <- "Two-family GPCM fitted curves"
     if (missing(subtitle)) subtitle <- "Provisional fitted values; calibration intervals are unavailable"
   }
@@ -191,9 +200,11 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
   if (!requireNamespace("ggplot2", quietly = TRUE)) stop("Install ggplot2 to plot curve intervals.", call. = FALSE)
   tab <- x$table
   automatic_caption <- missing(caption)
-  if (automatic_caption && any(!tab$CIEligible)) caption <- paste(
-    "Intervals unavailable at", sum(!tab$CIEligible), "of", nrow(tab),
-    "points. Crosses mark retained estimates; see the result table for reasons.")
+  if (automatic_caption && point_only) {
+    caption <- "Fitted curves only; calibration intervals are unavailable for two-family GPCM."
+  } else if (automatic_caption && any(!tab$CIEligible)) caption <- paste(
+      "Intervals unavailable at", sum(!tab$CIEligible), "of", nrow(tab),
+      "points. Crosses mark retained estimates; see the result table for reasons.")
   if (automatic_caption && !is.null(x$contexts) && any(!x$contexts$ObservedContext)) {
     caption <- paste(c(caption, paste(sum(!x$contexts$ObservedContext),
       "input rows combine fitted levels not observed together; see contexts.")), collapse = " ")
@@ -202,7 +213,12 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
   if (!is.null(caption)) caption <- paste(strwrap(caption, width = 85), collapse = "\n")
   tab$Context <- apply(tab[x$settings$facets], 1L, function(z)
     paste(paste(x$settings$facets, z, sep = " = "), collapse = ", "))
+  contexts <- tab[!duplicated(tab$Context), , drop = FALSE]
+  context_labels <- setNames(apply(contexts[x$settings$facets], 1L, function(z)
+    paste(paste(x$settings$facets, z, sep = " = "), collapse = "\n")), contexts$Context)
   tab$Series <- if (x$settings$type == "probability") factor(tab$Category) else factor("Information")
+  isolated <- if (point_only) stats::ave(tab$Theta, tab$Context,
+    FUN = function(z) length(unique(z))) == 1L else rep(FALSE, nrow(tab))
   # Keep a ribbon from bridging over an unavailable point in a series.
   index <- order(tab$Context, tab$Series, tab$Theta, tab$InputRow)
   tab$IntervalGroup <- integer(nrow(tab))
@@ -215,8 +231,10 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
     color = .data$Series, fill = .data$Series, linetype = .data$Series, group = .data$Series)) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper,
       group = .data$IntervalGroup), alpha = .15, color = NA, na.rm = TRUE,
-      show.legend = any(tab$CIEligible)) + ggplot2::geom_line(linewidth = .7) +
-    ggplot2::facet_wrap(~Context) + ggplot2::scale_color_manual(values = palette) +
+      show.legend = any(tab$CIEligible)) +
+    ggplot2::geom_line(data = tab[!isolated, , drop = FALSE], linewidth = .7) +
+    ggplot2::facet_wrap(~Context, labeller = ggplot2::as_labeller(context_labels)) +
+    ggplot2::scale_color_manual(values = palette) +
     ggplot2::scale_fill_manual(values = palette) +
     ggplot2::scale_linetype_manual(values = rep(c("solid", "dashed", "dotted", "dotdash", "longdash", "twodash"), length.out = nlevels(tab$Series))) +
     ggplot2::labs(title = title, subtitle = subtitle, caption = caption, x = "Ability (native scale)",
@@ -224,14 +242,17 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       color = if (x$settings$type == "probability") "Category" else "Series",
       fill = if (x$settings$type == "probability") "Category" else "Series",
       linetype = if (x$settings$type == "probability") "Category" else "Series",
-      alt = if (isTRUE(x$settings$point_only)) paste("Two-family GPCM", x$settings$type,
-        "provisional fitted curves. Intervals are unavailable; crosses mark the retained estimates.") else
+      alt = if (point_only) paste("Two-family GPCM", x$settings$type,
+        "provisional fitted curves. Calibration intervals are unavailable for the entire plot.",
+        "Contexts with only one supplied ability value retain colored points.") else
         paste("GPCM", x$settings$type, "curves with", 100*x$settings$level,
         "percent", if (x$settings$simultaneous == "none") "pointwise" else "Bonferroni-adjusted",
         "intervals;", sum(!tab$CIEligible), "unavailable grid-point intervals.",
         "Crosses mark estimates without intervals; ribbons do not bridge unavailable points.")) +
     ggplot2::theme_minimal() + ggplot2::theme(plot.subtitle = ggplot2::element_text(size = 9))
-  if (any(!tab$CIEligible)) p <- p +
+  if (any(isolated)) p <- p +
+    ggplot2::geom_point(data = tab[isolated, , drop = FALSE], size = 2.5)
+  if (!point_only && any(!tab$CIEligible)) p <- p +
     ggplot2::geom_point(data = tab[!tab$CIEligible, , drop = FALSE],
       ggplot2::aes(shape = "Unavailable"), color = "#333333", size = 2.5,
       show.legend = c(shape = TRUE, color = FALSE, fill = FALSE, linetype = FALSE)) +

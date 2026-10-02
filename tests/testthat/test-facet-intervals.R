@@ -56,9 +56,10 @@ local({
     bad <- f; bad$config$method <- "JML"
     expect_error(mfrm_facet_intervals(bad, "Rater"), "inference-ready")
     bad <- f; bad$config$population_spec$active <- TRUE
-    expect_error(mfrm_facet_intervals(bad, "Rater"), "standard-normal")
+    expect_error(mfrm_facet_intervals(bad, "Rater"), "Population coding")
     bad <- f; bad$config$model <- "GPCM"
-    expect_error(mfrm_facet_intervals(bad, "Rater"), "RSM/PCM")
+    # Changing only the model label cannot create a valid GPCM calibration.
+    expect_error(mfrm_facet_intervals(bad, "Rater"))
     bad <- f; bad$prep$data$Weight[1] <- 2
     expect_error(mfrm_facet_intervals(bad, "Rater"), "unit weights")
     bad <- f; bad$readiness$fit$InferenceReady <- FALSE

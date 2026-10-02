@@ -40,7 +40,8 @@ presets are \code{"standard"}, \code{"publication"}, \code{"validation"}, \code{
 Section names include \code{"fit"}, \code{"diagnostics"}, \code{"tables"},
 \code{"precision"}, \code{"reporting"}, \code{"categories"}, \code{"plots"},
 \code{"facets_fit"}, \code{"bias"}, \code{"misfit"}, \code{"linking"}, \code{"network"},
-and \code{"apa"}.}
+and \code{"apa"}. When omitted, \code{NULL} or empty for a two-family GPCM fit, this selects
+\code{c("fit", "plots")}. Explicit presets and sections remain scope-checked.}
 
 \item{response_time}{Optional response-time column name. When \code{NULL} and
 \code{include} contains \code{"response_time"}, conservative column names such as
@@ -70,7 +71,9 @@ available data frames, or \code{"html"} for a temporary HTML report.}
 standard behavior; \code{"never"} collects only sections that can be built
 without computing diagnostics and marks every requested dependent section
 as \code{"not_computed"}. Matching supplied or stored diagnostics are still
-reused under \code{"never"}.}
+reused under \code{"never"}. For two-family GPCM fits, both settings collect
+saved results without fitting, integration or diagnostic calculation;
+ordinary diagnostics remain \code{"not_available"}.}
 
 \item{predictions}{Optional saved predictions for a testlet or random-rater
 fit: the result of \code{predict(fit, ...)}. Matching calibration, column roles,
@@ -81,13 +84,16 @@ before attachment; the fit itself does not need to be re-estimated.}
 \item{intervals}{Optional saved \code{\link[=mfrm_random_rater_intervals]{mfrm_random_rater_intervals()}} result from
 the exact supplied random-rater fit. For a native GPCM fit, accepts saved
 slope intervals, curve intervals, a GPCM bootstrap result, or a named list
-of these. All must match the exact fitted data, parameters, population and
+of these. Two-family GPCM also accepts \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} for locations
+and within-facet contrasts. All must match the exact fitted data, parameters, population and
 integration settings. For native RSM/PCM fits, accepts a saved
 \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} result or a named list of them. No bootstrap
 or interval calculation is run by this function.}
 
 \item{scores}{Optional saved \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} result for an extension,
 or \code{\link[=score_mfrm_random_rater]{score_mfrm_random_rater()}} output, with matching source calibration.
+Two-family GPCM also accepts \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} output or a format-6
+\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} result with matching saved source identity.
 For testlets this is an alias for \code{predictions}; supply it once. Shared
 raters can also attach response \code{predictions} and rater \code{intervals}.
 No Person scoring is run here. Complete source-roster identity is required
@@ -104,13 +110,19 @@ retain aligned predictive quantities; select \code{metric} for other indices.}
 \item{response_diagnostics}{Optional saved \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}}
 output matching the fit's calibration and exact source roster. It is
 identity-checked and reused without integration. Ordinary RSM MML and
-testlet/shared-rater fits and two-family GPCM MML--EM support these
+testlet/shared-rater fits and two-family GPCM MML support these
 posterior summaries; corrected JML instead supplies conditional plug-in
-summaries. None has reference cutoffs. Two-family results require
-\code{include = c("fit", "plots")} and \code{compute = "never"}.
+summaries. None has reference cutoffs. Two-family results default to
+\code{include = c("fit", "plots")} and only collect saved quantities.
 Use \code{compute = "never"} to also avoid computing ordinary
 plug-in diagnostics. Saved posterior summaries appear in
-\verb{response_*} tables and \code{plot(..., type = "response_diagnostics")}.}
+\verb{response_*} tables and \code{plot(..., type = "response_diagnostics")}.
+\code{tables$response_overview} counts selected, available, unresolved,
+missing-score, zero-variance and unselected rows; partial output requires
+review. Older saved results without this table recover the overview and
+matching status from their retained diagnostic rows during summary, reporting,
+export or supported viewing, without re-estimation. The original object is
+unchanged; newly exported results include the recovered metadata.}
 
 \item{calibration_intervals}{For testlet and shared-rater fits, \code{"none"}
 (default) retains calibration estimates and approximate SEs with missing
@@ -318,16 +330,46 @@ unavailable; a numerical solution is not a rater-quality judgment.
 
 \section{Provisional two-family results}{
 
-For a two-slope-family GPCM fit, use \code{include = c("fit", "plots")} and
-\code{compute = "never"}. Attach saved \code{\link[=mfrm_curve_intervals]{mfrm_curve_intervals()}} results through
+For a two-slope-family GPCM fit, \code{mfrm_results(fit)} collects its saved
+estimates and numerical status, with \code{include = c("fit", "plots")} when
+omitted. Neither \code{compute} setting fits, integrates or calculates diagnostics.
+The \code{gpcm_fitted_slopes}, \code{gpcm_fitted_locations} and \code{gpcm_fitted_steps}
+tables retain all saved non-Person estimates when \code{"fit"} is included.
+Locations retain their centering reference; steps identify their owner and
+level and are centered offsets within that level. Separately computed
+experimental \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} results may be attached through
+\code{intervals = list(locations = ci)}; step intervals remain unavailable.
+Reports and CSV exports retain these values;
+the report shows at most 20 rows of each table with an explicit notice.
+Explicit unsupported sections or attachments are rejected. Attach saved
+\code{\link[=mfrm_curve_intervals]{mfrm_curve_intervals()}} results through
 \code{intervals}; these contain provisional fitted values without intervals.
 Summary, tables, named curve plots, reports and saved exports retain that
 limitation. Separately requested \code{confint(fit)} results can be attached as
 \code{intervals = list(slopes = ci, curves = curves)}. Their experimental
 component-slope approximation, owner identities, numerical checks and
 unavailable outcomes follow the saved tables, plots and report.
-Ordinary diagnostics, Wright/Pathway maps, model comparison,
-new-person scoring and portable two-family calibration are unavailable.
+If exactly one saved curve, slope/location-interval or response-diagnostic plot is
+available, \code{plot(res)} displays it. With multiple saved plots, select \code{type}
+from \code{summary(res)$plot_map}; no new curves or diagnostics are calculated.
+Replay code saves and reloads the complete result, including the fit's
+owner identities, estimation settings and unresolved numerical status.
+Attach saved conditional new-Person output as \code{scores = scores}, from
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or the format-6 portable calibration workflow.
+The source identity must match this fit's calibration, data, category/owner
+coding, integration settings and recorded status. Collection does not repeat
+source checks or scoring. Older scores without the identity still support
+their standalone methods; regenerate them before attachment (also re-extract
+an older portable calibration), without re-estimating the fit.
+\code{person_scores} and \verb{scoring_*} tables retain unrounded estimates, conditional
+interval meanings, source/batch checks, omissions and review labels in reports,
+CSV exports and saved replay. Native scoring records omitted row counts but
+does not enumerate a not-scored Person roster; portable scoring retains it.
+This attachment adds tables and reports; it does not add a score plot route.
+The intervals exclude calibration uncertainty; coverage and population
+transport remain unqualified. \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} provides the
+separately checked portable route without retaining training responses.
+Ordinary diagnostics, Wright/Pathway maps and model comparison are unavailable.
 The starter export uses the available saved curves instead of requesting
 an unsupported Wright map.
 }

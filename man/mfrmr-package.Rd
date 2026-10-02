@@ -65,7 +65,7 @@ one-scale \code{RSM} or \code{PCM} MML fit under the fixed standard-normal scori
 basis. Use \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}} before extraction, then follow
 \link{mfrm_calibration_workflow} to review, validate, freeze, save, load, and
 score the artifact. Review the returned batch with
-\link{mfrm_calibration_score_methods} before using its estimates. Development GPCM
+\link{mfrm_calibration_score_methods} before using its estimates. One-family GPCM
 MML also supports an estimated intercept-only normal population, shared or
 separate slope/step owners, unit weights and no anchors/interactions, subject
 to conditional source and per-batch numerical scoring checks. Estimated-
@@ -74,7 +74,12 @@ RSM/PCM JML supports portable post-hoc EAP with a standard-normal reference
 prior, unit weights, no anchors/interactions and passing finite identified
 source checks. Shared-owner GPCM JML also supports conditional portable
 EAP after its joint-likelihood/curvature checks, preserving incomplete global
-audits. That reference prior is not estimated by JML. Artifact
+audits. Explicit corrected GPCM JML instead uses adjusted-equation checks
+and preserves the correction order in format 5; residual calibration bias
+may remain. That reference prior is not estimated by JML. Experimental
+two-family GPCM MML uses format 6 with both ordered slope owners and a fixed
+N(0,1) prior, separate source/batch checks and no prior overrides.
+Artifact
 score uncertainty is conditional on the frozen point calibration and its
 recorded prior; loading validates consistency but does not authenticate an
 untrusted file.
@@ -361,10 +366,13 @@ Uto--Ueno equation with explicit fixed-N(0,1) identification, exactly two
 facets and second-owner steps. The first family's slopes have geometric mean
 one and the second family's slopes are free. Fixed-grid EM and adaptive
 direct MML supply summaries and conditional fitted curves without intervals.
-Fixed-grid EM has separately checked experimental component-slope intervals
-and descriptive residuals; these outputs are unavailable for adaptive fits.
-The one-family diagnostic,
-inference and portable-scoring routes below do not apply to it. See the
+Both support separately checked experimental component log-Wald and
+location/contrast intervals and descriptive posterior residuals; component
+profiles require fixed-grid EM. \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and the portable
+calibration workflow supply experimental conditional new-Person EAP and
+posterior intervals, excluding calibration uncertainty. Coverage and
+population transport remain unqualified. The one-family diagnostic and
+inference routes below do not apply to it. See the
 Two slope families section of \code{\link[=fit_mfrm]{fit_mfrm()}}. Unit slopes reduce to the
 equal-discrimination PCM kernel.
 Under default one-family MML, an intercept-only person distribution

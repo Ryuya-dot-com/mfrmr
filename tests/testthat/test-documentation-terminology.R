@@ -106,7 +106,10 @@ test_that("public documentation does not advertise later-release routes as curre
   expect_identical(hits, character(0))
   expect_match(flat, "one observed score scale", fixed = TRUE)
   expect_match(flat, "portable fixed-calibration artifacts are available only", fixed = TRUE)
-  expect_match(flat, "estimated-population and latent-regression mml", fixed = TRUE)
+  expect_true(grepl(
+    "estimated-population rsm/pcm and latent-regression mml remain fitted-object-only",
+    flat, fixed = TRUE
+  ))
   expect_match(flat, "posterior scoring from an existing fitted object is a separate", fixed = TRUE)
 })
 

@@ -30,7 +30,8 @@ Use \code{\link[=mfrm_results]{mfrm_results()}} to retain the fit and matching o
 \code{summary(res)}, then use \code{\link[=mfrm_report]{mfrm_report()}} for a report or
 \code{\link[=export_mfrm_results]{export_mfrm_results()}} for an analyst archive.
 \item "What can I give to an individual rater?"
-Use \code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01", output = "html")} for native additive RSM/PCM results. Review and retain
+Use \code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01", output = "html")} for native additive RSM/PCM or experimental two-family
+GPCM MML results. Review and retain
 the standalone HTML file. The complete analysis archive serves the analyst
 and retains source data and identifiers.
 \item "Which parts of this run are ready to draft, and with what caveats?"

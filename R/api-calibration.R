@@ -20,29 +20,29 @@
 mfrm_calibration_capabilities <- function() {
   data.frame(
     Model = c(
-      "RSM", "PCM", "RSM/PCM", "GPCM", "RSM/PCM", "GPCM", "GPCM"
+      "RSM", "PCM", "RSM/PCM", "GPCM", "RSM/PCM", "GPCM", "GPCM", "GPCM (two families)"
     ),
-    Estimator = c("MML", "MML", "MML", "MML", "JML", "JML", "Corrected JML"),
+    Estimator = c("MML", "MML", "MML", "MML", "JML", "JML", "Corrected JML", "MML"),
     ScoringBasis = c(
       "fixed standard normal", "fixed standard normal",
       "estimated population or latent regression",
       "frozen estimated intercept-only normal", "post-hoc standard normal reference",
-      "post-hoc standard normal reference", "post-hoc standard normal reference"
+      "post-hoc standard normal reference", "post-hoc standard normal reference", "fixed standard normal"
     ),
     PortableCalibration = c(
-      "available", "available", "unavailable", "available", "available", "available", "available"
+      "available", "available", "unavailable", "available", "available", "available", "available", "available"
     ),
     AnchorSupport = c(
       "stored direct and group facet anchors",
       "stored direct and group facet anchors",
       "not available for portable calibration", "not supported",
-      "not supported", "not supported", "not supported"
+      "not supported", "not supported", "not supported", "not supported"
     ),
     InteractionSupport = c(
       "stored two-way facet interactions",
       "stored two-way facet interactions",
       "not available for portable calibration", "not supported",
-      "not supported", "not supported", "not supported"
+      "not supported", "not supported", "not supported", "not supported"
     ),
     ExistingAlternative = c(
       "portable artifact or fitted-object scoring",
@@ -51,7 +51,8 @@ mfrm_calibration_capabilities <- function() {
       "conditional portable artifact or fitted-object GPCM scoring",
       "portable artifact or fitted-object post-hoc EAP; not ML/WLE",
       "conditional portable artifact or fitted-object post-hoc EAP; not ML/WLE",
-      "experimental corrected calibration with post-hoc EAP; not corrected Person ML/WLE"
+      "experimental corrected calibration with post-hoc EAP; not corrected Person ML/WLE",
+      "experimental two-family conditional artifact or fitted-object EAP"
     ),
     Limitation = c(
       paste(
@@ -66,7 +67,8 @@ mfrm_calibration_capabilities <- function() {
       "passing conditional source checks; known levels, unit weights, no anchors, interactions or latent regression",
       "finite identified RSM/PCM JML source; unit weights, no anchors or interactions; reference prior is not estimated by JML",
       "shared owners, unit weights, no anchors/interactions; passing local JML checks; incomplete global audits remain recorded",
-      "shared owners; explicit correction order; passing adjusted-equation/root checks; residual calibration bias may remain; no calibration uncertainty propagated"
+      "shared owners; explicit correction order; passing adjusted-equation/root checks; residual calibration bias may remain; no calibration uncertainty propagated",
+      "two ordered slope owners, second-owner steps, fixed N(0,1), known levels, unit weights and passing source/batch checks; no prior override or repeated-event extension; calibration uncertainty and population transport are not qualified"
     ),
     stringsAsFactors = FALSE
   )
@@ -84,8 +86,8 @@ mfrmr_public_calibration_extraction_error <- function(error) {
       "check model and method compatibility before portable or fitted-object scoring"
     ),
     SCORING_BASIS_UNSUPPORTED = paste(
-      "portable calibration supports fixed-normal RSM/PCM and intercept-only",
-      "estimated-normal GPCM; use fitted-object scoring for other population models"
+      "portable calibration supports fixed-normal RSM/PCM and two-family GPCM,",
+      "or intercept-only estimated-normal one-family GPCM; use fitted-object scoring for other population models"
     ),
     NULL
   )
@@ -212,29 +214,54 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' These functions implement a strict lifecycle for a saved, versioned
 #' calibration. [extract_mfrm_calibration()] creates a draft from an eligible
 #' `RSM` or `PCM` MML fit under the fixed standard-normal scoring basis, or
-#' a GPCM MML fit with an estimated intercept-only normal population that passes
-#' the conditional source checks in [predict_mfrm_units()]. RSM/PCM JML also
-#' supports portable post-hoc EAP with a standard-normal reference prior.
+#' a one-family GPCM MML fit with an estimated intercept-only normal population that passes
+#' the conditional source checks in [predict_mfrm_units()]. Experimental
+#' two-family GPCM MML retains a fixed N(0,1) prior and its own source checks.
+#' RSM/PCM and shared-owner GPCM JML support portable post-hoc EAP with a
+#' standard-normal reference prior; explicit corrected GPCM JML preserves its
+#' correction order and uses adjusted-equation checks, as described below.
 #' [validate_mfrm_calibration()] and [freeze_mfrm_calibration()] are separate,
 #' fail-closed transitions. Only a frozen artifact can be passed to
 #' [score_mfrm_calibration()].
 #'
 #' The portable workflow supports one observed score scale, one latent
 #' dimension and known non-Person facet levels. RSM/PCM MML retain stored anchors
-#' and two-way facet interactions in file format 1. GPCM uses file format 2,
+#' and two-way facet interactions in file format 1. One-family GPCM MML uses file format 2,
 #' retaining both step and slope owners, positive geometric-mean-one relative
 #' slopes and the estimated population mean and SD. The slope multiplies the
-#' entire adjacent-category predictor. GPCM currently requires unit weights,
-#' no anchors or interactions, and an intercept-only normal population when
-#' estimated by MML. Shared-owner GPCM JML uses file format 4 and a post-hoc
+#' entire adjacent-category predictor. Portable GPCM requires unit weights
+#' and no anchors or interactions. One-family MML uses an estimated intercept-only
+#' normal population. Shared-owner GPCM JML uses file format 4 and a post-hoc
 #' N(0,1) reference prior; its distinct checks are described below.
+#' Experimental two-family GPCM MML uses file format 6, with two ordered slope
+#' owners, second-owner steps and the fixed N(0,1) prior. The first owner's
+#' locations and log slopes are centered; the second owner's locations and
+#' slopes remain free. Both fitting engines retain their fixed or adaptive
+#' scoring algorithm. Source identity/convergence and finer-integration checks
+#' must pass; review-only sources cannot be exported for frozen scoring.
+#' No separate `quadrature_review` is accepted for this route. The file contains
+#' component slopes and observed facet combinations, without training responses,
+#' Person estimates or an executable fit. Known levels may form new combinations;
+#' `row_dispositions$ObservedContext` identifies whether each pair occurred in
+#' calibration. New combinations are model-based, not empirically validated.
+#' Prior overrides and `event_id` extensions are unsupported; repeated Person-
+#' facet cells are rejected. Facet names must not collide with scoring/disposition
+#' columns (`Person`, `Score`, `Weight`, `InputRow`, `EventId`, `Disposition`,
+#' `ReasonCode`, `CalibrationId`, `ObservedContext`).
+#'
+#' For format 6, use the same extract, validate, freeze, save, load and score
+#' functions as below. Each new batch must pass its own integration checks;
+#' validation and freezing do not establish sampling coverage, global
+#' identification, boundary absence or population transport. Posterior
+#' intervals exclude calibration uncertainty. Older readers refuse format 6;
+#' existing formats 1--5 keep their original interpretation.
 #' RSM/PCM JML uses file format 3, with unit weights, no anchors or interactions,
 #' a finite identified source and a post-hoc N(0,1) reference prior. This prior
 #' is not estimated by JML. Estimated-population RSM/PCM and latent regression
 #' use fitted-object routes; other structures follow their documented capabilities.
 #' See [mfrm_calibration_capabilities()].
 #'
-#' GPCM MML extraction freshly evaluates the native fit's local likelihood,
+#' One-family GPCM MML extraction freshly evaluates the native fit's local likelihood,
 #' gradient, unregularized information and source-integration stability using
 #' the same conditional source checks as [predict_mfrm_units()]. A failed or
 #' unresolved source cannot be frozen by selecting a review policy. The
@@ -406,7 +433,8 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   receives numerical scoring checks and does not modify the frozen artifact.
 #'   Legacy artifacts with discrete grid-endpoint intervals require re-extraction
 #'   before using this option. The prior is common to all scored persons;
-#'   covariate-dependent overrides are not supported.
+#'   covariate-dependent overrides are not supported. Two-family GPCM format 6
+#'   requires `scoring_prior = NULL` and retains the fixed N(0,1) prior.
 #'
 #' @return `extract_mfrm_calibration()`, `validate_mfrm_calibration()`,
 #'   `freeze_mfrm_calibration()`, `supersede_mfrm_calibration()`,
@@ -433,7 +461,6 @@ extract_mfrm_calibration <- function(fit, calibration_id = NULL,
                                      created_at_utc = NULL,
                                      scoring_quad_points = 31L,
                                      quadrature_review = NULL) {
-  if (!mfrm_has_jml_adjustment(fit)) stop_if_product_slopes(fit, "extract_mfrm_calibration()")
   draft <- tryCatch(
     mfrmr_extract_calibration_draft(
       fit = fit,
@@ -444,7 +471,9 @@ extract_mfrm_calibration <- function(fit, calibration_id = NULL,
     ),
     mfrm_calibration_error = mfrmr_public_calibration_extraction_error
   )
-  if (identical(fit$config$method, "JML")) {
+  if (mfrm_has_product_slopes(fit)) {
+    if (!is.null(quadrature_review)) stop("Two-family extraction uses its own source identity, convergence and finer-integration checks; quadrature_review is not accepted.", call. = FALSE)
+  } else if (identical(fit$config$method, "JML")) {
     if (!is.null(quadrature_review)) stop("JML extraction does not use an MML quadrature review; scoring integration is checked for each new batch.", call. = FALSE)
   } else if (!identical(fit$config$model, "GPCM") || !is.null(quadrature_review)) {
     mfrmr_validate_calibration_quadrature_review(fit, quadrature_review)

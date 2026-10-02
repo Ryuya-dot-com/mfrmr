@@ -91,7 +91,12 @@ test_that("boundary and identical-plan outcomes remain explicit", {
   expect_true(all(is.na(result$comparisons$SE[5:6])))
   expect_true(all(grepl("boundary", result$comparisons$Status[5:6])))
   expect_true(all(is.finite(result$comparisons$SE[7:8])))
-  payload <- plot_data(plot(result, draw = FALSE))
+  plans <- plot_data(plot(result, draw = FALSE))
+  expect_identical(plans$view, "plans")
+  expect_equal(plans$series$Value, rep(0, 6))
+  expect_equal(nrow(plans$unavailable), 0L)
+  expect_equal(nrow(plans$interval_unavailable), 2L)
+  payload <- plot_data(plot(result, view = "differences", draw = FALSE))
   expect_equal(nrow(payload$unavailable), 2L)
   expect_true(all(payload$unavailable$Difference == 0))
   expect_true(all(is.na(payload$unavailable$Lower)))
@@ -100,6 +105,38 @@ test_that("boundary and identical-plan outcomes remain explicit", {
     score = "Content", assumption = "normal")
   expect_true(all(is.na(missing$comparisons$Difference[missing$comparisons$Metric %in% c("G", "Phi")])))
   expect_true(all(grepl("Point projection", missing$comparisons$Status[1:2])))
+  unavailable <- plot_data(plot(missing, draw = FALSE))
+  expect_true(all(is.na(unavailable$series$Value)))
+  expect_equal(nrow(unavailable$unavailable), 6L)
+})
+
+test_that("saved comparisons retain source row accounting and unnormalized weights", {
+  data <- mvdc_fixture()
+  data$Content[1] <- NA_real_
+  g <- mfrm_multivariate_gstudy(data, c("Content", "Organization"),
+    facets = c(Assessor = "Rater", Occasion = "Task"), method = "minque0", missing = "omit")
+  d <- mfrm_multivariate_d_study(g, data.frame(Assessor = c(2, 3), Occasion = c(6, 4)),
+    c(Content = 2, Organization = -1))
+  before <- serialize(d, NULL)
+  a <- mfrm_multivariate_d_compare(d, assumption = "normal")
+  expect_identical(a$source_design$counts, c(Person = 4L, Assessor = 3L, Occasion = 4L))
+  expect_identical(a$source_rows, c(InputRows = 48L, UsedRows = 47L, ExcludedRows = 1L))
+  expect_identical(a$source_design$complete, FALSE)
+  expect_null(a$source_design$levels)
+  expect_null(a$data)
+  output <- capture.output(print(a))
+  expect_true(all(capture.output(print(c(Content = 2, Organization = -1))) %in% output))
+  expect_match(paste(output, collapse = "\n"), "Source rows: 47 used of 48 ; 1 explicitly omitted.", fixed = TRUE)
+  expect_match(paste(output, collapse = "\n"), "future counts do not reproduce its observed assignments", fixed = TRUE)
+  path <- tempfile(fileext = ".rds"); on.exit(unlink(path))
+  saveRDS(a, path)
+  expect_identical(capture.output(print(readRDS(path))), output)
+  expect_identical(summary(readRDS(path)), a$comparisons)
+  old <- a; old[c("source_design", "source_rows")] <- NULL
+  expect_output(print(old), "Source design not recorded")
+  expect_identical(summary(old), summary(a))
+  expect_identical(plot_data(plot(old, draw = FALSE)), plot_data(plot(a, draw = FALSE)))
+  expect_identical(serialize(d, NULL), before)
 })
 
 test_that("unsupported assumptions and malformed comparison requests fail clearly", {
@@ -126,14 +163,22 @@ test_that("unsupported assumptions and malformed comparison requests fail clearl
 test_that("comparison plots retain interval endpoints and reject generic conversion", {
   g <- mfrm_multivariate_gstudy(mvdc_fixture(), "Content")
   d <- mfrm_multivariate_d_study(g, data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)))
-  result <- mfrm_multivariate_d_compare(d, assumption = "normal")
+  result <- mfrm_multivariate_d_compare(d, reference = 2, assumption = "normal")
+  before <- serialize(result, NULL)
   for (type in c("coefficients", "sem")) {
     payload <- plot_data(plot(result, type = type, draw = FALSE))
     wanted <- result$comparisons[result$comparisons$Metric %in% payload$metrics, ]
     expect_equal(payload$table[names(wanted)], wanted)
-    expect_match(payload$subtitle, "Normal random effects")
-    expect_match(payload$title, "Raters = 2, Tasks = 6", fixed = TRUE)
+    expect_equal(payload$series$Value, unlist(d$coefficients[payload$metrics], use.names = FALSE))
+    expect_equal(payload$series$Scenario[payload$series$IsReference], c(2L, 2L))
+    expect_false(any(c("Lower", "Upper", "SE") %in% names(payload$series)))
+    expect_match(payload$title, "Raters = 3, Tasks = 4", fixed = TRUE)
+    difference <- plot_data(plot(result, type = type, view = "differences", draw = FALSE))
+    expect_equal(difference$table[names(wanted)], wanted)
+    expect_match(difference$subtitle, "Normal random effects")
   }
+  expect_identical(serialize(result, NULL), before)
+  expect_error(plot(result, view = "invalid", draw = FALSE), "arg")
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     expect_error(as_ggplot(result), "plot_data")
     expect_error(as_ggplot(plot(result, draw = FALSE)), "plot_data")

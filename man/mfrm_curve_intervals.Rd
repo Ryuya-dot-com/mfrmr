@@ -60,6 +60,8 @@ types distinguish series in addition to color. The default is colorblind friendl
 
 \item{caption}{Optional plot caption. If omitted, unavailable intervals are
 counted and explained, along with unobserved combinations of fitted levels.
+Two-family point-only curves instead state that calibration intervals
+are unavailable for the entire plot, without marking every curve point.
 NULL removes the caption without removing markers
 or the reasons in the saved table.}
 }
@@ -104,7 +106,13 @@ interval is not a finite-sample coverage certification.
 Printing and the default plot subtitle identify the approximation.
 Custom plot text may omit that description; retain the method and its
 limitations in the figure legend or accompanying report.
-Crosses mark retained estimates whose intervals are unavailable. Ribbons
+For one-family curves, crosses mark retained estimates whose intervals
+are unavailable. Two-family curves have no calibration intervals; the
+default subtitle and caption state this without covering curves in crosses.
+A context with only one supplied ability value retains colored points.
+Panel labels put each facet on its own line. With many rating contexts,
+supply the comparisons of interest in \code{newdata} or enlarge the exported
+figure; plotting does not select or discard contexts automatically. Ribbons
 stop at unavailable grid points; a missing ribbon does not mean zero
 uncertainty. Consult the table's \code{InferenceReview} for each reason.
 

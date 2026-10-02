@@ -110,8 +110,12 @@
 #'   abilities. JML estimates each person's ability as a separate parameter;
 #'   it does not fit a population distribution during calibration. Choosing
 #'   JML does not automatically correct the bias associated with few ratings
-#'   per person. The current public JML route is uncorrected and its location
-#'   SEs are exploratory; see the estimator discussion in [fit_mfrm()].
+#'   per person. Without `jml_correction_order`, JML is uncorrected and its
+#'   location SEs are exploratory. Shared-owner GPCM also supports an explicit,
+#'   experimental correction order. Its `RootSE` describes local variation
+#'   around the adjusted-equation root; residual bias may remain and structural
+#'   confidence intervals are not supplied. See the estimator discussion in
+#'   [fit_mfrm()].
 #'   Neither a larger model nor a smaller reported SE establishes a better
 #'   analysis. Choose from the assessment question, rating design and modeling
 #'   assumptions, rather than from whether the user is a beginner or expert.
@@ -266,9 +270,12 @@
 #' and accuracy, whose source-specific covariances are estimated together.
 #' Multiple GPCM slope owners still describe a single latent ability.
 #' Both provisional two-family MML engines support summaries and conditional
-#' fitted curves with saved reports. Fixed-grid EM additionally supports
-#' separately checked experimental component intervals and descriptive residuals;
-#' adaptive direct MML does not yet supply those outputs. Neither inherits the one-family
+#' fitted curves with saved reports, separately checked experimental component
+#' log-Wald and location/contrast intervals, and descriptive posterior residuals.
+#' Component profiles require fixed-grid EM. Separately checked fitted-object
+#' and portable new-Person EAP intervals condition on the calibration and prior;
+#' they exclude calibration uncertainty and have unqualified coverage and
+#' population transport. Neither inherits the one-family
 #' diagnostic/inference workflow below. See [gpcm_capability_matrix()] and the
 #' Two slope families section in [fit_mfrm()].
 #' Neither the estimated slopes nor their sampling covariance can substitute

@@ -263,6 +263,81 @@ mfrm_gmfrm_em <- function(problem, start = problem$start, maxit = 500L,
       par, problem$common$sizes, problem$common$config, "log_slopes"))
 }
 
+# Compare adaptive solutions, never fixed-grid and adaptive objective values.
+# The EM calculation supplies a starting vector only; inference keeps its own gates.
+mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
+                                    optimizer, policy) {
+  capture <- function(call) {
+    value <- NULL; error <- ""; warnings <- character()
+    elapsed <- system.time(withCallingHandlers(tryCatch(value <- call(),
+      error = function(e) error <<- conditionMessage(e)), warning = function(w) {
+        warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning")
+      }))[["elapsed"]]
+    list(value = value, error = error, warnings = unique(warnings), seconds = elapsed)
+  }
+  starts <- list(neutral = problem$start)
+  em <- NULL
+  if (identical(policy, "neutral_em")) {
+    em <- capture(function() mfrm_gmfrm_em(problem, maxit = maxit, score_tol = 1e-6))
+    starts["em"] <- list(em$value$par)
+    if (!is.null(em$value)) em$value <- em$value[c("par", "trace", "controls",
+      "converged", "reason", "max_score")]
+  }
+  common <- problem$common
+  evaluate <- mfrmr_make_adaptive_mml_evaluator(common$idx, config, common$sizes, quad_points)
+  attempts <- lapply(names(starts), function(name) {
+    start <- starts[[name]]; initial <- NA_real_
+    trial <- capture(function() {
+      if (is.null(start)) stop(paste("EM initialization unavailable:", em$error), call. = FALSE)
+      initial <<- evaluate(start)$value
+      if (!is.finite(initial)) stop("Nonfinite adaptive starting objective.", call. = FALSE)
+      run_mfrm_optimization(start, "MML", common$idx, config, common$sizes,
+        quad_points, maxit, reltol, optimizer)
+    })
+    c(list(start = start, initial_nll = initial), trial)
+  })
+  names(attempts) <- names(starts)
+  table <- do.call(rbind, lapply(names(attempts), function(name) {
+    x <- attempts[[name]]; opt <- x$value
+    data.frame(Start = name, InitialNLL = x$initial_nll, FinalNLL = opt$value %||% NA_real_,
+      ConvergenceCode = opt$convergence %||% NA_integer_,
+      GradientCheck = opt$optimizer_diagnostics$ConvergenceSeverity %||% "unavailable",
+      OptimizerStages = nrow(opt$optimizer_polish$Stages) %||% 0L,
+      ElapsedSeconds = x$seconds, Error = x$error,
+      Warnings = paste(x$warnings, collapse = " | "), Selected = FALSE)
+  }))
+  finite <- which(is.finite(table$FinalNLL))
+  record <- list(policy = policy, selected = NA_character_, table = table,
+    controls = list(quad_points = quad_points, maxit = maxit, reltol = reltol, optimizer = optimizer),
+    attempts = attempts, em = em, total_seconds = sum(table$ElapsedSeconds) + (em$seconds %||% 0))
+  if (!length(finite)) stop(structure(list(
+    message = "No adaptive starting value produced a finite solution; inspect the initialization record.",
+    call = NULL, initialization = record), class = c("mfrmr_gmfrm_start_error", "error", "condition")))
+  # Prefer the lowest finite objective, even if it is not converged. Do not hide
+  # a better unfinished solution by returning a worse one with a success flag.
+  selected <- finite[which.min(table$FinalNLL[finite])]
+  record$table$Selected[selected] <- TRUE
+  record$selected <- table$Start[selected]
+  opt <- attempts[[selected]]$value
+  initial <- table$InitialNLL[is.finite(table$InitialNLL)]
+  if (length(initial) && opt$value > min(initial) +
+      64 * .Machine$double.eps * max(1, abs(opt$value), abs(initial))) {
+    opt$convergence <- 2L
+    opt$optimizer_diagnostics$ConvergenceCode <- 2L
+    opt$optimizer_diagnostics$ConvergenceStatus <- "starting_value_review"
+    opt$optimizer_diagnostics$ConvergenceSeverity <- "review"
+    opt$optimizer_diagnostics$ConvergenceReason <- "better_starting_objective"
+    opt$optimizer_diagnostics$ConvergenceDetail <-
+      "A retained starting value has a lower adaptive objective than the selected terminal point."
+    warning(opt$optimizer_diagnostics$ConvergenceDetail, call. = FALSE)
+  }
+  opt$mml_initialization <- record
+  for (message in attempts[[selected]]$warnings) warning(message, call. = FALSE)
+  if (any(nzchar(table$Error))) warning(
+    "Some adaptive starting values failed; inspect fit$opt$mml_initialization.", call. = FALSE)
+  opt
+}
+
 # Assemble an actual EM result with the shared fit tables/readiness contract.
 # Public dispatch validates its input scope before using this adapter.
 mfrm_gmfrm_fit_result <- function(problem, result) {
@@ -373,7 +448,7 @@ mfrm_fit_product_slopes <- function(args, supplied) {
   allowed <- c("data", "person", "facets", "score", "rating_min", "rating_max",
     "keep_original", "category_policy", "model", "method", "step_facet", "slope_facet",
     "noncenter_facet", "quad_points", "maxit", "optimizer", "mml_engine",
-    "gpcm_mml_identification", "mml_integration", if (em) "em_score_tol" else "reltol")
+    "gpcm_mml_identification", "mml_integration", if (em) "em_score_tol" else c("reltol", "gpcm_mml_start"))
   unsupported <- setdiff(supplied, allowed)
   if (length(unsupported)) {
     stop("These arguments are not supported by the two-family route: ",
@@ -428,8 +503,10 @@ mfrm_fit_product_slopes <- function(args, supplied) {
       quad_points = args$quad_points, quadrature = problem$specification$quadrature,
       mml_integration = "adaptive", mml_engine_requested = "direct", mml_engine_used = "direct",
       optimizer_requested = args$optimizer)
-    opt <- run_mfrm_optimization(problem$start, "MML", common$idx, config,
-      common$sizes, args$quad_points, args$maxit, tol, args$optimizer)
+    policy <- match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))
+    config$estimation_control$gpcm_mml_start <- policy
+    opt <- mfrm_gmfrm_adaptive_fit(problem, config, args$quad_points, args$maxit,
+      tol, args$optimizer, policy)
     config$estimation_control$optimizer_used <- opt$optimizer_plan$Used
     fit <- mfrm_gmfrm_assemble_fit(problem, config, opt,
       list(maxit = args$maxit, reltol = tol),
@@ -442,6 +519,7 @@ mfrm_fit_product_slopes <- function(args, supplied) {
   replay$rating_min <- 0
   replay$rating_max <- max_score
   if (em) replay$em_score_tol <- tol else replay$reltol <- tol
+  if (adaptive) replay$gpcm_mml_start <- policy
   replay$package_version <- as.character(utils::packageVersion("mfrmr"))
   fit$config$replay_inputs <- replay
   fit$config$source_columns <- list(person = args$person, facets = args$facets, score = args$score, weight = NULL)

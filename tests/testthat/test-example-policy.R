@@ -239,6 +239,11 @@ test_that("CRAN testthat surface is an explicit representative whitelist", {
     "missing-codes-integration",
     "bundle-summary-privacy",
     "gpcm-capability-matrix",
+    "gmfrm-scoring",
+    "gmfrm-portable",
+    "gmfrm-scoring-results",
+    "gmfrm-rater-feedback",
+    "gmfrm-facet-intervals",
     "namespace-contract",
     "vignette-artifacts"
   )

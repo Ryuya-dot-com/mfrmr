@@ -179,6 +179,8 @@
 #'   selection.
 #' @param maxit Computational ceiling on optimizer iterations. The default is
 #'   `400`; for two-family EM this counts outer EM iterations.
+#'   Two-family adaptive initialization also allows this many EM seed iterations;
+#'   it then applies separately to every direct optimizer stage at each start.
 #'   For corrected JML it applies separately to each recorded root-solving stage.
 #'   This is not a convergence criterion or a model-selection control:
 #'   a fit that reaches the ceiling remains non-ready until the common
@@ -197,8 +199,8 @@
 #'   The best non-worsening stage under the recorded selection rule is
 #'   retained. Requested and selected-stage settings remain in `fit$summary`,
 #'   and the complete stage history remains in `fit$opt$optimizer_polish`.
-#'   If ordinary polishing still stalls, fixed-grid, fixed-standard-normal
-#'   RSM/PCM MML fits with at most 64 free parameters can use one local
+#'   If ordinary polishing still stalls, fixed-grid RSM/PCM or adaptive GPCM
+#'   MML fits with a fixed population and at most 64 free parameters can use one local
 #'   curvature step to restart the selected optimizer. The step requires
 #'   positive-definite, well-conditioned curvature, a smaller gradient and
 #'   an objective that does not worsen beyond floating-point roundoff.
@@ -216,6 +218,21 @@
 #'   adequate quadrature, or valid confidence intervals. Inspect the
 #'   `SmallestCurvature`, `CurvatureScale` and `CurvatureReviewError` fields
 #'   in the stage history alongside the objective and terminal gradient.
+#' @param gpcm_mml_start Initial values for two-family adaptive direct MML only.
+#'   `NULL` (default) selects `"neutral_em"`: optimize from both the neutral vector
+#'   and a same-data fixed-grid EM vector, and select the lowest finite adaptive
+#'   negative log likelihood, retaining its convergence status. `"neutral"`
+#'   retains the earlier neutral-only initialization. Numerical optimizer repairs
+#'   still apply; exact historical reproduction requires the original source.
+#'   An EM vector is only a start;
+#'   its fixed-grid likelihood is never compared with an adaptive likelihood.
+#'   The seed uses the requested quadrature order, `maxit` outer iterations,
+#'   100 M-step iterations and per-Person score tolerance `1e-6`. A finite seed
+#'   need not have converged. Each direct start uses the requested optimizer,
+#'   `reltol` and its existing polishing sequence. All starts, errors, warnings,
+#'   stage histories, seed trace and elapsed costs are stored in
+#'   `fit$opt$mml_initialization`; results and reports include its comparison table.
+#'   This comparison does not prove a global optimum or interval validity.
 #' @param em_score_tol Stopping tolerance for the two-family GPCM MML-EM route
 #'   only. `NULL` selects `1e-6` for that route. Stops when the largest absolute
 #'   derivative of the negative marginal log likelihood, divided by the number
@@ -283,6 +300,8 @@
 #'   variables for `population_formula`. Numeric, logical, factor, ordered
 #'   factor, and character predictors are expanded through `stats::model.matrix()`;
 #'   categorical xlevels and contrasts are stored for replay and scoring.
+#'   Prediction-aware transformations such as `scale()`, `poly()` and
+#'   `splines::ns()` retain their training basis when scoring new persons.
 #'   Required when `population_formula` is supplied.
 #' @param person_id Optional person-ID column in `person_data`. Defaults to
 #'   `person` when that column exists in `person_data`.
@@ -464,8 +483,17 @@
 #' engine's tolerance is an error. Adaptive integration preserves the same
 #' N(0,1) population and response equation while moving each Person's grid.
 #' It is direct maximization of the marginal likelihood, not adaptive EM.
+#' By default it compares neutral and EM-derived starts through that same
+#' adaptive objective; see `gpcm_mml_start`. A better unfinished solution is
+#' retained as unfinished, rather than replaced by a worse converged candidate.
+#' If a retained starting point is better than all terminal candidates beyond
+#' roundoff, the returned fit remains numerically unresolved. A failed alternative
+#' is disclosed; if every direct attempt fails, the error carries an
+#' `initialization` record. Neither fixed-grid likelihoods nor interval outcomes
+#' select a candidate. Extreme slopes and weak information can still prevent
+#' inference even after a successful start comparison.
 #' Use [mml_quadrature_sensitivity()] to compare refits at different orders;
-#' it preserves the chosen integration method and engine.
+#' it preserves the chosen integration method, engine and initialization policy.
 #'
 #' `summary(fit)` and `print(fit)` retain numerical status and the two slope
 #' references. [mfrm_curve_intervals()] evaluates provisional category or
@@ -474,24 +502,36 @@
 #' `mfrm_results(fit, include = c("fit", "plots"), compute = "never",
 #' intervals = list(curves = curves))` to report saved curves. Their values can
 #' be inspected even after nonconvergence, but are not qualified estimates.
-#' For fixed-grid EM, separately request `confint(fit)` for experimental component-slope intervals
+#' Separately request `confint(fit)` for experimental component log-Wald intervals
 #' from the full observed marginal information. Their numerical checks do not
 #' qualify global identification or sampling coverage; failed checks retain
 #' missing bounds. Attach the result alongside curves for saved plots/reports.
-#' To profile one component instead, explicitly request
+#' For fixed-grid EM, to profile one component instead, explicitly request
 #' `confint(fit, method = "profile", slope = c(Task = "t1"))`, replacing the
 #' named owner and level with your fitted identifiers. This reoptimizes other
 #' coefficients; it is an experimental local interval without established coverage.
-#' For fixed-grid EM, [mfrm_response_diagnostics()] integrates each Person's ability posterior at
+#' [mfrm_response_diagnostics()] integrates each Person's ability posterior at
 #' the saved calibration for descriptive residuals. Both slopes are retained;
 #' unavailable integration stays explicit. There are no reference fit cutoffs.
 #' Attach this result through `response_diagnostics` in the results call above.
-#' Adaptive two-family fitting supplies summaries and conditional curves;
-#' its component-slope intervals and posterior residual diagnostics are
-#' unavailable. Fixed-grid interval checks cannot qualify an adaptive fit.
-#' Other parameter intervals, model ranking/LRT, ordinary fit/bias diagnostics,
-#' Wright/Pathway plots, later-person scoring and portable two-family calibration
-#' are unavailable. Numerical agreement of the fitting implementation is not a
+#' Adaptive two-family log-Wald checks use the moving-node marginal objective
+#' and compare adaptive quadrature orders. Posterior residuals preserve the
+#' fitted integration method and complete conditioning record, with separate
+#' row-wise integration checks. Adaptive profile intervals remain unavailable.
+#' [predict_mfrm_units()] separately supplies experimental conditional new-Person
+#' EAP and posterior intervals with the retained N(0,1) prior, known levels,
+#' unit weights and separate source/batch checks; calibration uncertainty is excluded.
+#' [mfrm_facet_intervals()] separately supplies experimental model-based
+#' intervals for either owner's locations and within-facet contrasts, retaining
+#' slope/step nuisance uncertainty. Failed numerical checks leave missing bounds;
+#' location differences need not imply uniform rating differences. Attach these
+#' intervals to [mfrm_results()] for plots, reports and exports.
+#' Step/curve intervals, sandwich inference, model ranking/LRT, ordinary fit/bias
+#' diagnostics and Wright/Pathway plots remain unavailable.
+#' [extract_mfrm_calibration()] provides a separately checked portable two-family
+#' route. Matching native or portable scores can be attached with
+#' `mfrm_results(fit, scores = scores)` without rescoring.
+#' Numerical agreement of the fitting implementation is not a
 #' general identification, convergence or coverage guarantee. See
 #' `vignette("mfrmr-gpcm-scope")` for a complete example and interpretation.
 #'
@@ -798,13 +838,6 @@
 #' a correction or an interval for sparse many-facet GPCM. Formal JML
 #' slope intervals are not currently available in mfrmr.
 #'
-#' `fit_mfrm()` does not replace extreme response scores before JML fitting.
-#' For a freely estimated Person with all-minimum or all-maximum responses,
-#' the primary estimate is `-Inf` or `Inf`; a finite optimizer value is only
-#' a computational trace. Fixed Person anchors retain their supplied values,
-#' and coupled constraints require their own boundary review. A finite
-#' display from `fair_average_table(..., xtreme = ...)`, or placement at the
-#' end of a Wright map, does not change the fitted model or correct JML bias.
 #' When comparing software, report response-score adjustment and post-fit
 #' bias correction separately, including how the correction defines exposure
 #' when responses are missing or unequal across Persons. Matching the label
@@ -827,6 +860,51 @@
 #'   is a distribution-free alternative that conditions out person parameters.
 #'   A third-party CML fit can be imported from `eRm` with
 #'   [`import_erm_fit()`].
+#'
+#' @section All-minimum and all-maximum Persons:
+#' `fit_mfrm()` has no public option to remove Persons before fitting because
+#' all their responses are at the minimum or maximum. Both JML and MML retain
+#' those observed responses. Extreme-response flags use the usable rows after
+#' data preparation; missing responses do not count as intermediate scores.
+#' Declare `rating_min` and `rating_max` from the rubric so that an observed
+#' maximum is not mistaken for the intended scale maximum. Inspect
+#' `fit$facets$person$Extreme` for `"low"`, `"high"`, or `"none"`.
+#'
+#' **Ordinary JML.** `fit_mfrm()` does not replace extreme response scores
+#' before JML fitting. For an independently free Person with all-minimum or
+#' all-maximum responses, the primary `Estimate` is `-Inf` or `Inf`;
+#' `OptimizerEstimate` retains the finite computational trace, not a finite
+#' Person MLE. Fixed Person anchors retain their supplied values, and coupled
+#' constraints require their own boundary review. The Person audit's
+#' `BoundaryState = "has_exclusions"` identifies nonfinite parameters; it
+#' does not mean that these Persons or their input rows were deleted.
+#' Finite structural estimates alone do not establish a finite joint maximum.
+#'
+#' **Corrected JML.** In the supported shared-owner GPCM route, extreme
+#' Persons also remain in the data and assignment-pattern accounting. Their
+#' profiled abilities have infinite limits and their structural estimating-
+#' equation contributions are zero at those limits. This boundary calculation
+#' is not an input filter or a general proof of bias removal.
+#'
+#' **MML.** Extreme Persons contribute to the marginal likelihood through
+#' integration over the specified or estimated population distribution. Their
+#' reported abilities are posterior EAPs, with posterior SDs rather than
+#' frequentist Person-MLE standard errors. A proper normal population model
+#' with finite parameters gives finite EAPs, subject to valid numerical
+#' integration; an extreme response pattern alone does not require deletion.
+#' This does not guarantee convergence, identification or valid structural
+#' intervals for the fitted model. Removing these Persons would change the
+#' observed sample and marginal likelihood.
+#'
+#' New-Person scoring with [predict_mfrm_units()] is a separate operation.
+#' With an eligible calibration and an admitted scoring prior, it can return
+#' finite EAPs for extreme new Persons, including after JML calibration. Those
+#' scores do not replace the original JML Person MLEs. Calibration-source
+#' checks and scoring-batch integration checks must both pass; increasing
+#' scoring nodes does not resolve a boundary in the source calibration.
+#' A finite display from `fair_average_table(..., xtreme = ...)`, or placement
+#' at the end of a Wright map, likewise does not change the fitted model or
+#' correct JML bias.
 #'
 #' @section Model-estimated facet interactions:
 #' `facet_interactions` adds confirmatory fixed-effect interaction terms to the
@@ -943,6 +1021,16 @@
 #' 6. Report `summary(fit)$population_coefficients` as coefficients of the
 #'    conditional-normal latent population model, not as a post hoc regression
 #'    on EAP or MLE scores.
+#'
+#' With covariates, the estimated `sigma2` is the residual variance of ability
+#' conditional on those covariates, not the marginal population variance.
+#' Marginal variance also depends on the distribution of the covariates.
+#' Standardization and polynomial/spline bases learned during fitting are
+#' reused for new persons; changing the scoring cohort does not redefine them.
+#' For custom transformations, supply a prediction-aware R transformation or
+#' precompute predictors with fixed training constants. Older saved fits can
+#' reconstruct transformed terms only from retained person data that reproduce
+#' the training design; otherwise scoring requests a new calibration fit.
 #'
 #' For an intercept-only model, `population_formula = ~ 1` estimates a single
 #' population mean and variance. Training still requires a one-row-per-person
@@ -1390,7 +1478,8 @@ fit_mfrm <- function(data,
                      category_policy = NULL,
                      em_score_tol = NULL,
                      jml_correction_order = NULL,
-                     jml_correction_sampling = c("fixed_rosters", "random_rosters")) {
+                     jml_correction_sampling = c("fixed_rosters", "random_rosters"),
+                     gpcm_mml_start = NULL) {
   supplied_arguments <- names(as.list(match.call())[-1L])
   keep_original <- resolve_mfrm_category_policy(
     keep_original, category_policy, !missing(keep_original))
@@ -1501,6 +1590,11 @@ fit_mfrm <- function(data,
     stop("`shrink_person` must be a single logical value.", call. = FALSE)
   }
 
+  if (!is.null(gpcm_mml_start) &&
+      !(length(slope_facet) == 2L && identical(model, "GPCM") &&
+        identical(method_input, "MML") && identical(mml_engine, "direct") &&
+        identical(mml_integration, "adaptive") && is.null(jml_correction_order)))
+    stop("`gpcm_mml_start` applies only to two-family adaptive direct MML.", call. = FALSE)
   if (!is.null(jml_correction_order)) {
     arguments <- mget(names(formals(fit_mfrm)), envir = environment(), inherits = FALSE)
     return(mfrm_fit_adjusted_jml(arguments, supplied_arguments))
@@ -2099,7 +2193,8 @@ prepare_mfrm_population_scaffold <- function(data,
                                              population_policy = c("error", "omit"),
                                              population_xlevels = NULL,
                                              population_contrasts = NULL,
-                                             require_full_rank = TRUE) {
+                                             require_full_rank = TRUE,
+                                             population_terms = NULL) {
   if (is.null(population_formula)) {
     return(list(
       active = FALSE,
@@ -2180,7 +2275,7 @@ prepare_mfrm_population_scaffold <- function(data,
   person_tbl_replay <- person_tbl
 
   model_frame_args <- list(
-    formula = population_formula,
+    formula = population_terms %||% population_formula,
     data = person_tbl,
     na.action = stats::na.pass
   )
@@ -2249,7 +2344,7 @@ prepare_mfrm_population_scaffold <- function(data,
   # number is very small so users are not silently handed a fit whose
   # coefficients are dominated by numerical noise.
   mm_rcond <- tryCatch(suppressWarnings(rcond(mm)), error = function(e) NA_real_)
-  if (is.finite(mm_rcond) && mm_rcond < 1e-8) {
+  if (isTRUE(require_full_rank) && is.finite(mm_rcond) && mm_rcond < 1e-8) {
     warning(sprintf(
       paste0("Latent-regression design matrix is near-singular (rcond = %.1e). ",
              "Estimated coefficients may be unstable; consider dropping ",
@@ -2280,6 +2375,7 @@ prepare_mfrm_population_scaffold <- function(data,
   list(
     active = TRUE,
     formula = population_formula,
+    terms = terms_obj,
     person_id = person_id,
     person_table = person_tbl,
     person_table_replay = person_tbl_replay,

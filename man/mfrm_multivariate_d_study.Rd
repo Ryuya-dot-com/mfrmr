@@ -54,6 +54,11 @@ row and metric-specific status, and \code{ComponentPSD}), \code{covariances}
 \code{weights} (the supplied vector or matrix, reordered to the G-study score
 order), \code{component_diagnostics},
 and \code{gstudy} (the source result). \code{summary()} returns \code{coefficients}.
+\code{print()} also shows source level/row counts, future-plan conventions and
+the supplied composite weights. Save the full result with \code{saveRDS(d)}
+and reopen with \code{readRDS()} to preserve that context. A CSV of
+\code{summary(d)} contains the coefficient table only; accompany it with the
+weights, source design and row usage, future design and score convention.
 }
 \description{
 Would adding tasks or raters make assessment scores more dependable?

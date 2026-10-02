@@ -134,7 +134,11 @@ make_jml_total_problem <- function(owner, exposure, observed_counts, max_states=
     adjustment <- matrix(0,G,5)
     for(k in seq_len(order)) adjustment <- adjustment+apply_transition(raw_group-adjustment)
     actual$value <- actual$value-adjustment[group,,drop=FALSE]
+    total_theta <- theta
+    total_theta[rowSums(totals)==0] <- -Inf
+    total_theta[rowSums(totals)==sum(max_total)] <- Inf
     list(value=actual$value,q=actual$q,theta=theta[group],root_residual=root_residual,
+      total_theta=total_theta,
       conditional_raw=raw_group,adjustment=adjustment,total_states=G,
       error_bound=rep(0,5),max_omitted_mass=0)
   }

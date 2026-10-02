@@ -96,7 +96,7 @@ Use \code{mfrmr_output_guide("feedback")} when preparing rater feedback. Start
 with the question and the fitted model: severity, response misfit and the
 accuracy of a warning rule are different quantities. A severe rater need
 not misfit, and an observed flag does not establish poor rater quality.
-For an individual native additive RSM/PCM sheet, use
+For an individual native additive RSM/PCM or experimental two-family GPCM sheet, use
 \code{mfrm_report(res, style = "rater", facet = "Rater", rater = "R01")}.
 The selected sheet omits source identifiers; the comprehensive result and
 export bundle retain the original analysis.

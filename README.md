@@ -15,7 +15,8 @@ checks approximate pointwise relative-slope intervals separately. Matched PCM/GP
 with `compare_mfrm(..., nested = TRUE)`. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score. An experimental two-family GPCM route estimates two
-ordered slope families using fixed-standard-normal MML--EM; its supported
+ordered slope families using fixed-standard-normal fixed-grid EM or adaptive
+direct MML; its supported
 outputs and unresolved inferential limitations are described in
 [Model scope](#model-scope).
 
@@ -213,7 +214,7 @@ rating-event IDs to check, not a switch that starts an imputation model.
 | --- | --- | --- |
 | Are my rating rows and categories usable? | `describe_mfrm_data()` | A data review; correct problems in the rating table before fitting. |
 | How severe are these raters, allowing for person ability and criterion difficulty? | `fit_mfrm()` | A fitted model; use `summary()` and `diagnose_mfrm()` to review it. |
-| How uncertain is a specified fixed-rater difference? | `mfrm_facet_intervals()` | Pointwise intervals for an eligible ordinary RSM/PCM fit, using model-based or explicitly selected sandwich covariance. |
+| How uncertain is a specified fixed-rater difference? | `mfrm_facet_intervals()` | Pointwise model-based or explicitly selected sandwich intervals for eligible RSM/PCM fits; experimental model-based location/contrast intervals for two-family GPCM MML. |
 | What are the abilities of people already in my fitted RSM? | `score_mfrm_persons()` | Conditional ability scores under a supported ordinary, shared-rater or testlet RSM. |
 | Do raters with similar backgrounds form descriptive groups? | `mfrm_features()`, then `mfrm_cluster_pam()` or `mfrm_cluster_kmeans()` | Groups based on external attributes, not rater quality. `mfrm_pca()` optionally summarizes numeric attributes first. |
 | How do I analyze several completed versions of missing assigned scores? | `review_mfrm_imputations()`, then `fit_mfrm_imputed()` and `pool_mfrm_imputed()` | A review, separate fits and pooled eligible facet estimates. Supply the completed data; the first function does not generate replacements. |
@@ -345,7 +346,15 @@ intervals. Its default label is "Selected rater"; an explicit `label` is
 printed as supplied. The sheet omits source identifiers and the source fit,
 but recognizable rating patterns still require review before sharing.
 Distribute the standalone HTML, not the comprehensive analysis bundle.
-GPCM, interaction, testlet and random-rater models require their own reports.
+For two-family GPCM MML, the same `style = "rater"` route creates an
+experimental descriptive sheet from its saved `mfrm_results()` object. It
+separates location from component slope, reports observed assignment coverage
+and category use, and retains saved component-slope intervals and posterior
+residuals when attached. Location/step intervals are not displayed in the individual
+sheet; separately requested location/contrast intervals belong in the analyst
+report. Calibrated fit cutoffs remain unavailable; no rater ranking, competence or training-effect claim is
+made. One-family GPCM, interaction, testlet and random-rater models require
+their other model-specific reports.
 
 For a column named `Judge` or `Examiner`, pass that modeled facet name instead
 of `"Rater"`. Severity describes scoring relative to the fitted reference;
@@ -2175,7 +2184,8 @@ bootstrap diagnostics. See `help("compute_facet_icc")` for details.
 GPCM uses one substantive ability dimension. Its one-family route assigns
 relative discriminations to one selected facet. MML allows a different facet
 to own category steps; JML requires the same owner. A separate experimental
-MML--EM route estimates two ordered slope families. Model
+MML route estimates two ordered slope families using fixed-grid EM or adaptive
+direct maximization. Model
 structure and the availability of intervals, comparisons and downstream
 workflows are described separately. Unsupported combinations and inference
 states are reported explicitly.
@@ -2187,7 +2197,8 @@ one observed score scale, and the current public API does not provide mixed
 response families, multiple independent rating scales, general threshold
 anchoring, or online calibration updates. Portable fixed-calibration artifacts are available only
 for eligible one-scale fits: `RSM`/`PCM` MML with a fixed standard-normal population,
-estimated-normal one-family GPCM MML, and the separately qualified JML routes
+estimated-normal one-family GPCM MML, experimental fixed-standard-normal
+two-family GPCM MML, and the separately checked JML routes
 described below. The prior and source checks depend on the estimator; successful
 loading does not establish validity for another population. See the portable
 workflow below for structural and source-check requirements.
@@ -2240,14 +2251,24 @@ checks. The original global inference states remain recorded. Estimated-populati
 RSM/PCM and latent-regression MML remain fitted-object-only routes. RSM/PCM JML
 also supports portable post-hoc EAP with a reference N(0,1) prior, current finite
 identified source checks, unit weights and no anchors or interactions. That
-prior is not estimated by JML. Shared-owner GPCM JML also supports conditional
+prior is not estimated by JML. Uncorrected shared-owner GPCM JML supports conditional
 portable EAP after fresh joint-likelihood/curvature checks; detected boundary
 certificates are refused and incomplete global audits remain recorded. Formal
 JML slope inference is not supplied by these scoring checks.
+Explicit corrected GPCM JML uses format 5 with adjusted-equation checks and
+the saved correction order. Its reference-prior EAP intervals do not account for
+residual calibration bias or supply corrected Person ML/WLE.
+
+Experimental two-family GPCM MML uses format 6 with the same lifecycle,
+preserving both ordered slope owners, category coding and fixed N(0,1) prior.
+Its separate source and batch checks do not qualify coverage or population
+transport; prior overrides and repeated-event extensions are unsupported.
+
 `score_mfrm_calibration(..., scoring_prior = list(mean = 0, sd = 1))` can examine
-an explicit normal prior without changing a current frozen artifact; omitted
-`scoring_prior` retains its original prior. Artifact scores are posterior EAP values conditional on the
-frozen point calibration and recorded prior. Their intervals exclude
+an explicit normal prior for supported RSM/PCM or one-family GPCM artifacts
+without changing the frozen artifact; omit `scoring_prior` for two-family GPCM.
+Omitted `scoring_prior` retains the original prior. Artifact scores are posterior
+EAP values conditional on the frozen point calibration and recorded prior. Their intervals exclude
 calibration-parameter uncertainty, and loading validates consistency rather
 than authenticating files from untrusted sources. Review every
 `scored_review` or `not_scored` disposition before using estimates. The score
@@ -2260,6 +2281,14 @@ grid-based intervals, whose posterior mass may differ from the requested level.
 
 ## Model and interpretation boundaries
 
+Two-family adaptive direct MML compares neutral and EM-derived starting values
+using the same adaptive likelihood. `fit$opt$mml_initialization` retains candidate
+solutions, failures and costs; `gpcm_mml_start = "neutral"` retains neutral-only
+initialization. With a fixed population and at most 64 free parameters, a stalled
+adaptive GPCM fit can use one guarded curvature restart after ordinary polishing.
+The selected point still needs its own interval checks, and
+numerical convergence does not establish a global optimum or sampling coverage.
+
 | Area | Supported route | Important boundary |
 | --- | --- | --- |
 | Latent structure | One latent dimension | No multidimensional or Q-matrix engine |
@@ -2267,7 +2296,7 @@ grid-based intervals, whose posterior mass may differ from the requested level.
 | `RSM` | Shared step structure | The common rating-scale assumption must be substantively defensible |
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
 | One-family `GPCM` | MML permits separate slope/step owners and estimates the common scale by default; JML requires a shared owner | Intervals, comparisons and scoring have estimator-specific checks |
-| Two-family `GPCM` | Experimental MML--EM with fixed N(0,1), exactly two facets and ordered slope owners | Experimental component intervals and descriptive response diagnostics; no ordinary model ranking or portable scoring |
+| Two-family `GPCM` | Experimental fixed-grid EM or adaptive direct MML with fixed N(0,1), exactly two facets and ordered slope owners | Experimental component intervals, descriptive response diagnostics and separately checked fitted-object/portable EAP; profiles require fixed-grid EM; no ordinary model ranking |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
 | Latent regression | Conditional-normal, unidimensional MML population model | Person scoring requires explicit exploratory review and omits uncertainty in the fitted population parameters |
 | Diagnostics | Residual and posterior-averaged marginal screens | A flag is not a deletion, fairness, or validity decision; missing results remain unavailable |
@@ -2340,18 +2369,48 @@ matched legacy or external comparison requires that identification.
 
 A provisional two-family route is also available: use ordered
 `slope_facet = c(first_owner, second_owner)` with explicit fixed-standard-normal
-MML--EM, exactly two facets, and the second owner as both `step_facet` and
+MML, exactly two facets, and the second owner as both `step_facet` and
 `noncenter_facet`. `summary()` and `mfrm_curve_intervals()` supply numerical
 estimates and conditional fitted curves without intervals; saved curves connect
-to `mfrm_results(include = c("fit", "plots"), compute = "never")` and reports.
-`confint(fit)` separately checks experimental component-slope intervals on the
+to `mfrm_results(fit, intervals = curves)` and reports. Without attachments,
+`mfrm_results(fit)` collects the saved fit and numerical status without
+calculating diagnostics or intervals.
+Choose `mml_engine = "em"` for fixed-grid fitting or
+`mml_engine = "direct", mml_integration = "adaptive"` for adaptive fitting.
+`confint(fit)` separately checks experimental component log-Wald intervals on the
 fixed ability scale. It retains owner labels, full joint covariance and numerical
 checks through plots and saved reports; global identification and sampling
 coverage remain unestablished. Failed checks leave estimates with missing bounds.
+`mfrm_facet_intervals(fit, "Rater")` separately checks experimental normal
+intervals for locations or named within-facet contrasts. It uses the inverse
+full marginal information, retaining slope/step nuisance uncertainty and the
+first-owner centered versus second-owner uncentered location references.
+Attach it with `intervals = list(locations = ci)` for plots, reports and saved
+exports. Coverage remains unqualified; location differences are not uniform
+differences in expected ratings when slopes or steps also vary.
 `mfrm_response_diagnostics()` provides descriptive same-data posterior response
 checks, including Infit/Outfit without reference cutoffs, with plots and saved
-reports. Ordinary fit diagnostics, model ranking, new-person scoring and portable
-calibration remain unavailable for two families. See the [two-family workflow](vignettes/mfrmr-gpcm-scope.Rmd#a-provisional-two-family-workflow)
+reports. It preserves the fitted integration method and each Person's complete
+observed record even when selecting output rows. For fixed-grid EM, an explicit
+`confint(..., method = "profile", slope = ...)` can profile one component.
+`predict_mfrm_units(fit, new_ratings)` now provides experimental conditional
+EAP, posterior SD and continuous posterior intervals for new Persons, using
+both slope families, known facet levels, unit weights and the retained N(0,1)
+prior. Source-calibration and scoring-integration checks are separate;
+unresolved numerical checks require explicit `readiness_policy = "review"`.
+Invalid saved calibrations and failed convergence cannot be enabled by review.
+The intervals exclude calibration uncertainty and do not establish sampling
+coverage or validity for another population. `extract_mfrm_calibration()` now
+supports portable format 6 after passing the source checks: validate and freeze
+the artifact, then save/load it and call `score_mfrm_calibration()` without the
+training data or original fit. Each batch must pass numerical checks; prior
+overrides and repeated-event extensions are unsupported. With the source fit
+available, `mfrm_results(fit, scores = scores)` collects matching saved native
+or format-6 scores for tables, reports, CSV and saved replay without rescoring.
+Source/batch checks, omitted rows and review-only labels are retained.
+Adaptive profiles,
+ordinary fit diagnostics and model ranking remain unavailable for two families.
+See the [two-family workflow](vignettes/mfrmr-gpcm-scope.Rmd#a-provisional-two-family-workflow)
 for a complete call, input restrictions and interpretation.
 
 The one-family GPCM estimates **relative discriminations for one selected facet**;

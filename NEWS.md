@@ -1,12 +1,204 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Saved two-family GPCM results now load their required sparse-matrix methods
+  when the package is attached in a fresh R session. Reports and score exports
+  no longer depend on Matrix having been loaded by an earlier fit or another
+  package; replay still performs no fitting or scoring.
+
+* Latent-regression scoring now preserves the fitted basis for `scale()`,
+  `poly()` and prediction-aware spline terms. Previously the same Person's
+  conditional prior could change with the other Persons in the scoring batch,
+  and a single-Person batch could fail. Saved fits retain the training terms;
+  older fits reconstruct them from matching retained training data or stop
+  explicitly when that basis cannot be recovered. Scoring batches need not
+  have a full-rank covariate matrix because they do not re-estimate coefficients.
+  Estimation, population-parameter inference and source-readiness rules are
+  unchanged.
+
+* `fit_mfrm()` help clarifies that extreme Persons are retained: ordinary
+  JML distinguishes infinite Person estimates from optimizer traces, corrected
+  JML uses profile-boundary contributions, and MML integrates their responses
+  and reports posterior EAPs. The `has_exclusions` Person-boundary label does
+  not mean input deletion. New-Person posterior scoring is distinguished from
+  calibration. This is a documentation clarification, with no estimator change.
+
+* `predict_mfrm_units()` now checks EAP and posterior-SD integration for every
+  native scoring batch, including ordinary RSM/PCM with the retained prior.
+  Previously that route could return a coarse-grid score even when supplying
+  the identical prior explicitly required a finer grid. Failed checks stop
+  under the default policy; increasing `scoring_quad_points` changes only
+  scoring, and explicit review output retains the failure labels. New saved
+  scores must retain their numerical checks for summary/export. Legacy scores
+  keep their recorded procedure. Calibration and posterior interval definitions
+  are unchanged; these intervals still exclude calibration uncertainty.
+
+* `mfrm_facet_intervals()` adds experimental native-scale model intervals for
+  estimated intercept-only normal RSM/PCM and one-family GPCM MML, including
+  the latter's explicit fixed-N(0,1) restriction. Direct fixed/adaptive fitting,
+  unit weights and centered additive facets/steps are required. Full joint
+  information and same-point finer-grid checks retain nuisance uncertainty;
+  numerical refusals preserve points with unavailable bounds. Results, plots,
+  reports and exports retain these checks and the native scale. The fixed-normal
+  GPCM branch now recognizes its actual saved population metadata instead of
+  rejecting a valid fit. Sampling coverage remains unqualified; no standardized
+  contrasts, sandwich extension or formal JML intervals are added.
+
+* Two-family GPCM fitted-curve plots now state once that calibration intervals
+  are unavailable, instead of covering every curve point with a cross. Facet
+  labels use separate lines so rating contexts are easier to read. All saved
+  values, contexts and unavailable bounds remain unchanged; one-family curves
+  still mark individual unavailable intervals and preserve gaps in ribbons.
+
+* Help and output guides now consistently describe experimental two-family
+  GPCM Person scoring, saved-score attachments, location/contrast intervals
+  and posterior residuals. Portable-calibration guides distinguish corrected
+  JML reference-prior scoring from two-family MML's fixed N(0,1) prior, which
+  cannot be overridden. Obsolete statements that these routes were
+  unavailable have been corrected. Conditional scoring still excludes
+  calibration uncertainty, and interval coverage remains unqualified.
+
+* Saved response diagnostics now distinguish complete, partial and unavailable
+  residual output in `mfrm_results()`. The `response_overview` table reports
+  selected, available, unresolved, missing-score, zero-variance and unselected
+  source rows. Two-family GPCM, testlet and shared-rater reports show these counts
+  on their first screen; incomplete numerical results no longer receive an
+  unconditional available label.
+  Saved estimates and the numerical acceptance checks are unchanged.
+  Older saved `mfrm_results` objects without the overview recover it from their
+  retained diagnostic rows when summarized, reported, exported or opened in a
+  supported results viewer, without re-estimation.
+
+* `mfrm_facet_intervals()` now supports experimental two-family GPCM MML
+  location estimates and within-facet contrasts with `method = "model"`.
+  It transforms the inverse full marginal information under the fitted location
+  constraints, retaining slope/step nuisance uncertainty. Source, stationarity,
+  information and quadrature checks must pass; otherwise points and reasons
+  remain with missing intervals. Plots, result attachments, reports and exports
+  preserve the fixed N(0,1) scale and experimental status. Sampling coverage is
+  unqualified, and location differences do not imply uniform rating differences
+  when slopes or steps differ. No sandwich, step/curve or rater-quality inference
+  is added; individual rater sheets continue to display slope intervals only.
+
+* Multivariate D-study printing now separates observed source counts and row
+  usage from complete future plans and displays composite weights. Saved paired
+  plan comparisons retain this source context without raw ratings or identifiers;
+  older comparisons explicitly report when it is absent. Comparison plots now
+  default to G/Phi or SEM on their original scale for every plan, including a
+  marked reference, connected in supplied plan order. Use `view = "differences"`
+  for the previous paired difference intervals. Both views identify future
+  complete crossed plans; point projections do not acquire confidence intervals
+  from the difference intervals. Coefficients, intervals and `summary()`
+  tables are unchanged. Save full objects with `saveRDS()`;
+  a coefficient CSV alone does not retain the design and interpretation context.
+
+* `mfrm_report(..., style = "rater")` now creates experimental individual
+  feedback sheets for two-family GPCM MML. The sheet separates location,
+  component slope, step offsets, category use and assignment exposure, and
+  reuses matching saved slope intervals and posterior residuals when supplied.
+  Unresolved and unselected rows remain counted; location/step intervals and
+  diagnostic cutoffs remain unavailable. Object, tables, Markdown and standalone
+  HTML omit source identifiers and free-form source notes. No fitting or new
+  inference occurs, and no rater-quality or training-effect claim is added.
+
+* Saved two-family scores now reject inconsistent interval levels or algorithm
+  labels before summary and result collection. Result attachments also compare
+  their saved calibration values and coding with the supplied fit, so a retained
+  source identity cannot make a changed calibration match. These checks require
+  no fitting, integration or rescoring.
+
+* Two-family `mfrm_results(fit, scores = scores)` now accepts saved native
+  new-Person predictions and format-6 portable scores with matching source
+  identity. Results, reports, CSV and replay retain unrounded EAP/SD/intervals,
+  source/batch checks, omissions and review-only labels without rescoring.
+  Older outputs without source identity remain standalone-readable but need
+  regeneration before attachment; older portable calibrations must also be
+  re-extracted. No refitting is required. These conditional intervals exclude
+  calibration uncertainty and do not qualify coverage or population transport.
+
+* The existing portable calibration workflow now supports experimental
+  two-family GPCM MML in file format 6. It preserves ordered slope components,
+  location/step constraints, category codes, fixed N(0,1) prior and source
+  checks without training responses or Person estimates. Saved artifacts score
+  new batches in a fresh session with separate integration checks. Unobserved
+  combinations of known levels are flagged; prior overrides and repeated-event
+  extensions are unsupported. Formats 1--5 retain their original meaning.
+  Validation/freezing does not qualify coverage or population transport, and
+  posterior intervals still exclude calibration uncertainty.
+
+* `predict_mfrm_units()` now supports experimental conditional new-Person
+  EAP, posterior SD and continuous posterior intervals for two-family GPCM
+  MML. Both slope owners and original category steps are retained, with known
+  levels, unit weights and the fixed N(0,1) prior. Source identity/convergence,
+  finer source integration and each scoring batch are checked separately.
+  Review-only results remain flagged; invalid calibrations cannot be enabled
+  by review. Save/reopen and summaries retain the calibration and checks.
+  Intervals exclude calibration uncertainty; coverage and population transport
+  remain unqualified. Portable calibration follows the separately validated
+  format 6 route above.
+
+* Two-family results now collect all fitted non-Person locations, category
+  steps and component slopes for tables and CSV export. Reports include
+  location and step values alongside slopes, preserving facet identities,
+  centering references and unavailable intervals without recalculation.
+  Category steps are identified as centered offsets, not standalone thresholds.
+
+* Two-family result summaries no longer recommend unsupported ordinary
+  diagnostics or flag a Wright map as a missing required figure. `plot(res)`
+  uses the sole available saved curve, slope-interval or response-diagnostic
+  plot; multiple saved plots require an explicit `type`. Missing plots are
+  explained without calculating new results, and unavailable intervals stay
+  visible in the selected saved display.
+
+* `mfrm_results(fit)` now accepts two-family GPCM fits with its default
+  arguments, collecting saved estimates and numerical status without new
+  fitting or diagnostic calculations. Saved curves, intervals and response
+  diagnostics can still be attached explicitly; unsupported section requests
+  remain errors. Replay instructions preserve the complete saved result even
+  when no additional inference is attached.
+
+* Adaptive GPCM MML can now use the existing bounded curvature restart when
+  ordinary optimizer polishing leaves a failed gradient review. This uses
+  the same adaptive likelihood with a fixed population and at most 64 free
+  parameters. A proposal needs positive, well-conditioned curvature, a smaller
+  gradient and no objective deterioration beyond roundoff; failures remain in
+  the stage history. Information and interval checks are unchanged.
+  Weak-information refusals now show the curvature-change, inverse-residual
+  and standardized-displacement values with their limits.
+
+* Two-family adaptive direct MML now compares neutral and same-data EM-derived
+  starts using the same adaptive likelihood. This repairs an observed failure
+  where a neutral start reached a poor, nearly flat solution despite a small
+  gradient. `gpcm_mml_start = "neutral"` retains the earlier procedure.
+  Selection preserves a better unfinished candidate's convergence status;
+  starts, failures, seed and optimizer histories and costs remain saved.
+  Summaries, results, reports and quadrature refits retain the initialization
+  policy. Interval checks remain separate and sampling coverage is unqualified.
+
+* `mfrm_response_diagnostics()` now accepts two-family adaptive direct MML
+  fits. Source likelihood and gradient checks use the adaptive objective;
+  prediction integrates each Person's complete observed record with both
+  slope families and calibration fixed. Higher-order row checks preserve
+  unresolved probabilities and groups. Selecting output rows does not shorten
+  the conditioning record. Existing plots, reports, exports and saved replay
+  retain the integration method and descriptive interpretation, without
+  expectation-one references, fit cutoffs or calibration-uncertainty propagation.
+
+* Two-family adaptive direct MML now supports experimental component log-Wald
+  intervals through `confint(fit)`. Full observed information differentiates
+  the moving-node likelihood, including all nuisance parameters. Fresh source,
+  convergence, score-rank, stationarity and higher-order adaptive-integration
+  checks retain estimates with missing bounds when unsuccessful. Saved interval
+  settings, plots, reports and exports retain the actual integration method.
+  These numerical checks do not establish sampling coverage. Adaptive profile
+  intervals remain unavailable.
+
 * Two-family GPCM now permits `mml_engine = "direct"` with
   `mml_integration = "adaptive"` in `fit_mfrm()`. This uses the existing
   moving-node likelihood and gradient while retaining the fixed N(0,1)
   population and both slope owners. Summaries, conditional curves, saved
   reports and quadrature-order refits retain the actual engine and integration
-  method. Fixed-grid EM remains available. Adaptive two-family component
-  intervals and posterior residual diagnostics are unavailable; numerical
+  method. Fixed-grid EM remains available. Adaptive two-family profile
+  intervals are unavailable; numerical
   convergence does not establish identification or interval coverage.
 
 * `mml_quadrature_sensitivity()` and its GPCM alias now accept
@@ -14,8 +206,8 @@
   integration calculation uses both slope components and compares integrals
   at unchanged calibration parameters. Per-Person results distinguish
   integration error from changes introduced by refitting. Summaries and saved
-  results retain these diagnostic quantities without adding Person scoring,
-  adaptive EM or changing interval eligibility.
+  results retain these diagnostic quantities without adding Person scoring
+  or adaptive EM; the fixed-calibration review alone does not change interval eligibility.
 
 * The GPCM guide adds a judged-sport example based on official Olympic score
   protocols. It distinguishes competition totals from latent ability, preserves
@@ -130,8 +322,9 @@
   the score ladder and EM controls; comparisons use both slopes in category
   probabilities and full joint information for raw diagnostic SEs. Saved
   component intervals retain their numerical checks and connect to existing
-  plots and tables. Person-score comparisons are explicitly unavailable and
-  adaptive integration comparisons are unavailable for this model. No fixed
+  plots and tables. Person-score comparisons are explicitly unavailable. Adaptive
+  direct refits and fixed-calibration integration comparisons are now supported
+  as described above. No fixed
   number of integration points is sufficient for every dataset; compare
   estimates and intervals across grids before interpreting sensitive results.
 
@@ -155,7 +348,8 @@
   Summary and conditional probability/information curves connect to plots,
   saved results, reports and exports. These curves have no calibration
   intervals. Ordinary diagnostics, Wright/Pathway maps, other parameter intervals,
-  model ranking and portable two-family scoring remain unavailable. The
+  and model ranking remain unavailable. Conditional new-Person and portable
+  scoring are provided by the later extensions described above. The
   capability table and workflow guide distinguish this scope from one-family
   GPCM. Existing single-family defaults and EM-to-direct fallback are unchanged.
 

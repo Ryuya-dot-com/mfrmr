@@ -26,7 +26,8 @@
 #'   [export_mfrm_results()] for an analyst archive.
 #' - "What can I give to an individual rater?"
 #'   Use `mfrm_report(res, style = "rater", facet = "Rater", rater = "R01",
-#'   output = "html")` for native additive RSM/PCM results. Review and retain
+#'   output = "html")` for native additive RSM/PCM or experimental two-family
+#'   GPCM MML results. Review and retain
 #'   the standalone HTML file. The complete analysis archive serves the analyst
 #'   and retains source data and identifiers.
 #' - "Which parts of this run are ready to draft, and with what caveats?"

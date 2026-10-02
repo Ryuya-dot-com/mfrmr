@@ -1036,7 +1036,7 @@ mfrmr_interval_guide <- function(scope = c(
     Route = c("Fixed-facet model/sandwich intervals", "Assigned-score MI facet intervals"),
     Scope = c("table,visual,fit,reporting", "table,visual,fit,reporting"),
     PrimaryHelper = c(
-      "mfrm_facet_intervals(fit, facet, method = \"sandwich\", level = 0.95)",
+      "mfrm_facet_intervals(fit, facet, method = \"model\", level = 0.95)",
       "pool_mfrm_imputed(analyses, facet, ci_level = 0.95)"
     ),
     DisplayRoute = c(
@@ -1057,12 +1057,12 @@ mfrmr_interval_guide <- function(scope = c(
       "Report eligible fixed facet estimates and contrasts after proper imputation of missing assigned scores."
     ),
     InterpretationBoundary = c(
-      "Requires many independent Persons or declared larger clusters; covariance correction does not remove misspecification bias or establish general coverage.",
+      "RSM/PCM sandwich inference requires many independent Persons or declared larger clusters. Two-family GPCM supports experimental model-based location intervals only; location differences need not be uniform rating differences. Coverage is not guaranteed.",
       "Depends on adequate imputations and complete-data inference; excludes EAP pooling, sandwich pooling and simultaneous rater decisions."
     ),
-    GPCMStatus = c("unavailable; RSM/PCM MML only", "unavailable; RSM/PCM MML only"),
+    GPCMStatus = c("experimental two-family MML locations only", "unavailable; RSM/PCM MML only"),
     Notes = c(
-      "Fixed-standard-normal MML, unit weights, fixed quadrature and unregularized information. Inspect Status; not replacement-rater or G/D-study inference.",
+      "Fixed-standard-normal MML, unit weights and unregularized information. RSM/PCM uses fixed quadrature; two families use fixed-grid EM or adaptive direct MML with separate numerical checks. Inspect Status; not replacement-rater or G/D-study inference.",
       "All completions must qualify on a common identified scale; unassigned events stay unassigned. Inspect Status and the imputation model."
     ),
     stringsAsFactors = FALSE

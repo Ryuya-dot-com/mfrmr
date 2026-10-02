@@ -15,6 +15,10 @@ mfrm_rater_feedback <- function(x, facet, rater, audience, label, max_cases, int
     stop("`max_cases` must be a nonnegative whole number; use 0 to omit cases.", call. = FALSE)
   }
   fit <- x[["fit"]]
+  if (mfrm_has_product_slopes(fit)) {
+    if (!is.null(interval)) interval <- tolower(scalar_text(interval, "interval"))
+    return(mfrm_gmfrm_rater_feedback(x, facet, rater, audience, label, max_cases, interval))
+  }
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
       !isTRUE(fit$config$model %in% c("RSM", "PCM")) ||
       !isTRUE(fit$config$method %in% c("MML", "JML")) ||
@@ -169,26 +173,198 @@ mfrm_rater_feedback <- function(x, facet, rater, audience, label, max_cases, int
   out
 }
 
+# Two-family sheets use the same recipient boundary and renderer, with their
+# own targets. No ordinary fit reference or location interval is transferred.
+mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_cases, interval) {
+  fit <- x$fit; cfg <- fit$config
+  if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit") ||
+      !identical(cfg$model, "GPCM") || !identical(cfg$method, "MML") ||
+      !identical(cfg$posterior_basis, "fixed_standard_normal") ||
+      !identical(cfg$step_facet, cfg$slope_facet[2L]) ||
+      !isTRUE(all(cfg$facet_signs[cfg$slope_facet] == -1)) ||
+      length(cfg$interaction_specs) || isTRUE(fit$population$active))
+    stop("Two-family rater sheets require the native fixed-N(0,1) GPCM MML fit.", call. = FALSE)
+  roles <- mfrm_gpcm_slope_roles(cfg)
+  if (!facet %in% roles$SlopeOwner) stop("`facet` must name a fitted non-Person slope facet.", call. = FALSE)
+  if (!rater %in% cfg$facet_levels[[facet]]) stop("`rater` must select exactly one level of `facet`.", call. = FALSE)
+  params <- expand_params(fit$opt$par, build_param_sizes(cfg), cfg)
+  expected <- list(locations = build_other_facet_table(cfg, fit$prep, params),
+    steps = build_step_table(cfg, fit$prep, params), slopes = build_slope_table(cfg, fit$prep, params))
+  actual <- list(locations = fit$facets$others, steps = fit$steps, slopes = fit$slopes)
+  actual$slopes$Estimate <- actual$slopes$OptimizerEstimate
+  keys <- list(locations = c("Facet", "Level", "Estimate"),
+    steps = c("StepFacet", "Step", "Estimate"), slopes = c("SlopeOwner", "SlopeFacet", "Estimate"))
+  for (key in names(keys)) {
+    if (!is.data.frame(actual[[key]]) || !all(keys[[key]] %in% names(actual[[key]])) ||
+        !isTRUE(all.equal(actual[[key]][keys[[key]]], expected[[key]][keys[[key]]],
+          tolerance = 1e-10, check.attributes = FALSE)))
+      stop("Saved location, step and slope values must match the two-family fitted parameters.", call. = FALSE)
+  }
+  location <- as.numeric(params$facets[[facet]][match(rater, cfg$facet_levels[[facet]])])
+  slope <- as.numeric(params$slope_components[[facet]]$Slope[match(rater, cfg$facet_levels[[facet]])])
+  if (any(!is.finite(c(location, slope))) || slope <= 0)
+    stop("The selected two-family point estimates are unavailable.", call. = FALSE)
+  first <- identical(facet, cfg$slope_facet[1L])
+  d <- fit$prep$data; take <- which(as.character(d[[facet]]) == rater)
+  other <- setdiff(cfg$slope_facet, facet)
+  if (!length(take) || any(!is.finite(d$Weight)) || any(d$Weight != 1))
+    stop("Two-family rater sheets require retained unit-weight rating rows.", call. = FALSE)
+  score <- as.numeric(d$Score[take]); map <- fit$prep$score_map
+  if (!is.data.frame(map) || !identical(as.numeric(map$OriginalScore), as.numeric(map$InternalScore)) ||
+      !identical(as.numeric(map$InternalScore), as.numeric(0:(cfg$n_cat - 1L))) ||
+      anyNA(score) || !all(score %in% map$InternalScore))
+    stop("Retain the original zero-based two-family category coding.", call. = FALSE)
+  counts <- vapply(as.numeric(map$InternalScore), function(k) sum(score == k), integer(1))
+  tables <- list(
+    severity = data.frame(Location = location),
+    slope = data.frame(ComponentSlope = slope),
+    exposure = data.frame(RatingRows = length(take), Persons = length(unique(d$Person[take])),
+      ObservedCounterpartLevels = length(unique(d[[other]][take])),
+      FittedCounterpartLevels = length(cfg$facet_levels[[other]])),
+    uncertainty = data.frame(),
+    steps = if (!first) data.frame(Step = seq_len(cfg$n_cat - 1L),
+      Offset = as.numeric(params$steps_mat[match(rater, cfg$facet_levels[[facet]]), ])) else data.frame(),
+    categories = data.frame(ModelScore = as.numeric(map$InternalScore), Ratings = counts,
+      Percent = 100 * counts / length(take)),
+    residuals = data.frame(), cases = data.frame())
+  notes <- c(
+    severity = paste("Increasing this location lowers expected scores when ability, both slopes and all other modeled effects are held fixed.",
+      if (first) "Locations in this family sum to zero across fitted levels." else
+        "Locations in this family are not centered; the ability population has mean zero and SD one.",
+      "Zero is not a quality standard or necessarily the other raters' average. Location intervals are not displayed in this individual sheet."),
+    slope = paste("This component multiplies the other family's slope for each rating. Together they control how category probabilities change with ability.",
+      if (first) "Components in this family have geometric mean one." else
+        "Components in this family are free on the fixed standard-normal ability scale; their geometric mean need not equal one.",
+      "One is not a competence benchmark. A larger slope does not establish scoring accuracy or training effectiveness."),
+    exposure = "Counts cover retained ratings, people and observed levels of the other facet. Unobserved combinations are not evidence of the rater's behavior there. These counts do not measure planned-assignment completion or make different raters' assignments comparable.",
+    uncertainty = "No saved interval for this component slope was supplied. Location and category-step intervals are not displayed in this sheet; no interval is calculated here.",
+    steps = if (first) "Category steps belong to the other facet; there is no single set of steps specific to this selected level." else
+      "These category-step offsets sum to zero within this level. An adjacent-category threshold also includes both facet locations; an offset alone is not a threshold. Step intervals are unavailable.",
+    categories = "Percentages describe this rater's retained assignments on the fitted category scale. Unequal use or an unused category alone does not establish a rubric or rater problem.",
+    residuals = "No saved posterior response diagnostics were supplied. Ordinary Infit/Outfit reference values, cutoffs and tests are unavailable for this model.",
+    cases = "No saved posterior response diagnostics were supplied; rating cases are not calculated for this sheet.")
+  intervals <- mfrm_gpcm_results_inputs(fit, x$gpcm_inference)
+  candidates <- lapply(intervals, function(ci) {
+    if (!inherits(ci, "mfrm_slope_intervals")) return(integer(0))
+    tab <- attr(ci, "diagnostics")
+    if (!all(c("SlopeOwner", "SlopeLevel") %in% names(tab))) return(integer(0))
+    which(tab$SlopeOwner == facet & tab$SlopeLevel == rater)
+  })
+  eligible <- names(candidates)[lengths(candidates) > 0L]
+  if (!is.null(interval) && !interval %in% eligible)
+    stop("`interval` must name a saved interval for this individual component slope.", call. = FALSE)
+  if (is.null(interval) && length(eligible) > 1L)
+    stop("Several saved intervals contain this component slope. Choose one with `interval`.", call. = FALSE)
+  if (is.null(interval) && length(eligible) == 1L) interval <- eligible
+  if (!is.null(interval)) {
+    ci <- intervals[[interval]]; at <- candidates[[interval]]
+    tab <- attr(ci, "diagnostics")[at, , drop = FALSE]; settings <- attr(ci, "settings")
+    level <- attr(ci, "level"); adjustment <- attr(ci, "simultaneous")
+    if (length(at) != 1L ||
+        !all(c("Estimate", "CI_Level", "CI_Lower", "CI_Upper", "CIEligible", "ScaleReference") %in% names(tab)) ||
+        !isTRUE(all.equal(as.numeric(tab$Estimate), slope, tolerance = 1e-8)) ||
+        !identical(settings$scale, "standardized") || !is.null(settings$contrasts) ||
+        !isTRUE(settings$method %in% c("model", "profile")) ||
+        !isTRUE(adjustment %in% c("none", "bonferroni")) ||
+        !is.numeric(level) || length(level) != 1L || !is.finite(level) || level <= 0 || level >= 1 ||
+        !identical(as.numeric(tab$CI_Level), as.numeric(level)) ||
+        !identical(as.character(tab$ScaleReference), if (first) "geometric_mean_one" else "fixed_standard_normal"))
+      stop("The saved interval must retain this component's estimate, scale and method.", call. = FALSE)
+    available <- isTRUE(tab$CIEligible) && all(is.finite(c(tab$CI_Lower, tab$CI_Upper))) &&
+      tab$CI_Lower > 0 && tab$CI_Lower <= tab$CI_Upper
+    tables$uncertainty <- data.frame(Level = as.numeric(level), Lower = as.numeric(tab$CI_Lower),
+      Upper = as.numeric(tab$CI_Upper), Method = if (settings$method == "model") "Log-Wald" else "Profile likelihood",
+      Adjustment = if (adjustment == "none") "Pointwise" else "Bonferroni", Available = available)
+    notes["uncertainty"] <- paste(
+      if (available) "Saved experimental interval for this component slope only." else
+        "The saved component-slope interval is unavailable; any retained endpoints do not form a usable interval.",
+      "It does not describe uncertainty in location or category steps. Coverage is not established; this is not a test of rater quality or a comparison with another rater.",
+      if (adjustment == "bonferroni") "The saved Bonferroni adjustment retains the original family of targets; selecting one recipient does not change it.")
+  }
+  diagnostics <- x$response_diagnostics
+  if (!is.null(diagnostics)) {
+    mfrm_validate_response_diagnostics(fit, diagnostics)
+    tab <- diagnostics$rows
+    if (!all(c("InputRow", "Score", "ExpectedScore", "StandardizedResidual", "Status") %in% names(tab)) ||
+        anyNA(tab$InputRow) || anyDuplicated(tab$InputRow) ||
+        any(tab$InputRow != floor(tab$InputRow) | tab$InputRow < 1 | tab$InputRow > nrow(diagnostics$source_data)))
+      stop("Saved response diagnostics must retain distinct original row positions.", call. = FALSE)
+    tab <- tab[as.character(diagnostics$source_data[[facet]][tab$InputRow]) == rater, , drop = FALSE]
+    available <- tab$Status == "available_conditional" & is.finite(tab$ExpectedScore) &
+      is.finite(tab$StandardizedResidual) & is.finite(tab$Score)
+    available[is.na(available)] <- FALSE
+    complete <- nrow(tab) > 0 && all(available)
+    tables$residuals <- data.frame(SavedRows = nrow(tab), Available = sum(available),
+      Unavailable = sum(!available), NotIncluded = length(take) - nrow(tab),
+      MeanResidual = if (complete) mean(tab$Score - tab$ExpectedScore) else NA_real_,
+      MeanSquaredStandardizedResidual = if (complete) mean(tab$StandardizedResidual^2) else NA_real_)
+    notes["residuals"] <- paste("These summaries cover only the saved rows for this recipient; rows not included in the diagnostics are counted separately.",
+      "Expectations use each person's full observed record and fixed calibration. They describe the same data used to fit the model, not independent predictions.",
+      "A mean squared standardized residual has no expectation-one reference, warning cutoff or p-value here. Averages are unavailable if any saved row is unresolved; calibration uncertainty is excluded.")
+    rows <- which(available)
+    rows <- utils::head(rows[order(-abs(tab$StandardizedResidual[rows]), tab$InputRow[rows])], max_cases)
+    tables$cases <- data.frame(Case = seq_along(rows), Observed = as.numeric(tab$Score[rows]),
+      Expected = as.numeric(tab$ExpectedScore[rows]), Residual = as.numeric(tab$Score[rows] - tab$ExpectedScore[rows]),
+      StandardizedResidual = as.numeric(tab$StandardizedResidual[rows]))
+    notes["cases"] <- paste("The largest absolute standardized residuals among available saved rows are shown; unresolved and unselected rows remain counted above.",
+      "Positive residuals mean higher scores than expected. These are discussion examples, not automatic scoring errors. Case numbers are local to this sheet, not original row numbers.")
+  }
+  if (max_cases == 0) {
+    tables$cases <- data.frame(); notes["cases"] <- "Individual rating cases were omitted by request."
+  }
+  numerical <- isTRUE(fit$summary$Converged) && identical(fit$opt$convergence, 0L) &&
+    identical(fit$opt$optimizer_diagnostics$ConvergenceSeverity, "pass")
+  out <- structure(list(title = "Two-family GPCM rater feedback", label = label, audience = audience,
+    review = paste(if (numerical) "Experimental descriptive feedback; numerical convergence does not establish model adequacy or reliable inference." else
+      "The source fit needs review: numerical convergence is unresolved. Treat all displayed estimates as provisional.",
+      if (isTRUE(tables$residuals$Unavailable > 0))
+        "Saved response diagnostics contain unresolved rows; residual averages are unavailable.",
+      if (isTRUE(tables$residuals$NotIncluded > 0)) "Residuals describe a selected subset of retained ratings.",
+      "Review assignment differences and assessment context before sharing or acting."),
+    guidance = if (audience == "researcher") paste(
+      "Two-family GPCM MML with fixed N(0,1) ability. The product of component slopes multiplies the complete adjacent-category predictor.",
+      "Locations and centered step offsets are on the ability scale; posterior replicate residuals condition on all observed ratings and fixed calibration.") else
+      "Use scoring tendency, response sensitivity, category use and rating examples together to guide a discussion with the assessment team. This sheet does not rank raters or establish competence or training effects.",
+    notes = notes, tables = tables), class = "mfrm_rater_feedback")
+  out$markdown <- mfrm_rater_feedback_render(out, html = FALSE)
+  out
+}
+
 mfrm_rater_feedback_render <- function(x, html = TRUE) {
   headings <- c(severity = "Scoring tendency", exposure = "Ratings included",
     uncertainty = "Uncertainty in scoring tendency", fit = "Consistency with the model",
-    categories = "Category use", cases = "Ratings to discuss")
+    categories = "Category use", cases = "Ratings to discuss", slope = "Response sensitivity",
+    steps = "Category-step offsets", residuals = "Saved response residuals")
+  product <- "slope" %in% names(x$tables)
+  if (product) headings["uncertainty"] <- "Uncertainty in the component slope"
+  headings <- headings[names(x$tables)]
   display <- lapply(x$tables, function(tab) {
     tab[] <- lapply(tab, function(col) {
       if (is.numeric(col)) ifelse(is.na(col), "Not available", format(round(col, 3), trim = TRUE)) else col
     })
     tab
   })
-  names(display$severity) <- c("Severity", "Model reference")
-  names(display$exposure) <- c("Rating rows", "People rated", "Weight total")
+  names(display$severity) <- if (product) "Location" else c("Severity", "Model reference")
+  names(display$exposure) <- if (product) c("Rating rows", "People rated", "Observed counterpart levels", "Fitted counterpart levels") else
+    c("Rating rows", "People rated", "Weight total")
   if (nrow(display$uncertainty)) {
     display$uncertainty$Level <- paste0(100 * x$tables$uncertainty$Level, "%")
-    display$uncertainty$Method <- ifelse(display$uncertainty$Method == "model", "Model-based", "Sandwich")
+    if (!product) display$uncertainty$Method <- ifelse(display$uncertainty$Method == "model", "Model-based", "Sandwich")
     display$uncertainty$Available <- ifelse(display$uncertainty$Available, "Available", "Unavailable")
-    names(display$uncertainty) <- c("Confidence", "Lower", "Upper", "Calculation", "Status")
+    names(display$uncertainty) <- c("Confidence", "Lower", "Upper", "Calculation", if (product) "Adjustment", "Status")
   }
-  names(display$categories) <- c("Model score", "Ratings", "Percent", "Weight total",
+  names(display$categories) <- c("Model score", "Ratings", "Percent", if (!product) "Weight total",
     if ("OriginalScore" %in% names(display$categories)) "Original score")
+  if (product) {
+    names(display$slope) <- "Component slope"
+    if (nrow(display$steps)) names(display$steps) <- c("Step", "Offset")
+    if (nrow(display$residuals)) names(display$residuals) <- c("Saved rows", "Available", "Unavailable", "Not included",
+      "Mean residual", "Mean squared standardized residual")
+    # These are one-recipient summaries; vertical fields also fit printed cards.
+    for (key in c("uncertainty", "residuals")) if (nrow(display[[key]]))
+      display[[key]] <- data.frame(Measure = names(display[[key]]),
+        Value = as.character(unlist(display[[key]][1, ], use.names = FALSE)))
+  }
   if (nrow(display$cases)) names(display$cases) <- c("Case", "Observed", "Expected", "Residual", "Standardized residual")
   if (!html) return(paste(c(paste0("# ", x$title), html_escape(x$label), x$review, x$guidance,
     unlist(lapply(names(headings), function(key) c(paste0("## ", headings[key]),
@@ -219,7 +395,7 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
     '@media print{@page{size:A4;margin:12mm}body{background:white;font-size:9pt;line-height:1.3}main{padding:0;max-width:none}',
     'h1{font-size:18pt}h2{font-size:11pt}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}section{break-inside:avoid;margin:0;padding:8px}',
     'p{margin-bottom:6px}table{font-size:8pt}.bars{display:none}.table-scroll{overflow:visible}.table-scroll:focus-visible{outline:none}}',
-    '</style></head><body><main><h1>Rater feedback</h1><p class="label">', html_escape(x$label),
+    '</style></head><body><main><h1>', html_escape(x$title), '</h1><p class="label">', html_escape(x$label),
     '</p><p class="review">', html_escape(x$review), '</p><p>', html_escape(x$guidance),
     '</p><div class="grid">', paste(sections, collapse = ""), '</div></main></body></html>')
 }

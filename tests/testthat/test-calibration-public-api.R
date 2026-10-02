@@ -69,7 +69,7 @@ test_that("portable calibration exports only the reviewed public workflow", {
 
 test_that("public capability matrix states the bounded artifact envelope", {
   capabilities <- mfrm_calibration_capabilities()
-  expect_identical(nrow(capabilities), 7L)
+  expect_identical(nrow(capabilities), 8L)
   expect_identical(
     names(capabilities),
     c(
@@ -79,9 +79,9 @@ test_that("public capability matrix states the bounded artifact envelope", {
     )
   )
   available <- capabilities$PortableCalibration == "available"
-  expect_identical(which(available), c(1L, 2L, 4L, 5L, 6L, 7L))
-  expect_identical(capabilities$Model[available], c("RSM", "PCM", "GPCM", "RSM/PCM", "GPCM", "GPCM"))
-  expect_identical(capabilities$Estimator[available], c("MML", "MML", "MML", "JML", "JML", "Corrected JML"))
+  expect_identical(which(available), c(1L, 2L, 4L, 5L, 6L, 7L, 8L))
+  expect_identical(capabilities$Model[available], c("RSM", "PCM", "GPCM", "RSM/PCM", "GPCM", "GPCM", "GPCM (two families)"))
+  expect_identical(capabilities$Estimator[available], c("MML", "MML", "MML", "JML", "JML", "Corrected JML", "MML"))
   expect_true(all(
     capabilities$ScoringBasis[1:2] == "fixed standard normal"
   ))
@@ -403,7 +403,7 @@ test_that("public loader explicitly refuses incompatible schema fixtures", {
   on.exit(unlink(path), add = TRUE)
 
   newer <- fixture$frozen
-  newer$header$schema_version <- 6L
+  newer$header$schema_version <- 7L
   saveRDS(newer, path, version = 3)
   newer_error <- tryCatch(
     load_mfrm_calibration(path),
@@ -771,7 +771,7 @@ test_that("current RSM portable artifacts accept explicit scoring priors without
 test_that("the output guide agrees with conditional portable GPCM capabilities", {
   guide <- mfrmr_output_guide("calibration")
   expect_true(all(guide$GPCMStatus == "supported_with_caveat"))
-  expect_true(any(grepl("conditional source checks", guide$UseWhen, fixed = TRUE)))
+  expect_true(any(grepl("source checks", guide$UseWhen, fixed = TRUE)))
   expect_true(any(grepl("GPCM", guide$Notes, fixed = TRUE)))
   boundary <- guide$DecisionBoundary[guide$ObjectRole == "portable calibration lifecycle"]
   expect_length(boundary, 1L)

@@ -10,7 +10,13 @@
 #'
 #' @param fit An inference-ready RSM/PCM MML fit from [fit_mfrm()], using a
 #'   fixed standard-normal person distribution, fixed quadrature and unit
-#'   observation weights.
+#'   observation weights. Experimental two-family GPCM MML also supports
+#'   `method = "model"` with fixed-grid EM or direct adaptive integration;
+#'   see "Two-family location targets" below. Experimental direct MML native
+#'   locations additionally support estimated intercept-only normal RSM/PCM
+#'   and one-family GPCM with fixed N(0,1) or an estimated intercept-only normal
+#'   population, using fixed or adaptive integration; see "Native locations"
+#'   below for their scope and separate numerical checks.
 #' @param facet A non-person facet, for example `"Rater"`.
 #' @param contrasts Optional numeric matrix with distinct target row names
 #'   and columns named by every level of `facet`. Columns are aligned by name.
@@ -18,6 +24,9 @@
 #'   second. By default, each level is reported.
 #' @param method `"model"` (default) uses ordinary observed information;
 #'   `"sandwich"` uses independent-cluster marginal-likelihood scores.
+#'   The experimental native-location and two-family extensions support only
+#'   `"model"`; sandwich support remains limited to the ordinary fixed-population
+#'   RSM/PCM route.
 #' @param clusters For sandwich inference, an optional data frame with exactly
 #'   one row per fitted person and complete `Person` and `Cluster` identifiers.
 #'   Without it, persons are the independent units. A larger cluster could be
@@ -40,6 +49,13 @@
 #'   When weak information passes numerical refinement, `cautions` and
 #'   `information_review` retain the warning and checks. `InferenceCaution`
 #'   also accompanies the interval table when applicable.
+#'   Two-family results additionally retain `checks`, `numerical_checks`,
+#'   `score_rank`, source identity, scale references and interval refusal reasons.
+#'   Their table includes `CIEligible`; failed numerical checks leave bounds
+#'   and SEs missing while preserving the fitted point estimates.
+#'   Native-location results retain checks, numerical comparisons, full and
+#'   target covariance, target Jacobian and source identity, without an
+#'   empirical Person-score rank requirement.
 #'
 #' @details For cluster score `s_g` and observed negative-log-likelihood
 #'   Hessian `H`, the unadjusted sandwich is
@@ -56,13 +72,85 @@
 #'   establish independence between units. A small number of units can give
 #'   poor intervals even with nonsingular covariance. If their scores do not
 #'   span the free-parameter space, sandwich intervals are unavailable; point
-#'   estimates and the reason remain. Singular/regularized observed information
+#'   estimates and the reason remain. For ordinary fixed-population RSM/PCM, singular/regularized observed information
 #'   or an ineligible source fit causes an error. Targets fixed by constraints
 #'   have no inferential interval. Known anchors exclude anchor uncertainty.
 #'   An ill-conditioned but numerically verified unregularized inverse can be
 #'   used with a warning. Successful inversion does not establish reliable
 #'   normal intervals. Review interval width, boundary proximity and quadrature
 #'   sensitivity; changing to sandwich covariance does not remove this concern.
+#'
+#' @section Native locations:
+#'   For estimated intercept-only normal RSM/PCM and one-family GPCM MML,
+#'   `method = "model"` supplies experimental pointwise normal intervals for
+#'   locations or contrasts on the model's native ability scale. One-family
+#'   GPCM also admits the explicit fixed-N(0,1) restriction
+#'   (`gpcm_mml_identification = "fixed_standard_normal"`). Shared or separate
+#'   slope/step owners are supported, with geometric-mean-one relative slopes.
+#'   Use direct MML, fixed or adaptive integration, unit weights, additive
+#'   centered facets and centered steps. Anchors, interactions, latent regression
+#'   and sandwich covariance are unavailable in this added route.
+#'
+#'   The covariance transforms the inverse full joint marginal information,
+#'   including all estimated population, slope and step coordinates. A
+#'   location-only inverse or independent printed SEs cannot replace it.
+#'   The source, category support, local solution and unregularized information
+#'   must pass checks; covariance and score changes are also checked at a finer
+#'   integration order at the same fitted parameter vector. This model-information
+#'   procedure has no empirical Person-score rank requirement.
+#'   A numerical refusal preserves the native point and its reason with
+#'   unavailable SE/bounds. Constraint-fixed targets have no inferential interval.
+#'
+#'   These numerical checks do not establish sampling coverage, global
+#'   identification or robustness to misspecification. Native locations are
+#'   not divided by the estimated population SD; standardized targets would
+#'   additionally need that SD's uncertainty and cross-covariances. A location
+#'   difference need not produce a uniform rating difference with unequal slopes
+#'   or steps. The calculation does not refit or change the saved fit/readiness.
+#'   Save and attach `ci` with `mfrm_results(fit, intervals = list(locations = ci),
+#'   compute = "never")`; select `plot(res, type = "facet_locations")` for
+#'   RSM/PCM or `"gpcm_locations"` for one-family GPCM. Reports and exports retain
+#'   the native scale, experimental status and unavailable outputs.
+#'
+#' @section Two-family location targets:
+#'   For native two-family GPCM MML, select either modeled non-Person facet.
+#'   The first slope owner's locations sum to zero; the second owner's locations
+#'   are uncentered on the fixed N(0,1) ability scale. These locations are measured
+#'   before multiplication by both slope components. Increasing a location
+#'   lowers expected ratings when ability, slopes and other effects stay fixed.
+#'   A contrast between actual raters need not imply a uniform difference in
+#'   expected ratings: their slopes and category-step offsets may also differ.
+#'   Neither zero nor a location difference defines rater quality or accuracy.
+#'
+#'   Let `J` expand the free location coordinates under their fitted constraints
+#'   and `C` be the requested contrast matrix. The target covariance is
+#'   `C J V J' C'`, where `V` is the location block extracted *after inverting
+#'   the full joint marginal information*. Slopes, steps and the other facet
+#'   remain estimated nuisance parameters. Inverting a location-only Hessian,
+#'   adding independent printed SEs, or using the EM conditional-objective
+#'   Hessian would omit their joint estimation uncertainty.
+#'
+#'   The source fit must pass the same identity, category support, local score
+#'   rank, stationarity, full-information and finer-quadrature checks used for
+#'   experimental two-family slope intervals in [confint.mfrm_fit()]. The full
+#'   covariance is checked, but passing these numerical checks does not establish
+#'   repeated-sample coverage for locations or contrasts. Evidence for component
+#'   slope intervals does not qualify these different targets. These are
+#'   experimental pointwise normal approximations, with no sandwich, profile,
+#'   multiplicity or automatic significance decision. A failed check retains
+#'   estimates and reasons with unavailable intervals, even if the coarse-grid
+#'   information could be inverted. Constraint-fixed targets have no interval.
+#'   The calculation does not refit or change quadrature in the saved fit.
+#'
+#'   For example, use `ci <- mfrm_facet_intervals(fit, "Rater")`, or supply a
+#'   named zero-sum row of `contrasts` for a difference. Plot and save `ci`
+#'   directly, or attach it with
+#'   `mfrm_results(fit, intervals = list(locations = ci))` and select
+#'   `plot(res, type = "gpcm_locations")`. The model must actually contain the
+#'   specified facet. Location intervals do not add category-step/curve bands,
+#'   Person uncertainty, Wright maps or tests of rater competence. Individual
+#'   two-family rater sheets currently display component-slope intervals only;
+#'   use the analyst report for these location and contrast results.
 #'
 #' @section What robustness means here:
 #'   Under model misspecification, the sandwich describes sampling variation
@@ -81,7 +169,7 @@
 #'   Review quadrature sensitivity separately; the helper reuses the fitted grid.
 #'
 #' @section Bounded evaluation:
-#'   A 1,600-dataset RSM/PCM comparison used 80/320 independent persons, three
+#'   For the RSM/PCM route, a 1,600-dataset comparison used 80/320 independent persons, three
 #'   fixed raters and two criteria. In its combined skewed-ability/sparse-design
 #'   scenario, sandwich coverage of generating contrasts ranged from 87.0 to
 #'   95.5 percent despite all intervals being available. Coverage of the
@@ -103,10 +191,11 @@
 #'   Use [plot()], [as_ggplot()] and [plot_data()] to display or extract the
 #'   saved result, and [apa_table()] for tables. Set `title = NULL`,
 #'   `subtitle = NULL` or `caption = NULL` in the plot to omit that text.
-#'   Attach one result or a named list to [mfrm_results()], for example
+#'   For RSM/PCM, attach one result or a named list to [mfrm_results()], for example
 #'   `mfrm_results(fit, intervals = list(raters = intervals),
 #'   include = c("fit", "plots"), compute = "never")`.
 #'   The route `plot(res, type = "facet_raters")` shows the selected intervals.
+#'   For two-family GPCM, the corresponding plot type is `"gpcm_raters"`.
 #'   [mfrm_report()] and [export_mfrm_results()] retain the method, level,
 #'   contrast coefficients, cluster mapping and unavailable outcomes.
 #'   The source fit must match; replay reloads the saved results without
@@ -125,31 +214,65 @@
 mfrm_facet_intervals <- function(fit, facet, contrasts = NULL,
                                  method = c("model", "sandwich"),
                                  clusters = NULL, adjust = FALSE, level = .95) {
-  stop_if_product_slopes(fit, "mfrm_facet_intervals()")
+  stop_if_jml_adjustment(fit, "mfrm_facet_intervals()")
+  product <- mfrm_has_product_slopes(fit)
+  native <- !product && (isTRUE(fit$config$population_spec$active) ||
+    identical(fit$config$model, "GPCM"))
   method <- match.arg(method)
-  if (!inherits(fit, "mfrm_fit") || !identical(fit$config$method, "MML") ||
+  if (!product && !native && (!inherits(fit, "mfrm_fit") || !identical(fit$config$method, "MML") ||
       !fit$config$model %in% c("RSM", "PCM") ||
       isTRUE(fit$config$population_spec$active) || mfrmr_adaptive_integration(fit$config) ||
       any(!is.finite(fit$prep$data$Weight)) || any(fit$prep$data$Weight != 1) ||
-      !mfrm_inference_ready(fit)) {
+      !mfrm_inference_ready(fit))) {
     stop("Use an inference-ready RSM/PCM MML fit with unit weights, fixed quadrature and a fixed standard-normal person distribution.", call. = FALSE)
   }
   if (!is.logical(adjust) || length(adjust) != 1L || is.na(adjust) ||
-      !is.numeric(level) || is.complex(level) || length(level) != 1L ||
+      !is.numeric(level) || is.complex(level) || is.object(level) || !is.null(dim(level)) || length(level) != 1L ||
       !is.finite(level) || level <= 0 || level >= 1) {
     stop("Supply a logical `adjust` and 0 < level < 1.", call. = FALSE)
   }
+  level <- unname(level)
   if (method == "model" && (!is.null(clusters) || adjust)) {
     stop("`clusters` and `adjust` apply only to method = 'sandwich'.", call. = FALSE)
   }
+  if (product && (method != "model" || !inherits(fit, "mfrm_fit") ||
+      inherits(fit, "mfrm_imported_fit") || !identical(fit$config$method, "MML"))) {
+    stop("Two-family location intervals require native MML and method = 'model'; sandwich intervals are unavailable.", call. = FALSE)
+  }
+  if (native && method != "model") {
+    stop("Native population/one-family GPCM location intervals require method = 'model'; sandwich intervals are unavailable.", call. = FALSE)
+  }
+  params <- if (native) mfrm_native_location_source(fit) else NULL
   target <- mfrm_facet_contrasts(fit, facet, contrasts)
-  information <- compute_mml_parameter_covariance(fit)
-  if (!identical(information$status, "ok") || is.null(information$cov) ||
+  sizes <- build_param_sizes(fit$config)
+  if (!native) params <- expand_params(fit$opt$par, sizes, fit$config)
+  estimate <- drop(target$contrasts %*% params$facets[[facet]])
+  estimate[target$fixed] <- target$constant[target$fixed]
+  if (native && any(!is.finite(estimate)))
+    stop("Native contrast estimates must be finite; rescale excessively large coefficients.", call. = FALSE)
+  if (product) {
+    expected <- build_other_facet_table(fit$config, fit$prep, params)
+    keys <- c("Facet", "Level", "Estimate")
+    if (!isTRUE(all.equal(fit$facets$others[keys], expected[keys],
+        tolerance = 1e-10, check.attributes = FALSE)))
+      stop("Saved locations must match the fitted two-family parameters.", call. = FALSE)
+    inference <- mfrm_gpcm_product_inference(fit)
+    information <- inference$information
+    model_cov <- inference$covariance
+    if (is.null(model_cov)) model_cov <- matrix(NA_real_, length(fit$opt$par), length(fit$opt$par))
+  } else if (native) {
+    inference <- mfrm_native_location_inference(fit)
+    information <- inference$information
+    model_cov <- inference$covariance
+  } else {
+    information <- compute_mml_parameter_covariance(fit)
+    if (!identical(information$status, "ok") || is.null(information$cov) ||
       any(!is.finite(information$cov)) ||
       is.null(tryCatch(chol(information$cov), error = function(e) NULL))) {
-    stop("Unregularized positive-definite observed information is required.", call. = FALSE)
+      stop("Unregularized positive-definite observed information is required.", call. = FALSE)
+    }
+    model_cov <- information$cov
   }
-  model_cov <- information$cov
   cov <- model_cov
   person_scores <- cluster_scores <- NULL
   nclusters <- rank <- NA_integer_
@@ -161,22 +284,24 @@ mfrm_facet_intervals <- function(fit, facet, contrasts = NULL,
     nclusters <- nrow(cluster_scores); rank <- sandwich$rank
     factor <- sandwich$factor; cov <- sandwich$covariance
   }
-  slice <- information$param_slices[[facet]]
-  transform <- function(v) symmetrize_matrix(
-    target$jacobian %*% v[slice, slice, drop = FALSE] %*% t(target$jacobian))
+  slice <- build_param_slices(sizes)[[facet]]
+  transform <- function(v) {
+    z <- if (is.null(v)) matrix(NA_real_, nrow(target$contrasts), nrow(target$contrasts)) else
+      symmetrize_matrix(target$jacobian %*% v[slice, slice, drop = FALSE] %*% t(target$jacobian))
+    z[target$fixed, ] <- 0; z[, target$fixed] <- 0
+    z
+  }
   selected_cov <- transform(cov)
   model_target_cov <- transform(model_cov)
-  estimate <- drop(target$contrasts %*%
-    expand_params(fit$opt$par, information$sizes, fit$config)$facets[[facet]])
-  estimate[target$fixed] <- target$constant[target$fixed]
   se <- covariance_diag_se(selected_cov)
   model_se <- covariance_diag_se(model_target_cov)
   status <- rep("available", length(estimate))
+  if ((product || native) && !isTRUE(inference$check$eligible)) status[] <- "numerical_review_failed"
   if (method == "sandwich" && rank < ncol(cluster_scores)) status[] <- "insufficient_cluster_rank"
-  status[!is.finite(se) | se <= 0] <- "nonpositive_variance"
+  status[status != "numerical_review_failed" & (!is.finite(se) | se <= 0)] <- "nonpositive_variance"
   status[target$fixed] <- "fixed"
   se[!status %in% c("available", "fixed")] <- NA_real_
-  critical <- stats::qnorm(1 - (1 - level) / 2)
+  critical <- stats::qnorm((1 - level) / 2, lower.tail = FALSE)
   margin <- critical * se
   margin[target$fixed] <- NA_real_
   model_margin <- critical * model_se
@@ -185,6 +310,13 @@ mfrm_facet_intervals <- function(fit, facet, contrasts = NULL,
     SE = se, Lower = estimate - margin, Upper = estimate + margin,
     ModelSE = model_se, ModelLower = estimate - model_margin,
     ModelUpper = estimate + model_margin, Status = status, row.names = NULL)
+  if (native) {
+    invalid <- status == "available" & (!is.finite(tab$Lower) | !is.finite(tab$Upper))
+    status[invalid] <- "nonfinite_bounds"
+    tab$Status <- status
+    tab[!status %in% c("available", "fixed"),
+      c("SE", "Lower", "Upper", "ModelSE", "ModelLower", "ModelUpper")] <- NA_real_
+  }
   out <- list(table = tab, covariance = selected_cov, model_covariance = model_target_cov,
     parameter_covariance = cov, model_parameter_covariance = model_cov,
     person_scores = person_scores, cluster_scores = cluster_scores, clusters = clusters,
@@ -197,6 +329,50 @@ mfrm_facet_intervals <- function(fit, facet, contrasts = NULL,
   class(out) <- "mfrm_facet_intervals"
   out$cautions <- mfrm_mml_information_caution(information)
   out$information_review <- information$solution_information$inverse_review
+  if (product) {
+    out$source <- mfrm_gpcm_inference_source(fit)
+    out$settings$two_family <- TRUE
+    out$settings$scale <- "fixed_standard_normal"
+    out$settings$location_reference <- if (facet == fit$config$slope_facet[1L])
+      "sum_to_zero_across_levels" else "uncentered_on_fixed_N01"
+    out$settings$integration <- if (mfrmr_adaptive_integration(fit$config)) "adaptive" else "fixed"
+    out$checks <- inference$checks
+    out$numerical_checks <- inference$numerical_checks
+    out$score_rank <- inference$score_rank
+    out$table$CIEligible <- status == "available"
+    out$table$ScaleReference <- out$settings$location_reference
+    out$table$InferenceReview <- inference$check$review
+    out$cautions <- unique(c(out$cautions, inference$check$caution,
+      "Experimental two-family location intervals: sampling coverage is not qualified. Location differences do not imply uniform differences in expected ratings when slopes or category steps differ."))
+  }
+  if (native) {
+    out$settings$procedure <- "mml_native_location_model_v1"
+    out$settings$scale <- "native_ability"
+    out$settings$location_reference <- "sum_to_zero_across_levels"
+    out$settings$integration <- if (mfrmr_adaptive_integration(fit$config)) "adaptive" else "fixed"
+    out$settings$comparison_quad_points <- 2 * out$settings$quad_points - 1
+    out$settings$population <- if (isTRUE(fit$config$population_spec$active))
+      "estimated_intercept_normal" else "fixed_standard_normal"
+    out$settings$slope_owner <- fit$config$slope_facet %||% NA_character_
+    out$settings$step_owner <- fit$config$step_facet %||% "shared"
+    out$source <- mfrm_native_location_identity(fit)
+    out$checks <- inference$checks
+    out$numerical_checks <- inference$numerical_checks
+    out$comparison_information_review <- inference$comparison_information_review
+    out$target_jacobian <- matrix(0, nrow(target$contrasts), length(fit$opt$par),
+      dimnames = list(rownames(target$contrasts), mfrm_checkpoint_parameter_names(sizes)))
+    out$target_jacobian[, slice] <- target$jacobian
+    out$population <- data.frame(Mean = if (is.null(params$population)) 0 else
+      unname(params$population$coefficients), Variance = params$population$sigma2 %||% 1)
+    out$table$CIEligible <- status == "available"
+    out$table$ScaleReference <- "native ability units; centered facet locations"
+    out$table$InferenceReview <- inference$check$review
+    out$table$InferenceReview[status == "fixed"] <- "Constraint-fixed native target; no inferential interval."
+    out$table$InferenceReview[status %in% c("nonpositive_variance", "nonfinite_bounds")] <-
+      "The target requires finite positive variance and finite normal bounds."
+    out$cautions <- unique(c(out$cautions, inference$check$caution,
+      "Experimental native location intervals: sampling coverage is not qualified. Native ability units are not standardized by the fitted population SD; unequal slopes or steps can make expected-rating differences vary with ability."))
+  }
   if (length(out$cautions)) {
     out$table$InferenceCaution <- paste(out$cautions, collapse = " ")
     warning(paste(out$cautions, collapse = " "), call. = FALSE)
@@ -305,8 +481,13 @@ mfrm_facet_interval_tables <- function(x) {
     settings = settings,
     contrasts = data.frame(Comparison = rownames(x$contrasts),
       x$contrasts, row.names = NULL, check.names = FALSE))
+  for (name in c("checks", "numerical_checks", "score_rank", "population", "comparison_information_review")) {
+    if (!is.null(x[[name]])) tables[[name]] <- x[[name]]
+  }
   if (!is.null(x$clusters)) tables$clusters <- x$clusters
   if (!is.null(x$information_review)) tables$information_review <- x$information_review
+  if (!is.null(x$target_jacobian)) tables$target_jacobian <- data.frame(
+    Target = rownames(x$target_jacobian), x$target_jacobian, row.names = NULL, check.names = FALSE)
   tables
 }
 
@@ -329,6 +510,10 @@ mfrm_facet_results_inputs <- function(fit, intervals) {
   for (x in intervals) {
     if (is.null(x$fit) || !identical(source, mfrm_gpcm_inference_source(x$fit))) {
       stop("Saved fixed-facet intervals must match the fitted parameters, data, constraints, population and integration settings.", call. = FALSE)
+    }
+    if (identical(x$settings$procedure, "mml_native_location_model_v1") &&
+        !identical(mfrm_native_location_identity(fit), x$source)) {
+      stop("Saved native location intervals must match the source coordinates, tables and qualification metadata.", call. = FALSE)
     }
   }
   intervals

@@ -107,7 +107,9 @@ test_that("unsafe curvature proposals do not replace the retained point", {
 })
 
 test_that("a stalled optimizer restarts only from a safe curvature proposal", {
-  run <- function(indefinite = FALSE, code = 0L, method = "MML") {
+  run <- function(indefinite = FALSE, code = 0L, method = "MML",
+                  model = "RSM", integration = "fixed", population = FALSE,
+                  reltol = 1e-9) {
     h <- diag(c(900, if (indefinite) -15000 else 15000))
     fn <- function(p) 86000 + sum(p * (h %*% p))/2
     gr <- function(p) as.vector(h %*% p)
@@ -118,8 +120,10 @@ test_that("a stalled optimizer restarts only from a safe curvature proposal", {
                                              counts=c("function"=1L,"gradient"=1L)),
       .package = "mfrmr"
     )
-    run_mfrm_direct_optimization(c(4e-7,-1e-7), method, list(), list(model="RSM"),
-      list(), quad_points=3, maxit=20, reltol=1e-9, suppress_convergence_warning=TRUE)
+    config <- list(model = model, population_spec = list(active = population),
+      estimation_control = list(mml_integration = integration))
+    run_mfrm_direct_optimization(c(4e-7,-1e-7), method, list(), config,
+      list(), quad_points=3, maxit=20, reltol=reltol, suppress_convergence_warning=TRUE)
   }
   good <- run()
   expect_identical(good$optimizer_diagnostics$ConvergenceSeverity,"pass")
@@ -132,7 +136,19 @@ test_that("a stalled optimizer restarts only from a safe curvature proposal", {
   expect_identical(bad$optimizer_diagnostics$ConvergenceSeverity,"review")
   expect_true(nzchar(tail(bad$optimizer_polish$Stages$Error,1)))
   expect_false(tail(bad$optimizer_polish$Stages$Selected,1))
-  for (x in list(run(code=1L),run(method="JML"))) {
+  adaptive <- run(model = "GPCM", integration = "adaptive")
+  expect_identical(adaptive$optimizer_diagnostics$ConvergenceSeverity, "pass")
+  expect_lt(adaptive$optimizer_diagnostics$TerminalGradientSupNorm, 1e-10)
+  expect_identical(tail(adaptive$optimizer_polish$Stages$StageLabel, 1), "curvature_restart")
+  expect_lte(adaptive$value, good$value)
+  unsafe <- run(indefinite = TRUE, model = "GPCM", integration = "adaptive")
+  expect_identical(unsafe$optimizer_diagnostics$ConvergenceSeverity, "review")
+  expect_true(nzchar(tail(unsafe$optimizer_polish$Stages$Error, 1)))
+  expect_false(tail(unsafe$optimizer_polish$Stages$Selected, 1))
+  for (x in list(run(code=1L),run(method="JML"),
+                run(model="GPCM", integration="adaptive", population=TRUE),
+                run(model="GPCM", integration="adaptive", reltol=1e-6),
+                run(integration="adaptive"))) {
     expect_false("curvature_restart" %in% x$optimizer_polish$Stages$StageLabel)
   }
 })

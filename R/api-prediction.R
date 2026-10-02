@@ -460,6 +460,9 @@ resolve_prediction_facets <- function(fit, facets = NULL) {
     stop("`fit` does not contain any calibrated facet names.", call. = FALSE)
   }
 
+  # Two-family parameter order follows slope owners, which may differ from
+  # the facets argument in the original call. Their native names are identities.
+  if (is.null(facets) && mfrm_has_product_slopes(fit)) facets <- setNames(fit_facets, fit_facets)
   facets <- facets %||% (fit$config$source_columns$facets %||% fit_facets)
   if (!is.character(facets) || length(facets) != length(fit_facets)) {
     stop("`facets` must be a character vector naming one column per calibrated facet: ",
@@ -727,6 +730,41 @@ filter_mfrm_prediction_persons <- function(prepared, keep_persons) {
   prepared
 }
 
+prediction_population_terms <- function(fit) {
+  pop <- fit$population %||% list()
+  spec <- fit$config$population_spec %||% list()
+  stored <- pop$terms %||% spec$terms
+  if (!is.null(stored)) return(stored)
+
+  formula <- pop$formula %||% fit$config$population_formula
+  terms <- stats::terms(formula)
+  # Plain variables need only the retained factor levels/contrasts. Calls may
+  # have learned a basis (scale, poly, splines); never relearn it on new Persons.
+  variables <- as.list(attr(terms, "variables"))[-1L]
+  if (!any(vapply(variables, is.call, logical(1)))) return(terms)
+
+  training <- pop$person_table_replay %||% pop$person_table
+  person_id <- pop$person_id %||% spec$person_id
+  if (!is.data.frame(training) || length(person_id) != 1L ||
+      !person_id %in% names(training)) {
+    stop("Transformed population predictors require fitted terms or retained training person data. Refit the calibration before scoring.", call. = FALSE)
+  }
+  rebuilt <- prepare_mfrm_population_scaffold(
+    data = training, person = person_id, population_formula = formula,
+    person_data = training, person_id = person_id,
+    population_policy = pop$policy %||% "error",
+    population_xlevels = pop$xlevels %||% spec$xlevels,
+    population_contrasts = pop$contrasts %||% spec$contrasts,
+    require_full_rank = FALSE
+  )
+  design <- pop$design_matrix %||% spec$design_matrix
+  if (is.null(design) || !identical(colnames(rebuilt$design_matrix), colnames(design)) ||
+      !isTRUE(all.equal(unname(rebuilt$design_matrix), unname(design), tolerance = 1e-12))) {
+    stop("Retained person data do not reproduce the fitted population training design. Refit the calibration before scoring.", call. = FALSE)
+  }
+  rebuilt$terms
+}
+
 prepare_mfrm_prediction_population <- function(fit,
                                                prepared,
                                                person_data = NULL,
@@ -785,7 +823,8 @@ prepare_mfrm_prediction_population <- function(fit,
     population_policy = population_policy,
     population_xlevels = fit_population$xlevels %||% fit$config$population_spec$xlevels,
     population_contrasts = fit_population$contrasts %||% fit$config$population_spec$contrasts,
-    require_full_rank = FALSE
+    require_full_rank = FALSE,
+    population_terms = prediction_population_terms(fit)
   )
 
   current_columns <- colnames(scaffold$design_matrix %||% matrix(numeric(0), nrow = 0L))
@@ -1119,7 +1158,87 @@ prediction_jml_calibration_review <- function(fit) {
   })
 }
 
+# Fixed-calibration scoring needs the saved point solution, not a covariance
+# certificate. Reuse its identity check, then compare the fitted integration
+# with a finer rule without fitting or changing the source readiness record.
+prediction_gmfrm_source_identity <- function(fit) {
+  # An exact saved-source match, not a new numerical check or authenticity claim.
+  paste0("gmfrm_scoring_source_v1:", mfrm_checkpoint_fingerprint(list(
+    source = mfrm_gpcm_inference_source(fit), config = fit$config,
+    specification = fit$gmfrm, score_map = fit$prep$score_map,
+    source_columns = fit$prep$source_columns,
+    locations = fit$facets$others, steps = fit$steps, slopes = fit$slopes,
+    converged = fit$summary$Converged, numerical = fit$opt$optimizer_diagnostics,
+    readiness = mfrmr_get_readiness_record(fit))))
+}
+
+prediction_gmfrm_calibration <- function(fit, params) {
+  list(slope_facets = fit$config$slope_facet, step_facet = fit$config$step_facet,
+    scale_reference = "fixed_standard_normal", levels = fit$prep$levels[fit$config$slope_facet],
+    score_map = fit$prep$score_map, locations = fit$facets$others,
+    steps = fit$steps, slope_components = params$slope_components,
+    observed_contexts = unique(fit$prep$data[fit$config$slope_facet]))
+}
+
+prediction_gmfrm_scoring_readiness <- function(fit) {
+  input <- mfrm_gmfrm_response_input(fit, operation = "new-Person scoring")
+  cfg <- input$config
+  record <- mfrmr_get_readiness_record(fit)$fit
+  field <- function(name) if (is.data.frame(record) && nrow(record) == 1L &&
+      name %in% names(record)) as.character(record[[name]]) else "missing"
+  eligible <- identical(field("ReadinessContractVersion"), mfrmr_readiness_contract_version()) &&
+    field("InputState") == "pass" && field("CategoryState") == "adequate" &&
+    field("NumericalState") == "ready" &&
+    field("EstimabilityState") %in% c("identified", "not_evaluated") &&
+    field("BoundaryState") %in% c("finite", "not_applicable", "not_evaluated") &&
+    !isTRUE(cfg$estimability_audit$nonlinear_local_estimability$local_first_order_rank_deficient)
+  local <- list(eligible = FALSE, basis = "two_family_point_calibration_v1",
+    review = "The source readiness record requires review.",
+    caution = "Two-family scoring is experimental. Numerical checks do not establish a global maximum, complete identification or boundary audits, or validate future-population scores.")
+  if (isTRUE(eligible)) local <- tryCatch({
+    q <- as.integer(cfg$estimation_control$quad_points)
+    higher <- max(q + 10L, 2L * q - 1L)
+    if (inherits(tryCatch(gauss_hermite_normal(higher), error = identity), "error")) higher <- q + 10L
+    n <- length(input$prep$levels$Person)
+    if (mfrmr_adaptive_integration(cfg)) {
+      refined <- mfrmr_make_adaptive_mml_evaluator(input$indices, cfg,
+        build_param_sizes(cfg), higher)(fit$opt$par)
+      value <- refined$value; gradient <- refined$gradient / n
+    } else {
+      specification <- fit$gmfrm$specification
+      specification$quadrature <- gauss_hermite_normal(higher)
+      refined <- do.call(mfrm_gmfrm_problem, specification)$marginal(fit$opt$par)
+      value <- -refined$logLik; gradient <- refined$gradient
+    }
+    local$integration <- data.frame(OriginalOrder = q, ComparisonOrder = higher,
+      NLLChangePerPerson = abs(value - fit$opt$value) / n,
+      ComparisonMeanGradient = max(abs(gradient)))
+    local$eligible <- all(is.finite(unlist(local$integration))) &&
+      local$integration$NLLChangePerPerson <= 1e-6 &&
+      local$integration$ComparisonMeanGradient <= 1e-6
+    local$review <- if (local$eligible) {
+      "Saved two-family calibration identity and convergence passed; finer-rule NLL change and maximum absolute gradient per Person are at most 1e-6."
+    } else "The two-family calibration needs finer integration or further optimization; numerical source scoring checks did not pass."
+    local
+  }, error = function(e) {
+    local$review <- paste("Two-family source integration checks are unavailable:", conditionMessage(e))
+    local
+  })
+  local$source_identity <- prediction_gmfrm_source_identity(fit)
+  state <- mfrm_convergence_state(fit)
+  list(ready = isTRUE(local$eligible),
+    status = if (isTRUE(local$eligible)) "conditional" else "review_only",
+    policy_basis = "two_family_conditional_eap_v1", local_calibration_review = local,
+    parameter_ready = TRUE,
+    reason_codes = if (isTRUE(local$eligible)) character(0) else "local_calibration_check_failed",
+    source_audit_states = c(identification = field("EstimabilityState"),
+      boundary = field("BoundaryState"), numerical = field("NumericalState")),
+    fit_readiness = state$fit_readiness, inference_ready = isTRUE(state$inference_ready),
+    readiness_contract_version = field("ReadinessContractVersion"))
+}
+
 prediction_source_scoring_readiness <- function(fit) {
+  if (mfrm_has_product_slopes(fit)) return(prediction_gmfrm_scoring_readiness(fit))
   state <- mfrm_convergence_state(fit)
   record <- mfrmr_get_readiness_record(fit)
   readiness <- as.data.frame(record$fit %||% data.frame(),
@@ -1318,6 +1437,21 @@ prediction_validate_scoring_prior <- function(prior) {
   list(mean = unname(prior$mean), sd = unname(prior$sd))
 }
 
+prediction_validate_interval_record <- function(x) {
+  level <- x$settings$interval_level
+  algorithm <- x$settings$scoring_algorithm
+  valid <- is.numeric(level) && length(level) == 1L && is.finite(level) &&
+    level > 0 && level < 1 && is.character(algorithm) && length(algorithm) == 1L &&
+    algorithm %in% c("quadrature_eap_v2", "adaptive_quadrature_eap_v2") &&
+    is.data.frame(x$estimates) &&
+    all(c("IntervalLevel", "ScoringAlgorithm") %in% names(x$estimates)) &&
+    identical(unname(x$estimates$IntervalLevel), rep(unname(level), nrow(x$estimates))) &&
+    identical(unname(x$estimates$ScoringAlgorithm), rep(unname(algorithm), nrow(x$estimates)))
+  if (!isTRUE(valid))
+    stop("Two-family scoring output has inconsistent interval records. Re-score to change the interval level or algorithm; saved bounds cannot be relabelled.", call. = FALSE)
+  invisible(x)
+}
+
 prediction_estimate_table <- function(x) {
   table <- x$estimates
   if (!is.data.frame(table) || !nrow(table)) return(table)
@@ -1374,7 +1508,9 @@ prediction_output_notes <- function(x) {
     "Posterior SDs and intervals condition on the point calibration and prior; uncertainty from estimating either is excluded.")
   if (identical(x$settings$source_scoring_status, "conditional")) {
     notes <- c(notes,
-      "The calibration passed local solution and integration checks. Scores condition on these estimates; this is not a global-maximum or future-population validation.",
+      if (identical(x$settings$source_scoring_policy_basis, "two_family_conditional_eap_v1")) {
+        "The saved two-family calibration passed identity, convergence and finer-integration checks. Scores condition on these estimates; this is not a global-maximum or future-population validation."
+      } else "The calibration passed local solution and integration checks. Scores condition on these estimates; this is not a global-maximum or future-population validation.",
       x$settings$local_calibration_review$caution %||% character(0))
   }
   if (!is.null(x$settings$score_integration_review) &&
@@ -1451,6 +1587,42 @@ prediction_validate_population_output <- function(x) {
   }
   if (!inherits(x, c("mfrm_unit_prediction", "mfrm_plausible_values",
                       "summary.mfrm_unit_prediction", "summary.mfrm_plausible_values"))) return(invisible(x))
+  product <- identical(x$settings$source_scoring_policy_basis, "two_family_conditional_eap_v1") ||
+    !is.null(x$settings$two_family_calibration)
+  if (product) {
+    prediction_validate_interval_record(x)
+    calibration <- x$settings$two_family_calibration
+    owners <- calibration$slope_facets
+    valid <- identical(x$settings$source_scoring_policy_basis, "two_family_conditional_eap_v1") &&
+      x$settings$source_scoring_status %in% c("conditional", "review_only") &&
+      identical(isTRUE(x$settings$source_scoring_ready),
+        identical(x$settings$source_scoring_status, "conditional")) &&
+      identical(isTRUE(x$settings$source_scoring_ready),
+        isTRUE(x$settings$local_calibration_review$eligible)) &&
+      identical(x$settings$method, "MML") &&
+      identical(x$settings$posterior_basis, "fixed_standard_normal") &&
+      is.null(x$settings$scoring_prior) &&
+      identical(calibration$scale_reference, "fixed_standard_normal") &&
+      is.character(owners) && length(owners) == 2L && !anyNA(owners) && !anyDuplicated(owners) &&
+      identical(calibration$step_facet, owners[2L]) &&
+      identical(names(calibration$levels), owners) &&
+      identical(names(calibration$slope_components), owners) &&
+      all(vapply(calibration$slope_components, function(tab)
+        is.data.frame(tab) && is.numeric(tab$Slope) && length(tab$Slope) > 1L &&
+          all(is.finite(tab$Slope) & tab$Slope > 0), TRUE)) &&
+      is.data.frame(calibration$score_map) &&
+      all(c("OriginalScore", "InternalScore") %in% names(calibration$score_map)) &&
+      identical(calibration$score_map$OriginalScore, calibration$score_map$InternalScore)
+    if (isTRUE(x$settings$source_scoring_ready)) {
+      check <- x$settings$local_calibration_review$integration
+      valid <- valid && is.data.frame(check) && nrow(check) == 1L &&
+        all(c("NLLChangePerPerson", "ComparisonMeanGradient") %in% names(check)) &&
+        all(is.finite(unlist(check))) && check$NLLChangePerPerson >= 0 &&
+        check$NLLChangePerPerson <= 1e-6 && check$ComparisonMeanGradient >= 0 &&
+        check$ComparisonMeanGradient <= 1e-6
+    }
+    if (!isTRUE(valid)) stop("Two-family scoring output has missing or inconsistent calibration records. Re-score from the fitted model before summary or export.", call. = FALSE)
+  }
   supplied <- identical(x$settings$posterior_basis, "user_supplied_normal")
   if (supplied || !is.null(x$settings$scoring_prior) || !is.null(x$settings$prior_comparison) ||
       any(x$estimates[["PriorSource"]] %in% "user_supplied")) {
@@ -1476,7 +1648,22 @@ prediction_validate_population_output <- function(x) {
     if (!isTRUE(valid)) stop("Scoring output has missing or inconsistent retained/scoring prior records. Re-score before summary or export.", call. = FALSE)
   }
   conditional <- identical(x$settings$source_scoring_status, "conditional")
-  if (conditional || supplied) {
+  population <- identical(x$settings$posterior_basis, "population_model") ||
+    identical(x$settings$retained_posterior_basis, "population_model")
+  if (population && !conditional &&
+      (!identical(x$settings$source_scoring_ready, FALSE) ||
+       !identical(x$settings$readiness_policy, "review") ||
+       !identical(x$settings$source_scoring_status, "review_only") ||
+       !all(c("SourceScoringReady", "EstimateUse") %in% names(x$estimates)) ||
+       anyNA(x$estimates$SourceScoringReady) || any(x$estimates$SourceScoringReady) ||
+       anyNA(x$estimates$EstimateUse) ||
+       any(x$estimates$EstimateUse != "review_only_nonready_source"))) {
+    stop("Population-model scoring output requires explicit review-only eligibility. ",
+         "Regenerate it with `readiness_policy = \"review\"` before summary or export.",
+         call. = FALSE)
+  }
+  if (conditional || supplied || product || isTRUE(x$settings$score_integration_required) ||
+      !is.null(x$settings$score_integration_review) || "ScoreIntegrationReady" %in% names(x$estimates)) {
     review <- x$settings$score_integration_review
     valid_review <- is.data.frame(review) && nrow(review) == nrow(x$estimates) &&
       all(c("Person", "Passed", "EAPChange", "SDChange", "ReferenceChange") %in% names(review)) &&
@@ -1489,7 +1676,7 @@ prediction_validate_population_output <- function(x) {
     }
     ready <- isTRUE(x$settings$source_scoring_ready)
     valid <- valid_review &&
-      (!conditional || (x$settings$source_scoring_policy_basis %in% c("conditional_scoring_checks_v3","corrected_jml_reference_eap_v1") &&
+      (!conditional || (x$settings$source_scoring_policy_basis %in% c("conditional_scoring_checks_v3","corrected_jml_reference_eap_v1", "two_family_conditional_eap_v1") &&
         ready && isTRUE(x$settings$local_calibration_review$eligible))) &&
       all(c("SourceScoringReady", "ScoreIntegrationReady", "EstimateUse") %in% names(x$estimates)) &&
       all(!is.na(x$estimates$SourceScoringReady) & x$estimates$SourceScoringReady == ready) &&
@@ -1510,18 +1697,6 @@ prediction_validate_population_output <- function(x) {
     }
     if (!valid) stop("Scoring output has missing or inconsistent numerical review records. Re-score with the fitted model before summary or export.", call. = FALSE)
     return(invisible(x))
-  }
-  if (!identical(x$settings$posterior_basis, "population_model")) return(invisible(x))
-  if (!identical(x$settings$source_scoring_ready, FALSE) ||
-      !identical(x$settings$readiness_policy, "review") ||
-      !identical(x$settings$source_scoring_status, "review_only") ||
-      !all(c("SourceScoringReady", "EstimateUse") %in% names(x$estimates)) ||
-      anyNA(x$estimates$SourceScoringReady) || any(x$estimates$SourceScoringReady) ||
-      anyNA(x$estimates$EstimateUse) ||
-      any(x$estimates$EstimateUse != "review_only_nonready_source")) {
-    stop("Population-model scoring output requires explicit review-only eligibility. ",
-         "Regenerate it with `readiness_policy = \"review\"` before summary or export.",
-         call. = FALSE)
   }
   invisible(x)
 }
@@ -1553,6 +1728,8 @@ prediction_validate_population_output <- function(x) {
 #'   provenance table. For categorical background variables, supply values on
 #'   the same coding scale used at fit time; the fitted factor levels and
 #'   contrasts are reused when building the scoring design matrix.
+#'   Fitted standardization and polynomial/spline bases are also reused;
+#'   they are not re-estimated from the scoring cohort.
 #' @param person_id Optional person-ID column in `person_data`. Defaults to
 #'   `person` when that column exists, otherwise `"Person"` for the canonical
 #'   scoring layout.
@@ -1584,9 +1761,10 @@ prediction_validate_population_output <- function(x) {
 #'   a fixed-prior grid with grids centered and scaled to each Person's
 #'   posterior. Calibration parameters and the prior are held fixed. Inspect
 #'   both fixed/adaptive differences and movement between adaptive orders;
-#'   this diagnostic does not replace estimates, intervals or draws. The
-#'   conditional-scoring route automatically adds reference orders and uses
-#'   them to check numerical score accuracy; see below.
+#'   this diagnostic does not replace estimates, intervals or draws. Every
+#'   scoring call automatically adds reference orders and uses them to check
+#'   numerical score accuracy, including ordinary RSM/PCM with the retained
+#'   prior; see below.
 #' @param scoring_prior Optional `list(mean = ..., sd = ...)` specifying one
 #'   normal scoring prior shared by all scored persons, on the unchanged
 #'   calibration ability scale. `sd` is a standard deviation, not a variance.
@@ -1654,9 +1832,43 @@ prediction_validate_population_output <- function(x) {
 #' scoring for new Persons. Posterior uncertainty conditions on the fitted
 #' calibration; it does not include calibration-parameter uncertainty.
 #'
+#' @section Experimental two-family scoring:
+#' Two-family GPCM MML supports new Persons with known non-Person facet levels,
+#' unit weights and the retained fixed N(0,1) prior. Both slope components,
+#' facet locations and the second owner's category steps remain fixed. New
+#' combinations of known levels are allowed under the fitted product model;
+#' this does not validate those combinations empirically. Repeated Person-facet
+#' combinations are rejected. Missing responses are omitted with a warning and
+#' row review; Persons without valid responses receive no prior-only score.
+#' Unknown levels or scores outside the original category coding are rejected.
+#' Prior overrides and person-level population inputs are not supported.
+#'
+#' The saved specification, point estimates, objective and convergence must
+#' agree before either readiness policy permits scoring. A finer rule (normally
+#' `max(q + 10, 2 * q - 1)`) must change the source negative log likelihood per
+#' Person by at most 1e-6 and have maximum absolute gradient per Person at most
+#' 1e-6 for conditional source scoring. Source-readiness or refinement failures
+#' require explicit `readiness_policy = "review"`; invalid calibration records
+#' or failed convergence cannot be enabled by review. No covariance is required.
+#' Each new batch also receives the EAP/SD integration checks described below.
+#' These tolerances are numerical checks, not statistical validity thresholds.
+#'
+#' EAP, posterior SD and continuous equal-tail intervals condition on the point
+#' calibration and fixed prior, excluding calibration uncertainty. Numerical
+#' checks do not complete the identification/boundary audits or establish
+#' sampling coverage, population transport or decision accuracy. Settings retain
+#' both owners, component slopes, locations, steps, category coding, observed
+#' calibration combinations and separate source/batch checks through saveRDS()
+#' and summary(). [extract_mfrm_calibration()] provides the corresponding
+#' portable format 6 route after passing source checks. Use
+#' `mfrm_results(fit, scores = scores)` to attach matching saved native or
+#' format-6 scores for reports and exports without rescoring. The saved source
+#' identity, calibration and scoring records must agree with the supplied fit;
+#' source/batch checks, omitted rows and review-only labels remain visible.
+#'
 #' @section Conditional scoring and source checks:
 #' A finite calibration can define a person's posterior score without proving
-#' that the calibration is the unique global optimum. For GPCM MML and models
+#' that the calibration is the unique global optimum. For one-family GPCM MML and models
 #' with an estimated intercept-only normal population, this function checks the
 #' current likelihood, gradient and unregularized joint information using the
 #' same local-solution machinery as [compare_mfrm()]. Detected identification
@@ -1673,14 +1885,14 @@ prediction_validate_population_output <- function(x) {
 #' calibration avoids repeating it. No MML integration check or formal slope
 #' interval is inferred from this JML calculation.
 #'
-#' MML calibration checks also compare the retained solution at its fitting order
+#' One-family MML calibration checks also compare the retained solution at its fitting order
 #' and a higher order (normally `2 * q - 1`, at least `q + 10`; `q + 10` is
 #' used if the larger rule is not representable). They require NLL movement
 #' <= 1e-5, gradient movement <= 1e-4 and a higher-order gradient <= 1e-4,
 #' in addition to the existing local-solution criteria. These are numerical
 #' screening tolerances, not statistical coverage or global-existence guarantees.
 #'
-#' After a calibration passes, the actual reported EAP and SD are compared
+#' For every native scoring route, after a calibration passes, the actual reported EAP and SD are compared
 #' with adaptive reference orders under the same calibration and scoring prior.
 #' The reference includes the scoring order (at least 3 for this comparison)
 #' and a higher order chosen by the same rule. EAP/SD discrepancies and changes
@@ -1691,6 +1903,9 @@ prediction_validate_population_output <- function(x) {
 #'
 #' `settings$local_calibration_review` records the source checks and
 #' `settings$score_integration_review` records the per-Person numerical checks.
+#' New outputs set `settings$score_integration_required = TRUE`; their saved
+#' checks must remain with the scores. Older outputs without these checks can
+#' still be summarized, but are not retrospectively numerically qualified.
 #' `SourceScoringReady` concerns the calibration; `ScoreIntegrationReady`
 #' concerns the reported scores. `EstimateUse` identifies any scores requiring
 #' integration review. These records accompany summaries, draws and exports.
@@ -1898,7 +2113,11 @@ predict_mfrm_units <- function(fit,
                                adaptive_quad_points = NULL,
                                scoring_prior = NULL) {
   adjusted <- if (mfrm_has_jml_adjustment(fit)) mfrm_jml_scoring_components(fit) else NULL
-  if (is.null(adjusted)) stop_if_product_slopes(fit, "predict_mfrm_units()") else fit$config <- adjusted$config
+  if (!is.null(adjusted)) fit$config <- adjusted$config
+  product <- mfrm_has_product_slopes(fit)
+  if (product && (!is.null(scoring_prior) || !is.null(person_data) || !is.null(person_id))) {
+    stop("Two-family scoring retains the fitted N(0,1) prior; scoring_prior and person-level population inputs are not supported.", call. = FALSE)
+  }
   scoring_prior <- prediction_validate_scoring_prior(scoring_prior)
   adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
   if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit")) {
@@ -1945,16 +2164,12 @@ predict_mfrm_units <- function(fit,
          call. = FALSE)
   }
 
-  conditional <- identical(source_readiness$status, "conditional")
-  check_scores <- conditional || !is.null(scoring_prior)
-  if (check_scores) {
-    higher <- max(scoring_quad_points + 10L, 2L * scoring_quad_points - 1L)
-    if (inherits(tryCatch(gauss_hermite_normal(higher), error = identity), "error")) {
-      higher <- scoring_quad_points + 10L
-    }
-    adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(
-      unique(c(adaptive_quad_points, max(3L, scoring_quad_points), higher)))
+  higher <- max(scoring_quad_points + 10L, 2L * scoring_quad_points - 1L)
+  if (inherits(tryCatch(gauss_hermite_normal(higher), error = identity), "error")) {
+    higher <- scoring_quad_points + 10L
   }
+  adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(
+    unique(c(adaptive_quad_points, max(3L, scoring_quad_points), higher)))
 
   prepared <- prepare_mfrm_prediction_data(
     fit = fit,
@@ -2000,13 +2215,26 @@ predict_mfrm_units <- function(fit,
   idx <- build_indices(
     prepared$prep,
     step_facet = fit$config$step_facet,
-    slope_facet = fit$config$slope_facet,
+    slope_facet = if (product) NULL else fit$config$slope_facet,
     interaction_specs = fit$config$interaction_specs
   )
   params <- if (is.null(adjusted)) {
     sizes <- build_param_sizes(fit$config)
     expand_params(fit$opt$par, sizes, fit$config)
   } else adjusted$params
+  if (product) {
+    if (any(prepared$prep$data$Weight != 1))
+      stop("Two-family scoring requires unit observation weights.", call. = FALSE)
+    if (anyDuplicated(prepared$prep$data[c("Person", fit$config$slope_facet)]))
+      stop("Repeated person-facet combinations require a separate observation model.", call. = FALSE)
+    # Assemble from the fitted components, including previously unobserved
+    # combinations of known levels. Never index the fitted crossings by batch order.
+    params$slopes <- Reduce(`*`, lapply(fit$config$slope_facet, function(owner)
+      params$slope_components[[owner]]$Slope[idx$facets[[owner]]]))
+    if (any(!is.finite(params$slopes) | params$slopes <= 0))
+      stop("Predicted slope products must be finite and positive.", call. = FALSE)
+    idx$slope_idx <- seq_along(idx$score_k)
+  }
   if (!is.null(adjusted) && any(prepared$prep$data$Weight != 1))
     stop("Corrected-JML scoring requires unit observation weights.",call.=FALSE)
   quad_points <- as.integer(scoring_quad_points)
@@ -2116,6 +2344,7 @@ predict_mfrm_units <- function(fit,
         n_draws = n_draws,
         quad_points = as.integer(quad_points),
         scoring_quad_points = as.integer(quad_points),
+        score_integration_required = TRUE,
         scoring_algorithm = if (mfrmr_adaptive_integration(fit$config)) {
           "adaptive_quadrature_eap_v2"
         } else "quadrature_eap_v2",
@@ -2160,31 +2389,32 @@ predict_mfrm_units <- function(fit,
     ),
     class = "mfrm_unit_prediction"
   )
-  if (!is.null(adaptive_quad_points)) {
-    out$quadrature_review <- mfrmr_adaptive_quadrature_review(
-      idx, fit$config, params, quad, prepared$prep$levels$Person,
-      adaptive_quad_points, population_spec = scoring_population
-    )
-    out$settings$adaptive_quad_points <- adaptive_quad_points
-    out$notes <- c(out$notes, if (check_scores) {
-      "Scoring integration compares the reported EAP and SD with adaptive reference orders under the same calibration and prior. Passing does not validate the scoring prior for another population."
-    } else mfrmr_adaptive_quadrature_note())
-  }
-  if (check_scores) {
-    out$settings$score_integration_review <- prediction_score_integration_review(
-      out$estimates, out$quadrature_review)
-    passed <- out$settings$score_integration_review$Passed
-    out$estimates$ScoreIntegrationReady <- passed
-    if (!all(passed)) {
-      if (identical(readiness_policy, "error")) {
-        stop("Posterior scoring integration did not pass the numerical accuracy check. Increase `scoring_quad_points` or use `readiness_policy = \"review\"` to inspect the flagged scores.", call. = FALSE)
-      }
-      if (isTRUE(source_readiness$ready)) {
-        out$estimates$EstimateUse[!passed] <- "review_only_scoring_integration"
-      }
+  out$quadrature_review <- mfrmr_adaptive_quadrature_review(
+    idx, fit$config, params, quad, prepared$prep$levels$Person,
+    adaptive_quad_points, population_spec = scoring_population
+  )
+  out$settings$adaptive_quad_points <- adaptive_quad_points
+  out$notes <- c(out$notes,
+    "Scoring integration compares the reported EAP and SD with adaptive reference orders under the same calibration and prior. Passing does not validate the scoring prior for another population.")
+  out$settings$score_integration_review <- prediction_score_integration_review(
+    out$estimates, out$quadrature_review)
+  passed <- out$settings$score_integration_review$Passed
+  out$estimates$ScoreIntegrationReady <- passed
+  if (!all(passed)) {
+    if (identical(readiness_policy, "error")) {
+      stop("Posterior scoring integration did not pass the numerical accuracy check. Increase `scoring_quad_points` or use `readiness_policy = \"review\"` to inspect the flagged scores.", call. = FALSE)
+    }
+    if (isTRUE(source_readiness$ready)) {
+      out$estimates$EstimateUse[!passed] <- "review_only_scoring_integration"
     }
   }
   if (!is.null(adjusted)) out$notes <- c(out$notes,mfrm_jml_scoring_note(adjusted$source))
+  if (product) {
+    out$settings$two_family_calibration <- prediction_gmfrm_calibration(fit, params)
+    out$notes <- c(out$notes,
+      "Experimental two-family EAP uses both fitted slope components and the original step coding on the fixed N(0,1) scale. Known levels may form new combinations; their adequacy is a model assumption, not an observed calibration result.",
+      "These conditional scores do not establish global identification, boundary absence, sampling coverage or validity for another population. extract_mfrm_calibration() provides the separately validated portable route.")
+  }
   out$estimates <- prediction_estimate_table(out)
   out$draws <- prediction_draw_table(out$draws, out$estimates)
   out$notes <- prediction_output_notes(out)
@@ -2284,6 +2514,8 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #'   provenance table. For categorical background variables, supply values on
 #'   the same coding scale used at fit time; the fitted factor levels and
 #'   contrasts are reused when building the scoring design matrix.
+#'   Fitted standardization and polynomial/spline bases are also reused;
+#'   they are not re-estimated from the scoring cohort.
 #' @param person_id Optional person-ID column in `person_data`.
 #' @param population_policy How missing background data are handled when
 #'   `fit` uses the latent-regression branch. `"error"` (default) requires
