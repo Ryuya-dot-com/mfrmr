@@ -82,8 +82,10 @@ multi-step analyses to README/vignettes or non-CRAN tests.
   `R-CMD-check`; only Ubuntu release then uses `NOT_CRAN=true`. Record the
   reason and source revision for a full run. Historical full-suite evidence
   remains tied to its original source and must not be relabelled as a new run.
-  The full Ubuntu job allows 180 minutes for executed articles and exhaustive
-  tests; representative jobs retain a 60-minute limit.
+  Package checks have no repository-defined time limit; GitHub-hosted runner
+  limits still apply. If an external limit interrupts a run, preserve completed
+  results and rerun only unfinished phases against the same source archive.
+  Do not restart successful numerical tests merely to change a timeout setting.
 - Source-tree-only historical and research validation tests are excluded from
   the package. Run them only for the affected area, with their recorded source
   version and optional runtime.
