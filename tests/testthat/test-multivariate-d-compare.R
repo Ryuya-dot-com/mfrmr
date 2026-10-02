@@ -184,3 +184,30 @@ test_that("comparison plots retain interval endpoints and reject generic convers
     expect_error(as_ggplot(plot(result, draw = FALSE)), "plot_data")
   }
 })
+
+test_that("comparison plots draw and replay on a standard landscape device", {
+  g <- mfrm_multivariate_gstudy(mvdc_fixture(), c("Content", "Organization"))
+  d <- mfrm_multivariate_d_study(g,
+    data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)),
+    weights = c(Content = .5, Organization = .5))
+  result <- mfrm_multivariate_d_compare(d, assumption = "normal")
+  on_device <- function(width, height, code) {
+    path <- tempfile(fileext = ".pdf")
+    grDevices::pdf(path, width = width, height = height)
+    on.exit({ grDevices::dev.off(); unlink(path) }, add = TRUE)
+    grDevices::dev.control(displaylist = "enable")
+    force(code)
+  }
+  for (view in c("plans", "differences")) for (type in c("coefficients", "sem")) {
+    recorded <- on_device(7, 7, {
+      old <- graphics::par(c("mfrow", "mar", "oma", "cex", "mex"))
+      plot(result, view = view, type = type)
+      expect_identical(graphics::par(names(old)), old)
+      grDevices::recordPlot()
+    })
+    on_device(700 / 96, 433 / 96, {
+      expect_silent(grDevices::replayPlot(recorded))
+      expect_silent(plot(result, view = view, type = type))
+    })
+  }
+})

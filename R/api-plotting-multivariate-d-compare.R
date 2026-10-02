@@ -98,7 +98,9 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
   note_lines <- strwrap(note, 95)
   labels <- if (type == "coefficients") c("G: relative ordering", "Phi: absolute score levels") else
     c("Relative SEM: ordering", "Absolute SEM: score levels")
-  graphics::par(mfrow = c(2, 1), mar = if (view == "plans") c(6, 5, 2.5, 1) else c(5, 12, 2.5, 1),
+  # Keep margin line spacing compact so recorded panels also fit landscape devices.
+  graphics::par(mfrow = c(2, 1), mex = .65,
+    mar = if (view == "plans") c(6, 5, 2.5, 1) else c(5, 12, 2.5, 1),
     oma = c(length(note_lines) + 1, 0, length(title_lines) + length(subtitle_lines) + 1, 0))
   for (j in seq_along(metrics)) {
     if (view == "plans") {

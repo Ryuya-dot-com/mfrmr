@@ -1,5 +1,10 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Multivariate D-study comparison plots now fit standard landscape graphics
+  devices, including recorded-plot replay during documentation-site builds.
+  More compact margin spacing preserves both panels, labels, reference points
+  and intervals without changing the plotted values.
+
 * Saved two-family GPCM results now load their required sparse-matrix methods
   when the package is attached in a fresh R session. Reports and score exports
   no longer depend on Matrix having been loaded by an earlier fit or another
