@@ -216,7 +216,7 @@ test_that("pathway and CCC disclose the same reference profile in data and drawi
     p <- .mfrmr_muffle_expected_warnings(plot(fit, type = type), "^Review-only display:")
     expect_identical(p$data$curve_basis, expected_basis)
     expect_match(paste(labels, collapse = " "),
-      "additive facet main effects and fitted interactions are fixed at zero", fixed = TRUE)
+      "additive effects and interactions fixed at zero", fixed = TRUE)
     expect_true(all(p$data$curve_basis$PredictorOffset == 0))
   }
 })

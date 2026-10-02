@@ -93,6 +93,7 @@ test_that("original scores, eleven categories and GPCM slopes survive comparison
   a$steps <- data.frame(Step = paste0("Step_", 1:10), Estimate = seq(-2, 2, length.out = 10))
   b <- a
   b$config$model <- "GPCM"; b$config$step_facet <- "Criterion"
+  b$config$slope_facet <- "Criterion"
   b$prep$levels$Criterion <- "C1"
   b$steps$StepFacet <- "C1"
   b$slopes <- data.frame(SlopeFacet = "C1", Estimate = 1.4)

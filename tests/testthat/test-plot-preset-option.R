@@ -10,12 +10,16 @@ test_that("all direct common-preset entries consult the option only when omitted
   expect_length(entries, 42)
   withr::local_options(mfrmr.plot_preset = "not-a-preset")
   for (name in entries) {
-    # Required data arguments remain missing: the option check must precede
-    # their processing, and an explicit preset must bypass the bad option.
-    expect_error(do.call(get(name, ns), list()), "Option `mfrmr.plot_preset`", info = name)
-    error <- tryCatch(do.call(get(name, ns), list(preset = "standard")), error = identity)
-    expect_true(inherits(error, "error"), info = name)
-    expect_false(grepl("mfrmr.plot_preset", conditionMessage(error), fixed = TRUE), info = name)
+    # NULL data allow model-routing guards to inspect the argument. This
+    # checks preset handling independently of missing-argument error order.
+    fun <- get(name, ns)
+    required <- names(formals(fun))[vapply(formals(fun), identical, logical(1), quote(expr = ))]
+    required <- setdiff(required, "...")
+    args <- setNames(rep(list(NULL), length(required)), required)
+    expect_error(do.call(fun, args), "Option `mfrmr.plot_preset`", info = name)
+    error <- tryCatch(do.call(fun, list(preset = "standard")), error = identity)
+    expect_false(inherits(error, "error") &&
+      grepl("mfrmr.plot_preset", conditionMessage(error), fixed = TRUE), info = name)
   }
   for (bad in list(NA_character_, character(), c("standard", "monochrome"), 1, "pub")) {
     options(mfrmr.plot_preset = bad)

@@ -346,8 +346,14 @@ mfrm_gmfrm_fit_result <- function(problem, result) {
   }
   quad <- problem$specification$quadrature
   expected_quad <- gauss_hermite_normal(length(quad$nodes))
-  if (!isTRUE(all.equal(quad$nodes, expected_quad$nodes, tolerance = 0)) ||
-      !isTRUE(all.equal(quad$weights, expected_quad$weights, tolerance = 0))) {
+  # Eigensolver roundoff differs across platforms. Compare nodes at their
+  # own scale and weights relatively, including the tiny tail weights. Keep
+  # the supplied rule for every likelihood, score and retained result below.
+  if (length(quad$weights) != length(expected_quad$weights) ||
+      is.complex(quad$nodes) || is.complex(quad$weights) ||
+      !isTRUE(all(abs(quad$nodes - expected_quad$nodes) <=
+                  1e-12 * pmax(1, abs(expected_quad$nodes)))) ||
+      !isTRUE(all(abs(quad$weights / expected_quad$weights - 1) <= 1e-10))) {
     stop("The shared fit result currently requires standard-normal Gauss-Hermite quadrature.", call. = FALSE)
   }
   common <- problem$common

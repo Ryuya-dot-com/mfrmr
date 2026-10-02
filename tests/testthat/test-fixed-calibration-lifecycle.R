@@ -472,7 +472,9 @@ test_that("portable scoring grid is independent of a one-point source fit grid",
 test_that("high scoring orders survive the full calibration lifecycle", {
   fixture <- fixed_calibration_fit_fixture("RSM")
   rows <- fixed_calibration_scoring_rows(fixture$data)
-  for (n in c(61L, 121L, 181L)) {
+  expect_error(predict_mfrm_units(fixture$fit, rows, scoring_quad_points = 61L),
+               "Posterior scoring integration did not pass")
+  for (n in c(121L, 181L, 241L)) {
     draft <- mfrmr:::mfrmr_extract_calibration_draft(
       fixture$fit, scoring_quad_points = n
     )
@@ -486,6 +488,7 @@ test_that("high scoring orders survive the full calibration lifecycle", {
     )
     portable <- mfrmr:::mfrmr_score_calibration(frozen, rows)
     fitted <- predict_mfrm_units(fixture$fit, rows, scoring_quad_points = n)
+    expect_true(all(fitted$estimates$ScoreIntegrationReady))
     expect_equal(portable$estimates$Person, fitted$estimates$Person)
     expect_equal(portable$estimates$Estimate, unname(fitted$estimates$Estimate),
                  tolerance = 1e-12)
@@ -599,7 +602,10 @@ test_that("fixed-calibration implementation helpers remain unexported", {
 
 test_that("artifact coordinates independently reproduce RSM and PCM fit scoring", {
   for (model in c("RSM", "PCM")) {
-    fixture <- fixed_calibration_frozen_fixture(model)
+    fixture <- fixed_calibration_fit_fixture(model)
+    fixture$frozen <- freeze_mfrm_calibration(validate_mfrm_calibration(
+      mfrmr:::mfrmr_extract_calibration_draft(fixture$fit, scoring_quad_points = 121L)
+    ))
     rows <- fixed_calibration_scoring_rows(fixture$data)
     rows$Weight <- rep(c(0.5, 1, 2), length.out = nrow(rows))
 
@@ -607,8 +613,10 @@ test_that("artifact coordinates independently reproduce RSM and PCM fit scoring"
       fixture$frozen, rows, weight = "Weight", interval_level = 0.90
     )
     fit_score <- predict_mfrm_units(
-      fixture$fit, rows, weight = "Weight", interval_level = 0.90
+      fixture$fit, rows, weight = "Weight", interval_level = 0.90,
+      scoring_quad_points = 121L
     )
+    expect_true(all(fit_score$estimates$ScoreIntegrationReady))
     artifact_estimates <- artifact_score$estimates[
       order(artifact_score$estimates$Person), , drop = FALSE
     ]
@@ -709,7 +717,8 @@ test_that("an independent direct oracle reproduces one-row RSM scoring", {
 test_that("interaction artifacts score from their complete stored cell matrix", {
   fixture <- fixed_calibration_interaction_fixture()
   validated <- mfrmr:::mfrmr_validate_calibration_draft(
-    fixture$draft, validated_at_utc = "2026-08-22T00:01:00Z"
+    mfrmr:::mfrmr_extract_calibration_draft(fixture$fit, scoring_quad_points = 181L),
+    validated_at_utc = "2026-08-22T00:01:00Z"
   )
   frozen <- mfrmr:::mfrmr_freeze_calibration(
     validated, frozen_at_utc = "2026-08-22T00:02:00Z"
@@ -726,7 +735,8 @@ test_that("interaction artifacts score from their complete stored cell matrix", 
   rownames(rows) <- NULL
 
   artifact_score <- mfrmr:::mfrmr_score_calibration(frozen, rows)
-  fit_score <- predict_mfrm_units(fixture$fit, rows)
+  fit_score <- predict_mfrm_units(fixture$fit, rows, scoring_quad_points = 181L)
+  expect_true(all(fit_score$estimates$ScoreIntegrationReady))
   artifact_estimates <- artifact_score$estimates[
     order(artifact_score$estimates$Person), , drop = FALSE
   ]
@@ -747,7 +757,8 @@ test_that("public RSM and PCM interaction calibrations retain reviewed fit scori
       fixture$fit, fixture$data, quad_points = c(5L, 7L), theta_points = 41L
     ))
     fit <- review$fits$q7
-    draft <- extract_mfrm_calibration(fit, quadrature_review = review)
+    draft <- extract_mfrm_calibration(fit, quadrature_review = review,
+                                     scoring_quad_points = 241L)
     artifact <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
     path <- tempfile(fileext = ".rds")
     save_mfrm_calibration(artifact, path)
@@ -758,12 +769,13 @@ test_that("public RSM and PCM interaction calibrations retain reviewed fit scori
     rows <- fixture$data[fixture$data$Person %in% persons, , drop = FALSE]
     rows$Person <- paste0("NEW", match(rows$Person, persons))
     score <- score_mfrm_calibration(restored, rows)
-    fitted <- predict_mfrm_units(fit, rows)
+    fitted <- predict_mfrm_units(fit, rows, scoring_quad_points = 241L)
+    expect_true(all(fitted$estimates$ScoreIntegrationReady))
     fields <- c("Person", "Estimate", "SD", "Lower", "Upper")
     expect_equal(score$estimates[fields], as.data.frame(fitted$estimates)[fields],
                  tolerance = 1e-12)
     expect_identical(nrow(restored$model$interactions), 1L)
-    expect_identical(restored$scoring_basis$quadrature_order, 31L)
+    expect_identical(restored$scoring_basis$quadrature_order, 241L)
     expect_identical(as.integer(fit$config$estimation_control$quad_points), 7L)
   }
 })

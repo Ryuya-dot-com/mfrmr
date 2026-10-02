@@ -90,6 +90,35 @@ test_that("EM M-step refinement meets the requested score while retaining ascent
   expect_gte(min(diff(rejected$trace$logLik)),-1e-10)
 })
 
+test_that("two-family result assembly preserves normal rules across eigensolver roundoff", {
+  fit <- gmfrm_profile_fixture()$fit
+  rule <- gauss_hermite_normal
+  alternative <- new.env(parent = environment(rule))
+  alternative$eigen <- function(x, symmetric, only.values)
+    base::eigen(x, symmetric = symmetric, only.values = FALSE)
+  environment(rule) <- alternative
+  spec <- fit$gmfrm$specification
+  spec$quadrature <- rule(length(spec$quadrature$nodes))
+  problem <- do.call(mfrm_gmfrm_problem, spec)
+  result <- mfrm_gmfrm_em(problem, start = fit$opt$par, maxit = 1L, score_tol = 1e-7)
+  expect_true(result$converged)
+  native <- mfrm_gmfrm_fit_result(problem, result)
+  expect_identical(native$config$estimation_control$quadrature, spec$quadrature)
+  expect_identical(native$opt$par, result$par)
+  # Substantive changes remain invalid, including changes to tiny tail weights.
+  for (field in c("nodes", "weights")) {
+    changed <- problem
+    if (field == "nodes") changed$specification$quadrature$nodes[1] <-
+      changed$specification$quadrature$nodes[1] + 1e-4 else
+        changed$specification$quadrature$weights[1] <-
+          changed$specification$quadrature$weights[1] * 1.001
+    changed_result <- result
+    changed_result$specification <- changed$specification
+    expect_error(mfrm_gmfrm_fit_result(changed, changed_result),
+                 "requires standard-normal Gauss-Hermite")
+  }
+})
+
 test_that("neutral two-family profile starts do not escape under total-likelihood scaling", {
   x <- readRDS(test_path("fixtures", "gmfrm-numerical-repair.rds"))
   fit <- x$profile; spec <- fit$gmfrm$specification
@@ -192,6 +221,15 @@ test_that("two-family profile targets need unambiguous owner and level identitie
   expect_error(confint(fit, method = "sandwich"), "Two-family intervals currently require")
   failed <- fit; failed$summary$Converged <- FALSE
   expect_error(confint(failed, method = "profile", slope = c(Task = "t3")), "per-Person")
+  # Cached QR factors are numerical workspace, not part of model identity.
+  uncached <- failed
+  uncached$config$gpcm_spec$log_slope_design@factors <- list()
+  expect_error(confint(uncached, method = "profile", slope = c(Task = "t3")), "per-Person")
+  changed <- uncached
+  changed$config$gpcm_spec$log_slope_design@x[1] <-
+    changed$config$gpcm_spec$log_slope_design@x[1] + .01
+  expect_error(confint(changed, method = "profile", slope = c(Task = "t3")),
+               "product specification must match")
   # Reuse completed searches; this tests dispatch, checks and result identity,
   # not another costly calculation of the same endpoints.
   local_mocked_bindings(mfrm_gpcm_profile_search = function(evaluator, reference, start, contrast, ...) {

@@ -126,7 +126,7 @@ test_that("two-family adaptive review retains model identity and diagnostic-only
   expect_gt(max(abs(q$LogMarginalChange[q$FixedNodes==5L])),1e-3)
   # Replaying summaries never performs inference or changes the calibration.
   expect_identical(review$fits$q5,x$fit)
-  expect_error(predict_mfrm_units(x$fit,x$data),"two slope families")
+  expect_error(predict_mfrm_units(x$fit,x$data),"source calibration did not pass")
 })
 
 # Independent literal probability equation and continuous posterior integrals.

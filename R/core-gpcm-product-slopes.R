@@ -217,10 +217,18 @@ mfrm_gpcm_product_inference <- function(fit) {
   specification <- fit$gmfrm$specification
   reference <- tryCatch(do.call(mfrm_gmfrm_common_setup,
     specification[setdiff(names(specification),"quadrature")]), error=function(e) NULL)
+  without_factor_cache <- function(spec) {
+    # Sparse QR factors can differ across Matrix/SuiteSparse builds. The
+    # design entries and all model metadata still require exact agreement.
+    if (inherits(spec$log_slope_design, "dgCMatrix"))
+      spec$log_slope_design@factors <- list()
+    spec
+  }
   if (!record("Model identity", !is.null(reference) &&
       identical(lapply(reference$prep$data, identity),lapply(fit$prep$data, identity)) &&
       identical(reference$config$facet_specs,config$facet_specs) &&
-      identical(reference$config$gpcm_spec,config$gpcm_spec) &&
+      identical(without_factor_cache(reference$config$gpcm_spec),
+                without_factor_cache(config$gpcm_spec)) &&
       identical(reference$config$facet_signs,config$facet_signs) &&
       identical(reference$config$interaction_specs,config$interaction_specs) &&
       identical(reference$config$n_cat,config$n_cat),
