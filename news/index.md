@@ -2,6 +2,15 @@
 
 ## mfrmr 0.2.4.9000 (development version)
 
+- Two-family GPCM interval checks now ignore cached sparse QR factors
+  when comparing the saved model with its reconstruction. Clearing or
+  changing that numerical cache no longer invalidates an unchanged
+  model; design entries, constraints and model metadata still require
+  exact agreement. EM result assembly also permits eigensolver roundoff
+  in a saved normal quadrature rule, with a relative check on every
+  weight including the tails. The supplied nodes and weights, likelihood
+  and score checks are preserved.
+
 - Multivariate D-study comparison plots now fit standard landscape
   graphics devices, including recorded-plot replay during
   documentation-site builds. More compact margin spacing preserves both
