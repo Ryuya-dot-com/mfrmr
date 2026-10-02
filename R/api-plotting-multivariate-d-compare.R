@@ -100,8 +100,8 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
     c("Relative SEM: ordering", "Absolute SEM: score levels")
   # Keep margin line spacing compact so recorded panels also fit landscape devices.
   graphics::par(mfrow = c(2, 1), mex = .65,
-    mar = if (view == "plans") c(6, 5, 2.5, 1) else c(5, 12, 2.5, 1),
-    oma = c(length(note_lines) + 1, 0, length(title_lines) + length(subtitle_lines) + 1, 0))
+    mar = if (view == "plans") c(6, 6, 2.5, 1) else c(5, 12, 2.5, 1),
+    oma = c(length(note_lines) + 1, 0, length(title_lines) + length(subtitle_lines) + 1.5, 0))
   for (j in seq_along(metrics)) {
     if (view == "plans") {
       tab <- series[series$Metric == metrics[j], , drop = FALSE]
@@ -112,7 +112,9 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
         paste(paste(names(x$design_grid), unlist(x$design_grid[i, ]), sep = " = "), collapse = "\n"), character(1))
       axis_labels[x$reference] <- paste0(axis_labels[x$reference], "\n(reference)")
       graphics::plot(tab$Scenario, tab$Value, type = "n", ylim = limits, xaxt = "n", yaxt = "n",
-        xlab = "", ylab = if (type == "coefficients") "Dependability" else "SEM (score units)", main = labels[j])
+        xlab = "", ylab = "", main = labels[j])
+      graphics::mtext(if (type == "coefficients") "Dependability" else "SEM (score units)",
+        side = 2, line = 4.2)
       graphics::axis(1, at = tab$Scenario, labels = axis_labels, cex.axis = .75, padj = 1)
       if (type == "coefficients") graphics::axis(2, at = seq(0, 1, .25), las = 1) else graphics::axis(2, las = 1)
       graphics::grid(nx = NA, ny = NULL, col = style$grid)
