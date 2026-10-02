@@ -40,7 +40,7 @@ jobs:
     name: ${{ inputs.os }} (${{ inputs.r }})
     # Full runs execute the articles during both build and check, in addition
     # to the exhaustive tests; the representative jobs retain their usual cap.
-    timeout-minutes: ${{ inputs.full && 120 || 60 }}
+    timeout-minutes: ${{ inputs.full && 180 || 60 }}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
