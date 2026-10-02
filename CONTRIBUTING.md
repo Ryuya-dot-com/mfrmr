@@ -94,7 +94,9 @@ non-CRAN tests.
   when manually running `R-CMD-check`; only Ubuntu release then uses
   `NOT_CRAN=true`. Record the reason and source revision for a full run.
   Historical full-suite evidence remains tied to its original source and
-  must not be relabelled as a new run.
+  must not be relabelled as a new run. The full Ubuntu job allows 120
+  minutes for executed articles and exhaustive tests; representative
+  jobs retain a 60-minute limit.
 - Source-tree-only historical and research validation tests are excluded
   from the package. Run them only for the affected area, with their
   recorded source version and optional runtime.

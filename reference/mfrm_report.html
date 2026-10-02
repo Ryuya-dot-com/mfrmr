@@ -76,7 +76,7 @@ record into interpretation, formal-inference, reason, and next-action text."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build report-ready output from <code>mfrm_results()</code></h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/0c8198db6cb6f5c8d963001720e3abaf9b9a061e/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/b682048427e2c6eeec7c8cd0ada25dc7247a99f6/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>mfrm_report.Rd</code></div>
     </div>
 
@@ -499,7 +499,7 @@ with other report styles, even when explicitly supplied as <code>NULL</code>.</p
 <span class="r-in"><span><span class="va">sheet</span> <span class="op">&lt;-</span> <span class="fu">mfrm_report</span><span class="op">(</span><span class="va">res</span>, style <span class="op">=</span> <span class="st">"rater"</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>,</span></span>
 <span class="r-in"><span>                     rater <span class="op">=</span> <span class="va">recipient</span>, output <span class="op">=</span> <span class="st">"html"</span>, max_cases <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sheet</span><span class="op">$</span><span class="va">path</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp0zMWEq/mfrmr_rater_1b707337b918.html"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpLE6R8y/mfrmr_rater_1b3437179120.html"</span>
 <span class="r-in"><span><span class="co"># Review in a browser, then choose a permanent path for continuing work.</span></span></span>
 <span class="r-in"><span><span class="va">recipient_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".html"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.copy</a></span><span class="op">(</span><span class="va">sheet</span><span class="op">$</span><span class="va">path</span>, <span class="va">recipient_file</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></span>
