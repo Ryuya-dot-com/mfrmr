@@ -105,6 +105,8 @@ Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
 generalizability for scores and profiles}. Wiley.
 
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
+\doi{10.1007/978-1-4757-3456-0}. This framework does not recover the
+interaction components omitted by the source main-effects model.
 }
 \seealso{
 \code{\link[=plot.mfrm_d_study]{plot.mfrm_d_study()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}},

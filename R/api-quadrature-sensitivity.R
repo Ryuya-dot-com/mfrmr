@@ -112,6 +112,14 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
   if (mfrm_has_product_slopes(fit)) {
     if (mfrmr_adaptive_integration(fit$config)) {
       policy <- fit$config$estimation_control$gpcm_mml_start %||% "neutral"
+      if (identical(policy, "explicit")) {
+        record <- fit$opt$mml_initialization
+        starts <- lapply(record$attempts, `[[`, "start")
+        mfrmr_gqs_assert(identical(record$policy, "explicit") && length(starts) >= 2L &&
+          identical(names(starts), record$table$Start) && identical(replay$gpcm_mml_start, starts),
+          "The saved explicit initialization vectors and replay settings must agree.")
+        policy <- starts
+      }
       mfrmr_gqs_assert(is.null(replay$gpcm_mml_start) || identical(replay$gpcm_mml_start, policy),
         "The saved adaptive initialization and replay settings must agree.")
       replay$gpcm_mml_start <- policy
@@ -147,6 +155,7 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
     ),
     anchors = replay$anchors,
     group_anchors = replay$group_anchors,
+    centering_scope = config$centering_scope %||% "remainder",
     noncenter_facet = as.character(
       replay$noncenter_facet %||% "Person"
     ),

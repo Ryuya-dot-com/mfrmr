@@ -26,7 +26,8 @@ run_mfrm_facets(
   optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L,
-  mml_integration = c("fixed", "adaptive")
+  mml_integration = c("fixed", "adaptive"),
+  centering_scope = c("facet", "remainder")
 )
 
 mfrmRFacets(
@@ -49,7 +50,8 @@ mfrmRFacets(
   reltol = 1e-09,
   mml_engine = c("direct", "em", "hybrid"),
   top_n_interactions = 20L,
-  mml_integration = c("fixed", "adaptive")
+  mml_integration = c("fixed", "adaptive"),
+  centering_scope = c("facet", "remainder")
 )
 }
 \arguments{
@@ -101,6 +103,9 @@ only when \code{method = "MML"}.}
 \item{mml_integration}{MML integration mode passed to \code{\link[=fit_mfrm]{fit_mfrm()}}:
 \code{"fixed"} (default) or \code{"adaptive"}. Adaptive integration requires the
 direct MML engine.}
+
+\item{centering_scope}{Whole-facet (default) or legacy remainder centering;
+passed to \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 }
 \value{
 A list with components:
@@ -149,7 +154,7 @@ structure is needed.
 \itemize{
 \item \code{plot(out, type = "fit")} delegates to \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} and returns
 fit-level visual bundles (e.g., Wright/pathway/CCC).
-\item \code{plot(out, type = "qc")} delegates to \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} and returns
+\item \code{plot(out, type = "qc")} delegates to \link[=plot.mfrm_fit]{plot(x, type = "qc")} and returns
 a QC dashboard plot object.
 }
 }

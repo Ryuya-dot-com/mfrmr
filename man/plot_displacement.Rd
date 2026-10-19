@@ -112,6 +112,12 @@ For a plot-selection guide and a longer walkthrough, see
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -147,21 +153,17 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_displacement(fit, anchored_only = FALSE, draw = FALSE)
+p <- plot(fit, type = "displacement", anchored_only = FALSE, draw = FALSE)
 if (interactive()) {
-  plot_displacement(
-    fit,
-    anchored_only = FALSE,
-    plot_type = "lollipop",
-    preset = "publication"
-  )
+  plot(fit, type = "displacement", anchored_only = FALSE, view = "lollipop", preset = "publication")
 }
 }
 }
 \seealso{
-\code{\link[=displacement_table]{displacement_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}},
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=displacement_table]{displacement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "fair_average")},
+\link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link{mfrmr_visual_diagnostics}
 }
 \concept{confidence intervals}
 \concept{displacement}
 \concept{visual diagnostics}
+\keyword{internal}

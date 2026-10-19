@@ -83,8 +83,8 @@ than silently reusing the Rasch-only compatibility calculation.
 
 This function draws a fixed 3\eqn{\times}3 panel grid (no \code{plot_type}
 argument).  For individual panel control, use the dedicated helpers:
-\code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
+\link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},
+\link[=plot.mfrm_fit]{plot(x, type = "agreement")}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")}.
 }
 
 \section{Interpreting output}{
@@ -106,17 +106,23 @@ current SE approximation.
 }
 
 Treat this dashboard as a screening layer; follow up with dedicated helpers
-(\code{plot_unexpected()}, \code{plot_displacement()}, \code{plot_interrater_agreement()},
-\code{plot_facets_chisq()}) for detailed diagnosis.
+(\code{plot()}, \code{plot()}, \code{plot()},
+\code{plot()}) for detailed diagnosis.
 }
 
 \section{Typical workflow}{
 
 \enumerate{
 \item Fit and diagnose model.
-\item Run \code{plot_qc_dashboard()} for one-page triage.
+\item Run \code{plot()} for one-page triage.
 \item Drill into flagged panels using dedicated functions.
 }
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -174,13 +180,14 @@ review <- summary(diagnostics)
 review$decision
 
 # Draw the dashboard and save its data
-qc <- plot_qc_dashboard(fit, diagnostics = diagnostics)
+qc <- plot(fit, type = "qc", diagnostics = diagnostics)
 
 # Inspect the counts behind the category panel
 qc$data$category_stats[, c("Category", "Count", "ExpectedCount")]
-# Use focused plots such as plot_marginal_fit(diagnostics) to investigate a panel
+# Use focused plots such as plot(diagnostics, type = "marginal_fit") to investigate a panel
 }
 }
 \seealso{
-\code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}
+\link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")}, \link[=plot.mfrm_fit]{plot(x, type = "agreement")}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}
 }
+\keyword{internal}

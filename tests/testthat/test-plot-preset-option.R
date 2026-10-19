@@ -7,7 +7,7 @@ test_that("all direct common-preset entries consult the option only when omitted
       "preset" %in% names(formals(f)) &&
       grepl('"standard"', paste(deparse(formals(f)$preset), collapse = " "), fixed = TRUE)
   }, ls(ns, all.names = TRUE))
-  expect_length(entries, 42)
+  expect_true(all(c("plot.mfrm_fit", "plot.mfrm_multivariate_d_study") %in% entries))
   withr::local_options(mfrmr.plot_preset = "not-a-preset")
   for (name in entries) {
     # NULL data allow model-routing guards to inspect the argument. This

@@ -18,7 +18,7 @@ mfrm_multivariate_gstudy(
   nesting = NULL
 )
 
-\method{print}{mfrm_multivariate_gstudy}(x, ...)
+\method{print}{mfrm_multivariate_gstudy}(x, digits = NULL, row.names = FALSE, ...)
 
 \method{summary}{mfrm_multivariate_gstudy}(object, ...)
 }
@@ -69,7 +69,13 @@ specifies crossed facets. See "Nested measurement facets" below.}
 
 \item{x, object}{A result from the corresponding G-study or D-study function.}
 
-\item{...}{Reserved for method compatibility.}
+\item{digits}{Display precision passed to the printed tables; \code{NULL} uses
+R's current setting. Stored estimates are unchanged.}
+
+\item{row.names}{Logical; print table row names? Defaults to \code{FALSE}.}
+
+\item{...}{Further table-printing arguments for \code{print()}; unused arguments
+to \code{summary()} are rejected.}
 }
 \value{
 An \code{mfrm_multivariate_gstudy} list with \code{components} (three, five, or seven
@@ -83,6 +89,9 @@ diagnostics), \code{design} (\code{facets} maps facet labels to input columns an
 score convention, \code{nesting}, \code{child_counts}, completeness, balance,
 potential cells and observed cell fraction), and \code{data}
 (the retained selected input columns).
+\code{print()} displays the design and diagnostics and returns the same object
+invisibly. \code{summary()} returns the component-diagnostics data frame;
+use \verb{$components} for the estimated covariance matrices.
 }
 \description{
 Investigate how observed assessment scores vary across people, raters and
@@ -137,6 +146,10 @@ rating per cell, Person-by-Task and residual variation cannot be separated
 in the seven-component model. Other overlaps are still needed for the
 remaining components. Uneven workloads across raters can also affect
 precision even when the moment system has full rank.
+\code{\link[=vcov.mfrm_multivariate_gstudy]{vcov.mfrm_multivariate_gstudy()}} supplies normal-model sampling
+covariance and SEs for the original component estimates, including
+incomplete sources. Inspect its separate negative/nonidentifiable
+sampling-variance diagnostics; it does not provide normal-reference intervals.
 
 Conditioning on the observed assignments must preserve the stated
 random-effect means and covariances. Outcome-dependent assignment or
@@ -190,6 +203,41 @@ for incomplete designs. These checks do not establish population recovery
 for arbitrary sparse assignments or missingness mechanisms. This function
 returns point estimates, not sampling intervals.
 }
+\section{Component uncertainty versus measurement error}{
+
+For a balanced ANOVA result, \code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}} adds
+sampling SEs and pointwise intervals for variance components of one score
+or a prespecified weighted composite, under an explicit normal-effects
+assumption. \code{plot(g, intervals = TRUE, assumption = "normal")} adds
+these intervals to a component plot; its returned data retain SEs,
+raw endpoints and reasons for unavailable intervals.
+For balanced or identifiable incomplete sources, explicit
+\code{method = "reml_profile"} supplies approximate variance or two-score covariance intervals
+from a separate normal REML model. Original estimates remain unchanged,
+with the REML estimate in \code{IntervalCenter}. It does not supply a component
+sampling SE, and numerical availability is not a coverage guarantee.
+For between-score covariance, pass exactly two score names to \code{confint()}
+and explicitly select \code{method = "gci"} or \code{"regression_region"} for balanced ANOVA,
+or experimental \code{"reml_profile"} for the joint normal model.
+These retain signed bounds and distinguish approximate generalized coverage
+from conservative normal-model enclosures. \code{plot(g, type = "covariance", score = c("V", "W"), intervals = TRUE, method = "gci", assumption = "normal")} shows their intervals across sources.
+Explicit \code{method = "residual_contrast"} also accepts retained ANOVA/MINQUE
+ratings, but supplies only Residual intervals: exact normal-model
+chi-square for variance, or a conservative covariance enclosure. It
+removes all nonresidual incidence columns, requires residual degrees of
+freedom, retains original points and reports a separate \code{IntervalCenter}.
+It does not supply the original component estimator's SE or intervals
+for G/Phi or other sources. See \code{\link[=confint.mfrm_multivariate_gstudy]{confint.mfrm_multivariate_gstudy()}}.
+\code{score_scale} contains observed score SDs used for
+numerical diagnostics; these are not component SEs. Neither matrix rank
+nor a nonnegative estimate establishes that a component is precisely known.
+A D-study's SEM instead describes projected measurement error in score
+units. The separate \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} provides approximate
+intervals for \strong{plan differences} in its supported two-facet crossed
+scope; these are not component intervals or marginal intervals for each
+plan's coefficient. See \link{mfrmr_methods_reference} for the target map.
+}
+
 \section{Fixed tasks as score components}{
 
 To plan ratings of the same fixed interview, presentation and discussion,
@@ -298,20 +346,13 @@ d_sparse <- mfrm_multivariate_d_study(g_sparse,
   data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 d_sparse$coefficients # Read metric status and ComponentPSD separately.
 
-# Fictional continuous scores, with two correlated score components.
-set.seed(2026)
-# Here occasions are exchangeable repeat assessments, without a time trend.
-ratings <- expand.grid(Person = 1:40, Assessor = 1:8, Session = 1:6)
-ratings$Content <- ratings$Organization <- 0
-sources <- list("Person", "Assessor", "Session", c("Person", "Assessor"),
-  c("Person", "Session"), c("Assessor", "Session"), c("Person", "Assessor", "Session"))
-for (source in sources) {
-  group <- interaction(ratings[source], drop = TRUE)
-  effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
-  effect <- effect \%*\% matrix(c(1, 0, 0.4, 1), 2)
-  ratings[c("Content", "Organization")] <-
-    ratings[c("Content", "Organization")] + effect[as.integer(group), ]
-}
+# Existing continuous-score example; rename columns to show role mapping.
+data("mfrmr_example_gtheory_crossed", package = "mfrmr")
+ratings <- mfrmr_example_gtheory_crossed
+names(ratings)[names(ratings) == "Rater"] <- "Assessor"
+names(ratings)[names(ratings) == "Task"] <- "Session"
+head(ratings) # Two score columns for each Person-Assessor-Session cell.
+# Here sessions represent exchangeable assessments, without a time trend.
 g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"),
   facets = c(Rater = "Assessor", Occasion = "Session"))
 g$components$Person
@@ -332,20 +373,10 @@ g_rater <- mfrm_multivariate_gstudy(one_session, c("Content", "Organization"),
 d_rater <- mfrm_multivariate_d_study(g_rater, data.frame(Raters = c(1, 2, 4)))
 plot(d_rater, score = "Content")
 
-# Different rater teams for different tasks; shared persons and scores.
-# Fictional continuous scores with five independent random-effect sources.
-set.seed(2027)
-nested <- expand.grid(Person = 1:30, Task = 1:6, Rater = paste0("R", 1:3))
-nested$Content <- nested$Organization <- 0
-sources <- list("Person", "Task", c("Task", "Rater"),
-  c("Person", "Task"), c("Person", "Task", "Rater"))
-for (source in sources) {
-  group <- interaction(nested[source], drop = TRUE)
-  effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
-  effect <- effect \%*\% matrix(c(1, 0, 0.4, 1), 2)
-  nested[c("Content", "Organization")] <-
-    nested[c("Content", "Organization")] + effect[as.integer(group), ]
-}
+# Different rater teams for different tasks; the same Persons and scores.
+data("mfrmr_example_gtheory_nested", package = "mfrmr")
+nested <- mfrmr_example_gtheory_nested
+head(nested) # R1 in Task 1 is a different rater from R1 in Task 2.
 g_nested <- mfrm_multivariate_gstudy(nested, c("Content", "Organization"),
   nesting = c(Rater = "Task"))
 g_nested$design$child_counts # Three raters per task; eighteen in total.
@@ -359,10 +390,13 @@ plot(d_nested, x_var = "Tasks", type = "sem")
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
-Chapters 9--11.
+Chapters 9--11. \doi{10.1007/978-1-4757-3456-0}.
+
 Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
 Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22;
 Table 12 (page 32) and Appendix E (pages 74--77).
+Manual available from the author's
+\href{https://brennancrickgenova.org/genova-suite/}{GENOVA Suite}.
 
 Brennan, R. L. (1992). Generalizability theory.
 \emph{Educational Measurement: Issues and Practice}, 11(4), 27--34.
@@ -373,5 +407,7 @@ theory. \emph{Journal of Multivariate Analysis}, 1, 257--275.
 \doi{10.1016/0047-259X(71)90001-7}.
 }
 \seealso{
-\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}
+\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}. For a
+guided data-to-plan-to-saved-result workflow, use
+\code{vignette("mfrmr-gtheory", package = "mfrmr")}.
 }

@@ -62,7 +62,7 @@ in anchor assumptions.
 \enumerate{
 \item Run \code{displacement_table(fit, anchored_only = TRUE)} for anchor checks.
 \item Inspect \code{summary(disp)} then detailed rows.
-\item Visualize with \code{\link[=plot_displacement]{plot_displacement()}}.
+\item Visualize with \link[=plot.mfrm_fit]{plot(x, type = "displacement")}.
 }
 }
 

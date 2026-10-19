@@ -44,6 +44,37 @@ test_that("TAM coordinates follow category logits rather than coefficient names"
   expect_error(mfrmr:::.tam_extract_single(invalid, "Item"), "constant adjacent-category slope")
 })
 
+test_that("TAM response flags use fitted support and retain Person alignment", {
+  source <- list(
+    pid = c("low", "high", "mixed", "missing", "partial", "unused", "masked"),
+    item = data.frame(item = c("binary", "polytomous")),
+    AXsi = rbind(c(0, -.2, NA), c(0, -.3, -.8)),
+    resp = rbind(c(0, 0), c(1, 2), c(1, 0), c(NA, NA),
+      c(NA, 2), c(1, 1), c(1, 0)))
+  colnames(source$resp) <- source$item$item
+  source$resp.ind <- !is.na(source$resp)
+  source$resp.ind[7, 2] <- FALSE
+  ids <- rev(source$pid)
+  status <- mfrmr:::.tam_person_response_status(source, ids)
+  expect_identical(status$Extreme, rev(c("low", "high", "none", NA,
+    "high", "none", "high")))
+  expect_identical(status$NObserved, rev(c(2L, 2L, 2L, 0L, 1L, 2L, 1L)))
+  expect_equal(status$ResponseStatus[4], "no_observed_responses")
+  # An observed ceiling of one cannot remove the fitted category two.
+  source$resp[source$resp == 2 & !is.na(source$resp)] <- 1
+  source$resp <- source$resp[, 2:1]
+  source$resp.ind <- source$resp.ind[, 2:1]
+  updated <- mfrmr:::.tam_person_response_status(source, source$pid)
+  expect_equal(updated$Extreme[2], "none")
+  expect_equal(updated$Extreme[5], "none")
+  expect_equal(updated$Extreme[7], "high")
+  source$resp[1, 1] <- 3
+  expect_equal(mfrmr:::.tam_person_response_status(source, source$pid)$ResponseStatus[1], "unavailable")
+  source$pid[1] <- source$pid[2]
+  expect_true(all(is.na(mfrmr:::.tam_person_response_status(source, ids)$Extreme)))
+  expect_true(all(is.na(mfrmr:::.tam_person_response_status(list(), ids)$Extreme)))
+})
+
 test_that("eRm locations and thresholds retain their difficulty meaning", {
   skip_if_not_installed("eRm")
   set.seed(47L)
@@ -110,10 +141,25 @@ test_that("imported summaries and plots do not invent native model assumptions",
   set.seed(44L)
   y <- matrix(stats::rbinom(80L * 6L, 1, .5), nrow = 80L)
   colnames(y) <- paste0("I", seq_len(ncol(y)))
+  y[1, ] <- 0
+  y[2, ] <- 1
   y[1, 1] <- NA
   fit <- TAM::tam.mml(y, verbose = FALSE)
   imported <- import_tam_fit(fit, "RSM", compute_fit = TRUE)
   expect_equal(imported$diagnostics$n_obs, sum(!is.na(y)))
+  expect_identical(imported$facets$person$Extreme[1:2], c("low", "high"))
+  expect_identical(imported$facets$person$NObserved[1:2], c(5L, 6L))
+  expect_identical(imported$facets$person$Estimate, fit$person$EAP)
+  expect_identical(imported$facets$person$SE, fit$person$SD.EAP)
+  masked <- fit
+  masked$resp[is.na(masked$resp)] <- 0
+  masked_import <- import_tam_fit(masked, "RSM", compute_fit = TRUE)
+  expect_equal(masked_import$diagnostics$n_obs, sum(!is.na(y)))
+  expect_identical(masked_import$facets$person, imported$facets$person)
+  saved <- tempfile(fileext = ".rds")
+  on.exit(unlink(saved), add = TRUE)
+  saveRDS(imported, saved)
+  expect_identical(readRDS(saved), imported)
   person_rel <- imported$diagnostics$reliability
   expect_true(is.na(person_rel$Reliability[person_rel$Facet == "Person"]))
   expect_match(person_rel$SummaryNote[person_rel$Facet == "Person"], "Posterior SD")

@@ -108,6 +108,12 @@ non-trivial heterogeneity beyond measurement error.
 }
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -143,20 +149,16 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_facets_chisq(fit, draw = FALSE)
+p <- plot(fit, type = "facets_chisq", draw = FALSE)
 if (interactive()) {
-  plot_facets_chisq(
-    fit,
-    draw = TRUE,
-    plot_type = "fixed",
-    preset = "publication",
-    main = "Facet Chi-square (Customized)",
+  plot(fit, type = "facets_chisq", draw = TRUE, view = "fixed",
+    preset = "publication", main = "Facet Chi-square (Customized)",
     palette = c(fixed_ok = "#2b8cbe", fixed_flag = "#cb181d"),
-    label_angle = 45
-  )
+    label_angle = 45)
 }
 }
 }
 \seealso{
-\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}
+\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "agreement")}, \link[=plot.mfrm_fit]{plot(x, type = "qc")}
 }
+\keyword{internal}

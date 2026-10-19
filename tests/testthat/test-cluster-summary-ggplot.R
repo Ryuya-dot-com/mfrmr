@@ -44,7 +44,7 @@ test_that("numeric profiles preserve original values, counts and separate mean/m
   expected <- rev(sprintf("Group %d (n = %d)", p$data$table$Cluster, p$data$table$N))
   expect_identical(b$layout$panel_params[[1]]$y$get_labels(), expected)
   expect_identical(plot_data(g), p$data)
-  expect_match(g$labels$caption, "without confidence intervals", fixed = TRUE)
+  expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "without confidence intervals", fixed = TRUE)
   expect_silent(ggplot2::ggplotGrob(g))
 })
 

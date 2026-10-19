@@ -85,6 +85,12 @@ when \code{igraph} is available.
 (echoed for downstream reporting helpers that need to label rows
 by review scope).
 }
+
+\code{plot(x, type = "icc")} draws variance shares and any available intervals
+without an embedded title or footnote. Save its returned object as \code{p} and
+use \code{plot_data(p, "notes")} to read the interval method or the reason bounds
+are unavailable. These notes survive \code{saveRDS()}/\code{readRDS()}; they do not
+change the underlying ICC estimates.
 }
 \description{
 One-stop review that combines the nesting, cross-tabulation, ICC, and

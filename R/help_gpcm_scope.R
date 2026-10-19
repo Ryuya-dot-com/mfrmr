@@ -83,8 +83,10 @@
 #' and attach `intervals = list(slopes = ci, curves = curves)`. Local numerical
 #' checks do not establish global identification or sampling coverage; failed
 #' checks retain missing bounds.
-#' For fixed-grid EM, an explicit `confint(fit, method = "profile", slope = c(Task = "t1"))`
+#' An explicit `confint(fit, method = "profile", slope = c(Task = "t1"))`
 #' profiles one two-family component, using the actual owner/level names.
+#' It preserves the fitted fixed or adaptive integration method; adaptive nodes,
+#' scales and Jacobians are recomputed throughout the constrained searches.
 #' It retains nuisance reoptimization, numerical checks, unavailable endpoints
 #' and a same-target Wald comparison. Neither method has qualified coverage.
 #' Use [mml_quadrature_sensitivity()] to compare
@@ -92,8 +94,7 @@
 #' each order's experimental log-Wald checks. Optional `adaptive_quad_points` also adds fixed-calibration
 #' integration checks for two families; the posterior moments in that review
 #' are numerical diagnostics, not a Person-scoring workflow. Person-score
-#' comparisons remain unavailable for two families. Adaptive two-family fitting
-#' does not yet supply profile intervals.
+#' comparisons remain unavailable for two families.
 #' For both engines, [mfrm_response_diagnostics()] supplies same-data posterior
 #' predictive residuals with fixed calibration, including descriptive Infit/Outfit
 #' without reference cutoffs. It retains the fitted integration method and
@@ -484,10 +485,10 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "diagnose_mfrm(); analyze_residual_pca(); unexpected_response_table();",
         "displacement_table(); measurable_summary_table();",
         "rating_scale_table(); interrater_agreement_table();",
-        "facet_quality_dashboard(); plot_qc_dashboard();",
-        "plot_marginal_fit(); plot_marginal_pairwise()"
+        "facet_quality_dashboard(); plot(x, type = \"qc\");",
+        "plot(x, type = \"marginal_fit\"); plot(x, type = \"marginal_pairwise\")"
       ),
-      "predict_mfrm_units(); sample_mfrm_plausible_values(); compute_information(); plot_information()",
+      "predict_mfrm_units(); sample_mfrm_plausible_values(); compute_information(); plot(x)",
       paste(
         "plot(fit, type = c(\"wright\", \"pathway\", \"ccc\", \"ccc_surface\"));",
         "category_structure_report(); category_curves_report();",
@@ -495,7 +496,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       "reporting_checklist(); precision_review_report(); build_summary_table_bundle(); export_summary_appendix()",
       "build_misfit_casebook()",
-      "compare_mfrm(); build_model_choice_review(); build_weighting_review(); compute_information(); plot_information(); build_summary_table_bundle(); export_summary_appendix()",
+      "compare_mfrm(); build_model_choice_review(); build_weighting_review(); compute_information(); plot(x); build_summary_table_bundle(); export_summary_appendix()",
       "build_linking_review()",
       "build_mfrm_sim_spec(); extract_mfrm_sim_spec(); simulate_mfrm_data(); evaluate_mfrm_recovery(); assess_mfrm_recovery()",
       paste(
@@ -507,7 +508,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "fair_average_table()",
       "evaluate_mfrm_design(); predict_mfrm_population()",
       "evaluate_mfrm_diagnostic_screening(); evaluate_mfrm_signal_detection()",
-      "analyze_dff(); analyze_dif(); dif_interaction_table(); dif_report(); plot_dif_heatmap(); plot_dif_summary()",
+      "analyze_dff(); analyze_dif(); dif_interaction_table(); dif_report(); plot(x, type = \"heatmap\"); plot(x, type = \"summary\")",
       NA_character_,
       "estimate_bias(); unexpected_after_bias_table()",
       "facets_output_file_bundle(include = \"score\")",
@@ -701,7 +702,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "Summary and fitted curves connect to saved results/reports; curve intervals are unavailable.",
         "Both routes support separately checked experimental component log-Wald intervals using their fitted integration method. Global identification and coverage remain unestablished.",
         "mfrm_facet_intervals() separately supplies experimental model-based location and within-facet contrast intervals from the inverse full marginal information. Failed numerical checks retain points and missing bounds; no sandwich or step/curve intervals are supplied.",
-        "For fixed-grid EM, method = 'profile' and a named slope value profile one owner/level, with nuisance reoptimization and saved Wald comparison; adaptive profiles remain unavailable and coverage improvement is not established.",
+        "method = 'profile' and a named slope value profile one owner/level with the fitted fixed or adaptive integration, nuisance reoptimization and saved Wald comparison; coverage improvement is not established.",
         "mml_quadrature_sensitivity() preserves the fitting engine/integration method; optional adaptive_quad_points adds fixed-calibration integration diagnostics, not Person scoring or a change of estimator.",
         "For both engines, mfrm_response_diagnostics() integrates ability with both slope families fixed, retaining the fitted integration method and complete Person record; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests.",
         "predict_mfrm_units() separately supplies experimental new-Person EAP, posterior SD and continuous posterior intervals under the retained N(0,1) prior with known levels and unit weights. Source/batch numerical checks are distinct; intervals exclude calibration uncertainty and do not establish coverage or population transport.",
@@ -735,7 +736,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       paste(
         "Use fitted-object posterior scoring and `compute_information()` /",
-        "`plot_information()`; keep portable calibration and population",
+        "`plot(x)`; keep portable calibration and population",
         "forecasting on their separately documented routes."
       ),
       paste(
@@ -791,8 +792,8 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       paste(
         "Use `analyze_dff()` / `analyze_dif()` and `dif_interaction_table()`",
         "as screening surfaces, then carry `gpcm_boundary` through",
-        "`summary()`, `dif_report()`, `plot_dif_heatmap()`, and",
-        "`plot_dif_summary()` before writing claims."
+        "`summary()`, `dif_report()`, `plot(x, type = \"heatmap\")`, and",
+        "`plot(x, type = \"summary\")` before writing claims."
       ),
       paste(
         "Use the current MML fitting and fitted-object posterior scoring routes, or",

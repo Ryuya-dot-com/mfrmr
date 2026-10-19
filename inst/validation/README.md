@@ -11,14 +11,10 @@ Most package users can ignore this directory. Start with `README.md`,
 analysis guidance. The files here support package release checks and
 maintenance review; public release notes stay in `NEWS.md`.
 
-The repository-root `ROADMAP.md` is the single source of truth for public
-release direction and support boundaries. The
-[current internal roadmap](internal-roadmap-0.2.4.md) owns maintainer sequencing,
-source/evidence identity, completion criteria and validation decisions for the
-integrated 0.2.4. Start there for the three pillars, open statistical and workflow
-decisions, and the single ordered work queue. `internal-roadmap-0.2.3.md` is
-historical. Other records preserve evidence but do not broaden current API scope
-or create competing execution plans.
+The repository-root `ROADMAP.md` describes public release direction and support
+boundaries. Private maintainer roadmaps are retained locally and are not part of
+the public repository. The validation records here preserve evidence but do not
+broaden the API scope stated in the public roadmap.
 
 The [claim/evidence ledger](claim-reconciliation-0.2.4.md) retains the September
 14 assessment of 18 claim groups and 373 namespace declarations, followed by

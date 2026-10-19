@@ -6,7 +6,8 @@ gmfrm_location_fixture <- local({
       problem <- mfrm_gmfrm_problem(saved$data, 2L, gauss_hermite_normal(31L))
       fit <- mfrm_gmfrm_fit_result(problem,
         mfrm_gmfrm_em(problem, start = saved$parameters, maxit = 1L))
-      cached <<- list(fit = fit, saved = saved)
+      cached <<- list(fit = fit, saved = saved,
+        inference = mfrm_gpcm_product_inference(fit))
     }
     cached
   }
@@ -14,6 +15,11 @@ gmfrm_location_fixture <- local({
 
 test_that("two-family locations use constrained blocks of the inverse full information", {
   x <- gmfrm_location_fixture(); fit <- x$fit; before <- fit
+  # These targets share one freshly checked source, not separate calibrations.
+  local_mocked_bindings(mfrm_gpcm_product_inference = function(source) {
+    expect_identical(source, fit)
+    x$inference
+  }, .package = "mfrmr")
   V <- solve(x$saved$information)
   for (facet in c("Task", "Rater")) {
     ci <- suppressWarnings(mfrm_facet_intervals(fit, facet))
@@ -67,7 +73,7 @@ test_that("two-family location failures keep points and explain missing interval
   bad <- fit; bad$facets$others$Estimate[1] <- 999
   expect_error(mfrm_facet_intervals(bad, "Rater"), "must match")
   # Refinement failure must not leak the original, otherwise invertible covariance.
-  rejected <- mfrm_gpcm_product_inference(fit)
+  rejected <- gmfrm_location_fixture()$inference
   rejected$covariance <- NULL; rejected$check$eligible <- FALSE
   rejected$check$review <- "Quadrature comparison failed"
   rejected$checks$Passed[nrow(rejected$checks)] <- FALSE
@@ -103,7 +109,11 @@ test_that("location targets keep arbitrary owner names and shared level labels s
 })
 
 test_that("two-family location outputs preserve scale and checks through reports and replay", {
-  fit <- gmfrm_location_fixture()$fit
+  x <- gmfrm_location_fixture(); fit <- x$fit
+  local_mocked_bindings(mfrm_gpcm_product_inference = function(source) {
+    expect_identical(source, fit)
+    x$inference
+  }, .package = "mfrmr")
   ci <- suppressWarnings(mfrm_facet_intervals(fit, "Rater", level = .9))
   slopes <- suppressWarnings(confint(fit))
   local_mocked_bindings(fit_mfrm = function(...) stop("no refitting"),

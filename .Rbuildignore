@@ -41,6 +41,8 @@
 ^design-notes$
 ^scripts$
 ^inst/validation$
+^tests/testthat/test-comparison-identification-contract[.]R$
+^tests/testthat/test-comparison-identification-gpcm[.]R$
 ^tests/testthat/test-gpcm-joint-profile-20260926[.]R$
 ^tests/testthat/test-external-recovery-review[.]R$
 ^tests/testthat/test-recovery-validation-protocol[.]R$
@@ -67,6 +69,7 @@
 ^tests/testthat/test-release-readiness-protocol[.]R$
 ^tests/testthat/test-tam-.*[.]R$
 ^tests/testthat/helper-repository-validation[.]R$
+^tests/testthat/test-validation-(f-scoring|lr-pcm-stages|lr-rsm-stages|lr-rsm-confirmation)[.]R$
 ^tests/testthat/helper-gtheory-tiers[.]R$
 ^tests/testthat/test-gtheory-.*[.]R$
 ^tests/testthat/test-fixed-calibration-g0-contract[.]R$

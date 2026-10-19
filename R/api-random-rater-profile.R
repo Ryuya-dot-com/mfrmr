@@ -69,7 +69,7 @@ confint.mfrm_random_rater <- function(object, parm = "rater_sd", level = .95, ..
         isTRUE(object$checks$EstimatedVarianceBoundary) ||
         isTRUE(object$checks$EstimatedPersonVarianceBoundary)) se[] <- NA_real_
     se[!is.finite(se) | se < 0] <- NA_real_
-    bounds <- object$raters$Estimate + stats::qnorm((1 + level) / 2) * cbind(Lower = -se, Upper = se)
+    bounds <- object$raters$Estimate + stats::qnorm((1 - level) / 2, lower.tail = FALSE) * cbind(Lower = -se, Upper = se)
     rownames(bounds) <- object$raters$Rater
     return(structure(bounds, level = level, method = "First-order normal prediction approximation",
       target = "Realized uncentered rater effects relative to the population mean",

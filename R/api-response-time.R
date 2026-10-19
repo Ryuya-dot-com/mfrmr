@@ -196,8 +196,8 @@ validate_response_time_review <- function(x) {
 #'   time = "ResponseTime"
 #' )
 #' summary(rt)
-#' plot_response_time_review(rt, draw = FALSE)
-#' @seealso [plot_response_time_review()], [fit_mfrm()],
+#' plot(rt, draw = FALSE)
+#' @seealso [plot(x)][plot.mfrm_response_time_review], [fit_mfrm()],
 #'   [mfrmr_visual_diagnostics], [mfrmr_output_guide()]
 #' @concept response time
 #' @concept visual diagnostics
@@ -467,7 +467,7 @@ print.mfrm_response_time_review <- function(x, ...) {
   }
   print_wrapped_line("Descriptive timing review; counts and rates use valid timed rows only. Flags are not evidence of low effort or rater quality.")
   cat("Use `summary(x)` for top flagged groups and ",
-      "`plot_response_time_review(x)` for draw-free plot data or graphics.\n",
+      "`plot(x)` for draw-free plot data or graphics.\n",
       sep = "")
   invisible(x)
 }
@@ -605,14 +605,17 @@ print.summary.mfrm_response_time_review <- function(x, ...) {
 #'   toy, person = "Person", facets = c("Rater", "Criterion"),
 #'   score = "Score", time = "ResponseTime"
 #' )
-#' plot_response_time_review(rt, type = "distribution", draw = FALSE)
-#' plot_response_time_review(rt, type = "person", draw = FALSE)
+#' plot(rt, type = "distribution", draw = FALSE)
+#' plot(rt, type = "person", draw = FALSE)
 #' @seealso [response_time_review()], [plot_data_components()],
 #'   [mfrmr_output_guide()]
 #' @concept response time
 #' @concept visual diagnostics
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_response_time_review <- function(x,
                                       type = c("distribution", "person",
                                                "facet", "score"),
@@ -653,7 +656,7 @@ plot_response_time_review <- function(x,
         breaks = if (length(unique(tbl$LogTime)) < 2L) 1L else "FD",
         col = style$fill_soft,
         border = style$axis,
-        main = title,
+        main = "",
         xlab = paste0("log response time (", unit, ")")
       )
       graphics::abline(v = log(thresholds$Value), lty = c(2, 3),
@@ -667,7 +670,6 @@ plot_response_time_review <- function(x,
       )
     } else if (!any(is.finite(tbl$MedianTime))) {
       graphics::plot.new()
-      graphics::title(main = title)
       graphics::text(0.5, 0.5, "No valid times are available for these groups.")
     } else if (identical(type, "score")) {
       y <- tbl$MedianTime
@@ -675,7 +677,7 @@ plot_response_time_review <- function(x,
       graphics::plot(
         x_pos, y, type = "b", pch = 19, col = style$accent_primary,
         xaxt = "n", xlab = "Score", ylab = paste0("Median time (", unit, ")"),
-        main = title
+        main = ""
       )
       graphics::axis(1, at = x_pos, labels = tbl$Score)
       graphics::abline(h = thresholds$Value, lty = c(2, 3),
@@ -690,7 +692,7 @@ plot_response_time_review <- function(x,
         tbl$MedianTime, y,
         yaxt = "n", pch = 19, col = style$accent_primary,
         xlab = paste0("Median time (", unit, ")"), ylab = "",
-        main = title
+        main = ""
       )
       graphics::axis(2, at = y, labels = labels, las = 1, cex.axis = 0.75)
       graphics::abline(v = thresholds$Value, lty = c(2, 3),
@@ -698,7 +700,6 @@ plot_response_time_review <- function(x,
     }
   }
 
-  if (isTRUE(draw)) graphics::mtext(subtitle, side = 3, line = 0.2, cex = 0.7)
 
   ref_values <- if (identical(type, "distribution")) {
     log(thresholds$Value)
@@ -746,6 +747,11 @@ plot_response_time_review <- function(x,
   ))
 }
 
+#' Plot a saved response-time review
+#' @inheritParams plot_response_time_review
+#' @param ... View-specific controls from [plot_response_time_review()].
+#' @return The existing response-time plot payload. These are descriptive timing summaries.
+#' @seealso [response_time_review()], [mfrmr_plot_migration]
 #' @export
 plot.mfrm_response_time_review <- function(x,
                                            type = c("distribution", "person",

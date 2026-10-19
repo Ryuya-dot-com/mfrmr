@@ -7,6 +7,15 @@ equivalence has been established. mfrmr estimates, diagnostics, plot payloads,
 and report bundles remain the source of truth unless external FACETS output is
 explicitly supplied for comparison.
 
+Reviewed against the 0.2.4 development routes on October 14, 2026. Use
+`facets_feature_coverage()` for current route-level limits and
+`help("mfrmr_methods_reference")` for calculation assumptions and literature.
+The ordinary diagnostic/report routes below are not automatically available
+for two-family GPCM or corrected JML merely because they share `mfrm_fit`.
+Consult `gpcm_capability_matrix()` and the model-specific result help.
+Plotting uses `plot()` on fitted models or saved analysis results in 0.2.4.
+See `help("mfrmr_plot_migration")` for replacements of the former drawing helpers.
+
 ## Manual References Used
 - Output table index (64-bit): <https://www.winsteps.com/facetman64/outputtableindex.htm>
 - Output table index (32-bit archive): <https://www.winsteps.com/facetman/outputtableindex.htm>
@@ -32,15 +41,15 @@ explicitly supplied for comparison.
 - Table 1-style specification summary: `specifications_report()`
 - Table 2-style data summary report: `data_quality_report()`
 - Table 3-style iteration report (replayed): `estimation_iteration_report()`
-- Table 4-style unexpected responses: `unexpected_response_table()`, `plot_unexpected()`
+- Table 4-style unexpected responses: `unexpected_response_table()`, `plot(fit, type = "unexpected")`
 - Table 5-style measurable summary bundle: `measurable_summary_table()`
 - Table 6.0.0-style subset/disjoint listing: `subset_connectivity_report()`
 - Table 6.2-style facet-statistics graphic summary: `facet_statistics_report()`
 - Table 7-style facet/person measures and fit summary: `diagnose_mfrm()` + `summary.mfrm_fit()`
-- Table 7 reliability + facet chi-square style summaries: `diagnose_mfrm()$reliability`, `diagnose_mfrm()$facets_chisq`, `facets_chisq_table()`, `plot_facets_chisq()`
-- Table 7 agreement style summaries: `diagnose_mfrm()$interrater`, `interrater_agreement_table()`, `rater_network_analysis()`, `rater_halo_network_analysis()`, `plot_interrater_agreement()`
+- Table 7 reliability + facet chi-square style summaries: `diagnose_mfrm()$reliability`, `diagnose_mfrm()$facets_chisq`, `facets_chisq_table()`, `plot(fit, type = "facets_chisq")`
+- Table 7 agreement style summaries: `diagnose_mfrm()$interrater`, `interrater_agreement_table()`, `rater_network_analysis()`, `rater_halo_network_analysis()`, `plot(fit, type = "agreement")`
 - Table 6-style Wright/variable-map visual display:
-  `plot_wright_unified(fit, renderer = "facets")` provides the shared
+  `plot(fit, type = "wright", view = "unified", renderer = "facets")` provides the shared
   logit ruler, person-frequency asterisks, signed facet columns, and labeled
   score-transition lines; `renderer = "native"` retains the package-native
   facet SE/CI display. Both routes expose editable draw-free data.
@@ -57,8 +66,11 @@ explicitly supplied for comparison.
   `write_mfrm_residual_file()` and `write_mfrm_subset_file()`
 - FACETS fit/score-file import: `read_facets_fit_table()` /
   `import_facets_fit_table()` for delimited and fixed-field score-file extracts
-- Table 12 fair-average style output bundle: `fair_average_table()`, `plot_fair_average()`
-- Displacement diagnostics (FACETS-style anchor drift check): `displacement_table()`, `plot_displacement()`
+- Fair-average measurement summaries: `fair_average_table()`, `plot(fit, type = "fair_average")`.
+  The package's column-contract CSV retains a legacy `Table 12` identifier
+  for this bundle. It is not the FACETS Table 12, which is the
+  [bias summary report](https://www.winsteps.com/facetman64/table12.htm).
+- Displacement diagnostics (FACETS-style anchor drift check): `displacement_table()`, `plot(fit, type = "displacement")`
 - Bias re-estimation iteration (Table 9 workflow): `estimate_bias()` / `estimate_bias_interaction()`
 - Table 10-style unexpected-after-bias output: `unexpected_after_bias_table()`
 - Table 11-style bias-count report: `bias_count_table()`
@@ -68,11 +80,11 @@ explicitly supplied for comparison.
   - pairwise: `bias_pairwise_report()` for structured review and
     `build_fixed_reports()` (`pairwise_table`, `pairwise_fixed`) for 2-way
     fixed-report handoff
-  - Table 13 plot export: `bias_interaction_report()`, `plot_bias_interaction()` (including `facet_profile` mode)
+  - Table 13 plot export: `bias_interaction_report()` → `plot(result, type = "bias")` (including `view = "facet_profile"`)
 - Fixed-width report generation: `build_fixed_reports()`
 - APA narrative/table helpers: `build_apa_outputs()`, `apa_table()`
-- Residual PCA checks (overall + by facet): `analyze_residual_pca()`, `plot_residual_pca()`
-- QC dashboard (base graphics): `plot_qc_dashboard()`
+- Residual PCA checks (overall + by facet): `analyze_residual_pca()` → `plot(result, type = "scree")` (use `mode = "facet"` and `facet` for a facet-specific view)
+- QC dashboard (base graphics): `plot(fit, type = "qc")`
 - Anchor workflow: `review_mfrm_anchors()`, `make_anchor_table()`
 - Data packaging/loading helpers: `list_mfrmr_data()`, `load_mfrmr_data()`
 - FACETS feature coverage boundary: `facets_feature_coverage()`
@@ -85,7 +97,7 @@ explicitly supplied for comparison.
 
 ### Wright and variable maps
 
-- Capability: `plot_wright_unified(renderer = "facets")` provides the shared
+- Capability: `plot(fit, type = "wright", view = "unified", renderer = "facets")` provides the shared
   ruler, person-frequency asterisks, signed facet columns, and labelled score
   transitions. The native renderer adds SE/CI information.
 - Limitation: visual correspondence does not establish pixel identity or
@@ -134,6 +146,64 @@ explicitly supplied for comparison.
   boundary; redesign the contrast or use FACETS externally if a missing
   FACETS-specific report is required.
 
+Package bias screens condition on the supplied calibration. Re-estimating a
+bias cell does not propagate the joint uncertainty of all calibration
+parameters. The accompanying intervals and pairwise summaries are not
+full-covariance structural tests.
+
+### Separation, agreement and assessment planning
+
+High rater separation reliability indicates distinguishable severities,
+not high observed agreement. Low separation can also result from imprecise
+measures. Strata describes hypothetical distinguishable levels, not discovered
+groups. See the [FACETS interpretation](https://www.winsteps.com/facetman64/reliability.htm)
+and the estimator-specific formulas in `help("diagnose_mfrm")`.
+
+The [FACETS G-theory menu](https://www.winsteps.com/facetman64/gtheory.htm)
+launches the external R package `gtheory`. mfrmr's own
+`mfrm_multivariate_gstudy()` / `mfrm_multivariate_d_study()` route handles
+supported univariate or multivariate observed-score designs, interactions,
+composites and future complete plans. Its component/covariance plots and
+D-study curves retain negative components and unavailable metrics. For balanced
+ANOVA, `confint(g, assumption = "normal")` supplies component SEs and intervals
+for one score or a fixed composite. Two-score covariance intervals now have
+explicit generalized and conservative choices with signed bounds. Scalar
+component `reml_profile` intervals also accept identifiable MINQUE(0) sources,
+retaining original points and separate REML centers but not supplying sampling
+SEs. Explicit joint `reml_profile` also supplies signed two-score covariance
+intervals for identifiable incomplete sources. This is experimental, has no
+sampling SE and does not establish finite-sample coverage or a default method.
+Separately, `vcov(g, assumption = "normal")` provides sampling covariance and
+SEs for the original ANOVA/MINQUE component estimates, including incomplete
+sources. Product-moment correction retains negative or unidentified sampling
+variances; it does not describe the separate REML estimator or validate
+normal-reference confidence intervals.
+For individual G/Phi in balanced two-crossed-facet sources, the default is
+approximate MLS null inversion. Undefined MLS widths are conservatively
+retained and flagged separately from numerical availability; small-source
+intervals may be very wide. This is normal-model approximate inference,
+not a transfer of FACETS intervals or a uniform-coverage guarantee.
+Balanced crossed G also offers an explicit experimental `score` interval,
+using expected information and extended nuisance mean-square expectations.
+It preserves original points and distinguishes empty numerical confidence
+sets from calculation failures; this does not supply Phi or paired differences.
+For G/Phi and SEM, explicit experimental
+`reml_profile` accepts balanced or identifiable incomplete sources under
+normal effects. Its separate REML fit preserves the original points and uses
+approximate likelihood-ratio calibration, without a finite-sample or boundary
+coverage guarantee. SEM profiles constrain error variance directly and report
+the interval around the REML center without enumerating remote disconnected
+accepted regions. With `reference`, one-facet plans or nested plans with a
+common future child count have shared-profile G/Phi/SEM difference intervals,
+including incomplete sources. These preserve interior extrema, original
+points and the base approximation; nonproportional future errors remain
+outside this transformation. `mfrm_multivariate_d_compare()` has a separate
+normal-theory paired-plan scope. The older `mfrm_generalizability()` /
+`mfrm_d_study()` adapter uses a simpler main-effects model and an explicit
+residual-scaling rule. These decompositions are not interchangeable. Follow
+`vignette("mfrmr-gtheory", package = "mfrmr")`; no MFRM fit is needed for the
+multivariate route, and none of these coefficients is MFRM separation reliability.
+
 ## Unsupported or External-Only FACETS Surfaces
 
 The public `facets_feature_coverage()` table is the canonical capability
@@ -146,8 +216,8 @@ the appropriate route for each surface. External-only areas include:
   or run FACETS for the exact report.
 - Arbitrary FACETS R/Web/Excel menu plots; use `plot_data()` with an R graphics
   system or run FACETS for those menu outputs.
-- The FACETS/gtheory interface; use `mfrm_generalizability()` and
-  `mfrm_d_study()` for the documented univariate package route.
+- The FACETS/gtheory interface itself; use the package-native observed-score
+  G/D routes above for their documented designs.
 - FACETS network-menu output; use `subset_connectivity_report()`,
   `mfrm_network_analysis()`, `rater_network_analysis()`, or
   `rater_halo_network_analysis()` for reusable R node and edge tables.
@@ -161,7 +231,7 @@ the appropriate route for each surface. External-only areas include:
 - Group anchors (`Facet`, `Level`, `Group`, `GroupValue`) constrain group means.
 - If a level appears in both tables, direct anchor takes precedence.
 - Missing `GroupValue` is treated as 0.
-- Default recommendation thresholds:
+- Default review thresholds (not universal adequacy or identification rules):
   - common anchors per linking facet: `>= 5`
   - observations per element: `>= 30`
   - observations per score category: `>= 10`

@@ -48,7 +48,9 @@ bind_mfrm_preparation_notes <- function(notes) {
 prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
                               rating_min = NULL, rating_max = NULL,
                               weight_col = NULL, keep_original = FALSE,
-                              missing_codes = NULL) {
+                              missing_codes = NULL,
+                              repeated_ratings = c("review", "independent")) {
+  repeated_ratings <- match.arg(repeated_ratings)
   preparation_notes <- list()
   emit_preparation_messages <- isTRUE(getOption("mfrmr.show_preparation_messages", FALSE)) &&
     !isTRUE(getOption("mfrmr._preparation_messages_announced", FALSE))
@@ -423,22 +425,31 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
          "contain valid (non-NA, non-empty) data.", call. = FALSE)
   }
 
-  # Detect duplicate person x facet rows. They violate the MFRM
-  # conditional-independence assumption and silently bias estimates;
-  # the user should make their unit of observation explicit.
+  # Repeated cell keys do not establish dependence. Keep the default review
+  # unless the analyst explicitly declares conditionally independent events.
   if (nrow(df) > 0L) {
     key_cols <- c("Person", facet_cols)
     dup_mask <- duplicated(df[, key_cols, drop = FALSE]) |
                 duplicated(df[, key_cols, drop = FALSE], fromLast = TRUE)
     n_dup <- sum(dup_mask)
-    if (n_dup > 0L) {
+    if (n_dup > 0L && identical(repeated_ratings, "independent")) {
+      add_preparation_note(
+        stage = "design_check",
+        condition = "independent_repeated_ratings_declared",
+        severity = "info", count = n_dup,
+        affected = paste(key_cols, collapse = ", "),
+        message = "Repeated Person-by-facet ratings are retained as separate conditionally independent events, as explicitly declared by the analyst.",
+        action = "This declaration does not verify independence or distinguish accidental copies. Use a dependence model when ratings remain associated after conditioning on the model."
+      )
+    } else if (n_dup > 0L) {
       n_dup_cells <- nrow(unique(df[dup_mask, key_cols, drop = FALSE]))
       duplicate_msg <- paste0(
         "Detected ", n_dup, " row(s) across ", n_dup_cells,
         " duplicated Person x ",
         "(", paste(facet_cols, collapse = ", "), ") combination. MFRM ",
-        "assumes one observation per cell; aggregate, deduplicate, or ",
-        "introduce a distinguishing facet column before fitting. Continuing ",
+        "requires review of repeated ratings; correct accidental copies, model ",
+        "dependence, or explicitly declare repeated_ratings = 'independent' ",
+        "when conditional independence is justified. Continuing ",
         "with the rows as supplied."
       )
       add_preparation_note(
@@ -448,7 +459,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
         count = n_dup,
         affected = paste(c("Person", facet_cols), collapse = ", "),
         message = duplicate_msg,
-        action = "Aggregate, deduplicate, or add a distinguishing facet before interpreting the fit."
+        action = "Review repeated events: correct accidental copies, model dependence, or explicitly declare conditional independence."
       )
       duplicate_warning_announced <- isTRUE(
         getOption("mfrmr._duplicate_warning_announced", FALSE)
@@ -699,6 +710,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   list(
     data = df,
     n_obs = nrow(df),
+    repeated_ratings = repeated_ratings,
     weighted_n = sum(df$Weight, na.rm = TRUE),
     n_person = length(levels(df$Person)),
     rating_min = rating_min,

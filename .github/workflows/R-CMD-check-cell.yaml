@@ -74,6 +74,8 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # Keep installed dependencies even when a later package check fails.
+          cache: always
           # Invalidate compiled-package caches after the runner TBB ABI change.
           cache-version: "2"
           # Source builds avoid Zstandard macOS binaries unsupported by stable pak.

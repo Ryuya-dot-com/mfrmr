@@ -48,7 +48,9 @@ test_that("two-family recipient sheets preserve component targets and saved resi
     expect_match(sheet$notes["residuals"], "no expectation-one")
     expect_identical(mfrm_report(x, "rater", "tables", facet, id), sheet$tables)
     expect_identical(mfrm_report(x, "rater", "markdown", facet, id), sheet$markdown)
-    expect_identical(mfrm_report(x, "rater", facet = facet, rater = id, audience = "researcher")$tables, sheet$tables)
+    numeric_tables <- setdiff(names(sheet$tables), "interpretation_notes")
+    expect_identical(mfrm_report(x, "rater", facet = facet, rater = id, audience = "researcher")$tables[numeric_tables],
+      sheet$tables[numeric_tables])
     expect_output(print(sheet), "Two-family GPCM")
   }
   expect_identical(x, before)

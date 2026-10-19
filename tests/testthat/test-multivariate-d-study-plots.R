@@ -4,6 +4,176 @@ mvgt_plot_data <- function() {
   read.csv(path)
 }
 
+test_that("D-study ribbons reuse matching saved intervals without recomputation", {
+  g <- mfrm_multivariate_gstudy(mvgt_plot_data(), c("V", "W"), rater = NULL)
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(12, 1, 6)))
+  ci <- lapply(c("V", "W"), function(s)
+    confint(d, score = s, parm = "Phi", assumption = "normal", draws = 4000))
+  before <- serialize(d, NULL)
+  # The plot must not invoke either inference or model estimation.
+  local_mocked_bindings(confint.mfrm_multivariate_d_study = function(...) stop("recomputed"),
+    mfrm_multivariate_gstudy = function(...) stop("refitted"))
+  p <- plot(d, score = c("V", "W"), metric = "Phi", intervals = rev(ci), draw = FALSE)
+  z <- plot_data(p)
+  for (interval in ci) {
+    rows <- z$series[z$series$Score == interval$Score[1], ]
+    expect_identical(rows$Lower, interval$Lower)
+    expect_identical(rows$Upper, interval$Upper)
+    expect_identical(rows$Value, interval$Estimate)
+  }
+  expect_equal(length(unique(z$series$IntervalRun)), 2)
+  expect_equal(nrow(z$unavailable_intervals), 0)
+  expect_identical(z$intervals, rev(ci))
+  expect_identical(serialize(d, NULL), before)
+  expect_true(any(grepl("simultaneous coverage", z$notes$Text)))
+  expect_true(any(grepl("frequentist coverage", z$notes$Text)))
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, score = c("V", "W"), metric = "Phi", intervals = ci))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(p)
+    expect_identical(gg$data$Lower, z$series$Lower)
+    expect_identical(plot_data(gg, "intervals"), rev(ci))
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+})
+
+test_that("curve intervals reject wrong sources, targets, plans and weights", {
+  g <- mfrm_multivariate_gstudy(mvgt_plot_data(), c("V", "W"), rater = NULL)
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = 1:4))
+  ci <- confint(d, assumption = "normal")
+  draw <- function(x = d, intervals = ci, ...) plot(x, metric = "G", intervals = intervals, draw = FALSE, ...)
+  expect_error(plot(d, intervals = ci, draw = FALSE), "select one coefficient")
+  expect_error(plot(d, type = "sem", metric = "AbsoluteSEM", intervals = ci), "plans, metric and score")
+  expect_error(draw(intervals = as.data.frame(ci)), "confint")
+  expect_error(draw(intervals = ci[-2, ]), "one interval row per plan")
+  expect_error(draw(intervals = list(ci, ci)), "exactly one")
+  expect_error(draw(score = c("V", "W")), "every selected")
+  expect_error(draw(score = "W"), "plans, metric and score")
+  other <- d; other$design_grid$Tasks <- other$design_grid$Tasks + 1
+  expect_error(draw(x = other), "plans, metric and score")
+  # Identical point ratios do not make a different source acceptable.
+  other <- d; other$gstudy$mean_products <- lapply(g$mean_products, function(m) m*4)
+  expect_error(draw(x = other), "source summaries")
+  old <- ci; attr(old, "source_summary") <- NULL
+  expect_error(draw(intervals = old), "source summaries")
+  expect_no_error(plot(old, draw = FALSE))
+  difference <- confint(d, assumption = "normal", reference = 1)
+  expect_error(draw(intervals = difference), "plans, metric and score")
+  other <- d; other$coefficients$G[1] <- other$coefficients$G[1] + .01
+  expect_error(draw(x = other), "point estimates")
+  wide <- confint(d, score = "W", level = .99, assumption = "normal")
+  expect_error(draw(intervals = list(ci, wide), score = c("V", "W")), "same method and confidence")
+  weighted <- mfrm_multivariate_d_study(g, d$design_grid, c(V = .5, W = .5))
+  wc <- confint(weighted, assumption = "normal")
+  weighted$weights <- c(V = 1, W = -1)
+  expect_error(draw(x = weighted, intervals = wc), "weights")
+})
+
+test_that("the ordinary ribbon workflow computes selected scores in one plot call", {
+  g <- mfrm_multivariate_gstudy(mvgt_plot_data(), c("V", "W"), rater = NULL)
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = 1:4))
+  expected <- lapply(c("W", "V"), function(s) confint(d, score = s, assumption = "normal", level = .9))
+  # The convenience route computes intervals but never refits the G-study.
+  local_mocked_bindings(mfrm_multivariate_gstudy = function(...) stop("refitted"))
+  p <- plot(d, score = c("W", "V"), metric = "G", intervals = TRUE,
+    assumption = "normal", level = .9, draw = FALSE)
+  expect_identical(plot_data(p, "intervals"), expected)
+  expect_identical(plot_data(p), plot_data(plot(d, score = c("W", "V"), metric = "G",
+    intervals = expected, draw = FALSE)))
+  expect_error(plot(d, metric = "G", intervals = TRUE), "assumption")
+  expect_error(plot(d, metric = "G", intervals = TRUE, assumption = "normal",
+    method = c("exact_f", "gci")), "one interval method")
+  expect_error(plot(d, metric = "G", assumption = "normal"), "only when")
+  expect_identical(plot_data(plot(d, draw = FALSE)), plot_data(plot(d, intervals = NULL, draw = FALSE)))
+})
+
+test_that("missing ribbons break at gaps and isolated intervals remain visible", {
+  g <- mfrm_multivariate_gstudy(mvgt_plot_data(), c("V", "W"), rater = NULL)
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(5, 1, 4, 2, 3)))
+  ci <- confint(d, assumption = "normal")
+  # A saved failed interval in the middle must not be joined across.
+  gap <- ci$Tasks == 3
+  ci$Lower[gap] <- ci$Upper[gap] <- NA_real_
+  ci$Available[gap] <- FALSE; ci$Status[gap] <- "Numerical interval failure"
+  p <- plot(d, metric = "G", intervals = ci, draw = FALSE)
+  z <- plot_data(p)
+  expect_equal(z$unavailable_intervals$X, 3)
+  expect_equal(z$unavailable_intervals$IntervalStatus, "Numerical interval failure")
+  expect_equal(length(unique(na.omit(z$series$IntervalRun))), 2)
+  expect_equal(z$series$Value, ci$Estimate)
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, metric = "G", intervals = ci, preset = "monochrome"))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(p); built <- ggplot2::ggplot_build(gg)
+    runs <- split(built$data[[1]]$x, built$data[[1]]$group)
+    expect_equal(length(runs), 2)
+    expect_true(all(vapply(runs, function(x) max(x) < 3 || min(x) > 3, logical(1))))
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+  # One interval amid unavailable intervals needs a visible segment, not a zero-area ribbon.
+  ci$Lower[-1] <- ci$Upper[-1] <- NA_real_; ci$Available[-1] <- FALSE
+  p <- plot(d, metric = "G", intervals = ci)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(p)
+    expect_equal(nrow(ggplot2::ggplot_build(gg)$data[[2]]), 1)
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+  ci$Lower[] <- ci$Upper[] <- NA_real_; ci$Available[] <- FALSE
+  expect_no_warning(p <- plot(d, metric = "G", intervals = ci))
+  expect_equal(nrow(plot_data(p, "unavailable_intervals")), 5)
+  if (requireNamespace("ggplot2", quietly = TRUE)) expect_no_warning(ggplot2::ggplotGrob(as_ggplot(p)))
+})
+
+test_that("ribbons retain crossed panels, composite identity and method limits", {
+  g <- mfrm_multivariate_gstudy(mfrmr_example_gtheory_crossed, c("Content", "Organization"))
+  d <- mfrm_multivariate_d_study(g, expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 12)),
+    cbind(Equal = c(Content = .5, Organization = .5), Difference = c(Content = 1, Organization = -1)))
+  ci <- confint(d, composite = "Equal", parm = "Phi", assumption = "normal", method = "approximate_f")
+  p <- plot(d, composite = "Equal", metric = "Phi", intervals = ci, panel_by = "Raters", draw = FALSE)
+  z <- plot_data(p)
+  expect_equal(length(unique(na.omit(z$series$IntervalRun))), 2)
+  expect_identical(z$intervals[[1]]$Validation, ci$Validation)
+  expect_identical(attr(z$intervals[[1]], "diagnostics"), attr(ci, "diagnostics"))
+  mls <- plot(d, composite = "Equal", metric = "Phi", intervals = TRUE,
+    assumption = "normal", draw = FALSE)
+  expect_true(all(plot_data(mls)$intervals[[1]]$MethodCode == "mls"))
+  auto <- plot(d, composite = "Equal", metric = "Phi", intervals = TRUE,
+    assumption = "normal", method = "approximate_f", panel_by = "Raters", draw = FALSE)
+  expect_identical(plot_data(auto), z)
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, composite = "Equal", metric = "Phi", intervals = ci, panel_by = "Raters"))
+  if (requireNamespace("ggplot2", quietly = TRUE)) expect_no_warning(ggplot2::ggplotGrob(as_ggplot(p)))
+  if (requireNamespace("lpSolve", quietly = TRUE)) {
+    both <- confint(d, composite = "Equal", parm = "Phi", assumption = "normal",
+      method = c("approximate_f", "mean_square_region"))
+    expect_error(plot(d, composite = "Equal", metric = "Phi", intervals = both), "one interval method")
+  }
+})
+
+test_that("an available interval remains visible without an admissible point", {
+  n <- 10; k <- 6
+  p <- qr.Q(qr(contr.helmert(n))); t <- qr.Q(qr(contr.helmert(k)))
+  y <- outer(p[, 1]*sqrt(.5*(n-1)/k), rep(1, k)) + sqrt((n-1)*(k-1))*outer(p[, 2], t[, 1])
+  ratings <- expand.grid(Person = 1:n, Task = 1:k); ratings$Score <- as.vector(y)
+  d <- mfrm_multivariate_d_study(mfrm_multivariate_gstudy(ratings, "Score", rater = NULL),
+    data.frame(Tasks = c(6, 60)))
+  ci <- confint(d, assumption = "normal")
+  expect_true(all(is.na(ci$Estimate)))
+  expect_true(all(ci$Available))
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(p <- plot(d, metric = "G", intervals = ci))
+  expect_identical(plot_data(p, "series")$Upper, ci$Upper)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(p)
+    expect_equal(nrow(ggplot2::ggplot_build(gg)$data[[1]]), 2)
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+})
+
 test_that("D-study plots preserve stored values, units, weights and score identities", {
   tasks <- mvgt_plot_data()
   g <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
@@ -48,7 +218,7 @@ test_that("named composite plots require an unambiguous selection and keep its w
   d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 6, 12)), w)
   expect_error(plot(d, draw = FALSE), "Several composites.*select one")
   expect_error(plot(d, score = "V", composite = "V", draw = FALSE), "not both")
-  for (bad in list("absent", c("V", "Difference"), NA_character_, 1, character())) {
+  for (bad in list("absent", c("V", "V"), NA_character_, 1, character())) {
     expect_error(plot(d, composite = bad, draw = FALSE), "name one composite")
   }
   original <- plot_data(plot(d, score = "V", draw = FALSE))
@@ -84,7 +254,7 @@ test_that("named composite plots require an unambiguous selection and keep its w
     p <- as_ggplot(d, composite = "Difference", type = "sem")
     payload <- plot_data(plot(d, composite = "Difference", type = "sem", draw = FALSE))
     expect_identical(p$data$Value, payload$series$Value)
-    expect_identical(p$labels$title, payload$title)
+    expect_identical(plot_data(p, "title"), payload$title)
     expect_no_warning(ggplot2::ggplotGrob(p))
   }
 })
@@ -139,7 +309,7 @@ test_that("D-study plots preserve independent metric availability and component 
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     gg <- as_ggplot(d)
     expect_equal(gg$data$Value, p$series$Value)
-    expect_match(gg$labels$caption, "Non-PSD covariance components")
+    expect_match(paste(plot_data(gg, "notes")$Text, collapse = "\n"), "Non-PSD covariance components")
     expect_no_warning(ggplot2::ggplotGrob(gg))
   }
 
@@ -159,7 +329,7 @@ test_that("D-study plots preserve independent metric availability and component 
   expect_no_warning(plot(single))
   expect_error(plot(single, x_var = "Raters"), "facet count present")
   expect_error(plot(single, score = "unknown"), "one original score")
-  expect_error(plot(single, score = c("V", "W")), "one original score")
+  expect_error(plot(single, score = c("V", "V")), "one original score")
   expect_error(plot(single, draw = NA), "TRUE or FALSE")
   expect_error(plot(single, unused = TRUE), "must be empty")
 })
@@ -188,6 +358,7 @@ test_that("ggplot conversion retains D-study metrics, units, groups and unavaila
     expect_identical(levels(p$data$Panel), payload$data$panel_labels)
     expect_identical(p$labels$x, "Number of tasks")
     expect_match(p$labels$y, if (type == "sem") "score units" else "Dependability")
+    expect_identical(plot_data(p, "notes"), plot_data(payload, "notes"))
     built <- ggplot2::ggplot_build(p)
     expect_identical(unname(built$plot$scales$get_scales("colour")$map(payload$data$legend$label)),
       payload$data$legend$value)
@@ -195,7 +366,7 @@ test_that("ggplot conversion retains D-study metrics, units, groups and unavaila
     expect_no_warning(ggplot2::ggplotGrob(p))
   }
   direct <- as_ggplot(d, type = "sem", score = "V", x_var = "Raters")
-  expect_identical(direct$labels$title, "Score: V")
+  expect_identical(plot_data(direct, "title"), "Score: V")
   expect_identical(direct$labels$x, "Number of raters")
   expect_true(all(direct$data$Kind == "Score"))
 
@@ -207,7 +378,7 @@ test_that("ggplot conversion retains D-study metrics, units, groups and unavaila
   p <- as_ggplot(d)
   expect_true(all(is.na(p$data$Value[p$data$X == 6])))
   expect_true(all(is.na(p$layers[[1]]$data$Value[p$layers[[1]]$data$X == 6])))
-  expect_match(gsub("\n", " ", p$labels$caption), "Unavailable estimates in 2 scenario")
+  expect_match(gsub("\n", " ", paste(plot_data(p, "notes")$Text, collapse = "\n")), "Unavailable estimates in 2 scenario")
   expect_no_warning(ggplot2::ggplotGrob(p))
 
   d$coefficients[c("G", "Phi", "RelativeSEM", "AbsoluteSEM")] <- NA_real_
@@ -221,6 +392,32 @@ test_that("ggplot conversion retains D-study metrics, units, groups and unavaila
   expect_no_warning(ggplot2::ggplotGrob(p))
   single <- mfrm_multivariate_d_study(g)
   expect_no_warning(ggplot2::ggplotGrob(as_ggplot(single)))
+})
+
+test_that("ggplot preserves separate component and unavailable notes for sparse D studies", {
+  skip_if_not_installed("ggplot2", minimum_version = "3.4.0")
+  data <- mvgt_plot_data()
+  data <- data[(data$Person + data$Task) %% 3 != 0, ]
+  data$V[1] <- NA_real_
+  g <- mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL,
+    method = "minque0", missing = "omit")
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(6, 12)), c(V = -1, W = 1))
+  expect_true(any(!g$component_diagnostics$PositiveSemidefinite))
+  for (type in c("coefficients", "sem")) {
+    p <- plot(d, type = type, draw = FALSE)
+    before <- serialize(p, NULL)
+    gg <- as_ggplot(p)
+    expect_identical(plot_data(gg, "notes"), plot_data(p, "notes"))
+    expect_identical(serialize(p, NULL), before)
+    expect_identical(gg$data$Value, plot_data(p, "series")$Value)
+    expect_null(gg$labels$caption)
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+    # A saved payload from before returned captions still retains each caution.
+    legacy <- p
+    legacy$data$caption <- legacy$data$notes <- NULL
+    expect_identical(trimws(plot_data(as_ggplot(legacy), "notes")$Text),
+      trimws(plot_data(p, "notes")$Text))
+  }
 })
 
 test_that("rater-only and named-facet plots retain their declared count identities", {
@@ -265,5 +462,234 @@ test_that("rater-only and named-facet plots retain their declared count identiti
     expect_identical(as.character(gg$data$Group), flipped$series$Group)
     expect_no_warning(ggplot2::ggplotGrob(gg))
     expect_identical(as_ggplot(named_d)$labels$x, "Test occasion count")
+  }
+})
+
+
+test_that("multiple score curves retain identity, fixed counts, weights and gaps", {
+  ratings <- merge(mvgt_plot_data(), data.frame(Rater = 1:3))
+  ratings$V <- ratings$V + ratings$Rater
+  ratings$W <- ratings$W + 2 * ratings$Rater
+  g <- mfrm_multivariate_gstudy(ratings, c("V", "W"))
+  w <- cbind(V = c(V = .5, W = .5), Difference = c(V = -1, W = 1))
+  d <- mfrm_multivariate_d_study(g, expand.grid(Raters = 1:4, Tasks = c(3, 6, 12)), w)
+  before <- serialize(d, NULL)
+  p <- plot_data(plot(d, score = c("W", "V"), metric = "Phi", draw = FALSE))
+  expect_identical(p$score, c("W", "V"))
+  expect_identical(p$metric, "Phi")
+  expect_true(p$show_legend)
+  expect_null(p$weights)
+  expect_identical(p$table, d$coefficients[d$coefficients$Kind == "Score", ])
+  expect_identical(p$series$Value, p$table$Phi)
+  expect_identical(p$legend$label, c(paste("W | Raters =", 1:4), paste("V | Raters =", 1:4)))
+  curves <- split(p$series, p$series$Group)
+  expect_length(curves, 8L)
+  expect_true(all(vapply(curves, function(z) nrow(unique(z[c("Score", "Raters", "Metric")])) == 1L,
+    logical(1))))
+  expect_equal(anyDuplicated(data.frame(p$line_types, p$point_shapes)), 0L)
+  expect_match(paste(p$notes$Text, collapse = " "), "equivalent score meaning")
+  comp <- plot_data(plot(d, composite = c("Difference", "V"), metric = "G", draw = FALSE))
+  expect_identical(comp$weights, w[, c("Difference", "V")])
+  expect_identical(comp$table, d$coefficients[d$coefficients$Kind == "Composite", ])
+  expect_true(all(comp$series$Kind == "Composite"))
+  expect_identical(serialize(d, NULL), before)
+
+  # An unavailable score remains in the table/legend; internal gaps break lines.
+  missing <- d$coefficients$Kind == "Score" &
+    (d$coefficients$Score == "W" | d$coefficients$Tasks == 6)
+  d$coefficients$Phi[missing] <- NA_real_
+  d$coefficients$PhiStatus[missing] <- "Negative projected error variance"
+  payload <- plot(d, score = c("W", "V"), metric = "Phi", reference = .8, draw = FALSE)
+  expect_equal(nrow(payload$data$unavailable), sum(missing))
+  expect_equal(nrow(payload$data$series), sum(d$coefficients$Kind == "Score"))
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, score = c("W", "V"), metric = "Phi", reference = .8, preset = "monochrome"))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(payload)
+    expect_identical(plot_data(gg, "notes"), payload$data$notes)
+    expect_identical(as.character(gg$data$Group), payload$data$series$Group)
+    expect_true(all(is.na(gg$layers[[1]]$data$Value[gg$layers[[1]]$data$Tasks == 6])))
+    expect_length(unique(ggplot2::ggplot_build(gg)$layout$layout$PANEL), 1L)
+    expect_identical(gg$theme$legend.position, "bottom")
+    # Long display labels must fit the article's seven-inch drawing device.
+    long <- payload
+    labels <- paste("Detailed criterion", long$data$legend$label)
+    long$data$series$Group <- labels[match(long$data$series$Group, long$data$legend$label)]
+    long$data$legend$label <- labels
+    grob <- ggplot2::ggplotGrob(as_ggplot(long))
+    legend <- which(startsWith(grob$layout$name, "guide-box") &
+      vapply(grob$grobs, inherits, logical(1), "gtable"))
+    expect_length(legend, 1L)
+    expect_lte(grid::convertWidth(sum(grob$grobs[[legend]]$widths), "inches", valueOnly = TRUE), 7)
+    expect_null(gg$labels$title)
+    expect_null(gg$labels$caption)
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+})
+
+test_that("single metrics and optional references use the requested scale", {
+  g <- mfrm_multivariate_gstudy(mvgt_plot_data(), c("V", "W"), rater = NULL)
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 6, 12)))
+  p <- plot_data(plot(d, score = c("W", "V"), metric = "Phi", reference = c(.7, .8), draw = FALSE))
+  expect_identical(p$legend$label, c("W", "V"))
+  expect_true(p$show_legend)
+  expect_identical(p$reference_lines$value, c(.7, .8))
+  expect_true(all(p$reference_lines$role == "user_reference"))
+  expect_match(paste(p$notes$Text, collapse = " "), "not universal acceptance rules")
+  expect_equal(nrow(plot_data(plot(d, draw = FALSE))$reference_lines), 0L)
+  for (bad in list(character(), c("G", "Phi"), NA_character_, "AbsoluteSEM", "unknown", 1)) {
+    expect_error(plot(d, metric = bad, draw = FALSE), "compatible with `type`")
+  }
+  for (bad in list(numeric(), NA_real_, Inf, -0.1, 1.1, c(.8, .8), "0.8", TRUE, .8+0i, matrix(.8))) {
+    expect_error(plot(d, reference = bad, draw = FALSE), "distinct finite numeric")
+  }
+  expect_error(plot(d, type = "sem", metric = "Phi", draw = FALSE), "compatible")
+  sem <- plot(d, score = c("V", "W"), type = "sem", metric = "AbsoluteSEM", reference = 10, draw = FALSE)
+  expect_match(sem$data$y_label, "score units")
+  expect_identical(sem$data$series$Value, d$coefficients$AbsoluteSEM)
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  h <- NULL
+  original_abline <- graphics::abline
+  local_mocked_bindings(abline = function(..., h = NULL) {
+    if (!is.null(h)) h <<- h
+    original_abline(..., h = h)
+  }, .package = "graphics")
+  expect_no_warning(plot(d, type = "sem", metric = "AbsoluteSEM", reference = 10))
+  expect_equal(h, 10)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(sem)
+    expect_equal(ggplot2::ggplot_build(gg)$layout$panel_params[[1]]$y$limits, c(0, 10))
+    expect_equal(ggplot2::ggplot_build(gg)$data[[3]]$yintercept, 10)
+    expect_identical(plot_data(gg, "reference_lines"), sem$data$reference_lines)
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+})
+
+
+test_that("facet-count panels share score styles and keep only supplied scenarios", {
+  ratings <- merge(mvgt_plot_data(), data.frame(Rater = 1:3))
+  ratings$V <- ratings$V + ratings$Rater
+  ratings$W <- ratings$W + 2 * ratings$Rater
+  g <- mfrm_multivariate_gstudy(ratings, c("V", "W"))
+  grid <- data.frame(Raters = c(2, 4, 2, 4, 2), Tasks = c(3, 3, 6, 6, 12))
+  weights <- cbind(Equal = c(V = .5, W = .5), Difference = c(V = -1, W = 1))
+  d <- mfrm_multivariate_d_study(g, grid, weights)
+  before <- serialize(d, NULL)
+  p <- plot(d, score = c("W", "V"), x_var = "Tasks", panel_by = "Raters",
+    metric = "Phi", reference = .8, draw = FALSE)
+  expect_identical(p$data$panel_by, "Raters")
+  expect_equal(p$data$ncol, 2)
+  expect_equal(p$data$panels$Count, c(2, 4))
+  expect_identical(p$data$panels$Label, c("Raters = 2", "Raters = 4"))
+  expect_identical(p$data$table, d$coefficients[d$coefficients$Kind == "Score", ])
+  expect_identical(p$data$series$Value, p$data$table$Phi)
+  expect_identical(p$data$series$Group, p$data$series$Score)
+  expect_identical(p$data$legend$label, c("W", "V"))
+  expect_length(unique(p$data$legend$value), 2L)
+  expect_equal(nrow(p$data$series), 2 * nrow(grid))
+  groups <- split(p$data$series, p$data$series$Panel)
+  expect_true(all(vapply(groups, function(z) length(unique(z$Raters)) == 1L, logical(1))))
+  expect_equal(sort(unique(groups[[2]]$X)), c(3, 6))
+  both <- plot(d, score = "V", panel_by = "Raters", draw = FALSE)
+  expect_identical(both$data$panels$Metric, c("G", "G", "Phi", "Phi"))
+  expect_false(both$data$show_legend)
+  expect_identical(both$data$legend$label, "V")
+  single_column <- plot(d, score = "V", panel_by = "Raters", ncol = 1, draw = FALSE)
+  expect_equal(single_column$data$ncol, 1)
+  comp <- plot(d, composite = c("Equal", "Difference"), metric = "Phi", panel_by = "Raters", draw = FALSE)
+  expect_identical(comp$data$weights, weights)
+  expect_identical(comp$data$series$Value, comp$data$table$Phi)
+  flipped <- plot(d, score = "V", x_var = "Raters", panel_by = "Tasks", draw = FALSE)
+  expect_equal(flipped$data$panels$Count, rep(c(3, 6, 12), 2))
+  expect_identical(serialize(d, NULL), before)
+  for (bad in list("Tasks", "Score", "missing", c("Raters", "Tasks"), NA_character_, 1, character())) {
+    expect_error(plot(d, score = "V", x_var = "Tasks", panel_by = bad, draw = FALSE), "non-horizontal facet count")
+  }
+  for (bad in list(0, -1, 1.5, NA_real_, Inf, "2", TRUE, c(1, 2), numeric(), 1+0i)) {
+    expect_error(plot(d, score = "V", panel_by = "Raters", ncol = bad, draw = FALSE), "positive integer")
+  }
+  expect_error(plot(d, score = "V", ncol = 2, draw = FALSE), "requires `panel_by`")
+  one <- mfrm_multivariate_d_study(mfrm_multivariate_gstudy(mvgt_plot_data(), c("V", "W"), rater = NULL))
+  expect_error(plot(one, panel_by = "Tasks", draw = FALSE), "non-horizontal facet count")
+
+  grDevices::pdf(NULL, width = 7, height = 6)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  old <- graphics::par(c("mfrow", "mar", "oma", "cex", "mex", "fig", "bg", "fg"))
+  expect_no_warning(plot(d, score = c("W", "V"), metric = "Phi", panel_by = "Raters", reference = .8))
+  expect_no_warning(plot(d, composite = c("Equal", "Difference"), type = "sem", panel_by = "Raters"))
+  expect_equal(graphics::par(names(old)), old)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(p)
+    built <- ggplot2::ggplot_build(gg)
+    expect_length(unique(built$layout$layout$PANEL), 2L)
+    expect_identical(levels(gg$data$Panel), p$data$panels$Label)
+    expect_identical(plot_data(gg, "notes"), p$data$notes)
+    expect_identical(gg$data$Value, p$data$series$Value)
+    expect_equal(built$data[[3]]$yintercept, rep(.8, 2))
+    expect_equal(built$data[[2]]$colour,
+      p$data$legend$value[match(p$data$series$Score, p$data$legend$label)])
+    expect_length(built$layout$panel_scales_x, 1L)
+    expect_length(built$layout$panel_scales_y, 1L)
+    expect_equal(built$layout$panel_params[[1]]$x$limits, c(3, 12))
+    expect_equal(built$layout$panel_params[[2]]$y$limits, c(0, 1))
+    expect_identical(as_ggplot(both)$theme$legend.position, "none")
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+})
+
+test_that("empty panels and missing points stay visible with metric-specific reasons", {
+  ratings <- merge(mvgt_plot_data(), data.frame(Rater = 1:3))
+  g <- mfrm_multivariate_gstudy(ratings, c("V", "W"))
+  d <- mfrm_multivariate_d_study(g, expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 12)))
+  missing <- d$coefficients$Raters == 4 | d$coefficients$Tasks == 6
+  d$coefficients$Phi[missing] <- NA_real_
+  d$coefficients$PhiStatus[missing] <- "Negative projected error variance"
+  p <- plot(d, score = c("V", "W"), panel_by = "Raters", draw = FALSE)
+  expect_equal(nrow(p$data$panels), 4L)
+  expect_true(all(is.finite(p$data$series$Value[p$data$series$Metric == "G"])))
+  expect_true(all(p$data$unavailable$Metric == "Phi"))
+  expect_true(all(is.na(p$data$series$Value[p$data$series$Panel == 4L])))
+  grDevices::pdf(NULL, width = 7, height = 6)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, score = c("V", "W"), panel_by = "Raters"))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(p)
+    expect_length(levels(gg$data$Panel), 4L)
+    line <- gg$layers[[1]]$data
+    gap <- line$Metric == "Phi" & line$Raters == 2 & line$X == 6
+    expect_equal(sum(gap), 2L)
+    expect_true(all(is.na(line$Value[gap])))
+    expect_false(any(line$Metric == "Phi" & line$Raters == 4))
+    expect_match(gg$layers[[3]]$data$Label, "Negative projected error")
+    expect_identical(as.character(gg$layers[[3]]$data$Panel), p$data$panels$Label[4])
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
+})
+
+test_that("nested and named-facet panel labels retain their count meaning", {
+  env <- new.env(parent = environment())
+  eval(parse(test_path("test-multivariate-nested-gtheory.R"), keep.source = FALSE)[[1L]], env)
+  ratings <- env$mvgt_nested_fixture()$data
+  g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"), nesting = c(Rater = "Task"))
+  d <- mfrm_multivariate_d_study(g, expand.grid(Raters = c(2, 3), Tasks = c(4, 8)))
+  p <- plot(d, metric = "Phi", panel_by = "Raters", draw = FALSE)
+  expect_identical(p$data$panels$Label, c("Raters per Task = 2", "Raters per Task = 3"))
+  flipped <- plot(d, x_var = "Raters", panel_by = "Tasks", metric = "Phi", draw = FALSE)
+  expect_identical(flipped$data$x_label, "Number of raters per Task")
+  named <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"),
+    facets = c("Test occasion" = "Task", Label = "Rater"))
+  named_d <- mfrm_multivariate_d_study(named, expand.grid(`Test occasion` = c(4, 8), Label = c(2, 3)))
+  named_p <- plot(named_d, x_var = "Test occasion", panel_by = "Label", metric = "Phi", draw = FALSE)
+  expect_identical(named_p$data$panels$Label, c("Label = 2", "Label = 3"))
+  expect_equal(named_p$data$panels$Count, c(2, 3))
+  expect_identical(named_p$data$series$Label, named_p$data$table$Label)
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, metric = "Phi", panel_by = "Raters"))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_identical(levels(as_ggplot(p)$data$Panel), p$data$panels$Label)
+    expect_no_warning(ggplot2::ggplotGrob(as_ggplot(named_p)))
   }
 })

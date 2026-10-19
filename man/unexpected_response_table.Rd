@@ -72,7 +72,7 @@ conservative your screening should be.
 \enumerate{
 \item Start with \code{rule = "either"} for broad screening.
 \item Re-run with \code{rule = "both"} for strict subset.
-\item Inspect top rows and visualize with \code{\link[=plot_unexpected]{plot_unexpected()}}.
+\item Inspect top rows and visualize with \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}.
 }
 }
 

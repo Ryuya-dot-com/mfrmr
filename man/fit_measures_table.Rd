@@ -27,7 +27,10 @@ fit_measures_table(
 \item{x}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
 
 \item{diagnostics}{Optional diagnostics object. If supplied, \code{x} may be the
-fitted object used only for provenance.}
+supported fitted object used only for provenance. Supplying diagnostics
+does not enable ordinary fit measures for corrected JML, two-family GPCM,
+testlet or shared-rater models. Use \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} for their
+separately supported descriptive response residuals.}
 
 \item{facet}{Optional facet-name filter, for example \code{"Rater"}.}
 
@@ -114,11 +117,13 @@ Changing \code{ci_level} changes their width, not their inferential status.
 Older inputs without this metadata are labelled as having an unrecorded
 basis; finite SEs alone do not establish formal inference.
 
-\code{plot(x, type = "measure_ci")} retains these explanations in its caption
-and saved data. Fixed values use open diamonds without intervals; other
-finite estimates without intervals use crosses. Use \code{main = ""} to omit
-the title or \code{show_notes = FALSE} to hide the caption while retaining its
-text in the saved plot data.
+After \code{fm <- fit_measures_table(x)}, use
+\code{p <- plot(fm, type = "measure_ci", draw = FALSE)} to inspect the bands.
+\code{plot_data(p, "caption")} retains the explanation and
+\code{plot_data(p, "table")} retains the interpretation fields. Titles and notes
+are not drawn by default; \code{show_notes = TRUE} explicitly adds the note.
+Fixed values use open diamonds without intervals; other finite estimates
+without intervals use crosses.
 
 Directional labels use the selected \code{flag_basis}. By default, high mean
 squares are labeled \code{underfit} and low mean squares \code{overfit}; conflicting
@@ -170,7 +175,7 @@ Wright, B. D. and Linacre, J. M. (1994). Reasonable mean-square fit values.
 \url{https://www.rasch.org/rmt/rmt83b.htm}.
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_fit_review]{facets_fit_review()}}, \code{\link[=plot_bubble]{plot_bubble()}},
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_fit_review]{facets_fit_review()}}, \link[=plot.mfrm_fit]{plot(x, type = "bubble")},
 \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}, \code{\link[=mfrm_screening_sensitivity]{mfrm_screening_sensitivity()}}
 }
 \concept{confidence intervals}

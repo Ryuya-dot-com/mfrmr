@@ -64,7 +64,7 @@ test_that('plot extraction and customization retain unavailable intervals withou
   expect_equal(plot_data(p,'table')$Estimate,attr(x$ci,'diagnostics')$Estimate)
   expect_equal(plot_data(x$curves,'table')$Estimate,x$curves$table$Estimate)
   expect_identical(plot_data(x$curves,'settings')$level,.9)
-  expect_match(as_ggplot(x$curves)$labels$subtitle,'90%')
+  expect_match(paste(plot_data(as_ggplot(x$curves), "notes")$Text, collapse = "\n"),'90%')
   bad <- x$ci; tab <- attr(bad,'diagnostics')
   tab$CI_Lower[1:2] <- c(0,NA); tab$CI_Upper[1:2] <- c(Inf,NA)
   tab$CIEligible[1:2] <- FALSE; attr(bad,'diagnostics') <- tab
@@ -92,7 +92,7 @@ test_that('curve plots expose unavailable intervals and break ribbons at gaps', 
   one <- tab[tab$Category==1 & tab$CIEligible,]
   expect_length(unique(one$IntervalGroup),2L)
   expect_identical(tab$InferenceReview,x$table$InferenceReview)
-  expect_match(p$labels$caption,'1 of 21')
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"),'1 of 21')
   built <- ggplot2::ggplot_build(p)
   expect_equal(nrow(built$data[[3]]),1L)
   expect_equal(built$data[[3]]$shape,4)
@@ -103,11 +103,11 @@ test_that('curve plots expose unavailable intervals and break ribbons at gaps', 
   x$table$CIEligible[] <- FALSE
   x$table$Lower[] <- x$table$Upper[] <- NA_real_
   all_missing <- plot(x,draw=FALSE)
-  expect_match(all_missing$labels$caption,'21 of 21')
+  expect_match(paste(plot_data(all_missing, "notes")$Text, collapse = "\n"),'21 of 21')
   expect_equal(nrow(ggplot2::ggplot_build(all_missing)$data[[3]]),21L)
   expect_match(all_missing$labels$alt,'Crosses')
   x$cautions <- paste(rep('Weak information requires careful review.',8),collapse=' ')
-  expect_true(max(nchar(strsplit(plot(x,draw=FALSE)$labels$subtitle,'\n')[[1]]))<=75)
+  expect_true(max(nchar(strsplit(plot_data(plot(x,draw=FALSE), "subtitle"),'\n')[[1]]))<=75)
 })
 
 test_that('saved GPCM exports replay the exact selected inference', {
@@ -166,7 +166,7 @@ test_that('bootstrap test plots retain all unresolved replicates', {
     settings=list(sampling='Independent Persons',seed=1)),class='mfrm_gpcm_bootstrap')
   expect_identical(plot_data(x,'table'),x$trials)
   expect_equal(nrow(apa_table(x,which='trials')$table),2)
-  expect_match(as_ggplot(x)$labels$caption,'unresolved: 1')
+  expect_match(paste(plot_data(as_ggplot(x), "notes")$Text, collapse = "\n"),'unresolved: 1')
   x$trials$Available[] <- FALSE; x$trials$LR[] <- NA_real_
   expect_no_error(ggplot2::ggplot_build(as_ggplot(x)))
 })
@@ -207,7 +207,7 @@ test_that('selected bootstrap updates remain identified through saved output', {
   expect_identical(attr(ci,'availability'),attr(original,'availability'))
   expect_match(paste(capture.output(print(b)),collapse=' '),'not a complete rerun')
   expect_true(all(grepl('not a complete rerun',attr(ci,'diagnostics')$InferenceReview)))
-  expect_match(plot(ci,draw=FALSE)$labels$subtitle,'not a complete')
+  expect_match(paste(plot_data(plot(ci,draw=FALSE), "notes")$Text, collapse = "\n"),'not a complete')
   expect_null(plot(ci,subtitle=NULL,draw=FALSE)$labels$subtitle)
   expect_identical(apa_table(b,which='sampling')$table$Reanalysis,b$settings$recheck)
   tables <- mfrmr:::mfrm_gpcm_inference_tables(ci)

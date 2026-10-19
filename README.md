@@ -5,6 +5,18 @@
 [![pkgdown](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Ryuya-dot-com/mfrmr/actions/workflows/pkgdown.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**New to mfrmr?** Start with [Installation](#installation), then
+[Quick start](#quick-start). The example explains one rating per row, fits a
+model, and shows how to read individual estimates and review messages.
+For your own file, follow [Use your own CSV](#use-your-own-csv).
+You do not need every specialist analysis described on this page.
+
+In R, `help("mfrmr_workflow_methods")` gives the analysis steps;
+`help("mfrmr_methods_reference")` explains what the calculations mean and
+where to find their formulas and methodological references.
+Both help topics work without installed vignettes. Use
+`mfrmr_output_guide("beginner")` to choose a function by your question.
+
 `mfrmr` fits unidimensional many-facet ordered-response models in R.
 It supports rating-scale (`RSM`) and partial-credit (`PCM`) models, together
 with a one-family `GPCM` extension in which one selected facet supplies level-specific
@@ -32,6 +44,190 @@ Start with the quick start below: load data, fit a model, draw a plot, and
 inspect the summary. The complete workflow then covers data checks,
 diagnostics, and reporting.
 
+To compare observed scores before fitting a model, follow
+[Rating agreement and score comparisons](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.html)
+(`vignette("mfrmr-rating-agreement", package = "mfrmr")`). The runnable lesson
+matches ratings by person and task, explains why perfect correlation can
+coexist with disagreement, and preserves missing-pair audits and saved results.
+
+For aligned scores from human raters, automated scorers or other scoring
+procedures, `score_comparison_table()` provides QWK, correlation, standardized
+mean differences and an optional second-reference baseline. Declare the rubric
+categories; supply categorized scores separately from continuous scores:
+
+```r
+comparison <- score_comparison_table(
+  scores = c(0.2, 0.9, 1.3, 2.1, 2.7, 2.8),
+  reference = c(0, 1, 1, 2, 3, 3),
+  reference2 = c(0, 1, 2, 2, 2, 3),
+  categories = 0:3,
+  score_categories = c(0, 1, 1, 2, 3, 3)
+)
+comparison$table
+comparison$criteria
+```
+
+All statistics use the same complete responses. By default no thresholds are
+applied. For joint human/automated scoring, `screen = "williamson2012"` selects
+the paper's numerical examples; individual thresholds can be supplied or
+overridden. These screens do not certify validity or deployment readiness.
+Both pooled-SD and reference-SD SMDs are retained because Williamson et al.
+(2012) differ between formula and prose; the default follows the formula.
+Optional `fit`, matching `diagnostics`, `rater_facet` and `rater` add saved
+RSM/PCM severity and Infit/Outfit for the selected rater's fitted cohort, which
+need not equal the comparison sample. Save the complete list with `saveRDS()`;
+`table` and `criteria` can be written as CSV. The earlier
+`automated_scoring_table()` interface retains its argument names, output
+columns and default Williamson screen for compatibility.
+
+Separation reliability answers a different question. In reports and
+`plot(fit, type = "reliability")`, high Person values indicate distinguishable
+abilities; high rater values indicate distinguishable severities, **not rater
+agreement**. Low rater values may reflect imprecision and do not establish
+agreement. Interpret each facet by its role, together with estimates and
+uncertainty; the figure does not apply a common adequate/strong cutoff.
+
+For rater centrality, `rater_centrality_table()` accepts an existing RSM fit
+and an optional PCM fit estimated on the same retained ratings with
+`step_facet = "Rater"` (or your rater facet's name):
+
+```r
+centrality <- rater_centrality_table(
+  fit = rsm_fit, threshold_fit = pcm_rater_fit, rater_facet = "Rater"
+)
+centrality$table
+centrality$categories
+```
+
+RSM raw-residual versus expected-score correlations and Infit/Outfit accompany
+PCM threshold SDs and variances. Either fit can be supplied alone; unavailable
+indices retain reasons. More negative correlations and wider threshold spreads
+can suggest centrality, but assignment, score ranges and estimation error also
+affect them. Low Infit alone is not a centrality diagnosis. Review both source
+statuses, category counts and threshold ordering. These are descriptive
+indices, not the Bayesian FM-SC centrality parameter or corrected abilities.
+See `?rater_centrality_table` for executable fitting examples and scope.
+
+When expert reference ratings are available, `fit_rater_accuracy()` estimates
+raters' accuracy in matching those references. Supply one row per rater and
+benchmark combination, with the reference already aligned to that row:
+
+```r
+accuracy <- fit_rater_accuracy(
+  ratings_with_reference, rater = "Judge", facets = c("Essay", "Domain"),
+  score = "Rating", reference = "Reference", method = "JML"
+)
+accuracy$table
+accuracy$difficulty
+accuracy$cases
+```
+
+The response is 1 for an exact match and 0 otherwise. Higher accuracy logits
+mean a greater probability of matching the supplied reference, adjusting for
+the specified difficulty facets. This is a different construct from severity
+or examinee ability. Missing pairs remain in the case audit; contradictory
+references and duplicate rater-by-benchmark rows are rejected. JML is
+exploratory and preserves infinite estimates for all-match/all-mismatch raters.
+`method = "MML"` estimates a normal rater-accuracy population and returns
+EAPs and posterior SDs, conditional on fitted parameters. The population sample
+is the number of raters. Review source readiness and benchmark quality; the
+function does not estimate reference uncertainty or issue an accuracy verdict.
+The native fit is retained as `accuracy$fit`, where `Person` means **rater**;
+`accuracy$settings$column_map` records the roles. See `?fit_rater_accuracy` for
+an executable example and the assumptions.
+
+For observed scores on a common interval scale, `pairwise_icc_table()` computes
+two-way ICCs for every rater pair without fitting an MFRM:
+
+```r
+pair_icc <- pairwise_icc_table(
+  ratings, rater = "Rater", unit = c("Person", "Criterion"), score = "Score",
+  model = "mixed", definition = "agreement", type = "single"
+)
+pair_icc$table
+pair_icc$cases
+```
+
+Absolute agreement includes systematic score offsets; `definition = "consistency"`
+removes their contribution. `type = "average"` concerns the mean of exactly two
+ratings. `model = "random"` requires a defensible random-rater sampling design;
+its point formula is the same as for the selected raters. Each pair uses its
+own common complete units. These samples remain auditable, including explicit
+missing scores and absent assignments. Repeated rater-unit cells are rejected.
+Negative estimates are retained and undefined estimates have reasons. There
+are no confidence intervals or quality cutoffs, and different pair cohorts
+do not provide a common ranking of rater quality. This is distinct from MFRM
+separation reliability and `compute_facet_icc()` variance shares. See
+`?pairwise_icc_table` for an executable example, formulas and assumptions.
+
+For pooled agreement across raters, `krippendorff_alpha_table()` supports
+nominal, ordinal, interval and ratio scores, including unequal numbers of
+ratings per unit:
+
+```r
+alpha <- krippendorff_alpha_table(
+  ratings, rater = "Rater", unit = c("Person", "Criterion"), score = "Score",
+  level = "ordinal", categories = 0:3
+)
+alpha$table
+alpha$unit_summary
+alpha$cases
+```
+
+Choose the measurement level substantively. Ordinal scores require their
+category order; distances depend on pairable-category frequencies, not the
+numeric gaps or QWK weights. Units with fewer than two nonmissing ratings
+contribute to neither observed nor expected disagreement. Their exclusions,
+explicit missing scores and absent assignments remain visible. Units with
+more ratings contribute more pairable values. Negative alpha is retained;
+zero expected disagreement makes it undefined. This is Krippendorff's
+agreement coefficient, not Cronbach's alpha, MFRM separation reliability or
+individual rater accuracy against a reference. No confidence intervals or
+quality cutoffs are supplied. See `?krippendorff_alpha_table` for distance
+definitions, normalization and limits.
+
+For weighted categorical agreement, use `pairwise_kappa_table()` for each
+rater pair and `gwet_ac2_table()` for the whole panel:
+
+```r
+kappa <- pairwise_kappa_table(
+  ratings, "Rater", c("Person", "Criterion"), "Score", categories = 0:3,
+  weights = "quadratic"
+)
+ac2 <- gwet_ac2_table(
+  ratings, "Rater", c("Person", "Criterion"), "Score", categories = 0:3,
+  weights = "quadratic"
+)
+kappa$table
+ac2$table
+```
+
+Both also accept linear or unweighted agreement; unweighted Gwet agreement
+is AC1. Declare all permitted categories, including unused ones. Numeric
+values use actual spacing, whereas character labels use equally spaced
+positions in the declared order. The returned weights make this choice
+auditable. Kappa uses each pair's complete units for both observed and
+expected agreement. AC2 equally weights pairable units for observed agreement,
+but its category proportions also use singleton units. Unlike alpha, those
+singletons affect AC2; unused categories can affect it as well. Its chance
+model differs from kappa's. A constant rating can give AC = 1 while kappa is
+undefined, without demonstrating discrimination or accuracy. Matching audits,
+component quantities and undefined-result reasons are retained. These are
+point estimates with no confidence intervals or universal quality cutoffs;
+see the help topics for formulas, missingness and scale conventions.
+
+For a binary conditional group comparison, `mantel_haenszel_table()` accepts
+explicit matching strata and one response per Person and target. It returns
+common odds ratios, exact or asymptotic inference, and auditable stratum/row
+inclusion. Matching validity and comparable rating plans require substantive
+justification. This supplements the residual/refit DFF routes without changing
+their inferential limits. For ordered responses, `ordinal_logistic_table()`
+uses the optional `ordinal` package to separate uniform, nonuniform and joint
+group comparisons and a proportional-odds diagnostic. It retains model failures,
+named Nagelkerke R-squared changes and common-range effect contrasts. Both
+interfaces reject repeated Person-target cells; neither establishes the
+validity of matching or exposure. See `vignette("mfrmr-linking-and-dff")`.
+
 Package website: <https://ryuya-dot-com.github.io/mfrmr/>
 
 Source code: <https://github.com/Ryuya-dot-com/mfrmr>
@@ -41,13 +237,17 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the `0.2.4.9000` development source, including
-portable calibration, exploratory external-feature groups, numeric PCA/k-means,
+This README describes the unreleased `0.2.4` candidate, including native
+RSM/PCM conditional estimation, portable calibration, exploratory
+external-feature groups, numeric PCA/k-means,
 assigned-score imputation, fixed-facet sandwich intervals, screening evaluation,
 multivariate G/D-studies, and shared random-rater and Person-specific testlet
-RSMs. See [the roadmap](https://ryuya-dot-com.github.io/mfrmr/ROADMAP.html) for supported scope and future work.
-The development version is intended for evaluation and has not been released
-on CRAN. Its `mfrmr_output_guide("plots")` is not part of the checked rc.6 archive.
+RSMs. See [this source's roadmap](ROADMAP.md) for supported scope and future work.
+The API, inferential scope and supported workflows are settled for this
+candidate. It is intended for evaluation and has not been released
+on CRAN. Final release checks remain open; earlier candidate checks do not
+qualify the current source. The published website may describe an earlier
+revision, so use the installed help and tutorials for this candidate.
 Functions and options shown here may differ from an installed release; retain
 the installed source tag or commit and use its matching help. Earlier candidates
 also report `0.2.4`, so `packageVersion("mfrmr")` alone cannot distinguish them.
@@ -60,36 +260,38 @@ Install the published CRAN release with:
 install.packages("mfrmr")
 ```
 
-To install the downloaded 0.2.4 candidate archive, use the following command
-(replace the path with its location on your computer). Development-only
-features require the corresponding development checkout:
+To evaluate this candidate from a supplied source archive, install that file:
 
 ```r
 install.packages("path/to/mfrmr_0.2.4.tar.gz", repos = NULL, type = "source")
 ```
 
-The checked GitHub candidate is `v0.2.4-rc.6`. It includes
-`mfrm_cluster_pam()`, `review_mfrm_imputations()`, `category_policy` and the
-`"feedback"` output-guide scope. To install that candidate reproducibly:
+Retain the archive and its supplied checksum with your analysis. This candidate
+has not been published; a GitHub branch may describe an earlier source. A local
+checkout can also be installed with `remotes::install_local("path/to/mfrmr")`,
+using the directory containing `DESCRIPTION` and this README.
 
-```r
-if (!requireNamespace("remotes", quietly = TRUE)) {
-  install.packages("remotes")
-}
+The earlier [rc.6 release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.6)
+retains that candidate's source archive, prebuilt tutorials, checksum and
+check results. It is a historical candidate, not the current source
+documented on this page.
 
-remotes::install_github(
-  "Ryuya-dot-com/mfrmr",
-  ref = "v0.2.4-rc.6",
-  build_vignettes = TRUE
-)
-```
+### Which additional packages do I need?
 
-The [release page](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.6)
-provides the rc.6 source archive with prebuilt tutorials, its checksum and the
-applicable check results. Check which revision contains a new API before using
-`ref = "main"`; that branch changes over time. A local checkout can
-also be installed with `remotes::install_local("path/to/mfrmr")`, using the
-directory containing `DESCRIPTION` and this README.
+The quick start below uses packages installed with mfrmr; its base-R plots do
+not need `ggplot2`. Install additional packages when you choose a feature that
+uses them. For example, `as_ggplot()` needs `ggplot2`, corrected JML estimation
+needs `nleqslv`, and shared random-rater estimation needs `RTMB` (version 2.0 or
+later). If one is missing, the function identifies the required package.
+Use `install.packages("ggplot2")` when you want the ggplot2 rendering route.
+See `help("mfrmr", package = "mfrmr")`, under **Optional packages**, for the
+feature-to-package guide.
+
+A saved `mfrm_results` bundle can be reopened with `readRDS()` and passed to
+`mfrm_report()` without refitting or reinstalling optional estimation packages.
+This reports the stored analysis; it does not update estimates for new data or
+compute missing diagnostics. Retain the complete bundle and matching package
+version/source, as described in [Updating saved analyses](#updating-saved-analyses).
 
 ## Quick start
 
@@ -98,7 +300,9 @@ and criterion difficulty. A *facet* is a source of variation in scores; here,
 `Rater` and `Criterion` are facets, and individual raters and criteria are their
 *levels*. The data are synthetic, with one row per rating and scores from 1 to 4.
 
-`head(toy)` shows the first six rows. The quoted column names in `fit_mfrm()`
+The example data are included in the package; you do not need to create or
+download them. The loading line below creates an object named `ratings`.
+`head(ratings)` shows the first six rows. The quoted column names in `fit_mfrm()`
 are case-sensitive; `Study` and `Group` are extra labels unused by this model.
 `MML` selects marginal maximum likelihood; `RSM` selects a rating-scale model
 with shared category thresholds (the transitions between adjacent scores).
@@ -108,12 +312,12 @@ with shared category thresholds (the transitions between adjacent scores).
 library(mfrmr)
 
 # Load example ratings and look at the first six rows
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
@@ -135,20 +339,29 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 results$decision
 ```
 
-`<-` saves an object without printing it. Here `toy` holds the data, `fit`
+`<-` saves an object without printing it. Here `ratings` holds the data, `fit`
 holds the model, and `results` holds its summary. `$` selects a named part:
 `results$person_overview` displays just that table. Enter `results` to print
 the full summary.
 
 These settings describe this example, not every assessment. The bounds 1 and 4
-come from its rubric; change them for your own data. `keep_original = TRUE`
-preserves that category ladder. The ordinary default is `FALSE`, which can
-collapse unused internal categories and change the model's steps. Preserving
+come from its rubric; change them for your own data. `category_policy = "preserve"`
+preserves that category ladder. Without an explicit policy, the ordinary default
+can collapse unused internal categories and change the model's steps. Preserving
 an unsupported internal category instead stops fitting for review.
 `population_formula = NULL` fixes the ordinary RSM/PCM ability distribution
 at N(0,1); it does not estimate the population variance. Both extended RSMs
 estimate that variance by default, so copying defaults across models does not
 necessarily provide a matched comparison.
+
+For an ordinary RSM/PCM MML fit with `population_formula = ~ X`,
+`mfrm_population_intervals(fit, contrasts = L)` can report prespecified
+comparisons of conditional population means. Supply a named coefficient-weight
+matrix: one row per comparison and every fitted coefficient as a column.
+The [population interval help](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_population_intervals.html)
+includes an executed example and the `mfrm_results()` / `apa_table()` handoff.
+These experimental pointwise intervals use full joint information; sampling
+coverage is not yet qualified. They do not compare two individual abilities.
 
 The Wright map displays the estimates in logits, the model's measurement units,
 rather than the original 1-to-4 scores. With this example's default orientation,
@@ -287,8 +500,8 @@ k-means standardize features by default. These are analysis choices, not just
 display preferences. Check the settings stored with each result.
 
 For custom figure headings, the development version adds `title` to eight
-existing diagnostic helpers, including `plot_bubble()` and
-`plot_facet_quality_dashboard()`. Use `title = "Scoring patterns"` to replace
+existing diagnostic helpers, including `plot(fit, type = "bubble")` and
+`plot(fit, type = "facet_dashboard")`. Use `title = "Scoring patterns"` to replace
 the heading or `title = NULL` to hide it. Existing `main` calls remain
 supported; `main = NULL` still means the default heading. Supply only one
 name. See `?mfrmr_visual_diagnostics` for the complete list and interpretation
@@ -303,10 +516,7 @@ their uncertainty, followed by the detailed screening results:
 
 ```r
 # Review severity on the fitted scale without heuristic guide bands
-severity <- plot_rater_severity_profile(
-  fit, diagnostics = diagnostics, facet = "Rater",
-  show_bands = FALSE, draw = FALSE
-)
+severity <- plot(fit, type = "rater_severity", diagnostics = diagnostics, facet = "Rater", show_bands = FALSE, draw = FALSE)
 severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
 
 # Keep the screening settings and interpretation notes with the results
@@ -404,6 +614,34 @@ pointwise intervals conditional on the observed fixed raters, not random-rater
 inference or a rater-exclusion rule. The tutorial explains the assumptions,
 unavailable results and saved output:
 `vignette("mfrmr-facet-intervals", package = "mfrmr")`.
+
+For full-rank RSM/PCM models, `fit_mfrm(method = "CML",
+category_policy = "preserve")` conditions on each Person's total and requires
+no ability population distribution. Use `mfrm_facet_intervals()` for native-scale
+conditional-information intervals and `plot(ci)` for their display. This separate
+fit class estimates no Person abilities or population SD; see the same tutorial
+for an executable example and the initial scope. Population-SD-standardized
+contrasts remain available for supported MML fits through
+`scale = "standardized"`, using the full joint delta method with the fitted SD.
+For a matching full RSM/PCM MML interaction fit, supply its `comparison_review`
+to `mfrm_facet_intervals()` to obtain intervals for the declared school/rater
+contrasts. Standardization requires the fitted common intercept-only normal
+population; a `~Group` residual SD is not a marginal population SD.
+For incomplete school/rater assignments, declare a CML comparison review with
+`describe_mfrm_data()` and use `fit_scope = "comparisons"`. Identified interaction
+contrasts receive conditional-information intervals and joint covariance;
+unidentified targets stay missing. `ci <- mfrm_facet_intervals(fit)` reuses
+the saved targets; use `plot(ci)` and `apa_table(ci)` to display them, or
+`level = .90` for pointwise 90% limits without refitting. See the executable example in
+`vignette("mfrmr-linking-and-dff")` for scope, assumptions and interpretation.
+The review's `IdentificationBasis` explains whether a target is identified
+under the unrestricted-Person response model, depends on the declared population
+restrictions in the conditional map, or uses CML conditional support. MML's
+global marginal identification and interval qualification remain separate.
+Use `mfrmr_interval_guide("fit")` to find the CML and full-MML interaction
+calls, scale requirements and supported displays. CML results use dedicated
+tables, plots and RDS saving; they do not enter the ordinary Person-scoring,
+Wright-map, diagnostic or consolidated-report workflow.
 
 To evaluate a warning rule in a simulation, use
 `mfrm_screening_performance(roster, results, rule = "your prespecified rule")`.
@@ -604,6 +842,79 @@ computed diagnostics. They do not supply formal model-fit tests.
 intervals for the ordinary RSM and both extensions. Attach two saved scores
 with `compare_mfrm(..., person_scores = list(ordinary_scores, extended_scores))`
 and select `metric = "person"` to compare population-centered EAPs.
+
+For ordinary RSM/PCM, supply ability cut scores on the calibration scale to
+ask about ability levels:
+
+```r
+scores <- predict_mfrm_units(
+  fit, new_ratings, cut_scores = c(Basic = -0.5, Advanced = 0.8)
+)
+scores$decisions
+apa_table(scores, which = "decisions")
+```
+
+The saved table includes probabilities above each cut and within consecutive
+bands (`Lower < ability <= Upper`), the scoring prior and availability. The
+same `cut_scores` argument works with ordinary RSM `score_mfrm_persons()` and
+continuous-posterior RSM/PCM `score_mfrm_calibration()`. Unit observation weights
+are required. Existing source and missing-response rules still apply.
+`summary(scores)` retains the computed table. Native and portable score batches
+both support `build_summary_table_bundle()` and `export_summary_appendix()`;
+`saveRDS()`/`readRDS()` reuse it without rescoring.
+See `?predict_mfrm_units` for the probability-table definition and a runnable
+fitted-object example, `?mfrm_calibration_score_methods` for the portable
+example, and `vignette("mfrmr-portable-calibration", package = "mfrmr")` for
+the complete save, score and export workflow. `mfrmr_output_guide("calibration")`
+also lists these routes.
+
+These probabilities hold calibration, population parameters and the cuts fixed.
+They do not include uncertainty from estimating those quantities, test a
+difference between two Persons, or predict passing a future administration.
+The example cuts and labels are illustrative; CEFR use requires separately
+justified boundaries on the same ability scale. Very small probabilities have
+absolute numerical accuracy; a displayed zero or one is not a claim of logical
+impossibility or certainty. Shared-rater, testlet and GPCM cut probabilities
+are not yet supported.
+
+To evaluate future classifications under a fixed ordinary RSM/PCM calibration,
+use `classification_table()`. Supply one row per planned rating, true ability
+cuts, the actual operational sum-score cuts and an ability grid:
+
+```r
+plan <- expand.grid(Rater = c("R1", "R2"), Criterion = c("C1", "C2"))
+# Replace the identifiers and illustrative cuts with your calibrated plan.
+decision <- classification_table(
+  fit, plan, cut_scores = c(Basic = -0.5, Advanced = 0.8),
+  score_cuts = c(4, 8), theta = seq(-1.5, 1.5, by = 0.1)
+)
+decision$table  # Conditional accuracy, consistency and ability-scale SEM
+decision$cuts   # SEM and expected sum at the declared ability cuts
+```
+
+`lee_sum` uses the exact summed-score distribution; scores are the model's
+`0, ..., K-1` category indices, not necessarily the original numeric labels.
+`rudner_normal` approximates ML ability decisions using inverse-information
+SEM and `operational_cuts` (by default the true ability cuts). Compare their
+values only after checking the actual score-to-ability decision mapping.
+Ties enter the higher category. Consistency assumes two conditionally
+independent repetitions of the same plan; calibration and cuts are fixed.
+Neither a posterior SD nor posterior ability-band probabilities substitute
+for these future-classification quantities.
+
+Population results are returned only when `theta_weights` explicitly defines
+point or quadrature mass at the supplied abilities. `marginal` and
+`classification_matrix` then retain population indices and joint decision
+probabilities. `saveRDS()` preserves the whole result; its data frames can be
+exported with `write.csv()`. See `?classification_table` for a runnable example,
+input eligibility, endpoint rules and the normal approximation's limitations.
+
+Review whether the retained scoring prior represents the population being
+scored. Its estimation uncertainty is excluded, and a larger calibration sample
+does not correct a prior that mismatches a new population. A fixed reference
+prior is not a universal remedy. Numerical availability and population-averaged
+accuracy do not guarantee accurate probabilities in every subgroup or near each
+cut; the portable-calibration article explains the interpretation.
 
 For either extension, collect source scores and residuals with
 `mfrm_results(fit, scores = extended_scores, response_diagnostics = residuals)`.
@@ -1240,7 +1551,7 @@ See `?mfrmr_visual_diagnostics` for scope and saved-plot behavior.
 
 ### Fair Scores and figures without embedded notes
 
-`plot_fair_average()` offers observed-versus-fair (`"scatter"`),
+`plot(fit, type = "fair_average")` offers observed-versus-fair (`"scatter"`),
 observed-minus-fair (`"difference"`), and measure-to-score (`"measure"`) views.
 FairM uses mean reference measures; FairZ uses zero reference measures.
 **FairZ is an expected score, not a z-score.** These transformations do not
@@ -1248,11 +1559,7 @@ average predictions over the observed assignment distribution, and gaps also
 reflect person mix and assignment; they do not by themselves establish bias.
 
 ```r
-p_fair <- plot_fair_average(
-  fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
-  plot_type = "measure", show_ci = TRUE, preset = "monochrome",
-  show_title = FALSE, show_notes = FALSE, draw = FALSE
-)
+p_fair <- plot(fit, type = "fair_average", diagnostics = diag, facet = "Rater", metric = "FairZ", view = "measure", show_ci = TRUE, preset = "monochrome", show_title = FALSE, show_notes = FALSE, draw = FALSE)
 p_fair$data$notes
 p_fair$data$plot_data
 # With ggplot2 installed:
@@ -1266,7 +1573,7 @@ also accept `show_title`, `show_notes`, and `preset = "monochrome"`; see
 
 | Fair-score interval route | What is propagated | Current interpretation |
 | --- | --- | --- |
-| `plot_fair_average(fit, show_ci = TRUE)` for RSM/PCM | Focal measure SE, with thresholds and reference measures fixed | Conditional diagnostic interval |
+| `plot(fit, type = "fair_average", show_ci = TRUE)` for RSM/PCM | Focal measure SE, with thresholds and reference measures fixed | Conditional diagnostic interval |
 | `fair_average_table(fit_gpcm, fair_se = TRUE)` for GPCM-MML | Joint structural covariance, with Person EAP/reference means fixed; non-Person rows only | Structural diagnostic interval |
 
 The table's `fair_se` option does not supply RSM/PCM fair-score SEs. Historical
@@ -1664,6 +1971,178 @@ cannot be pooled by this function. Unassigned cells remain unassigned.
 
 ## Multivariate G-theory
 
+For a guided path from data import to plan comparison and saved reopening,
+use `vignette("mfrmr-gtheory", package = "mfrmr")`
+([online tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gtheory.html)). It connects the common-task
+example below to a two-facet comparison and explains unavailable results.
+
+Use `plot(g, weights = c(V = .5, W = .5))` on the common-task G-study to
+inspect raw sources of variance before projecting future plans. The plot
+includes score covariances for the weighted score and preserves negative
+component estimates. `plot_data(p, "notes")` returns interpretation cautions
+separately; `as_ggplot(p)` provides an editable figure. These are variance
+components in squared score units, not percentages or future-plan error shares.
+
+To compare original scores, use `plot(g, score = c("V", "W"))` for separate
+component panels with shared axes. Use `plot(g, type = "covariance")` for one
+heatmap per source, showing diagonal variances and off-diagonal covariances.
+The color scale is shared and centered at zero; signed cell labels also work
+in `preset = "monochrome"`. `ncol` controls panel columns in both views.
+Covariances are in products of score units, not correlations. Compare sizes
+only for comparable units, and retain `plot_data(p, "notes")` for negative
+variance and full-matrix PSD cautions. These default views show point estimates;
+`plot(g, intervals = TRUE, assumption = "normal")` adds supported component
+intervals, retaining negative estimates and unavailable reasons.
+
+For balanced ANOVA, use `confint(g, weights = c(V = .5, W = .5),
+assumption = "normal")` to obtain component sampling SEs and pointwise
+intervals for that fixed composite. Normal random effects are an explicit
+assumption, not a result of the calculation. Read `Status` and the returned
+`notes` attribute: raw estimates and endpoints are retained separately from
+the interval's intersection with nonnegative variances. This does not supply
+intervals for incomplete sources or a D-plan's G/Phi.
+
+For identifiable incomplete sources, explicitly select
+`confint(g, method = "reml_profile", assumption = "normal")` for scalar
+variance-component intervals. This experimental method fits a separate normal
+REML model to the used ratings; `Estimate` retains the original component and
+`IntervalCenter` identifies the REML estimate. `SE` is not calculated, and
+`SEStatus` distinguishes this from zero uncertainty. The intervals surround
+the REML centers without enumerating remote disconnected accepted regions;
+numerical completion is not a finite-sample coverage guarantee. Use
+`plot(g, intervals = TRUE, method = "reml_profile", assumption = "normal")`
+to calculate and draw them in one call, then save the returned plot to reuse
+its intervals through `as_ggplot()` without refitting.
+
+For sampling SEs of the original MINQUE component estimates, use
+`sampling <- vcov(g, assumption = "normal")` and read
+`attr(sampling, "summary")`. The same method handles a fixed composite via
+`weights`, or between-score covariance components via two `score` names.
+It corrects plug-in bias in sampling variances using normal product moments;
+the SE itself is not unbiased. Negative sampling-variance estimates and
+unidentified entries remain explicit. These SEs are neither measurement SEM
+nor SEs of the separate REML fit, and do not validate intervals formed as
+estimate plus/minus 1.96 SE.
+
+For two-score covariance with an incomplete source, explicitly use
+`confint(g, score = c("V", "W"), method = "reml_profile", assumption = "normal")`.
+This fits a joint normal model and keeps signed endpoints, the original
+MINQUE covariance and a separate REML center. It supplies no sampling SE.
+Its chi-square calibration can under-cover with few facet levels;
+incomplete-source coverage is not established. Use `plot(g, type = "covariance",
+score = c("V", "W"), intervals = TRUE, method = "reml_profile",
+assumption = "normal")` for the same result in one interval plot.
+
+For covariance between two original scores from balanced ANOVA, use
+`confint(g, score = c("V", "W"), method = "gci", assumption = "normal")`.
+These endpoints retain their sign. The generalized method has approximate
+coverage and separate Monte Carlo endpoint bands. Explicit
+`method = "regression_region"` gives a conservative normal-model enclosure,
+which can be very wide with few sampled facet levels. Neither is an automatic
+default. `SEStatus` and `Status` distinguish an unavailable SE from an
+unavailable interval. Use `plot(g, type = "covariance", score = c("V", "W"),
+intervals = TRUE, method = "gci", assumption = "normal")` for one interval
+plot across sources; omitting `intervals` keeps the covariance heatmaps.
+See `?confint.mfrm_multivariate_gstudy` for formulas, assumptions, limitations
+and the reference for the Wishart generalized pivot.
+
+For a D-study `d` based on balanced one-facet ANOVA, use
+`confint(d, assumption = "normal")` for G intervals at its specified future
+counts. This separate F method uses the source persons/tasks for its degrees
+of freedom; a larger future count does not enlarge the source sample.
+For Phi, use `confint(d, parm = "Phi", assumption = "normal", seed = 1)`.
+This uses a generalized confidence interval, with numerical endpoint bands
+in `attr(result, "monte_carlo")`; it does not guarantee exact frequentist
+coverage. More pivotal draws improve numerical precision, not the source
+sample information. For complete balanced two-crossed-facet ANOVA, the default
+G/Phi method is approximate MLS null inversion. It reuses the saved mean squares,
+retains original points, and reports `FormulaComplete = FALSE` when undefined
+MLS widths have been conservatively included in the returned bounds. Read
+`Status` and `attr(result, "notes")`; limited normal-model evaluations do not
+guarantee uniform coverage or precise intervals for small sources. Explicit
+alternatives include `method = "approximate_f"` and `"mean_square_region"`;
+a vector such as `c("mls", "approximate_f", "mean_square_region")` compares all
+three. The region method needs lpSolve and can be very conservative.
+Use `plot(result)` for a forest comparison
+and `as_ggplot(plot(result, draw = FALSE))` for an editable forest plot. The
+default groups future plans vertically on one shared axis with a common method
+legend; `layout = "panels"` retains the separate-plan view. Preserve
+`PointStatus`, interval `Status`, `Available`, `NegativeComponent`, `Validation`,
+weights and notes. Numerical availability and agreement between methods do
+not establish robust coverage. See the G-theory tutorial for examples and limits.
+
+Balanced two-crossed-facet G also accepts `method = "score"`. This explicit
+experimental choice inverts an expected-information score using extended
+nuisance parameters and stored mean squares; it keeps the original ANOVA
+points. `NumericalComplete` and `Empty` distinguish resolved empty confidence
+sets from failed calculations, and neither is replaced by a zero-width
+interval. It supports the same forests and curve ribbons. Its chi-square
+calibration is approximate, and it is not a Phi, SEM, nested, incomplete-source
+or paired-plan method. It is never selected automatically.
+
+An additional explicit G/Phi or measurement-SEM option is `method = "reml_profile"`, for balanced
+or identifiable incomplete/unequal sources. It fits the original used ratings
+under normal effects using optional lme4 and minqa. `Estimate` remains the
+ANOVA/MINQUE point; `IntervalCenter` is the separate REML estimate of the same
+population target. The chi-square likelihood-ratio calibration is experimental,
+with no finite-sample or boundary coverage guarantee, and is never an automatic
+default. Numerical diagnostics and exploratory failed bounds remain inspectable.
+It can be included in a supported method vector for the same target and
+comparison plot. Select `parm = "AbsoluteSEM"` or `"RelativeSEM"` for SEM;
+the error variance is profiled directly, then its bounds are square-rooted.
+The SEM search returns an interval around the REML center, without enumerating
+remote disconnected accepted regions. Limited boundary checks showed
+below-nominal inclusion. Add `reference = 1` for G/Phi/SEM differences between
+one-facet plans, or nested plans with a common future child count. These map
+one shared profile interval, including interior extrema for G/Phi; the original
+points, separate REML centers and approximate calibration remain. They also
+accept incomplete sources. For other crossed/nested comparisons, including
+changed future child counts, the same explicit method directly profiles the
+difference and additionally requires nloptr. Its finite-sample calibration,
+especially at zero differences, remains experimental.
+Save the result to reuse its intervals without fitting again.
+
+For ordinary planning, add ribbons directly to the existing D-study curves:
+
+```r
+figure <- plot(d, metric = "Phi", intervals = TRUE, assumption = "normal")
+```
+
+This calculates and displays intervals in one call. Choose one coefficient;
+balanced two-crossed-facet sources use the default approximate MLS intervals.
+An explicit `method` selects a supported alternative.
+Use `score = c("V", "W")` to show several score criteria with matching ribbons.
+Save `figure` to retain the calculated intervals and diagnostics; `as_ggplot(figure)`
+redisplays them without recalculation. Supplying saved `confint()` results
+through `intervals` is an optional alternative. Missing intervals leave gaps
+and open available points. A ribbon does not establish simultaneous coverage
+across scores, and interval overlap is not a test of their difference.
+
+To quantify the change in G from the first one-facet plan, use
+`confint(d, parm = "G", reference = 1, assumption = "normal")`.
+The returned `Estimate` is comparison minus reference. This maps the entire
+common F confidence set, including any interior maximum/minimum, rather than
+subtracting marginal interval endpoints. Coverage is at least the requested
+level under the model and can be conservative. `parm = "Phi"` instead maps
+the generalized set and retains approximate coverage and joint numerical
+endpoint bands. The two-facet paired approximation below is a different method.
+
+For uncertainty in SEM itself, use `parm = "RelativeSEM"` or `"AbsoluteSEM"`.
+Balanced crossed/nested sources use chi-square or MLS error-variance limits
+followed by square roots; MLS remains approximate. Add `reference` for
+one-facet differences. SEM ribbons use `plot(d, type = "sem",
+metric = "AbsoluteSEM", intervals = TRUE, assumption = "normal")`.
+These intervals concern population measurement error, not individual scores.
+
+Balanced nested G/Phi defaults and differences apply when every future child
+count per parent equals the source count. Nested MLS SEM differences need a
+common future child count across plans. For general balanced crossed/nested
+two-facet plans, explicitly select `method = "mean_square_region"` with
+`reference` to obtain conservative G/Phi/SEM difference enclosures from one
+shared source region. These need not be tight and can be wide. Changed-child
+nested G/Phi also supports the experimental approximate-F method, with its
+documented boundary limitations. Preserve the chosen method and diagnostics.
+
 For a first runnable example, start with the bundled two-score data under
 [Common tasks and crossed facets](#common-tasks-and-crossed-facets). It follows
 the question of adding tasks through data import, G-study estimation, D-study
@@ -1813,10 +2292,12 @@ identifies a different rater from R1 on Task 2. If the same physical rater
 works on both tasks, this independent nested-rater model does not describe
 that arrangement; relabeling the rater cannot make it so.
 
-With `nested_ratings` containing one row per observed Person/Task/Rater and
-both score columns:
+The bundled example has one row per observed Person/Task/Rater and both score
+columns. Replace it with your own similarly structured data when appropriate:
 
 ```r
+data("mfrmr_example_gtheory_nested", package = "mfrmr")
+nested_ratings <- mfrmr_example_gtheory_nested
 g_nested <- mfrm_multivariate_gstudy(nested_ratings,
   scores = c("Content", "Organization"), nesting = c(Rater = "Task"))
 g_nested$design$child_counts # Raters within each observed task.
@@ -1832,9 +2313,12 @@ plot(d_nested, x_var = "Tasks", type = "sem")
 Here two raters for each of six tasks requires **twelve distinct raters** and
 twelve ratings per examinee. Increasing `Raters` adds raters within each task;
 increasing `Tasks` samples more tasks with their own teams. Read the G/Phi and
-SEM projections together with their status and component diagnostics. They
-are point estimates; the plan-comparison interval method currently requires
-crossed facets and cannot be used for this nested model.
+SEM projections together with their status and component diagnostics. Add
+intervals using `confint(d_nested, parm = "Phi", method = "mean_square_region",
+assumption = "normal")`, or add `reference = 1` for a conservative change
+enclosure. The source must be complete balanced ANOVA; normal random effects
+are an explicit assumption. See the G-theory tutorial for the narrower
+unchanged-child reduction, interval-method comparison and limitations.
 
 ANOVA requires complete observations and equal numbers of raters per task.
 Use `method = "minque0"` for incomplete observations or unequal team sizes
@@ -1856,9 +2340,12 @@ g_task <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
 d_task <- mfrm_multivariate_d_study(g_task,
   design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 summary(d_task)
-plot(d_task) # G and Phi for W minus V, identified by the title and weights.
+plot(d_task) # G and Phi for W minus V; selection and weights are in plot_data().
 plot(d_task, type = "sem") # Error in difference-score units.
 plot(d_task, score = "V") # An original score, shown separately.
+plot(d_task, score = c("V", "W"), metric = "Phi", reference = 0.8,
+  preset = "standard") # Colored curves; use "monochrome" for one dark color.
+# 0.8 is an illustrative user criterion; omit reference for no guide.
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   p <- as_ggplot(d_task, type = "sem")
   print(p)
@@ -1900,6 +2387,10 @@ d_grid <- mfrm_multivariate_d_study(g,
   expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 9)),
   weights = c(Content = 0.6, Organization = 0.4))
 plot(d_grid, x_var = "Tasks") # Each line holds the rater count constant.
+panel_plot <- plot(d_grid, score = c("Content", "Organization"), metric = "Phi",
+  x_var = "Tasks", panel_by = "Raters", ncol = 2, preset = "standard")
+# Each panel fixes the rater count; scores keep their colors and line/point styles.
+# as_ggplot(panel_plot) preserves the panels and shared axis limits.
 ```
 
 Plots select a sole composite by default, or the first score when no weights
@@ -1953,7 +2444,8 @@ An interval containing zero does not establish equivalence. Intervals are
 pointwise, not simultaneous guarantees for all plans or a plan selected after
 examining the results. This approximation is sensitive to nonnormal effects,
 small facet pools and uneven assignments; it is not a robust missing-data
-correction. One-facet and nested-design intervals are not yet provided. A point can remain
+correction. This paired-delta method excludes one-facet and nested sources;
+use the separate `confint(d)` routes described above for those targets. A point can remain
 available when its interval is unavailable; inspect `Status`. See
 `?mfrm_multivariate_d_compare` for assumptions and a complete example.
 
@@ -2054,7 +2546,7 @@ Review an incomplete design in this order:
 | Can this arrangement separate the components? | The estimation error or `g_sparse$estimation`, including component replication | A full-rank moment system permits calculation. A small condition number is not an estimate of statistical precision. |
 | Are the estimated covariance matrices admissible? | `g_sparse$component_diagnostics` and D-study `ComponentPSD` | Non-PSD components flag a need for review. This diagnostic is separate from whether each requested coefficient can be calculated. |
 | Which requested metrics can be calculated? | `GStatus`, `PhiStatus`, `RelativeSEMStatus`, `AbsoluteSEMStatus` | Each metric uses its own projected variances. An unavailable Phi does not automatically withhold G. Calculability does not establish model fit or precision. |
-| How uncertain is a prespecified improvement between plans? | `mfrm_multivariate_d_compare()` for two common crossed facets under normal random effects, plus evidence for the source design and population | Approximate paired intervals preserve dependence between plans. They do not establish robustness to nonnormality, selective missingness or post-selection inference. |
+| How uncertain is a prespecified improvement between plans? | For balanced one-facet ANOVA, `confint(d, parm = "G", reference = 1, assumption = "normal")`; for two common crossed facets, `mfrm_multivariate_d_compare()` | The one-facet G method maps an F confidence set. The two-facet method uses a paired delta approximation. Their scope and coverage properties differ; neither establishes robustness to nonnormality or selective missingness. |
 
 The arrangement matters even at the same workload. With 120 persons, rating
 four tasks with two distinct raters per performance and rating eight tasks
@@ -2296,8 +2788,8 @@ numerical convergence does not establish a global optimum or sampling coverage.
 | `RSM` | Shared step structure | The common rating-scale assumption must be substantively defensible |
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
 | One-family `GPCM` | MML permits separate slope/step owners and estimates the common scale by default; JML requires a shared owner | Intervals, comparisons and scoring have estimator-specific checks |
-| Two-family `GPCM` | Experimental fixed-grid EM or adaptive direct MML with fixed N(0,1), exactly two facets and ordered slope owners | Experimental component intervals, descriptive response diagnostics and separately checked fitted-object/portable EAP; profiles require fixed-grid EM; no ordinary model ranking |
-| Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
+| Two-family `GPCM` | Experimental fixed-grid EM or adaptive direct MML with fixed N(0,1), exactly two facets and ordered slope owners | Experimental component intervals, descriptive response diagnostics and separately checked fitted-object/portable EAP; profiles preserve fitted fixed/adaptive integration with separate checks; no ordinary model ranking |
+| Estimation | `MML`, `JML`/`JMLE`, and RSM/PCM `CML` | CML has separate full structural or selected-contrast interval results, with no Person estimates, population SD or ordinary fit diagnostics |
 | Latent regression | Conditional-normal, unidimensional MML population model | Person scoring requires explicit exploratory review and omits uncertainty in the fitted population parameters |
 | Diagnostics | Residual and posterior-averaged marginal screens | A flag is not a deletion, fairness, or validity decision; missing results remain unavailable |
 | Residual group comparisons | Differences in observed-minus-expected scores | No residual SEs, p-values, confidence intervals or differential-functioning classifications |
@@ -2391,8 +2883,11 @@ differences in expected ratings when slopes or steps also vary.
 `mfrm_response_diagnostics()` provides descriptive same-data posterior response
 checks, including Infit/Outfit without reference cutoffs, with plots and saved
 reports. It preserves the fitted integration method and each Person's complete
-observed record even when selecting output rows. For fixed-grid EM, an explicit
-`confint(..., method = "profile", slope = ...)` can profile one component.
+observed record even when selecting output rows. An explicit
+`confint(..., method = "profile", slope = ...)` can profile one component,
+preserving the fitted fixed-grid or adaptive integration. Each constrained
+solution has separate numerical checks; available bounds do not establish
+coverage or superiority to Wald intervals.
 `predict_mfrm_units(fit, new_ratings)` now provides experimental conditional
 EAP, posterior SD and continuous posterior intervals for new Persons, using
 both slope families, known facet levels, unit weights and the retained N(0,1)
@@ -2408,9 +2903,8 @@ overrides and repeated-event extensions are unsupported. With the source fit
 available, `mfrm_results(fit, scores = scores)` collects matching saved native
 or format-6 scores for tables, reports, CSV and saved replay without rescoring.
 Source/batch checks, omitted rows and review-only labels are retained.
-Adaptive profiles,
-ordinary fit diagnostics and model ranking remain unavailable for two families.
-See the [two-family workflow](vignettes/mfrmr-gpcm-scope.Rmd#a-provisional-two-family-workflow)
+Ordinary fit diagnostics and model ranking remain unavailable for two families.
+See the [two-family workflow](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html#a-provisional-two-family-workflow)
 for a complete call, input restrictions and interpretation.
 
 The one-family GPCM estimates **relative discriminations for one selected facet**;
@@ -2533,7 +3027,7 @@ population-SD-standardized slopes after multiplying by the fitted population
 SD (conditional on any population covariates). Transforming intervals also
 requires the SD's uncertainty and its covariance with the slopes; multiplying
 interval endpoints is insufficient.
-The [GPCM tutorial](vignettes/mfrmr-gpcm-scope.Rmd#what-can-and-cannot-be-compared-across-programs)
+The [GPCM tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-gpcm-scope.html#what-can-and-cannot-be-compared-across-programs)
 links the official ConQuest/TAM specifications and distinguishes existing
 numerical comparisons from unverified uncertainty comparisons. Its scope is
 separate from the public ConQuest overlap-bundle and external-import APIs.
@@ -2582,6 +3076,7 @@ For an MFRM-based analysis, this assumes a fit with current estimation checks:
 | Saved result | Required action |
 | --- | --- |
 | Fit-summary wording | Reprint the summary. Stored calculations and missing precision evidence do not change. |
+| Standalone drawing helpers (`plot_*`) | In 0.2.4 these 33 exports are removed. Use `plot()` on the fit or saved result; `help("mfrmr_plot_migration")` lists every replacement. `plot_data()` and `plot_data_components()` remain public. |
 | Generic conversions of dedicated plots | Recreate affected figures from the saved analysis with its base `plot()` method or use `plot_data()` for explicitly specified custom graphics. Previously, `as_ggplot(..., component = "table")` could discard PCA axes, MI intervals or D-study metrics; that bypass is now refused. Dedicated external-feature PCA and pooled MI interval conversions preserve their full views with the default or `component = "table"`; supported multivariate D-study scenario conversions use the default or `component = "series"`. Refitting is unnecessary, but previously saved ggplots/images are not automatically corrected. |
 | Shared-rater/testlet calibration bounds | Rebuild `summary(fit)`, `mfrm_results(fit)` and dependent reports from the saved fit; refitting is unnecessary. Defaults now retain estimates and approximate SEs with missing bounds. Request `confint(fit, parm = "calibration", level = .95)` or `mfrm_results(fit, calibration_intervals = "normal", calibration_level = .95)` explicitly for pointwise normal approximations with unestablished finite-sample coverage. Testlet plots accept `intervals = "normal", level = .95`. Older result bundles retain their original tables; changing display does not correct coverage. |
 | Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |

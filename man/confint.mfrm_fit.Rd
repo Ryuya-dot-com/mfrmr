@@ -140,6 +140,19 @@ model-based refit alternative use \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mf
 Relative and standardized slope differences are different targets; their
 interval performance need not be the same. See the GPCM scope vignette
 for these distinctions and the observed limits of approximation.
+}
+\section{Fixed anchors in a one-family fit}{
+
+Model and sandwich slope intervals can use fixed facet anchors and group
+means when the joint-information and numerical checks pass. They condition
+on the supplied values and do not propagate uncertainty from their source
+calibration. A location anchor does not fix a slope or a step threshold;
+a fixed group mean does not fix every group member. This does not extend
+the separate profile-slope, native-location or portable-GPCM routes to
+anchored fits. Those routes retain their own exclusions.
+}
+
+\section{Information workspace}{
 
 The joint-information calculation includes all estimated parameters. Option
 \code{mfrmr.max_information_bytes} (default 256 MiB) budgets eight dense p-by-p
@@ -157,6 +170,7 @@ boundary solutions or that intervals for other parameters are valid.
 This method recomputes uncertainty for saved fits; it does not trust old
 interval flags or alter the supplied object.
 }
+
 \section{Experimental two-family slope intervals}{
 
 For the fixed-standard-normal MML model with two slope facets,
@@ -174,12 +188,17 @@ unit-slope p-values are supplied.
 
 The default \code{method = "model"} uses \code{scale = "standardized"}, without
 contrasts or cluster adjustments. Bonferroni adjusts for all component
-slopes in that call. For fixed-grid EM only, an explicit \code{method = "profile"} profiles one named
+slopes in that call. An explicit \code{method = "profile"} profiles one named
 owner/level, retaining both families' scale constraints and reoptimizing
 all remaining slopes, locations and steps. The N(0,1) population is fixed,
 not an estimated nuisance parameter. Use, for example,
 \code{confint(fit, method = "profile", slope = c(Task = "t1"))}.
 Replace Task and t1 with your actual column and level names.
+Both fixed-grid EM and adaptive direct fits retain their fitted integration
+method. Adaptive nodes, scales and Jacobians are recalculated at every trial;
+the source's posterior quadrature is not held fixed during optimization.
+The interval uses the likelihood loss after nuisance reoptimization for each
+constrained log slope. Its chi-square(1) calibration remains asymptotic.
 The result preserves owner, level, scale reference and the same-target
 Wald comparison through saved plots, reports and exports. This is a
 component interval, not an interval for the product of two slopes.
@@ -189,13 +208,18 @@ Effective slope-product and curve intervals, sandwich intervals and model
 ranking are not supplied for this model.
 
 Checks reevaluate the source identity, category support, engine-specific convergence and
-unregularized marginal information. The observed Person-score Jacobian
-must span all free coordinates at relative SVD tolerances 1e-10, 1e-8 and
-1e-6, using numerical derivative steps 1e-5 and 5e-6. Columns are normalized
-to unit Euclidean length; their maximum difference must be at most 1e-6.
-Full rank is evidence of local separation at this fitted point for the
-quadrature model, not global identification. Failure of this sufficient
-check does not prove structural nonidentifiability.
+unregularized marginal information. Person marginal-score derivatives
+use steps 1e-5 and 5e-6; after scaling both by the first matrix's column
+lengths, their maximum difference must be at most 1e-6. Empirical score rank
+is retained at relative SVD tolerances 1e-10, 1e-8 and 1e-6, with minimum
+ranks for both derivative steps in \code{ScoreRank} and \code{FineScoreRank}.
+\code{ScoreRankDeficient} and an additional warning flag deficient rank.
+Full empirical score rank is not required for the inverse observed Hessian
+used here: this Hessian is not the empirical outer product of scores.
+Rank deficiency alone neither proves structural nonidentifiability nor
+makes the model-based interval unavailable. It does prevent a nonsingular
+full-parameter empirical sandwich covariance. The other numerical checks
+remain necessary, and small-sample coverage is not established.
 
 The fresh mean marginal score must meet the smaller of \code{em_score_tol} and
 1e-6 for EM, or 1e-6 for adaptive direct fitting; the full score scaled by its covariance must have length at most
@@ -228,30 +252,37 @@ constrained nuisance solution must pass the absolute 1e-4 gradient check
 at both quadrature orders. The shared profile algorithm and failure rules
 described below also apply. No superiority to Wald or general coverage is
 established, and this does not make a rejected near-zero-slope source eligible.
-The two-family EM optimizer uses a per-Person objective scale internally;
+Two-family profile optimizers use a per-Person objective scale internally;
 likelihood ratios and all acceptance checks use the total likelihood.
-Adaptive two-family profiles are unavailable; an adaptive log-Wald result
-does not qualify constrained profile searches or their integration checks.
+Passing adaptive log-Wald checks does not by itself qualify the constrained
+profile searches; every candidate still needs its own integration checks.
 
 Every available two-family interval carries an experimental warning:
 global identification, absence of boundary alternatives and sampling
 coverage remain unestablished. Failed checks retain estimates, missing
 bounds and reasons. Inspect \code{attr(ci, "checks")}, \code{attr(ci, "numerical_checks")}
 and \code{attr(ci, "score_rank")}, or \code{apa_table(ci, which = "checks")}.
+In \code{attr(ci, "diagnostics")}, \code{CIEligible} records numerical interval
+availability; \code{CoverageQualified = FALSE} separately records that nominal
+sampling coverage has not been established for the target and design.
+This is neither a coverage estimate of zero nor a numerical-failure flag.
+Both fields persist in interval tables, saved results and exports, including
+explicitly requested two-family profile intervals. Older saved results
+may lack \code{CoverageQualified}; absence does not establish coverage.
 Plots and saved results/reports retain the approximation and its checks.
 This calculation does not change the original point estimates or resolve
 other warnings about the fitted model.
 
 For an unresolved two-family profile, distinguish the original fit from
-the constrained searches. \code{maxit} in \code{\link[=fit_mfrm]{fit_mfrm()}} controls the original EM
+the constrained searches. \code{maxit} in \code{\link[=fit_mfrm]{fit_mfrm()}} controls the original
 fit; \code{profile_control = list(maxit = ...)} in \code{confint()} controls each
 constrained BFGS stage. Inspect \code{apa_table(ci, which = "profile_checks")}
 and \code{which = "profile_endpoints"}. Checks at the fitted slope can fail
 when the two constrained starts disagree even though the original fit
 passed its checks. Increasing \code{quad_points} requires refitting and addresses
 integration discrepancies; it does not resolve disagreement between starts.
-\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} compares fixed-grid refits while preserving
-the model and EM settings. Its \code{intervals} entries are model-based Wald
+\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} compares refits while preserving
+the model, engine and integration method. Its \code{intervals} entries are model-based Wald
 intervals; they do not repeat a profile search. To assess a profile on a
 finer grid, explicitly call \code{confint()} with \code{method = "profile"} on the
 corresponding entry in \code{review$fits}. If the problem is instead a constrained
@@ -328,14 +359,28 @@ reported separately from mathematical unboundedness.
 }
 
 \examples{
-# After fitting a GPCM with method = "MML":
-# intervals <- confint(fit, parm = "slopes", level = 0.95)
-# Inspect fit$slopes$SlopeFacet and choose one level before profiling:
-# ci <- confint(fit, method = "profile", slope = "R01")
-# plot(ci, type = "profile", title = NULL)
-# apa_table(ci, which = "profile_endpoints")
-# attr(intervals, "diagnostics")[, c("SlopeFacet", "Estimate",
-#   "CIEligible", "InferenceReview")]
+# How uncertain are the relative discriminations of these raters?
+ratings <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "GPCM", method = "MML", step_facet = "Criterion",
+  slope_facet = "Rater", rating_min = 1, rating_max = 4,
+  category_policy = "preserve", quad_points = 61)
+intervals <- confint(fit, parm = "slopes", level = 0.95)
+intervals
+attr(intervals, "diagnostics")[, c("SlopeFacet", "Estimate",
+  "CIEligible", "InferenceReview")]
+# Relative slopes have geometric mean one. A value above one means a
+# steeper response curve, not greater severity or better rater quality.
+# Missing bounds need the saved reason; availability is not a coverage test.
+plot(intervals)
+file <- tempfile(fileext = ".rds")
+saveRDS(intervals, file) # Use a lasting path for your analysis
+saved <- readRDS(file)
+apa_table(saved) # Reuse the intervals without fitting again
+
+# A separate, prespecified profile calculation can be requested with
+# confint(fit, method = "profile", slope = chosen_rater).
+# Choose chosen_rater from fit$slopes$SlopeFacet; see the profile section.
 }
 \references{
 Fischer, S. M., and Lewis, M. A. (2021). A robust and efficient

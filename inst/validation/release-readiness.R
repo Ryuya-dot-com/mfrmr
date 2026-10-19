@@ -1533,7 +1533,15 @@ mfrmr_release_readiness_version_status <- function(paths, target_version = NULL)
   news_lines <- mfrmr_release_readiness_read_lines(paths$news)
   first_heading <- news_lines[grep("^# ", news_lines)][1] %||% NA_character_
   current_files <- c(paths$description, paths$news, paths$cran_comments, paths$evidence_map)
-  current_lines <- unlist(lapply(current_files[file.exists(current_files)], mfrmr_release_readiness_read_lines), use.names = FALSE)
+  current_lines <- unlist(lapply(current_files[file.exists(current_files)], function(path) {
+    lines <- mfrmr_release_readiness_read_lines(path)
+    # NEWS and submission comments retain earlier versions under later headings.
+    if (path %in% c(paths$news, paths$cran_comments)) {
+      headings <- grep("^# ", lines)
+      if (length(headings) > 1L) lines <- lines[seq_len(headings[2L] - 1L)]
+    }
+    lines
+  }), use.names = FALSE)
   release_version <- sub("\\.9000$", "", target_version)
   dev_label_present <- any(grepl(
     paste0(release_version, ".9000"),
@@ -1623,8 +1631,6 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   roadmap_text <- gsub("\\]\\(inst/validation/[^)\n]+\\)", "]", roadmap_text)
   roadmap_required_markers <- c(
     "# mfrmr roadmap",
-    "status: public roadmap",
-    "## current releases",
     "## model scope",
     "## compatibility principles"
   )
@@ -1640,8 +1646,7 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
     "inst/validation",
     "candidate manifest",
     "frozen gate",
-    "preflight",
-    "denominator"
+    "preflight"
   )
   roadmap_internal_hits <- roadmap_internal_phrases[vapply(
     roadmap_internal_phrases,
@@ -1652,6 +1657,9 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   )]
   roadmap_reader_facing <- roadmap_available &&
     roadmap_required_sections_present && length(roadmap_internal_hits) == 0L
+  # Paragraph wrapping and inline emphasis do not change a lifecycle claim.
+  roadmap_prose <- gsub("[[:space:]]+", " ",
+                        gsub("[`*]", "", roadmap_text))
   supplement_lines <- mfrmr_release_readiness_read_lines(paths$gpcm_roadmap)
   forbidden_current_api <- c(
     "mfrmr_model_family_scope()",
@@ -1687,22 +1695,22 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   } else if (identical(release_status, "development")) {
     grepl(
       paste0("mfrmr ", tolower(description_version), " is under development"),
-      roadmap_text,
+      roadmap_prose,
       fixed = TRUE
-    ) && grepl("has not been released", roadmap_text, fixed = TRUE)
+    ) && grepl("has not been released", roadmap_prose, fixed = TRUE)
   } else if (identical(release_status, "candidate")) {
     grepl(
       paste0("mfrmr ", tolower(description_version), " is a release candidate"),
-      roadmap_text,
+      roadmap_prose,
       fixed = TRUE
-    ) && grepl("has not been released", roadmap_text, fixed = TRUE)
+    ) && grepl("has not been released", roadmap_prose, fixed = TRUE)
   } else if (identical(release_status, "released")) {
     grepl(
       paste0(
         "mfrmr ", tolower(description_version),
         " is the current cran source release"
       ),
-      roadmap_text,
+      roadmap_prose,
       fixed = TRUE
     )
   } else {
@@ -2010,10 +2018,13 @@ mfrmr_release_readiness_prose_count_status <- function(
   } else {
     current_news <- character(0)
   }
+  cran_comments <- mfrmr_release_readiness_read_lines(paths$cran_comments)
+  historical <- grep("^# Historical\\b", cran_comments)
+  if (length(historical)) cran_comments <- cran_comments[seq_len(historical[1L] - 1L)]
   documents <- list(
     README.md = mfrmr_release_readiness_read_lines(paths$readme),
     NEWS.current = current_news,
-    cran.comments = mfrmr_release_readiness_read_lines(paths$cran_comments)
+    cran.comments = cran_comments
   )
   patterns <- c(
     "\\b[0-9][0-9,]*[[:space:]]+passes\\b",

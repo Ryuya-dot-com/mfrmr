@@ -42,7 +42,7 @@
   graphics::par(mar = c(4, 8, 3, 1))
   graphics::plot(dt$Drift, seq_len(n), xlim = c(-max_abs, max_abs),
                  yaxt = "n", xlab = "Drift (logits)", ylab = "",
-                 main = "Anchor Drift", pch = 19,
+                 main = "", pch = 19,
                  col = ifelse(dt$Flag, style$warn, style$accent_primary), ...)
   graphics::axis(2, at = seq_len(n), labels = labels, las = 1, cex.axis = 0.7)
   graphics::abline(v = pretty(c(-max_abs, max_abs), n = 5), col = grDevices::adjustcolor(style$grid, alpha.f = 0.85), lty = 1)
@@ -102,7 +102,7 @@
 
   graphics::image(t(mat[nrow(mat):1, , drop = FALSE]),
                   axes = FALSE, col = blues, breaks = breaks,
-                  main = "Anchor Drift Heatmap", ...)
+                  main = "", ...)
   graphics::axis(1, at = seq(0, 1, length.out = ncol(mat)),
                  labels = colnames(mat), las = 2, cex.axis = 0.8)
   graphics::axis(2, at = seq(0, 1, length.out = nrow(mat)),
@@ -638,7 +638,7 @@
 }
 
 .plot_equating_chain <- function(x, draw = TRUE, style = resolve_plot_preset("standard"),
-                                 show_title = TRUE, show_notes = TRUE, ...) {
+                                 show_title = FALSE, show_notes = FALSE, ...) {
   cum <- x$cumulative
   out <- new_mfrm_plot_data(
     "anchor_drift",
@@ -710,7 +710,7 @@
 #'   functions.
 #'
 #' @details
-#' Three plot types are supported:
+#' Four plot types are supported:
 #'
 #' - **`"drift"`** (for `mfrm_anchor_drift` objects): A dot plot of each
 #'   element's drift value, grouped by facet.  Horizontal reference lines
@@ -719,6 +719,10 @@
 #'   heat matrix showing drift magnitude.  Darker cells represent larger
 #'   absolute drift.  Useful for spotting systematic patterns (e.g., all
 #'   criteria shifting in the same direction).
+#' - **`"forest"`** (for `mfrm_anchor_drift` objects): Per-wave estimates
+#'   with approximate normal whiskers from their available SEs. These are
+#'   not intervals for between-wave differences; linking-offset uncertainty
+#'   and cross-wave covariance are not included.
 #' - **`"chain"`** (for `mfrm_equating_chain` objects): A line plot of
 #'   cumulative offsets across the screened linking chain. A flatter line
 #'   indicates smaller between-wave shifts; steep segments suggest larger
@@ -738,13 +742,14 @@
 #' offset. An
 #' element is flagged when its absolute drift exceeds a threshold
 #' (typically 0.5 logits) **and** the drift-to-SE ratio exceeds a
-#' secondary criterion (typically 2.0), ensuring that only
-#' practically noticeable and relatively precise shifts are flagged.
+#' secondary criterion (typically 2.0). These are heuristic screening rules,
+#' not a calibrated test of change. Subtracting a common offset can remove
+#' a panel-wide shift; unflagged elements do not establish absence of annual drift.
 #'
-#' - In drift and heatmap plots, red or dark-shaded elements exceed
-#'   both thresholds.  Common causes include rater drift over time,
-#'   item exposure effects, or curriculum changes.
-#' - In chain plots, uneven spacing between waves suggests differential
+#' - Drift dots distinguish flagged elements. Heatmap shading shows magnitude,
+#'   not whether both screening thresholds were exceeded. Possible explanations
+#'   require substantive review, including changes in scoring or exposure.
+#' - In chain plots, uneven changes between waves indicate differential
 #'   shifts in the screened linking offsets. The \eqn{y}-axis shows cumulative
 #'   logit-scale offsets; flatter segments indicate more stable adjacent links.
 #'   Steep segments should be checked alongside `LinkSupportAdequate` and the
@@ -772,33 +777,15 @@
 #'   `legend`, and `reference_lines`.
 #'
 #' @seealso [detect_anchor_drift()], [build_equating_chain()],
-#'   [plot_dif_heatmap()], [plot_bubble()], [mfrmr_visual_diagnostics]
+#'   [plot(x, type = "heatmap")][plot.mfrm_dif], [plot(x, type = "bubble")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
 #' @concept confidence intervals
 #' @concept visual diagnostics
 #' @concept linking
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
-#' @export
-#' @examples
-#' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' people <- unique(toy$Person)
-#' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
-#' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
-#' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
-#' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-#'                  method = "JML", maxit = 30)
-#' drift <- detect_anchor_drift(list(W1 = fit1, W2 = fit2))
-#' drift_plot <- plot_anchor_drift(drift, type = "drift", draw = FALSE)
-#' class(drift_plot)
-#' names(drift_plot$data)
-#' chain <- build_equating_chain(list(F1 = fit1, F2 = fit2))
-#' chain_plot <- plot_anchor_drift(chain, type = "chain", draw = FALSE)
-#' head(chain_plot$data$table)
-#' if (interactive()) {
-#'   plot_anchor_drift(drift, type = "heatmap", preset = "publication")
-#' }
-#' }
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest"),
                               facet = NULL,
                               ci_level = 0.95,
@@ -855,7 +842,7 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
   }
   dt$Estimate <- dt[[est_col]]
   se_col <- if ("SE_Wave" %in% names(dt)) "SE_Wave" else if ("SE" %in% names(dt)) "SE" else if ("ModelSE" %in% names(dt)) "ModelSE" else NA_character_
-  z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
+  z_ci <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
   if (!is.na(se_col)) {
     dt$CI_Lower <- dt$Estimate - z_ci * dt[[se_col]]
     dt$CI_Upper <- dt$Estimate + z_ci * dt[[se_col]]
@@ -893,11 +880,8 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
       x = dt$Estimate, y = y, type = "n",
       xlim = xrange, yaxt = "n",
       xlab = "Estimate (logit)", ylab = "",
-      main = "Anchor drift forest"
+      main = ""
     )
-    graphics::title(sub = sprintf("Per-wave anchor estimates with %g%% CI",
-                                   round(100 * ci_level)),
-                    line = 2.2, cex.sub = 0.9)
     graphics::abline(v = 0, lty = 2, col = style$neutral)
     valid <- is.finite(dt$CI_Lower) & is.finite(dt$CI_Upper)
     if (any(valid)) {
@@ -918,7 +902,7 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 #' Plot QC pipeline results
 #'
 #' Visualizes the output from [run_qc_pipeline()] as either a traffic-light
-#' bar chart or a detail panel showing values versus thresholds.
+#' bar chart or a panel containing each check's explanation.
 #'
 #' @param x Output from [run_qc_pipeline()].
 #' @param type Plot type: `"traffic_light"` (default) or `"detail"`.
@@ -931,9 +915,9 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 #' - **`"traffic_light"`** (default): A horizontal bar chart with one row
 #'   per QC check.  Bars are coloured green (Pass), amber (Warn), or red
 #'   (Fail).  Provides an at-a-glance summary of the current QC review state.
-#' - **`"detail"`**: A panel showing each check's observed value and its
-#'   pass/warn/fail thresholds.  Useful for understanding how close a
-#'   borderline result is to the next verdict level.
+#' - **`"detail"`**: A panel showing the saved `Detail` text beside each
+#'   verdict. Read this explanation and the returned table to understand
+#'   why a check was flagged or unavailable.
 #'
 #' @section Interpretation:
 #' The rows are the actual checks returned by [run_qc_pipeline()]: convergence,
@@ -952,19 +936,12 @@ plot_anchor_drift <- function(x, type = c("drift", "chain", "heatmap", "forest")
 #'
 #' @return Invisible verdicts tibble from the QC pipeline.
 #'
-#' @seealso [run_qc_pipeline()], [plot_qc_dashboard()],
+#' @seealso [run_qc_pipeline()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [build_visual_summaries()], [mfrmr_visual_diagnostics]
-#' @examples
-#' \donttest{
-#' toy <- load_mfrmr_data("study1")
-#' # These observed data trigger a category-support warning: the QC plot
-#' # displays that review requirement; convergence does not remove it.
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 300)
-#' qc <- run_qc_pipeline(fit)
-#' plot_qc_pipeline(qc, draw = FALSE)
-#' }
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_qc_pipeline <- function(x, type = c("traffic_light", "detail"),
                              draw = TRUE, ...) {
   type <- match.arg(type)
@@ -987,7 +964,7 @@ plot_qc_pipeline <- function(x, type = c("traffic_light", "detail"),
 
     graphics::plot(NULL, xlim = c(0, 1), ylim = c(0.5, n + 0.5),
                    xaxt = "n", yaxt = "n", xlab = "", ylab = "",
-                   main = paste("QC Pipeline:", x$overall), ...)
+                   main = "", ...)
 
     for (i in seq_len(n)) {
       graphics::rect(0, i - 0.4, 1, i + 0.4, col = cols[i], border = NA)
@@ -1006,7 +983,7 @@ plot_qc_pipeline <- function(x, type = c("traffic_light", "detail"),
 
     graphics::plot(NULL, xlim = c(0, 1), ylim = c(0.5, n + 0.5),
                    xaxt = "n", yaxt = "n", xlab = "", ylab = "",
-                   main = paste("QC Pipeline Detail:", x$overall), ...)
+                   main = "", ...)
 
     for (i in seq_len(n)) {
       graphics::rect(0, i - 0.4, 0.15, i + 0.4, col = cols[i], border = NA)

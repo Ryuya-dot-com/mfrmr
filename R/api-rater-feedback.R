@@ -337,7 +337,7 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
     steps = "Category-step offsets", residuals = "Saved response residuals")
   product <- "slope" %in% names(x$tables)
   if (product) headings["uncertainty"] <- "Uncertainty in the component slope"
-  headings <- headings[names(x$tables)]
+  headings <- headings[setdiff(names(x$tables), "interpretation_notes")]
   display <- lapply(x$tables, function(tab) {
     tab[] <- lapply(tab, function(col) {
       if (is.numeric(col)) ifelse(is.na(col), "Not available", format(round(col, 3), trim = TRUE)) else col

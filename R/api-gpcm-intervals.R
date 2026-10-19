@@ -35,6 +35,8 @@ mfrm_gpcm_slope_inference_check <- function(fit, covariance, allow_singleton = F
     "Relative slopes have geometric mean one. Assess starting-value and quadrature sensitivity;",
     "small samples and model misspecification can affect coverage.", check$caution %||% ""
   )
+  check$anchor_note <- mfrm_gpcm_anchor_note(fit)
+  if (length(check$anchor_note)) check$review <- paste(check$review, check$anchor_note)
   check
 }
 
@@ -156,6 +158,16 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' interval performance need not be the same. See the GPCM scope vignette
 #' for these distinctions and the observed limits of approximation.
 #'
+#' @section Fixed anchors in a one-family fit:
+#' Model and sandwich slope intervals can use fixed facet anchors and group
+#' means when the joint-information and numerical checks pass. They condition
+#' on the supplied values and do not propagate uncertainty from their source
+#' calibration. A location anchor does not fix a slope or a step threshold;
+#' a fixed group mean does not fix every group member. This does not extend
+#' the separate profile-slope, native-location or portable-GPCM routes to
+#' anchored fits. Those routes retain their own exclusions.
+#'
+#' @section Information workspace:
 #' The joint-information calculation includes all estimated parameters. Option
 #' `mfrmr.max_information_bytes` (default 256 MiB) budgets eight dense p-by-p
 #' matrices before allocation, or twenty when weak-information refinement is
@@ -187,12 +199,17 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #'
 #' The default `method = "model"` uses `scale = "standardized"`, without
 #' contrasts or cluster adjustments. Bonferroni adjusts for all component
-#' slopes in that call. For fixed-grid EM only, an explicit `method = "profile"` profiles one named
+#' slopes in that call. An explicit `method = "profile"` profiles one named
 #' owner/level, retaining both families' scale constraints and reoptimizing
 #' all remaining slopes, locations and steps. The N(0,1) population is fixed,
 #' not an estimated nuisance parameter. Use, for example,
 #' `confint(fit, method = "profile", slope = c(Task = "t1"))`.
 #' Replace Task and t1 with your actual column and level names.
+#' Both fixed-grid EM and adaptive direct fits retain their fitted integration
+#' method. Adaptive nodes, scales and Jacobians are recalculated at every trial;
+#' the source's posterior quadrature is not held fixed during optimization.
+#' The interval uses the likelihood loss after nuisance reoptimization for each
+#' constrained log slope. Its chi-square(1) calibration remains asymptotic.
 #' The result preserves owner, level, scale reference and the same-target
 #' Wald comparison through saved plots, reports and exports. This is a
 #' component interval, not an interval for the product of two slopes.
@@ -202,13 +219,18 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' ranking are not supplied for this model.
 #'
 #' Checks reevaluate the source identity, category support, engine-specific convergence and
-#' unregularized marginal information. The observed Person-score Jacobian
-#' must span all free coordinates at relative SVD tolerances 1e-10, 1e-8 and
-#' 1e-6, using numerical derivative steps 1e-5 and 5e-6. Columns are normalized
-#' to unit Euclidean length; their maximum difference must be at most 1e-6.
-#' Full rank is evidence of local separation at this fitted point for the
-#' quadrature model, not global identification. Failure of this sufficient
-#' check does not prove structural nonidentifiability.
+#' unregularized marginal information. Person marginal-score derivatives
+#' use steps 1e-5 and 5e-6; after scaling both by the first matrix's column
+#' lengths, their maximum difference must be at most 1e-6. Empirical score rank
+#' is retained at relative SVD tolerances 1e-10, 1e-8 and 1e-6, with minimum
+#' ranks for both derivative steps in `ScoreRank` and `FineScoreRank`.
+#' `ScoreRankDeficient` and an additional warning flag deficient rank.
+#' Full empirical score rank is not required for the inverse observed Hessian
+#' used here: this Hessian is not the empirical outer product of scores.
+#' Rank deficiency alone neither proves structural nonidentifiability nor
+#' makes the model-based interval unavailable. It does prevent a nonsingular
+#' full-parameter empirical sandwich covariance. The other numerical checks
+#' remain necessary, and small-sample coverage is not established.
 #'
 #' The fresh mean marginal score must meet the smaller of `em_score_tol` and
 #' 1e-6 for EM, or 1e-6 for adaptive direct fitting; the full score scaled by its covariance must have length at most
@@ -241,30 +263,37 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #' at both quadrature orders. The shared profile algorithm and failure rules
 #' described below also apply. No superiority to Wald or general coverage is
 #' established, and this does not make a rejected near-zero-slope source eligible.
-#' The two-family EM optimizer uses a per-Person objective scale internally;
+#' Two-family profile optimizers use a per-Person objective scale internally;
 #' likelihood ratios and all acceptance checks use the total likelihood.
-#' Adaptive two-family profiles are unavailable; an adaptive log-Wald result
-#' does not qualify constrained profile searches or their integration checks.
+#' Passing adaptive log-Wald checks does not by itself qualify the constrained
+#' profile searches; every candidate still needs its own integration checks.
 #'
 #' Every available two-family interval carries an experimental warning:
 #' global identification, absence of boundary alternatives and sampling
 #' coverage remain unestablished. Failed checks retain estimates, missing
 #' bounds and reasons. Inspect `attr(ci, "checks")`, `attr(ci, "numerical_checks")`
 #' and `attr(ci, "score_rank")`, or `apa_table(ci, which = "checks")`.
+#' In `attr(ci, "diagnostics")`, `CIEligible` records numerical interval
+#' availability; `CoverageQualified = FALSE` separately records that nominal
+#' sampling coverage has not been established for the target and design.
+#' This is neither a coverage estimate of zero nor a numerical-failure flag.
+#' Both fields persist in interval tables, saved results and exports, including
+#' explicitly requested two-family profile intervals. Older saved results
+#' may lack `CoverageQualified`; absence does not establish coverage.
 #' Plots and saved results/reports retain the approximation and its checks.
 #' This calculation does not change the original point estimates or resolve
 #' other warnings about the fitted model.
 #'
 #' For an unresolved two-family profile, distinguish the original fit from
-#' the constrained searches. `maxit` in [fit_mfrm()] controls the original EM
+#' the constrained searches. `maxit` in [fit_mfrm()] controls the original
 #' fit; `profile_control = list(maxit = ...)` in `confint()` controls each
 #' constrained BFGS stage. Inspect `apa_table(ci, which = "profile_checks")`
 #' and `which = "profile_endpoints"`. Checks at the fitted slope can fail
 #' when the two constrained starts disagree even though the original fit
 #' passed its checks. Increasing `quad_points` requires refitting and addresses
 #' integration discrepancies; it does not resolve disagreement between starts.
-#' [mml_quadrature_sensitivity()] compares fixed-grid refits while preserving
-#' the model and EM settings. Its `intervals` entries are model-based Wald
+#' [mml_quadrature_sensitivity()] compares refits while preserving
+#' the model, engine and integration method. Its `intervals` entries are model-based Wald
 #' intervals; they do not repeat a profile search. To assess a profile on a
 #' finer grid, explicitly call `confint()` with `method = "profile"` on the
 #' corresponding entry in `review$fits`. If the problem is instead a constrained
@@ -350,14 +379,28 @@ mfrm_update_slope_readiness_parameters <- function(parameters, slopes) {
 #'   Journal of Statistical Software, 95(1), 1--36. \doi{10.18637/jss.v095.i01}.
 #' @seealso [gpcm_capability_matrix()], [build_weighting_review()]
 #' @examples
-#' # After fitting a GPCM with method = "MML":
-#' # intervals <- confint(fit, parm = "slopes", level = 0.95)
-#' # Inspect fit$slopes$SlopeFacet and choose one level before profiling:
-#' # ci <- confint(fit, method = "profile", slope = "R01")
-#' # plot(ci, type = "profile", title = NULL)
-#' # apa_table(ci, which = "profile_endpoints")
-#' # attr(intervals, "diagnostics")[, c("SlopeFacet", "Estimate",
-#' #   "CIEligible", "InferenceReview")]
+#' # How uncertain are the relative discriminations of these raters?
+#' ratings <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'   model = "GPCM", method = "MML", step_facet = "Criterion",
+#'   slope_facet = "Rater", rating_min = 1, rating_max = 4,
+#'   category_policy = "preserve", quad_points = 61)
+#' intervals <- confint(fit, parm = "slopes", level = 0.95)
+#' intervals
+#' attr(intervals, "diagnostics")[, c("SlopeFacet", "Estimate",
+#'   "CIEligible", "InferenceReview")]
+#' # Relative slopes have geometric mean one. A value above one means a
+#' # steeper response curve, not greater severity or better rater quality.
+#' # Missing bounds need the saved reason; availability is not a coverage test.
+#' plot(intervals)
+#' file <- tempfile(fileext = ".rds")
+#' saveRDS(intervals, file) # Use a lasting path for your analysis
+#' saved <- readRDS(file)
+#' apa_table(saved) # Reuse the intervals without fitting again
+#'
+#' # A separate, prespecified profile calculation can be requested with
+#' # confint(fit, method = "profile", slope = chosen_rater).
+#' # Choose chosen_rater from fit$slopes$SlopeFacet; see the profile section.
 #' @export
 confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
                               scale = c("relative", "standardized"), contrasts = NULL,
@@ -398,6 +441,7 @@ confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
     out <- mfrm_gpcm_interval_result(tab, level, "Joint-information log-Wald approximation",
       "Relative GPCM slopes (geometric mean one)")
     attr(out, "source") <- mfrm_gpcm_inference_source(object)
+    attr(out, "anchor_note") <- mfrm_gpcm_anchor_note(object)
     attr(out, "cautions") <- unique(tab$InferenceCaution[nzchar(tab$InferenceCaution)])
     if (length(attr(out, "cautions"))) warning(paste(attr(out, "cautions"), collapse = " "), call. = FALSE)
     return(out)
@@ -418,7 +462,7 @@ confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
   dimnames(cov) <- list(target$labels, target$labels)
   se <- covariance_diag_se(cov)
   eligible <- isTRUE(inference$check$eligible) & is.finite(se) & se > 0
-  critical <- stats::qnorm(1 - (1-level)/(2 * if (simultaneous == "bonferroni") n else 1))
+  critical <- stats::qnorm((1-level)/(2 * if (simultaneous == "bonferroni") n else 1), lower.tail = FALSE)
   low <- target$value - critical * se; high <- target$value + critical * se
   if (target$log_scale) { low <- exp(low); high <- exp(high) }
   eligible <- eligible & is.finite(low) & is.finite(high) & (!target$log_scale | low > 0)
@@ -430,6 +474,9 @@ confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
   if (isTRUE(inference$check$eligible)) {
     review[eligible] <- paste("Approximate inference for", target$target,
       "with", method, "covariance; finite-sample coverage is not guaranteed.", inference$check$caution %||% "")
+    if (length(inference$check$anchor_note)) {
+      review[eligible] <- paste(review[eligible], inference$check$anchor_note)
+    }
     review[!eligible] <- "Nonpositive variance or nonrepresentable interval bounds."
   }
   tab <- data.frame(SlopeFacet = target$labels, Estimate = target$estimate,
@@ -440,6 +487,7 @@ confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
       "approximate_bonferroni", "unavailable"), PValue = p,
     NullValue = if (product) NA_real_ else if (target$log_scale) 1 else 0, InferenceReview = review)
   if (product) {
+    tab$CoverageQualified <- FALSE
     tab$SlopeOwner <- target$metadata$Owner
     tab$SlopeLevel <- target$metadata$Level
     tab$ScaleReference <- target$metadata$ScaleReference
@@ -453,6 +501,7 @@ confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
     contrast_scale = contrast_scale, method = method, clusters = inference$clusters,
     adjustment_factor = inference$adjustment_factor %||% 1,
     covariance_scale = if (target$log_scale) "log" else "identity")
+  attr(out, "anchor_note") <- inference$check$anchor_note
   if (product) {
     attr(out, "settings")$two_family <- TRUE
     attr(out, "settings")$integration <- object$config$estimation_control$mml_integration
@@ -473,11 +522,13 @@ confint.mfrm_fit <- function(object, parm = "slopes", level = .95,
 #' @noRd
 print.mfrm_slope_intervals <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
   tab <- attr(x, "diagnostics")
-  cat(sprintf("Approximate %g%% intervals: %s\n", 100 * attr(x, "level"), attr(x, "target")))
+  status <- mfrm_slope_interval_display(tab)
+  cat(sprintf("Approximate %g%% interval results: %s\n", 100 * attr(x, "level"), attr(x, "target")))
   print(data.frame(Level = rownames(x), Estimate = tab$Estimate,
-    Lower = as.numeric(x[, 1]), Upper = as.numeric(x[, 2])),
+    Lower = as.numeric(x[, 1]), Upper = as.numeric(x[, 2]), Status = status),
     row.names = FALSE, digits = digits, ...)
   cat(attr(x, "method"), "\n")
+  if (length(attr(x, "anchor_note"))) cat(attr(x, "anchor_note"), "\n")
   if (!is.null(attr(x,"scale_note"))) cat(attr(x,"scale_note"), "\n")
   cat(if (identical(attr(x, "simultaneous"), "bonferroni"))
     "Bonferroni family: all targets requested in this call.\n" else "Pointwise intervals.\n")
@@ -486,9 +537,12 @@ print.mfrm_slope_intervals <- function(x, digits = max(3L, getOption("digits") -
     if (attr(x, "expected_tail_draws") < 10) cat("Few tail draws: increase nsim to assess endpoint stability.\n")
   }
   for (caution in attr(x, "cautions")) cat("Caution:", caution, "\n")
-  unavailable <- !tab$CIEligible
+  unavailable <- !tab$CIEligible %in% TRUE
+  if (any(status == "Incomplete")) cat(
+    "Incomplete intervals retain computed bounds; NA is not infinity or a calibrated one-sided interval.\n")
+  if (any(status == "Unavailable")) cat("Unavailable intervals:", sum(status == "Unavailable"), "\n")
   if (any(unavailable)) {
-    cat("Unavailable intervals:", sum(unavailable), "\n")
+    cat("Intervals requiring review:", sum(unavailable), "\n")
     for (reason in unique(tab$InferenceReview[unavailable])) cat("  ", reason, "\n", sep = "")
   }
   invisible(x)

@@ -171,7 +171,7 @@ test_that("nested plots and ggplot retain per-parent counts and point values", {
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     gg <- as_ggplot(d, x_var = "Raters")
     expect_match(gg$labels$x, "per Task", fixed = TRUE)
-    expect_match(gg$labels$subtitle, "nested designs", fixed = TRUE)
+    expect_match(paste(plot_data(gg, "notes")$Text, collapse = "\n"), "nested designs", fixed = TRUE)
     expect_equal(gg$data$Value, payload$series$Value)
   }
 })

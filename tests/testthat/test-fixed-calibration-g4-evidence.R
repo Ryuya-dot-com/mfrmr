@@ -1844,10 +1844,6 @@ test_that("G6 final decision binds the successful matrix and bounded scope", {
   )
   expect_true(file.exists(path))
   record <- paste(readLines(path, warn = FALSE), collapse = "\n")
-  roadmap <- paste(
-    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
-    collapse = "\n"
-  )
 
   expect_match(
     record,
@@ -1910,18 +1906,8 @@ test_that("G6 final decision binds the successful matrix and bounded scope", {
   )
   expect_match(record, "`CRANSubmissionPerformed=FALSE`", fixed = TRUE)
 
-  expect_match(
-    roadmap,
-    "mfrmr 0.2.4.9000 is under development and has not been released",
-    fixed = TRUE
-  )
-  expect_match(roadmap, "## Not part of the 0.2.4 promise", fixed = TRUE)
-  expect_false(grepl(
-    "CORE-[0-9]|G[0-6] exit|candidate metadata|preflight|submission",
-    roadmap,
-    perl = TRUE,
-    ignore.case = TRUE
-  ))
+  # Current roadmap/lifecycle checks belong to test-release-readiness-protocol;
+  # this test preserves the earlier decision's recorded scope.
 })
 
 test_that("internal strategic roadmap preserves the long-horizon decision axis", {
@@ -3491,12 +3477,8 @@ test_that("score UX review invalidates the previous candidate before human sign-
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
   }
 
-  description <- read.dcf(file.path(ctx$root, "DESCRIPTION"))
-  expect_identical(unname(description[1L, "Version"]), "0.2.4.9000")
-  expect_identical(
-    unname(description[1L, "Config/mfrmr/release-status"]), "development"
-  )
-  expect_false("Date" %in% colnames(description))
+  # The retained record establishes that earlier return to development;
+  # it does not constrain the lifecycle of subsequent candidates.
 
   expected_surface <- c(
     "R/api-calibration-methods.R",

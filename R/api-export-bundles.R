@@ -188,6 +188,7 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     "  anchors = anchors,",
     "  group_anchors = group_anchors,",
     emit("noncenter_facet", as.character(ri$noncenter_facet %||% "Person")),
+    emit("centering_scope", cfg$centering_scope %||% ri$centering_scope %||% "remainder"),
     add_optional("dummy_facets", ri$dummy_facets),
     add_optional("positive_facets", ri$positive_facets),
     emit("anchor_policy", as.character(ri$anchor_policy %||% "warn")),
@@ -443,13 +444,15 @@ validate_bias_results_input <- function(bias_results,
 #' The returned bundle has class `mfrm_manifest` and includes:
 #' - `summary`: one-row analysis overview
 #' - `readiness`, `readiness_components`, and `readiness_parameters`: the
-#'   source fit's current readiness-contract record, its component review, and
-#'   any parameter-level readiness rows
+#'   fitted model's recorded numerical checks and restrictions on inference,
+#'   overall and by component or parameter
 #' - `environment`: package/R/platform metadata
 #' - `model_settings`: key-value model settings table
 #' - `source_columns`: key-value data-column table
 #' - `estimation_control`: key-value optimizer settings table
-#' - `anchor_summary`: facet-level anchor summary
+#' - `anchor_summary`: facet-level anchor summary. `model_settings` separately
+#'   records `centering_scope` and `noncenter_facet`; missing convention metadata
+#'   in a native fit retains the legacy `"remainder"` interpretation
 #' - `anchors`: machine-readable anchor table
 #' - `hierarchical_review`: retained traceability table for hierarchical /
 #'   small-sample design flags
@@ -468,14 +471,15 @@ validate_bias_results_input <- function(bias_results,
 #' `estimation_control` tables are designed for reproducibility records and
 #' method write-up.
 #' `Converged` records the optimizer return-code decision; `InferenceReady`
-#' records the stricter readiness-contract decision. They need not agree.
-#' The `readiness` tables are provenance: they preserve the decision recorded
-#' for the source fit, including its contract version and reason codes. They do
-#' not make a subsequently replayed fit inference-ready; replay must recompute
-#' readiness from the replayed data and numerical result.
+#' records whether the fit passes the additional numerical checks required for
+#' inference. They need not agree; passing these checks does not establish model
+#' fit or the statistical adequacy of every interval method.
+#' The `readiness` tables preserve these checks for the original fitted model,
+#' including the check-format version and reason codes. Re-running the analysis
+#' must repeat the checks using the new fit; the saved records do not certify it.
 #' Active latent-regression fits also record their population-model provenance
 #' there, including the fitted scoring basis, stored `population_formula`, and
-#' person-level contract used by the fitted population model. When categorical
+#' person-level data requirements used by the fitted population model. When categorical
 #' background variables are expanded through `stats::model.matrix()`,
 #' `population_xlevel_variables` and `population_contrast_variables` identify
 #' the variables whose fitted coding must be preserved for replay/scoring.
@@ -633,6 +637,7 @@ build_mfrm_manifest <- function(fit,
     method_used = as.character(manifest_method_used),
     facet_names = paste(as.character(cfg$facet_names %||% character(0)), collapse = ", "),
     noncenter_facet = as.character(cfg$noncenter_facet %||% ""),
+    centering_scope = mfrm_centering_scope(cfg),
     step_facet = as.character(cfg$step_facet %||% ""),
     slope_facet = as.character(cfg$slope_facet %||% ""),
     gpcm_mml_identification = as.character(
@@ -1141,6 +1146,14 @@ build_mfrm_session_info_table <- function() {
 #' Anchor and group-anchor constraints are embedded directly from the fitted
 #' object's stored configuration, so the script can replay anchored analyses
 #' without manual table reconstruction.
+#' The script retains `centering_scope`; a native fit saved before this setting
+#' was recorded uses `"remainder"`. Running it performs a new fit under that
+#' convention, not a conversion of the saved object. To adopt whole-facet
+#' centering, review the generated call and change it to `"facet"`, preserving
+#' the intended population, uncentered facet, rubric and step/slope owners.
+#' Recheck the resulting constraints and readiness. Use `saveRDS()`/`readRDS()`
+#' to reopen an unchanged fit, or the replay from [export_mfrm_results()] to
+#' reopen a saved results bundle without refitting.
 #'
 #' Adjustments made with [apply_empirical_bayes_shrinkage()] are replayed after
 #' fitting, using the most recently recorded prior and Person settings. The
@@ -1474,6 +1487,7 @@ build_mfrm_replay_script <- function(fit,
 	    "  anchors = anchors,",
 	    "  group_anchors = group_anchors,",
 	    paste0("  noncenter_facet = ", render_r_object_literal(as.character(cfg$noncenter_facet %||% "Person")), ","),
+      paste0("  centering_scope = ", render_r_object_literal(cfg$centering_scope %||% "remainder"), ","),
       paste0("  dummy_facets = ", if (length(cfg$dummy_facets %||% character(0)) > 0) render_r_object_literal(as.character(cfg$dummy_facets)) else "NULL", ","),
       paste0("  positive_facets = ", if (length(cfg$positive_facets %||% character(0)) > 0) render_r_object_literal(as.character(cfg$positive_facets)) else "NULL", ","),
       paste0("  quad_points = ", render_r_object_literal(as.integer(est_ctl$quad_points %||% 15L)), ","),
@@ -1698,6 +1712,9 @@ build_mfrm_replay_script <- function(fit,
       paste0("  scoring_quad_points = ", render_r_object_literal(as.integer(unit_settings$scoring_quad_points %||% unit_settings$quad_points %||% 31L)), ","),
       paste0("  readiness_policy = ", render_r_object_literal(as.character(unit_settings$readiness_policy %||% "error")), ","),
       paste0("  n_draws = ", render_r_object_literal(as.integer(unit_settings$n_draws %||% 0L)), ","),
+      paste0("  cut_scores = ", render_r_object_literal(unit_settings$cut_scores), ","),
+      paste0("  scoring_prior = ", render_r_object_literal(unit_settings$scoring_prior), ","),
+      paste0("  adaptive_quad_points = ", render_r_object_literal(unit_settings$adaptive_quad_points), ","),
       paste0("  seed = ", if (!is.null(unit_settings$seed)) render_r_object_literal(unit_settings$seed) else "NULL"),
       ")"
     )
@@ -4068,6 +4085,13 @@ review_conquest_overlap <- function(bundle,
 #' [build_summary_table_bundle()] supports, exports their table bundles as CSV,
 #' and optionally assembles a lightweight HTML appendix page.
 #'
+#' Inspect `written_files` for the actual file paths. An analysis table whose
+#' name conflicts with bundle metadata (for example, `overview`) is retained
+#' with a `table_` prefix, with a numeric suffix if needed for uniqueness.
+#' Metadata keeps its existing filename; the analysis table is also retained
+#' in HTML. Summary rounding follows `digits`; retain the source R object for
+#' full-precision reuse.
+#'
 #' Fit-level caveats are exported through the `analysis_caveats` role, and
 #' pre-fit score-support caveats are exported through the
 #' `score_category_caveats` role. Both roles are classified as diagnostics, so
@@ -5250,6 +5274,8 @@ export_mfrm_bundle <- function(fit,
     if (!is.null(unit_prediction)) {
       unit_sum <- summary(unit_prediction, digits = 6)
       write_csv(unit_prediction$estimates, paste0(prefix, "_unit_prediction_estimates.csv"), "unit_prediction_estimates")
+      if (!is.null(unit_prediction$decisions)) write_csv(unit_prediction$decisions,
+        paste0(prefix,"_unit_prediction_decisions.csv"), "unit_prediction_decisions")
       write_csv(unit_prediction$row_review, paste0(prefix, "_unit_prediction_row_review.csv"), "unit_prediction_row_review")
       write_settings_table(unit_prediction$settings, paste0(prefix, "_unit_prediction_settings.csv"), "unit_prediction_settings")
       if (nrow(as.data.frame(unit_prediction$population_review %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
@@ -5743,6 +5769,7 @@ export_normalize_summary_table_inputs <- function(summary_tables,
     "mfrm_misfit_casebook",
     "mfrm_model_choice_review",
     "mfrm_weighting_review",
+    "mfrm_calibration_score",
     "mfrm_unit_prediction",
     "mfrm_plausible_values",
     "summary.mfrm_fit",
@@ -5768,6 +5795,7 @@ export_normalize_summary_table_inputs <- function(summary_tables,
     "summary.mfrm_misfit_casebook",
     "summary.mfrm_model_choice_review",
     "summary.mfrm_weighting_review",
+    "summary.mfrm_calibration_score",
     "summary.mfrm_unit_prediction",
     "summary.mfrm_plausible_values"
   )
@@ -6366,7 +6394,8 @@ export_write_summary_table_bundles <- function(summary_table_bundles,
     bundle_obj <- summary_table_bundles[[nm]]
     bundle_sum <- summary(bundle_obj)
     label <- export_sanitize_component_tag(nm, fallback = "summary")
-    reserved_table_tags <- c("overview", "reporting_map")
+    reserved_table_tags <- c("overview", "role_summary", "table_catalog",
+      "table_profile", "plot_index", "reporting_map", "table_index")
 
     write_csv_local(bundle_sum$overview, paste0(prefix, "_summary_", label, "_overview.csv"), paste0("summary_", label, "_overview"))
     if (nrow(as.data.frame(bundle_sum$role_summary %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
@@ -6386,16 +6415,21 @@ export_write_summary_table_bundles <- function(summary_table_bundles,
     }
     write_csv_local(bundle_obj$table_index, paste0(prefix, "_summary_", label, "_table_index.csv"), paste0("summary_", label, "_table_index"))
 
-    for (tbl_name in names(bundle_obj$tables %||% list())) {
-      if (tbl_name %in% reserved_table_tags) next
+    table_names <- names(bundle_obj$tables %||% list())
+    table_tags <- vapply(table_names, export_sanitize_component_tag, "", fallback = "table")
+    reserved <- table_tags %in% reserved_table_tags
+    table_tags[reserved] <- paste0("table_", table_tags[reserved])
+    table_tags <- tail(make.unique(c(reserved_table_tags, table_tags), sep = "_"), length(table_tags))
+    for (i in seq_along(table_names)) {
+      tbl_name <- table_names[[i]]
       tbl <- as.data.frame(bundle_obj$tables[[tbl_name]], stringsAsFactors = FALSE)
-      tag <- export_sanitize_component_tag(tbl_name, fallback = "table")
+      tag <- table_tags[[i]]
       write_csv_local(
         tbl,
         paste0(prefix, "_summary_", label, "_", tag, ".csv"),
         paste0("summary_", label, "_", tag)
       )
-      html_tables[[paste0("summary_", label, "_", tbl_name)]] <- tbl
+      html_tables[[paste0("summary_", label, "_", tag)]] <- tbl
     }
     html_tables[[paste0("summary_", label, "_table_index")]] <- bundle_obj$table_index
     if (nrow(as.data.frame(bundle_sum$table_catalog %||% data.frame(), stringsAsFactors = FALSE)) > 0) {

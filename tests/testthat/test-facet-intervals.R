@@ -3,6 +3,18 @@ local({
   f <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score")
   intervals <- mfrm_facet_intervals(f, "Rater", method = "sandwich")
 
+  test_that("known unit population SD preserves ordinary fixed-population contrasts", {
+    local_mocked_bindings(compute_mml_parameter_covariance = function(...)
+      list(status = "ok", cov = intervals$model_parameter_covariance))
+    C <- matrix(c(1, -1, 0, 0), 1, dimnames = list("Difference", rownames(intervals$contrasts)))
+    native <- mfrm_facet_intervals(f, "Rater", C)
+    std <- suppressWarnings(mfrm_facet_intervals(f, "Rater", C, scale = "standardized"))
+    expect_identical(std$table[names(native$table)], native$table)
+    expect_equal(std$covariance, native$covariance, ignore_attr = TRUE)
+    expect_false(std$settings$population_sd_estimated)
+    expect_match(plot_data(plot(std, draw = FALSE))$subtitle, "Known population SD = 1")
+  })
+
   test_that("Person scores and sandwich reproduce direct full-covariance calculations", {
     h <- compute_mml_parameter_covariance(f)
     expect_equal(intervals$parameter_covariance,
@@ -143,4 +155,23 @@ test_that("individual marginal scores match independent continuous integration",
       expect_equal(unname(scores[person, ]), reference, tolerance = 1e-6)
     }
   }
+})
+
+test_that("both plotted covariance methods mark constraint-fixed targets", {
+  x <- readRDS(test_path("fixtures", "anchored-facet-information.rds"))$RSM_group
+  local_mocked_bindings(compute_mml_parameter_covariance = function(...)
+    list(status = "ok", cov = x$covariance),
+    mfrm_person_likelihood_scores = function(...) x$scores, .package = "mfrmr")
+  ci <- mfrm_facet_intervals(x$fit, "Rater", method = "sandwich")
+  shapes <- list()
+  draw_points <- graphics::points
+  local_mocked_bindings(points = function(...) {
+    args <- list(...); shapes[[length(shapes) + 1L]] <<- args$pch
+    draw_points(...)
+  }, .package = "graphics")
+  grDevices::pdf(NULL)
+  tryCatch(plot(ci), finally = grDevices::dev.off())
+  expect_gte(length(shapes), 2L)
+  expect_identical(shapes[[1]], c(5, 1, 1, 5))
+  expect_identical(shapes[[2]], c(5, 16, 16, 5))
 })

@@ -59,7 +59,7 @@ contract.
 | Anchoring | Element/group anchors, rating-scale calibration, and reusable starting values | Element and group anchors; no general threshold/scale anchors or fixed-calibration starting-value bundle |
 | Repeated cells | Multiple observations may be represented within a design cell | Exact Person-by-facet duplicates are retained but force Data review; distinguish legitimate repeats with an event/occasion facet |
 | Bias / interaction | Table 14 | `estimate_bias()` and `bias_interaction_report()` |
-| Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and `plot_wright_unified()` |
+| Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and `plot()` |
 | Fair average | Table 7 fair-M average | `fair_average_table()` |
 | Reproducibility | Specification, input data, FACETS version, and recorded run environment/settings | `build_mfrm_manifest()` plus `build_mfrm_replay_script()` |
 
@@ -218,7 +218,7 @@ evidence threshold. `FormalInference = "No"` therefore remains a stop on
 substantive reporting even when a familiar FACETS-style table or plot is
 available.
 
-`plot_wright_unified()` is the corresponding explicit helper when the Wright
+`plot()` is the corresponding explicit helper when the Wright
 map is the main figure. For readers who expect the FACETS Table 6-style
 asterisk ruler and horizontal, rubric-labelled category transitions, define
 one label for every retained original score:
@@ -382,7 +382,7 @@ After a FACETS-oriented package-native fit is in hand, the recommended mfrmr
 reporting workflow extends the analysis with:
 
 - `review_mfrm_anchors()` before anchored fitting, and
-  `detect_anchor_drift()` / `plot_anchor_drift()` when common elements define
+  `detect_anchor_drift()` / `plot()` when common elements define
   a cross-form or cross-wave link.
 - `diagnose_mfrm(diagnostic_mode = "both")` for the strict marginal screen
   alongside the residual stack.
@@ -390,7 +390,7 @@ reporting workflow extends the analysis with:
   `category_curves_report()` for category-functioning evidence.
 - `fair_average_table()` when FACETS Table 12-style fair-average review is
   needed.
-- `plot(fit, type = "wright")` or `plot_wright_unified()` for a variable-map
+- `plot(fit, type = "wright")` or `plot()` for a variable-map
   view of targeting and threshold placement.
 - `estimate_bias()`, `bias_interaction_report()`, and
   `bias_pairwise_report()` when FACETS Table 14-style local interaction

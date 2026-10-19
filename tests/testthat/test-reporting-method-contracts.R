@@ -246,8 +246,8 @@ test_that("build_visual_summary_map returns summary text for all keys", {
 test_that("build_visual_summary_map includes strict marginal routes for MML diagnostics", {
   smap_mml <- mfrmr:::build_visual_summary_map(.fit_mml, .diag_mml)
   expect_true(any(grepl("Expected counts condition on the same responses", smap_mml$strict_marginal_fit, fixed = TRUE)))
-  expect_true(any(grepl("plot_marginal_fit()", smap_mml$strict_marginal_fit, fixed = TRUE)))
-  expect_true(any(grepl("plot_marginal_pairwise()", smap_mml$strict_pairwise_local_dependence, fixed = TRUE)))
+  expect_true(any(grepl('plot(x, type = "marginal_fit")', smap_mml$strict_marginal_fit, fixed = TRUE)))
+  expect_true(any(grepl('plot(x, type = "marginal_pairwise")', smap_mml$strict_pairwise_local_dependence, fixed = TRUE)))
 })
 
 test_that("build_visual_warning_map explains when strict marginal diagnostics were not requested", {

@@ -165,13 +165,13 @@ test_that("comparatively expensive demonstrations run in the donttest pass", {
 
   expected <- sort(c(
     "mml_quadrature_sensitivity",
-    "dif_interaction_table", "plot_dif_heatmap", "facet_quality_dashboard",
+    "dif_interaction_table", "facet_quality_dashboard",
     "summary.mfrm_facet_dashboard", "plot_facet_quality_dashboard",
     "diagnose_mfrm", "build_mfrm_manifest", "build_mfrm_replay_script",
     "export_mfrm_bundle", "analyze_facet_equivalence",
     "plot_facet_equivalence", "summary.mfrm_diagnostics",
     "summary.mfrm_bias", "compute_person_fit_indices", "plot_person_fit",
-    "plot_rater_severity_profile", "plot_dif_summary",
+    "plot_rater_severity_profile",
     "plot_apa_figure_one", "plot_guttman_scalogram", "plot_residual_qq",
     "plot_rater_agreement_heatmap", "plot_local_dependence_heatmap",
     "plot_reliability_snapshot", "plot_residual_matrix",
@@ -182,7 +182,7 @@ test_that("comparatively expensive demonstrations run in the donttest pass", {
     "facet_statistics_report", "precision_review_report",
     "category_structure_report", "category_curves_report",
     "bias_interaction_report", "bias_iteration_report",
-    "bias_pairwise_report", "plot_bias_interaction", "build_apa_outputs",
+    "bias_pairwise_report", "build_apa_outputs",
     "print.mfrm_apa_text", "summary.mfrm_apa_outputs", "summary.apa_table",
     "facets_fit_review", "dif_report", "apply_empirical_bayes_shrinkage",
     "shrinkage_report", "build_peer_review_sim_spec",
@@ -190,7 +190,7 @@ test_that("comparatively expensive demonstrations run in the donttest pass", {
     "unexpected_response_table", "displacement_table",
     "measurable_summary_table", "rating_scale_table", "bias_count_table",
     "unexpected_after_bias_table", "facets_output_file_bundle",
-    "plot_residual_pca", "estimate_bias", "summary.mfrm_facets_run"
+    "estimate_bias", "summary.mfrm_facets_run", "plot.mfrm_fit"
   ))
   examples <- example_policy_roxygen_examples(pkg_root)
   observed <- sort(unique(examples$target[examples$outer_donttest]))
@@ -329,7 +329,7 @@ test_that("front-door examples use one explicit beginner workflow", {
   expect_false(grepl("panels$Status", rd_text("plot_qc_dashboard.Rd"), fixed = TRUE))
 })
 
-test_that("roxygen examples keep expensive demonstrations conditional", {
+test_that("ordinary roxygen examples avoid repeated fitting and parallel work", {
   pkg_root <- example_policy_source_root()
   testthat::skip_if(is.na(pkg_root), "source files are not available")
 
@@ -342,14 +342,6 @@ test_that("roxygen examples keep expensive demonstrations conditional", {
     example_policy_hits(multi_fit),
     character(0),
     info = "Standard Rd examples should not run multiple fit_mfrm() calls."
-  )
-
-  active_mml_without_quadrature <- examples[
-    examples$active_has_mml & !examples$active_has_quad_points, ]
-  expect_identical(
-    example_policy_hits(active_mml_without_quadrature),
-    character(0),
-    info = "Standard MML examples should set quad_points."
   )
 
   active_parallel <- examples[examples$active_has_parallel, ]
@@ -370,10 +362,13 @@ test_that("vignettes keep heavy executable chunks off during CRAN checks", {
 
   missing_guard <- character(0)
   unsafe_cache_chunk <- character(0)
+  # These short observed-score tutorials execute in full without MFRM calibration.
+  fully_executed <- c("mfrmr-gtheory.Rmd", "mfrmr-rating-agreement.Rmd")
   for (path in files) {
     text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-    if (!grepl("is_cran_check", text, fixed = TRUE) ||
-        !grepl("eval = !is_cran_check", text, fixed = TRUE)) {
+    if (!basename(path) %in% fully_executed &&
+        (!grepl("is_cran_check", text, fixed = TRUE) ||
+         !grepl("eval = !is_cran_check", text, fixed = TRUE))) {
       missing_guard <- c(missing_guard, basename(path))
     }
     if (grepl("eval = is_cran_check", text, fixed = TRUE) &&

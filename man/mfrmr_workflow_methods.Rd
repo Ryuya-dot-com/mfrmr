@@ -8,11 +8,22 @@ Start with one analysis: load ratings, fit a model, plot the results, and
 read the summary. The Examples section contains a complete runnable script.
 The later sections describe diagnostics, reporting, and specialist routes.
 }
+\section{Choose a reading path}{
+
+For a first analysis, read \strong{Start here}, run the Examples, then read
+\strong{From the first summary to diagnostics}. You do not need to work through
+every specialist route. For your own file, use \strong{Use your own ratings} and
+the workflow vignette's CSV lesson. For an unfamiliar result or formula,
+open \link{mfrmr_methods_reference}: it links questions to calculations, their
+limits and original references. Use \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} when the
+question specifically concerns uncertainty.
+}
+
 \section{Start here}{
 
 \enumerate{
 \item Load the package with \code{library(mfrmr)} and example ratings with
-\code{toy <- load_mfrmr_data("example_operational")}.
+\code{ratings <- load_mfrmr_data("example_operational")}.
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}}. The \code{person}, \code{facets}, and \code{score} arguments
 name columns in the data; each row represents one rating event.
 \item Draw the Wright map with \code{plot(fit)} to view person abilities, rater
@@ -27,11 +38,28 @@ for individual person, rater, and criterion estimates, identified by
 \code{results$decision} and follow its \code{NextAction}; the default summary does
 not compute diagnostics. For your own data, first check the rating design
 and score categories with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
-\code{head(toy)} shows the input rows; \code{Study} and \code{Group} are extra labels unused
+\code{head(ratings)} shows the input rows; \code{Study} and \code{Group} are extra labels unused
 by this model. \verb{<-} saves an object and \code{$} selects a named part of it.
+\code{ratings} is the name used in this example, not a required object that you
+must prepare beforehand. The loading line creates it from packaged synthetic
+data. Use that line first; after the example works, replace it with your own
+data import and review the column names and score categories.
 }
 
 \section{From the first summary to diagnostics}{
+
+The ordinary workflow below uses MML/JML \code{mfrm_fit} results. Native
+\code{fit_mfrm(method = "CML", category_policy = "preserve")} instead returns a
+dedicated RSM/PCM structural-parameter result: use \code{summary(fit)$locations},
+\code{summary(fit)$steps} and \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, then \code{plot(ci)} and RDS
+saving. CML conditions out Person abilities and estimates no population SD;
+ordinary scoring, diagnostics and consolidated reports do not apply.
+See \code{vignette("mfrmr-facet-intervals")} for its executable comparison example.
+For a deficient school/rater assignment, declare CML comparisons with
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and use \code{fit_scope = "comparisons"}; \code{summary(fit)}
+then reports only requested contrasts, with conditional-information intervals
+for identifiable targets and missing values for others. See
+\code{vignette("mfrmr-linking-and-dff")} for that separate workflow.
 
 A \code{FormalInference = "No"} entry in \code{results$decision} can mean that precision
 has not yet been reviewed. Read \code{Why} and \code{NextAction} to distinguish that
@@ -95,11 +123,14 @@ compare future rater/task plans. Neither needs an MFRM fit.
 }
 
 
-The old calls remain supported, including positional arguments. Saved
+The old calls \strong{in this table} remain supported, including positional arguments. Saved
 objects retain their classes and \code{summary()}/\code{plot()} methods. Do not pass
 conflicting old/new category choices. See \code{\link[=compatibility_alias_table]{compatibility_alias_table()}} for
 the complete migration map. This does not change what \code{predict()} returns:
 use the ability-scoring or response-prediction route named for your model.
+The former standalone drawing \verb{plot_*()} functions have a different policy:
+they are no longer exported in 0.2.4. Use result-object \code{plot()} and
+\link{mfrmr_plot_migration} to update those calls.
 
 A \strong{calibration} is the fitted set of model parameters, such as rater
 severity and category thresholds. A \strong{conditional} ability interval holds
@@ -231,12 +262,17 @@ the review and pass the corrected data frame to \code{\link[=fit_mfrm]{fit_mfrm(
 
 \section{Choose which ratings share an effect}{
 
-The routine fit/diagnose/results/report workflow on this page is for
-\code{\link[=fit_mfrm]{fit_mfrm()}} objects. Use \code{mfrmr_output_guide("models")} to compare:
+The routine fit/diagnose/results/report workflow starts with ordinary
+RSM/PCM. Other \code{\link[=fit_mfrm]{fit_mfrm()}} models share the \code{mfrm_fit} class but have
+different restrictions. Check \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} and
+\code{vignette("mfrmr-gpcm-scope", package = "mfrmr")} for one-family GPCM,
+two-family GPCM or corrected JML;
+the latter two do not supply ordinary fit tests or Wright/Pathway maps.
+Use \code{mfrmr_output_guide("models")} to compare:
 \itemize{
 \item \strong{Fixed facets:} \code{\link[=fit_mfrm]{fit_mfrm()}} describes the specified rater and task
-levels. Its native diagnostics, Wright map and comprehensive reports use
-the \code{mfrm_fit} result.
+levels. For supported ordinary models, native diagnostics, Wright maps
+and comprehensive reports use the matching \code{mfrm_fit} result.
 \item \strong{Shared random raters:} \code{\link[=fit_mfrm_random_rater]{fit_mfrm_random_rater()}} models one rater effect
 shared across all Persons rated by that rater. For abilities of source
 Persons, use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}}. \code{predict()} instead gives score
@@ -249,6 +285,25 @@ Both hold fitted calibration fixed. A Rater column can specify fixed severity
 and local within-Person membership. See
 \code{vignette("mfrmr-testlets", package = "mfrmr")}.
 }
+
+Choose the next call from the input and the quantity you need:\tabular{ll}{
+   Input and purpose \tab Entry \cr
+   Source responses; estimate abilities in either extension \tab \code{score_mfrm_persons()} \cr
+   Supplied shared-rater responses; estimate abilities \tab \code{score_mfrm_random_rater(newdata = ...)} \cr
+   Supplied testlet responses; estimate abilities \tab \code{predict(testlet_fit, newdata = ...)} \cr
+   Supplied abilities; predict shared-rater rating probabilities \tab \code{predict(random_fit, ability = ...)} \cr
+}
+
+
+For the last row, choose \code{rater = "observed"} or \code{rater = "new"} explicitly.
+There is no corresponding supplied-ability prediction route for testlets.
+
+A supplied scoring roster replaces source responses. In the shared-rater
+model, an existing rater ID alone does not retain that rater's earlier
+responses or saved conditional distribution; include all intended responses
+once. In the testlet model, a column used both for local membership and as
+a fixed facet still requires known fixed levels: a new Person can be scored,
+but a new fixed rater cannot be introduced by changing its testlet label.
 
 Shared-rater ability scoring can be slow because each Person's calculation
 uses the complete rating table. Start with a few actual IDs in \code{persons};
@@ -299,7 +354,8 @@ Multiple GPCM slope owners still describe a single latent ability.
 Both provisional two-family MML engines support summaries and conditional
 fitted curves with saved reports, separately checked experimental component
 log-Wald and location/contrast intervals, and descriptive posterior residuals.
-Component profiles require fixed-grid EM. Separately checked fitted-object
+Component profiles preserve the fitted fixed-grid or adaptive integration;
+every constrained solution needs its own numerical checks. Separately checked fitted-object
 and portable new-Person EAP intervals condition on the calibration and prior;
 they exclude calibration uncertainty and have unqualified coverage and
 population transport. Neither inherits the one-family
@@ -315,6 +371,40 @@ raters, so its generalization scope differs from a person-by-rater-by-task
 analysis. For the relationship and literature, see
 \code{vignette("mfrmr-gpcm-scope", package = "mfrmr")}.
 
+\strong{Does MFRM simulation replace a G-study?} Not automatically, and an
+analysis need not use both. Choose the score and decision first:
+\itemize{
+\item A G/D-study asks how a specified observed mean/composite generalizes over
+sampled tasks, raters or other supported conditions. Its variance and
+covariance components include interactions; relative and absolute error
+definitions determine G, Phi and SEM. Future counts reweight these
+components without repeatedly generating ratings and refitting MFRM.
+\item \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} generates ordered ratings under a declared MFRM
+specification, refits models and summarizes recovery, separation and fit
+screens. It asks how that procedure behaves under those assumptions.
+Increasing repetitions reduces Monte Carlo error, not uncertainty about
+an incorrect generating model or whether future raters are exchangeable.
+\item If the decision concerns calibrated latent scores, a suitably specified
+simulation may be sufficient. If it concerns the dependability of a raw
+mean or composite, a G-study provides that target directly. Simulation
+can also evaluate an observed-score target, but it must explicitly define
+the score, sampling universe, dependence and error criterion; a facet
+separation coefficient is not a substitute for G or Phi.
+}
+
+For example, adding equally severe raters may improve Person precision
+without removing Person-by-Task variation. An additive MFRM generator does
+not acquire that latent interaction simply by increasing facet counts;
+a G-study estimates observed-score interaction components, whose scale is
+different from a latent interaction variance. Neither method validates
+its own assumptions merely by reproducing its own generated data.
+These APIs do not fit a joint MFRM/G-theory model. The current simulation
+planner uses Person, rater-like and criterion-like roles; changing their
+names or level counts does not provide an arbitrary-facet planner. The
+multivariate G-study separately supports one or two random measurement
+facets. See \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} and \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} for
+the respective design boundaries.
+
 To group persons, raters or tasks by external attributes, use \code{\link[=mfrm_features]{mfrm_features()}}
 followed by \code{\link[=mfrm_cluster_pam]{mfrm_cluster_pam()}} or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for mixed
 attributes. \code{\link[=mfrm_pca]{mfrm_pca()}} and \code{\link[=mfrm_cluster_kmeans]{mfrm_cluster_kmeans()}} use selected numeric
@@ -328,9 +418,14 @@ and \code{plot()} or \code{\link[=plot_data]{plot_data()}} for fitted PCA, parti
 Save the full analysis with \code{saveRDS()}; these are not \code{\link[=mfrm_results]{mfrm_results()}} inputs.
 Export a chosen summary with \code{write.csv(summary(result), ..., row.names = FALSE)}
 and keep the full source object for its settings, excluded rows and assumptions.
-Multivariate D-study scenario plots support \code{\link[=as_ggplot]{as_ggplot()}}, preserving G/Phi
-or SEM panels. Plan-difference intervals, PCA and clustering instead use
-their base plots or explicit custom graphics from \code{\link[=plot_data]{plot_data()}}.
+Multivariate G-study component panels/covariance heatmaps and D-study curves
+support \code{\link[=as_ggplot]{as_ggplot()}}, retaining score identities, G/Phi or SEM, facet-count
+panels and unavailable values. Plan-difference plots use base graphics or
+custom graphics from \code{\link[=plot_data]{plot_data()}}; automatic conversion is unavailable.
+PCA scree/scores/loadings, saved dendrograms, imputation co-membership,
+silhouettes and numeric/categorical cluster profiles have dedicated
+\code{\link[=as_ggplot]{as_ggplot()}} conversions. Use \code{mfrmr_output_guide("plots")} to choose a
+supported view; data extraction alone does not guarantee equivalent graphics.
 }
 
 \section{Missing scores on assigned ratings}{
@@ -345,8 +440,11 @@ See \code{mfrmr_output_guide("imputation")} and
 \code{vignette("mfrmr-response-imputation")} for an executed example and its limits.
 A pooled result has dedicated \code{summary()}, \code{plot()} and \code{\link[=plot_data]{plot_data()}} routes;
 use \code{saveRDS()} for the complete analysis or \code{write.csv(summary(pooled), ...)}
-for a selected table. It is not an \code{\link[=mfrm_results]{mfrm_results()}} input and does not support
-\code{\link[=as_ggplot]{as_ggplot()}}. Selecting a plot \code{component} cannot supply a missing conversion.
+for a selected table. It is not an \code{\link[=mfrm_results]{mfrm_results()}} input. \code{\link[=as_ggplot]{as_ggplot()}}
+supports the saved pooled interval view, including \code{component = "table"},
+and preserves its t intervals, fixed targets and inference settings.
+Use \code{\link[=plot_data]{plot_data()}} for other components; conversion does not refit or pool
+the analyses again.
 }
 
 \section{Updating saved analyses for 0.2.4}{
@@ -493,23 +591,28 @@ limits; updating an object does not broaden those limits.
 
 \section{Next steps for reporting}{
 
-For the clearest default route in \code{RSM} / \code{PCM}, use
-\code{\link[=describe_mfrm_data]{describe_mfrm_data()}} ->
-\code{\link[=fit_mfrm]{fit_mfrm()}} with \code{method = "MML"} ->
-\code{summary(fit, profile = "fit")} ->
-\code{review <- summary(fit, profile = "facets")} ->
-optionally view targeting with \code{plot(fit, type = "wright", show_ci = TRUE)} ->
-reuse \code{review$results$diagnostics}; call \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} again only when
-residual PCA or other custom settings are needed ->
-\code{\link[=reporting_checklist]{reporting_checklist()}} ->
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} and, when flagged, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} /
-\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} ->
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
-\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=apa_table]{apa_table()}} or
-\code{\link[=export_summary_appendix]{export_summary_appendix()}}.
-The \code{"facets"} profile name is historical: it provides a comprehensive
-measurement review and does not require FACETS, TAM, or sirt knowledge or
-software.
+For ordinary MML/JML \code{mfrm_fit} results, use one basic route:
+\code{summary(fit)} -> \code{res <- mfrm_results(fit)} -> \code{summary(res)}.
+The summary's \code{triage} and \code{next_actions} identify what needs attention;
+\code{plot_map} lists supported figures. The collector computes missing requested
+diagnostics by default. If you already have matching diagnostics, pass them
+as \code{diagnostics = diagnostics}; \code{compute = "never"} keeps absent diagnostics
+unavailable rather than computing them. It does not certify readiness.
+
+From \code{res}, choose \code{\link[=mfrm_report]{mfrm_report()}} for a report, \code{plot(res, ...)} for a
+supported figure, \code{\link[=export_mfrm_results]{export_mfrm_results()}} for an analyst archive, or
+\code{saveRDS(res, file)} for later R use. These are optional branches, not a
+checklist that must be run in full. The worked example in
+\link{mfrmr_reports_and_tables} follows this route. \code{\link[=build_apa_outputs]{build_apa_outputs()}} and
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} serve additional manuscript/table assembly;
+they are not prerequisites for the ordinary report.
+
+CML and comparison-only fits use their separate structural/comparison
+workflow above. For GPCM and extended models, consult \code{\link[=mfrm_results]{mfrm_results()}}
+for the supported sections and attachments before collecting a report.
+If an earlier script uses \code{summary(fit, profile = "facets")}, reuse its
+\verb{$results} or \verb{$results$diagnostics}. The historical profile name does not
+require FACETS, TAM, or sirt software.
 
 Use \code{JML} only when its fixed-person-parameter estimand is methodologically
 intended, for example for a JMLE-oriented external comparison, descriptive
@@ -528,7 +631,7 @@ branch from \code{review$results$diagnostics} into:
 \code{\link[=build_linking_review]{build_linking_review()}} ->
 inspect \code{review$group_view_index} for stable wave / link / facet rollups and
 \code{summary(review)$plot_routes} for the next plot helper ->
-\code{\link[=plot_anchor_drift]{plot_anchor_drift()}} or \code{plot(anchor_review, ...)} for the specific flagged
+\link[=plot.mfrm_anchor_drift]{plot(x)} or \code{plot(anchor_review, ...)} for the specific flagged
 evidence family.
 
 For \code{GPCM}, use \code{\link[=build_linking_review]{build_linking_review()}} as a caveated exploratory
@@ -544,8 +647,8 @@ structures deserve follow-up, branch from \code{review$results$diagnostics} into
 inspect \code{casebook$group_view_index}, \code{casebook$group_views}, and
 \code{summary(casebook)$plot_routes} for stable person / facet / wave rollups and
 the next plot helper ->
-\code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, or
-\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} according to \code{casebook$plot_map} ->
+\link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")}, or
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")} according to \code{casebook$plot_map} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} / \code{\link[=export_summary_appendix]{export_summary_appendix()}} when the
 flagged cases need appendix-style reporting support.
 
@@ -611,17 +714,26 @@ as not assessed; mfrmr does not assume a complete crossing.
 
 \section{Typical workflow}{
 
+The steps below describe ordinary MML/JML \code{mfrm_fit} results. Native CML
+uses the separate route in \strong{From the first summary to diagnostics}:
+read its structural or comparison summary, create \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}},
+and use the interval object's plots/tables and RDS saving. CML has no Person
+abilities or population SD and does not support the ordinary diagnostic,
+Wright-map or consolidated-report steps. \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} also maps
+full MML interaction contrasts and their explicit population-SD standardization.
 \enumerate{
 \item Review the long-format data and intended score support with
 \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}. Choose \code{MML} or \code{JML} from the prespecified
 estimand and assumptions; do not select \code{JML} merely to shorten runtime.
-\item Read \code{summary(fit, profile = "fit")}, then request
-\code{summary(fit, profile = "facets")}. To inspect targeting and uncertainty,
-draw \code{plot(fit, type = "wright", show_ci = TRUE)}.
-\item (Optional) Use \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} or \code{\link[=mfrmRFacets]{mfrmRFacets()}} for a
-legacy-compatible one-shot workflow wrapper.
-\item For \code{RSM} / \code{PCM}, build diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+\item Read \code{summary(fit)$decision}. For a usable ordinary fit, collect
+\code{res <- mfrm_results(fit)} and inspect \code{summary(res)$triage} and
+\verb{$next_actions}. The same \code{res} supports reporting and saving; use
+\verb{$plot_map} to select an optional figure.
+\item (Optional) Use \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} or \code{\link[=mfrmRFacets]{mfrmRFacets()}} only when a
+legacy-compatible one-shot wrapper is needed.
+\item For a focused diagnostic question, reuse \code{res$diagnostics}. Call
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} separately when its settings need to change.
 For final reporting, prefer \code{diagnostic_mode = "both"} so the legacy
 residual path and the strict marginal screen remain visible side by side.
 For \code{GPCM}, diagnostics are now available through
@@ -629,7 +741,7 @@ For \code{GPCM}, diagnostics are now available through
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
 \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}},
 \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} -- the
+\code{\link[=reporting_checklist]{reporting_checklist()}}, and \link[=plot.mfrm_fit]{plot(x, type = "qc")} -- the
 fair-average panel of the dashboard reports an explicit
 unavailability indicator under GPCM. Use \code{\link[=fair_average_table]{fair_average_table()}} directly
 when you need the supported slope-aware element-conditional fair averages.
@@ -642,7 +754,7 @@ direct fair-average tables, and bias-screening tables carry their own
 caveats.
 Posterior scoring with \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} /
 \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}, design-weighted information via
-\code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}}, Wright/pathway/CCC plots
+\code{\link[=compute_information]{compute_information()}} / \link[=plot.mfrm_information]{plot(x)}, Wright/pathway/CCC plots
 via \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, direct category reports via
 \code{\link[=category_structure_report]{category_structure_report()}} / \code{\link[=category_curves_report]{category_curves_report()}}, and direct
 data generation through \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}},
@@ -672,7 +784,9 @@ weighting review, or \code{\link[=build_misfit_casebook]{build_misfit_casebook()
 for operational case review. For \code{GPCM}, use
 \code{\link[=build_linking_review]{build_linking_review()}} only as an exploratory index over direct
 anchor/drift/chain evidence.
-\item Generate reporting bundles:
+\item For ordinary reports and saving, use \code{\link[=mfrm_report]{mfrm_report()}},
+\code{\link[=export_mfrm_results]{export_mfrm_results()}} or \code{saveRDS(res, file)}. For additional manuscript
+and appendix assembly, select the relevant helper:
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=apa_table]{apa_table()}},
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}. For \code{GPCM}, use the APA, visual,
@@ -721,12 +835,12 @@ helpers) for base-R visual diagnostics.
 
 \itemize{
 \item Quick first pass:
-\code{RSM} / \code{PCM}: \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} ->
+\code{RSM} / \code{PCM}: \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \link[=plot.mfrm_fit]{plot(x, type = "qc")} ->
 \code{\link[=reporting_checklist]{reporting_checklist()}} when you want the package to route the next figures.
 \code{GPCM}: \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} ->
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} / \code{\link[=unexpected_response_table]{unexpected_response_table()}} ->
+\link[=plot.mfrm_fit]{plot(x, type = "qc")} / \code{\link[=unexpected_response_table]{unexpected_response_table()}} ->
 \code{\link[=rating_scale_table]{rating_scale_table()}} ->
-\code{\link[=compute_information]{compute_information()}} -> \code{\link[=plot_information]{plot_information()}} ->
+\code{\link[=compute_information]{compute_information()}} -> \link[=plot.mfrm_information]{plot(x)} ->
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} / \code{\link[=category_curves_report]{category_curves_report()}} ->
 \code{\link[=fair_average_table]{fair_average_table()}} / \code{\link[=estimate_bias]{estimate_bias()}} when those screening tables
 answer the question. For \code{GPCM}, the fit-based export family
@@ -735,7 +849,7 @@ answer the question. For \code{GPCM}, the fit-based export family
 output with explicit \code{gpcm_boundary} rows.
 \item Linking and coverage review:
 \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} -> \code{plot(..., type = "design_matrix")} ->
-\code{\link[=plot_wright_unified]{plot_wright_unified()}}.
+\link[=plot.mfrm_fit]{plot(x, type = "wright", view = "unified")}.
 \item Manuscript prep:
 \code{RSM} / \code{PCM}:
 \code{\link[=reporting_checklist]{reporting_checklist()}} -> inspect the \code{"Visual Displays"} and
@@ -748,7 +862,7 @@ output with explicit \code{gpcm_boundary} rows.
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} with \code{gpcm_boundary} caveats.
 \item Weighting-policy review:
 \code{\link[=compare_mfrm]{compare_mfrm()}} -> \code{\link[=build_weighting_review]{build_weighting_review()}} ->
-\code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} when you want to inspect
+\code{\link[=compute_information]{compute_information()}} / \link[=plot.mfrm_information]{plot(x)} when you want to inspect
 whether \code{GPCM} is introducing substantively acceptable
 discrimination-based reweighting relative to the Rasch-family reference.
 Eligible MML comparisons require a common grid of at least 31 points and
@@ -806,8 +920,8 @@ plot and report follow-up.
 \itemize{
 \item \code{mfrm_fit}: \code{summary(fit)} and \code{plot(fit, ...)}.
 \item \code{mfrm_diagnostics}: \code{summary(diag)}; plotting via dedicated helpers
-such as \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}.
-\item \code{mfrm_bias}: \code{summary(bias)} and \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}.
+such as \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")}, \link[=plot.mfrm_fit]{plot(x, type = "qc")}.
+\item \code{mfrm_bias}: \code{summary(bias)} and \link[=plot.mfrm_fit]{plot(x, type = "bias")}.
 \item \code{mfrm_data_description}: \code{summary(ds)} and \code{plot(ds, ...)}.
 \item \code{mfrm_anchor_review}: \code{summary(review)} and \code{plot(review, ...)}.
 \item \code{mfrm_misfit_casebook}: \code{summary(casebook)} and \code{print(casebook)}, with
@@ -818,13 +932,13 @@ appendix/report handoff available through
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 \item \code{mfrm_weighting_review}: \code{summary(review)} and \code{print(review)}, with
 information follow-up routed through \code{\link[=compute_information]{compute_information()}} and
-\code{\link[=plot_information]{plot_information()}} according to \code{review$plot_map}, and appendix/report
+\link[=plot.mfrm_information]{plot(x)} according to \code{review$plot_map}, and appendix/report
 handoff available through \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 \item \code{mfrm_linking_review}: \code{summary(review)} and \code{print(review)}, with
 grouping views available through \code{review$group_view_index} and
 \code{review$group_views}, and plotting routed through \code{summary(review)$plot_routes},
-\code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, and \code{plot(anchor_review, ...)} according to
+\link[=plot.mfrm_anchor_drift]{plot(x)}, and \code{plot(anchor_review, ...)} according to
 \code{review$plot_map}.
 \item \code{mfrm_facets_run}: \code{summary(run)} and \code{plot(run, type = c("fit", "qc"), ...)}.
 \item \code{apa_table}: \code{summary(tbl)} and \code{plot(tbl, ...)}.
@@ -878,12 +992,12 @@ plots from component tables.
 library(mfrmr)
 
 # Load example ratings and look at the first six rows
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",

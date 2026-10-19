@@ -122,7 +122,7 @@ plot.mfrm_pca <- function(x, type = c("scree", "scores", "loadings"),
   on.exit(graphics::par(old), add = TRUE)
   if (type == "scree") {
     graphics::plot(seq_len(nrow(tab)), 100 * tab$Proportion, type = "l",
-      col = style$foreground, xlab = xlab, ylab = ylab, main = title, xaxt = "n")
+      col = style$foreground, xlab = xlab, ylab = ylab, main = "", xaxt = "n")
     graphics::axis(1, at = seq_len(nrow(tab)))
     graphics::points(seq_len(nrow(tab)), 100 * tab$Proportion,
       pch = ifelse(tab$Retained, 16, 1),
@@ -132,19 +132,18 @@ plot.mfrm_pca <- function(x, type = c("scree", "scores", "loadings"),
       col = c(style$accent_primary, "grey65"), bty = "n")
   } else if (type == "loadings") {
     graphics::plot(tab$Loading, seq_len(nrow(tab)), xlim = c(-1, 1), yaxt = "n",
-      pch = 16, col = style$accent_primary, xlab = xlab, ylab = ylab, main = title)
+      pch = 16, col = style$accent_primary, xlab = xlab, ylab = ylab, main = "")
     graphics::abline(v = 0, col = style$grid)
     graphics::axis(2, at = seq_len(nrow(tab)), labels = tab$Feature, las = 1)
   } else {
     color <- if (nrow(encoding)) encoding$Colour[match(tab$Cluster, encoding$Cluster)] else style$accent_primary
     shape <- if (nrow(encoding)) encoding$Shape[match(tab$Cluster, encoding$Cluster)] else 16
     graphics::plot(tab[[axes[1]]], tab[[axes[2]]], pch = shape, col = color,
-      xlab = xlab, ylab = ylab, main = title, asp = 1)
+      xlab = xlab, ylab = ylab, main = "", asp = 1)
     if (show_labels) graphics::text(tab[[axes[1]]], tab[[axes[2]]], labels = tab$ID, pos = 3, cex = 0.7)
     if (nrow(encoding)) graphics::legend("topright", legend = paste("Group", encoding$Cluster),
       col = encoding$Colour, pch = encoding$Shape, bty = "n")
   }
-  graphics::mtext(subtitle, side = 3, line = 0.3, cex = 0.8)
   invisible(out)
 }
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-generalizability.R
 \name{mfrm_generalizability}
 \alias{mfrm_generalizability}
-\title{Generalizability-theory variance decomposition for an MFRM design}
+\title{Main-effects generalizability approximation for an MFRM design}
 \usage{
 mfrm_generalizability(
   fit,
@@ -62,11 +62,11 @@ coefficient table and D-study projections, including tabular exports;
 Re-fits the rating data underlying an \code{mfrm_fit} as a crossed
 random-effects model
 \code{Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual}
-via \code{lme4::lmer}, and returns the canonical G-theory variance
-components plus G / Phi coefficients. Useful when reviewers ask
-for a generalizability-theory complement to the Rasch-style
-separation / reliability statistics that \code{diagnose_mfrm()}
-already emits.
+via \code{lme4::lmer}, and returns main-effect variance components,
+residual variance, and G / Phi coefficients under this simplified model.
+Interactions are not estimated separately. For a G-study including the
+supported interactions, use \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} with one or two
+common random facets; it also accepts a single score column.
 }
 \details{
 The decomposition is on the observed numeric \code{Score} scale. It does not use
@@ -124,16 +124,6 @@ calculation version is current, but unavailable row counts are not guessed;
 rerun the G-study with the original data to obtain row accounting.
 }
 
-\section{References}{
-
-\itemize{
-\item Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
-(1972). \emph{The dependability of behavioral measurements: Theory
-of generalizability for scores and profiles}. Wiley.
-\item Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
-}
-}
-
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
@@ -159,6 +149,16 @@ if (requireNamespace("lme4", quietly = TRUE)) {
 }
 }
 }
+\references{
+Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
+(1972). \emph{The dependability of behavioral measurements: Theory
+of generalizability for scores and profiles}. Wiley.
+
+Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
+\doi{10.1007/978-1-4757-3456-0}. General G/D framework; the main-effects
+restriction and residual-scaling choices here are package-specific limits.
+}
 \seealso{
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+\code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}},
+\code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
 }

@@ -21,7 +21,9 @@ describe_mfrm_data(
   agreement_top_n = NULL,
   expected_design = NULL,
   min_linking_persons = 2L,
-  category_policy = NULL
+  category_policy = NULL,
+  repeated_ratings = c("review", "independent"),
+  comparisons = NULL
 )
 }
 \arguments{
@@ -95,6 +97,22 @@ maps gaps in the observed categories to consecutive scores;
 Preservation does not estimate unsupported steps: fitting stops if a
 retained internal category has no observations. Use the same policy in
 \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}.}
+
+\item{repeated_ratings}{Treatment of repeated Person-by-facet cells.
+\code{"review"} (default) retains the duplicate-cell warning and ordinary
+MML/JML input-review state. Use \code{"independent"} only to declare that the
+rows are distinct, conditionally independent rating events under the
+specified model. Every row and its weight are retained; this argument
+does not aggregate scores, add a facet, change the likelihood or establish
+independence from the data. Other input, numerical and inference checks
+still apply. The declaration is saved in preparation notes, configuration
+and replay settings. Corrected JML already requires conditionally
+independent repeated ratings; the argument records that assumption
+explicitly there. It is not supported by the two-family GPCM route.}
+
+\item{comparisons}{Optional named specification for a prospective
+facet-by-origin interaction review. See "Comparison-specific review".
+Default \code{NULL} performs no model/target review or fitting.}
 }
 \value{
 A list of class \code{mfrm_data_description} with:
@@ -135,6 +153,8 @@ design conditions detected during preparation
 replaced with \code{NA} before row filtering
 \item \code{score_support}: minimal prepared score-support metadata used by
 \code{summary(ds)$caveats}
+\item \code{comparison_review}: optional prospective interaction review, including
+all requested rows and their explicit weights; also retained by \code{summary()}.
 }
 }
 \description{
@@ -167,6 +187,87 @@ criterion is not given a prior or automatically shrunk by choosing MML.
 Review the fitted boundary and precision evidence before interpretation.
 }
 }
+\section{Comparison-specific review}{
+
+Use \code{comparisons = list(facet = ..., group = ..., groups = c("A", "B"), contrasts = W, model = "RSM", method = "JML")} to review explicitly
+declared interaction comparisons before estimation. Both \code{facet} and
+\code{group} must occur in \code{facets}; each Person/recording must keep one origin
+group. \code{groups} gives the subtraction order, including when additional
+neutral origins are present. Unit weights and preserved categories are
+required. \code{W} is a numeric matrix with unique comparison row names and
+every reviewed facet level as a named column, including zero weights.
+Each nonzero row must sum to zero. For four raters, weights
+\code{c(.75, -.25, -.25, -.25)} compare the first rater's A-minus-B
+interaction with the equal-weight panel; \code{c(1, -1, 0, 0)} compares the
+first two raters' A-minus-B interactions. These are different targets.
+
+The prospective model has centered measurement facets, a zero-valued
+group main facet, and the named facet-by-group interaction with zero
+marginal sums. JML has free Person locations. Choose \code{model = "PCM"}
+with an explicit \code{step_facet} for facet-owned steps. Optional
+\code{positive_facets} records the location orientation. Anchors, extra
+interactions and nonunit weights are outside this review. GPCM interaction
+requests return \code{unsupported}, not an additive-model substitute.
+
+\code{method = "MML"} uses a fixed common standard-normal population unless
+\code{population_formula} is supplied (an intercept or the origin group only).
+\code{ConditionalState} refers to the linear response map; \code{FreePersonState}
+reviews the same response structure with unrestricted Persons. A same-law
+alias remains unidentified after mixing. A positive conditional rank alone
+does not certify the marginal model: those MML rows have
+\code{State = "not_evaluated"}. No fit or numerical marginal-rank calculation
+is performed. JML rows distinguish \code{all_parameters_identified},
+\code{target_identified_only}, and \code{target_unidentified}. Numerically sensitive
+or oversized dense maps remain \code{not_evaluated}.
+
+\code{IdentificationBasis} interprets these checks for each requested target:
+\code{free_person_response_model} means the declared response map identifies
+it even with unrestricted Person locations. \code{population_restriction} means
+an unrestricted-Person alias is removed only after imposing the declared
+population restrictions in the conditional map. This does \strong{not} certify
+marginal identification, and the corresponding MML \code{State} stays
+\code{not_evaluated}. \code{conditional_support} identifies a CML target from response
+patterns at the observed totals. \code{unidentified}, \code{not_evaluated} and
+\code{unsupported} remain separate. \code{IdentificationDetail} explains the scope;
+\code{Basis} retains the broader estimator/model basis.
+
+A fixed common N(0,1) population or estimated common normal population
+(\code{~1}) restricts origin groups to the same ability distribution. This is
+substantive, not arbitrary scale coding. Origin regression relaxes only
+the means allowed by its design and retains a common residual SD. Interpret
+the zero origin main effect jointly with those restrictions. A contrast
+identified in a free-Person response map does not make its MML estimator
+distribution-free. All conclusions still depend on the declared response
+model, including equal slopes and shared/facet-owned step restrictions.
+
+\code{method = "CML"} instead reviews conditional support at the actual Person
+totals and rating rosters. A dynamic program spans differences between all
+possible patterns at those totals, so extreme scores and unavailable category
+combinations do not manufacture information. \code{State} and \code{ConditionalState}
+distinguish full identification, target-only identification and unidentified
+targets; \code{FreePersonState} is the separate unrestricted-Person response-map
+review. Person-constant main effects disappear, and no population distribution
+or SD is estimated. Population formulas are not accepted for CML.
+
+Read \verb{$comparison_review$table}, \verb{$weights}, \verb{$cells} and \verb{$notes} together.
+The table preserves group direction, model, step owner and counts; counts
+cover nonzero-weight facet levels, while \code{cells} includes empty cells.
+\verb{$fit_arguments} records the prospective structural settings; use matching
+input preparation when fitting. An identified target does not permit fitting
+a rejected full parameterization. \code{Estimate} stays missing and formal
+inference is unavailable. Save the review with its retained response rows.
+Pass it as \code{comparison_review} to \code{\link[=analyze_dff]{analyze_dff()}} to preserve this separate
+prospective question alongside residual/refit effects; it does not certify
+those different effects. See \code{vignette("mfrmr-linking-and-dff")} for a
+school-assignment example and \link{mfrmr_linking_and_dff} for interpretation.
+A matching, fully supported joint fit can return descriptive contrasts via
+\code{\link[=interaction_effect_table]{interaction_effect_table()}} or \code{summary(fit, comparison_review = review)}.
+These explicit calls add retained-point numerical checks, not partial
+estimation or formal uncertainty. To fit selected CML contrasts and obtain
+conditional-information Wald intervals, use \code{fit_mfrm(fit_scope = "comparisons", comparison_review = review)} with the CML review's \verb{$fit_arguments}; see
+the comparison-only section of \code{\link[=fit_mfrm]{fit_mfrm()}}.
+}
+
 \section{Interpreting output}{
 
 Recommended order:
@@ -209,7 +310,9 @@ and \code{preparation_notes}. Resolve unintended missing IDs and invalid score
 text in the input data. For documented score markers such as \code{99} or \code{.},
 use \code{\link[=recode_missing_codes]{recode_missing_codes()}} with explicit \code{columns} and \code{codes}.
 \item \strong{Repeated person-by-facet cells:} inspect \code{duplicate_cell_detail}.
-Correct accidental duplicates; include a task or occasion facet when
+Correct accidental duplicates; declare \code{repeated_ratings = "independent"}
+for distinct conditionally independent events, or model dependence.
+Include a task or occasion facet when
 ratings represent distinct events in the design.
 \item \strong{Unused category or disconnected design:} inspect
 \code{score_distribution} and \code{design_connectivity}. Review the rubric and
@@ -239,12 +342,12 @@ and a complete worked example, see
 
 \examples{
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 
 # Check the data before fitting; the intended score categories are 1 to 4
 data_review <- describe_mfrm_data(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
@@ -262,7 +365,7 @@ data_review$design_connectivity # Components = 1 means connected for that facet
 review <- summary(data_review)
 review$overview
 review$notes
-# For the next fit, use data = toy; data_review is a set of checks, not ratings
+# For the next fit, use data = ratings; data_review is a set of checks, not ratings
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=summary.mfrm_data_description]{summary.mfrm_data_description()}},

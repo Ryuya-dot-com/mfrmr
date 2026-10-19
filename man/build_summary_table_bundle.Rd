@@ -25,7 +25,8 @@ build_summary_table_bundle(
 \code{mfrm_facets_run}, \code{mfrm_bias}, \code{mfrm_anchor_review},
 \code{mfrm_linking_review}, \code{mfrm_misfit_casebook},
 \code{mfrm_model_choice_review}, \code{mfrm_weighting_review},
-\code{mfrm_unit_prediction}, or \code{mfrm_plausible_values} object, one of their
+\code{mfrm_calibration_score}, \code{mfrm_unit_prediction}, or
+\code{mfrm_plausible_values} object, one of their
 \code{summary()} outputs, or a compatible precomputed recovery-evidence
 summary.}
 
@@ -108,6 +109,8 @@ manuscript-facing subset before plotting or export.
 \item \code{\link[=build_model_choice_review]{build_model_choice_review()}} or \code{summary(review)}
 \item \code{\link[=build_weighting_review]{build_weighting_review()}} or \code{summary(review)}
 \item \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{summary(pred_units)}
+\item \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} or \code{summary(scores)}; includes all review
+dispositions and unrounded conditional decisions when requested
 \item \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} or \code{summary(pv)}
 }
 }

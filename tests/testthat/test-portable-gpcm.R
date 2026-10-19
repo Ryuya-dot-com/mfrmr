@@ -6,20 +6,23 @@ portable_gpcm_fixture <- function(owner) {
 portable_gpcm_oracle <- function(x, rows, interval, prior = list(mean = x$scoring_basis$prior_mean, sd = x$scoring_basis$prior_sd)) {
   coords <- x$parameters$coordinates
   mu <- prior$mean; sd <- prior$sd
+  # Fixed row coordinates need resolving only once, independently of theta.
+  responses <- lapply(seq_len(nrow(rows)), function(i) {
+    location <- sum(vapply(x$model$facet_names, function(f) {
+      x$model$facet_signs[[f]] * coords$Value[coords$ParameterClass == 'facet' &
+        coords$OwnerFacet == f & coords$Level == rows[[f]][i]]
+    }, numeric(1)))
+    a <- coords$Value[coords$ParameterClass == 'slope' &
+      coords$Level == rows[[x$model$slope_owner]][i]]
+    st <- coords[coords$ParameterClass == 'owned_step' &
+      coords$Level == rows[[x$model$step_owner]][i], ]
+    list(location = location, slope = a, steps = st$Value[order(as.integer(st$Step))],
+      score = match(rows$Score[i], x$response$score_map$OriginalScore))
+  })
   likelihood <- function(theta) vapply(theta, function(t) {
-    logp <- vapply(seq_len(nrow(rows)), function(i) {
-      location <- sum(vapply(x$model$facet_names, function(f) {
-        x$model$facet_signs[[f]] * coords$Value[coords$ParameterClass == 'facet' &
-          coords$OwnerFacet == f & coords$Level == rows[[f]][i]]
-      }, numeric(1)))
-      a <- coords$Value[coords$ParameterClass == 'slope' &
-        coords$Level == rows[[x$model$slope_owner]][i]]
-      st <- coords[coords$ParameterClass == 'owned_step' &
-        coords$Level == rows[[x$model$step_owner]][i], ]
-      steps <- st$Value[order(as.integer(st$Step))]
-      logits <- c(0, cumsum(a * (t + location - steps)))
-      k <- match(rows$Score[i], x$response$score_map$OriginalScore)
-      logits[k] - max(logits) - log(sum(exp(logits - max(logits))))
+    logp <- vapply(responses, function(r) {
+      logits <- c(0, cumsum(r$slope * (t + r$location - r$steps)))
+      logits[r$score] - max(logits) - log(sum(exp(logits - max(logits))))
     }, numeric(1))
     exp(sum(logp)) * dnorm(t, mu, sd)
   }, numeric(1))
@@ -365,7 +368,7 @@ test_that("GPCM JML artifacts and saved scores replay without fitting", {
         predict_mfrm_units=function(...) stop("unexpected native scorer"),
         prediction_jml_calibration_review=function(...) stop("unexpected source evaluation"), .package="mfrmr")
       s <- mfrmr::score_mfrm_calibration(mfrmr::load_mfrm_calibration(path), rows, missing_response="omit")
-      save <- tempfile(); on.exit(unlink(save)); saveRDS(s,save); s<-readRDS(save)
+      save <- tempfile(); on.exit(unlink(save), add = TRUE); saveRDS(s,save); s<-readRDS(save)
       p <- plot(s,draw=FALSE,main="New-cohort EAP")
       if(requireNamespace("ggplot2",quietly=TRUE)) ggplot2::ggplot_build(mfrmr::as_ggplot(s))
       list(scores=s,summary=summary(s),plot=p$data)

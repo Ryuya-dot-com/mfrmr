@@ -66,21 +66,48 @@ mfrmr_adaptive_person_kernel <- function(idx, config, params, base_eta, mu, sigm
   if (any(!is.finite(slope)) || any(slope <= 0)) {
     stop("The retained slopes are not positive finite values.", call. = FALSE)
   }
+  # Thresholds are fixed for this parameter vector throughout mode finding,
+  # quadrature and CDF integration; reuse the same cumulative sums.
+  step_cum <- if (config$model == "RSM") {
+    c(0, cumsum(params$steps))
+  } else {
+    t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
+  }
+  n <- length(idx$score_k)
+  rows <- seq_len(n)
+  step_rows <- if (config$model == "RSM") {
+    matrix(step_cum, n, length(categories), byrow = TRUE)
+  } else step_cum[idx$step_idx, , drop = FALSE]
   function(z, include_linear_part = FALSE, include_moments = TRUE) {
     # CDF integration needs only likelihoods; retain the R moment/gradient path.
     if (!include_moments && mfrm_use_cpp11_backend(config, include_linear_part)) {
       bundle <- mfrm_mml_logprob_bundle_cpp11(
         idx, config, list(nodes = mu + sigma * z, weights = rep(1, length(z))),
-        params, base_eta, include_probs = FALSE
+        params, base_eta, step_cum = step_cum, include_probs = FALSE
       )
       return(list(log_likelihood = colSums(bundle$log_prob_mat)))
     }
-    bundle <- mfrm_mml_logprob_bundle_r(
-      idx, config, list(nodes = mu + sigma * z, weights = rep(1, length(z))),
-      params, base_eta, include_probs = include_moments, include_linear_part = include_linear_part
-    )
-    if (!include_moments) return(list(log_likelihood = colSums(bundle$log_prob_mat)))
-    moments <- vapply(bundle$prob_list, function(probability) {
+    # Stack nodes within this Person so fixed row/category work is not repeated.
+    node_rows <- rep(rows, length(z))
+    eta <- base_eta[node_rows] + rep(mu + sigma * z, each = n)
+    linear <- outer(eta, categories) - step_rows[node_rows, , drop = FALSE]
+    log_num <- if (identical(config$model, "GPCM")) linear * slope[node_rows] else linear
+    flat_rows <- seq_along(node_rows)
+    row_max <- log_num[cbind(flat_rows, max.col(log_num, ties.method = "first"))]
+    log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
+    log_prob <- log_num[cbind(flat_rows, idx$score_k[node_rows] + 1L)] - log_denom
+    if (!is.null(idx$weight)) log_prob <- log_prob * idx$weight[node_rows]
+    log_likelihood <- colSums(matrix(log_prob, n, length(z)))
+    if (!include_moments) return(list(log_likelihood = log_likelihood))
+    probability <- exp(log_num - log_denom)
+    node_indices <- lapply(seq_along(z), function(q) rows + (q - 1L) * n)
+    prob_list <- lapply(node_indices, function(i) probability[i, , drop = FALSE])
+    linear_part_list <- if (include_linear_part) {
+      if (identical(config$model, "GPCM")) {
+        lapply(node_indices, function(i) linear[i, , drop = FALSE])
+      } else vector("list", length(z))
+    } else NULL
+    moments <- vapply(prob_list, function(probability) {
       expected <- as.vector(probability %*% categories)
       variance <- rowSums(probability *
         (rep(categories, each = nrow(probability)) - expected)^2)
@@ -90,9 +117,9 @@ mfrmr_adaptive_person_kernel <- function(idx, config, params, base_eta, mu, sigm
     if (any(!is.finite(moments))) {
       stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive posterior score or information."))
     }
-    list(log_likelihood = colSums(bundle$log_prob_mat),
+    list(log_likelihood = log_likelihood,
          score = moments[1L, ] - z, information = moments[2L, ] + 1,
-         prob_list = bundle$prob_list, linear_part_list = bundle$linear_part_list)
+         prob_list = prob_list, linear_part_list = linear_part_list)
   }
 }
 

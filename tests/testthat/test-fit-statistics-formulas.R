@@ -48,7 +48,9 @@ test_that("separation, reliability, and strata match hand calculations", {
   expect_equal(row$RealStrata, real_strata)
   expect_equal(row$MeanInfit, mean(measures$Infit))
   expect_equal(row$MeanOutfit, mean(measures$Outfit))
-  expect_identical(row$ReliabilityUse, "primary_reporting")
+  expect_true(row$SourceSupportsFormalInference)
+  expect_false(row$SupportsFormalInference)
+  expect_identical(row$ReliabilityUse, "approximate_summary")
 })
 
 test_that("facet precision summary includes sample and population bases", {

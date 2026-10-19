@@ -12,6 +12,14 @@
   draw = TRUE,
   preset = "standard",
   composite = NULL,
+  metric = NULL,
+  reference = NULL,
+  panel_by = NULL,
+  ncol = NULL,
+  intervals = FALSE,
+  assumption = NULL,
+  method = "auto",
+  level = 0.95,
   ...
 )
 }
@@ -21,12 +29,13 @@
 \item{type}{\code{"coefficients"} shows G and Phi in separate panels;
 \code{"sem"} shows relative and absolute standard errors of measurement.}
 
-\item{score}{A single original score name. An explicit name always selects
+\item{score}{One or more distinct original score names, in legend order.
+An explicit name always selects
 an original score, even if a composite has the same name. If both \code{score}
 and \code{composite} are \code{NULL}, select the sole composite, or the first score
 when there are no composites. Several composites require an explicit
-selection. The title identifies the selection and any composite weights.
-Call the method again to inspect another score or composite.}
+selection. \code{\link[=plot_data]{plot_data()}} identifies the selection and composite weights;
+a suggested title is returned rather than drawn on the figure.}
 
 \item{x_var}{A count column in \code{x$design_grid}: \code{"Tasks"}/\code{"Raters"} for
 the task/rater interface, or a facet label supplied through \code{facets}.
@@ -37,23 +46,96 @@ Each line holds the other facet count constant.}
 \item{draw}{Draw the plot when \code{TRUE}; \code{FALSE} only returns its data.}
 
 \item{preset}{Plot style: \code{"standard"}, \code{"publication"}, \code{"compact"}, or
-\code{"monochrome"}. Point shapes and line types also distinguish counts.}
+\code{"monochrome"}. The first three use distinct curve colors; monochrome
+uses one dark color. Point shapes and line types also distinguish curves.
+An explicit preset overrides \code{options(mfrmr.plot_preset = ...)}.
+\code{\link[=as_ggplot]{as_ggplot()}} retains colors saved in a plot payload.}
 
-\item{composite}{A single composite name from \code{x$coefficients}, as defined
+\item{composite}{One or more distinct composite names from \code{x$coefficients}, as defined
 by a weight-matrix column, or \code{"Composite"} for vector weights. Supply
 either \code{score} or \code{composite}, not both.}
+
+\item{metric}{Optional single metric compatible with \code{type}: \code{"G"} or
+\code{"Phi"} for coefficients; \code{"RelativeSEM"} or \code{"AbsoluteSEM"} for SEM.
+\code{NULL} shows both metrics in separate panels.}
+
+\item{reference}{Optional numeric reference values: between 0 and 1 for
+coefficients, nonnegative for SEM. \code{NULL} draws no reference lines.
+The same values apply to each panel. These are user-chosen guides, not
+universal acceptance rules or confidence bounds.}
+
+\item{panel_by}{Optional non-horizontal count column in \code{x$design_grid},
+such as \code{"Raters"} when \code{x_var = "Tasks"}. Each count gets a separate
+panel; selected scores/composites keep the same color, line type and point
+shape across panels. \code{NULL} retains the overlaid curves.}
+
+\item{ncol}{Optional positive integer number of panel columns. Requires
+\code{panel_by}; by default use up to two columns. With both metrics selected,
+panels run through all counts for the first metric, then the second.}
+
+\item{intervals}{\code{FALSE} (default) draws point curves. \code{TRUE} computes
+intervals and adds ribbons in one call; also specify
+\code{assumption = "normal"} and select one \code{metric}: \code{"G"}, \code{"Phi"}, or,
+with \code{type = "sem"}, \code{"RelativeSEM"} or \code{"AbsoluteSEM"}.
+Alternatively, supply a saved \code{confint(x)} result, or a list with one
+result per selected score/composite, to avoid recalculation. Saved results
+must use one method/level and match the source, weights and design grid;
+retain unavailable rows. \code{NULL} is equivalent to \code{FALSE}.
+Use \code{plot(ci)} separately to compare several interval methods.}
+
+\item{assumption}{With \code{intervals = TRUE}, explicitly specify \code{"normal"}
+for independent normal random effects; this assumption is not tested.}
+
+\item{method}{With \code{intervals = TRUE}, the interval method passed to
+\code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}. \code{"auto"} selects exact F for
+one-facet G and generalized CI for one-facet Phi, also for nested plans
+with source child counts per parent unchanged. For two crossed random
+facets, \code{"auto"} selects approximate \code{"mls"} null inversion for G/Phi.
+Undefined MLS widths are conservatively retained and flagged in the saved
+interval result. For alternatives or changed nested child counts, select \code{"approximate_f"} or
+\code{"mean_square_region"}. For SEM, \code{"auto"} uses \code{"mls"} for supported
+balanced crossed/nested sources: chi-square for a single mean square,
+Graybill-Wang for positive sums, Ting for signed sums. Two-facet SEM also
+accepts \code{"mean_square_region"} for conservative normal-model intervals.
+\code{"reml_profile"} explicitly fits approximate G/Phi intervals for balanced
+or identifiable incomplete sources; lme4 and minqa are required for fitting.
+It preserves the original curve points and reports separate REML estimates
+in the saved intervals. Its finite-sample/boundary coverage is not guaranteed.
+For one-facet \code{RelativeSEM}, explicit \code{"residual_contrast"} accepts
+retained ANOVA/MINQUE ratings, including incomplete sources. It transforms
+a residual chi-square interval without likelihood fitting, retaining
+original curve points and a separate projected center in the saved table.
+For one-facet G, explicit \code{"spectral_f"} accepts retained ANOVA/MINQUE
+ratings, including incomplete sources, using a normal-model variance-ratio
+F pivot. It keeps the original points; sparse sources can yield wide bands.
+Balanced crossed G also accepts explicit \code{"score"}, an experimental
+extended-nuisance score interval calculated from stored mean squares.
+It preserves the source points; empty sets and numerical failures remain
+missing ribbon segments, with their reasons in the saved interval object.
+No method is
+silently substituted after failure.}
+
+\item{level}{Confidence level for \code{intervals = TRUE}, default 0.95.}
 
 \item{...}{Reserved for future use; additional arguments are rejected.}
 }
 \value{
 Invisibly, an \code{mfrm_plot_data} object. Use \code{\link[=plot_data]{plot_data()}} to extract
-\code{table} (the selected score/composite), \code{series} (one row per scenario and
+\code{table} (the selected scores/composites), \code{series} (one row per scenario and
 plotted metric, including missing values), \code{unavailable}, \code{design_grid},
 \code{weights}, score identity, axis/group names, labels, \code{component_note},
 and legend settings. In \code{series}, \code{Status} is specific to \code{Metric};
 \code{table} retains the original row status and metric-specific columns.
-\code{weights} contains the selected composite's named weight vector,
-or \code{NULL} when plotting an original score.
+\code{weights} contains a named vector for one composite, a named matrix for
+several composites, or \code{NULL} for original scores. \code{reference_lines} and
+\code{notes} retain the chosen guides and their interpretation. When \code{panel_by}
+is supplied, \code{panels} maps \code{series$Panel} to its metric, count and label;
+\code{ncol} records the resolved layout for base and ggplot rendering.
+With \code{intervals}, \code{series} also retains \code{Lower}, \code{Upper}, \code{IntervalStatus},
+\code{IntervalAvailable} and \code{IntervalRun} (connected ribbon segments).
+\code{intervals} retains the complete input objects, including diagnostics;
+\code{unavailable_intervals} retains missing bounds separately from missing
+point estimates. Save the complete plot object with \code{saveRDS()} to replay.
 \code{\link[=as_ggplot]{as_ggplot()}} preserves these comparisons for editing or export with
 the optional ggplot2 package; for example, \code{as_ggplot(d, type = "sem")}.
 }
@@ -62,7 +144,7 @@ See how a planned change in the number of tasks, raters, or other conditions aff
 dependability of a mean score. Plot an existing D-study result; no model
 is refitted. Start with \code{plot(d)} for G and Phi, then use
 \code{plot(d, type = "sem")} to examine error in score units. If the result has
-several composites, select one explicitly with \code{composite}.
+several composites, select them explicitly with \code{composite}.
 }
 \details{
 G describes consistency of relative ordering: for example, ranking
@@ -81,15 +163,21 @@ meaning of the score; a higher G or Phi alone does not justify a new set
 of weights.
 
 Points represent only the supplied scenarios. Lines connect them as visual
-guides within a fixed count of the other facet, without fitting a curve or
+guides for each selected score at a fixed count of the other facet, without fitting a curve or
 evaluating intermediate designs. For example, with tasks on the horizontal
 axis, compare points along one line to change tasks while keeping raters
-constant. Compare lines at the same task count to change raters.
+constant. For overlaid curves, each legend entry identifies the score and
+the other facet count. With \code{panel_by}, the panel identifies the count and
+the legend identifies the score. Compare rater counts within the same score.
 
 Multivariate means several score criteria, not a requirement for a 3D plot.
 Use these 2D panels to compare counts while holding the other facet fixed.
-With many lines, specify a smaller set of relevant plans when creating the
-D-study and inspect scores/composites separately. This method does not draw
+With many lines, use \code{panel_by} to separate the other facet count, or
+specify a smaller set of relevant plans when creating the D-study. Panel
+axes share limits; only requested scenarios are drawn, even in a
+nonrectangular grid. Panel labels identify counts (and metrics when needed),
+while the figure title and cautions remain in the returned data. Increase
+figure height for many panels or select one \code{metric}. This method does not draw
 a heatmap or 3D surface. For uncertainty in a prespecified change, use
 \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} and its plot method; an SEM curve is not
 a confidence band. \code{\link[=plot_data]{plot_data()}} supplies exact values, including unavailable
@@ -107,8 +195,39 @@ facet, the axis or legend says "per" to identify its count within each parent,
 for example "Raters per Task"; this is not the total rater pool size.
 Even when the G-study used incomplete
 data, the figure does not describe reliability of that sparse roster.
-Projections hold estimated covariance components fixed and have no sampling
-confidence intervals. A flattening curve can indicate limited gains from
+Point projections use the estimated covariance components. By default no
+sampling intervals are shown. \code{intervals = TRUE} uses
+\code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}} for each selected score/composite,
+without changing the G-study. \code{method = "reml_profile"} fits a separate
+likelihood model once per selected score/composite. \code{"residual_contrast"}
+projects the retained ratings for one-facet relative SEM, and \code{"spectral_f"}
+does so for one-facet G; other methods
+use saved ANOVA summaries. To customize other inference settings such
+as pivotal \code{draws} or \code{seed}, pass saved \code{confint()} results instead.
+This alternative does not recalculate intervals. Source summaries, score weights, plans and stored point estimates
+are checked before overlaying. Older interval objects without source summaries
+must be recreated with \code{confint(x)}; their forest plots still work.
+Ribbons connect the supplied endpoints; intermediate plans are not evaluated.
+Delta normal-reference ribbons may extend outside \verb{[0,1]}; both renderers
+expand the axis rather than clipping the saved limits. This indicates an
+approximation limitation, not a population coefficient outside its range.
+Missing intervals break the ribbon and leave open points when estimates exist.
+An isolated interval is a vertical segment. An interval can remain visible
+without a point estimate. Boundary line types distinguish overlapping bands
+in monochrome. Confidence levels, method limitations, numerical diagnostics
+and unavailable reasons remain in the returned object, not figure footnotes.
+
+Ribbons do not establish simultaneous coverage across scores or metrics.
+Joint coverage across future plans, if any, depends on the chosen method
+and its model assumptions; drawing a band supplies no additional guarantee.
+Overlap is not a test of score or plan differences. Measurement SEM and
+paired-difference intervals cannot be used as coefficient ribbons.
+SEM ribbons show sampling uncertainty in the population SEM, not intervals
+for Person scores. Their axes retain score units and include the entire
+interval. MLS bands are approximate; do not read a narrow ribbon as a
+guarantee of coverage. See \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}} for the
+equations, small-sample evaluation and boundary limitations.
+A flattening curve can indicate limited gains from
 adding one facet alone; it does not identify a cost-effective optimum.
 The highest point alone does not account for uncertainty in the estimated
 components. Read the size of differences as well as their ordering. Equal products
@@ -117,11 +236,11 @@ examinee burden or total cost. Unavailable candidates prevent a complete
 comparison for that metric.
 
 Unavailable estimates stay missing. A panel with no estimates states the
-reason; otherwise a margin note reports unavailable scenarios. The returned
+reason; otherwise returned notes report unavailable scenarios. The returned
 \code{unavailable} table preserves their counts, metrics, and \code{Status} values.
 Each panel uses its metric's status, so an unavailable Phi does not hide
-an available G. Non-PSD component matrices are noted separately on the
-figure; inspect \code{x$component_diagnostics} before using raw projections.
+an available G. Non-PSD component matrices are described in the returned
+notes; inspect \code{x$component_diagnostics} before using raw projections.
 Increasing planned counts does not repair those component estimates.
 Missing values are never plotted as zero. Previously saved D-study objects
 retain their recorded values and availability: rerun
@@ -167,6 +286,11 @@ d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 6, 12)),
 plot(d) # Default: the difference W minus V; higher G/Phi is better.
 plot(d, type = "sem") # Error in difference-score units; lower is better.
 plot(d, score = "V") # Inspect an original score separately.
+# Add intervals for both criteria in the same call.
+ribbons <- plot(d, score = c("V", "W"), metric = "Phi", reference = 0.8,
+  intervals = TRUE, assumption = "normal")
+plot_data(ribbons, "intervals") # Saved intervals and their diagnostics.
+# 0.8 above is an illustrative user criterion, not a recommended cutoff.
 values <- plot_data(plot(d, draw = FALSE))
 values$table # Exact values and availability, rather than reading off a line.
 if (requireNamespace("ggplot2", quietly = TRUE)) {

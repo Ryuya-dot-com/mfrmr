@@ -525,7 +525,7 @@ summary.mfrm_person_fit_indices <- function(object,
       "overview / status_summary / lz_star_status_summary",
       "top_review",
       "build_misfit_casebook() / unexpected_response_table()",
-      "plot_person_fit(..., fit_index = \"loglik\", draw = FALSE) / plot_data()"
+      "plot(..., type = \"person_fit\", fit_index = \"loglik\", draw = FALSE) / plot_data()"
     ),
     stringsAsFactors = FALSE
   )

@@ -70,6 +70,14 @@ data file at \code{data_file}.
 Anchor and group-anchor constraints are embedded directly from the fitted
 object's stored configuration, so the script can replay anchored analyses
 without manual table reconstruction.
+The script retains \code{centering_scope}; a native fit saved before this setting
+was recorded uses \code{"remainder"}. Running it performs a new fit under that
+convention, not a conversion of the saved object. To adopt whole-facet
+centering, review the generated call and change it to \code{"facet"}, preserving
+the intended population, uncentered facet, rubric and step/slope owners.
+Recheck the resulting constraints and readiness. Use \code{saveRDS()}/\code{readRDS()}
+to reopen an unchanged fit, or the replay from \code{\link[=export_mfrm_results]{export_mfrm_results()}} to
+reopen a saved results bundle without refitting.
 
 Adjustments made with \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} are replayed after
 fitting, using the most recently recorded prior and Person settings. The

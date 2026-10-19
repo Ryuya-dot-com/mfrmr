@@ -75,6 +75,6 @@ p_fs$data$plot
 }
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}},
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")},
 \link{mfrmr_reports_and_tables}
 }

@@ -17,13 +17,16 @@ category_structure_report(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Reuses
+stored uncertainty and marginal-fit results; omitted diagnostics do not
+trigger a covariance calculation.}
 
 \item{theta_range}{Theta/logit range used to derive transition points.}
 
 \item{theta_points}{Number of grid points used for transition-point search.}
 
-\item{drop_unused}{If \code{TRUE}, remove zero-count categories from outputs.}
+\item{drop_unused}{If \code{TRUE}, remove zero-count rows from the global category
+display. Owner-specific counts and their denominators remain complete.}
 
 \item{include_fixed}{If \code{TRUE}, include a legacy-compatible fixed-width text
 block.}
@@ -59,6 +62,18 @@ Practical read order:
 categories are retained.
 \item \code{plot(out)} for quick visual check.
 }
+
+\code{owner_category_table}, \code{threshold_table}, \code{model_context} and \code{notes}
+follow \code{\link[=rating_scale_table]{rating_scale_table()}}, including source checks and uncertainty
+status. The global usage display does not replace owner-specific counts.
+\code{curve_profiles} maps each \code{CurveGroup} to its step/slope owners and levels.
+Curves and the legacy-named \code{median_thresholds} use zero additive facet
+locations; they are reference profiles, not full ability-axis crossings.
+Stored step SEs are reported only in \code{threshold_table}, not transferred to
+modal, half-score or cumulative boundaries. Two-family GPCM remains
+unsupported by this helper.
+Counts support \code{\link[=as_ggplot]{as_ggplot()}}; modal-boundary and half-score views require the
+base renderer or explicitly grouped custom graphics from \code{\link[=plot_data]{plot_data()}}.
 }
 
 \section{Typical workflow}{

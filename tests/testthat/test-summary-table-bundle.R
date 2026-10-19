@@ -620,6 +620,16 @@ test_that("summary table bundle role registry covers every supported spec role",
     )
   )
 
+  # Valid portable scores cover both dispositions and optional cut decisions.
+  saved <- readRDS(test_path("fixtures", "ordinary-score-integration.rds"))
+  calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(
+    extract_mfrm_calibration(saved$fits[["PCM-JML"]], scoring_quad_points = 121)))
+  rows <- saved$new_data
+  rows <- rows[rows$Person %in% unique(rows$Person)[1:2], ]
+  rows$Event <- as.character(seq_len(nrow(rows)))
+  minimal_summaries$summary.mfrm_calibration_score <- summary(
+    score_mfrm_calibration(calibration, rows, event_id = "Event", cut_scores = c(Pass = 0)))
+
   emitted_roles <- character()
   for (cls in names(minimal_summaries)) {
     obj <- minimal_summaries[[cls]]

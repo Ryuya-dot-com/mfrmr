@@ -72,6 +72,9 @@ test_that("two-family input never silently changes requested model options", {
 })
 
 test_that("public conditional curves match the product equation and retain unavailable intervals", {
+  # The fixture keeps Japanese facet names; the default PDF font cannot encode them.
+  grDevices::pdf(NULL, family = "Japan1")
+  on.exit(grDevices::dev.off(), add = TRUE)
   args <- gmfrm_public_args(); fit <- do.call(fit_mfrm, args)
   grid <- data.frame(Theta = rep(c(-1,0,1), 2))
   grid[[args$slope_facet[1]]] <- rep(c("same:1", "t3"), each=3)
@@ -98,15 +101,15 @@ test_that("public conditional curves match the product equation and retain unava
   expect_error(mfrm_curve_intervals(fit,grid,method="sandwich"), "do not yet support")
   expect_error(mfrm_curve_intervals(fit,grid,simultaneous="bonferroni"), "not supported")
   p <- plot(curves, draw=FALSE)
-  expect_match(p$labels$subtitle, "intervals are unavailable")
-  expect_match(p$labels$caption, "unavailable for two-family GPCM")
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "intervals are unavailable")
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "unavailable for two-family GPCM")
   expect_false(any(vapply(p$layers, function(layer) inherits(layer$geom, "GeomPoint"), logical(1))))
   contexts <- unique(plot_data(p, "table")$Context)
   labels <- p$facet$params$labeller(data.frame(Context = contexts))[[1L]]
   expect_true(all(grepl("\n", labels, fixed = TRUE)))
   expect_true(all(grepl("Judge-ID = ", labels, fixed = TRUE)))
   expect_true(all(grepl("観点 名 = ", labels, fixed = TRUE)))
-  expect_false(grepl("95|Approximate", p$labels$subtitle))
+  expect_false(grepl("95|Approximate", paste(plot_data(p, "notes")$Text, collapse = "\n")))
   expect_null(plot(curves, draw=FALSE, title=NULL,subtitle=NULL,caption=NULL)$labels$title)
   expect_equal(plot_data(p, component="table")$Estimate, curves$table$Estimate)
   single <- mfrm_curve_intervals(fit, grid[1, , drop = FALSE])

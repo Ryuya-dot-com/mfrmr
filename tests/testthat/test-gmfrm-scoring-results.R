@@ -15,6 +15,24 @@ gmfrm_scoring_results_fixture <- local({
   }
 })
 
+test_that("two-family score identities exclude the writing R version", {
+  a <- structure(list(), names = character(), row.names = integer(), class = "data.frame")
+  b <- structure(list(), row.names = integer(), names = character(), class = "data.frame")
+  expect_identical(a, b)
+  expect_identical(mfrm_checkpoint_fingerprint(a, canonical = TRUE),
+    mfrm_checkpoint_fingerprint(b, canonical = TRUE))
+  x <- readRDS(test_path("fixtures", "gmfrm-explicit-start.rds"))
+  expect_identical(prediction_gmfrm_source_identity(x$fit),
+    x$scores$settings$local_calibration_review$source_identity)
+  expect_match(prediction_gmfrm_source_identity(x$fit), "^gmfrm_scoring_source_v2:")
+  # The same fixture is read on every supported R/OS CI cell. Also retain
+  # same-runtime v1 compatibility without pretending old hashes are portable.
+  legacy <- x$scores
+  legacy$settings$local_calibration_review$source_identity <-
+    prediction_gmfrm_source_identity(x$fit, legacy = TRUE)
+  expect_identical(mfrm_results(x$fit, include = "fit", compute = "never", scores = legacy)$scores, legacy)
+})
+
 test_that("two-family results retain native and portable scores without recalculation", {
   x <- gmfrm_scoring_results_fixture()
   local_mocked_bindings(fit_mfrm = function(...) stop("unexpected fit"),

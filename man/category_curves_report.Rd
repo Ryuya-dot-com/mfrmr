@@ -36,6 +36,17 @@ Build a category curve export bundle (preferred alias)
 }
 \details{
 Preferred high-level API for category-probability curve exports.
+\code{model_context} records the fitted step/slope owners. \code{curve_profiles} maps
+each \code{CurveGroup} to the owner levels, including separate-owner GPCM.
+Native curves are conditional reference profiles with additive locations
+fixed at zero; see the retained \code{CurveBasis} and \code{PredictorOffset} columns.
+This helper does not compute step/curve intervals or support two-family GPCM.
+\code{plot(out)} and its selected curve views use base graphics. Automatic
+\code{\link[=as_ggplot]{as_ggplot()}} conversion of this bundle is unavailable because curve
+families have distinct targets and scales; extract \code{plot_long} and retain
+its curve-family and group columns for custom figures. For fitted CCC
+graphics, \link[=plot.mfrm_fit]{plot(fit, type = "ccc")} has a dedicated conversion;
+review its reference-profile settings before comparing curves.
 Returns tidy curve coordinates and summary metadata for quick
 plotting/report integration without calling low-level helpers directly.
 The expected-score table also carries the per-curve score variance and

@@ -30,15 +30,81 @@
                         strwrap, width = 72L)), collapse = "\n")
   })
   display <- payload[["display"]]
-  if (is.list(display) && identical(display$show_title, FALSE)) labels$title <- NULL
-  if (is.list(display) && identical(display$show_notes, FALSE)) {
+  if (!is.list(display) || is.data.frame(display)) display <- list()
+  if (!isTRUE(display$show_title)) labels$title <- NULL
+  if (!isTRUE(display$show_notes)) {
     labels$subtitle <- NULL
     labels$caption <- NULL
   }
   p <- p + ggplot2::labs(
     title = labels$title, subtitle = labels$subtitle, caption = labels$caption, x = x, y = y
   )
-  if (!is.null(payload$notes)) attr(p, "mfrmr_notes") <- payload$notes
+  attr(p, "mfrmr_notes") <- .mfrm_plot_annotation_notes(payload)
+  attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data(payload$plot_name %||% "plot", payload)
+  p
+}
+
+.mfrmr_gg_fit_measure_bands <- function(x) {
+  payload <- x$data
+  df <- payload$table
+  style <- resolve_plot_preset(payload$preset %||% "standard")
+  palette <- c(underfit = style$warn, overfit = style$accent_secondary,
+    mixed = style$fail, within_band = style$success, not_available = style$neutral)
+  fixed <- df[["Fixed"]] %in% TRUE
+  if (length(fixed) != nrow(df)) fixed <- rep(FALSE, nrow(df))
+  shown <- is.finite(df$Measure)
+  interval <- shown & !fixed & is.finite(df$CI_Lower) & is.finite(df$CI_Upper)
+  df$Row <- seq_len(nrow(df))
+  df$Shape <- ifelse(fixed, 5, ifelse(interval, 21, 4))
+  df$Colour <- unname(palette[match(df$FitStatus, names(palette))])
+  df$Colour[is.na(df$Colour)] <- style$accent_primary
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Measure, y = .data$Row)) +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dotted", colour = style$neutral) +
+    ggplot2::geom_segment(data = df[interval, , drop = FALSE],
+      ggplot2::aes(x = .data$CI_Lower, xend = .data$CI_Upper, yend = .data$Row),
+      colour = style$neutral, linewidth = .6) +
+    ggplot2::geom_point(data = df[shown, , drop = FALSE],
+      ggplot2::aes(shape = .data$Shape, colour = .data$Colour, fill = .data$Colour), size = 2) +
+    ggplot2::scale_shape_identity() + ggplot2::scale_colour_identity() +
+    ggplot2::scale_fill_identity() +
+    ggplot2::scale_y_reverse(breaks = df$Row[shown],
+      labels = paste(df$Facet[shown], df$Level[shown], sep = ": ")) +
+    .mfrmr_gg_theme()
+  p <- .mfrmr_gg_labs(p, payload, x = "Measure (logits)", y = NULL)
+  attr(p, "mfrmr_plot_data") <- x
+  p
+}
+
+.mfrmr_gg_severity <- function(x) {
+  payload <- x$data
+  df <- payload$data
+  geometry <- .mfrm_severity_geometry(df)
+  style <- resolve_plot_preset(payload$preset %||% "standard")
+  df$Row <- seq_len(nrow(df))
+  df$Shape <- geometry$shape
+  show_bands <- payload$show_bands %||% any(payload$legend$role == "band")
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Estimate, y = .data$Row))
+  if (isTRUE(show_bands)) {
+    # Older saved plots keep their original guide colors and data labels.
+    band_colors <- payload$band_colors %||% c(style$success, style$warn, style$warn)
+    p <- p + ggplot2::annotate("rect", xmin = c(-.5, -1, .5), xmax = c(.5, -.5, 1),
+      ymin = -Inf, ymax = Inf, fill = band_colors,
+      alpha = c(.10, .08, .08))
+  }
+  p <- p + ggplot2::geom_vline(xintercept = 0, linetype = "dashed", colour = style$neutral) +
+    ggplot2::geom_segment(data = df[geometry$interval, , drop = FALSE],
+      ggplot2::aes(x = .data$CI_Lower, xend = .data$CI_Upper, yend = .data$Row),
+      colour = style$accent_primary, linewidth = .6) +
+    ggplot2::geom_point(data = df[geometry$shown, , drop = FALSE],
+      ggplot2::aes(shape = .data$Shape), colour = style$accent_primary, size = 2) +
+    ggplot2::geom_text(data = df[!geometry$shown, , drop = FALSE],
+      ggplot2::aes(x = mean(geometry$xrange)), label = "Unavailable",
+      colour = style$neutral, size = 3) +
+    ggplot2::scale_shape_identity() +
+    ggplot2::scale_y_continuous(breaks = df$Row, labels = df$Level) +
+    ggplot2::scale_x_continuous(limits = geometry$xrange) + .mfrmr_gg_theme()
+  p <- .mfrmr_gg_labs(p, payload, x = payload$axis_label %||% "Severity (logit)", y = NULL)
+  attr(p, "mfrmr_plot_data") <- x
   p
 }
 
@@ -98,6 +164,8 @@
 .mfrmr_gg_matrix <- function(mat, payload, flag_matrix = NULL,
                              show_values = FALSE, value_digits = 2L,
                              flag_color = "black") {
+  residual <- identical(payload$plot_name, "local_dependence_heatmap")
+  halo <- identical(payload$plot_name, "halo_network")
   long <- as.data.frame(as.table(mat), stringsAsFactors = FALSE)
   names(long) <- c("Row", "Column", "Value")
   long$Flag <- FALSE
@@ -111,7 +179,10 @@
   ) +
     ggplot2::geom_tile(colour = "white", linewidth = 0.25) +
     ggplot2::scale_fill_gradient2(
-      low = "steelblue", mid = "white", high = "firebrick", na.value = "grey90"
+      low = if (halo) payload$palette[["non_halo"]] %||% "steelblue" else "steelblue",
+      mid = "white", high = if (halo) payload$palette[["halo"]] %||% "firebrick" else "firebrick",
+      na.value = "grey90", limits = if (residual || halo) c(-1, 1) else NULL,
+      name = if (halo) "Retained correlation" else if (residual) "Residual correlation" else ggplot2::waiver()
     ) +
     ggplot2::coord_equal() +
     .mfrmr_gg_theme() +
@@ -136,9 +207,94 @@
     )
   }
   .mfrmr_gg_labs(
-    p, payload, x = "Group or contrast", y = "Facet level",
+    p, payload, x = if (halo) "Rater x criterion node" else if (residual) payload$facet else "Group or contrast",
+    y = if (halo) "Rater x criterion node" else if (residual) payload$facet else "Facet level",
     fallback = "DIF/DFF heatmap"
   )
+}
+
+.mfrmr_gg_interrater <- function(x) {
+  payload <- x$data
+  df <- payload$table
+  view <- payload$plot
+  if (length(view) != 1L || is.na(view) || !view %in% c("exact", "corr", "difference") || !is.data.frame(df) ||
+      !nrow(df) || !all(c("Rater1", "Rater2", "Exact", "Corr", "MeanDiff", "MAD") %in% names(df))) {
+    stop("Recreate the agreement plot from its saved result to retain the selected view.", call. = FALSE)
+  }
+  style <- resolve_plot_preset(payload$preset %||% "standard")
+  pal <- payload$palette %||% c(ok = style$accent_primary, flag = style$warn,
+    expected = style$accent_secondary)
+  df$Colour <- if ("Flag" %in% names(df)) {
+    ifelse(is.na(df$Flag), style$neutral, ifelse(df$Flag, pal["flag"], pal["ok"]))
+  } else pal["ok"]
+  if (view == "difference") {
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$MeanDiff, y = .data$MAD)) +
+      ggplot2::geom_point(ggplot2::aes(colour = .data$Colour), na.rm = TRUE) +
+      ggplot2::scale_colour_identity()
+    if (!any(is.finite(df$MeanDiff) & is.finite(df$MAD)))
+      p <- p + ggplot2::annotate("text", x = 0, y = 0,
+        label = "No matched-score differences are available.")
+    xlab <- "Mean score difference (Rater1 - Rater2)"
+    ylab <- "Mean absolute difference"
+  } else {
+    df$Index <- seq_len(nrow(df))
+    df$Value <- if (view == "exact") df$Exact else df$Corr
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Index, y = .data$Value)) +
+      ggplot2::geom_col(ggplot2::aes(fill = .data$Colour), na.rm = TRUE) +
+      ggplot2::scale_fill_identity() +
+      ggplot2::scale_x_continuous(breaks = df$Index,
+        labels = truncate_axis_label(paste0(df$Rater1, " | ", df$Rater2), width = 28L),
+        limits = c(0.5, nrow(df) + 0.5)) +
+      ggplot2::scale_y_continuous(limits = if (view == "exact") c(0, 1) else c(-1, 1))
+    if (view == "exact" && "ExpectedExact" %in% names(df) && any(is.finite(df$ExpectedExact))) {
+      if (sum(is.finite(df$ExpectedExact)) > 1L) p <- p + ggplot2::geom_line(ggplot2::aes(y = .data$ExpectedExact,
+        colour = "Model expected", group = 1), na.rm = TRUE)
+      p <- p + ggplot2::geom_point(ggplot2::aes(y = .data$ExpectedExact,
+          colour = "Model expected"), shape = 21, fill = "white", na.rm = TRUE) +
+        ggplot2::scale_colour_manual(values = c("Model expected" = unname(pal["expected"])), name = NULL)
+    }
+    xlab <- "Rater pair"
+    ylab <- if (view == "exact") "Exact agreement" else "Correlation"
+  }
+  p <- p + .mfrmr_gg_theme() + ggplot2::theme(legend.position = "bottom")
+  if (view != "difference") p <- p + ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = payload$label_angle %||% 45, hjust = 1))
+  p <- .mfrmr_gg_labs(.mfrmr_gg_add_references(p, payload$reference_lines), payload,
+    x = xlab, y = ylab)
+  attr(p, "mfrmr_plot_data") <- x
+  p
+}
+
+.mfrmr_gg_agreement_heatmap <- function(x) {
+  payload <- x$data
+  mat <- payload$matrix
+  correlation <- identical(payload$metric, "correlation")
+  if (!is.matrix(mat) || !length(mat) || length(payload$metric) != 1L ||
+      is.na(payload$metric) || !payload$metric %in% c("exact", "correlation"))
+    stop("Recreate the agreement heatmap to retain its matrix and metric.", call. = FALSE)
+  df <- as.data.frame(as.table(mat), stringsAsFactors = FALSE)
+  names(df) <- c("Row", "Column", "Value")
+  df$Label <- ifelse(is.finite(df$Value), sprintf("%.2f", df$Value), "")
+  colors <- payload$colors %||% grDevices::hcl.colors(20L,
+    if (correlation) "RdBu" else "YlGnBu", rev = TRUE)
+  limits <- if (correlation) c(-1, 1) else c(0, 1)
+  # Use palette luminance, including monochrome, for readable cell text.
+  index <- round((df$Value - limits[1]) / diff(limits) * (length(colors) - 1)) + 1L
+  rgb <- grDevices::col2rgb(colors[pmax(1L, pmin(length(colors), index))]) / 255
+  df$TextColour <- ifelse(colSums(rgb * c(.299, .587, .114)) < .5, "white", "black")
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Column, y = .data$Row, fill = .data$Value)) +
+    ggplot2::geom_tile(colour = "white", linewidth = .25) +
+    ggplot2::geom_text(ggplot2::aes(label = .data$Label, colour = .data$TextColour), size = 3) +
+    ggplot2::scale_colour_identity() +
+    ggplot2::scale_fill_gradientn(colours = colors, limits = limits,
+      na.value = "grey90", name = if (correlation) "Correlation" else "Exact agreement") +
+    ggplot2::coord_equal() + .mfrmr_gg_theme() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      panel.grid.major = ggplot2::element_blank())
+  facet <- payload$settings$rater_facet %||% "Rater"
+  p <- .mfrmr_gg_labs(p, payload, x = facet, y = facet)
+  attr(p, "mfrmr_plot_data") <- x
+  p
 }
 
 .mfrmr_gg_effect_summary <- function(df, payload) {
@@ -600,7 +756,7 @@
   }
   radius <- as.numeric(payload$radius)
   if (length(radius) != nrow(tbl) || any(!is.finite(radius) | radius < 0)) {
-    stop("Saved bubble radii must match the table. Recreate the payload with plot_bubble(..., draw = FALSE).", call. = FALSE)
+    stop("Saved bubble radii must match the table. Recreate the payload with plot(..., type = \"bubble\", draw = FALSE).", call. = FALSE)
   }
   # ggplot point sizes use physical units, while base circles use plot units.
   # Preserve the saved radius ratios; a native maximum of .15 maps to 6 mm.
@@ -609,7 +765,7 @@
   facets <- unique(as.character(tbl$Facet))
   legend <- payload$legend
   if (!is.data.frame(legend) || !all(c("role", "label", "value") %in% names(legend))) {
-    stop("Saved bubble facet colours are unavailable. Recreate the payload with plot_bubble(..., draw = FALSE).", call. = FALSE)
+    stop("Saved bubble facet colours are unavailable. Recreate the payload with plot(..., type = \"bubble\", draw = FALSE).", call. = FALSE)
   }
   legend <- legend[legend$role == "facet", , drop = FALSE]
   at <- match(facets, legend$label)
@@ -860,6 +1016,115 @@
   )
 }
 
+.mfrmr_gg_bias <- function(x) {
+  payload <- x$data
+  ranked <- identical(payload$plot, "ranked")
+  df <- if (ranked) payload$ranked_table else payload$scatter_data
+  df <- df[is.finite(df$BiasSize), , drop = FALSE]
+  if (ranked) df <- utils::head(df, payload$plot_settings$TopN %||% 40L)
+  pal <- resolve_palette(payload$palette, c(normal = "#2B6CB0", flag = "#B2182B"))
+  df$Colour <- ifelse(df$Flag %in% TRUE, pal[["flag"]], pal[["normal"]])
+  df$Position <- seq_len(nrow(df))
+  p <- if (ranked) ggplot2::ggplot(df, ggplot2::aes(x = .data$BiasSize, y = .data$Position)) else
+    ggplot2::ggplot(df, ggplot2::aes(x = .data$ObsExpAverage, y = .data$BiasSize))
+  if (isTRUE(payload$plot_settings$CIRequested) && all(c("CI_Lower", "CI_Upper", "CI_Complete") %in% names(df))) {
+    intervals <- df[is.finite(df$CI_Lower) & is.finite(df$CI_Upper), , drop = FALSE]
+    intervals$LineType <- ifelse(intervals$CI_Complete %in% TRUE, "solid", "dashed")
+    mapping <- if (ranked) ggplot2::aes(x = .data$CI_Lower, xend = .data$CI_Upper,
+      y = .data$Position, yend = .data$Position, colour = .data$Colour, linetype = .data$LineType) else
+      ggplot2::aes(x = .data$ObsExpAverage, xend = .data$ObsExpAverage,
+        y = .data$CI_Lower, yend = .data$CI_Upper, colour = .data$Colour, linetype = .data$LineType)
+    p <- p + ggplot2::geom_segment(data = intervals, mapping = mapping, inherit.aes = FALSE) +
+      ggplot2::scale_linetype_identity()
+  }
+  p <- p + ggplot2::geom_point(ggplot2::aes(colour = .data$Colour), na.rm = TRUE) +
+    ggplot2::scale_colour_identity() + .mfrmr_gg_theme()
+  if (ranked) p <- p + ggplot2::scale_y_continuous(breaks = df$Position, labels = df$Pair)
+  p <- .mfrmr_gg_add_references(p, payload$reference_lines)
+  .mfrmr_gg_labs(p, payload, x = if (ranked) "Bias size (logits)" else "Observed - expected average",
+    y = if (ranked) NULL else "Bias size (logits)")
+}
+
+.mfrmr_gg_halo <- function(x) {
+  payload <- x$data
+  if (identical(payload$plot, "matrix")) return(.mfrmr_gg_matrix(payload$matrix, payload))
+  df <- payload$table
+  pal <- resolve_palette(payload$palette, c(halo = "#B65E16", non_halo = "#2B6CB0",
+    warning = "#B2182B", review = "#B65E16", ok = "#2B6CB0", neutral = "grey60"))
+  if (identical(payload$plot, "edge_distribution")) {
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$EdgeType, y = .data$AbsEstimate, fill = .data$EdgeType)) +
+      ggplot2::geom_boxplot(outlier.shape = NA) +
+      ggplot2::geom_point(position = ggplot2::position_jitter(width = 0.1, height = 0, seed = 1), alpha = 0.35) +
+      ggplot2::scale_fill_manual(values = pal[c("halo", "non_halo")], guide = "none") +
+      ggplot2::scale_x_discrete(limits = c("halo", "non_halo"), labels = c("Same rater", "Other raters"))
+    xlab <- NULL; ylab <- "Absolute correlation"
+  } else {
+    df$Position <- seq_len(nrow(df))
+    df$Value <- df[[payload$metric]]
+    df$Colour <- unname(pal[ifelse(df$ReviewStatus %in% c("warning", "review", "ok"), df$ReviewStatus, "neutral")])
+    available <- is.finite(df$Value)
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Position, y = .data$Value)) +
+      ggplot2::geom_col(data = df[available, , drop = FALSE], ggplot2::aes(fill = .data$Colour)) +
+      ggplot2::scale_fill_identity() +
+      ggplot2::scale_x_continuous(breaks = df$Position, labels = df$Rater)
+    if (any(!available)) p <- p + ggplot2::geom_text(data = df[!available, , drop = FALSE],
+      ggplot2::aes(x = .data$Position), y = 0, label = "Unavailable", vjust = -0.5,
+      inherit.aes = FALSE, size = 3)
+    xlab <- payload$settings$rater_facet %||% "Rater"; ylab <- payload$metric
+  }
+  p <- p + .mfrmr_gg_theme()
+  .mfrmr_gg_labs(p, payload, x = xlab, y = ylab)
+}
+
+.mfrmr_gg_categories <- function(x) {
+  payload <- x$data
+  counts <- identical(payload$plot, "counts")
+  pal <- resolve_palette(payload$palette, c(counts = "#9ecae1", expected = "#08519c",
+    step_line = "#238b45"))
+  if (counts) {
+    df <- as.data.frame(payload$category_table)
+    if (!nrow(df) || !all(c("Category", "Count") %in% names(df)))
+      stop("Saved category counts are required for this view.", call. = FALSE)
+    df$Position <- seq_len(nrow(df))
+    labels <- as.character(df$Category)
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Position, y = .data$Count)) +
+      ggplot2::geom_col(data = df[is.finite(df$Count), , drop = FALSE], fill = pal[["counts"]])
+    if ("ExpectedCount" %in% names(df)) {
+      df$ExpectedCount[!is.finite(df$ExpectedCount)] <- NA_real_
+      p$data <- df
+      p <- p + ggplot2::geom_line(ggplot2::aes(y = .data$ExpectedCount), colour = pal[["expected"]], na.rm = TRUE) +
+        ggplot2::geom_point(ggplot2::aes(y = .data$ExpectedCount), shape = 21, fill = "white",
+          colour = pal[["expected"]], na.rm = TRUE)
+    }
+    missing <- !is.finite(df$Count)
+    xlab <- "Category (model score)"; ylab <- "Count"
+  } else {
+    df <- calc_step_order(payload$threshold_table)
+    if (!nrow(df)) stop("Saved step estimates are required for this view.", call. = FALSE)
+    df$Estimate[!is.finite(df$Estimate)] <- NA_real_
+    df$Position <- seq_len(nrow(df))
+    labels <- if (all(df$StepFacet == "Common")) as.character(df$Step) else
+      paste(df$StepFacet, df$Step, sep = ": ")
+    ends <- which(!is.na(df$Ordered))
+    segments <- data.frame(X = ends - 1L, Xend = ends,
+      Y = df$Estimate[ends - 1L], Yend = df$Estimate[ends])
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Position, y = .data$Estimate)) +
+      ggplot2::geom_segment(data = segments,
+        ggplot2::aes(x = .data$X, xend = .data$Xend, y = .data$Y, yend = .data$Yend),
+        inherit.aes = FALSE, colour = pal[["step_line"]]) +
+      ggplot2::geom_point(colour = pal[["step_line"]], na.rm = TRUE)
+    missing <- !is.finite(df$Estimate)
+    xlab <- "Step within owner level"; ylab <- "Stored step estimate"
+  }
+  if (any(missing)) p <- p + ggplot2::geom_text(data = df[missing, , drop = FALSE],
+    ggplot2::aes(x = .data$Position), y = 0, label = "Unavailable",
+    inherit.aes = FALSE, vjust = -0.5, size = 3)
+  p <- p + ggplot2::scale_x_continuous(breaks = df$Position, labels = labels) +
+    .mfrmr_gg_theme() + ggplot2::theme(axis.text.x = ggplot2::element_text(
+      angle = payload$label_angle %||% 45, hjust = 1))
+  .mfrmr_gg_labs(p, payload, x = xlab, y = ylab)
+}
+
 .mfrmr_gg_tabular <- function(component, payload) {
   value <- component$value
   if (is.matrix(value)) return(.mfrmr_gg_matrix(value, payload))
@@ -933,6 +1198,8 @@
       ggplot2::scale_linetype_manual(values = stats::setNames(c("solid", "dashed", "dotted"), labels)) +
       ggplot2::scale_shape_manual(values = stats::setNames(c(16, 17, NA), labels)) +
       ggplot2::labs(colour = NULL, linetype = NULL, shape = NULL)
+    guide <- ggplot2::guide_legend(ncol = 2, byrow = TRUE)
+    p <- p + ggplot2::guides(colour = guide, linetype = guide, shape = guide)
     xlab <- "Component"; ylab <- "Eigenvalue"
   } else if (view == "scree") {
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Component, y = .data$Eigenvalue)) +
@@ -1001,52 +1268,133 @@
   )
 }
 
+.mfrmr_gg_multivariate_gstudy <- function(payload) {
+  df <- payload$table
+  style <- resolve_plot_preset(payload$preset %||% "standard")
+  if (identical(payload$plot, "covariance")) {
+    df$Row <- factor(df$Row, levels = rev(payload$score))
+    df$Column <- factor(df$Column, levels = payload$score)
+    df$Panel <- factor(df$Panel, levels = payload$panels$Panel, labels = payload$panels$Label)
+    colors <- grDevices::colorRampPalette(payload$heat_colors)(101)
+    index <- round((df$Estimate / payload$fill_limits[2L] + 1) * 50) + 1L
+    df$Ink <- ifelse(colMeans(grDevices::col2rgb(colors[index])) < 140, "white", "black")
+    df$CellLabel <- trimws(formatC(df$Estimate, format = "g", digits = 3))
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Column, y = .data$Row)) +
+      ggplot2::geom_tile(ggplot2::aes(fill = .data$Estimate), colour = "white") +
+      ggplot2::geom_text(ggplot2::aes(label = .data$CellLabel, colour = .data$Ink), size = 3) +
+      ggplot2::scale_colour_identity() +
+      ggplot2::scale_fill_gradientn(colours = colors, limits = payload$fill_limits,
+        breaks = c(payload$fill_limits[1L], 0, payload$fill_limits[2L]),
+        labels = function(x) trimws(formatC(x, format = "g", digits = 3)), name = "Variance / covariance") +
+      ggplot2::scale_x_discrete(labels = function(x) vapply(x, function(s)
+        paste(strwrap(s, 14), collapse = "\n"), character(1)), expand = c(0, 0)) +
+      ggplot2::scale_y_discrete(labels = function(x) vapply(x, function(s)
+        paste(strwrap(s, 14), collapse = "\n"), character(1)), expand = c(0, 0)) +
+      ggplot2::facet_wrap(~Panel, ncol = payload$ncol, labeller = ggplot2::label_wrap_gen(28)) +
+      ggplot2::coord_fixed() + .mfrmr_gg_theme() +
+      ggplot2::theme(panel.grid = ggplot2::element_blank(), legend.position = "bottom")
+    return(.mfrmr_gg_labs(p, payload, x = NULL, y = NULL))
+  }
+  sources <- unique(df$Source)
+  df$Position <- length(sources) + 1L - match(df$Source, sources)
+  faceted <- !is.null(payload$panels) && nrow(payload$panels) > 1L
+  if (faceted) df$Panel <- factor(df$Panel, levels = payload$panels$Panel, labels = payload$panels$Label)
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$Estimate, y = .data$Position)) +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dashed", colour = "grey60")
+  if (!is.null(payload$intervals)) {
+    p <- p + ggplot2::geom_errorbar(data = df[df$IntervalAvailable, , drop = FALSE],
+      ggplot2::aes(xmin = .data$Lower, xmax = .data$Upper),
+      orientation = "y", width = .18, colour = style$foreground) +
+      ggplot2::geom_point(data = df[!df$IntervalAvailable, , drop = FALSE],
+        shape = 0, size = 3.75, colour = style$foreground)
+  } else p <- p + ggplot2::geom_segment(
+    ggplot2::aes(x = 0, xend = .data$Estimate, yend = .data$Position), colour = style$foreground)
+  p <- p +
+    ggplot2::geom_point(ggplot2::aes(shape = .data$Status), size = 2.5, colour = style$foreground) +
+    ggplot2::scale_shape_manual(values = c("Negative estimate" = 1, "Nonnegative estimate" = 16), guide = "none") +
+    ggplot2::scale_y_continuous(breaks = rev(seq_along(sources)), labels = payload$labels,
+      limits = c(.5, length(sources) + .5), expand = ggplot2::expansion(mult = 0)) +
+    .mfrmr_gg_theme()
+  if (faceted) {
+    p <- p + ggplot2::facet_wrap(~Panel, ncol = payload$ncol, labeller = ggplot2::label_wrap_gen(28))
+  }
+  .mfrmr_gg_labs(p, payload, x = payload$x_label, y = NULL)
+}
+
 .mfrmr_gg_multivariate_d_study <- function(payload) {
   df <- payload$series
-  df$Panel <- factor(payload$panel_labels[match(df$Metric, payload$metric)],
-    levels = payload$panel_labels)
+  faceted <- !is.null(payload$panel_by)
+  df$Panel <- if (faceted) factor(payload$panels$Label[match(df$Panel, payload$panels$Panel)],
+    levels = payload$panels$Label) else
+    factor(payload$panel_labels[match(df$Metric, payload$metric)], levels = payload$panel_labels)
   groups <- payload$legend$label
   df$Group <- factor(df$Group, levels = groups)
   df$Value[df$Status != "Available" | !is.finite(df$Value)] <- NA_real_
   coefficients <- identical(payload$plot, "coefficients")
-  top <- if (coefficients || !any(is.finite(df$Value))) 1 else max(df$Value, na.rm = TRUE)
-  if (top == 0) top <- 1
+  y_lim <- .mfrm_mvds_y_limits(df, coefficients, payload$reference_lines$value)
   ticks <- sort(unique(df$X))
   if (length(ticks) > 15L) ticks <- pretty(range(ticks))
   ticks <- ticks[ticks >= min(df$X) & ticks <= max(df$X) & ticks == floor(ticks)]
   # Keep internal NA rows so lines break at unavailable scenarios. A series
   # with fewer than two available points has no line to draw.
-  line_rows <- stats::ave(as.integer(is.finite(df$Value)), df$Metric, df$Group, FUN = sum) >= 2L
+  line_rows <- stats::ave(as.integer(is.finite(df$Value)), df$Panel, df$Group, FUN = sum) >= 2L
   p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Value,
-    colour = .data$Group, linetype = .data$Group, shape = .data$Group, group = .data$Group)) +
-    ggplot2::geom_line(data = df[line_rows, , drop = FALSE], linewidth = 0.7, na.rm = TRUE) +
-    ggplot2::geom_point(size = 2.2, na.rm = TRUE) +
-    ggplot2::facet_wrap(~Panel, ncol = 1, drop = FALSE) +
+    colour = .data$Group, linetype = .data$Group, shape = .data$Group, group = .data$Group))
+  if (!is.null(payload$intervals)) {
+    bands <- df[df$IntervalAvailable, , drop = FALSE]
+    single <- stats::ave(bands$X, bands$IntervalRun, FUN = function(x) length(unique(x))) == 1L
+    p <- p + ggplot2::geom_ribbon(data = bands[!single, , drop = FALSE],
+      ggplot2::aes(x = .data$X, ymin = .data$Lower, ymax = .data$Upper,
+        fill = .data$Group, colour = .data$Group, linetype = .data$Group,
+        group = .data$IntervalRun),
+      inherit.aes = FALSE, alpha = .14, linewidth = .35, outline.type = "both", show.legend = FALSE) +
+      ggplot2::geom_linerange(data = bands[single, , drop = FALSE],
+        ggplot2::aes(x = .data$X, ymin = .data$Lower, ymax = .data$Upper,
+          colour = .data$Group, linetype = .data$Group),
+        inherit.aes = FALSE, show.legend = FALSE) +
+      ggplot2::scale_fill_manual(values = stats::setNames(payload$legend$value, groups), guide = "none")
+  }
+  p <- p + ggplot2::geom_line(data = df[line_rows, , drop = FALSE], linewidth = 0.7, na.rm = TRUE) +
+    ggplot2::geom_point(data = if (is.null(payload$intervals)) df else
+      df[df$IntervalAvailable, , drop = FALSE], size = 2.2, na.rm = TRUE) +
     ggplot2::scale_x_continuous(limits = range(df$X), breaks = ticks) +
-    ggplot2::scale_y_continuous(limits = c(0, top),
-      breaks = if (coefficients) seq(0, 1, 0.2) else ggplot2::waiver()) +
+    ggplot2::scale_y_continuous(limits = y_lim,
+      breaks = if (coefficients && identical(y_lim, c(0, 1))) seq(0, 1, 0.2) else ggplot2::waiver()) +
     ggplot2::scale_colour_manual(values = stats::setNames(payload$legend$value, groups), drop = FALSE, name = NULL) +
     ggplot2::scale_linetype_manual(values = stats::setNames(payload$line_types, groups), drop = FALSE, name = NULL) +
     ggplot2::scale_shape_manual(values = stats::setNames(payload$point_shapes, groups), drop = FALSE, name = NULL) +
     .mfrmr_gg_theme() +
-    ggplot2::theme(legend.position = if (length(payload$group_var)) "bottom" else "none")
-  for (metric in payload$metric) {
-    s <- df[df$Metric == metric, , drop = FALSE]
-    if (all(is.na(s$Value))) {
-      note <- data.frame(Panel = s$Panel[1L], X = mean(range(s$X)), Y = top / 2,
-        Label = .mfrm_mvds_unavailable_message(s$Status))
+    ggplot2::theme(legend.position = if (payload$show_legend %||% (length(payload$group_var) > 0L)) "bottom" else "none")
+  if (!is.null(payload$intervals)) for (j in seq_along(groups)) {
+    p <- p + ggplot2::geom_point(data = df[!df$IntervalAvailable & df$Group == groups[j], , drop = FALSE],
+      shape = c(1, 2, 0, 5, 1, 2)[(j-1L) %% 6L+1L], size = 2.2, na.rm = TRUE, show.legend = FALSE)
+  }
+  if (isTRUE(payload$show_legend) && length(payload$score) > 1L) {
+    guide <- ggplot2::guide_legend(ncol = 2, byrow = TRUE)
+    p <- p + ggplot2::guides(colour = guide, linetype = guide, shape = guide)
+  }
+  if (faceted || length(payload$metric) > 1L) p <- p +
+    ggplot2::facet_wrap(~Panel, ncol = payload$ncol %||% 1L, drop = FALSE)
+  p <- .mfrmr_gg_add_references(p, payload$reference_lines)
+  for (panel in levels(df$Panel)) {
+    s <- df[df$Panel == panel, , drop = FALSE]
+    if (all(is.na(s$Value)) && !any(s$IntervalAvailable %||% FALSE)) {
+      note <- data.frame(Panel = s$Panel[1L], X = mean(range(df$X)), Y = mean(y_lim),
+        Label = .mfrm_mvds_unavailable_message(s$Status, compact = faceted))
       p <- p + ggplot2::geom_text(data = note,
         ggplot2::aes(x = .data$X, y = .data$Y, label = .data$Label),
         inherit.aes = FALSE, size = 3.2)
     }
   }
-  payload$caption <- "Points are requested scenarios; lines are guides."
-  payload$caption <- paste(c(payload$caption, payload$component_note), collapse = "\n")
-  if (nrow(payload$unavailable)) payload$caption <- paste(payload$caption,
-    sprintf("Unavailable estimates in %d scenario(s); inspect the D-study table for reasons.",
-      length(unique(payload$unavailable$Scenario))))
+  # Earlier payloads lack a caption; component notes are already merged by labs.
+  if (is.null(payload$caption)) {
+    payload$caption <- "Points are requested scenarios; lines are guides."
+    if (nrow(payload$unavailable)) payload$caption <- paste(payload$caption,
+      sprintf("Unavailable estimates in %d scenario(s); inspect the D-study table for reasons.",
+        length(unique(payload$unavailable$Scenario))))
+  }
   .mfrmr_gg_labs(p, payload, x = payload$x_label %||% paste("Number of", tolower(payload$x_var)),
-    y = if (coefficients) "Dependability (higher is better)" else "SEM in score units (lower is better)")
+    y = payload$y_label %||% if (coefficients) "Dependability (higher is better)" else "SEM in score units (lower is better)")
 }
 
 # Earlier saved plot payloads are upgraded only for rendering, without refitting.
@@ -1070,8 +1418,8 @@
       "Saved 95% normal approximation, with calibration uncertainty to first order; nominal coverage is not established"
   } else "Approximate 95% intervals | missing whiskers: unavailable"
   updated <- mfrm_extended_estimate_plot(payload$table, labels, name, title, xlab, note,
-    FALSE, payload$settings, show_title = payload$display$show_title %||% TRUE,
-    show_notes = payload$display$show_notes %||% TRUE)
+    FALSE, payload$settings, show_title = payload$display$show_title %||% FALSE,
+    show_notes = payload$display$show_notes %||% FALSE)
   .mfrmr_gg_extended_estimates(updated$data)
 }
 
@@ -1085,7 +1433,7 @@
 #' reference lines. It preserves relative circle radii, rather than replacing
 #' them with equal-sized points. Base circles use plot units; ggplot point
 #' sizes use physical units, so absolute sizes need not match across devices. Payloads lacking matching saved radii
-#' or facet colours must be recreated with [plot_bubble()].
+#' or facet colours must be recreated with [plot(x, type = "bubble")][plot.mfrm_fit].
 #'
 #' Dedicated conversions are provided for Wright maps, theta-to-expected-score
 #' pathways, fit-statistic-to-measure pathways, category characteristic curves,
@@ -1095,6 +1443,16 @@
 #' multivariate D-study comparisons. Matched ordinary/extended facet comparisons
 #' preserve centered effects, paired/difference views, excluded rows, display
 #' controls and alternative text; see [plot.mfrm_extended_comparison()].
+#' Portable-calibration score views preserve their selected axes, stored
+#' endpoints, review symbols and unplotted dispositions with either the default
+#' or `component = "data"`. Use [plot_data()] for other components; conversion
+#' does not rescore Persons or change their interval level.
+#' Agreement conversions retain the selected exact/correlation/difference
+#' metric, saved pair ordering and review thresholds, model-expected overlay,
+#' and missing comparisons. Agreement heatmaps use the saved facet labels and
+#' palette with a fixed metric scale. Use `plot_data()` for other tables in
+#' an agreement payload; automatic conversion does not guess a different
+#' statistic from the first numeric column.
 #' Threshold-sensitivity tile and curve payloads also preserve their selected
 #' view, display controls and text alternatives; see
 #' [plot.mfrm_screening_sensitivity()].
@@ -1109,11 +1467,22 @@
 #' conversion retains infinite endpoints as arrows and ordinary intervals as
 #' a dashed comparison. D-study conversions
 #' preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
-#' estimates. They do not refit the model or add confidence intervals.
+#' estimates. They retain supplied D-study coefficient ribbons and interval
+#' gaps. Converting a saved plot object does not refit models or calculate
+#' intervals. G-study component conversions retain raw negative points,
+#' component intervals and square outlines for unavailable intervals.
+#' For a G-study or D-study input, `intervals = TRUE` is forwarded to its
+#' plot method and computes intervals before conversion; also supply
+#' `assumption = "normal"`.
 #' For multivariate D-study plots, an explicit `component = "series"` keeps
 #' this dedicated conversion; use [plot_data()] for other tables.
 #' Difference-interval plots from [mfrm_multivariate_d_compare()] use their
 #' base `plot()` method or [plot_data()]; automatic conversion is not supported.
+#' Severity profiles preserve their saved normal bounds,
+#' ordered levels, guide bands, fixed points, unavailable states and precision
+#' notes with the default or `component = "data"`. The word "profile" does not
+#' imply a likelihood-profile interval. Conversion does not recalculate bounds
+#' or qualify exploratory JML or fallback/regularized uncertainty for inference.
 #' Residual-PCA scree, reference, excess and loadings plots have dedicated
 #' conversions with the default or `component = "data"`. They preserve saved
 #' eigenvalues, reference cutoffs, signed loadings and display encodings; method
@@ -1146,6 +1515,11 @@
 #' For main-effects `mfrm_d_study` results, use the base `plot()` method or
 #' [plot_data()] for custom graphics; automatic conversion is refused because
 #' generic column selection does not preserve those design comparisons.
+#' Fit-measure `measure_ci` plots retain each facet/level row and its saved
+#' normal-band endpoints, including exploratory JML bands. Open diamonds mark
+#' fixed values and crosses mark estimates without intervals. Conversion does
+#' not recompute bounds or change their inferential qualification. The default
+#' and `component = "table"` preserve the complete view and its returned notes.
 #' Pooled fixed-facet MI intervals have dedicated conversion with the default
 #' or `component = "table"`. Saved t-interval endpoints, degrees of freedom,
 #' contrasts and complete-data information cautions are retained, with no
@@ -1155,12 +1529,39 @@
 #' Selecting `component` does not enable unsupported conversions: it cannot
 #' preserve D-study differences through generic column selection. Use [plot_data()] to extract the table
 #' and specify the axes, intervals and grouping explicitly in custom graphics.
-#' Other draw-free payloads use a conservative tabular
-#' fallback; inspect [plot_data_components()] when automatic inference is not
+#' Residual Q-Q plots require the base renderer or explicitly specified custom
+#' quantile axes; automatic conversion is unavailable, even with `component`.
+#' Residual-correlation heatmaps retain the selected facet on both
+#' axes, a fixed -1 to 1 colour scale, and grey unavailable cells; their pair
+#' table and notes retain overlap counts and interpretation qualifications.
+#' Saved rating-scale counts and thresholds, and category-structure counts,
+#' retain the selected values, missing outcomes, expected-count overlay and
+#' saved palette. Use the default or the matching `category_table` /
+#' `threshold_table` component. Threshold figures show point estimates; stored
+#' SEs and CI-use flags remain in the payload, not as curve or gap intervals.
+#' Category-curve bundles (including their overview), category-structure
+#' boundary views and threshold ladders require their base renderer or custom
+#' graphics from [plot_data()]; automatic conversion is unavailable even with
+#' `component`. Generic column selection would mix distinct curve targets or
+#' lose the selected view. Fitted CCC plots from
+#' [plot(fit, type = "ccc")][plot.mfrm_fit] retain their dedicated conversion.
+#'
+#' Bias scatter/ranked views preserve their axes, saved review rules and
+#' conditional interval bounds, including dashed search-limited bounds.
+#' Bias heatmaps, histograms and facet profiles require base/custom graphics;
+#' the generic converter cannot combine their distinct layouts safely.
+#' Halo distributions, selected per-rater summaries and signed retained-edge
+#' matrices preserve the selected metric, missing comparisons and caveats.
+#' Halo network conversion is unavailable. Save the complete analysis result
+#' and recreate its plot to obtain current interpretation notes.
+#'
+#' Other draw-free payloads use a conservative tabular fallback; inspect
+#' [plot_data_components()] when automatic inference is not
 #' appropriate.
-#' Titles, subtitles, and captions are wrapped at 72 text columns for ordinary
-#' figure widths; missing text is omitted. For narrower exports or custom line
-#' breaks, override these labels with `ggplot2::labs()` on the returned plot.
+#' Titles, subtitles and captions are omitted by default and retained as
+#' metadata. Use `plot_data(p, "notes")` to retrieve descriptions and cautions.
+#' Explicitly enabled text is wrapped at 72 columns; use `ggplot2::labs()`
+#' for custom labels or narrower exports.
 #' Fit plots created with `show_title = FALSE` or `show_notes = FALSE` retain
 #' those settings on conversion. To set them when converting a fit directly,
 #' pass the flags through `...`. Interpretation and display notes remain
@@ -1197,7 +1598,7 @@
 #'
 #' @return A `ggplot2` plot object, with a `mfrmr_notes` attribute when the
 #'   source plot payload contains a `notes` table.
-#'   Paired Wright/CCC payloads from [plot_compare_mfrm()] retain their selected
+#'   Paired Wright/CCC payloads from [plot(reference, comparison = comparison)][plot.mfrm_fit] retain their selected
 #'   comparison or difference view, group selection and monochrome panel policy.
 #' @examples
 #' \donttest{
@@ -1274,6 +1675,47 @@ as_ggplot.mfrm_signal_detection_plot_data <- function(x, type = NULL,
 #' @export
 as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   if (!is.null(type)) stop("A saved plot already selects a view. Recreate it from the fit or result to select another view.", call. = FALSE)
+  if (x$name %in% c("table13_bias", "halo_network")) {
+    rlang::check_dots_empty()
+    allowed <- if (x$name == "table13_bias") c(scatter = "scatter_data", ranked = "ranked_table") else
+      c(edge_distribution = "table", halo_summary = "table", matrix = "matrix")
+    if (!x$data$plot %in% names(allowed)) stop(
+      "Automatic ggplot conversion of this rater-effect view is unavailable. Use plot() on the saved result, or plot_data() for custom graphics.", call. = FALSE)
+    if (!is.null(component) && !identical(component, unname(allowed[x$data$plot]))) stop(
+      "Use the selected rater-effect view, or plot_data() for other components.", call. = FALSE)
+    .require_mfrmr_ggplot2()
+    return(if (x$name == "table13_bias") .mfrmr_gg_bias(x) else .mfrmr_gg_halo(x))
+  }
+  if (x$name %in% c("rating_scale", "category_structure", "category_curves", "threshold_ladder")) {
+    rlang::check_dots_empty()
+    supported <- (x$name %in% c("rating_scale", "category_structure") && identical(x$data$plot, "counts")) ||
+      (x$name == "rating_scale" && identical(x$data$plot, "thresholds"))
+    if (!supported) stop(
+      "Automatic ggplot conversion of this category view is unavailable. Use plot() on the original fit/result for base graphics, or plot_data() for explicitly grouped custom graphics.", call. = FALSE)
+    expected <- if (x$data$plot == "counts") "category_table" else "threshold_table"
+    if (!is.null(component) && !identical(component, expected)) stop(
+      "Use the selected category view, or plot_data() for other components.", call. = FALSE)
+    .require_mfrmr_ggplot2()
+    return(.mfrmr_gg_categories(x))
+  }
+  if (x$name %in% c("interrater", "rater_agreement_heatmap")) {
+    rlang::check_dots_empty()
+    .require_mfrmr_ggplot2()
+    expected <- if (x$name == "interrater") "table" else "matrix"
+    if (!is.null(component) && !identical(component, expected))
+      stop("Use the selected agreement view, or plot_data() for other components.", call. = FALSE)
+    return(if (x$name == "interrater") .mfrmr_gg_interrater(x) else .mfrmr_gg_agreement_heatmap(x))
+  }
+  if (identical(x$name, "rater_severity_profile")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "data")) stop(
+      "Use component = 'data' for the severity profile, or plot_data() for other components.", call. = FALSE)
+    .require_mfrmr_ggplot2()
+    return(.mfrmr_gg_severity(x))
+  }
+  if (identical(x$name, "residual_qq")) {
+    stop("Automatic ggplot conversion of residual Q-Q plots is unavailable. Use plot(fit, type = \"residual_qq\") or plot_data() to specify both quantile axes explicitly.", call. = FALSE)
+  }
   if (identical(x$name, "residual_pca")) {
     rlang::check_dots_empty()
     if (!is.null(component) && !identical(component, "data")) {
@@ -1287,10 +1729,20 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
       stop("Use component = 'table' for the complete profile view, or plot_data() for other tables.", call. = FALSE)
     return(mfrm_gg_gpcm_profile(x))
   }
+  if (identical(x$name, "population_intervals")) {
+    rlang::check_dots_empty()
+    if (!is.null(component)) stop("Use plot_data() to select population tables; as_ggplot() preserves the selected interval view.", call. = FALSE)
+    return(.mfrm_gg_population_intervals(x))
+  }
   if (identical(x$name, "facet_interval_methods")) {
     if (!is.null(component)) stop("Use plot_data() to select a fixed-facet table; as_ggplot() preserves the complete interval view.", call. = FALSE)
     rlang::check_dots_empty()
     return(mfrm_gg_facet_intervals(x))
+  }
+  if (identical(x$name, "dstudy_intervals")) {
+    rlang::check_dots_empty()
+    if (!is.null(component)) stop("Use plot_data() to select tables; as_ggplot() preserves all interval rows.", call. = FALSE)
+    return(.mfrm_gg_dstudy_intervals(x))
   }
   if (x$name %in% c("feature_pca_scree", "feature_pca_scores", "feature_pca_loadings")) {
     rlang::check_dots_empty()
@@ -1341,6 +1793,12 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   .require_mfrmr_ggplot2()
   payload <- x$data %||% list()
   dots <- list(...)
+  if (identical(x$name, "fit_measures") && identical(payload$plot, "measure_ci")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table")) stop(
+      "Use component = 'table' for measure bands, or plot_data() for other components.", call. = FALSE)
+    return(.mfrmr_gg_fit_measure_bands(x))
+  }
   if (identical(x$name,"extended_model_map")) {
     rlang::check_dots_empty()
     if(!is.null(component) && !identical(component,"table")) stop("Use plot_data() for other map components.",call.=FALSE)
@@ -1366,6 +1824,12 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
     if (!is.null(component) && !identical(component, "table")) stop(
       "Extended-model graphics use component = 'table'; use plot_data() for other components.", call. = FALSE)
     return(.mfrmr_gg_extended_payload(payload, x$name))
+  }
+  if (identical(x$name, "multivariate_gstudy")) {
+    rlang::check_dots_empty()
+    if (!is.null(component) && !identical(component, "table")) stop(
+      "G-study conversion uses component = 'table'; use plot_data() for other components.", call. = FALSE)
+    return(.mfrmr_gg_multivariate_gstudy(payload))
   }
   if (identical(x$name, "multivariate_d_study")) {
     rlang::check_dots_empty()
@@ -1431,8 +1895,9 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   calibration_score_type <- sub(
     "^calibration_score_", "", as.character(x$name %||% "")
   )
-  if (is.null(component) &&
-      calibration_score_type %in% c("interval", "precision", "edge_mass")) {
+  if (calibration_score_type %in% c("interval", "precision", "edge_mass")) {
+    if (!is.null(component) && !identical(component, "data")) stop(
+      "Use component = 'data' for the selected portable-score view, or plot_data() for other components.", call. = FALSE)
     return(.mfrmr_gg_calibration_score(payload, calibration_score_type))
   }
   if (is.null(component) && x$name %in% c(

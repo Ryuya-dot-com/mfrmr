@@ -136,6 +136,14 @@ test_that("profile API validates its target and retains unresolved endpoint reas
   expect_equal(as.vector(out),as.vector(saved))
   expect_match(attr(out,'target'),'Criterion C1')
   expect_identical(serialize(fit, NULL, version = 2), before)
+  # The saved search is a test double: this checks only the Wald comparator,
+  # not profile endpoints at a different likelihood-ratio cutoff.
+  level <- 1 - .Machine$double.eps / 2
+  high <- confint(fit, method='profile', slope=slope, level=level)
+  wald <- attr(out, 'wald'); high_wald <- attr(high, 'wald')
+  se <- (log(wald$Upper)-log(wald$Lower))/(2*sqrt(qchisq(.95, 1)))
+  expect_equal(log(high_wald$Lower), log(wald$Estimate)-sqrt(qchisq(level, 1))*se)
+  expect_equal(log(high_wald$Upper), log(wald$Estimate)+sqrt(qchisq(level, 1))*se)
   result$endpoints$Status[1] <- 'crossing_not_found'; result$endpoints$Bound[1] <- NA_real_
   expect_warning(unresolved <- confint(fit,method='profile',slope=slope),'no cutoff crossing')
   expect_true(is.na(unresolved[1,1])); expect_true(is.finite(unresolved[1,2]))

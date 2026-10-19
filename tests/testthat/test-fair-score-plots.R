@@ -58,7 +58,7 @@ test_that("fair-score relationship plots preserve data, notes and grayscale enco
   g <- as_ggplot(p)
   expect_null(g$labels$title)
   expect_null(g$labels$subtitle)
-  expect_identical(attr(g, "mfrmr_notes"), p$data$notes)
+  expect_identical(utils::head(plot_data(g, "notes"), nrow(p$data$notes)), p$data$notes)
   expect_no_warning(ggplot2::ggplot_build(g))
   built <- ggplot2::ggplot_build(g)$data[[1]]
   expect_equal(built$x, unname(p$data$plot_data$X))

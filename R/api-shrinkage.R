@@ -519,7 +519,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
                                       shrunk_se_col = "ShrunkSE",
                                       shrunk_prefix = "Shrunk") {
   ci_level <- .validate_shrinkage_ci_level(ci_level)
-  z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
+  z_ci <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
   raw_lower <- if (nzchar(raw_prefix)) paste0(raw_prefix, "CI_Lower") else "CI_Lower"
   raw_upper <- if (nzchar(raw_prefix)) paste0(raw_prefix, "CI_Upper") else "CI_Upper"
   shrunk_lower <- paste0(shrunk_prefix, "CI_Lower")
@@ -552,7 +552,6 @@ apply_empirical_bayes_shrinkage <- function(fit,
   tbl <- data_list$table
   if (nrow(tbl) == 0L) {
     graphics::plot.new()
-    graphics::title(main = title %||% "Shrinkage plot")
     graphics::text(0.5, 0.5,
                    "No shrinkage applied.\nFit with facet_shrinkage = 'empirical_bayes'.")
     return(invisible(NULL))
@@ -570,7 +569,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
   x_vals <- x_vals[is.finite(x_vals)]
   if (isTRUE(show_ci) && any(is.finite(se_vals))) {
     ci_level <- .validate_shrinkage_ci_level(ci_level)
-    z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
+    z_ci <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
     x_vals <- c(x_vals, tbl$Estimate - z_ci * tbl$SE,
                 tbl$Estimate + z_ci * tbl$SE,
                 tbl$ShrunkEstimate - z_ci * tbl$ShrunkSE,
@@ -595,7 +594,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
     ylab = "",
     pch = 16,
     col = style$accent_primary,
-    main = title,
+    main = "",
     cex = 1.1
   )
   graphics::abline(v = 0, lty = 2, col = style$neutral)
@@ -625,7 +624,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
   # Optional CI error bars for both.
   if (isTRUE(show_ci)) {
     ci_level <- .validate_shrinkage_ci_level(ci_level)
-    z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
+    z_ci <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
     for (i in seq_len(nrow(tbl))) {
       if (is.finite(tbl$Estimate[i]) && is.finite(tbl$SE[i]) && tbl$SE[i] >= 0) {
         graphics::segments(
@@ -644,7 +643,6 @@ apply_empirical_bayes_shrinkage <- function(fit,
     }
   }
 
-  if (isTRUE(show_ci)) graphics::mtext("Plug-in bands; prior-variance uncertainty and covariance omitted.", side = 1, line = 3, cex = 0.65)
 
   # Horizontal band separators between facets.
   facet_boundaries <- cumsum(table(tbl$Facet)[unique(tbl$Facet)])

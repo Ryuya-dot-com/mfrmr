@@ -141,7 +141,7 @@ desired decision.
 \item Fit and review an MML model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Prespecify the practical bound and run \code{analyze_facet_equivalence()}.
 \item Read \code{summary} and \code{pairwise}.
-\item Use \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}} for descriptive grand-mean proximity.
+\item Use \link[=plot.mfrm_fit]{plot(x, type = "facet_equivalence")} for descriptive grand-mean proximity.
 }
 }
 
@@ -169,7 +169,7 @@ average bioavailability. \emph{Journal of Pharmacokinetics and
 Biopharmaceutics, 15}(6), 657-680.
 }
 \seealso{
-\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}}
+\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facet_equivalence")}
 }
 \concept{confidence intervals}
 \concept{facet equivalence}

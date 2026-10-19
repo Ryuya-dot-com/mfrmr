@@ -96,8 +96,9 @@ topics with numerical evidence and information to supply manually.
 package's documented caveats. \code{ReadyForAPA} is a backward-compatible alias
 of the same flag; neither field certifies formal inferential adequacy.
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
-\code{fit_readiness_parameters}: exact source-fit v3 readiness provenance;
-these fields are not re-derived from checklist completeness.
+\code{fit_readiness_parameters}: the fitted model's recorded numerical checks
+and restrictions on inference, overall and by component or parameter.
+Checklist completeness does not change these records.
 \item \code{section_summary}: available items by section.
 \item The Global Fit section includes a "Fit/separation reporting boundary"
 row that points to \code{\link[=precision_review_report]{precision_review_report()}}, \code{\link[=fit_measures_table]{fit_measures_table()}},
@@ -108,9 +109,10 @@ FACETS, ConQuest, and SPSS-style tabular handoffs.
 \item \code{facets_positioning}: report-ready wording that states \code{mfrmr} is not a
 FACETS numerical clone and separates native estimation from FACETS-style
 handoff or external-table review.
-\item \code{visual_scope}: plotting-route summary that separates report-default
-2D figures from exploratory surface/3D-ready data handoffs, including a
-short \code{InterpretationCheck} for the main user-facing caveat.
+\item \code{visual_scope}: available plots and their interpretation limits. It
+distinguishes 2D figures from category-surface data for custom rendering;
+data availability does not mean an interactive 3D renderer is provided.
+\code{InterpretationCheck} gives the main caveat for each type of plot.
 \item \code{references}: abbreviated background citations and topics when requested,
 not a complete bibliography. Verify full records for the methods used;
 use \code{citation("mfrmr")} for the installed software's citation.

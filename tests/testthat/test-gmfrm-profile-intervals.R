@@ -269,7 +269,7 @@ test_that("two-family saved profiles retain failures and meanings through existi
   for (ci in x$profiles) {
     p <- plot(ci, draw = FALSE)
     expect_identical(p$labels$x, "Component discrimination (log scale)")
-    expect_match(p$labels$caption, "Dotted: Wald limits")
+    expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "Dotted: Wald limits")
     expect_identical(plot_data(p, "slope_metadata"), attr(ci, "diagnostics"))
     expect_identical(plot_data(as_ggplot(attr(p, "mfrmr_plot_data"))), plot_data(p))
     expect_no_error(ggplot2::ggplot_build(p))

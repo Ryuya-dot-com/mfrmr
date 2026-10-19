@@ -49,8 +49,8 @@ the strict latent-integrated first-order marginal-fit companion;
 doubles to quintuples wall-clock time relative to \code{"legacy"};
 pass \code{"legacy"} explicitly when iterating on large designs and
 only the residual stack is needed. Use \code{"both"} for RSM/PCM
-reporting fits because it enables \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and
-\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} follow-up.}
+reporting fits because it enables \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")} and
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")} follow-up.}
 
 \item{residual_pca}{Residual PCA mode: \code{"none"}, \code{"overall"}, \code{"facet"}, or \code{"both"}.}
 
@@ -291,7 +291,10 @@ levels. Non-finite estimates are excluded from the spread and SE summaries.
 If any finite estimate lacks a valid SE, reliability, separation, strata and
 error-adjusted spread are unavailable, rather than combining different sets
 of levels. Excluded levels or incomplete uncertainty prevent a facet summary
-from supporting formal reporting. For EAP Persons, this separation-based
+from supporting formal reporting. A facet containing fixed values also has
+no aggregate reliability, separation or strata: a fixed anchor's zero
+conditional variance is not evidence of perfect measurement. Fixing a group
+mean alone does not fix each group member. For EAP Persons, this separation-based
 index is distinct from posterior-variance EAP reliability. High rater
 separation means distinguishable rater measures, not high rater agreement.
 
@@ -344,14 +347,15 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 \donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )

@@ -117,16 +117,16 @@ print_gtheory_data_usage <- function(usage) {
   }
 }
 
-#' Generalizability-theory variance decomposition for an MFRM design
+#' Main-effects generalizability approximation for an MFRM design
 #'
 #' Re-fits the rating data underlying an `mfrm_fit` as a crossed
 #' random-effects model
 #' `Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual`
-#' via `lme4::lmer`, and returns the canonical G-theory variance
-#' components plus G / Phi coefficients. Useful when reviewers ask
-#' for a generalizability-theory complement to the Rasch-style
-#' separation / reliability statistics that `diagnose_mfrm()`
-#' already emits.
+#' via `lme4::lmer`, and returns main-effect variance components,
+#' residual variance, and G / Phi coefficients under this simplified model.
+#' Interactions are not estimated separately. For a G-study including the
+#' supported interactions, use [mfrm_multivariate_gstudy()] with one or two
+#' common random facets; it also accepts a single score column.
 #'
 #' The decomposition is on the observed numeric `Score` scale. It does not use
 #' the fitted MFRM latent scale or estimate a latent ordinal G/Phi coefficient.
@@ -216,13 +216,17 @@ print_gtheory_data_usage <- function(usage) {
 #' calculation version is current, but unavailable row counts are not guessed;
 #' rerun the G-study with the original data to obtain row accounting.
 #'
-#' @section References:
-#' - Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
+#' @references
+#' Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
 #'   (1972). *The dependability of behavioral measurements: Theory
 #'   of generalizability for scores and profiles*. Wiley.
-#' - Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #'
-#' @seealso [mfrm_d_study()], [compute_facet_icc()], [diagnose_mfrm()]
+#' Brennan, R. L. (2001). *Generalizability theory*. Springer.
+#'   \doi{10.1007/978-1-4757-3456-0}. General G/D framework; the main-effects
+#'   restriction and residual-scaling choices here are package-specific limits.
+#'
+#' @seealso [mfrm_multivariate_gstudy()], [mfrm_d_study()],
+#'   [compute_facet_icc()], [diagnose_mfrm()]
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
@@ -528,6 +532,8 @@ mfrm_generalizability <- function(fit,
 #' generalizability for scores and profiles*. Wiley.
 #'
 #' Brennan, R. L. (2001). *Generalizability theory*. Springer.
+#' \doi{10.1007/978-1-4757-3456-0}. This framework does not recover the
+#' interaction components omitted by the source main-effects model.
 #'
 #' @seealso [plot.mfrm_d_study()], [mfrm_generalizability()],
 #'   [mfrm_multivariate_d_study()], [evaluate_mfrm_design()],
@@ -779,12 +785,17 @@ print.mfrm_d_study <- function(x, ...) {
 #' @param palette Optional colors.
 #' @param preset Plot style: `"standard"`, `"publication"`, `"compact"`, or
 #'   `"monochrome"`.
+#' @param reference Optional distinct finite numeric reference values for curves,
+#'   between 0 and 1 for coefficients or nonnegative for error variance.
+#'   `NULL` draws no guides. Not supported for surface plots.
 #' @param ... Reserved for method compatibility.
 #' @details Points represent requested scenarios; connecting lines and
 #'   contours are visual guides. Missing estimates remain missing and break
 #'   curves. If none are available, inspect the D-study table and source
-#'   variance components. Coefficient curves show 0.70 and 0.80 reference
-#'   lines; these are not universal acceptance criteria.
+#'   variance components. No reference lines are drawn by default. Specify
+#'   `reference = c(0.70, 0.80)` to reproduce the earlier coefficient guides.
+#'   User-chosen guides are not universal acceptance criteria or confidence
+#'   bounds; their values and interpretation remain in the returned plot data.
 #'   Heatmaps include a numeric color key; exact values remain in the table.
 #'
 #'   The main-effects G-study combines unmodeled interactions in its residual.
@@ -807,6 +818,7 @@ print.mfrm_d_study <- function(x, ...) {
 #' # With residual_scaling = "sensitivity", use
 #' # panel_grid = c("n_Occasion", "ResidualScaling") instead.
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
+#' @md
 #' @export
 plot.mfrm_d_study <- function(x,
                               y = NULL,
@@ -821,6 +833,7 @@ plot.mfrm_d_study <- function(x,
                               main = NULL,
                               palette = NULL,
                               preset = c("standard", "publication", "compact", "monochrome"),
+                              reference = NULL,
                               ...) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   validate_gtheory_output(x)
@@ -851,6 +864,10 @@ plot.mfrm_d_study <- function(x,
   }
 
   is_surface <- type %in% c("heatmap", "contour", "surface3d")
+  if (is_surface && !is.null(reference)) {
+    stop("`reference` is supported for curves, not surface plots.", call. = FALSE)
+  }
+  references <- .mfrm_d_study_references(reference, type == "coefficients")
   if (is_surface) {
     if (is.null(y_var)) {
       candidates <- setdiff(n_cols, x_var)
@@ -1108,7 +1125,6 @@ plot.mfrm_d_study <- function(x,
           )
         }
       }
-      graphics::mtext(projection_note, side = 1, outer = TRUE, line = 0.3, cex = 0.65)
     }
     return(invisible(new_mfrm_plot_data(
       "d_study",
@@ -1197,7 +1213,7 @@ plot.mfrm_d_study <- function(x,
     y_lim <- if (identical(type, "coefficients")) {
       c(0, 1)
     } else {
-      range(c(0, series_tbl$Value), na.rm = TRUE)
+      range(c(0, series_tbl$Value, references$value), na.rm = TRUE)
     }
     for (i in seq_len(nrow(panel_specs))) {
       if (length(panel_grid) == 2L) {
@@ -1223,17 +1239,14 @@ plot.mfrm_d_study <- function(x,
       )
       graphics::axis(1, at = sort(unique(s_panel$X)))
       graphics::grid(col = style$grid)
-      if (anyNA(s_panel$Value)) graphics::mtext("Unavailable estimates: inspect the D-study table.",
-        side = 3, line = 0.2, cex = 0.7)
       for (series in unique(s_panel$Series)) {
         s <- s_panel[s_panel$Series == series, , drop = FALSE]
         s <- s[order(s$X), , drop = FALSE]
         graphics::lines(s$X, s$Value, col = series_cols[series], lty = line_types[series], lwd = 2)
         graphics::points(s$X, s$Value, col = series_cols[series], pch = 16)
       }
-      if (identical(type, "coefficients")) {
-        graphics::abline(h = c(0.70, 0.80), col = grDevices::adjustcolor(style$neutral, alpha.f = 0.6), lty = c(3, 2))
-      }
+      if (nrow(references)) graphics::abline(h = references$value,
+        col = style$neutral, lty = references$linetype)
       graphics::legend(
         "bottomright",
         legend = unique(s_panel$Series),
@@ -1244,7 +1257,6 @@ plot.mfrm_d_study <- function(x,
         cex = 0.72
       )
     }
-    graphics::mtext(projection_note, side = 1, outer = TRUE, line = 0.3, cex = 0.65)
   }
 
   invisible(new_mfrm_plot_data(
@@ -1268,17 +1280,8 @@ plot.mfrm_d_study <- function(x,
         aesthetic = rep("line", length(series_levels)),
         value = unname(series_cols[series_levels])
       ),
-      reference_lines = if (identical(type, "coefficients")) {
-        new_reference_lines(
-          axis = rep("y", 2L),
-          value = c(0.70, 0.80),
-          label = c("0.70 reference", "0.80 reference"),
-          linetype = c("dotted", "dashed"),
-          role = rep("reference_guide", 2L)
-        )
-      } else {
-        new_reference_lines()
-      },
+      reference_lines = references,
+      interpretation_note = .mfrm_d_study_reference_note(references),
       preset = style$name
     )
   ))

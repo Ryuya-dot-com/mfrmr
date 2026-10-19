@@ -1833,6 +1833,7 @@ summarize_rating_scale_bundle <- function(object, digits = 3, top_n = 10) {
   caveats <- as.data.frame(object$caveats %||% data.frame(), stringsAsFactors = FALSE)
   notes <- c(
     base_note,
+    object$notes %||% character(),
     category_usage_note(object$category_usage),
     threshold_order_note(object$threshold_coverage),
     marginal_coverage_notes(object$marginal_fit$coverage),
@@ -1896,6 +1897,7 @@ summarize_category_structure_bundle <- function(object, digits = 3, top_n = 10) 
   caveats <- as.data.frame(object$caveats %||% data.frame(), stringsAsFactors = FALSE)
   notes <- c(
     base_note,
+    object$notes %||% character(),
     category_usage_note(usage),
     marginal_coverage_notes(object$marginal_fit$coverage),
     "Flag counts describe available decisions in the displayed rows; unavailable decisions do not indicate an absence of warnings.",
@@ -3281,7 +3283,7 @@ draw_category_structure_bundle <- function(x,
         xlab = "Theta / Logit",
         ylab = "",
         yaxt = "n",
-        main = if (is.null(main)) "Mode boundaries" else as.character(main[1])
+        main = ""
       )
       graphics::axis(side = 2, at = seq_along(levels(grp)), labels = levels(grp), las = 2)
     } else {
@@ -3298,7 +3300,7 @@ draw_category_structure_bundle <- function(x,
         xlab = "Theta / Logit",
         ylab = "",
         yaxt = "n",
-        main = if (is.null(main)) "Mean half-score boundaries" else as.character(main[1])
+        main = ""
       )
       graphics::axis(side = 2, at = seq_along(levels(grp)), labels = levels(grp), las = 2)
     }
@@ -3308,7 +3310,14 @@ draw_category_structure_bundle <- function(x,
     "category_structure",
     list(
       plot = type,
+      palette = pal,
+      label_angle = label_angle,
       category_table = cat_tbl,
+      owner_category_table = x$owner_category_table,
+      threshold_table = x$threshold_table,
+      model_context = x$model_context,
+      curve_profiles = x$curve_profiles,
+      notes = x$notes,
       mode_boundaries = mode_tbl,
       mean_halfscore_points = half_tbl
     )
@@ -3639,7 +3648,7 @@ draw_category_curves_bundle <- function(x,
       type = "n",
       xlab = "Theta / Logit",
       ylab = "Expected score",
-      main = main_title
+      main = ""
     )
     graphics::grid(col = style$grid)
     for (i in seq_along(groups)) {
@@ -3665,7 +3674,7 @@ draw_category_curves_bundle <- function(x,
       type = "n",
       xlab = "Theta / Logit",
       ylab = "Probability",
-      main = main_title
+      main = ""
     )
     graphics::grid(col = style$grid)
     for (i in seq_along(traces)) {
@@ -3695,7 +3704,7 @@ draw_category_curves_bundle <- function(x,
       type = "n",
       xlab = "Theta / Logit",
       ylab = "Cumulative probability",
-      main = main_title
+      main = ""
     )
     graphics::grid(col = style$grid)
     graphics::abline(h = 0.5, lty = 3, col = style$neutral)
@@ -3724,7 +3733,7 @@ draw_category_curves_bundle <- function(x,
       type = "n",
       xlab = "Theta / Logit",
       ylab = "Information",
-      main = main_title
+      main = ""
     )
     graphics::grid(col = style$grid)
     for (i in seq_along(groups)) {
@@ -3751,7 +3760,7 @@ draw_category_curves_bundle <- function(x,
       type = "n",
       xlab = "Theta / Logit",
       ylab = "Category information",
-      main = main_title
+      main = ""
     )
     graphics::grid(col = style$grid)
     for (i in seq_along(traces)) {
@@ -3770,12 +3779,6 @@ draw_category_curves_bundle <- function(x,
       draw_cumulative_panel("Cumulative probability")
       draw_information_panel("Total information")
       draw_category_information_panel("Category information")
-      graphics::mtext(
-        if (is.null(main)) "Category curve overview" else as.character(main[1]),
-        outer = TRUE,
-        cex = 1.1,
-        font = 2
-      )
     } else if (type == "ogive") {
       draw_ogive_panel(if (is.null(main)) "Expected-score ogive" else as.character(main[1]))
     } else if (type == "ccc") {
@@ -3793,6 +3796,8 @@ draw_category_curves_bundle <- function(x,
     "category_curves",
     list(
       plot = type,
+      model_context = x$model_context,
+      curve_profiles = x$curve_profiles,
       expected_ogive = ogive,
       probabilities = probs,
       cumulative_probabilities = cumulative,
@@ -3907,7 +3912,7 @@ draw_rating_scale_bundle <- function(x,
       }
       draw_step_plot(
         thr_tbl,
-        title = if (is.null(main)) "Rating-scale thresholds" else as.character(main[1]),
+        title = if (is.null(main)) "" else as.character(main[1]),
         palette = c(step_line = pal["step_line"]),
         label_angle = label_angle
       )
@@ -3916,7 +3921,10 @@ draw_rating_scale_bundle <- function(x,
 
   new_mfrm_plot_data(
     "rating_scale",
-    list(plot = type, category_table = cat_tbl, threshold_table = thr_tbl,
+    list(plot = type, palette = pal, label_angle = label_angle,
+         category_table = cat_tbl, threshold_table = thr_tbl,
+         owner_category_table = x$owner_category_table, model_context = x$model_context,
+         notes = x$notes,
          category_usage = x$category_usage, threshold_coverage = x$threshold_coverage)
   )
 }
@@ -4049,7 +4057,7 @@ draw_unexpected_after_bias_bundle <- function(x,
         col = c(pal["baseline"], pal["after"]),
         names.arg = labels,
         ylab = "Unexpected responses",
-        main = if (is.null(main)) "Unexpected responses: baseline vs after bias" else as.character(main[1]),
+        main = "",
         border = "white"
       )
       graphics::text(mids, vals, labels = as.integer(vals), pos = 3, cex = 0.85)
@@ -4074,7 +4082,7 @@ draw_unexpected_after_bias_bundle <- function(x,
         y = y_vals,
         xlab = "Standardized residual",
         ylab = expression(-log[10](P[obs])),
-        main = if (is.null(main)) "Unexpected responses after bias adjustment" else as.character(main[1]),
+        main = "",
         pch = 16,
         col = cols
       )
@@ -4149,7 +4157,7 @@ draw_output_bundle <- function(x,
         type = "n",
         xlab = "Theta / Logit",
         ylab = "Expected score",
-        main = if (is.null(main)) "Graphfile expected-score curves" else as.character(main[1])
+        main = ""
       )
       for (g in groups) {
         sub <- graph_tbl[as.character(graph_tbl$CurveGroup) == g, , drop = FALSE]
@@ -4179,7 +4187,7 @@ draw_output_bundle <- function(x,
         breaks = "FD",
         col = "#9ecae1",
         border = "white",
-        main = if (is.null(main)) "Scorefile residual distribution" else as.character(main[1]),
+        main = "",
         xlab = "Residual",
         ylab = "Count"
       )
@@ -4213,7 +4221,7 @@ draw_output_bundle <- function(x,
         breaks = "FD",
         col = "#fdd49e",
         border = "white",
-        main = if (is.null(main)) paste0(se_col, " distribution") else as.character(main[1]),
+        main = "",
         xlab = se_col,
         ylab = "Count"
       )
@@ -4234,7 +4242,7 @@ draw_output_bundle <- function(x,
       breaks = "FD",
       col = "#c7e9c0",
       border = "white",
-      main = if (is.null(main)) "Observed probability distribution" else as.character(main[1]),
+      main = "",
       xlab = "Observed probability",
       ylab = "Count"
     )
@@ -4330,7 +4338,7 @@ draw_specifications_bundle <- function(x,
         col = c(pal["anchor"], pal["group"], pal["free"]),
         border = "white",
         ylab = "Levels",
-        main = if (is.null(main)) "Anchor constraints by facet" else as.character(main[1])
+        main = ""
       )
       draw_rotated_x_labels(
         at = mids,
@@ -4580,7 +4588,6 @@ draw_data_quality_bundle <- function(x,
         )
       } else {
         graphics::plot.new()
-        graphics::title(if (is.null(main)) "Data quality flags" else as.character(main[1]))
         graphics::text(0.5, 0.5, "No priority QC flags")
       }
     }
@@ -4666,7 +4673,7 @@ draw_data_quality_bundle <- function(x,
         xaxt = "n",
         xlab = "Original score",
         ylab = "Internal score",
-        main = if (is.null(main)) "Score-map review" else as.character(main[1])
+        main = ""
       )
       graphics::axis(1, at = seq_len(nrow(plot_tbl)), labels = as.character(plot_tbl$OriginalScore), las = 2)
       if (any(plot_tbl$MappingStatus == "recoded", na.rm = TRUE)) {
@@ -4727,7 +4734,7 @@ draw_data_quality_bundle <- function(x,
           height = suppressWarnings(as.numeric(row_tbl$N)),
           labels = as.character(row_tbl$Status),
           col = pal["row_review"],
-          main = if (is.null(main)) "Data quality dashboard: row review" else as.character(main[1]),
+          main = if (is.null(main)) "Data quality dashboard: row review" else as.character(main[1]), show_title = TRUE,
           ylab = "Rows",
           label_angle = label_angle,
           mar_bottom = 7.2
@@ -4743,7 +4750,7 @@ draw_data_quality_bundle <- function(x,
           height = suppressWarnings(as.numeric(support_plot_tbl$Count)),
           labels = as.character(support_plot_tbl$Score),
           col = score_support_colors(support_plot_tbl),
-          main = "Score support",
+          main = "Score support", show_title = TRUE,
           ylab = "Count",
           label_angle = label_angle,
           mar_bottom = 6.8
@@ -4759,7 +4766,7 @@ draw_data_quality_bundle <- function(x,
           height = suppressWarnings(as.numeric(facet_plot_tbl$IssueCategories)),
           labels = paste(facet_plot_tbl$Facet, facet_plot_tbl$Level, sep = ": "),
           col = facet_usage_colors(facet_plot_tbl),
-          main = "Facet category use",
+          main = "Facet category use", show_title = TRUE,
           ylab = "Issues",
           label_angle = label_angle,
           mar_bottom = 8.0
@@ -4775,7 +4782,7 @@ draw_data_quality_bundle <- function(x,
           height = suppressWarnings(as.numeric(missing_tbl$Count)),
           labels = as.character(missing_tbl$Field),
           col = pal["missing"],
-          main = "Missing/invalid rows",
+          main = "Missing/invalid rows", show_title = TRUE,
           ylab = "Rows",
           label_angle = label_angle,
           mar_bottom = 8.0
@@ -4870,7 +4877,7 @@ draw_fit_measures_bundle <- function(x,
                                      preset = c("standard", "publication", "compact", "monochrome"),
                                      ci_level = NULL,
                                      top_n = 30L,
-                                     show_notes = TRUE) {
+                                     show_notes = FALSE) {
   if (!is.logical(show_notes) || length(show_notes) != 1L || is.na(show_notes)) {
     stop("`show_notes` must be TRUE or FALSE.", call. = FALSE)
   }
@@ -4936,7 +4943,7 @@ draw_fit_measures_bundle <- function(x,
     active_ci <- fit_measure_validate_ci_level(active_ci)
     measure <- suppressWarnings(as.numeric(tbl$Measure))
     se <- suppressWarnings(as.numeric(tbl$SE))
-    z_ci <- stats::qnorm(1 - (1 - active_ci) / 2)
+    z_ci <- stats::qnorm((1 - active_ci) / 2, lower.tail = FALSE)
     tbl$CI_Lower <- ifelse(is.finite(measure) & is.finite(se) & se >= 0, measure - z_ci * se, NA_real_)
     tbl$CI_Upper <- ifelse(is.finite(measure) & is.finite(se) & se >= 0, measure + z_ci * se, NA_real_)
     tbl$CI_Level <- active_ci
@@ -4978,7 +4985,7 @@ draw_fit_measures_bundle <- function(x,
         yaxt = "n",
         xlab = "Measure (logits)",
         ylab = "",
-        main = title
+        main = ""
       )
       graphics::segments(
         x0 = tbl$CI_Lower[ok],
@@ -5056,7 +5063,7 @@ draw_fit_measures_bundle <- function(x,
         border = "white",
         ylim = ylim,
         ylab = "Max |ZSTD difference|",
-        main = if (is.null(main)) "FACETS-style df sensitivity" else as.character(main[1])
+        main = ""
       )
       if (length(thresholds) > 0L) {
         graphics::abline(h = thresholds, lty = c(3, 2)[seq_along(thresholds)], col = pal["reference"])
@@ -5106,7 +5113,7 @@ draw_fit_measures_bundle <- function(x,
       ylim = yr,
       xlab = "Infit MnSq",
       ylab = "Outfit MnSq",
-      main = if (is.null(main)) "Infit vs Outfit by fit status" else as.character(main[1])
+      main = ""
     )
     graphics::abline(v = c(lower, 1, upper), lty = c(3, 2, 3), col = pal["reference"])
     graphics::abline(h = c(lower, 1, upper), lty = c(3, 2, 3), col = pal["reference"])
@@ -5162,7 +5169,7 @@ draw_iteration_report_bundle <- function(x,
         ylim = yr,
         xlab = "Iteration",
         ylab = "Residual metric",
-        main = if (is.null(main)) "Iteration residual trajectory" else as.character(main[1])
+        main = ""
       )
       graphics::lines(it, y2, type = "b", pch = 17, col = pal["residual_category"])
       graphics::legend(
@@ -5198,7 +5205,7 @@ draw_iteration_report_bundle <- function(x,
         ylim = yr,
         xlab = "Iteration",
         ylab = "Max absolute change",
-        main = if (is.null(main)) "Iteration logit-change trajectory" else as.character(main[1])
+        main = ""
       )
       graphics::lines(it, y2, type = "b", pch = 17, col = pal["change_step"])
       graphics::legend(
@@ -5230,7 +5237,7 @@ draw_iteration_report_bundle <- function(x,
       col = pal["objective"],
       xlab = "Iteration",
       ylab = "Objective (log-likelihood proxy)",
-      main = if (is.null(main)) "Iteration objective trajectory" else as.character(main[1])
+      main = ""
     )
   }
   invisible(new_mfrm_plot_data(
@@ -5488,7 +5495,7 @@ draw_rater_network_bundle <- function(x,
         col = grDevices::colorRampPalette(c(style$fill_soft, pal["agreement"], pal["disagreement"]))(64),
         xlab = "Rater",
         ylab = "Rater",
-        main = main %||% paste("Rater-network", gsub("_", " ", mode), "matrix")
+        main = ""
       )
       graphics::axis(1, at = seq_along(raters),
                      labels = truncate_axis_label(raters, width = 14L),
@@ -5599,6 +5606,13 @@ draw_halo_network_bundle <- function(x,
       neutral = style$neutral
     )
   )
+  finish <- function(payload) new_mfrm_plot_data("halo_network", c(payload, list(
+    settings = x$settings, summary = x$summary, caveats = x$caveats,
+    palette = pal, label_angle = label_angle,
+    notes = c(x$caveats$Message,
+      "These are observed-score profile correlations, not model residual correlations or severity estimates. Graph centrality is not rater centrality (middle-category use).",
+      "Distribution and MeanHaloWeight summaries use available pairs meeting min_pair_n before edge filters; the network and matrix show only retained edges. Missing or filtered edges do not mean zero correlation or absence of halo.",
+      "Review labels are descriptive package screens. A missing comparison is unassessed, not a no-flag result."))))
   top_n <- max(1L, as.integer(top_n))
   nodes <- as.data.frame(x$node_metrics %||% data.frame(), stringsAsFactors = FALSE)
   edges <- as.data.frame(x$edge_metrics %||% data.frame(), stringsAsFactors = FALSE)
@@ -5624,7 +5638,7 @@ draw_halo_network_bundle <- function(x,
         border = style$foreground,
         ylab = "Absolute correlation",
         xlab = "",
-        main = main %||% "Halo vs non-halo edge weights"
+        main = ""
       )
       graphics::stripchart(
         AbsEstimate ~ EdgeType,
@@ -5636,8 +5650,7 @@ draw_halo_network_bundle <- function(x,
         add = TRUE
       )
     }
-    return(invisible(new_mfrm_plot_data(
-      "halo_network",
+    return(invisible(finish(
       list(
         plot = "edge_distribution",
         table = tbl,
@@ -5672,25 +5685,29 @@ draw_halo_network_bundle <- function(x,
       ifelse(
         tbl$ReviewStatus == "warning",
         pal["warning"],
-        ifelse(tbl$ReviewStatus == "review", pal["review"], pal["ok"])
+        ifelse(tbl$ReviewStatus == "review", pal["review"],
+          ifelse(tbl$ReviewStatus == "ok", pal["ok"], pal["neutral"]))
       )
     } else {
       pal["halo"]
     }
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      barplot_rot45(
-        height = suppressWarnings(as.numeric(tbl[[metric]])),
+      values <- suppressWarnings(as.numeric(tbl[[metric]]))
+      bp <- barplot_rot45(
+        height = values,
+        ylim = range(0, 1, values, finite = TRUE),
         labels = truncate_axis_label(as.character(tbl$Rater), width = 24L),
         col = status_cols,
         main = main %||% paste("Rater halo", metric),
         ylab = metric,
         label_angle = label_angle,
-        mar_bottom = 8
+        mar_bottom = 4
       )
+      if (any(!is.finite(values))) graphics::text(bp[!is.finite(values)], 0,
+        "Unavailable", pos = 3, cex = 0.7)
     }
-    return(invisible(new_mfrm_plot_data(
-      "halo_network",
+    return(invisible(finish(
       list(
         plot = "halo_summary",
         table = tbl,
@@ -5698,10 +5715,10 @@ draw_halo_network_bundle <- function(x,
         title = main %||% paste("Rater halo", metric),
         subtitle = "Same-rater cross-criterion edge summary by rater",
         legend = new_plot_legend(
-          label = c("Warning", "Review", "OK"),
-          role = c("status", "status", "status"),
-          aesthetic = c("bar", "bar", "bar"),
-          value = c(pal["warning"], pal["review"], pal["ok"])
+          label = c("Flagged for review", "Review needed", "No configured flag", "Insufficient information"),
+          role = rep("status", 4),
+          aesthetic = rep("bar", 4),
+          value = c(pal["warning"], pal["review"], pal["ok"], pal["neutral"])
         ),
         reference_lines = new_reference_lines(),
         preset = style$name
@@ -5725,26 +5742,38 @@ draw_halo_network_bundle <- function(x,
     }
     if (isTRUE(draw) && length(node_names) > 0L) {
       apply_plot_preset(style)
+      labels <- truncate_axis_label(node_names, width = 24L)
+      old_mar <- graphics::par("mar")
+      on.exit(graphics::par(mar = old_mar), add = TRUE)
+      label_lines <- max(graphics::strwidth(labels, units = "inches", cex = style$axis_cex)) /
+        (graphics::par("csi") * graphics::par("mex"))
+      mar <- c(max(old_mar[1], label_lines + 2.5), max(old_mar[2], label_lines + 2.5), 1, 1)
+      graphics::par(mar = mar)
+      shown <- t(mat[nrow(mat):1, , drop = FALSE])
       graphics::image(
         x = seq_along(node_names),
         y = seq_along(node_names),
-        z = t(mat[nrow(mat):1, , drop = FALSE]),
+        z = 1 * is.na(shown),
         axes = FALSE,
-        col = grDevices::colorRampPalette(c(style$fill_soft, pal["non_halo"], pal["halo"]))(64),
-        xlab = "Rater x criterion node",
-        ylab = "Rater x criterion node",
-        main = main %||% "Halo-network edge matrix"
+        col = c("white", "grey90"), zlim = c(0, 1),
+        xlab = "",
+        ylab = "",
+        main = ""
       )
+      graphics::image(x = seq_along(node_names), y = seq_along(node_names),
+        z = shown, add = TRUE, zlim = c(-1, 1),
+        col = grDevices::colorRampPalette(c(pal["non_halo"], "white", pal["halo"]))(64))
       graphics::axis(1, at = seq_along(node_names),
-                     labels = truncate_axis_label(node_names, width = 14L),
+                     labels = labels,
                      las = 2, cex.axis = style$axis_cex)
       graphics::axis(2, at = seq_along(node_names),
-                     labels = rev(truncate_axis_label(node_names, width = 14L)),
+                     labels = rev(labels),
                      las = 2, cex.axis = style$axis_cex)
+      graphics::mtext("Rater x criterion node", side = 1, line = mar[1] - 1)
+      graphics::mtext("Rater x criterion node", side = 2, line = mar[2] - 1)
       graphics::box()
     }
-    return(invisible(new_mfrm_plot_data(
-      "halo_network",
+    return(invisible(finish(
       list(
         plot = "matrix",
         matrix = mat,
@@ -5801,11 +5830,10 @@ draw_halo_network_bundle <- function(x,
       vertex.size = 15,
       edge.width = edge_width,
       edge.color = edge_col,
-      main = main %||% "Rater-by-criterion halo network"
+      main = ""
     )
   }
-  invisible(new_mfrm_plot_data(
-    "halo_network",
+  invisible(finish(
     list(
       plot = "network",
       nodes = nodes,
@@ -5928,7 +5956,7 @@ draw_subset_connectivity_bundle <- function(x,
         graphics::plot(
           g,
           layout = layout,
-          main = if (is.null(main)) "Connectivity network" else as.character(main[1]),
+          main = "",
           vertex.label.color = style$foreground,
           vertex.label.family = "sans"
         )
@@ -6033,7 +6061,7 @@ draw_subset_connectivity_bundle <- function(x,
         axes = FALSE,
         space = 0.2,
         ylim = c(0, max(c(obs_vals, 1), na.rm = TRUE) * 1.15),
-        main = if (is.null(main)) "Linking design matrix" else as.character(main[1])
+        main = ""
       )
       graphics::axis(2, las = 1)
       graphics::mtext("Observation share (%)", side = 2, line = 5.2)
@@ -6221,7 +6249,7 @@ draw_facet_statistics_bundle <- function(x,
       yaxt = "n",
       xlab = metric,
       ylab = "",
-      main = if (is.null(main)) paste0("Facet ranges (", metric, ")") else as.character(main[1])
+      main = ""
     )
     graphics::segments(x0 = mn, y0 = y, x1 = mx, y1 = y, col = pal["range"], lwd = 2)
     graphics::points(md, y, pch = 16, col = pal["mean"])
@@ -6431,7 +6459,7 @@ draw_facets_contract_bundle <- function(x,
         col = cols,
         las = 2,
         ylab = "Checks",
-        main = if (is.null(main)) "Metric-check status counts" else as.character(main[1])
+        main = ""
       )
     }
     return(invisible(new_mfrm_plot_data(
@@ -6605,11 +6633,6 @@ plot_fixed_reports_bundle <- function(x,
   no_data_plot <- function(message) {
     if (isTRUE(draw)) {
       graphics::plot.new()
-      graphics::title(main = if (is.null(main)) {
-        if (identical(plot_type, "contrast")) "Pairwise contrasts" else "Pairwise p-value distribution"
-      } else {
-        as.character(main[1])
-      })
       graphics::text(0.5, 0.5, "No data")
     }
     payload <- list(plot = plot_type, message = message)
@@ -6676,7 +6699,7 @@ plot_fixed_reports_bundle <- function(x,
       breaks = "FD",
       col = pal["hist"],
       border = "white",
-      main = if (is.null(main)) "Pairwise p-value distribution" else as.character(main[1]),
+      main = "",
       xlab = "p-value",
       ylab = "Count"
     )
@@ -6758,7 +6781,7 @@ plot_visual_summaries_bundle <- function(x,
       names.arg = FALSE,
       col = c(pal["warning"], pal["summary"]),
       ylab = "Messages",
-      main = if (is.null(main)) "Warning vs summary counts by visual" else as.character(main[1]),
+      main = "",
       border = "white"
     )
     centers <- vapply(split(as.numeric(mids), rep(seq_along(vis), each = 2L)), mean, numeric(1))
@@ -6792,12 +6815,12 @@ plot_visual_summaries_bundle <- function(x,
 #'
 #' @details
 #' `plot()` dispatches by bundle class:
-#' - `mfrm_unexpected` -> [plot_unexpected()]
-#' - `mfrm_fair_average` -> [plot_fair_average()]
-#' - `mfrm_displacement` -> [plot_displacement()]
-#' - `mfrm_interrater` -> [plot_interrater_agreement()]
-#' - `mfrm_facets_chisq` -> [plot_facets_chisq()]
-#' - `mfrm_bias_interaction` -> [plot_bias_interaction()]
+#' - `mfrm_unexpected` -> [plot(x, type = "unexpected")][plot.mfrm_fit]
+#' - `mfrm_fair_average` -> [plot(x, type = "fair_average")][plot.mfrm_fit]
+#' - `mfrm_displacement` -> [plot(x, type = "displacement")][plot.mfrm_fit]
+#' - `mfrm_interrater` -> [plot(x, type = "agreement")][plot.mfrm_fit]
+#' - `mfrm_facets_chisq` -> [plot(x, type = "facets_chisq")][plot.mfrm_fit]
+#' - `mfrm_bias_interaction` -> [plot(x, type = "bias")][plot.mfrm_fit]
 #' - `mfrm_bias_count` -> bias-count plots (cell counts / low-count rates)
 #' - `mfrm_fixed_reports` -> pairwise-contrast diagnostics
 #' - `mfrm_visual_summaries` -> warning/summary message count plots
@@ -6811,7 +6834,7 @@ plot_visual_summaries_bundle <- function(x,
 #' - `mfrm_output_bundle` -> graph/score output-file diagnostics,
 #'   including `type = "score_se"` when scorefile SE columns are available
 #' - `mfrm_residual_pca` -> residual PCA scree, parallel-analysis, or
-#'   loadings views via [plot_residual_pca()]
+#'   loadings views via [plot(x, type = "residual_pca")][plot.mfrm_fit]
 #' - `mfrm_specifications` -> facet/anchor/convergence plots
 #' - `mfrm_data_quality` -> dashboard, quality-flag, score-map, facet-pattern,
 #'   and row/category/missing-row plots
@@ -6844,6 +6867,11 @@ plot_visual_summaries_bundle <- function(x,
 #' suppress those vertical boundary lines. Use
 #' `plot_data(x, component = "plot_long")` on a category-curve bundle when
 #' you want one ggplot2/plotly-friendly table across all curve families.
+#' Keep curve families and groups separate in custom figures. Automatic
+#' [as_ggplot()] conversion supports rating-scale counts/thresholds and
+#' category-structure counts; it is unavailable for category-curve bundles and
+#' category-structure boundary views. Step displays use point estimates and
+#' do not turn stored step SEs into crossing, gap or curve intervals.
 #'
 #' @section Interpreting output:
 #' The returned object is plotting data (`mfrm_plot_data`) that captures
@@ -6855,7 +6883,7 @@ plot_visual_summaries_bundle <- function(x,
 #' 3. Call `plot(bundle, type = ..., draw = FALSE)` to obtain reusable plot data.
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
-#' @seealso `summary()`, [plot_unexpected()], [plot_fair_average()], [plot_displacement()]
+#' @seealso `summary()`, [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "fair_average")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit]
 #' @examples
 #' \donttest{
 #' toy_full <- load_mfrmr_data("example_core")
@@ -6893,6 +6921,21 @@ plot_visual_summaries_bundle <- function(x,
 #' @export
 plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
   dots <- list(...)
+  family <- c(mfrm_unexpected = "unexpected", mfrm_fair_average = "fair_average",
+    mfrm_displacement = "displacement", mfrm_interrater = "agreement",
+    mfrm_facets_chisq = "facets_chisq", mfrm_bias_interaction = "bias")
+  selected_family <- intersect(class(x), names(family))
+  if (length(selected_family) && identical(type, unname(family[selected_family[1L]]))) {
+    type <- NULL
+    if (inherits(x, "mfrm_interrater")) {
+      if (!is.null(dots$view) && !identical(dots$view, "pairs"))
+        stop("Saved agreement results support the pairs view; use a fitted model for the heatmap.", call. = FALSE)
+      dots$view <- NULL
+      dots <- .mfrm_plot_rename(dots, "metric", "plot_type")
+      if (identical(dots$plot_type, "correlation")) dots$plot_type <- "corr"
+    } else dots <- .mfrm_plot_rename(dots, "view",
+      if (inherits(x, "mfrm_bias_interaction")) "plot" else "plot_type")
+  }
 
   if (inherits(x, "mfrm_unexpected")) {
     args <- c(list(x = x), dots)
@@ -7053,19 +7096,8 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
     )))
   }
   if (inherits(x, "mfrm_residual_pca")) {
-    draw <- if ("draw" %in% names(dots)) isTRUE(dots$draw) else TRUE
-    ptype <- if (is.null(type)) "overall_scree" else as.character(type[1])
-    facet <- dots$facet %||% NULL
-    component <- if ("component" %in% names(dots)) dots$component else 1L
-    top_n <- if ("top_n" %in% names(dots)) dots$top_n else 20L
-    return(invisible(draw_residual_pca_bundle(
-      x,
-      type = ptype,
-      facet = facet,
-      component = component,
-      top_n = top_n,
-      draw = draw
-    )))
+    return(do.call(plot.mfrm_residual_pca,
+      c(list(x = x, type = type %||% "scree"), dots)))
   }
   if (inherits(x, "mfrm_specifications")) {
     draw <- if ("draw" %in% names(dots)) isTRUE(dots$draw) else TRUE
@@ -7142,7 +7174,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
       preset = preset,
       ci_level = ci_level,
       top_n = top_n,
-      show_notes = if ("show_notes" %in% names(dots)) dots$show_notes else TRUE
+      show_notes = if ("show_notes" %in% names(dots)) dots$show_notes else FALSE
     )))
   }
   if (inherits(x, "mfrm_iteration_report")) {
@@ -7275,7 +7307,7 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 
   stop(
     "No default plot method for class `", class(x)[1], "`.\n",
-    "Use a dedicated plot helper (for example, `plot_unexpected()`, `plot_fair_average()`, or `plot_bias_interaction()`)."
+    "Use a dedicated plot helper (for example, `plot(x, type = \"unexpected\")`, `plot(x, type = \"fair_average\")`, or `plot(x, type = \"bias\")`)."
   )
 }
 
@@ -7817,7 +7849,7 @@ summary.mfrm_diagnostics <- function(object,
   if (isTRUE(!is.na(unexpected_n) && unexpected_n > 0L) || isTRUE(!is.na(displacement_flagged) && displacement_flagged > 0L)) {
     next_actions <- c(
       next_actions,
-      "Use `unexpected_response_table()` / `plot_unexpected()` and `displacement_table()` / `plot_displacement()` for case-level follow-up."
+      "Use `unexpected_response_table()` / `plot(x, type = \"unexpected\")` and `displacement_table()` / `plot(x, type = \"displacement\")` for case-level follow-up."
     )
   }
   if (!identical(as.character(object$residual_pca_mode %||% "none"), "none")) {
@@ -8165,7 +8197,7 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
   }
   if (!is.null(x$reliability) && nrow(x$reliability) > 0L) {
     print_wrapped_line(paste(
-      "Separation-based reliability describes differences among facet measures, not rater agreement.",
+      mfrm_separation_interpretation(),
       "Fit-adjusted values are not confidence bounds; Person values using EAP are not posterior-variance EAP reliability.",
       "Counts show finite estimates and their available SEs; indices are withheld when those SEs are incomplete."
     ))
@@ -8336,7 +8368,7 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
 #' @section Typical workflow:
 #' 1. Estimate interactions with [estimate_bias()].
 #' 2. Check `summary(bias)` for screen-positive and unstable cells.
-#' 3. Use [bias_interaction_report()] or [plot_bias_interaction()] for details.
+#' 3. Use [bias_interaction_report()] or [plot(x, type = "bias")][plot.mfrm_fit] for details.
 #'
 #' @return An object of class `summary.mfrm_bias` with:
 #' - `overview`: interaction facets/order, cell counts, and effect-size profile
@@ -8572,6 +8604,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' @param include_person Logical. Whether person identifiers may be printed in
 #'   extreme-person tables and requested by the fit-pathway route. The default
 #'   is `FALSE` for privacy-safe console output.
+#' @param comparison_review Optional prospective interaction review from
+#'   [describe_mfrm_data()]. Explicitly requests fitted contrasts and retained-
+#'   point numerical checks through [interaction_effect_table()], saved as
+#'   `$interaction_comparisons`. It does not fit a model or supply intervals.
 #'
 #' @details
 #' Start with `results <- summary(fit)`. Use `results$person_overview` for
@@ -8683,7 +8719,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'    Infit pathway only when they answer a specific follow-up question.
 #' 5. For `RSM` / `PCM`, continue with [diagnose_mfrm()] for element-level fit
 #'    checks. For `GPCM`, continue with [compute_information()] /
-#'    [plot_information()] or the fitted-object posterior scoring helpers.
+#'    [plot(x)][plot.mfrm_information] or the fitted-object posterior scoring helpers.
 #'
 #' @return An object of class `summary.mfrm_fit` with:
 #' - `overview`: global model/fit indicators. For MML, `MMLEngineUsed` records
@@ -8729,8 +8765,16 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   local evidence does not override an inconclusive boundary audit
 #' - `interaction_overview`: model-estimated facet-interaction summary
 #'   when the fit was specified with `facet_interactions`
+#' - `interaction_comparisons`: explicitly requested joint-fit contrasts,
+#'   retaining unavailable rows, the prospective review and numerical checks;
+#'   absent unless `comparison_review` is supplied
 #' - `settings_overview`: estimation-settings overview that pins the
-#'   configuration that affects identification/scoring
+#'   configuration that affects identification/scoring. `CenteringScope`
+#'   distinguishes whole-facet (`"facet"`) from legacy remainder centering
+#'   (`"remainder"`), separately from `NoncenterFacet`. Native fits saved before
+#'   convention metadata retain the legacy interpretation. Recreate this
+#'   summary from the fit to obtain new fields; reading an old summary does
+#'   not update it or refit the model
 #' - `attached_diagnostics`: logical flag indicating whether the
 #'   `mfrm_fit` was returned with diagnostics already attached
 #' - `attached_diagnostics_cols`: character vector of diagnostic
@@ -8801,9 +8845,11 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
                              detail = NULL,
                              diagnostics = NULL,
                              compute = c("auto", "never"),
-                             include_person = FALSE) {
+                             include_person = FALSE,
+                             comparison_review = NULL) {
   if (mfrm_has_jml_adjustment(object)) {
     rlang::check_dots_empty()
+    if (!is.null(comparison_review)) stop_if_jml_adjustment(object, "Interaction comparisons")
     if (!is.null(diagnostics)) stop_if_jml_adjustment(object, "Attaching ordinary diagnostics")
     match.arg(profile); match.arg(compute)
     if (!is.null(detail)) match.arg(detail,c("brief","full"))
@@ -8827,6 +8873,9 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
                                                helper = "summary.mfrm_fit()")
   }
   out <- mfrm_fit_summary_core(object, digits = digits, top_n = top_n)
+  if (!is.null(comparison_review)) {
+    out$interaction_comparisons <- interaction_effect_table(object, comparison_review)
+  }
   mfrm_fit_summary_workflow(
     out = out,
     fit = object,
@@ -9643,6 +9692,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       scale_contract$GpcmExtremePersonPolicy[1]
     ),
     NoncenterFacet = as.character(config$noncenter_facet %||% "Person"),
+    CenteringScope = mfrm_centering_scope(config),
     WeightColumn = as.character(config$weight_col %||% NA_character_),
     QuadPoints = as.integer(config$estimation_control$quad_points %||% NA_integer_),
     MMLIntegration = if (identical(config$method, "MML")) {
@@ -10150,7 +10200,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
         )
       },
       next_actions,
-      "Use `compute_information()` / `plot_information()` for reporting-oriented precision follow-up."
+      "Use `compute_information()` / `plot(x)` for reporting-oriented precision follow-up."
     )
   }
   if (nrow(interaction_overview) > 0) {
@@ -11112,6 +11162,12 @@ print.summary.mfrm_fit <- function(x, ...) {
   }
 
   cat("Many-Facet Measurement Model Summary\n")
+  if (nrow(x$interaction_comparisons %||% data.frame()) > 0L) {
+    cat("\nRequested joint-fit interaction comparisons\n")
+    columns <- c("Comparison", "Group1", "Group2", "Estimate", "EstimateStatus", "State")
+    print(round_numeric_df(as.data.frame(x$interaction_comparisons[columns]), digits = digits), row.names = FALSE)
+    print_wrapped_line("Descriptive contrasts only; no formal uncertainty. Review `$interaction_comparisons` and its attributes for unavailable values, assumptions and numerical checks.")
+  }
   if (nrow(overview) > 0) {
     ov <- overview[1, , drop = FALSE]
     print_wrapped_line(sprintf(
@@ -11153,6 +11209,12 @@ print.summary.mfrm_fit <- function(x, ...) {
       }
     }
     settings <- as.data.frame(x$settings_overview %||% data.frame())
+    if (nrow(settings) > 0L && "CenteringScope" %in% names(settings)) {
+      print_wrapped_line(switch(settings$CenteringScope[1],
+        facet = "Centering: whole declared facet, including anchors and group totals.",
+        remainder = "Centering: legacy ungrouped, unanchored remainder.",
+        "Centering convention: not recorded."))
+    }
     if (identical(as.character(ov$Model %||% NA_character_), "GPCM") &&
         nrow(settings) > 0L && "GpcmEstimatorFamily" %in% names(settings)) {
       print_wrapped_line(mfrm_gpcm_console_lines(settings))

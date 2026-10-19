@@ -55,9 +55,9 @@ test_that("two-family adaptive fitting preserves its objective and output scope"
   unresolved$fit$summary$Converged <- TRUE
   unresolved$fit$opt$optimizer_diagnostics$ConvergenceSeverity <- "review"
   expect_match(mfrm_report(unresolved)$markdown, "did not pass its numerical")
-  # A component profile must also stop before using fixed-grid curvature.
+  # A component profile must reject the same unconverged source.
   expect_error(confint(fit, method = "profile", slope = c(`First owner` = "a2")),
-    "Adaptive two-family profile intervals are unavailable")
+    "Direct adaptive MML must pass")
   expect_error(mfrm_response_diagnostics(fit), "Resolve the two-family convergence")
   expect_error(predict_mfrm_units(fit, data), "Resolve the two-family convergence")
   file <- tempfile(fileext = ".rds"); on.exit(unlink(file), add = TRUE)
@@ -217,8 +217,8 @@ test_that("adaptive two-family intervals retain the full covariance and output i
   unavailable <- confint(bad)
   expect_true(all(is.na(unavailable)))
   expect_match(attr(unavailable, "diagnostics")$InferenceReview[1], "likelihood must match")
-  expect_error(confint(fit, method = "profile", slope = c(`First owner` = "same")),
-    "Adaptive two-family profile intervals are unavailable")
+  expect_error(confint(bad, method = "profile", slope = c(`First owner` = "same")),
+    "likelihood must match")
   expect_false(fit$summary$InferenceReady)
   expect_false(fit$summary$ICEligible)
   args <- fit$config$replay_inputs

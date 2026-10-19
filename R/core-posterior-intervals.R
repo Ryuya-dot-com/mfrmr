@@ -3,7 +3,7 @@
 # approximate posterior quantiles accurately even when those moments converge.
 mfrmr_person_posterior_intervals <- function(idx, config, params, base_eta,
                                              person_labels, population_spec = NULL,
-                                             interval_level = 0.95) {
+                                             interval_level = 0.95, cut_scores = NULL) {
   basis <- resolve_person_quadrature_basis(list(nodes = c(0,1), weights = c(1,1)),
     population_spec %||% materialize_population_spec(config, params), person_count = length(person_labels))
   mu <- if (isTRUE(basis$transformed)) basis$mu else rep(0, length(person_labels))
@@ -55,7 +55,12 @@ mfrmr_person_posterior_intervals <- function(idx, config, params, base_eta,
       tol=1e-10, check.conv=TRUE)$root
     upper <- stats::uniroot(function(u) upper_tail(u)-alpha, c(-limit,limit),
       tol=1e-10, check.conv=TRUE)$root
-    mu[person] + sigma * (mode + scale * c(Lower=lower,Upper=upper))
+    answer <- mu[person] + sigma * (mode + scale * c(Lower=lower,Upper=upper))
+    if (!is.null(cut_scores)) {
+      cuts <- ((unname(cut_scores)-mu[person])/sigma-mode)/scale
+      answer <- c(answer, mfrm_cut_probabilities(integral, cuts, mass, -limit, limit))
+    }
+    answer
   })
   do.call(rbind,result)
 }

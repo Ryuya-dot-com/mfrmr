@@ -2,7 +2,7 @@
 mfrm_extended_estimate_plot <- function(table, labels, name, default_title, xlab,
     note, draw, settings, style = c("interval", "precision", "distribution"),
     sort = c("input", "estimate", "uncertainty"), palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, reference = 0, text_scale = 1, point_size = 2.5,
     extra = list()) {
   style <- match.arg(style); sort <- match.arg(sort); palette <- match.arg(palette)

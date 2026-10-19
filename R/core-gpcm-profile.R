@@ -215,10 +215,9 @@ mfrm_gpcm_profile_search <- function(evaluator, reference, start, contrast,
 
 mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
   product <- mfrm_has_product_slopes(fit)
+  adaptive <- mfrmr_adaptive_integration(fit$config)
   labels <- as.character(fit$config$gpcm_spec$levels)
   if (product) {
-    if (mfrmr_adaptive_integration(fit$config)) stop(
-      "Adaptive two-family profile intervals are unavailable; use method = 'model' for separately checked experimental log-Wald intervals.", call. = FALSE)
     owner <- names(slope)
     if (!is.character(slope) || length(slope) != 1L || is.na(slope) ||
         length(owner) != 1L || is.na(owner) || !owner %in% fit$config$slope_facet ||
@@ -255,6 +254,12 @@ mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
     direct <- make_mfrm_direct_evaluator("MML", make_param_cache(sizes, cfg, idx, is_mml = TRUE),
       idx, cfg, sizes, gauss_hermite_normal(q))
     if (!product) return(direct)
+    if (adaptive) {
+      # Keep moving nodes, scales and Jacobians in every constrained evaluation.
+      # Only the optimizer is scaled per Person; LR values stay on the total scale.
+      direct$optimization_scale <- length(fit$prep$levels$Person)
+      return(direct)
+    }
     specification <- fit$gmfrm$specification
     specification$quadrature <- gauss_hermite_normal(q)
     mfrm_gmfrm_profile_evaluator(do.call(mfrm_gmfrm_problem, specification), direct)
@@ -297,6 +302,7 @@ mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
     CIUse = if (eligible) "approximate_pointwise_profile" else "unavailable", InferenceReview = review)
   description <- paste("Relative GPCM slope:", fit$config$slope_facet, slope, "(geometric mean one)")
   if (product) {
+    tab$CoverageQualified <- FALSE
     tab$SlopeOwner <- owner; tab$SlopeLevel <- unname(slope)
     tab$ScaleReference <- target$metadata$ScaleReference[index]
     description <- paste("Two-family component slope:", owner, slope,
@@ -305,11 +311,13 @@ mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
   out <- mfrm_gpcm_interval_result(tab, level, "Profile likelihood; chi-square(1) approximation", description)
   attr(out, "profile") <- result
   attr(out, "wald") <- data.frame(SlopeFacet = label, Estimate = estimate,
-    Lower = exp(log(estimate) - stats::qnorm((1 + level)/2) * se),
-    Upper = exp(log(estimate) + stats::qnorm((1 + level)/2) * se))
+    Lower = exp(log(estimate) - stats::qnorm((1 - level) / 2, lower.tail = FALSE) * se),
+    Upper = exp(log(estimate) + stats::qnorm((1 - level) / 2, lower.tail = FALSE) * se))
   attr(out, "source") <- mfrm_gpcm_inference_source(fit)
   attr(out, "settings") <- c(list(scale = if (product) "standardized" else "relative", method = "profile", slope = slope,
-    quad_points = order, comparison_quad_points = higher), controls)
+    quad_points = order, comparison_quad_points = higher,
+    integration = if (adaptive) "adaptive" else "fixed",
+    engine = config$estimation_control$mml_engine_used), controls)
   if (product) {
     attr(out, "checks") <- info$checks
     attr(out, "numerical_checks") <- info$numerical_checks

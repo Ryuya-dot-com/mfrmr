@@ -69,7 +69,7 @@ facets_positioning_guide <- function() {
       "read_facets_fit_table(); facets_fit_review(); fit_measures_table(df_sensitivity = TRUE)",
       "fit_mfrm(); facets_feature_coverage(); mfrmr_output_guide()",
       "build_summary_table_bundle(); build_visual_summaries(); plot_data()",
-      "gpcm_capability_matrix(); mfrm_d_study(); mfrm_network_analysis(); plot_data_components()"
+      "gpcm_capability_matrix(); mfrm_multivariate_gstudy(); mfrm_multivariate_d_study(); mfrm_d_study(); mfrm_network_analysis(); plot_data_components()"
     ),
     stringsAsFactors = FALSE
   )
@@ -109,10 +109,10 @@ facets_term_crosswalk <- function() {
       "diagnose_mfrm(); fit_measures_table()",
       "facets_fit_df_guide(); fit_measures_table(df_sensitivity = TRUE)",
       "fit_mfrm(model = \"RSM\" or \"PCM\")",
-      "plot_wright_unified(); plot(fit, type = \"wright\")",
+      "plot(x, type = \"wright\", view = \"unified\"); plot(fit, type = \"wright\")",
       "facets_output_file_bundle(include = \"graph\")",
       "make_anchor_table(); fit_mfrm(anchors = ...)",
-      "fit_mfrm(positive_facets = ...); plot_wright_unified()"
+      "fit_mfrm(positive_facets = ...); plot(x, type = \"wright\", view = \"unified\")"
     ),
     Relationship = c(
       "substantive counterpart", "substantive counterpart", "substantive counterpart",
@@ -146,7 +146,7 @@ facets_term_crosswalk <- function() {
 #'
 #' @return A data.frame with visual surface, status, first route, editable data
 #'   route, and claim-boundary columns.
-#' @seealso [plot_wright_unified()], [plot_data()], [facets_term_crosswalk()],
+#' @seealso [plot(x, type = "wright", view = "unified")][plot.mfrm_fit], [plot_data()], [facets_term_crosswalk()],
 #'   [facets_feature_coverage()]
 #' @examples
 #' facets_visual_contract()
@@ -167,12 +167,12 @@ facets_visual_contract <- function() {
       "implemented", "implemented_extension", "partial", "partial"
     ),
     FirstMfrmrRoute = c(
-      "plot_wright_unified(fit, renderer = \"facets\")",
-      "plot_wright_unified(fit, renderer = \"native\", show_ci = TRUE)",
+      "plot(fit, type = \"wright\", view = \"unified\", renderer = \"facets\")",
+      "plot(fit, type = \"wright\", view = \"unified\", renderer = \"native\", show_ci = TRUE)",
       "rating_scale_table(); category_structure_report()",
       "plot(fit, type = \"pathway\")",
       "plot(fit, type = \"fit_pathway\", fit_stat = \"Infit\", include_person = TRUE, top_n_person = 12)",
-      "plot_bias_interaction()",
+      "plot(x, type = \"bias\")",
       "facets_output_file_bundle(); plot_data(); as_ggplot()"
     ),
     EditableDataRoute = c(
@@ -256,6 +256,34 @@ facets_visual_contract <- function() {
 #'   available does not make `mfrmr` operationally interchangeable with
 #'   FACETS.
 #'
+#' For observed-score assessment planning, [mfrm_multivariate_gstudy()] and
+#' [mfrm_multivariate_d_study()] support their documented univariate or
+#' multivariate component designs. The older [mfrm_generalizability()] /
+#' [mfrm_d_study()] pair has a different main-effects decomposition. Neither
+#' route reproduces the FACETS interface to the external `gtheory` package.
+#' For balanced ANOVA, [confint.mfrm_multivariate_gstudy()] adds component
+#' SEs/intervals for a score or fixed composite under normal random effects;
+#' two-score covariance intervals have explicit generalized and conservative
+#' choices with signed bounds. Explicit `reml_profile` variance and covariance intervals
+#' also accept MINQUE(0), with a separate REML center and no sampling SE;
+#' two-score covariance profiles fit a joint normal model and retain signed bounds.
+#' [vcov.mfrm_multivariate_gstudy()] separately supplies component sampling
+#' covariance/SEs for balanced ANOVA and identifiable MINQUE sources using
+#' normal product moments; these describe the original estimator, not REML.
+#' Individual G/Phi intervals from balanced two-crossed-facet sources default
+#' to approximate MLS null inversion. Undefined MLS widths are conservatively
+#' retained and flagged; numerical availability does not guarantee coverage.
+#' G/Phi and SEM have an explicit experimental `reml_profile` option for balanced or
+#' identifiable incomplete sources; the separate REML fit retains original
+#' ANOVA/MINQUE points and does not guarantee finite-sample or boundary coverage.
+#' With `reference`, it maps one shared profile interval for one-facet plans
+#' or nested plans with a common future child count, including incomplete sources.
+#' Balanced crossed G also accepts explicit experimental `score` intervals,
+#' retaining empty-set and numerical diagnostics; Phi is not supplied by this route.
+#' [mfrm_multivariate_d_compare()]
+#' supplies a separate, limited normal-theory paired-plan calculation. See
+#' `vignette("mfrmr-gtheory", package = "mfrmr")` for a runnable workflow.
+#'
 #' @return A data.frame with columns:
 #' - `FACETSArea`
 #' - `FACETSFeature`
@@ -336,7 +364,7 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Convergence and replayed iteration evidence.",
         "Does not reproduce the complete FACETS iteration trace.", package_native_alternative),
     row("Output table", "Table 4: unexpected responses", "table4.htm",
-        "unexpected_response_table(); plot_unexpected()", "implemented",
+        "unexpected_response_table(); plot(x, type = \"unexpected\")", "implemented",
         "Case-level unexpected-response screening.",
         "Structured table and plots, not printer-identical FACETS output.", package_native_alternative),
     row("Output table", "Table 5: measurable data summary", "table5.htm",
@@ -344,7 +372,7 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Facet coverage, category counts, and subset/connectivity checks.",
         "Column order and text layout differ from FACETS.", package_native_alternative),
     row("Output table", "Table 6.0: all-facet Wright map rulers", "table6.htm",
-        "plot_wright_unified(renderer = \"facets\"); plot(fit, type = \"wright\")", "implemented",
+        "plot(renderer = \"facets\", type = \"wright\", view = \"unified\"); plot(fit, type = \"wright\")", "implemented",
         "Common-logit person/facet/threshold display with FACETS-style asterisk ruler or native SE/CI rendering.",
         "Visual correspondence does not establish numerical equivalence; compare output from a documented FACETS version under aligned settings.",
         package_native_alternative),
@@ -365,7 +393,7 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Rasch/FACETS-style separation, reliability, and chi-square summaries.",
         "Uses package-native structured output and documented df conventions; external numerical equivalence is not established.", package_native_alternative),
     row("Output table", "Table 7: agreement statistics", "table7agreementstatistics.htm",
-        "interrater_agreement_table(); rater_network_analysis(); rater_halo_network_analysis(); plot_interrater_agreement()", "supported_with_caveat",
+        "interrater_agreement_table(); rater_network_analysis(); rater_halo_network_analysis(); plot(x, type = \"agreement\")", "supported_with_caveat",
         "Raw-category observed agreement and model-probability expected agreement, plus pairwise rater-network, rater-by-criterion halo network, and rater-agreement views.",
         "The package does not translate category positions across multiple independent scales, apply FACETS agreement-based SE inflation, or establish external Table 7 parity.", package_native_alternative),
     row("Output table", "Table 8.1: dichotomous/binomial/Poisson statistics",
@@ -399,7 +427,7 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Response counts behind bias estimates.",
         "Structured output replaces FACETS text layout.", package_native_alternative),
     row("Output table", "Table 12: bias summary report", "table12.htm",
-        "summary(estimate_bias(...)); plot_bias_interaction()", "partial",
+        "summary(estimate_bias(...)); plot(x, type = \"bias\")", "partial",
         "Distributional and visual bias summaries are available.",
         "FACETS vertical frequency bar-chart is not reproduced exactly.", package_native_alternative),
     row("Output table", "Table 13: DIF/bias detail report", "table13.htm",
@@ -411,7 +439,7 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Pairwise contrasts for two-way bias runs.",
         "Higher-order runs omit pairwise sections by design.", package_native_alternative),
     row("Output table", "DIF/bias Excel plot", "difbiasplot.htm",
-        "plot_bias_interaction(plot = ...)", "partial",
+        "plot(plot = ..., type = \"bias\")", "partial",
         "R-native scatter, heatmap, and facet-profile bias displays.",
         "Excel-specific output is not implemented.", external_format_alternative),
     row("R/Web plots", "Scatterplots and histograms from FACETS menus",
@@ -432,14 +460,14 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Selected 3D/surface-ready plot data are available.",
         "No arbitrary FACETS X-Y-Z plot wrapper.", custom_r_alternative),
     row("R/Web plots", "Histogram: R Statistics", "histogramr.htm",
-        "plot_data(); plot(fit, type = \"wright\"); plot_qc_dashboard()", "partial",
+        "plot_data(); plot(fit, type = \"wright\"); plot(x, type = \"qc\")", "partial",
         "Several package outputs include histogram-like summaries.",
         "No general FACETS histogram menu clone.", custom_r_alternative),
     row("R/Web plots", "Generalizability Theory via R package gtheory", "gtheory.htm",
-        "mfrm_generalizability(); mfrm_d_study(); compute_facet_icc()", "supported_with_caveat",
-        "Observed univariate G-study variance components plus D-study projections with residual-scaling sensitivity and `IdentificationStatus` columns.",
-        "Package-native caveated G/D-study route; not a FACETS/gtheory UI clone, not multivariate/profile G-theory, and not suitable for high-stakes use when boundary or singular fits are reported.",
-        package_native_alternative),
+        "mfrm_multivariate_gstudy(); mfrm_multivariate_d_study(); mfrm_multivariate_d_compare(); mfrm_generalizability(); mfrm_d_study()", "supported_with_caveat",
+        "Observed-score univariate/multivariate component models for supported crossed/nested designs, fixed score composites and D-study plans, with component/covariance plots, curves and paired normal-theory plan comparisons. The separate main-effects route retains residual-scaling sensitivity and IdentificationStatus columns.",
+        "Not a FACETS/gtheory UI clone or general multivariate/profile G-theory implementation. Incomplete source data do not authorize sparse future plans. Component SEs/intervals use balanced ANOVA and normal random effects for a score or fixed composite; two-score covariance intervals have explicit generalized and conservative choices with signed bounds. Explicit reml_profile component intervals also accept MINQUE(0), retaining original points and a separate REML center without supplying a sampling SE. Separately, vcov(g) supplies normal-model sampling covariance and SEs for original ANOVA/MINQUE components, including incomplete sources; product-moment correction retains negative or unidentified sampling variances and does not establish normal-reference intervals. Joint reml_profile covariance intervals also accept identifiable incomplete sources, with signed bounds, no sampling SE and unestablished finite-sample coverage. Balanced crossed G also accepts an explicit experimental score interval using extended nuisance parameters; empty numerical confidence sets and failed calculations have distinct diagnostics, with no Phi or paired-plan transfer. Explicit experimental reml_profile G/Phi and SEM intervals fit the used ratings under normal effects, preserving ANOVA/MINQUE points and reporting a separate REML IntervalCenter; finite-sample and boundary coverage are not guaranteed. With reference, the shared-profile transformation supplies G/Phi/SEM differences for one-facet plans or nested plans with a common future child count, including incomplete sources; the base approximation and numerical limitations remain. SEM intervals profile error variance before taking square roots and do not enumerate remote disconnected accepted regions. Plan-difference intervals have a separate normal-theory scope. Inspect negative components, metric-specific statuses and main-effects boundary/singularity flags.",
+        "Start with the G-theory vignette and declare the score, random facets and assignments. Use the main-effects adapter only for its different decomposition; use FACETS externally for its UI or other external-only options."),
     row("R/Web plots", "Connectivity network graph via igraph", "networkgraph.htm",
         "subset_connectivity_report(); mfrm_network_analysis(); rater_network_analysis(); rater_halo_network_analysis(); plot(..., type = \"network\")", "implemented",
         "Separate facet-level co-observation, rater score-relation, and rater-by-criterion halo networks with reusable node/edge tables.",
@@ -494,11 +522,11 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "Cumulative category-probability curve data, flipped direction data, and approximate .5 boundaries are available.",
         "R-native plot data replace FACETS graph-menu output.", package_native_alternative),
     row("Graph menu", "Test information function", "graphs.htm",
-        "compute_information(); plot_information(type = \"tif\")", "implemented",
+        "compute_information(); plot(type = \"tif\")", "implemented",
         "Design-weighted test/scale information curves.",
         "R-native information definition and plot data.", package_native_alternative),
     row("Graph menu", "Category information function", "graphs.htm",
-        "category_curves_report(); plot(..., type = \"category_information\"); compute_information(); plot_information(type = \"iif\")", "implemented",
+        "category_curves_report(); plot(..., type = \"category_information\"); compute_information(); plot(type = \"iif\")", "implemented",
         "Category-specific information contributions, total information curves, and facet/level contribution curves are available.",
         "R-native plot data replace FACETS graph-menu output.", package_native_alternative),
     row("Graph menu", "Conditional probability curves", "graphs.htm",

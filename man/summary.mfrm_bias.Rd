@@ -56,7 +56,7 @@ summaries also retain the profile-likelihood review columns when present.
 \enumerate{
 \item Estimate interactions with \code{\link[=estimate_bias]{estimate_bias()}}.
 \item Check \code{summary(bias)} for screen-positive and unstable cells.
-\item Use \code{\link[=bias_interaction_report]{bias_interaction_report()}} or \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} for details.
+\item Use \code{\link[=bias_interaction_report]{bias_interaction_report()}} or \link[=plot.mfrm_fit]{plot(x, type = "bias")} for details.
 }
 }
 

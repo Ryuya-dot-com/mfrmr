@@ -48,6 +48,12 @@ far from the expected category at a given theta) are highlighted
 with a heavy border so the visual reads as a Rasch-convention
 Guttman scalogram.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -84,7 +90,7 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_guttman_scalogram(fit, draw = FALSE)
+p <- plot(fit, type = "guttman", draw = FALSE)
 dim(p$data$matrix)
 # Look for: a clean monotone "staircase" of higher scores in the
 #   upper-right triangle and lower scores in the lower-left, once
@@ -96,7 +102,8 @@ dim(p$data$matrix)
 \seealso{
 \code{\link[=unexpected_response_table]{unexpected_response_table()}} for the case-level review of
 the cells flagged in the overlay;
-\code{\link[=plot_rater_agreement_heatmap]{plot_rater_agreement_heatmap()}} for a complementary rater-pair
+\link[=plot.mfrm_fit]{plot(x, type = "agreement", view = "heatmap")} for a complementary rater-pair
 view of the same residual structure;
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for the underlying diagnostics bundle.
 }
+\keyword{internal}

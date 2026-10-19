@@ -14,7 +14,10 @@ rating_scale_table(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Stored
+step uncertainty and marginal-fit results are reused when supplied. Without
+diagnostics, only observed/plug-in category statistics and step points are
+calculated; no covariance or full diagnostic calculation is started.}
 
 \item{whexact}{Use exact ZSTD transformation for category fit.}
 
@@ -26,7 +29,10 @@ unavailable counts remain visible, and score-support caveats are retained.}
 A named list with:
 \itemize{
 \item \code{category_table}: category-level counts, expected counts, fit, and ZSTD
-\item \code{threshold_table}: model step/threshold estimates
+\item \code{owner_category_table}: unfiltered counts within each step owner
+\item \code{model_context}: model, estimator, step/slope owners and step scale
+\item \code{notes}: interpretation outside the figure
+\item \code{threshold_table}: model step/threshold estimates and stored uncertainty
 \item \code{summary}: one-row summary with available/unavailable category counts and
 adjacent-threshold comparisons. Category-fit means identify their available
 denominators and describe displayed rows. Missing fit statistics/flags stay
@@ -52,9 +58,12 @@ Build a rating-scale diagnostics report
 \details{
 This helper provides category usage/fit statistics and threshold summaries
 for reviewing score-category functioning.
-The category usage portion is a global observed-score screen. In PCM fits
-with a \code{step_facet}, threshold diagnostics should be interpreted within each
-\code{StepFacet} rather than as one pooled whole-scale verdict.
+\code{category_table} is a global observed-score screen. \code{owner_category_table}
+retains every declared category within each level of the fitted \code{step_facet}
+(or one \code{Common} family for RSM). Its percentages use that owner's total
+weight. These are observed ratings, not independent Persons or planned
+assignments. Missing categories alone cannot establish structural absence.
+\code{drop_unused} only filters the global display; owner counts stay complete.
 
 Typical checks:
 \itemize{
@@ -83,12 +92,22 @@ Then inspect:
 \code{StepFacet}.
 }
 
-For MML step uncertainty, inspect
-\code{diagnostics$parameter_uncertainty$steps} from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. A bare fit
-supplies point estimates to \code{threshold_table}; passing separate diagnostics
-here does not attach their SEs or intervals to that table. Check \code{SE_Status}
-and, when present, \code{CIEligible} / \code{CIUse} before reporting intervals. Retain
-\code{StepFacet} for PCM threshold families. A facet-location SE is not a step SE.
+Stored \code{diagnostics$parameter_uncertainty$steps} are matched by threshold
+family and step, with fitted estimates and source identity checked. Inspect
+\code{SE_Status}, \code{CIEligible}, \code{CIUse} and \code{UncertaintySourceStatus}. Missing rows
+remain unavailable; duplicate or mismatched keys are rejected. Older
+diagnostics without full source identity retain their numbers for review,
+with \code{SourceCIEligible} / \code{SourceCIUse} retaining their original labels.
+They are not promoted to primary interval reporting. A bare fit supplies
+step points with \code{SE_Status = "not_supplied"}. A binary centered step has
+no free within-owner contrast (\code{fixed_by_step_centering}).
+
+Native thresholds here are centered step offsets. They are not full
+ability-axis crossings, cumulative-50\% boundaries or decision cuts. An SE
+for a step does not include the covariance required for a crossing or an
+adjacent-step difference. Threshold disorder is descriptive, not an
+automatic category-merging rule. Two-family GPCM diagnostics remain
+unsupported by this helper; use its dedicated response/curve routes.
 }
 
 \section{Typical workflow}{
@@ -99,6 +118,12 @@ and, when present, \code{CIEligible} / \code{CIUse} before reporting intervals. 
 \item Run \code{rating_scale_table()} and review \code{summary()}.
 \item Use \code{plot()} to visualize category profile quickly.
 }
+
+Save the complete result to retain owner counts, uncertainty status and
+notes. \code{plot(out, type = "counts")} shows global counts; use
+\code{plot(out, type = "thresholds")} for the stored step points. Both support
+\code{\link[=as_ggplot]{as_ggplot()}} without recalculating values. Step figures do not draw stored
+SEs as crossing, gap or curve intervals; inspect \code{threshold_table} separately.
 }
 
 \section{Further guidance}{
@@ -128,13 +153,26 @@ difference.}
 Structured score-support caveats for retained zero-count categories.}
 }
 
+The \code{owner_category_table} contains \code{StepOwner} (facet name), \code{StepFacet}
+(level), \code{Category} (model score), \code{CategoryLabel} (original score), raw and
+weighted counts (\code{RawCount}, \code{Count}), denominators (\code{OwnerRatings},
+\code{OwnerWeight}), \code{Percent}, \code{ZeroCount} and \code{UsageStatus}. Status distinguishes
+observed, not observed, zero weight, no exposure and unavailable counts.
+No-exposure counts are zero but percentages are unavailable.
+
 The \code{threshold_table} data.frame contains:
 \describe{
 \item{Step}{Step label (e.g., \code{Step_1}, \code{Step_2}). Use \code{LowerCategory}
 and \code{UpperCategory} to identify the corresponding score transition.}
 \item{Estimate}{Estimated threshold/step difficulty (logits).}
+\item{StepOwner}{Name of the facet owning the steps, or \code{Common} for RSM.}
 \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
 threshold sets.}
+\item{SE, CI_Lower, CI_Upper, SE_Status, CIEligible, CIUse}{Stored
+step uncertainty and reporting status, without new inference.}
+\item{LowerCategoryLabel, UpperCategoryLabel}{Original scores at the transition.}
+\item{LowerOwnerCount, UpperOwnerCount, OwnerSupportStatus}{Weighted
+counts and support within this threshold owner, not pooled frequencies.}
 \item{GapFromPrev}{Difference between adjacent numbered thresholds within
 the same \code{StepFacet}. Missing thresholds are not skipped to form a gap.
 No automatic category-merging rule is applied.}
@@ -193,6 +231,8 @@ fit <- fit_mfrm(
 categories <- rating_scale_table(fit)
 review <- summary(categories)
 review$summary
+categories$model_context
+head(categories$owner_category_table)
 
 # Bars show observed counts; the line shows model-expected counts
 # Recreate saved tables with the original fit and diagnostics after updating.

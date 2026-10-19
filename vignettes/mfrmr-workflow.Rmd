@@ -34,21 +34,44 @@ knitr::opts_chunk$set(
 
 ## Quick start
 
+By the end of this lesson you should be able to prepare one-rating-per-row
+data, estimate abilities and facet effects, identify results needing review,
+and save an analysis with its assumptions. Start with the synthetic example,
+then adapt the CSV lesson. Follow-up analyses are optional and should answer
+your assessment question.
+
+Use this reading route:
+
+| What you need now | Where to go |
+| --- | --- |
+| Run and understand a first analysis | Quick start, including individual estimates and review messages below |
+| Analyze your own rating sheet | [Use your own CSV](#use-your-own-csv), including stopped checks and wide-to-long reshaping |
+| Interpret fit, precision and rater feedback | [Continue with diagnostics and reporting](#continue-with-diagnostics-and-reporting) |
+| Find the calculation and its research basis | `help("mfrmr_methods_reference")`, then the linked function's method and References sections |
+
 This tutorial follows the ordinary fixed-facet `fit_mfrm()` workflow. To
+plan the number of tasks or raters for an observed score, use
+[Plan an assessment with G theory](mfrmr-gtheory.html); no MFRM fit is required
+for that workflow. To
 choose between fixed facets, shared random raters and Person-specific
 testlets, use `mfrmr_output_guide("models")` or
 `help("mfrmr_workflow_methods")`. The extended models have dedicated tutorials:
 `vignette("mfrmr-random-raters", package = "mfrmr")` and
 `vignette("mfrmr-testlets", package = "mfrmr")`. Their prediction targets and
-reporting support differ; the diagnostics and comprehensive reports below
-require an ordinary `mfrm_fit` result.
+reporting support differ. The diagnostics and reports below follow ordinary
+RSM/PCM fits. Two-family GPCM and corrected JML also have class `mfrm_fit`,
+but require their model-specific result routes; sharing that class does not
+make these ordinary diagnostics available. See `gpcm_capability_matrix()` and
+`vignette("mfrmr-gpcm-scope", package = "mfrmr")` before changing model family.
 
 This example estimates person abilities while accounting for rater severity
 and criterion difficulty. A *facet* is a source of variation in scores; here,
 `Rater` and `Criterion` are facets, and individual raters and criteria are their
 *levels*. The data are synthetic, with one row per rating and scores from 1 to 4.
 
-`head(toy)` shows the first six rows. The quoted column names in `fit_mfrm()`
+The example data are included in the package. The loading line below creates
+`ratings`; you do not need to prepare a file or construct the scores first.
+`head(ratings)` shows the first six rows. The quoted column names in `fit_mfrm()`
 are case-sensitive; `Study` and `Group` are extra labels unused by this model.
 `MML` selects marginal maximum likelihood; `RSM` selects a rating-scale model
 with shared category thresholds (the transitions between adjacent scores).
@@ -61,12 +84,12 @@ silently collapsed into a different scale.
 library(mfrmr)
 
 # Load example ratings and look at the first six rows
-toy <- load_mfrmr_data("example_operational")
-head(toy)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
@@ -88,7 +111,7 @@ results$facet_overview  # One row per facet: number of levels, mean, SD, range
 results$decision
 ```
 
-`<-` saves an object without printing it. Here `toy` holds the data, `fit`
+`<-` saves an object without printing it. Here `ratings` holds the data, `fit`
 holds the model, and `results` holds its summary. `$` selects a named part:
 `results$person_overview` displays just that table. Enter `results` to print
 the full summary.
@@ -97,6 +120,13 @@ The Wright map displays the estimates in logits, the model's measurement units,
 rather than the original 1-to-4 scores. With this example's default orientation,
 higher person estimates mean higher ability; higher rater estimates mean
 stricter ratings, and higher criterion estimates mean greater difficulty.
+
+The native models use the **logistic metric (L-metric), with D = 1**: there
+is no extra 1.7 or 1.702 normal-ogive approximation factor. In this RSM example,
+an ability increase of one unit raises each adjacent-category log odds by one,
+holding other parameters fixed. For GPCM, the effective discrimination
+multiplies that change. A normal ability distribution is a separate assumption
+and does not change the response link. See `?fit_mfrm` for scale conventions.
 
 The overview tables describe distributions: `person_overview` has one row for
 all 48 persons, and `facet_overview` has one row for each facet. `Mean`/`MeanEstimate`
@@ -372,29 +402,47 @@ these four demonstration rows are not sufficient for the intended analysis.
 
 ## Continue with diagnostics and reporting
 
-The following sections reuse the model and diagnostics from **Quick start**.
-They ask three questions: are the estimates interpretable, what needs closer
-inspection, and what information belongs in a report? For your own analysis,
-use `csv_fit` and `csv_diagnostics` in these same helper calls and review your
-own assignment roster if one exists.
+The following sections ask three questions: are the estimates interpretable,
+what needs closer inspection, and what information belongs in a report?
+First select the analysis to carry through every table, figure and export.
+The default uses **Quick start**, including its known assignment roster:
+
+```{r reporting-input}
+analysis_data <- ratings
+fit_toy <- fit
+diag_toy <- diagnostics
+data("mfrmr_example_operational_design", package = "mfrmr")
+analysis_roster <- mfrmr_example_operational_design
+```
+
+**For your CSV, run this replacement block instead.** The downstream object
+names stay the same so the remaining code uses your analysis:
+
+```{r reporting-csv-input, eval = FALSE}
+analysis_data <- ratings
+fit_toy <- csv_fit
+diag_toy <- csv_diagnostics
+analysis_roster <- NULL # Replace with your own planned roster if available
+```
+
+Do not use the packaged roster for your own ratings. `NULL` means planned
+omissions cannot be assessed; it does not mean there are no missing ratings.
+The numerical examples in the prose below describe the synthetic data.
+If your headers or rubric differ, update `person`, `facets`, `score`, the
+rating limits and later `"Rater"`/`"Criterion"` selections as in the CSV lesson.
 
 ### 1. Check the data and estimation record
 
-```{r toy-setup}
-fit_toy <- fit
-diag_toy <- diagnostics
-
-# The packaged roster declares which ratings were planned
-data("mfrmr_example_operational_design", package = "mfrmr")
+```{r ratings-setup}
 data_review_toy <- describe_mfrm_data(
-  data = toy,
+  data = analysis_data,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   rating_min = 1,
   rating_max = 4,
   category_policy = "preserve",
-  expected_design = mfrmr_example_operational_design
+  expected_design = analysis_roster
 )
 data_summary_toy <- summary(data_review_toy)
 data_summary_toy$structural_missingness
@@ -426,7 +474,7 @@ increasing it. Keep the same data, model, method, and planned controls when
 investigating an iteration limit. Choose JML for its fixed-person estimand
 when appropriate, not as a faster substitute for MML.
 
-```{r toy-setup-artifacts, echo = FALSE, eval = is_cran_check}
+```{r ratings-setup-artifacts, echo = FALSE, eval = is_cran_check}
 vignette_artifact("workflow_fit_decision.csv")
 vignette_artifact("workflow_fit_overview.csv")
 ```
@@ -472,9 +520,34 @@ the transitions between scores on the declared rubric:
 ```{r category-review, fig.alt = "Category-use and threshold summaries for the fitted rubric. Sparse categories and transition ordering should be reviewed together with the rating design."}
 scale_toy <- rating_scale_table(fit_toy, diagnostics = diag_toy)
 scale_toy$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
-scale_toy$threshold_table
+scale_toy$model_context
+scale_toy$owner_category_table[, c(
+  "StepFacet", "CategoryLabel", "RawCount", "Count", "Percent", "UsageStatus"
+)]
+scale_toy$threshold_table[, c("StepFacet", "Step", "Estimate", "SE", "CIUse")]
 plot(scale_toy)
+scale_toy$notes
 ```
+
+`StepOwner` tells you which facet supplies the thresholds. This RSM has one
+`Common` family, so its owner counts describe the whole sample. With PCM,
+`step_facet = "Criterion"` gives counts and thresholds for each criterion;
+`step_facet = "Rater"` gives them for each rater. Choose the owner from the
+rubric and analysis question. Criterion-owned thresholds cannot describe
+differences in raters' threshold spread.
+
+`RawCount` counts rating rows; `Count` sums their weights, and `Percent` uses
+the total weight within the indicated owner level. These are not counts of
+independent persons. A category unused by one owner can be common overall.
+`UsageStatus` distinguishes unobserved categories, zero-weight observations
+and owners with no ratings; the last have unavailable percentages. An observed
+zero does not establish that a category is structurally impossible.
+
+The threshold table reuses SEs and intervals from the supplied diagnostics.
+Check `SE_Status`, `CIUse` and `UncertaintySourceStatus` before reporting them.
+Without diagnostics, the same call returns counts and fitted threshold points
+without requesting covariance calculations; its SEs are unavailable. Notes
+remain in the returned object, outside the plot.
 
 The bars show observed category counts; the line shows fitted expected counts.
 Look for rarely used categories, changes in average person measure across
@@ -511,10 +584,10 @@ gaps. Keep their bases separate when reporting:
 
 ```{r diagnostic-bases, fig.alt = "Marginal fit display based on posterior-averaged response probabilities. Its probability basis differs from conditional residual diagnostics."}
 diagnostic_summary_toy$diagnostic_basis[, c("DiagnosticPath", "Status", "ReportingUse")]
-plot_marginal_fit(fit_toy, diagnostics = diag_toy)
+plot(fit_toy, type = "marginal_fit", diagnostics = diag_toy)
 ```
 
-Follow a pairwise warning with `plot_marginal_pairwise()`. Add residual PCA
+Follow a pairwise warning with `plot()`. Add residual PCA
 only when residual structure is relevant to the question, using
 `diagnose_mfrm(fit_toy, residual_pca = "both")`. Report the mode and limits of
 the screen; residual PCA alone does not establish unidimensionality. See
@@ -526,9 +599,7 @@ checks above, then view severity and its uncertainty alongside the screening
 results. Reuse the same fit and diagnostics:
 
 ```{r rater-feedback, fig.alt = "Rater severity estimates with 95% normal intervals on the fitted logit scale. Positive estimates indicate stricter ratings relative to the fitted reference."}
-plot_rater_severity_profile(
-  fit_toy, diagnostics = diag_toy, facet = "Rater", show_bands = FALSE
-)
+plot(fit_toy, type = "rater_severity", diagnostics = diag_toy, facet = "Rater", show_bands = FALSE)
 rater_review <- facet_quality_dashboard(
   fit_toy, diagnostics = diag_toy, facet = "Rater"
 )
@@ -647,8 +718,11 @@ summary(restored_results)$decision
 
 This restores the collected results and diagnostics. The separate dashboard
 object `rater_review` still needs its own `saveRDS()` call as described above.
-With a precomputed fit as input, this archive's replay code assumes that
-`fit` and `diagnostics` already exist. Keep your original data-to-fit script.
+The exported replay script also reloads the complete RDS; it does not need
+`fit` or `diagnostics` from the original session. Run it with
+`source("path/to/mfrmr_results_replay.R", chdir = TRUE)`, replacing the path
+with the exported script's location. Keep your original data-to-fit script
+when you also need to reproduce estimation.
 For a fit replay including its input CSV, and for saving a manuscript table,
 figure, and their notes, follow Section 5 of
 `vignette("mfrmr-reporting-and-apa", package = "mfrmr")`.
@@ -658,6 +732,56 @@ vignette_artifact("workflow_export_files.csv")
 ```
 
 ### Further analyses should answer a stated question
+
+For observed rating agreement, start with the
+[rating-agreement tutorial](mfrmr-rating-agreement.html). Its small runnable
+example shows how to match person-by-task records, distinguish correlation
+from agreement, compare a score source with a reference, and audit missing
+pairs without fitting another model. It also explains why these coefficients
+answer a different question from rater severity or separation reliability.
+
+For prior sensitivity or an external Bayesian extension, export an ordinary
+unanchored, unit-weight RSM/PCM MML specification with `export_mfrm_model()`:
+
+```{r model-export-example}
+# Reuse the fit above; no additional estimation or backend is needed to export.
+stan_model <- export_mfrm_model(
+  fit_toy, tempfile("stan-model-"), format = "stan",
+  acknowledge_sensitive = TRUE
+)
+brms_model <- export_mfrm_model(
+  fit_toy, tempfile("brms-model-"), format = "brms",
+  acknowledge_sensitive = TRUE
+)
+names(stan_model$files)
+model_data <- readRDS(stan_model$files[["model-data.rds"]])
+model_data$categories
+model_data$priors
+```
+
+Each directory contains code, data, category/level mappings and `run.R`.
+`stan_model$output_dir` and `brms_model$output_dir` locate these practice
+bundles; replace `tempfile()` with a study directory to retain them. The
+category table maps the external model's integers back to the original rubric.
+`model_data$levels` identifies the Persons and facet levels, and
+`model_data$step_owners` identifies the shared RSM or facet-specific PCM steps.
+Set `location_prior_sd` and `step_prior_sd` in `export_mfrm_model()` when
+creating a bundle for a different prior choice; both formats use those values.
+Review its README and priors, then run the script from that directory with
+CmdStanR/CmdStan installed (and brms for the second format). Export itself
+needs neither backend. Both formats preserve adjacent-category probabilities,
+the fixed standard-normal ability scale, facet signs and constraints, and
+unordered sum-zero step offsets. Their explicit structural priors make this
+a Bayesian analysis; it does not reproduce MML point estimates or qualify
+frequentist interval coverage. Two-family GMFRM also supports Stan export,
+with explicit component log-slope priors and a `slope-levels.csv` mapping; see
+the [two-family workflow](mfrmr-gpcm-scope.html). The scope excludes one-family
+GPCM, GPCM in brms, JML, anchors,
+nonunit weights, population regression, interactions and shrinkage. Inspect
+sampler diagnostics and prior sensitivity before using the posterior. Exported
+ratings and original labels require the same sharing review as an analysis
+archive. See `?export_mfrm_model` for supported post-processing and prediction
+targets.
 
 | Question | Follow-up |
 | --- | --- |
@@ -672,6 +796,7 @@ vignette_artifact("workflow_export_files.csv")
 | Are forms or waves on a comparable scale? | `mfrmr-linking-and-dff` and `mfrmr-portable-calibration`; common labels alone do not establish linking. |
 | How does a proposed rating design perform under stated assumptions? | `build_mfrm_sim_spec()`, `evaluate_mfrm_recovery()`, and `assess_mfrm_recovery()`; report generating conditions, repetitions, failures, and Monte Carlo uncertainty. |
 | How should new persons be scored under an existing calibration? | `predict_mfrm_units()` and `sample_mfrm_plausible_values()`; reuse an eligible fitted calibration and report the conditioning assumptions. |
+| How certain is a person's placement relative to supplied ability cuts? | For ordinary RSM/PCM, use `cut_scores` in the eligible scoring API and inspect `$decisions`. `apa_table(..., which = "decisions")` retains probabilities, priors and review states. Check whether the scoring prior represents the target population; numerical checks do not establish that match. See `mfrmr-portable-calibration` for interpretation and saved-score reporting; calibration and estimated-prior uncertainty are excluded. |
 
 Missing **attributes** and missing **rating scores** need different models and
 workflows. Neither clustering nor response-score imputation is a prerequisite
@@ -737,9 +862,7 @@ feedback <- facet_quality_dashboard(
 )
 feedback$detail[, c("Level", "N", "Estimate", "SE", "Infit", "Outfit", "MisfitFlag")]
 feedback$settings
-plot_rater_severity_profile(
-  writing_fit, diagnostics = writing_diagnostics, facet = "Rater", show_bands = FALSE
-)
+plot(writing_fit, type = "rater_severity", diagnostics = writing_diagnostics, facet = "Rater", show_bands = FALSE)
 saveRDS(feedback, "writing-feedback.rds")
 archive <- export_mfrm_bundle(
   writing_fit, diagnostics = writing_diagnostics, facet = "Rater",

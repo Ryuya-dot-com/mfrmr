@@ -54,6 +54,13 @@ marginal coefficient SEs cannot replace the required joint covariance.
 Persons retain source EAP and conditional posterior SD. Item fit is averaged
 over source posteriors; \code{TAM::tam.personfit()} uses WLE scores. \code{FitBasis}
 records this distinction without replacing the imported EAP estimates.
+Person \code{Extreme} flags use observed responses and each item's fitted category
+support, including unobserved categories. \code{NObserved} counts responses used
+for this check. \code{ResponseStatus} distinguishes observed, entirely missing,
+and unavailable response information. Entirely missing or unverifiable rows
+have \code{Extreme = NA}; finite posterior scores do not imply nonextreme data.
+Re-import older TAM objects to recover these flags; saved imported objects
+without the source responses cannot reconstruct them.
 
 The public imported-fit surface is deliberately unidimensional and MML-only.
 A \code{tam.jml} object is not silently relabelled as MML, and a TAM fit with

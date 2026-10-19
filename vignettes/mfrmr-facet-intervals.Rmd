@@ -18,11 +18,14 @@ interval describes uncertainty under specified sampling and model assumptions.
 Neither a difference nor an interval excluding zero establishes that a rater
 is scoring incorrectly.
 
-This guide compares two covariance methods for **the same fitted estimates**.
+This guide first compares two covariance methods for **the same fitted estimates**.
 The ordinary method uses the fitted model's observed information. The sandwich
 method also uses the variation in likelihood contributions between independent
 persons, or between explicitly declared larger clusters. It can change interval
-widths without correcting biased estimates. The example uses fictional ratings.
+widths without correcting biased estimates. It then introduces CML, which changes
+the estimator by conditioning out Person parameters, and distinguishes native
+contrasts from contrasts standardized by a fitted population SD. The examples
+use fictional ratings.
 
 ## Fit the model and identify the comparison
 
@@ -76,6 +79,124 @@ same horizontal coordinate. The zero line denotes no difference; it is not a
 threshold of practical importance or a rater-quality rule. Use the size of the
 difference, interval, rubric and shared rating examples together when giving
 feedback.
+
+## Estimate a rater difference without an ability population model
+
+Suppose the target is a fixed rater-severity difference, and a normal ability
+population would be a questionable assumption. For RSM/PCM, conditional maximum
+likelihood (CML) conditions on each person's total across their observed ratings.
+The ability parameter then cancels from the likelihood. This changes the
+estimator, so its estimates need not equal the MML estimates above.
+
+```{r cml-contrast}
+if (requireNamespace("lpSolve", quietly = TRUE)) {
+  cml_ratings <- load_mfrmr_data("example_core")
+  cml_fit <- fit_mfrm(cml_ratings, "Person", c("Rater", "Criterion"), "Score",
+    method = "CML", model = "RSM", rating_min = 1, rating_max = 4,
+    category_policy = "preserve")
+  cml_contrast <- matrix(c(1, -1, 0, 0), nrow = 1,
+    dimnames = list("R01 minus R02", c("R01", "R02", "R03", "R04")))
+  cml_interval <- mfrm_facet_intervals(cml_fit, "Rater", cml_contrast)
+  print(summary(cml_interval))
+  print(summary(cml_fit)$steps)
+  cml_fit$checks
+}
+```
+
+The comparison's `Estimate`, `SE`, `Lower` and `Upper` answer the same native-scale
+rater-difference question. Its covariance comes from the **full conditional
+information**, including jointly estimated criterion effects and steps.
+`summary(cml_fit)$locations` lists the centered facet estimates. Use
+`model = "PCM", step_facet = "Criterion"` when criteria own separate steps.
+The package computes conditional normalizing constants with a generalized ESF
+recursion and checks identification, finite-MLE existence and numerical convergence.
+The optional `lpSolve` package is needed for the finite-MLE check.
+
+```{r cml-contrast-plot, fig.width=7, fig.height=4.2, fig.alt="A CML estimate of the R01 minus R02 severity contrast with a pointwise 95 percent conditional-information Wald interval on the native logit scale."}
+if (requireNamespace("lpSolve", quietly = TRUE)) plot(cml_interval, comparison = FALSE)
+```
+
+Save `cml_fit` and `cml_interval` with `saveRDS()` to retain the covariance,
+contrast and checks. The dedicated `mfrm_cml_fit` has no Person estimates or
+population distribution. Ordinary fit diagnostics and consolidated
+`mfrm_results()` reports are outside this initial route; the interval object's
+own summary and plot are available.
+
+CML can remain consistent when the number of Persons grows with a fixed number
+of ratings per Person, under a correct conditional response model, independent
+Persons, fixed structural dimension and increasing identifiable information.
+This does not guarantee nominal Wald coverage in a small sample. Dependence or
+response-dependent missingness can still invalidate the conditional model.
+Extreme totals contribute no conditional information. A facet constant within
+each Person, such as school membership, disappears on conditioning: its main
+effect cannot be estimated by CML. The full-model route refuses a deficient
+parameterization. For identifiable interaction contrasts despite other aliased
+directions, use the explicit `fit_scope = "comparisons"` route demonstrated in
+`vignette("mfrmr-linking-and-dff")`; unavailable targets remain missing.
+
+A bounded check reused the earlier MML comparison's data-generation settings and
+seeds: RSM/PCM, 80/320 Persons, and either six ratings under a normal ability
+distribution or three ratings under a standardized-lognormal ability distribution
+with two sparse rosters. All 1,600 CML fits returned the four prespecified native
+contrasts. In the combined skewed/sparse conditions, truth coverage was
+93.0–98.0%, compared with the earlier MML sandwich range of 87.0–95.5% on the
+same datasets. Across all conditions CML coverage ranged from 92.5 to 98.5%.
+Each condition has 200 replications, giving MCSE about 1.54 percentage points
+near 95%. These ranges describe particular conditions and dependent contrasts;
+they do not establish nominal coverage for every design. Because population
+shape and roster sparsity changed together, this comparison does not isolate
+their separate effects.
+
+## Standardize by the same fit's estimated ability SD
+
+For an MML fit with `population_formula = ~1`,
+`mfrm_facet_intervals(fit, "Rater", contrasts = contrast, scale = "standardized")`
+divides the contrast by that fit's estimated ability population SD. The contrast
+must have coefficients summing to zero. It uses the joint delta method, including
+the covariance between the contrast and the estimated SD; simply dividing an
+existing interval by the fitted SD omits that uncertainty.
+
+If the native contrast is \(\delta\), \(\lambda=\log\sigma^2\), and
+\(d=\delta\exp(-\lambda/2)\), its derivative with respect to
+\((\delta,\lambda)\) is \((1/\sigma,-d/2)\). The full fitted covariance is
+transformed by this derivative. A near-zero estimated SD can make the ratio and
+its normal approximation unstable. This is an effect-size contrast, not the
+Wald statistic obtained by dividing by the contrast's SE.
+
+CML estimates no population SD, so this particular standardized contrast is
+unavailable from a CML fit alone. A standard deviation of estimated Person
+scores is not a substitute. Fixed-standard-normal MML uses a fixed SD of one;
+it should not be described as estimating the standardizer. Conditional-normal
+latent regression has a residual SD, which is a different estimand and is not
+accepted by this population-SD transformation.
+
+## Read fixed values and group constraints correctly
+
+In the ordinary fixed-population RSM/PCM route, supplied anchors and group
+means are treated as exact. Their source calibration error is not included.
+`Status = "fixed"`, SE zero and missing bounds mean that the requested value
+cannot vary under the declared constraints, rather than that it was estimated
+with perfect precision.
+
+This can happen even without a direct anchor for that level. With four raters
+centered across the whole facet, fixing the first three raters' mean at 0.10
+also fixes the fourth at -0.30. The first three can still differ; their
+individual intervals may be available while an interval for their mean is not.
+A difference between an anchored and a free rater can also remain uncertain.
+
+The calculation carries the full joint covariance through the fitted
+constraints and your comparison coefficients. It retains the uncertainty due
+to estimating other facets and thresholds. Adding printed SEs, or calculating
+information only for the selected rater, cannot replace that calculation.
+For cross-software comparisons, note that
+[TAM's `tam.se()` documentation](https://alexanderrobitzsch.github.io/TAM/reference/tam.se.html)
+explicitly describes ignoring covariances between parameter estimates.
+Match the uncertainty calculation as well as the response model.
+
+Anchored models with an estimated population have a separate limitation:
+their point estimates are supported, but the native location/population
+interval helpers currently exclude anchors and group constraints. See the
+[linking guide](mfrmr-linking-and-dff.html) for the distinction.
 
 ## Prepare a sheet for one rater
 
@@ -132,8 +253,19 @@ or decide whether a rater is good or bad. Inspect the full saved interval
 result and its numerical cautions before preparing the sheet. Missing inputs
 are explained. If multiple attached interval results contain the selected
 individual coefficient, choose one explicitly with `interval = "raters"`.
-GPCM, fitted interactions, imported fits, testlet and shared-random-rater
-models require their own model-specific reporting routes.
+The supported contents depend on the fitted model:
+
+| Fitted model | Individual sheet |
+| --- | --- |
+| Additive RSM/PCM, MML | Severity, supplied fixed-facet intervals, ordinary diagnostics and category use as illustrated here. |
+| Additive RSM/PCM, ordinary JML | Descriptive severity, supplied diagnostics and category use; no formal fixed-facet interval is added. |
+| Two-family GPCM, MML | Experimental location, component slope, category use and supplied posterior residuals. Only saved component-slope intervals appear in this sheet. |
+| One-family GPCM, corrected JML, fitted interactions, imported fits, testlet or shared-random-rater models | Individual sheets are unavailable; use the model-specific analyst results and reports. |
+
+For the two-family route, see the
+[GPCM guide](mfrmr-gpcm-scope.html). Its locations, slopes and residuals have
+different meanings from the ordinary-model quantities above. A successful
+sheet export does not establish interval coverage or rater competence.
 
 ### Save the analysis and keep a copy of the sheet
 
@@ -160,6 +292,35 @@ recipient HTML contains the selected summaries described above. Copying the
 HTML does not require sending the RDS file. Reading the saved analysis and
 preparing another sheet does not rerun estimation or diagnostics; it also
 does not update an earlier analysis to reflect new ratings.
+
+### Keep interpretation with exported tables
+
+For a table-based handoff, request the recipient's tables rather than using
+the full analyst export. Retain `interpretation_notes` alongside the numbers:
+it explains the overall review status, the audience and each section, including
+missing inputs. The HTML and Markdown formats already show these explanations
+beside their sections.
+
+```{r feedback-table-files}
+sheet_tables <- mfrm_report(saved_results, style = "rater", facet = "Rater",
+  rater = "R01", interval = "raters", output = "tables", max_cases = 5)
+sheet_tables$interpretation_notes
+table_dir <- tempfile("rater-tables-")
+dir.create(table_dir)
+for (name in names(sheet_tables)) {
+  if (ncol(sheet_tables[[name]]) > 0) {
+    write.csv(sheet_tables[[name]], file.path(table_dir, paste0(name, ".csv")),
+      row.names = FALSE)
+  }
+}
+```
+
+Choose a permanent folder instead of `tempfile()` for continuing work.
+Sections with no supplied table are explained in `interpretation_notes`;
+their absence is not evidence of a satisfactory result. These CSV files do
+not contain the fitted analysis and cannot be used to reconstruct it. Review
+the selected rating examples before sharing, even though source identifiers
+are omitted. Use `max_cases = 0` to exclude those examples.
 
 ## Carry the same intervals into figures and reports
 
@@ -231,7 +392,8 @@ reopened <- readRDS(saved_file)
 stopifnot(identical(reopened$facet_intervals, feedback_results$facet_intervals))
 ```
 
-Replay also writes the RDS here because the results contain saved intervals.
+Requesting replay also writes the complete RDS. The script reloads it without
+requiring the original session's fit, diagnostics or interval variables.
 No plots are requested in this example. Add `"plots"` to export available
 figures, or use `preset = "starter"` for the fuller archive. This export
 `preset` selects file contents; a plotting `preset` such as `"monochrome"`

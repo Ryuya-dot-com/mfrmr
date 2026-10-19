@@ -38,9 +38,11 @@ supplied explicitly; see the Person-screening boundary below.}
 
 \item{omit_extreme}{Omit extreme-only elements.}
 
-\item{max_iter}{Iteration cap.}
+\item{max_iter}{Maximum number of repeated cell-estimation passes recorded
+in \code{iteration}; the baseline calibration stays fixed throughout.}
 
-\item{tol}{Convergence tolerance.}
+\item{tol}{Between-pass change tolerance for the iteration log. This does
+not control the tolerance of the bounded scalar likelihood optimizer.}
 }
 \value{
 An object of class \code{mfrm_bias} with:
@@ -83,22 +85,30 @@ unexpectedly harsh on Criterion 2 despite being lenient overall.
 Mathematically, the bias term \eqn{b_{jc}} for rater \eqn{j} on
 criterion \eqn{c} modifies the linear predictor:
 
-\deqn{\eta_{njc} = \theta_n - \delta_j - \beta_c - b_{jc}}
+\deqn{\eta_{njc} = \theta_n - \delta_j - \beta_c + b_{jc}}
 
-For \code{RSM} / \code{PCM}, the function estimates \eqn{b_{jc}} from the residuals
-of the fitted additive model using an iterative recalibration screen aligned
-with the many-facet bias literature (Myford & Wolfe, 2003, 2004):
+Here the example uses negatively oriented rater and criterion facets.
+The returned \verb{Bias Size} is always an additive shift in the score predictor:
+positive values increase expected scores; negative values decrease them.
+Each cell's shift is estimated by maximizing its conditional likelihood
+within \verb{[-max_abs, max_abs]}, holding fitted person measures, facet values,
+steps and slopes fixed. For \code{RSM} / \code{PCM}, an interior solution satisfies
+the weighted score equation:
 
-\deqn{b_{jc} = \frac{\sum_n (X_{njc} - E_{njc})}
-                    {\sum_n \mathrm{Var}_{njc}}}
+\deqn{\sum_n w_{njc} \{X_{njc} - E_{njc}(b_{jc})\} = 0.}
 
-Each iteration updates expected scores using the current bias estimates,
-then re-computes the bias. Convergence is reached when the maximum absolute
-change in bias estimates falls below \code{tol}. For \code{GPCM}, the same
-additive-bias idea is evaluated with the slope-aware GPCM kernel and
-conditional profile-likelihood follow-up columns; those quantities remain
-screening evidence because theta, facet, step, and slope estimates are held
-fixed.
+With unit weights, \eqn{w_{njc}=1}. The conditional information gives
+\eqn{\mathrm{SE}(\hat b) = [\sum_n w_{njc}
+\mathrm{Var}_{njc}(\hat b)]^{-1/2}}. For \code{GPCM}, the score and information
+include the observation's slope and squared slope, respectively, and
+conditional profile-likelihood columns are also returned. All these
+quantities are plug-in screening evidence: JML person measures or MML EAP
+scores and the calibration parameters are treated as known. Their estimation
+uncertainty, including uncertainty in supplied anchors, is not propagated.
+A fixed rater severity can therefore have a nonzero cell bias and positive
+bias SE: the fixed severity and the cell's additional shift are different
+quantities. A shift near \code{max_abs} needs review; a search bound is not
+evidence of a well-determined effect.
 \itemize{
 \item For two-way mode, use \code{facet_a} and \code{facet_b} (or \code{interaction_facets}
 with length 2).
@@ -135,20 +145,23 @@ interaction effects.
 
 Prioritize rows with:
 \itemize{
-\item larger \verb{|Bias Size|} (effect on logit scale; \eqn{> 0.5} logits is
-typically noteworthy, \eqn{> 1.0} is large)
-\item larger \verb{|t|} among the screening metrics (\eqn{|t| \ge 2} suggests a
-screen-positive interaction cell)
+\item larger \verb{|Bias Size|}, assessed against a substantively chosen logit
+threshold rather than a universal small/large-effect rule
+\item larger \verb{|t|} among the screening metrics (the default review rule is
+\eqn{|t| \ge 2}, not a validated fairness decision)
 \item smaller \code{Prob.} among the screening metrics
 }
 
-A positive \verb{Obs-Exp Average} means the cell produced \emph{higher} scores
-than the additive model predicts (unexpected leniency); negative
-means unexpected harshness.
+Use \verb{Bias Size} for the direction of the departure from the baseline model.
+\verb{Expctd Score} and \verb{Obs-Exp Average} use expectations \emph{after} adding the
+fitted cell shift. The latter is a remaining score discrepancy and is
+usually close to zero at an interior \code{RSM} / \code{PCM} solution; it is not the
+original departure from the additive model.
 
-\code{iteration} helps verify whether iterative recalibration stabilized.
-If the maximum change on the final iteration is still above \code{tol},
-consider increasing \code{max_iter}.
+\code{iteration} records changes between repeated estimates of the same
+conditional cell problems. These passes do not refit person or facet
+parameters, and increasing \code{max_iter} does not turn this screen into a
+jointly fitted interaction model.
 }
 
 \section{Typical workflow}{
@@ -157,7 +170,7 @@ consider increasing \code{max_iter}.
 \item Fit and diagnose model.
 \item Run \code{estimate_bias(...)} for target interaction facets.
 \item Review \code{summary(bias)} and \code{bias$table}.
-\item Visualize/report via \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} and \code{\link[=build_fixed_reports]{build_fixed_reports()}}.
+\item Visualize/report via \link[=plot.mfrm_fit]{plot(x, type = "bias")} and \code{\link[=build_fixed_reports]{build_fixed_reports()}}.
 }
 }
 
@@ -167,12 +180,17 @@ In \code{bias$table}, the most-used columns are:
 \itemize{
 \item \verb{Bias Size}: estimated interaction effect \eqn{b_{jc}} (logit scale)
 \item \code{t} and \code{Prob.}: screening metrics, not formal inferential quantities
-\item \verb{Obs-Exp Average}: direction and practical size of observed-vs-expected
-gap on the raw-score metric
+\item \code{S.E.}: conditional information-based SE of the cell shift, with the
+calibration held fixed
+\item \verb{Obs-Exp Average}: remaining observed-minus-expected average after the
+fitted shift, on the raw-score metric
 \item for \code{GPCM}, \verb{LR ChiSq}, \verb{LR Prob.}, and \verb{Profile CI Lower} /
 \verb{Profile CI Upper}: conditional profile-likelihood checks for a single
 additive bias shift, holding the fitted person, facet, step, and slope
-estimates fixed
+estimates fixed. Calibration uncertainty is not propagated. Check
+\verb{Profile CI Status}: \verb{limited by search range} marks a retained search
+limit, not a computed likelihood-ratio endpoint. These are screening
+approximations, not formal fairness tests.
 }
 
 The \code{chi_sq} element provides a fixed-effect heterogeneity screen across all
@@ -181,9 +199,13 @@ interaction cells.
 
 \section{Recommended next step}{
 
-Use \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} to inspect the flagged cells visually, then
+Use \link[=plot.mfrm_fit]{plot(x, type = "bias")} to inspect the flagged cells visually, then
 integrate the result with DFF, linking, or substantive scoring review before
 making formal claims about fairness or invariance.
+Save the \code{mfrm_bias} object for repeat use. \code{\link[=bias_interaction_report]{bias_interaction_report()}} adds
+explicit screening rules without refitting; plotting the saved report keeps
+those rules. \code{\link[=mfrm_results]{mfrm_results()}} has a separate bias-screen collection route;
+saving a standalone bias result does not automatically attach it there.
 }
 
 \section{References}{
@@ -218,13 +240,13 @@ s_bias$overview
 # Look for: `MaxAbsBias` < ~0.5 logits and `Significant = 0` mean
 #   no cell exceeded the screen. The `BonferroniSignificant` /
 #   `HolmSignificant` columns count cells that survive multiple-
-#   testing correction; both being 0 is a stronger "no bias"
-#   signal than the raw screen-positive count alone.
+#   testing adjustment to screening tail areas. Zero flags do not
+#   establish absence of bias or equivalence.
 s_bias$top_rows
 # Look for: rows with `|t|` > 2 and |Bias Size| > 0.5 logits warrant
-#   review (large effect AND statistically reliable). Rows with only
-#   one of those triggered are usually small-cell artefacts.
-p_bias <- plot_bias_interaction(bias, draw = FALSE)
+#   review. These cutoffs do not establish statistical reliability;
+#   inspect cell counts, uncertainty and substantive consequences.
+p_bias <- plot(bias, type = "bias", draw = FALSE)
 p_bias$data$plot
 
 }

@@ -50,3 +50,6 @@ Library/
 Outputs/
 validation-results/
 release-candidates/
+
+# Retained local validation records; excluded from Git, not disposable scratch
+/tmp/

@@ -147,7 +147,7 @@ descriptive follow-up prompts, not standalone evidence of rater bias.
 \enumerate{
 \item Run \code{fair_average_table(fit, ...)}.
 \item Inspect \code{summary(t12)} and \code{t12$stacked}.
-\item Visualize with \code{\link[=plot_fair_average]{plot_fair_average()}}.
+\item Visualize with \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}.
 }
 }
 
@@ -193,7 +193,7 @@ fair-average value.}
 availability (\code{ok} or \code{regularized}) does not establish inferential validity.
 \code{FairCIReportingUse} distinguishes diagnostic-only and unavailable rows.
 Full-refit coverage remains unverified. For RSM/PCM, this table does not
-supply fair-score SEs; \code{\link[=plot_fair_average]{plot_fair_average()}} can compute a conditional
+supply fair-score SEs; \link[=plot.mfrm_fit]{plot(x, type = "fair_average")} can compute a conditional
 interval from a fitted model by propagating only the focal measure SE.
 Summaries identify \code{FairMetric}: FairM for mean/both reference tables, FairZ
 for zero-reference tables, with matching score/SE column names.

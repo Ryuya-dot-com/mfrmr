@@ -82,9 +82,9 @@ support.
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-# Two balanced 12-Person waves retain every Rater and Criterion.
-d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person \%in\% people[13:24], , drop = FALSE]
+# Two balanced 24-Person waves retain every Rater and Criterion.
+d1 <- toy[toy$Person \%in\% people[1:24], , drop = FALSE]
+d2 <- toy[toy$Person \%in\% people[25:48], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -100,5 +100,5 @@ review$group_view_index
 }
 \seealso{
 \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}, \code{\link[=detect_anchor_drift]{detect_anchor_drift()}},
-\code{\link[=build_equating_chain]{build_equating_chain()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, \link{mfrmr_linking_and_dff}
+\code{\link[=build_equating_chain]{build_equating_chain()}}, \link[=plot.mfrm_anchor_drift]{plot(x)}, \link{mfrmr_linking_and_dff}
 }

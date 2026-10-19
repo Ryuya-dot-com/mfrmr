@@ -28,9 +28,11 @@ export_mfrm_results(
 underscores.}
 
 \item{include}{Export components. \code{"default"} expands to \code{"summary"},
-\code{"tables"}, \code{"html"}, \code{"rds"}, \code{"replay"}, and \code{"manifest"}. Add
+\code{"tables"}, \code{"html"}, \code{"rds"}, \code{"replay"}, and \code{"manifest"}.
+\code{"replay"} always includes \code{"rds"} to reload the complete saved result. Add
 \code{"report"} to write \code{\link[=mfrm_report]{mfrm_report()}} tables plus Markdown and HTML; add
-\code{"plots"} to write available plot routes as PNG files, or use \code{"all"}.}
+\code{"plots"} to write available plot routes as PNG files with separate
+title/notes CSV files, or use \code{"all"}.}
 
 \item{preset}{Optional reader-facing analysis-archive preset. \code{"starter"} adds the
 report and plot routes to the default files and writes \code{index.html} with
@@ -75,16 +77,25 @@ evidence-summary, and reporting-template CSVs plus Markdown and HTML;
 \item a lightweight HTML report equivalent to \code{mfrm_results(x, output = "html")}
 for the already-created object;
 \item an \code{.rds} copy of the \code{mfrm_results} object;
-\item a replay \code{.R} script, reloading the saved result when additional inference
-or posterior diagnostics are attached;
+\item a replay \code{.R} script that reloads the complete exported result;
+\item optional PNG figures and matching \verb{_plot_\{type\}_notes.csv} files. Each
+CSV retains \code{\link[=plot_data]{plot_data()}} notes and their source-specific columns, with
+suggested titles identified by \code{Type = "title"}. Titles and explanatory
+notes remain outside the image; the starter index links each PNG to its CSV.
+A multi-plot \code{fit} bundle produces one PNG/CSV pair per member, named
+\verb{_plot_fit_wright_map}, \verb{_plot_fit_pathway_map} and
+\verb{_plot_fit_category_characteristic_curves}, rather than one combined PNG;
 \item a written-files manifest and compact export summary.
 }
 
-For testlet, random-rater and ordinary results with saved posterior response
-diagnostics, GPCM inference or RSM/PCM fixed-facet intervals, replay reloads
-the exported RDS without
-refitting, rescoring or resampling. Requesting \code{"replay"} also includes
-\code{"rds"}. Run the script from the exported folder. Stored prediction settings,
+For every supported result type, replay reloads the exported RDS without
+reconstructing the analysis, refitting, rescoring or resampling. Requesting
+\code{"replay"} also includes \code{"rds"}; source-session variables such as \code{fit}
+and \code{diagnostics} are not required. Run the script with
+\code{source("path/to/prefix_replay.R", chdir = TRUE)}, replacing the path with
+the exported script's location, or run it from the exported folder.
+Use \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for a separate refitting script.
+Stored prediction settings,
 unavailable rows, numerical checks and interval meanings travel with the
 result. A bootstrap interval may have infinite endpoints; exports retain
 them instead of substituting finite ordinary intervals.
@@ -111,14 +122,15 @@ Wright-map first screen.
 \donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )

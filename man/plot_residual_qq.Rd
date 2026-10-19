@@ -31,6 +31,12 @@ fitted Rasch-family model the residuals are approximately N(0, 1),
 so deviations from the reference line diagnose distributional
 misfit that mean-square summaries may miss.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -67,12 +73,13 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_residual_qq(fit, draw = FALSE)
+p <- plot(fit, type = "residual_qq", draw = FALSE)
 head(p$data$data)
 # Look for: points hugging the y = x reference line. Heavy upper-
 #   right tails indicate persons whose residual aggregates exceed
-#   the standard normal expectation; pair with `plot_unexpected()`
+#   the standard normal expectation; pair with `plot()`
 #   for case-level follow-up. This is an exploratory screen; do
 #   not treat tail behaviour as a definitive normality test.
 }
 }
+\keyword{internal}

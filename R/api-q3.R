@@ -88,7 +88,7 @@
 #' @param min_pairs Minimum number of persons with finite aggregated residuals
 #'   at both levels required to retain a pair; a single integer of at least
 #'   three. Unavailable pairs remain in the table with `NA` correlations and
-#'   flags (mirrors [plot_local_dependence_heatmap()]).
+#'   flags (mirrors [plot(x, type = "local_dependence")][plot.mfrm_fit]).
 #' @param yen_threshold Legacy-named argument retained for compatibility. It
 #'   applies the strict absolute heuristic `|Q3-style| > threshold` (default
 #'   `0.20`). Yen (1984) did not propose this as a general cutoff, and it is not
@@ -126,9 +126,19 @@
 #'   \item{`thresholds`}{The thresholds used, for reproducibility. The `yen`
 #'     name is retained for compatibility.}
 #'   \item{`facet`}{The facet whose levels were paired.}
+#'   \item{`notes`}{Residual aggregation and interpretation qualifications,
+#'     retained with the saved result.}
 #' }
 #'
-#' @section References:
+#' Save the complete result with [base::saveRDS()] and export `q3$pairs` or
+#' `q3$summary` with [utils::write.csv()]. There is no dedicated `plot(q3)`
+#' method. To obtain its companion matrix, use
+#' `plot(fit, type = "local_dependence", diagnostics = diagnostics, facet = facet,
+#' min_pairs = min_pairs, draw = FALSE)` with the same inputs. Save that plot
+#' payload separately for conversion with [as_ggplot()] without recalculation.
+#' The heatmap displays correlations; it does not apply the three flag rules.
+#'
+#' @references
 #' - Yen, W. M. (1984). Effects of local item dependence on the fit
 #'   and equating performance of the three-parameter logistic model.
 #'   *Applied Psychological Measurement, 8*(2), 125-145.
@@ -149,7 +159,7 @@
 #'   appropriate cut-off? *Journal of Educational Measurement, 62*(2),
 #'   345-359. \doi{10.1111/jedm.12432}
 #'
-#' @seealso [plot_local_dependence_heatmap()], [diagnose_mfrm()]
+#' @seealso [plot(x, type = "local_dependence")][plot.mfrm_fit], [diagnose_mfrm()]
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
@@ -271,6 +281,7 @@ q3_statistic <- function(fit,
                    marais = marais_threshold,
                    relative_offset = relative_offset),
     facet = facet,
+    notes = h$data$caption,
     calculation_version = 2L
   )
   class(out) <- c("mfrm_q3", "list")

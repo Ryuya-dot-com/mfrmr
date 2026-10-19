@@ -27,7 +27,10 @@ dif_interaction_table(
 
 \item{data}{Optional data frame with the group column. If \code{NULL}
 (default), the data stored in \code{fit$prep$data} is used, but it
-must contain the \code{group} column.}
+must contain the \code{group} column.
+All fitted response columns, including the weight column if used, are
+required. Subsets and repeated responses follow \code{\link[=analyze_dff]{analyze_dff()}}'s
+response-matching contract; unmatched rows remain visible in \verb{$cases}.}
 
 \item{min_obs}{Minimum observations per cell. Cells with fewer than
 this many observations are marked sparse; scaled residuals and magnitude
@@ -46,6 +49,7 @@ average, in score units. Default \code{0.5}. This is a descriptive magnitude rul
 Object of class \code{mfrm_dif_interaction} with:
 \itemize{
 \item \code{table}: tibble with per-cell statistics and flags.
+\item \code{cases}: requested-row matching and exclusion audit.
 \item \code{summary}: tibble summarizing flagged and sparse cell counts.
 \item \code{gpcm_boundary}: for \code{GPCM} fits, a capability-boundary table.
 \item \code{config}: list of analysis parameters.
@@ -62,6 +66,7 @@ model rather than re-estimating it. For each facet-level x group-value cell,
 it computes:
 \itemize{
 \item N: number of observations in the cell
+\item NPersons: number of distinct Persons in the cell, not an independence certificate
 \item ObsScore: sum of observed scores
 \item ExpScore: sum of expected scores
 \item ObsExpAvg: mean observed-minus-expected difference
@@ -87,6 +92,7 @@ For plot selection and follow-up diagnostics, see
 
 \itemize{
 \item \verb{$table}: the full interaction table with one row per cell.
+\item \verb{$cases}: requested-row matching and exclusion audit, also kept by \code{summary()}.
 \item \verb{$summary}: overview counts of flagged and sparse cells.
 \item \verb{$config}: analysis configuration parameters.
 \item \verb{$gpcm_boundary}: for \code{GPCM} fits, a capability-boundary table
@@ -115,7 +121,7 @@ older saved tables with this function using the fitted model; no refit is needed
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Run \code{dif_interaction_table(fit, diag, facet = "Rater", group = "Gender", data = df)}.
 \item Inspect \verb{$table} for flagged cells.
-\item Visualize with \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}.
+\item Visualize with \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}.
 }
 }
 
@@ -133,6 +139,6 @@ head(int$table[, c("Level", "GroupValue", "ObsExpAvg", "flag_bias")])
 }
 }
 \seealso{
-\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=dif_report]{dif_report()}},
+\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, \code{\link[=dif_report]{dif_report()}},
 \code{\link[=estimate_bias]{estimate_bias()}}
 }

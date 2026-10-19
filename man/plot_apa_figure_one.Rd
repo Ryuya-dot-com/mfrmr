@@ -56,6 +56,12 @@ design, and stability checks produce one warning and a visible
 report-ready evidence.
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -92,15 +98,16 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_apa_figure_one(fit, draw = FALSE)
+p <- plot(fit, type = "apa_summary", draw = FALSE)
 names(p$data)
 }
 }
 \seealso{
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} (\code{type = "wright"}),
-\code{\link[=plot_rater_severity_profile]{plot_rater_severity_profile()}}, \code{\link[=plot_threshold_ladder]{plot_threshold_ladder()}},
+\link[=plot.mfrm_fit]{plot(x, type = "rater_severity")}, \link[=plot.mfrm_fit]{plot(x, type = "thresholds")},
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
 }
 \concept{confidence intervals}
 \concept{reporting workflow}
 \concept{visual diagnostics}
+\keyword{internal}

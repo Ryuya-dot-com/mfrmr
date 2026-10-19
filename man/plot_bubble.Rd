@@ -129,8 +129,14 @@ Points are colored by facet for easy identification.
 \enumerate{
 \item Fit a model with \code{\link{fit_mfrm}()}.
 \item Compute diagnostics once with \code{\link{diagnose_mfrm}()}.
-\item Call \code{plot_bubble(fit, diagnostics = diag)} to inspect the most extreme elements.
+\item Call \code{plot(fit, type = "bubble", diagnostics = diag)} to inspect the most extreme elements.
 }
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -184,12 +190,12 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Compare facet estimates (horizontal axis) with Infit (vertical axis)
-plot_bubble(fit, diagnostics = diagnostics)
+plot(fit, type = "bubble", diagnostics = diagnostics)
 # Above the review band: more response variation than expected; below: less
 # By default, larger bubbles indicate greater precision, not greater misfit
 
 # Optional: compare Infit (horizontal) and Outfit (vertical) directly
-plot_bubble(fit, diagnostics = diagnostics, view = "infit_outfit")
+plot(fit, type = "bubble", diagnostics = diagnostics, view = "infit_outfit")
 # Here bubble size represents observation count; bands are review aids
 }
 }
@@ -197,3 +203,4 @@ plot_bubble(fit, diagnostics = diagnostics, view = "infit_outfit")
 \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},
 \code{\link{plot_fair_average}}
 }
+\keyword{internal}

@@ -174,13 +174,15 @@ more precise simulation summaries than the category frequencies from just 40
 completions. Labels show percentages as well as color, so the figure can be
 read without distinguishing colors. Each row is a marginal prediction;
 dependence between rows is preserved in the joint completions.
+The figure shows predicted category probabilities for the missing assigned
+ratings; its description stays outside the plotting area.
 
 ```{r imputation-diagnostics, fig.width=6.5, fig.height=8, fig.alt="Category probabilities for thirty missing assigned ratings; each cell shows its percentage."}
 probabilities <- example$probability_mean
 n <- nrow(probabilities)
 image(1:4, seq_len(n), t(probabilities[n:1, , drop = FALSE]),
       zlim = c(0, 1), col = colorRampPalette(c("#ffffd9", "#7fcdbb", "#41b6c4"))(64), axes = FALSE,
-      xlab = "Score", ylab = "", main = "Predicted category probabilities")
+      xlab = "Score", ylab = "", main = "")
 axis(1, at = 1:4)
 axis(2, at = seq_len(n), labels = rev(impute_ids), las = 1, cex.axis = .7)
 for (j in 1:4) text(j, seq_len(n),

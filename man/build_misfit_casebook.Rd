@@ -92,6 +92,6 @@ casebook$top_cases
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
-\code{\link[=displacement_table]{displacement_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}
+\code{\link[=displacement_table]{displacement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")}
 }

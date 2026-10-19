@@ -105,8 +105,10 @@ Separately use \code{ci <- confint(fit)} for experimental component log-Wald int
 and attach \code{intervals = list(slopes = ci, curves = curves)}. Local numerical
 checks do not establish global identification or sampling coverage; failed
 checks retain missing bounds.
-For fixed-grid EM, an explicit \code{confint(fit, method = "profile", slope = c(Task = "t1"))}
+An explicit \code{confint(fit, method = "profile", slope = c(Task = "t1"))}
 profiles one two-family component, using the actual owner/level names.
+It preserves the fitted fixed or adaptive integration method; adaptive nodes,
+scales and Jacobians are recomputed throughout the constrained searches.
 It retains nuisance reoptimization, numerical checks, unavailable endpoints
 and a same-target Wald comparison. Neither method has qualified coverage.
 Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare
@@ -114,8 +116,7 @@ refits with the same engine and integration method. Both routes retain
 each order's experimental log-Wald checks. Optional \code{adaptive_quad_points} also adds fixed-calibration
 integration checks for two families; the posterior moments in that review
 are numerical diagnostics, not a Person-scoring workflow. Person-score
-comparisons remain unavailable for two families. Adaptive two-family fitting
-does not yet supply profile intervals.
+comparisons remain unavailable for two families.
 For both engines, \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
 predictive residuals with fixed calibration, including descriptive Infit/Outfit
 without reference cutoffs. It retains the fitted integration method and

@@ -141,6 +141,6 @@ effects in language assessment: A comparison of ChatGPT vs human raters.
 \emph{Research Methods in Applied Linguistics, 4}, 100205.
 }
 \seealso{
-\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
+\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "agreement")},
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}}
 }

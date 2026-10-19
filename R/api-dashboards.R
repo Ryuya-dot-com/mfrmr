@@ -20,7 +20,8 @@
 #'   marking facet estimates near the fitted origin. The default `NULL`
 #'   disables this flag because origin proximity is not evidence that a rater
 #'   avoids extreme score categories. Use [data_quality_report()] for observed
-#'   category-use and restriction-of-range screening.
+#'   category-use screening and [rater_centrality_table()] for model-based
+#'   indirect centrality indices.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
 #'   level.
 #' @param bias_abs_t_warn Absolute `t` cutoff used when deriving bias-row
@@ -47,7 +48,8 @@
 #'   \eqn{|\mathrm{Estimate}| <} `central_tendency_max` logits are marked.
 #'   This only describes proximity to the fitted origin and must not be
 #'   interpreted as central-category use or restriction of range. Those are
-#'   response-pattern questions handled by [data_quality_report()].
+#'   response-pattern questions; see [data_quality_report()] and
+#'   [rater_centrality_table()] for their distinct descriptive indices.
 #' - **Bias**: elements involved in \eqn{\ge} `bias_count_warn`
 #'   screen-positive interaction cells (from [estimate_bias()]) are flagged.
 #'
@@ -101,7 +103,7 @@
 #' - `bias_results`: the `mfrm_bias` bundle (or list of bundles)
 #'   when `bias_results` was supplied; `NULL` otherwise
 #'
-#' @seealso [diagnose_mfrm()], [estimate_bias()], [plot_qc_dashboard()]
+#' @seealso [diagnose_mfrm()], [estimate_bias()], [plot(x, type = "qc")][plot.mfrm_fit]
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
@@ -590,7 +592,7 @@ dashboard_draw_plot <- function(tbl,
       yaxt = "n",
       xlab = "Estimate (logits)",
       ylab = "",
-      main = main %||% paste0("Facet quality: ", facet)
+      main = ""
     )
     graphics::segments(0, y, rev(tbl$Estimate), y, col = "gray70")
     graphics::points(rev(tbl$Estimate), y, pch = 16, col = rev(cols))
@@ -603,7 +605,6 @@ dashboard_draw_plot <- function(tbl,
   tbl <- tbl[tbl$AnyFlag %in% TRUE, , drop = FALSE]
   if (nrow(tbl) == 0) {
     graphics::plot.new()
-    graphics::title(main = main %||% paste0("Facet quality: ", facet))
     graphics::text(0.5, 0.5, "No observed flags; inspect missing diagnostics and notes")
     return(invisible(NULL))
   }
@@ -616,7 +617,7 @@ dashboard_draw_plot <- function(tbl,
     names.arg = labels,
     col = cols,
     las = if (isTRUE(label_angle >= 45)) 2 else 1,
-    main = main %||% paste0("Facet quality: ", facet),
+    main = "",
     ylab = "Flag count"
   )
   graphics::abline(h = 0, col = "gray60")
@@ -633,7 +634,7 @@ dashboard_draw_plot <- function(tbl,
 #' @param ... Reserved for generic compatibility.
 #'
 #' @return An object of class `summary.mfrm_facet_dashboard`.
-#' @seealso [facet_quality_dashboard()], [plot_facet_quality_dashboard()]
+#' @seealso [facet_quality_dashboard()], [plot(x, type = "facet_dashboard")][plot.mfrm_fit]
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
@@ -715,7 +716,8 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @param misfit_warn Mean-square cutoff used to flag misfit.
 #' @param central_tendency_max Legacy opt-in absolute estimate cutoff for
 #'   marking facet estimates near the fitted origin. Default `NULL`; use
-#'   [data_quality_report()] for observed category-use screening.
+#'   [data_quality_report()] for observed category-use screening or
+#'   [rater_centrality_table()] for indirect centrality indices.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
 #'   level.
 #' @param bias_abs_t_warn Absolute `t` cutoff used when deriving bias-row
@@ -744,10 +746,13 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
+#' p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
 #' p$data$plot
 #' }
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_facet_quality_dashboard <- function(x,
                                          diagnostics = NULL,
                                          facet = NULL,
@@ -860,9 +865,20 @@ plot_facet_quality_dashboard <- function(x,
   invisible(out)
 }
 
+#' Plot a saved facet-quality dashboard
+#' @param x A result from [facet_quality_dashboard()].
+#' @param y Ignored; present for generic compatibility.
+#' @param type `"severity"` or `"flags"`.
+#' @param ... Display controls from [plot_facet_quality_dashboard()].
+#' @return The existing plot payload, including screening cautions.
+#' @seealso [mfrmr_plot_migration]
 #' @export
 plot.mfrm_facet_dashboard <- function(x, y = NULL, type = c("severity", "flags"), ...) {
   args <- list(x = x, ...)
+  if (identical(type, "facet_dashboard")) {
+    type <- NULL
+    args <- .mfrm_plot_rename(args, "view", "plot_type")
+  }
   if (!is.null(type)) args$plot_type <- type
   do.call(plot_facet_quality_dashboard, args)
 }

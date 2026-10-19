@@ -264,7 +264,7 @@ mfrm_gmfrm_em <- function(problem, start = problem$start, maxit = 500L,
 }
 
 # Compare adaptive solutions, never fixed-grid and adaptive objective values.
-# The EM calculation supplies a starting vector only; inference keeps its own gates.
+# EM or supplied native vectors are starts only; inference keeps its own gates.
 mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
                                     optimizer, policy) {
   capture <- function(call) {
@@ -275,7 +275,18 @@ mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
       }))[["elapsed"]]
     list(value = value, error = error, warnings = unique(warnings), seconds = elapsed)
   }
-  starts <- list(neutral = problem$start)
+  supplied <- is.list(policy)
+  starts <- if (supplied) policy else list(neutral = problem$start)
+  if (supplied) {
+    if (is.object(starts) || length(starts) < 2L || is.null(names(starts)) ||
+        anyNA(names(starts)) || any(!nzchar(trimws(names(starts)))) || anyDuplicated(names(starts)))
+      stop("Supply a plain named list of at least two native starting vectors with distinct nonempty names.", call. = FALSE)
+    for (start in starts) if (!is.numeric(start) || is.complex(start) ||
+        !is.null(dim(start)) || length(start) != length(problem$start) || any(!is.finite(start)) ||
+        (!is.null(names(start)) && !identical(names(start), names(problem$start))))
+      stop("Each native start must be finite and match the model's free-parameter length and order; supplied parameter names must match exactly.", call. = FALSE)
+    policy <- "explicit"
+  }
   em <- NULL
   if (identical(policy, "neutral_em")) {
     em <- capture(function() mfrm_gmfrm_em(problem, maxit = maxit, score_tol = 1e-6))
@@ -509,8 +520,9 @@ mfrm_fit_product_slopes <- function(args, supplied) {
       quad_points = args$quad_points, quadrature = problem$specification$quadrature,
       mml_integration = "adaptive", mml_engine_requested = "direct", mml_engine_used = "direct",
       optimizer_requested = args$optimizer)
-    policy <- match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))
-    config$estimation_control$gpcm_mml_start <- policy
+    policy <- if (is.list(args$gpcm_mml_start)) args$gpcm_mml_start else
+      match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))
+    config$estimation_control$gpcm_mml_start <- if (is.list(policy)) "explicit" else policy
     opt <- mfrm_gmfrm_adaptive_fit(problem, config, args$quad_points, args$maxit,
       tol, args$optimizer, policy)
     config$estimation_control$optimizer_used <- opt$optimizer_plan$Used

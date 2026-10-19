@@ -271,8 +271,14 @@ generator/fitted-model contract does not align.
 Start with \code{summary(x)$design_summary}, then plot one focal metric at a time
 (for example rater \code{Separation} or criterion \code{SeverityRMSE}).
 
-Higher separation/reliability is generally better, whereas lower
-\code{SeverityRMSE}, \code{MeanMisfitRate}, and \code{MeanElapsedSec} are preferable.
+Person separation/reliability describes how well the design distinguishes
+persons under the model. High rater separation/reliability instead means
+that severity differences are distinguishable; it does not mean agreement
+or better calibration. Low rater separation can reflect similar severity
+or inadequate precision. Interpret each facet against its purpose rather
+than maximizing every separation coefficient. Recovery RMSE and elapsed
+time concern accuracy and cost; a low misfit-screen rate alone does not
+establish useful detection, since sensitivity and false flags differ.
 
 When choosing among designs, look for the point where increasing
 \code{n_person} or \code{raters_per_person} yields diminishing returns in
@@ -288,7 +294,11 @@ separation, reliability, strata, RMSE, and fit-screen rates change when
 you vary person, rater, criterion, or assignment counts. For analytic
 generalizability-theory planning, pair observed variance-component review
 from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with D-study projections from
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}. Read \code{IdentificationStatus}, \code{GStatus}, and \code{PhiStatus}
+\code{\link[=mfrm_d_study]{mfrm_d_study()}}. The complementary multivariate observed-score route is
+\code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} -> \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}. See
+\link{mfrmr_workflow_methods} for choosing between simulation and G-theory:
+neither is automatically required by the other, and neither replaces the
+other's estimand. Read \code{IdentificationStatus}, \code{GStatus}, and \code{PhiStatus}
 before using the projected coefficients: boundary or singular mixed-model
 fits are design-identification warnings rather than high-stakes-ready
 reliability evidence.

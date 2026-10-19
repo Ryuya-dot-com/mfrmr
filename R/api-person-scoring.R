@@ -18,6 +18,11 @@
 #' @param quad_points Extension quadrature order; `NULL` uses its fit's order.
 #'   Ordinary ability integration is continuous and does not use quadrature;
 #'   leave this argument `NULL` for ordinary fits.
+#' @param cut_scores Optional finite, strictly increasing numeric ability cuts,
+#'   with optional distinct names. Ordinary RSM scoring only. Returns a
+#'   `decisions` table of probabilities above each cut and in successive bands
+#'   (`Lower < ability <= Upper`). Calibration, population parameters and cuts
+#'   are held fixed. Labels do not establish CEFR alignment or a pass/fail rule.
 #' @details Ordinary fits use the bounded model/population specification of
 #'   [mfrm_response_diagnostics()]: additive unanchored severity facets and
 #'   known N(0,1) or an estimated intercept-only normal population. Both the
@@ -36,24 +41,34 @@
 #'   fixed ability. Missing-only Persons remain `prior_only`; zero ability
 #'   variance and failed integration return `unavailable`, not zero-width
 #'   intervals. No missing scores are imputed.
+#' @inheritSection predict_mfrm_units Conditional ability decisions
 #' @return Ordinary fits return `mfrm_person_scores` with `table`,
 #'   `scoring_data`, data usage, settings and source metadata. Extensions retain
-#'   their existing scoring classes. Supply saved scores to [compare_mfrm()]
+#'   their existing scoring classes. If `cut_scores` is supplied, `decisions`
+#'   retains probabilities, boundaries, labels, priors and availability;
+#'   `summary(x)$decisions` and `apa_table(x, which = "decisions")` reuse it.
+#'   Supply saved scores to [compare_mfrm()]
 #'   as `person_scores`; extension scores also support model-aware maps through
 #'   [mfrm_results()]. Saved plots/reports do not recompute scores.
 #' @seealso [score_mfrm_calibration()] for new people under an eligible saved
-#'   ordinary RSM/PCM calibration; [plot.mfrm_testlet_scores()],
+#'   ordinary RSM/PCM calibration; [predict_mfrm_units()] for supplied response
+#'   rows under a fitted calibration; [plot.mfrm_testlet_scores()],
 #'   [mfrm_response_diagnostics()]
 #' @examples
-#' \donttest{
 #' ratings <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
-#' scores <- score_mfrm_persons(fit, persons = unique(ratings$Person)[1:4])
+#' scores <- score_mfrm_persons(fit, persons = unique(ratings$Person)[1:4],
+#'   cut_scores = c(Basic = -0.5, Advanced = 0.8))
 #' scores$table
-#' plot(scores)
-#' }
+#' scores$decisions
+#' apa_table(scores, which = "decisions")
+#' plot(scores, draw = FALSE)
 #' @export
-score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = NULL) {
+score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = NULL,
+                               cut_scores = NULL) {
+  cut_scores <- mfrm_validate_cut_scores(cut_scores)
+  if (!is.null(cut_scores) && mfrm_extended_fit(fit))
+    stop("Cut-score probabilities currently require ordinary RSM/PCM scoring.", call. = FALSE)
   if (inherits(fit, "mfrm_testlet")) return(predict(fit, persons = persons,
     level = level, quad_points = quad_points %||% fit$settings$quad_points))
   if (inherits(fit, "mfrm_random_rater")) return(score_mfrm_random_rater(fit,
@@ -64,6 +79,7 @@ score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = N
   ids <- unique(input$assigned_data[[input$columns$person]])
   persons <- persons %||% ids
   if (!is.character(persons) || !length(persons) || anyNA(persons) || anyDuplicated(persons) || !all(persons %in% ids)) stop("Choose distinct Person IDs in the source roster.", call. = FALSE)
+  probabilities <- matrix(NA_real_, length(persons), 2L*length(cut_scores)+1L)
   table <- lapply(persons, function(id) {
     rows <- which(input$person == id); reason <- ""
     value <- setNames(rep(NA_real_, 4), c("Estimate", "ConditionalSD", "Lower", "Upper"))
@@ -72,8 +88,11 @@ score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = N
     } else if (!length(rows)) {
       value <- c(Estimate = input$mean, ConditionalSD = input$sd,
         Lower = stats::qnorm((1-level)/2, input$mean, input$sd),
-        Upper = stats::qnorm((1+level)/2, input$mean, input$sd))
+        Upper = stats::qnorm((1-level)/2, input$mean, input$sd, lower.tail = FALSE))
       status <- "prior_only"
+      if (!is.null(cut_scores)) probabilities[match(id,persons),] <<- mfrm_cut_probabilities(
+        function(a,b) stats::integrate(stats::dnorm,a,b,rel.tol=1e-10,abs.tol=0)$value,
+        (unname(cut_scores)-input$mean)/input$sd, 1)
     } else {
       answer <- tryCatch(withCallingHandlers({
         logdensity <- function(z) {
@@ -85,7 +104,10 @@ score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = N
           }, numeric(length(z)))
           rowSums(matrix(loglik, nrow=length(z))) + stats::dnorm(z,log=TRUE)
         }
-        ans <- mfrm_person_posterior_interval(logdensity, input$sd, level)[1:4]
+        ans <- mfrm_person_posterior_interval(logdensity, input$sd, level,
+          if (is.null(cut_scores)) NULL else (unname(cut_scores)-input$mean)/input$sd)
+        if (!is.null(cut_scores)) probabilities[match(id,persons),] <<- ans[-seq_len(5L)]
+        ans <- ans[1:4]
         ans[c("Estimate", "Lower", "Upper")] <- ans[c("Estimate", "Lower", "Upper")] + input$mean
         ans
       }, warning=function(w) stop(conditionMessage(w),call.=FALSE)),
@@ -95,13 +117,20 @@ score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = N
     }
     data.frame(Person=id, Observed=length(rows), as.list(value), Status=status, Reason=reason, row.names=NULL)
   })
-  structure(list(table=do.call(rbind,table), scoring_data=input$assigned_data,
+  out <- structure(list(table=do.call(rbind,table), scoring_data=input$assigned_data,
     data_usage=c(Input=input$input_rows,Observed=nrow(input$data),Omitted=length(input$omitted_rows)),
     omitted_rows=input$omitted_rows, source=mfrm_response_source(fit),
     settings=list(level=level, calibration_uncertainty=FALSE, person_mean=input$mean,
       person_variance=input$sd^2, integration="Continuous normal ability posterior",
       target="Person marginal posterior conditional on calibration and the complete scoring roster")),
     class="mfrm_person_scores")
+  if (!is.null(cut_scores)) {
+    out$settings$cut_scores <- cut_scores
+    out$decisions <- mfrm_decision_table(probabilities, persons, cut_scores,
+      input$mean,input$sd,out$table$Status,out$table$Reason)
+    out$notes <- mfrm_decision_note()
+  }
+  out
 }
 
 #' @rdname score_mfrm_persons
@@ -109,14 +138,28 @@ score_mfrm_persons <- function(fit, persons = NULL, level = .95, quad_points = N
 #' @param ... Display controls passed to [plot.mfrm_testlet_scores()]; unused
 #'   by print and summary.
 #' @export
-summary.mfrm_person_scores <- function(object, ...) summary.mfrm_testlet_scores(object, ...)
+summary.mfrm_person_scores <- function(object, ...) {
+  mfrm_validate_decisions(object)
+  out <- summary.mfrm_testlet_scores(object, ...)
+  if (!is.null(object$decisions)) {
+    out$decisions <- object$decisions
+    out$notes <- object$notes
+  }
+  out
+}
 
 #' @rdname score_mfrm_persons
 #' @export
 print.mfrm_person_scores <- function(x, ...) {
+  mfrm_validate_decisions(x)
   cat("Conditional Person scores from ordinary RSM calibration\n")
   print(x$table, row.names=FALSE)
   cat("Intervals exclude calibration-estimation uncertainty.\n")
+  if (!is.null(x$decisions)) {
+    cat("\nConditional decision probabilities (first 10; full table in $decisions)\n")
+    print(utils::head(x$decisions, 10L), row.names=FALSE)
+    print_wrapped_line(mfrm_decision_note())
+  }
   invisible(x)
 }
 

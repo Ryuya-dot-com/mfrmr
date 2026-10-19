@@ -603,6 +603,9 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 #' Rasch-metric version in `diagnostics$reliability` and this
 #' variance-share view here.
+#' For agreement or consistency between specific pairs on common units, use
+#' [pairwise_icc_table()] instead. A small rater variance share here does not
+#' establish pairwise agreement; residual disagreement can still be large.
 #'
 #' Set `ci_method = "boot"` to request intervals alongside the point
 #' estimates. The `Interpretation` column still uses point estimates.
@@ -662,7 +665,7 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' entry contains every draw, per-refit convergence and singularity indicators,
 #' the number of refit errors, and lme4's message/warning/error tables.
 #'
-#' @seealso [compute_facet_design_effect()],
+#' @seealso [compute_facet_design_effect()], [pairwise_icc_table()],
 #'   [analyze_hierarchical_structure()], [detect_facet_nesting()],
 #'   [facet_small_sample_review()].
 #'
@@ -690,7 +693,7 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #'   # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
 #'   #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
 #'   # - Rater / Criterion ICC reads as variance share, NOT reliability;
-#'   #   here SMALL values are desirable (raters / items agree), and
+#'   #   small values indicate limited systematic facet differences, and
 #'   #   shares > 0.10 hint at meaningful systematic facet differences.
 #'   # - `Interpretation` summarises the variance-share band the helper
 #'   #   has assigned to each row.
@@ -1250,6 +1253,12 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'   (echoed for downstream reporting helpers that need to label rows
 #'   by review scope).
 #'
+#' `plot(x, type = "icc")` draws variance shares and any available intervals
+#' without an embedded title or footnote. Save its returned object as `p` and
+#' use `plot_data(p, "notes")` to read the interval method or the reason bounds
+#' are unavailable. These notes survive `saveRDS()`/`readRDS()`; they do not
+#' change the underlying ICC estimates.
+#'
 #' @seealso [detect_facet_nesting()], [facet_small_sample_review()],
 #'   [compute_facet_icc()], [compute_facet_design_effect()],
 #'   [reporting_checklist()], [build_mfrm_manifest()], [fit_mfrm()].
@@ -1514,7 +1523,6 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
   tbl <- as.data.frame(x$table, stringsAsFactors = FALSE)
   if (is.null(tbl) || nrow(tbl) == 0L) {
     graphics::plot.new()
-    graphics::title(main = "Facet sample-size review")
     graphics::text(0.5, 0.5, "Review table empty.")
     return(invisible(tbl))
   }
@@ -1552,7 +1560,7 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
     col = tbl$BarColor,
     border = NA,
     xlab = "Observations per level",
-    main = "Facet sample-size review (Linacre bands)",
+    main = "",
     cex.names = 0.8
   )
   graphics::abline(
@@ -1598,7 +1606,6 @@ plot.mfrm_facet_nesting <- function(x,
   pair <- as.data.frame(x$pairwise_table, stringsAsFactors = FALSE)
   if (is.null(pair) || nrow(pair) == 0L) {
     graphics::plot.new()
-    graphics::title(main = "Facet nesting (pairwise)")
     graphics::text(0.5, 0.5, "At least two facets required.")
     return(invisible(NULL))
   }
@@ -1626,7 +1633,7 @@ plot.mfrm_facet_nesting <- function(x,
     xaxt = "n", yaxt = "n",
     xlab = "Nested in (column facet)",
     ylab = "Nested facet (row)",
-    main = "Pairwise nesting index"
+    main = ""
   )
   graphics::axis(1, at = seq_len(n), labels = facets, las = 2, cex.axis = 0.8)
   graphics::axis(2, at = seq_len(n), labels = facets, las = 1, cex.axis = 0.8)
@@ -1809,6 +1816,8 @@ summary.mfrm_hierarchical_structure <- function(object, ...) {
 plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
                                              pair = NULL, ...) {
   type <- match.arg(type)
+  # A saved return value can be plotted again with a different view.
+  attr(x, "mfrmr_notes") <- NULL
   if (type == "crosstab") {
     if (length(x$crosstabs) == 0L) {
       stop("No cross-tabulations available.", call. = FALSE)
@@ -1837,7 +1846,7 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
       xaxt = "n", yaxt = "n",
       xlab = tbl$FacetA[1L],
       ylab = tbl$FacetB[1L],
-      main = paste0("Cross-tabulation: ", pair_name),
+      main = "",
       col = grDevices::hcl.colors(20, palette = "YlGnBu", rev = TRUE)
     )
     graphics::axis(1L, at = seq_len(nrow(mat_num)),
@@ -1864,14 +1873,18 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
     if (has_ci && is.finite(ci_level)) {
       main_txt <- sprintf("%s\n%g%% parametric bootstrap CI",
                           main_txt, 100 * ci_level)
-    } else if (any(icc_tbl$ICC_CI_Method == "boot", na.rm = TRUE)) {
-      main_txt <- paste0(main_txt, "\nIntervals unavailable: ",
-                         paste(unique(icc_tbl$ICC_CI_Status), collapse = "; "))
     }
+    missing_ci <- !is.finite(icc_tbl$ICC_CI_Lower) | !is.finite(icc_tbl$ICC_CI_Upper)
+    if (any(missing_ci & icc_tbl$ICC_CI_Method == "boot", na.rm = TRUE)) {
+      main_txt <- paste0(main_txt, "\nIntervals unavailable: ",
+                         paste(unique(icc_tbl$ICC_CI_Status[missing_ci]), collapse = "; "))
+    }
+    attr(x, "mfrmr_notes") <- data.frame(
+      Type = "description", Text = main_txt, stringsAsFactors = FALSE)
     mids <- graphics::barplot(
       height = icc_tbl$ICC,
       names.arg = icc_tbl$Facet,
-      main = main_txt,
+      main = "",
       ylab = "ICC",
       ylim = c(0, y_max)
     )

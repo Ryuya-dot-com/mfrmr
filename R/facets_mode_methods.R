@@ -129,7 +129,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #' @param x A `mfrm_facets_run` object from [run_mfrm_facets()].
 #' @param y Unused.
 #' @param type Plot route: `"fit"` delegates to [plot.mfrm_fit()] and `"qc"`
-#'   delegates to [plot_qc_dashboard()].
+#'   delegates to [plot(x, type = "qc")][plot.mfrm_fit].
 #' @param ... Additional arguments passed to the selected plot function.
 #'
 #' @details
@@ -140,7 +140,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #'
 #' @section Interpreting output:
 #' Returns the plotting object produced by the delegated route:
-#' [plot.mfrm_fit()] for `"fit"` and [plot_qc_dashboard()] for `"qc"`.
+#' [plot.mfrm_fit()] for `"fit"` and [plot(x, type = "qc")][plot.mfrm_fit] for `"qc"`.
 #'
 #' @section Typical workflow:
 #' 1. Run [run_mfrm_facets()].
@@ -149,7 +149,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #'
 #' @return A plotting object from the delegated plot route.
 #'
-#' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot_qc_dashboard()],
+#' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #'
 #' @examples

@@ -145,6 +145,23 @@ test_that("a stalled optimizer restarts only from a safe curvature proposal", {
   expect_identical(unsafe$optimizer_diagnostics$ConvergenceSeverity, "review")
   expect_true(nzchar(tail(unsafe$optimizer_polish$Stages$Error, 1)))
   expect_false(tail(unsafe$optimizer_polish$Stages$Selected, 1))
+  for (model in c("RSM", "PCM", "GPCM")) {
+    fixed <- run(model = model, population = TRUE)
+    expect_identical(fixed$optimizer_diagnostics$ConvergenceSeverity, "pass")
+    expect_lt(fixed$optimizer_diagnostics$TerminalGradientSupNorm, 1e-10)
+    expect_identical(fixed$optimizer_polish$Stages$StageLabel[
+      fixed$optimizer_polish$Stages$Selected], "curvature_restart")
+    rejected <- run(model = model, population = TRUE, indefinite = TRUE)
+    expect_identical(rejected$optimizer_diagnostics$ConvergenceSeverity, "review")
+    restart <- rejected$optimizer_polish$Stages$StageLabel == "curvature_restart"
+    expect_true(any(restart))
+    expect_true(nzchar(rejected$optimizer_polish$Stages$Error[restart]))
+    expect_false(any(rejected$optimizer_polish$Stages$Selected[restart]))
+  }
+  fixed_gpcm <- run(model = "GPCM")
+  expect_identical(fixed_gpcm$optimizer_diagnostics$ConvergenceSeverity, "pass")
+  expect_identical(fixed_gpcm$optimizer_polish$Stages$StageLabel[
+    fixed_gpcm$optimizer_polish$Stages$Selected], "curvature_restart")
   for (x in list(run(code=1L),run(method="JML"),
                 run(model="GPCM", integration="adaptive", population=TRUE),
                 run(model="GPCM", integration="adaptive", reltol=1e-6),

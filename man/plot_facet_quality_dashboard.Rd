@@ -42,7 +42,8 @@ outliers.}
 
 \item{central_tendency_max}{Legacy opt-in absolute estimate cutoff for
 marking facet estimates near the fitted origin. Default \code{NULL}; use
-\code{\link[=data_quality_report]{data_quality_report()}} for observed category-use screening.}
+\code{\link[=data_quality_report]{data_quality_report()}} for observed category-use screening or
+\code{\link[=rater_centrality_table]{rater_centrality_table()}} for indirect centrality indices.}
 
 \item{bias_count_warn}{Minimum flagged-bias row count required to flag a
 level.}
@@ -92,15 +93,22 @@ Returned plot data retain those settings, interpretation notes and fit
 readiness. Restricted or older dashboards without readiness are labeled
 \verb{REVIEW ONLY}. Zero observed flags is not a complete diagnostic pass.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-p <- plot_facet_quality_dashboard(fit, diagnostics = diag, draw = FALSE)
+p <- plot(fit, type = "facet_dashboard", diagnostics = diag, draw = FALSE)
 p$data$plot
 }
 }
 \seealso{
 \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}, \code{\link[=summary.mfrm_facet_dashboard]{summary.mfrm_facet_dashboard()}}
 }
+\keyword{internal}

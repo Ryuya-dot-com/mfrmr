@@ -19,7 +19,7 @@
 plot.mfrm_random_rater_intervals <- function(x, level = x$settings$level,
     method = c("studentized", "error"), comparison = TRUE, draw = TRUE,
     sort = c("input", "estimate", "uncertainty"), palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, reference = 0, text_scale = 1, point_size = 2.5, ...) {
   rlang::check_dots_empty(); method <- match.arg(method)
   if (any(!vapply(list(comparison, draw), function(z) is.logical(z) && length(z) == 1L && !is.na(z), logical(1)))) {
@@ -28,8 +28,8 @@ plot.mfrm_random_rater_intervals <- function(x, level = x$settings$level,
   ci <- confint(x, level = level, method = method); source <- x$source$raters
   tab <- data.frame(Rater = source$Rater, Estimate = source$Estimate,
     Lower = ci[, 1L], Upper = ci[, 2L],
-    OrdinaryLower = source$Estimate - stats::qnorm((1 + level) / 2) * source$PredictionSE,
-    OrdinaryUpper = source$Estimate + stats::qnorm((1 + level) / 2) * source$PredictionSE,
+    OrdinaryLower = source$Estimate - stats::qnorm((1 - level) / 2, lower.tail = FALSE) * source$PredictionSE,
+    OrdinaryUpper = source$Estimate + stats::qnorm((1 - level) / 2, lower.tail = FALSE) * source$PredictionSE,
     Unresolved = attr(ci, "availability")$Unresolved, row.names = NULL)
   note <- sprintf("Nominal %.0f%% pointwise | %d planned refits | arrows: unbounded", 100 * level, nrow(x$trials))
   if (comparison) note <- paste(note, "Solid: bootstrap; dashed: ordinary normal.", sep = "\n")

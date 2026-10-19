@@ -50,12 +50,11 @@ plot.mfrm_pooled <- function(x, draw = TRUE, preset = "standard",
   out <- new_mfrm_plot_data("pooled_facet_intervals", list(table = tab,
     contrasts = x$contrasts, settings = x$settings, title = title,
     cautions = x$cautions, information_review = x$information_review,
-    subtitle = subtitle, xlab = "Estimate (logits)", preset = style$name))
+    subtitle = subtitle, xlab = "Estimate (logits)", preset = style$name,
+    caption = "Open diamonds: fixed targets without intervals; crosses: unavailable intervals; arrows in ggplot: infinite endpoints, not finite bounds."))
   if (!draw) return(invisible(out))
   apply_plot_preset(style)
-  extra_lines <- if (is.null(subtitle)) 0L else
-    max(0L, length(strsplit(subtitle, "\n", fixed = TRUE)[[1L]]) - 1L)
-  old <- graphics::par(mar = c(5, 10, 5 + extra_lines, 2))
+  old <- graphics::par(mar = c(4.5, 10, 1.5, 2))
   on.exit(graphics::par(old), add = TRUE)
   y <- rev(seq_len(nrow(tab)))
   limits <- range(c(0, tab$Estimate, tab$Lower, tab$Upper), finite = TRUE)
@@ -68,9 +67,6 @@ plot.mfrm_pooled <- function(x, draw = TRUE, preset = "standard",
   graphics::segments(tab$Lower[!fixed], y[!fixed], tab$Upper[!fixed], y[!fixed],
     col = style$accent_primary, lwd = 2)
   graphics::axis(2, at = y, labels = tab$Target, las = 1)
-  if (!is.null(title)) graphics::title(main = title, line = 3 + extra_lines)
-  if (!is.null(subtitle)) graphics::mtext(subtitle, side = 3, line = 0.3, cex = 0.8)
-  if (any(fixed)) graphics::mtext("Open diamonds: fixed by model constraints", side = 1, line = 3, cex = 0.8)
   invisible(out)
 }
 

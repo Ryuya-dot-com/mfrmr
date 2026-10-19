@@ -118,7 +118,8 @@ mfrm_jml_adjustment_roster <- function(design, exposure, counts, max_states) {
     logits <- function(theta, j) a[j] * (outer(theta, design$categories) +
       matrix(base[j, ], length(theta), K, byrow = TRUE))
     log_probability <- function(theta, j) {
-      z <- logits(theta, j); z <- z - apply(z, 1L, max)
+      z <- logits(theta, j)
+      z <- z - if (all(is.finite(z))) row_max_fast(z) else apply(z, 1L, max)
       z - log(rowSums(exp(z)))
     }
     # Positive forward convolution; no subtraction or probability pruning.
@@ -179,18 +180,29 @@ mfrm_jml_adjustment_roster <- function(design, exposure, counts, max_states) {
         K * (j - 1L) + seq_len(K), drop = FALSE])
     mean_raw <- raw(expected_counts, theta, extreme)$value
     actual <- raw(counts, theta[group], extreme[group])
+    blocks <- if (length(ix)) lapply(seq.int(1L, length(ix), by = 16L),
+      function(begin) ix[begin:min(length(ix), begin + 15L)]) else list()
+    transition_probability <- function(ii) {
+      probability <- matrix(1, G, length(ii))
+      for (g in seq_len(ng)) {
+        z <- outer(0:maximum[g], ag[g] * theta[ii]) + log(table[[g]]$probability)
+        z <- sweep(z, 2L, apply(z, 2L, max)); mass <- exp(z)
+        mass <- sweep(mass, 2L, colSums(mass), "/")
+        probability <- probability * mass[totals[, g] + 1L, , drop = FALSE]
+      }
+      if (max(abs(colSums(probability) - 1)) > 1e-10) stop("Owner-total transition is not normalized.")
+      probability
+    }
+    # Reuse only within this beta evaluation. Reserve three quarters of the
+    # workspace allowance for counts, scores and temporary calculation buffers.
+    probabilities <- if (order > 1L && 8 * as.double(G) * length(ix) <=
+        getOption("mfrmr.max_information_bytes", 256 * 1024^2) / 4)
+      lapply(blocks, transition_probability) else NULL
     apply_transition <- function(values) {
       answer <- matrix(0, G, p)
-      if (length(ix)) for (begin in seq.int(1L, length(ix), by = 16L)) {
-        ii <- ix[begin:min(length(ix), begin + 15L)]
-        probability <- matrix(1, G, length(ii))
-        for (g in seq_len(ng)) {
-          z <- outer(0:maximum[g], ag[g] * theta[ii]) + log(table[[g]]$probability)
-          z <- sweep(z, 2L, apply(z, 2L, max)); mass <- exp(z)
-          mass <- sweep(mass, 2L, colSums(mass), "/")
-          probability <- probability * mass[totals[, g] + 1L, , drop = FALSE]
-        }
-        if (max(abs(colSums(probability) - 1)) > 1e-10) stop("Owner-total transition is not normalized.")
+      for (block in seq_along(blocks)) {
+        ii <- blocks[[block]]
+        probability <- if (is.null(probabilities)) transition_probability(ii) else probabilities[[block]]
         answer[ii, ] <- crossprod(probability, values)
       }
       answer
@@ -216,15 +228,16 @@ mfrm_jml_adjustment_roster <- function(design, exposure, counts, max_states) {
 mfrm_jml_adjustment_covariance <- function(problem, beta, order,
     sampling = c("fixed_rosters", "random_rosters")) {
   sampling <- match.arg(sampling)
+  rosters <- if (sampling == "fixed_rosters") split(seq_along(problem$roster), problem$roster)
+  if (any(lengths(rosters) < 2L))
+    stop("Fixed-roster covariance needs at least two Persons per observed roster.")
   fn <- function(b) problem$mean_score(b, order)
   coarse <- mfrmr_numeric_transformation_jacobian(fn, beta, relative_step = 1e-4)
   fine <- mfrmr_numeric_transformation_jacobian(fn, beta, relative_step = 5e-5)
   U <- problem$evaluate(beta, order)$value
   N <- nrow(U); p <- ncol(U); A <- fine$jacobian
   centered <- sweep(U, 2L, colMeans(U))
-  if (sampling == "fixed_rosters") for (g in unique(problem$roster)) {
-    rows <- which(problem$roster == g)
-    if (length(rows) < 2L) stop("Fixed-roster covariance needs at least two Persons per observed roster.")
+  for (rows in rosters) {
     centered[rows, ] <- sweep(U[rows, , drop = FALSE], 2L, colMeans(U[rows, , drop = FALSE]))
   }
   if (!coarse$valid || !fine$valid)

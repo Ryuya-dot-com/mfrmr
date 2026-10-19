@@ -51,6 +51,12 @@ a \code{fit_mfrm(..., facet_shrinkage = "empirical_bayes")} run, so that
 \code{fit$facets$others} carries \code{Estimate}, \code{ShrunkEstimate}, and
 \code{ShrinkageFactor} columns.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -88,7 +94,7 @@ toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 300)
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
-p <- plot_shrinkage_funnel(fit_eb, draw = FALSE)
+p <- plot(fit_eb, type = "shrinkage", view = "funnel", draw = FALSE)
 head(p$data$table)
 # Look for: short segments (Raw and Shrunken close together) =
 #   little pooling. Long segments fanning toward the centre = the
@@ -101,3 +107,4 @@ head(p$data$table)
 \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}},
 \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

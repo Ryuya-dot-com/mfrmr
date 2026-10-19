@@ -122,7 +122,7 @@ test_that("fair-score plot intervals cannot acquire formal eligibility", {
   expect_match(p$data$subtitle, "observed means held fixed", fixed = TRUE)
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     visible <- plot_fair_average(fit, show_ci = TRUE, draw = FALSE)
-    expect_match(gsub("[[:space:]]+", " ", as_ggplot(visible)$labels$subtitle), "observed means held fixed", fixed = TRUE)
+    expect_match(gsub("[[:space:]]+", " ", paste(plot_data(as_ggplot(visible), "notes")$Text, collapse = "\n")), "observed means held fixed", fixed = TRUE)
   }
   expect_true(all(!d$CI_Eligible))
   expect_true(all(d$CI_ReportingUse[is.finite(d$CI_Lower)] == "diagnostic_only"))

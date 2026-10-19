@@ -61,3 +61,36 @@ test_that("likelihood-only evaluation preserves weighted and shifted-prior kerne
     }
   }
 })
+
+test_that("batched adaptive nodes preserve scalar probabilities and posterior derivatives", {
+  withr::local_options(mfrmr.use_cpp11_backend = FALSE)
+  for (model in c("RSM", "PCM", "GPCM")) for (n in c(1L, 4L)) {
+    idx <- list(person = rep(1L, n), score_k = (seq_len(n) - 1L) %% 4L,
+      weight = c(2, 0, .25, 1)[seq_len(n)], step_idx = c(2L, 1L, 2L, 1L)[seq_len(n)],
+      slope_idx = c(1L, 2L, 2L, 1L)[seq_len(n)])
+    config <- list(model = model, n_cat = 4L, n_person = 1L)
+    params <- list(steps = c(-.8, 0, .8),
+      steps_mat = rbind(c(-1.2, .3, .9), c(-.4, -.1, .5)), slopes = c(.6, 1.5))
+    evaluate <- mfrmr:::mfrmr_adaptive_person_kernel(
+      idx, config, params, c(-1, 0, 1, .3)[seq_len(n)], -.8, .4)
+    z <- c(25, -.3, -25, 0, 1.2)
+    batched <- evaluate(z, include_linear_part = TRUE)
+    scalar <- lapply(z, evaluate, include_linear_part = TRUE)
+    for (field in c("log_likelihood", "score", "information")) {
+      expect_identical(batched[[field]], vapply(scalar, `[[`, 0, field))
+    }
+    expect_identical(batched$prob_list, lapply(scalar, function(x) x$prob_list[[1L]]))
+    expect_identical(batched$linear_part_list, lapply(scalar, function(x) x$linear_part_list[[1L]]))
+    # Differentiate the log posterior, independently of the category-moment formulas.
+    log_posterior <- function(x) evaluate(x, include_moments = FALSE)$log_likelihood +
+      dnorm(x, log = TRUE)
+    h <- 1e-3
+    z <- c(-1.2, .3, 2)
+    score <- (log_posterior(z - 2*h) - 8*log_posterior(z - h) +
+      8*log_posterior(z + h) - log_posterior(z + 2*h)) / (12*h)
+    information <- (log_posterior(z + 2*h) - 16*log_posterior(z + h) +
+      30*log_posterior(z) - 16*log_posterior(z - h) + log_posterior(z - 2*h)) / (12*h^2)
+    expect_lt(max(abs(evaluate(z)$score - score)), 1e-8)
+    expect_lt(max(abs(evaluate(z)$information - information)), 1e-7)
+  }
+})

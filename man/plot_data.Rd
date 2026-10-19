@@ -29,6 +29,15 @@ It accepts an existing \code{mfrm_plot_data} object, or any mfrmr object whose
 \code{plot()} method supports \code{draw = FALSE}. Use \code{\link[=plot_data_components]{plot_data_components()}} first
 when you want to inspect which components are available before extracting
 one.
+
+Titles, subtitles, and explanatory footnotes are omitted from figures by
+default. Use \code{plot_data(p, "title")} for the suggested title and
+\code{plot_data(p, "notes")} for a \code{Type}/\code{Text} table of descriptions and cautions.
+This works for returned base-graphics payloads and mfrmr-generated ggplots,
+including after \code{saveRDS()}/\code{readRDS()}. Printing an \code{mfrm_plot_data} object
+also displays its notes in the console. Axes, legends, panel headings and
+data/status symbols remain in the figure. Removing figure text does not
+remove numerical warnings or strengthen the interpretation of a result.
 }
 \examples{
 \donttest{
@@ -48,6 +57,7 @@ fit <- fit_mfrm(
 
 # Draw the Wright map and keep its reusable data
 wright <- plot(fit)
+plot_data(wright, "notes")
 
 # Extract the plotted locations as a table
 locations <- plot_data(wright, component = "locations")

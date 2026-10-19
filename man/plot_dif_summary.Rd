@@ -60,6 +60,12 @@ Residual differences do not isolate differential functioning. Linked refit
 intervals omit estimated-anchor uncertainty and cross-refit covariance.
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -91,22 +97,10 @@ Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochr
 appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
-\examples{
-\donttest{
-toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-dff <- analyze_dff(fit, diagnostics = diag,
-                   facet = "Rater", group = "Group", data = toy)
-unique(dff$dif_table$ClassificationSystem)
-p <- plot_dif_summary(dff, draw = FALSE)
-head(p$data$data)
-}
-}
 \seealso{
-\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}.
+\code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \link[=plot.mfrm_dif]{plot(x, type = "heatmap")}.
 }
 \concept{DFF DIF}
 \concept{confidence intervals}
 \concept{visual diagnostics}
+\keyword{internal}

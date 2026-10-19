@@ -411,6 +411,13 @@ import_mirt_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
 #' Persons retain source EAP and conditional posterior SD. Item fit is averaged
 #' over source posteriors; `TAM::tam.personfit()` uses WLE scores. `FitBasis`
 #' records this distinction without replacing the imported EAP estimates.
+#' Person `Extreme` flags use observed responses and each item's fitted category
+#' support, including unobserved categories. `NObserved` counts responses used
+#' for this check. `ResponseStatus` distinguishes observed, entirely missing,
+#' and unavailable response information. Entirely missing or unverifiable rows
+#' have `Extreme = NA`; finite posterior scores do not imply nonextreme data.
+#' Re-import older TAM objects to recover these flags; saved imported objects
+#' without the source responses cannot reconstruct them.
 #'
 #' The public imported-fit surface is deliberately unidimensional and MML-only.
 #' A `tam.jml` object is not silently relabelled as MML, and a TAM fit with
@@ -554,7 +561,7 @@ import_tam_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
       facet_others = facet_others,
       persons = persons,
       facet_names = facet_names,
-      n_obs = sum(!is.na(fit$resp)),
+      n_obs = sum(persons$NObserved),
       source = "TAM"
     )
   }
@@ -716,11 +723,54 @@ import_tam_fit <- function(fit, model = c("RSM", "PCM", "GPCM"),
     Person = person_id,
     Estimate = as.numeric(person_eap),
     SE = as.numeric(person_se),
-    Extreme = "none",
+    .tam_person_response_status(fit, person_id),
     EstimateBasis = "Source EAP",
     UncertaintyBasis = "Conditional posterior SD; calibration uncertainty excluded",
     stringsAsFactors = FALSE
   )
+}
+
+.tam_person_response_status <- function(fit, person_id) {
+  out <- data.frame(NObserved = rep(NA_integer_, length(person_id)),
+    Extreme = rep(NA_character_, length(person_id)),
+    ResponseStatus = rep("unavailable", length(person_id)), stringsAsFactors = FALSE)
+  if (is.null(fit$resp) || is.null(fit$AXsi)) return(out)
+  response <- as.matrix(fit$resp)
+  intercepts <- as.matrix(fit$AXsi)
+  ids <- as.character(fit$pid)
+  items <- as.character(fit$item$item)
+  if (!(is.numeric(response) || is.logical(response)) || !is.numeric(intercepts) ||
+      nrow(response) != length(ids) || anyNA(ids) || anyDuplicated(ids) ||
+      anyNA(person_id) || anyDuplicated(person_id) ||
+      !all(person_id %in% ids) || ncol(response) != length(items) ||
+      nrow(intercepts) != length(items) || anyNA(items) || anyDuplicated(items) ||
+      is.null(colnames(response)) || anyDuplicated(colnames(response)) ||
+      !setequal(colnames(response), items)) return(out)
+  support <- is.finite(intercepts)
+  maximum <- rowSums(support) - 1L
+  if (any(maximum < 1L) ||
+      !all(support == outer(maximum, seq_len(ncol(intercepts)) - 1L, `>=`))) return(out)
+  observed <- fit$resp.ind
+  if (is.null(observed)) observed <- !is.na(response)
+  if (!is.matrix(observed) || !identical(dim(observed), dim(response)) ||
+      anyNA(observed) || !all(observed %in% c(0, 1))) return(out)
+  row <- match(person_id, ids)
+  column <- match(items, colnames(response))
+  response <- response[row, column, drop = FALSE]
+  observed <- observed[row, column, drop = FALSE] != 0
+  ceiling <- matrix(maximum, nrow(response), ncol(response), byrow = TRUE)
+  valid <- is.finite(response) & response >= 0 & response <= ceiling &
+    response == floor(response)
+  verified <- rowSums(observed & !valid) == 0L
+  count <- rowSums(observed)
+  out$NObserved[verified] <- as.integer(count[verified])
+  out$ResponseStatus[verified & count == 0L] <- "no_observed_responses"
+  used <- verified & count > 0L
+  out$ResponseStatus[used] <- "observed"
+  out$Extreme[used] <- "none"
+  out$Extreme[used & rowSums(observed & (is.na(response) | response != 0)) == 0L] <- "low"
+  out$Extreme[used & rowSums(observed & (is.na(response) | response != ceiling)) == 0L] <- "high"
+  out
 }
 
 .tam_extract_single <- function(fit, item_facet) {

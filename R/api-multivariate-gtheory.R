@@ -89,6 +89,10 @@
 #'   in the seven-component model. Other overlaps are still needed for the
 #'   remaining components. Uneven workloads across raters can also affect
 #'   precision even when the moment system has full rank.
+#'   [vcov.mfrm_multivariate_gstudy()] supplies normal-model sampling
+#'   covariance and SEs for the original component estimates, including
+#'   incomplete sources. Inspect its separate negative/nonidentifiable
+#'   sampling-variance diagnostics; it does not provide normal-reference intervals.
 #'
 #'   Conditioning on the observed assignments must preserve the stated
 #'   random-effect means and covariances. Outcome-dependent assignment or
@@ -141,6 +145,41 @@
 #'   for incomplete designs. These checks do not establish population recovery
 #'   for arbitrary sparse assignments or missingness mechanisms. This function
 #'   returns point estimates, not sampling intervals.
+#'
+#' @section Component uncertainty versus measurement error:
+#'   For a balanced ANOVA result, [confint.mfrm_multivariate_gstudy()] adds
+#'   sampling SEs and pointwise intervals for variance components of one score
+#'   or a prespecified weighted composite, under an explicit normal-effects
+#'   assumption. `plot(g, intervals = TRUE, assumption = "normal")` adds
+#'   these intervals to a component plot; its returned data retain SEs,
+#'   raw endpoints and reasons for unavailable intervals.
+#'   For balanced or identifiable incomplete sources, explicit
+#'   `method = "reml_profile"` supplies approximate variance or two-score covariance intervals
+#'   from a separate normal REML model. Original estimates remain unchanged,
+#'   with the REML estimate in `IntervalCenter`. It does not supply a component
+#'   sampling SE, and numerical availability is not a coverage guarantee.
+#'   For between-score covariance, pass exactly two score names to `confint()`
+#'   and explicitly select `method = "gci"` or `"regression_region"` for balanced ANOVA,
+#'   or experimental `"reml_profile"` for the joint normal model.
+#'   These retain signed bounds and distinguish approximate generalized coverage
+#'   from conservative normal-model enclosures. `plot(g, type = "covariance",
+#'   score = c("V", "W"), intervals = TRUE, method = "gci",
+#'   assumption = "normal")` shows their intervals across sources.
+#'   Explicit `method = "residual_contrast"` also accepts retained ANOVA/MINQUE
+#'   ratings, but supplies only Residual intervals: exact normal-model
+#'   chi-square for variance, or a conservative covariance enclosure. It
+#'   removes all nonresidual incidence columns, requires residual degrees of
+#'   freedom, retains original points and reports a separate `IntervalCenter`.
+#'   It does not supply the original component estimator's SE or intervals
+#'   for G/Phi or other sources. See [confint.mfrm_multivariate_gstudy()].
+#'   `score_scale` contains observed score SDs used for
+#'   numerical diagnostics; these are not component SEs. Neither matrix rank
+#'   nor a nonnegative estimate establishes that a component is precisely known.
+#'   A D-study's SEM instead describes projected measurement error in score
+#'   units. The separate [mfrm_multivariate_d_compare()] provides approximate
+#'   intervals for **plan differences** in its supported two-facet crossed
+#'   scope; these are not component intervals or marginal intervals for each
+#'   plan's coefficient. See [mfrmr_methods_reference] for the target map.
 #'
 #' @section Fixed tasks as score components:
 #'   To plan ratings of the same fixed interview, presentation and discussion,
@@ -230,11 +269,17 @@
 #'   score convention, `nesting`, `child_counts`, completeness, balance,
 #'   potential cells and observed cell fraction), and `data`
 #'   (the retained selected input columns).
+#'   `print()` displays the design and diagnostics and returns the same object
+#'   invisibly. `summary()` returns the component-diagnostics data frame;
+#'   use `$components` for the estimated covariance matrices.
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
-#'   Chapters 9--11.
+#'   Chapters 9--11. \doi{10.1007/978-1-4757-3456-0}.
+#'
 #'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
 #'   Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22;
 #'   Table 12 (page 32) and Appendix E (pages 74--77).
+#'   Manual available from the author's
+#'   [GENOVA Suite](https://brennancrickgenova.org/genova-suite/).
 #'
 #'   Brennan, R. L. (1992). Generalizability theory.
 #'   *Educational Measurement: Issues and Practice*, 11(4), 27--34.
@@ -243,7 +288,9 @@
 #'   Rao, C. R. (1971). Estimation of variance and covariance components--MINQUE
 #'   theory. *Journal of Multivariate Analysis*, 1, 257--275.
 #'   \doi{10.1016/0047-259X(71)90001-7}.
-#' @seealso [mfrm_multivariate_d_study()], [mfrm_generalizability()]
+#' @seealso [mfrm_multivariate_d_study()], [mfrm_generalizability()]. For a
+#'   guided data-to-plan-to-saved-result workflow, use
+#'   `vignette("mfrmr-gtheory", package = "mfrmr")`.
 #' @examples
 #' # Common tasks, without a rater facet: Brennan's published synthetic data.
 #' # mGENOVA manual Table 12: 10 persons, 6 common items, two scores V and W.
@@ -269,20 +316,13 @@
 #'   data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 #' d_sparse$coefficients # Read metric status and ComponentPSD separately.
 #'
-#' # Fictional continuous scores, with two correlated score components.
-#' set.seed(2026)
-#' # Here occasions are exchangeable repeat assessments, without a time trend.
-#' ratings <- expand.grid(Person = 1:40, Assessor = 1:8, Session = 1:6)
-#' ratings$Content <- ratings$Organization <- 0
-#' sources <- list("Person", "Assessor", "Session", c("Person", "Assessor"),
-#'   c("Person", "Session"), c("Assessor", "Session"), c("Person", "Assessor", "Session"))
-#' for (source in sources) {
-#'   group <- interaction(ratings[source], drop = TRUE)
-#'   effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
-#'   effect <- effect %*% matrix(c(1, 0, 0.4, 1), 2)
-#'   ratings[c("Content", "Organization")] <-
-#'     ratings[c("Content", "Organization")] + effect[as.integer(group), ]
-#' }
+#' # Existing continuous-score example; rename columns to show role mapping.
+#' data("mfrmr_example_gtheory_crossed", package = "mfrmr")
+#' ratings <- mfrmr_example_gtheory_crossed
+#' names(ratings)[names(ratings) == "Rater"] <- "Assessor"
+#' names(ratings)[names(ratings) == "Task"] <- "Session"
+#' head(ratings) # Two score columns for each Person-Assessor-Session cell.
+#' # Here sessions represent exchangeable assessments, without a time trend.
 #' g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"),
 #'   facets = c(Rater = "Assessor", Occasion = "Session"))
 #' g$components$Person
@@ -303,20 +343,10 @@
 #' d_rater <- mfrm_multivariate_d_study(g_rater, data.frame(Raters = c(1, 2, 4)))
 #' plot(d_rater, score = "Content")
 #'
-#' # Different rater teams for different tasks; shared persons and scores.
-#' # Fictional continuous scores with five independent random-effect sources.
-#' set.seed(2027)
-#' nested <- expand.grid(Person = 1:30, Task = 1:6, Rater = paste0("R", 1:3))
-#' nested$Content <- nested$Organization <- 0
-#' sources <- list("Person", "Task", c("Task", "Rater"),
-#'   c("Person", "Task"), c("Person", "Task", "Rater"))
-#' for (source in sources) {
-#'   group <- interaction(nested[source], drop = TRUE)
-#'   effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
-#'   effect <- effect %*% matrix(c(1, 0, 0.4, 1), 2)
-#'   nested[c("Content", "Organization")] <-
-#'     nested[c("Content", "Organization")] + effect[as.integer(group), ]
-#' }
+#' # Different rater teams for different tasks; the same Persons and scores.
+#' data("mfrmr_example_gtheory_nested", package = "mfrmr")
+#' nested <- mfrmr_example_gtheory_nested
+#' head(nested) # R1 in Task 1 is a different rater from R1 in Task 2.
 #' g_nested <- mfrm_multivariate_gstudy(nested, c("Content", "Organization"),
 #'   nesting = c(Rater = "Task"))
 #' g_nested$design$child_counts # Three raters per task; eighteen in total.
@@ -669,12 +699,68 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   by default, or the first score when there are no composites. With several
 #'   composites, specify one with `plot(d, composite = "Equal")`; use
 #'   `plot(d, score = "V")` to inspect an original score named V. The title
-#'   always identifies the plotted score and any composite weights.
+#'   metadata identifies the plotted score and any composite weights; it is
+#'   returned with the plot, with titles and notes omitted from the figure
+#'   by default.
 #'   Check `GStatus`, `PhiStatus`, `RelativeSEMStatus`, and `AbsoluteSEMStatus`:
 #'   each explains the corresponding metric's availability. `NA` means
 #'   unavailable, not zero dependability. `ComponentPSD` separately flags
 #'   covariance components needing review. See [plot.mfrm_multivariate_d_study()] for
 #'   interpreting curves and unavailable estimates.
+#'
+#'   For a balanced one-facet ANOVA source, [confint.mfrm_multivariate_d_study()]
+#'   returns exact F intervals for G and generalized confidence intervals for
+#'   Phi (`parm = "Phi"`) under independent normal random effects, using the
+#'   source study's degrees of freedom at each requested future count. Phi
+#'   includes Monte Carlo endpoint diagnostics and is not an exact-coverage
+#'   method. Add `reference = 1` for intervals on changes from the first plan:
+#'   G maps the F set; Phi maps the generalized set and retains approximate
+#'   coverage. Both include interior extrema; Phi differences retain joint
+#'   numerical endpoint bands. These methods also apply to balanced nested
+#'   plans when future child counts per parent equal the source count, using
+#'   the parent count in the one-facet reduction. Complete balanced crossed
+#'   two-facet sources default to approximate MLS null inversion for individual
+#'   G/Phi intervals. Undefined MLS widths are conservatively retained and
+#'   flagged by `FormulaComplete`; original estimates and numerical failures
+#'   remain explicit. Small-source intervals may span almost all of `[0,1]`.
+#'   These sources and general balanced nested plans also have explicitly selected
+#'   experimental `method = "approximate_f"` and `"mean_square_region"`
+#'   options for G/Phi; a vector requests both and `plot()` compares them.
+#'   The confidence-interval help explains their assumptions, limitations and
+#'   unavailable results. Use [mfrm_multivariate_d_compare()]
+#'   separately for its supported paired-plan differences.
+#'   For balanced or identifiable incomplete sources, explicit
+#'   `method = "reml_profile"` fits approximate G/Phi or SEM intervals from the used
+#'   ratings under normal effects. It retains original ANOVA/MINQUE estimates
+#'   and reports the separate REML estimates as `IntervalCenter`. Numerical
+#'   diagnostics and experimental finite-sample/boundary qualifications remain
+#'   explicit; it is not a default. With `reference`, it supplies shared-profile
+#'   interval images for one-facet or common-child nested plans, and direct
+#'   difference profiles for other crossed/nested comparisons. The latter need
+#'   optional nloptr and retain experimental calibration, especially at zero.
+#'   SEM uses a direct error-variance profile followed by square roots; the
+#'   numerical interval surrounds the REML center without enumerating remote
+#'   disconnected accepted regions. Checked boundary populations showed
+#'   below-nominal inclusion despite high numerical availability.
+#'   Select `parm = "RelativeSEM"` or `"AbsoluteSEM"` for intervals on SEM
+#'   itself from supported balanced crossed/nested sources. A single contributing
+#'   mean square uses chi-square limits; otherwise MLS limits for the combined
+#'   error variance are transformed by the square root. MLS coverage is
+#'   approximate. One-facet SEM differences also accept `reference = 1`;
+#'   nested MLS comparisons require a common future child count across plans.
+#'   For one-facet RelativeSEM, explicit `method = "residual_contrast"` also
+#'   accepts retained ANOVA/MINQUE ratings, including incomplete MINQUE sources.
+#'   It transforms one residual
+#'   chi-square interval and retains original points, a separate projected
+#'   `IntervalCenter`, unavailable states and shared uncertainty across plans.
+#'   Normal independent residuals and noninformative omissions are required;
+#'   this does not supply AbsoluteSEM, G/Phi or multifacet intervals.
+#'   Explicit `method = "mean_square_region"` supplies conservative individual
+#'   SEM intervals and G/Phi/SEM difference enclosures for general balanced
+#'   crossed/nested two-facet plans. The enclosure retains common source
+#'   uncertainty but can be much wider than the tight difference image.
+#'   `plot(d, type = "sem", metric = "AbsoluteSEM", intervals = TRUE,
+#'   assumption = "normal")` adds the corresponding ribbon without refitting.
 #'
 #' @section Calculation and interpretation limits:
 #'   For crossed covariance component matrices `P`, `R`, `T`, `PR`, `PT`, `RT`,
@@ -705,7 +791,13 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   same rules. All persons receive the same tasks and their nested raters;
 #'   two raters per task at six tasks means twelve distinct raters, not two
 #'   raters each judging six tasks. Future unequal child counts, changes of
-#'   nesting, and nested-design sampling intervals are not supported.
+#'   nesting are not supported. Nested G/Phi defaults and their differences
+#'   require unchanged source child counts. Nested MLS SEM differences need
+#'   a common future child count across plans, which may differ from the source.
+#'   General nested coefficient intervals require explicit experimental methods;
+#'   general difference enclosures use `method = "mean_square_region"`.
+#'   Individual nested SEM intervals allow both counts to change.
+#'   See `confint()` above for the derivations and limitations.
 #'
 #'   For incomplete source data, counts of distinct observed levels are not
 #'   per-person replication counts. This function projects a future complete
@@ -775,20 +867,26 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   `weights` (the supplied vector or matrix, reordered to the G-study score
 #'   order), `component_diagnostics`,
 #'   and `gstudy` (the source result). `summary()` returns `coefficients`.
+#'   `print()` returns the same D-study invisibly without computing intervals.
+#'   [summary.mfrm_multivariate_d_study()] with `intervals = TRUE` explicitly
+#'   calculates and collects supported intervals, methods and source context.
 #'   `print()` also shows source level/row counts, future-plan conventions and
 #'   the supplied composite weights. Save the full result with `saveRDS(d)`
 #'   and reopen with `readRDS()` to preserve that context. A CSV of
 #'   `summary(d)` contains the coefficient table only; accompany it with the
 #'   weights, source design and row usage, future design and score convention.
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
-#'   Chapters 9--11.
+#'   Chapters 9--11. \doi{10.1007/978-1-4757-3456-0}.
+#'
 #'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
 #'   Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
 #'   Appendices E and F, pages 74--81.
 #'   Crick, J. E., and Brennan, R. L. (2021). *Manual for jGENOVA, Version 1.0*.
 #'   Pages 2-10--2-11, 3-5, and A-22--A-23.
+#'   Both manuals are available from the author's
+#'   [GENOVA Suite](https://brennancrickgenova.org/genova-suite/).
 #' @seealso [plot.mfrm_multivariate_d_study()], [mfrm_multivariate_gstudy()],
-#'   [mfrm_d_study()]
+#'   [mfrm_multivariate_d_compare()], [mfrm_d_study()]
 #' @examples
 #' # Published synthetic two-score data: the same six tasks for ten persons.
 #' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
@@ -979,10 +1077,14 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
 
 #' @rdname mfrm_multivariate_gstudy
 #' @param x,object A result from the corresponding G-study or D-study function.
-#' @param ... Reserved for method compatibility.
+#' @param digits Display precision passed to the printed tables; `NULL` uses
+#'   R's current setting. Stored estimates are unchanged.
+#' @param row.names Logical; print table row names? Defaults to `FALSE`.
+#' @param ... Further table-printing arguments for `print()`; unused arguments
+#'   to `summary()` are rejected.
 #' @method print mfrm_multivariate_gstudy
 #' @export
-print.mfrm_multivariate_gstudy <- function(x, ...) {
+print.mfrm_multivariate_gstudy <- function(x, digits = NULL, row.names = FALSE, ...) {
   cat("Multivariate observed-score G-study\n")
   label <- if (identical(x$design$complete, FALSE)) "Incomplete observed design:" else
     if (!is.null(x$design$nesting)) "Complete nested design:" else "Complete crossed design:"
@@ -1005,8 +1107,11 @@ print.mfrm_multivariate_gstudy <- function(x, ...) {
     cat("Covariance-component rank:", x$estimation$rank,
       "; scaled moment-system condition number:", format(x$estimation$condition_number, digits = 4), "\n")
   }
-  print(x$component_diagnostics, row.names = FALSE)
-  cat("Raw covariance components are retained. Sampling uncertainty is not estimated.\n")
+  print(x$component_diagnostics, digits = digits, row.names = row.names, ...)
+  cat("Raw covariance components are retained; this table shows point estimates.\n")
+  if (identical(x$design$method, "Balanced multivariate ANOVA"))
+    cat("Use confint(x, assumption = 'normal') for eligible score-component SEs and intervals.\n")
+  else cat("Use vcov(x, assumption = 'normal') for component sampling SEs; confint(x, method = 'reml_profile', assumption = 'normal') provides explicit experimental intervals.\n")
   invisible(x)
 }
 
@@ -1014,18 +1119,20 @@ print.mfrm_multivariate_gstudy <- function(x, ...) {
 #' @method summary mfrm_multivariate_gstudy
 #' @export
 summary.mfrm_multivariate_gstudy <- function(object, ...) {
+  rlang::check_dots_empty()
   object$component_diagnostics
 }
 
 #' @rdname mfrm_multivariate_d_study
-#' @param object A result from [mfrm_multivariate_d_study()].
-#' @param ... Reserved for method compatibility.
+#' @inheritParams print.mfrm_multivariate_gstudy
+#' @param ... Further arguments to the printed coefficient table.
 #' @method print mfrm_multivariate_d_study
 #' @export
-print.mfrm_multivariate_d_study <- function(x, ...) {
+print.mfrm_multivariate_d_study <- function(x, digits = NULL, row.names = FALSE, ...) {
   cat("Multivariate observed-score D-study\n")
   .mfrm_mvgt_print_source(x$gstudy$design, x$gstudy$data_usage$counts)
   cat("Future complete balanced plans; counts apply to every person and score.\n")
+  .mfrm_mvgt_print_future_counts(x$gstudy$design)
   convention <- x$gstudy$design$score_convention
   if (is.null(convention)) convention <- paste("Means over common random",
     paste(tolower(names(x$design_grid)), collapse = " and "))
@@ -1033,12 +1140,12 @@ print.mfrm_multivariate_d_study <- function(x, ...) {
   if (!is.null(x$weights)) {
     cat("Composite weights (not normalized):\n")
     print(if (is.matrix(x$weights)) x$weights else
-      matrix(x$weights, ncol = 1L, dimnames = list(names(x$weights), "Composite")))
+      matrix(x$weights, ncol = 1L, dimnames = list(names(x$weights), "Composite")), digits = digits)
   }
   if (any(!x$component_diagnostics$PositiveSemidefinite)) {
     cat("Warning: non-PSD covariance components. Values use raw projections; inspect component_diagnostics.\n")
   }
-  print(x$coefficients, row.names = FALSE)
+  print(x$coefficients, digits = digits, row.names = row.names, ...)
   cat("Point projections conditional on estimated covariance components; no confidence intervals.\n")
   invisible(x)
 }
@@ -1062,9 +1169,11 @@ print.mfrm_multivariate_d_study <- function(x, ...) {
   invisible(NULL)
 }
 
-#' @rdname mfrm_multivariate_d_study
-#' @method summary mfrm_multivariate_d_study
-#' @export
-summary.mfrm_multivariate_d_study <- function(object, ...) {
-  object$coefficients
+.mfrm_mvgt_print_future_counts <- function(design) {
+  if (!is.null(design$nesting)) {
+    child <- names(design$nesting)
+    cat("Future", design$count_columns[[child]], "counts levels per",
+      unname(design$nesting), "; not the total across parents.\n")
+  }
+  invisible(NULL)
 }

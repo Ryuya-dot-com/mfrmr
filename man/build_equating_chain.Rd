@@ -24,8 +24,8 @@ build_equating_chain(
     "offset_sensitivity"),
   preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
-  show_title = TRUE,
-  show_notes = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
   ...
 )
 
@@ -287,7 +287,7 @@ figure titles and footers are omitted.
 \code{fits <- list(Spring23 = fit_s, Fall23 = fit_f, Spring24 = fit_s2)}.
 \item Call \code{chain <- build_equating_chain(fits)}.
 \item Review \code{summary(chain)} for link quality.
-\item Visualize with \code{plot_anchor_drift(chain, type = "chain")}.
+\item Visualize with \code{plot(chain, type = "chain")}.
 \item For problematic links, investigate flagged elements in
 \code{chain$element_detail} and consider removing them from the anchor set.
 }
@@ -328,12 +328,17 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person \%in\% people[13:24], , drop = FALSE]
+d1 <- toy[toy$Person \%in\% people[1:24], , drop = FALSE]
+d2 <- toy[toy$Person \%in\% people[25:48], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
+                 method = "JML")
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
-                 method = "JML", maxit = 30)
+                 method = "JML")
+# Check convergence before using the estimates for linking.
+summary(fit1)
+summary(fit2)
+# The four shared levels per facet trigger a thin-support warning.
+# Inspect that warning; matching labels alone do not establish a common scale.
 chain <- build_equating_chain(list(Form1 = fit1, Form2 = fit2))
 summary(chain)
 chain$cumulative
@@ -341,5 +346,5 @@ chain$cumulative
 }
 \seealso{
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}}, \code{\link[=anchor_to_baseline]{anchor_to_baseline()}},
-\code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}
+\code{\link[=make_anchor_table]{make_anchor_table()}}, \link[=plot.mfrm_anchor_drift]{plot(x)}
 }

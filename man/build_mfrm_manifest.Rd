@@ -71,13 +71,15 @@ The returned bundle has class \code{mfrm_manifest} and includes:
 \itemize{
 \item \code{summary}: one-row analysis overview
 \item \code{readiness}, \code{readiness_components}, and \code{readiness_parameters}: the
-source fit's current readiness-contract record, its component review, and
-any parameter-level readiness rows
+fitted model's recorded numerical checks and restrictions on inference,
+overall and by component or parameter
 \item \code{environment}: package/R/platform metadata
 \item \code{model_settings}: key-value model settings table
 \item \code{source_columns}: key-value data-column table
 \item \code{estimation_control}: key-value optimizer settings table
-\item \code{anchor_summary}: facet-level anchor summary
+\item \code{anchor_summary}: facet-level anchor summary. \code{model_settings} separately
+records \code{centering_scope} and \code{noncenter_facet}; missing convention metadata
+in a native fit retains the legacy \code{"remainder"} interpretation
 \item \code{anchors}: machine-readable anchor table
 \item \code{hierarchical_review}: retained traceability table for hierarchical /
 small-sample design flags
@@ -99,14 +101,15 @@ the intended analysis. The \code{model_settings}, \code{source_columns}, and
 \code{estimation_control} tables are designed for reproducibility records and
 method write-up.
 \code{Converged} records the optimizer return-code decision; \code{InferenceReady}
-records the stricter readiness-contract decision. They need not agree.
-The \code{readiness} tables are provenance: they preserve the decision recorded
-for the source fit, including its contract version and reason codes. They do
-not make a subsequently replayed fit inference-ready; replay must recompute
-readiness from the replayed data and numerical result.
+records whether the fit passes the additional numerical checks required for
+inference. They need not agree; passing these checks does not establish model
+fit or the statistical adequacy of every interval method.
+The \code{readiness} tables preserve these checks for the original fitted model,
+including the check-format version and reason codes. Re-running the analysis
+must repeat the checks using the new fit; the saved records do not certify it.
 Active latent-regression fits also record their population-model provenance
 there, including the fitted scoring basis, stored \code{population_formula}, and
-person-level contract used by the fitted population model. When categorical
+person-level data requirements used by the fitted population model. When categorical
 background variables are expanded through \code{stats::model.matrix()},
 \code{population_xlevel_variables} and \code{population_contrast_variables} identify
 the variables whose fitted coding must be preserved for replay/scoring.

@@ -92,7 +92,7 @@ marginal usage.
 \enumerate{
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"} for \code{RSM} / \code{PCM}.
 \item Run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"}.
-\item Use \code{plot_marginal_fit()} to inspect the largest strict marginal cells.
+\item Use \code{plot()} to inspect the largest strict marginal cells.
 \item Follow up with \code{\link[=rating_scale_table]{rating_scale_table()}} or substantive design review.
 }
 }
@@ -102,6 +102,12 @@ marginal usage.
 For a plot-selection guide and a longer walkthrough, see
 \link{mfrmr_visual_diagnostics} and
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -155,15 +161,16 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Which score categories occur more or less often than the model expects?
-plot_marginal_fit(diagnostics)
+plot(diagnostics, type = "marginal_fit")
 # Positive bars: more frequent than expected; negative bars: less frequent
 
 # Optional: show observed-minus-expected proportions instead
 # Run this command separately to inspect the second figure
-plot_marginal_fit(diagnostics, plot_type = "prop_diff")
+plot(diagnostics, type = "marginal_fit", view = "prop_diff")
 }
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}},
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")},
 \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

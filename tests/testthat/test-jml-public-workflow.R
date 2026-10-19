@@ -109,7 +109,7 @@ test_that("corrected JML refuses unsupported settings without changing defaults"
   raw <- args; raw$jml_correction_order <- NULL; raw$jml_correction_sampling <- "random_rosters"
   expect_error(do.call(fit_mfrm,raw),"requires an explicit")
   expect_null(formals(fit_mfrm)$jml_correction_order)
-  expect_identical(formals(fit_mfrm)$method,quote(c("MML", "JML", "JMLE")))
+  expect_identical(formals(fit_mfrm)$method,quote(c("MML", "JML", "JMLE", "CML")))
 })
 
 test_that("unresolved corrected roots remain reportable without optimizer placeholders", {

@@ -50,6 +50,7 @@ mfrmr_validate_calibration_score_assumptions <- function(x) {
 }
 
 mfrmr_validate_calibration_score <- function(x, arg = "x") {
+  mfrm_validate_decisions(x)
   if (!inherits(x, "mfrm_calibration_score")) {
     stop(
       "`", arg, "` must be output from score_mfrm_calibration().",
@@ -291,6 +292,11 @@ mfrmr_calibration_score_overview <- function(x) {
 #' Its print method shows at most ten rows from each table so routine console
 #' output stays compact. Base and ggplot2 renderers distinguish scored and
 #' review states by shape as well as colour.
+#' `as_ggplot(p)` and `as_ggplot(p, component = "data")` preserve the same
+#' selected view, saved bounds, review symbols and unplotted dispositions.
+#' Use [plot_data()] to extract other components. Changing the interval level
+#' requires an explicit scoring call; conversion does not recompute intervals.
+#' Notes remain in the returned object and are not automatically drawn.
 #'
 #' @param object,x An `mfrm_calibration_score` returned by
 #'   [score_mfrm_calibration()].
@@ -314,38 +320,45 @@ mfrmr_calibration_score_overview <- function(x) {
 #'   `overview`, `estimates`, `review`, `row_review`, `settings`, and `notes`.
 #'   When adaptive integration was requested and scored rows exist, it also
 #'   retains unrounded `quadrature_review` and a compact `quadrature_overview`.
+#'   When cut scores were requested, `decisions` preserves every probability,
+#'   cut boundary and actual scoring prior without rounding; unavailable
+#'   Persons remain in that table with `NA` probabilities.
 #'   `plot()` returns an `mfrm_plot_data` with the selected plotting table,
 #'   selection accounting, unplotted Person dispositions, interpretation
 #'   guidance, and plotting settings.
 #'
 #' @seealso [mfrm_calibration_workflow], [mfrm_calibration_capabilities],
-#'   [plot_data()], [plot_data_components()], [as_ggplot()]
+#'   [plot_data()], [plot_data_components()], [as_ggplot()], [apa_table()],
+#'   [build_summary_table_bundle()], [export_summary_appendix()],
+#'   [predict_mfrm_units()] for conditional-decision interpretation
 #' @name mfrm_calibration_score_methods
 #'
 #' @examples
-#' \donttest{
 #' dat <- load_mfrmr_data("example_core")
 #' ids <- unique(dat$Person)
 #' training <- dat[dat$Person %in% ids[1:18], , drop = FALSE]
 #' fit <- fit_mfrm(
 #'   training, "Person", c("Rater", "Criterion"), "Score",
-#'   model = "RSM", method = "MML", quad_points = 5, maxit = 20
+#'   model = "RSM", method = "MML", quad_points = 31
 #' )
 #' q_review <- mml_quadrature_sensitivity(
-#'   fit, training, quad_points = c(5, 7), theta_points = 41
+#'   fit, training, quad_points = c(31, 61), theta_points = 41
 #' )
-#' fit <- q_review$fits$q7
+#' summary(q_review) # Inspect movement; these grids are not universal cutoffs.
+#' fit <- q_review$fits$q61
 #' calibration <- freeze_mfrm_calibration(
 #'   validate_mfrm_calibration(extract_mfrm_calibration(
-#'     fit, quadrature_review = q_review
+#'     fit, quadrature_review = q_review, scoring_quad_points = 121
 #'   ))
 #' )
 #' new_rows <- dat[dat$Person %in% ids[19:20], , drop = FALSE]
-#' scores <- score_mfrm_calibration(calibration, new_rows)
+#' scores <- score_mfrm_calibration(calibration, new_rows,
+#'   cut_scores = c(Basic = -0.5, Advanced = 0.8))
 #' summary(scores)
-#' plot(scores, type = "interval")
+#' apa_table(scores, which = "decisions")
+#' build_summary_table_bundle(scores)$table_index
+#' plot(scores, type = "interval", draw = FALSE)
 #' plot(scores, type = "edge_mass", draw = FALSE)
-#' }
 NULL
 
 #' @rdname mfrm_calibration_score_methods
@@ -444,6 +457,10 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
     }
   }
   class(out) <- c("summary.mfrm_calibration_score", "list")
+  if (!is.null(object$decisions)) {
+    out$decisions <- object$decisions
+    out$settings$cut_scores <- object$settings$cut_scores
+  }
   out
 }
 
@@ -488,6 +505,7 @@ print.mfrm_calibration_score <- function(x, ...) {
 #' @method print summary.mfrm_calibration_score
 #' @export
 print.summary.mfrm_calibration_score <- function(x, ...) {
+  mfrm_validate_decisions(x)
   mfrmr_validate_calibration_score_summary(x)
   overview <- x$overview[1L, , drop = FALSE]
   cat("mfrmr Portable Calibration Score Summary\n")
@@ -538,6 +556,11 @@ print.summary.mfrm_calibration_score <- function(x, ...) {
       "missing-response policy: ",
       as.character(row$MissingResponsePolicy %||% "not recorded")
     ))
+  }
+  if (!is.null(x$decisions)) {
+    cat("\nConditional decision probabilities (first 10; full table in $decisions)\n")
+    print(utils::head(x$decisions, 10L), row.names=FALSE)
+    print_wrapped_line(mfrm_decision_note())
   }
   cat("\nInterval interpretation\n")
   print_wrapped_line(mfrmr_calibration_score_interval_note(x$settings))
@@ -810,7 +833,7 @@ plot.mfrm_calibration_score <- function(
         plotted$Estimate, plotted$DisplayOrder,
         xlim = x_range, ylim = c(0.5, nrow(plotted) + 0.5),
         yaxt = "n", ylab = "", xlab = "Posterior EAP (logits)",
-        main = title, pch = point_shape, col = point_color
+        main = "", pch = point_shape, col = point_color
       )
       graphics::abline(v = 0, lty = 2, col = style$neutral)
       graphics::segments(
@@ -840,7 +863,7 @@ plot.mfrm_calibration_score <- function(
         plotted$Observations, plotted$SD,
         xlim = x_range, ylim = y_range,
         xlab = "Valid response rows", ylab = "Posterior SD (logits)",
-        main = title, pch = point_shape, col = point_color
+        main = "", pch = point_shape, col = point_color
       )
       if (isTRUE(label_review) && any(plotted$ReviewFlag)) {
         graphics::segments(
@@ -867,7 +890,7 @@ plot.mfrm_calibration_score <- function(
         ylim = c(0, maximum * 1.08),
         xlab = "Posterior EAP (logits)",
         ylab = "Posterior mass at outer quadrature nodes",
-        main = title, pch = point_shape, col = point_color
+        main = "", pch = point_shape, col = point_color
       )
       if (length(edge_threshold) > 0L) {
         graphics::abline(h = edge_threshold[1L], lty = 2, col = style$warn)
@@ -888,10 +911,6 @@ plot.mfrm_calibration_score <- function(
       bty = "o", bg = style$background, box.col = style$background,
       cex = 0.78
     )
-    graphics::mtext(subtitle, side = 3, line = 0.25, cex = 0.72)
-    graphics::mtext(uncertainty_note, side = 1,
-                    line = if (identical(type, "interval")) 5 else 3.8,
-                    cex = 0.72)
   }
 
   interpretation <- data.frame(

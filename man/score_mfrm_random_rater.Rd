@@ -79,6 +79,15 @@ Persons. Start with a few IDs when checking a large roster; \code{persons = NULL
 computes every Person's posterior and can be slow. Selecting outputs keeps
 all scoring responses. No fixed effects or population variances are re-estimated.
 
+With \code{newdata}, reusing a source rater ID does not import that rater's
+saved conditional distribution. Shared-rater distributions are calculated
+from the supplied responses and fitted population parameters. To retain
+earlier responses, include them in the complete scoring table, with each
+intended rating event appearing once. By contrast,
+\code{\link[=predict.mfrm_random_rater]{predict.mfrm_random_rater()}} with \code{rater = "observed"} uses the rater's
+conditional distribution from the calibration responses at abilities you
+supply; it does not estimate abilities from new responses.
+
 Intervals condition on all supplied observed responses, fitted calibration
 and the fitted or specified normal ability population. They exclude
 calibration/population estimation uncertainty, are not fixed-ability

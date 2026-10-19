@@ -15,6 +15,10 @@ benchmark by 22%; it has not been measured in a full check or on Windows.
 and optimization follow the mathematical/statistical decisions in D1 and their
 D2 output contracts. The dated engineering next steps below are retained as
 history, not a competing active queue. See the authoritative internal roadmap.
+The October 6 user direction supersedes the blanket deferral for established
+calculations: targeted, equivalent-computation improvements now accompany D1,
+using measured costs and preserving statistical checks. The assembled release
+workload remains a later source-bound qualification.
 Examples and CRAN workload configuration are reviewed last; no example is newly
 excluded. In particular, the measured ordinary-example profile explicitly
 disabled `_R_CHECK_DONTTEST_EXAMPLES_`; unmodified `--as-cran` normally enables
@@ -440,3 +444,57 @@ phase. The 600-second prerequisite remains open: obtain Windows per-file test
 timings and use the existing feature contracts to remove excessive fixture or
 repeated-study work, while measuring static/manual/other overhead separately.
 Do not extrapolate this one 22% improvement into an under-budget release.
+
+## October 6: reuse cumulative thresholds within a fixed-parameter Person kernel
+
+The existing adaptive Person kernel called the shared probability evaluator
+repeatedly during mode finding, quadrature and posterior CDF integration.
+Each call rebuilt cumulative category thresholds from the same parameters.
+`R/core-adaptive-quadrature.R` now computes those thresholds once per kernel
+and passes them through the evaluators' existing `step_cum` argument. A new
+parameter vector constructs a new kernel. Both R and compiled likelihood-only
+paths use the same sums; no persistent fit/readiness cache or new approximation
+is introduced. The earlier derivative-projection optimization is already in
+this comparison's baseline.
+
+On the retained `mfrm-conditional-scoring-gpcm.rds` fit, one local calibration
+review constructs 2,520 kernels and makes 33,872 R probability-bundle calls.
+Threshold construction therefore falls from 33,872 to 2,520 calls. A separate
+instrumented profile still attributes about 83% of sampled review time to
+`optimHess`; instrumentation is excluded from the paired timings below.
+
+| Iteration | Baseline elapsed (s) | Reuse elapsed (s) |
+| --- | ---: | ---: |
+| 1 | 10.743 | 9.168 |
+| 2 | 10.665 | 9.077 |
+| 3 | 11.293 | 9.626 |
+| Median | 10.743 | 9.168 |
+
+Execution order alternates across three pairs under R 4.6.1 with all four
+numerical thread settings equal to one. Elapsed median falls 14.7%; user-CPU
+median falls from 6.721 to 5.826 seconds (13.3%). Other validation workers
+remain active. These are local observations for this operation, not full-fit,
+whole-study, Windows or release-check timing claims.
+
+All 192 direct old/new kernel comparisons are exactly identical across
+RSM/PCM/GPCM, both backend settings, scalar/vector evaluation points,
+likelihood-only/moment/linear outputs, weighted observations, changed thresholds
+and a shifted/scaled prior. Twelve objective/gradient comparisons at the saved
+and two perturbed parameter vectors, at orders 1/3/31/61, are also exactly
+identical. Every timed calibration review, including its numerical fields and
+eligibility decision, is exactly identical. No original fit is recomputed for
+this comparison. The old/new source, script, timings, source/fixture hashes,
+profile and session record are retained in
+`validation-results/adaptive-step-reuse-20261006/`.
+
+The six affected test files (`adaptive-fitting`, `adaptive-quadrature-review`,
+`conditional-scoring`, `gmfrm-adaptive-gradient`, `gmfrm-adaptive-workflow`
+and `posterior-intervals`) pass 379 expectations with zero failures, errors,
+warnings or skips. They retain independent finite-difference and Louis-information
+checks, literal posterior-mass calculations, weighted/anchored/regression
+configurations, source refusals and public fitting/scoring/portable output paths.
+A fresh R session verifies every recorded numerical source hash, allowing only
+the identified baseline-to-candidate kernel change, and rechecks the saved
+comparison/test records without fitting or integration. The exact candidate is
+adopted in the development source; ongoing validation workers retain their
+frozen source copies. No full package or Windows check is claimed.

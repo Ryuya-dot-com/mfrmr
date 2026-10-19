@@ -140,5 +140,5 @@ if (interactive()) {
 }
 \seealso{
 \code{\link[=mfrm_threshold_profiles]{mfrm_threshold_profiles()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
-\code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")}
 }

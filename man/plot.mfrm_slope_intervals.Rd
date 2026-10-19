@@ -29,10 +29,12 @@
 \arguments{
 \item{x}{Saved \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} or \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mfrm_gpcm()}} output.}
 
-\item{title, subtitle}{Optional plot text; NULL removes it. The interval
-subtitle defaults to the saved target, method, confidence level and any
+\item{title, subtitle}{Optional returned metadata; NULL removes it. The interval
+description defaults to the saved target, method, confidence level and any
 saved numerical or bootstrap cautions. Custom text overrides this default, while the
-diagnostics remain in the plot data and interval tables.}
+diagnostics remain in the plot data and interval tables. Titles and notes
+are not drawn. Use \code{plot_data(p, "notes")} for descriptions and cautions,
+and \code{plot_data(p, "title")} for the suggested figure title.}
 
 \item{reference}{Optional finite numeric vertical reference. Default NULL;
 no quality threshold or scoring-policy cutoff is selected.}
@@ -47,7 +49,7 @@ target and level. Otherwise unused.}
 limits. The default is \code{"profile"} for saved profile calculations and
 \code{"interval"} otherwise. This never initiates profiling.}
 
-\item{caption}{For saved slope intervals, optional caption. NULL removes it.
+\item{caption}{For saved slope intervals, optional returned caption. NULL removes it.
 Two-family intervals state the distinct family references by default.
 Profile plots supply a
 default explanation of line styles and missing coordinates when omitted.}
@@ -64,9 +66,13 @@ agreement, quality or recommended scoring weights.
 \details{
 Crosses retain unavailable intervals. Open circles retain intervals
 with infinite endpoints; the plot does not replace them with finite bounds.
-The accompanying table contains all bounds and failure reasons.
+Incomplete intervals retain the computed endpoint as a tick, without a
+connecting interval line. A missing endpoint is not an infinite endpoint
+or a calibrated one-sided interval. Finite review-only bounds use a dashed
+line. The table retains \code{IntervalStatus}, \code{CIEligible}, \code{CIUse} (when saved),
+all bounds and failure reasons; returned notes explain the display.
 For a bootstrap LRT, a histogram shows resolved null statistics and a line
-the observed statistic. The annotation counts every unresolved replicate.
+the observed statistic. The returned notes count every unresolved replicate.
 
 Use \code{\link[=apa_table]{apa_table()}} for target-aware tables, \code{\link[=plot_data]{plot_data()}} for plotted values,
 and \code{\link[=as_ggplot]{as_ggplot()}} for customization. Attach one result or a named list with

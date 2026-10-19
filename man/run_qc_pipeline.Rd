@@ -150,7 +150,7 @@ collapsing categories automatically.
 \item Check \code{qc$overall} for the headline verdict.
 \item Review \code{qc$verdicts} for per-check details.
 \item Follow \code{qc$recommendations} for remediation.
-\item Visualize with \code{\link[=plot_qc_pipeline]{plot_qc_pipeline()}}.
+\item Visualize with \link[=plot.mfrm_qc_pipeline]{plot(x)}.
 }
 }
 
@@ -168,6 +168,6 @@ qc$verdicts
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}},
-\code{\link[=mfrm_threshold_profiles]{mfrm_threshold_profiles()}}, \code{\link[=plot_qc_pipeline]{plot_qc_pipeline()}},
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}
+\code{\link[=mfrm_threshold_profiles]{mfrm_threshold_profiles()}}, \link[=plot.mfrm_qc_pipeline]{plot(x)},
+\link[=plot.mfrm_fit]{plot(x, type = "qc")}, \code{\link[=build_visual_summaries]{build_visual_summaries()}}
 }

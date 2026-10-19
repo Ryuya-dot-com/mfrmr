@@ -129,6 +129,12 @@ For a plot-selection guide and a longer walkthrough, see
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -164,23 +170,18 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 \donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
+p <- plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
 if (interactive()) {
-  plot_unexpected(
-    fit,
-    abs_z_min = 1.5,
-    prob_max = 0.4,
-    top_n = 10,
-    plot_type = "severity",
-    preset = "publication",
+  plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4,
+    top_n = 10, view = "severity", preset = "publication",
     main = "Unexpected Response Severity (Customized)",
     palette = c(higher = "#d95f02", lower = "#1b9e77", bar = "#2b8cbe"),
-    label_angle = 45
-  )
+    label_angle = 45)
 }
 }
 }
 \seealso{
-\code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=unexpected_response_table]{unexpected_response_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},
+\link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

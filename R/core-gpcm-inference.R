@@ -53,6 +53,12 @@ mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
   list(newdata = newdata, contexts = contexts, evaluate = evaluate)
 }
 
+mfrm_gpcm_anchor_note <- function(fit) {
+  if (!nrow(mfrmr_calibration_extract_anchors(fit))) return(NULL)
+  paste("Conditional on supplied anchors and group means;",
+    "uncertainty in their source calibration is not propagated.")
+}
+
 # Joint information and transformations shared by slope/curve inference.
 mfrm_gpcm_inference_source <- function(fit) {
   list(signature = normalize_compare_signature(fit), parameters = fit$opt$par,
@@ -83,21 +89,26 @@ mfrm_gpcm_inference <- function(fit, method = "model", clusters = NULL, adjust =
   check <- mfrm_gpcm_slope_inference_check(fit, information)
   out <- list(covariance = information$cov, information = information, check = check,
               method = method, clusters = NULL, person_scores = NULL, cluster_scores = NULL)
-  if (!isTRUE(check$eligible) || method == "model") return(out)
-  scores <- mfrm_mml_person_scores_numeric(fit)
-  sandwich <- mfrm_cluster_sandwich(information$cov, scores, clusters, adjust)
-  out$covariance <- sandwich$covariance
-  out$person_scores <- scores
-  out$cluster_scores <- sandwich$cluster_scores
-  out$clusters <- sandwich$clusters
-  out$cluster_rank <- sandwich$rank
-  out$adjustment_factor <- sandwich$factor
-  if (sandwich$rank < ncol(scores)) {
-    out$check <- list(eligible = FALSE,
-      review = "Independent-cluster scores do not span the free parameters; sandwich intervals are unavailable.")
-  } else out$check$review <- paste(
-    "Independent-cluster sandwich approximation for the working-model target.",
-    "It requires many independent clusters and does not correct biased estimates or selective assignment.")
+  if (isTRUE(check$eligible) && method == "sandwich") {
+    scores <- mfrm_mml_person_scores_numeric(fit)
+    sandwich <- mfrm_cluster_sandwich(information$cov, scores, clusters, adjust)
+    out$covariance <- sandwich$covariance
+    out$person_scores <- scores
+    out$cluster_scores <- sandwich$cluster_scores
+    out$clusters <- sandwich$clusters
+    out$cluster_rank <- sandwich$rank
+    out$adjustment_factor <- sandwich$factor
+    if (sandwich$rank < ncol(scores)) {
+      out$check <- list(eligible = FALSE,
+        review = "Independent-cluster scores do not span the free parameters; sandwich intervals are unavailable.")
+    } else out$check$review <- paste(
+      "Independent-cluster sandwich approximation for the working-model target.",
+      "It requires many independent clusters and does not correct biased estimates or selective assignment.")
+  }
+  out$check$anchor_note <- mfrm_gpcm_anchor_note(fit)
+  if (length(out$check$anchor_note) && method == "sandwich" && isTRUE(check$eligible)) {
+    out$check$review <- paste(out$check$review, out$check$anchor_note)
+  }
   out
 }
 

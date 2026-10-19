@@ -3,14 +3,11 @@
 \name{mfrm_multivariate_d_study}
 \alias{mfrm_multivariate_d_study}
 \alias{print.mfrm_multivariate_d_study}
-\alias{summary.mfrm_multivariate_d_study}
 \title{Plan measurement conditions with a multivariate D-study}
 \usage{
 mfrm_multivariate_d_study(x, design_grid = NULL, weights = NULL)
 
-\method{print}{mfrm_multivariate_d_study}(x, ...)
-
-\method{summary}{mfrm_multivariate_d_study}(object, ...)
+\method{print}{mfrm_multivariate_d_study}(x, digits = NULL, row.names = FALSE, ...)
 }
 \arguments{
 \item{x}{A result from \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}.}
@@ -41,9 +38,12 @@ Otherwise, each scenario reports the original scores once, followed by
 each composite. A vector's composite is named \code{"Composite"}; a matrix
 preserves its column names and order.}
 
-\item{...}{Reserved for method compatibility.}
+\item{digits}{Display precision passed to the printed tables; \code{NULL} uses
+R's current setting. Stored estimates are unchanged.}
 
-\item{object}{A result from \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}.}
+\item{row.names}{Logical; print table row names? Defaults to \code{FALSE}.}
+
+\item{...}{Further arguments to the printed coefficient table.}
 }
 \value{
 An \code{mfrm_multivariate_d_study} list containing \code{coefficients}
@@ -54,6 +54,9 @@ row and metric-specific status, and \code{ComponentPSD}), \code{covariances}
 \code{weights} (the supplied vector or matrix, reordered to the G-study score
 order), \code{component_diagnostics},
 and \code{gstudy} (the source result). \code{summary()} returns \code{coefficients}.
+\code{print()} returns the same D-study invisibly without computing intervals.
+\code{\link[=summary.mfrm_multivariate_d_study]{summary.mfrm_multivariate_d_study()}} with \code{intervals = TRUE} explicitly
+calculates and collects supported intervals, methods and source context.
 \code{print()} also shows source level/row counts, future-plan conventions and
 the supplied composite weights. Save the full result with \code{saveRDS(d)}
 and reopen with \code{readRDS()} to preserve that context. A CSV of
@@ -107,12 +110,67 @@ only the remaining values does not resolve the full planning question.
 by default, or the first score when there are no composites. With several
 composites, specify one with \code{plot(d, composite = "Equal")}; use
 \code{plot(d, score = "V")} to inspect an original score named V. The title
-always identifies the plotted score and any composite weights.
+metadata identifies the plotted score and any composite weights; it is
+returned with the plot, with titles and notes omitted from the figure
+by default.
 Check \code{GStatus}, \code{PhiStatus}, \code{RelativeSEMStatus}, and \code{AbsoluteSEMStatus}:
 each explains the corresponding metric's availability. \code{NA} means
 unavailable, not zero dependability. \code{ComponentPSD} separately flags
 covariance components needing review. See \code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}} for
 interpreting curves and unavailable estimates.
+
+For a balanced one-facet ANOVA source, \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}}
+returns exact F intervals for G and generalized confidence intervals for
+Phi (\code{parm = "Phi"}) under independent normal random effects, using the
+source study's degrees of freedom at each requested future count. Phi
+includes Monte Carlo endpoint diagnostics and is not an exact-coverage
+method. Add \code{reference = 1} for intervals on changes from the first plan:
+G maps the F set; Phi maps the generalized set and retains approximate
+coverage. Both include interior extrema; Phi differences retain joint
+numerical endpoint bands. These methods also apply to balanced nested
+plans when future child counts per parent equal the source count, using
+the parent count in the one-facet reduction. Complete balanced crossed
+two-facet sources default to approximate MLS null inversion for individual
+G/Phi intervals. Undefined MLS widths are conservatively retained and
+flagged by \code{FormulaComplete}; original estimates and numerical failures
+remain explicit. Small-source intervals may span almost all of \verb{[0,1]}.
+These sources and general balanced nested plans also have explicitly selected
+experimental \code{method = "approximate_f"} and \code{"mean_square_region"}
+options for G/Phi; a vector requests both and \code{plot()} compares them.
+The confidence-interval help explains their assumptions, limitations and
+unavailable results. Use \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}
+separately for its supported paired-plan differences.
+For balanced or identifiable incomplete sources, explicit
+\code{method = "reml_profile"} fits approximate G/Phi or SEM intervals from the used
+ratings under normal effects. It retains original ANOVA/MINQUE estimates
+and reports the separate REML estimates as \code{IntervalCenter}. Numerical
+diagnostics and experimental finite-sample/boundary qualifications remain
+explicit; it is not a default. With \code{reference}, it supplies shared-profile
+interval images for one-facet or common-child nested plans, and direct
+difference profiles for other crossed/nested comparisons. The latter need
+optional nloptr and retain experimental calibration, especially at zero.
+SEM uses a direct error-variance profile followed by square roots; the
+numerical interval surrounds the REML center without enumerating remote
+disconnected accepted regions. Checked boundary populations showed
+below-nominal inclusion despite high numerical availability.
+Select \code{parm = "RelativeSEM"} or \code{"AbsoluteSEM"} for intervals on SEM
+itself from supported balanced crossed/nested sources. A single contributing
+mean square uses chi-square limits; otherwise MLS limits for the combined
+error variance are transformed by the square root. MLS coverage is
+approximate. One-facet SEM differences also accept \code{reference = 1};
+nested MLS comparisons require a common future child count across plans.
+For one-facet RelativeSEM, explicit \code{method = "residual_contrast"} also
+accepts retained ANOVA/MINQUE ratings, including incomplete MINQUE sources.
+It transforms one residual
+chi-square interval and retains original points, a separate projected
+\code{IntervalCenter}, unavailable states and shared uncertainty across plans.
+Normal independent residuals and noninformative omissions are required;
+this does not supply AbsoluteSEM, G/Phi or multifacet intervals.
+Explicit \code{method = "mean_square_region"} supplies conservative individual
+SEM intervals and G/Phi/SEM difference enclosures for general balanced
+crossed/nested two-facet plans. The enclosure retains common source
+uncertainty but can be much wider than the tight difference image.
+\code{plot(d, type = "sem", metric = "AbsoluteSEM", intervals = TRUE, assumption = "normal")} adds the corresponding ribbon without refitting.
 }
 \section{Calculation and interpretation limits}{
 
@@ -144,7 +202,13 @@ Universe covariance remains \code{P}. Other nested facet labels follow the
 same rules. All persons receive the same tasks and their nested raters;
 two raters per task at six tasks means twelve distinct raters, not two
 raters each judging six tasks. Future unequal child counts, changes of
-nesting, and nested-design sampling intervals are not supported.
+nesting are not supported. Nested G/Phi defaults and their differences
+require unchanged source child counts. Nested MLS SEM differences need
+a common future child count across plans, which may differ from the source.
+General nested coefficient intervals require explicit experimental methods;
+general difference enclosures use \code{method = "mean_square_region"}.
+Individual nested SEM intervals allow both counts to change.
+See \code{confint()} above for the derivations and limitations.
 
 For incomplete source data, counts of distinct observed levels are not
 per-person replication counts. This function projects a future complete
@@ -236,14 +300,17 @@ plot(alternatives, composite = "Difference", type = "sem")
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
-Chapters 9--11.
+Chapters 9--11. \doi{10.1007/978-1-4757-3456-0}.
+
 Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
 Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
 Appendices E and F, pages 74--81.
 Crick, J. E., and Brennan, R. L. (2021). \emph{Manual for jGENOVA, Version 1.0}.
 Pages 2-10--2-11, 3-5, and A-22--A-23.
+Both manuals are available from the author's
+\href{https://brennancrickgenova.org/genova-suite/}{GENOVA Suite}.
 }
 \seealso{
 \code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}}, \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}},
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}
+\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}
 }

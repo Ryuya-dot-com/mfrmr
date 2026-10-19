@@ -29,6 +29,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "fit_mfrm_testlet",
     "mfrm_random_rater_intervals",
     "analyze_dff",
+    "mantel_haenszel_table",
+    "ordinal_logistic_table",
     "analyze_dif",
     "analyze_facet_equivalence",
     "analyze_residual_pca",
@@ -75,6 +77,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "evaluate_mfrm_signal_detection",
     "export_mfrm",
     "export_mfrm_bundle",
+    "export_mfrm_model",
     "export_summary_appendix",
     "extract_mfrm_sim_spec",
     "facet_quality_dashboard",
@@ -107,24 +110,6 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "normalize_conquest_overlap_exports",
     "normalize_conquest_overlap_files",
     "normalize_conquest_overlap_tables",
-    "plot_anchor_drift",
-    "plot_bias_interaction",
-    "plot_bubble",
-    "plot_dif_heatmap",
-    "plot_displacement",
-    "plot_facet_equivalence",
-    "plot_facet_quality_dashboard",
-    "plot_facets_chisq",
-    "plot_fair_average",
-    "plot_information",
-    "plot_interrater_agreement",
-    "plot_marginal_fit",
-    "plot_marginal_pairwise",
-    "plot_qc_dashboard",
-    "plot_qc_pipeline",
-    "plot_residual_pca",
-    "plot_unexpected",
-    "plot_wright_unified",
     "predict_mfrm_population",
     "predict_mfrm_units",
     "sample_mfrm_plausible_values",
@@ -161,21 +146,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "apply_empirical_bayes_shrinkage",
     "shrinkage_report",
     # 0.1.6: additional visualization helpers.
-    "plot_threshold_ladder",
-    "plot_person_fit",
-    "plot_rater_severity_profile",
-    "plot_apa_figure_one",
-    "plot_dif_summary",
     # 0.1.6 second-wave visualizations.
-    "plot_guttman_scalogram",
-    "plot_residual_qq",
-    "plot_rater_trajectory",
-    "plot_rater_agreement_heatmap",
     # 0.1.6 secondary plot helpers.
-    "plot_local_dependence_heatmap",
-    "plot_reliability_snapshot",
-    "plot_residual_matrix",
-    "plot_shrinkage_funnel",
     # 0.1.6 package-level MnSq misfit threshold getter / setter.
     "mfrm_misfit_thresholds",
     # 0.1.6 additions: Q3 + person fit + GT + interop importers.
@@ -189,24 +161,35 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "import_tam_fit",
     "import_erm_fit"
   )
-  # Subset assertion rather than exact-set equality. The hard-coded
-  # `expected_exports` list above is the 0.1.6 baseline contract: every entry
-  # must remain exported, but additional exports introduced by later cycles
-  # (Phase 7c plots, Phase 7d classical DIF, Phase 7g GPCM helpers, Phase 8
-  # visualisation round 2, etc.) are allowed to grow the namespace without
-  # tripping this regression guard.
+  # Retain the baseline except the explicitly retired 0.2.4 drawing helpers.
   expected_exports <- c(expected_exports, "score_mfrm_random_rater", "score_mfrm_persons")
   missing_exports <- setdiff(expected_exports, exports)
   expect_identical(
     missing_exports, character(0),
     info = paste0(
-      "These exports from the 0.1.6 baseline are no longer in NAMESPACE: ",
+      "Required exports are absent from NAMESPACE: ",
       paste(missing_exports, collapse = ", ")
     )
   )
 
   s3 <- grep("^S3method\\(", ns_lines, value = TRUE)
   expected_s3 <- c(
+    "S3method(logLik,mfrm_cml_fit)",
+    "S3method(print,mfrm_cml_fit)",
+    "S3method(summary,mfrm_cml_fit)",
+    "S3method(vcov,mfrm_cml_fit)",
+    "S3method(print,mfrm_comparison_fit)",
+    "S3method(summary,mfrm_comparison_fit)",
+    "S3method(plot,mfrm_anchor_drift)",
+    "S3method(plot,mfrm_bias)",
+    "S3method(plot,mfrm_diagnostics)",
+    "S3method(plot,mfrm_dif)",
+    "S3method(plot,mfrm_dif_interaction)",
+    "S3method(plot,mfrm_information)",
+    "S3method(plot,mfrm_multivariate_gstudy)",
+    "S3method(plot,mfrm_qc_pipeline)",
+    "S3method(plot,mfrm_residual_pca)",
+
     "S3method(as_ggplot,mfrm_curve_intervals)",
     "S3method(as_ggplot,mfrm_gpcm_bootstrap)",
     "S3method(as_ggplot,mfrm_results)",
@@ -250,6 +233,10 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(confint,mfrm_testlet)",
     "S3method(print,mfrm_facet_intervals)",
     "S3method(summary,mfrm_facet_intervals)",
+    "S3method(plot,mfrm_population_intervals)",
+    "S3method(print,mfrm_population_intervals)",
+    "S3method(summary,mfrm_population_intervals)",
+    "S3method(vcov,mfrm_population_intervals)",
     "S3method(plot,mfrm_facet_intervals)",
     "S3method(print,mfrm_screening_performance)",
     "S3method(print,mfrm_screening_sensitivity)",
@@ -436,8 +423,13 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     # 0.1.6 second-pass: print methods for the new public classes.
     "S3method(print,mfrm_q3)",
     "S3method(print,mfrm_generalizability)",
+    "S3method(confint,mfrm_multivariate_gstudy)",
+    "S3method(vcov,mfrm_multivariate_gstudy)",
     "S3method(print,mfrm_multivariate_gstudy)",
     "S3method(summary,mfrm_multivariate_gstudy)",
+    "S3method(confint,mfrm_multivariate_d_study)",
+    "S3method(plot,mfrm_dstudy_intervals)",
+    "S3method(print,summary.mfrm_multivariate_d_study)",
     "S3method(print,mfrm_multivariate_d_study)",
     "S3method(summary,mfrm_multivariate_d_study)",
     "S3method(plot,mfrm_multivariate_d_study)",

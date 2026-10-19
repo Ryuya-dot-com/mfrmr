@@ -177,7 +177,7 @@ NULL
 #' 3. Prefer the package-native name in all new outputs and scripts.
 #'
 #' @seealso [mfrmr_compatibility_layer], [run_mfrm_facets()], [analyze_dff()],
-#'   [reporting_checklist()], [fair_average_table()], [plot_fair_average()]
+#'   [reporting_checklist()], [fair_average_table()], [plot(x, type = "fair_average")][plot.mfrm_fit]
 #' @examples
 #' compatibility_alias_table()
 #' compatibility_alias_table("functions")
@@ -290,8 +290,8 @@ compatibility_alias_table <- function(scope = c("all", "functions", "arguments",
       "Backward-compatible standard-error column; ModelSE is the preferred label.",
       "Legacy adjusted-average column retained alongside the native label.",
       "Legacy standardized adjusted-average column retained alongside the native label.",
-      "Accepted by plot_fair_average() as a shortcut for AdjustedAverage.",
-      "Accepted by plot_fair_average() as a shortcut for StandardizedAdjustedAverage."
+      "Accepted by plot(x, type = \"fair_average\") as a shortcut for AdjustedAverage.",
+      "Accepted by plot(x, type = \"fair_average\") as a shortcut for StandardizedAdjustedAverage."
     ),
     stringsAsFactors = FALSE
   )

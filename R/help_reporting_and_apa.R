@@ -4,8 +4,13 @@
 #' Package-native guide to moving from fitted model objects to
 #' manuscript-draft text, tables, notes, and revision checklists in `mfrmr`.
 #'
-#' This guide currently applies fully to diagnostics-based `RSM` / `PCM`
-#' workflows. `GPCM` fits support [reporting_checklist()],
+#' This guide applies to ordinary MML/JML `RSM` / `PCM` reporting, with the
+#' estimator-specific limits on structural inference. Native CML and
+#' comparison-only fits do not supply this consolidated reporting workflow.
+#' For CML, use `summary(fit)` and [mfrm_facet_intervals()], then `summary(ci)`,
+#' `plot(ci)`, [apa_table()] and `saveRDS(ci, file)`; see
+#' `vignette("mfrmr-facet-intervals", package = "mfrmr")`.
+#' Ordinary one-family `GPCM` fits support [reporting_checklist()],
 #' [precision_review_report()], direct curve/graph and residual table helpers,
 #' and caveated APA/QC/export bundles. Use [gpcm_capability_matrix()] when you
 #' need the formal boundary for the current `GPCM` reporting path.
@@ -88,8 +93,8 @@
 #' or [export_summary_appendix()]. These narrower tools remain useful and
 #' are not replaced by the general report. For `GPCM`, keep the
 #' `gpcm_boundary` caveats with APA/QC/export output.
-#' When strict marginal rows are available, [plot_marginal_fit()] and
-#' [plot_marginal_pairwise()] support local-misfit follow-up.
+#' When strict marginal rows are available, [plot(x, type = "marginal_fit")][plot.mfrm_fit] and
+#' [plot(x, type = "marginal_pairwise")][plot.mfrm_fit] support local-misfit follow-up.
 #' When candidate models are compared, keep the comparison as a reporting
 #'    review: [compare_mfrm()] -> [build_model_choice_review()] ->
 #'    [build_summary_table_bundle()]. Treat `GPCM` as a slope-aware
@@ -236,8 +241,8 @@
 #' - Treat [reporting_checklist()] as the gap finder and
 #'   [build_apa_outputs()] as the writing engine.
 #' - Use the checklist's `"Visual Displays"` rows to decide whether the next
-#'   follow-up should be [plot_qc_dashboard()], [plot_marginal_fit()],
-#'   [plot_residual_pca()], [plot_bias_interaction()], or another public plot.
+#'   follow-up should be [plot(x, type = "qc")][plot.mfrm_fit], [plot(x, type = "marginal_fit")][plot.mfrm_fit],
+#'   [plot(x, type = "residual_pca")][plot.mfrm_fit], [plot(x, type = "bias")][plot.mfrm_fit], or another public plot.
 #' - Use [visual_reporting_template()] to draft visual captions and
 #'   results-sentence starters, but do not paste the skeletons without checking
 #'   the actual fit, diagnostics, and study context.
@@ -269,7 +274,9 @@
 #' deidentified; review every file under the study's data-handling policy before
 #' any handoff.
 #'
-#' @section Typical workflow:
+#' @section Additional task-specific workflows:
+#' Use these when the reporting question calls for extra manuscript or
+#' appendix assembly, after choosing the supported route above.
 #' - Manuscript-first route:
 #'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
 #'   [build_apa_outputs()] -> [build_summary_table_bundle()] -> `summary()` /

@@ -84,7 +84,7 @@ These are descriptive cutoffs without calibrated error rates.
 \enumerate{
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"} for \code{RSM} / \code{PCM}.
 \item Run \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"}.
-\item Use \code{plot_marginal_pairwise()} to inspect level pairs behind pairwise
+\item Use \code{plot()} to inspect level pairs behind pairwise
 local-dependence flags.
 \item Corroborate with legacy diagnostics, design review, and substantive
 interpretation before making claims.
@@ -96,6 +96,12 @@ interpretation before making claims.
 For a plot-selection guide and a longer walkthrough, see
 \link{mfrmr_visual_diagnostics} and
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -149,13 +155,14 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Which pairs show more or less exact agreement than the model expects?
-plot_marginal_pairwise(diagnostics)
+plot(diagnostics, type = "marginal_pairwise")
 # These are screening results; inspect the rating design before drawing conclusions
 
 # Optional: agreement within one score category
-plot_marginal_pairwise(diagnostics, metric = "adjacent")
+plot(diagnostics, type = "marginal_pairwise", metric = "adjacent")
 }
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")}, \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

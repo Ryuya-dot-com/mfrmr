@@ -89,7 +89,11 @@ test_that("public capability matrix states the bounded artifact envelope", {
   expect_true(all(nzchar(capabilities$Limitation)))
 
   guide <- mfrmr_output_guide("calibration")
-  expect_identical(nrow(guide), 5L)
+  expect_identical(nrow(guide), 7L)
+  decision_route <- guide[guide$ObjectRole == "conditional ability decisions",]
+  expect_equal(nrow(decision_route),1L)
+  expect_match(decision_route$NextStep,"apa_table",fixed=TRUE)
+  expect_match(decision_route$DecisionBoundary,"no automatic decision rule",fixed=TRUE)
   expect_true(all(guide$Scope == "calibration"))
   expect_true(all(guide$RecommendedEntry))
   expect_true(any(grepl(
@@ -608,7 +612,7 @@ test_that("portable interval identity survives saved results, summaries and CSV"
     expect_match(interval$data$caption, "95.5% intervals", fixed = TRUE)
     if (requireNamespace("ggplot2", quietly = TRUE)) {
       gg <- as_ggplot(interval)
-      expect_match(gsub("[[:space:]]+", " ", gg$labels$caption), expected, fixed = TRUE)
+      expect_match(gsub("[[:space:]]+", " ", paste(plot_data(gg, "notes")$Text, collapse = "\n")), expected, fixed = TRUE)
     }
   }
   rows <- fixture$rows
@@ -625,18 +629,15 @@ test_that("public documentation surfaces share the bounded calibration wording",
   readme <- file.path(root, "README.md")
   if (!file.exists(readme)) readme <- testthat::test_path("..", "..", "README.md")
   skip_if_not(file.exists(readme), "README requires the source tree on this R installation.")
-  article_candidates <- file.path(
-    root,
-    c(
+  article_candidates <- c(file.path(root, c(
       "doc/mfrmr-portable-calibration.Rmd",
       "vignettes/mfrmr-portable-calibration.Rmd"
-    )
-  )
-  article <- article_candidates[file.exists(article_candidates)][1L]
+    )), test_path("..", "..", "vignettes", "mfrmr-portable-calibration.Rmd"))
+  article <- article_candidates[file.exists(article_candidates)]
   expect_true(file.exists(readme))
   expect_true(file.exists(file.path(root, "NEWS.md")))
-  expect_length(article, 1L)
-  expect_true(!is.na(article) && file.exists(article))
+  skip_if(!length(article), "Article requires a source tree or an installation with built vignettes.")
+  article <- article[1L]
 
   text <- list(
     README = paste(
@@ -671,8 +672,10 @@ test_that("public documentation surfaces share the bounded calibration wording",
 
 test_that("installed public API preserves CSV identities and refusals in a fresh process", {
   package_path <- normalizePath(find.package("mfrmr"), winslash = "/")
-  library_roots <- normalizePath(.libPaths(), winslash = "/", mustWork = FALSE)
-  package_is_installed <- dirname(package_path) %in% library_roots
+  # Check libraries can contain package symlinks into another installation.
+  library_packages <- normalizePath(file.path(.libPaths(), "mfrmr"),
+                                   winslash = "/", mustWork = FALSE)
+  package_is_installed <- package_path %in% library_packages
   skip_if_not(
     package_is_installed,
     "Fresh-process evidence requires the check-installed package."
@@ -701,7 +704,7 @@ test_that("installed public API preserves CSV identities and refusals in a fresh
     'rows <- read.csv(args[3L], colClasses = "character", na.strings = "",',
     '                 check.names = FALSE, fileEncoding = "UTF-8-BOM")',
     'stopifnot(identical(unique(rows$Person), c("001", "1", "NA")))',
-    "result <- score_mfrm_calibration(calibration, rows, adaptive_quad_points = c(15L, 31L))",
+    "result <- score_mfrm_calibration(calibration, rows, adaptive_quad_points = c(15L, 31L), cut_scores = c(Low = -0.513456789, High = 0.823456789))",
     "saveRDS(result, args[4L], version = 3)",
     'unknown <- rows; unknown$Rater[1L] <- "unseen-rater"',
     'err <- tryCatch(score_mfrm_calibration(calibration, unknown), mfrm_calibration_error = identity)',
@@ -741,6 +744,11 @@ test_that("installed public API preserves CSV identities and refusals in a fresh
                tolerance = 0)
   expect_equal(nrow(result$quadrature_review), nrow(result$estimates) * 2L)
   expect_true(all(result$quadrature_review$Status == "computed"))
+  expect_setequal(result$decisions$Person, c("001", "1", "NA"))
+  expect_identical(result$settings$cut_scores, c(Low=-0.513456789,High=0.823456789))
+  expect_identical(apa_table(result,which="decisions")$table,result$decisions)
+  expect_identical(build_summary_table_bundle(summary(result))$tables$decisions,
+    result$decisions)
 })
 
 
@@ -770,11 +778,30 @@ test_that("current RSM portable artifacts accept explicit scoring priors without
 
 test_that("the output guide agrees with conditional portable GPCM capabilities", {
   guide <- mfrmr_output_guide("calibration")
-  expect_true(all(guide$GPCMStatus == "supported_with_caveat"))
+  cuts <- guide$ObjectRole == "conditional ability decisions"
+  decisions <- cuts | guide$MainFunction == "classification_table()"
+  expect_true(all(guide$GPCMStatus[!decisions] == "supported_with_caveat"))
+  expect_true(all(guide$GPCMStatus[decisions] == "unavailable; ordinary RSM/PCM only"))
+  expect_identical(guide$GPCMStatus[cuts], "unavailable; ordinary RSM/PCM only")
   expect_true(any(grepl("source checks", guide$UseWhen, fixed = TRUE)))
   expect_true(any(grepl("GPCM", guide$Notes, fixed = TRUE)))
   boundary <- guide$DecisionBoundary[guide$ObjectRole == "portable calibration lifecycle"]
   expect_length(boundary, 1L)
   expect_match(boundary, "GPCM MML", fixed = TRUE)
   expect_match(boundary, "shared-owner GPCM JML", fixed = TRUE)
+})
+
+test_that('quadrature review matches retained fits by grid name rather than list position', {
+  fixture <- calibration_public_fixture()
+  review <- fixture$quadrature_review
+  review$fits <- rev(review$fits)
+  expect_no_error(extract_mfrm_calibration(fixture$fit,quadrature_review=review))
+  duplicate <- review
+  names(duplicate$fits) <- rep(names(review$fits)[1],length(review$fits))
+  expect_error(extract_mfrm_calibration(fixture$fit,quadrature_review=duplicate),
+    'QUADRATURE_REVIEW_INVALID')
+  mislabeled <- review
+  names(mislabeled$fits) <- rev(names(review$fits))
+  expect_error(extract_mfrm_calibration(fixture$fit,quadrature_review=mislabeled),
+    'QUADRATURE_REVIEW_INVALID')
 })

@@ -41,6 +41,11 @@ Build a specification summary report (preferred alias)
 
 \itemize{
 \item \code{header} / \code{data_spec}: run identity and model settings.
+\code{CenteringScope} is \code{"facet"} for whole-facet centering or \code{"remainder"}
+for the legacy constraint on ungrouped, unanchored levels. It applies
+only to centered facets; \code{NonCenteredFacet} remains separate. Older
+native fits without convention metadata retain \code{"remainder"}; an input
+without a stored constraint specification is \code{"not_recorded"}.
 \item \code{facet_labels}: facet sizes and labels.
 \item \code{convergence_control}: optimizer configuration and status.
 }

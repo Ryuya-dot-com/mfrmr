@@ -109,7 +109,11 @@ mfrmr_constraint_jacobian_sparse <- function(spec, block) {
           add_column(
             level_idx = level_idx,
             reference_idx = reference,
-            constraint = "sum_zero"
+            constraint = if (identical(spec$centering_scope, "facet")) {
+              "whole_facet_sum_zero"
+            } else {
+              "sum_zero"
+            }
           )
         }
       }
@@ -2006,7 +2010,7 @@ audit_mfrm_mml_observed_pattern_score <- function(
     readiness_effect = "none_observed_patterns_diagnostic_only",
     detail = paste(
       "No nonlinear MML block required the observed Person-pattern score",
-      "audit in this implementation slice."
+      "audit."
     )
   )
   if (!identical(config$method, "MML") ||
@@ -2336,7 +2340,7 @@ audit_mfrm_mml_all_pattern_information <- function(
     readiness_effect = "none_all_patterns_local_diagnostic_only",
     detail = paste(
       "No nonlinear MML block required the all-response-pattern expected",
-      "information audit in this implementation slice."
+      "information audit."
     )
   )
   if (!identical(config$method, "MML") ||

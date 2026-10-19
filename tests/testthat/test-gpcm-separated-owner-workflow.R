@@ -55,10 +55,10 @@ test_that("MML keeps distinct owners through inference, curves and saved output"
   marked <- curves; marked$contexts <- query$contexts
   expect_output(print(marked), "Unobserved combinations")
   if (requireNamespace("ggplot2", quietly = TRUE)) {
-    expect_match(plot(marked, draw = FALSE)$labels$caption, "not observed together")
+    expect_match(paste(plot_data(plot(marked, draw = FALSE), "notes")$Text, collapse = "\n"), "not observed together")
     expect_null(plot(marked, caption = NULL, draw = FALSE)$labels$caption)
     unavailable <- marked; unavailable$table$CIEligible[1] <- FALSE
-    caption <- plot(unavailable, draw = FALSE)$labels$caption
+    caption <- paste(plot_data(plot(unavailable, draw = FALSE), "notes")$Text, collapse = "\n")
     expect_match(caption, "Intervals unavailable")
     expect_match(caption, "not observed together")
   }

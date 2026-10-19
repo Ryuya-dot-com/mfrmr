@@ -30,5 +30,5 @@ summary(facet_quality_dashboard(fit, diagnostics = diag))
 }
 }
 \seealso{
-\code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}, \code{\link[=plot_facet_quality_dashboard]{plot_facet_quality_dashboard()}}
+\code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}, \link[=plot.mfrm_fit]{plot(x, type = "facet_dashboard")}
 }

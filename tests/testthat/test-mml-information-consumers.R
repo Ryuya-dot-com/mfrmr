@@ -42,7 +42,7 @@ local({
       expect_null(plot_data(ci, subtitle = NULL)$subtitle)
       expect_identical(plot_data(ci, subtitle = NULL)$cautions, review$Detail)
       if (requireNamespace("ggplot2", quietly = TRUE)) {
-        expect_match(as_ggplot(ci)$labels$subtitle, "Weak information")
+        expect_match(paste(plot_data(as_ggplot(ci), "notes")$Text, collapse = "\n"), "Weak information")
       }
       file <- tempfile(fileext = ".rds"); on.exit(unlink(file), add = TRUE)
       saveRDS(res, file)

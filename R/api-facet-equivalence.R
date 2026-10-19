@@ -100,7 +100,7 @@
 #' 1. Fit and review an MML model with [fit_mfrm()].
 #' 2. Prespecify the practical bound and run `analyze_facet_equivalence()`.
 #' 3. Read `summary` and `pairwise`.
-#' 4. Use [plot_facet_equivalence()] for descriptive grand-mean proximity.
+#' 4. Use [plot(x, type = "facet_equivalence")][plot.mfrm_fit] for descriptive grand-mean proximity.
 #'
 #' @section Output:
 #' A bundle with `summary`, `chi_square`, `pairwise`, `rope`, `forest`, and
@@ -108,7 +108,7 @@
 #' must be recomputed before using `summary()`, `print()`, or plotting.
 #'
 #' @return A named list with class `mfrm_facet_equivalence`.
-#' @seealso [facets_chisq_table()], [fair_average_table()], [plot_facet_equivalence()]
+#' @seealso [facets_chisq_table()], [fair_average_table()], [plot(x, type = "facet_equivalence")][plot.mfrm_fit]
 #' @concept confidence intervals
 #' @concept facet equivalence
 #' @concept reporting workflow
@@ -249,7 +249,7 @@ analyze_facet_equivalence <- function(fit,
   separation <- if (rmse > 0) true_sd / rmse else NA_real_
   reliability <- separation ^ 2 / (1 + separation ^ 2)
 
-  z_ci <- stats::qnorm(1 - (1 - conf_level) / 2)
+  z_ci <- stats::qnorm((1 - conf_level) / 2, lower.tail = FALSE)
   z_tost <- stats::qnorm(0.95)
   pair_idx <- utils::combn(seq_len(n_elem), 2)
   pairwise_tbl <- if (is.null(dim(pair_idx))) {
@@ -446,10 +446,13 @@ validate_facet_equivalence_bundle <- function(x) {
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 31, maxit = 150)
 #' eq <- analyze_facet_equivalence(fit, facet = "Rater")
-#' pdat <- plot_facet_equivalence(eq, type = "forest", draw = FALSE)
+#' pdat <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
 #' c(pdat$facet, pdat$type)
 #' }
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_facet_equivalence <- function(x,
                                    diagnostics = NULL,
                                    facet = NULL,
@@ -515,7 +518,7 @@ plot_facet_equivalence <- function(x,
       yaxt = "n",
       ylab = "",
       xlab = "Deviation from facet mean (logits)",
-      main = out$title,
+      main = "",
       pch = 19,
       col = cols
     ), dots))
@@ -542,18 +545,29 @@ plot_facet_equivalence <- function(x,
       ylim = c(0, 100),
       col = cols,
       ylab = "Normal reference mass within bound (%)",
-      main = paste0(out$facet, ": descriptive grand-mean proximity"),
+      main = "",
       ...
     )
     out$bar_midpoints <- mids
   }
 
-  if (length(x$cautions)) graphics::mtext(
-    "Weak information: review interval and test reliability.", side = 3, line = 0.3, cex = .8)
   invisible(out)
 }
 
+#' Plot a saved facet-equivalence analysis
+#' @param x A result from [analyze_facet_equivalence()].
+#' @param ... Use `type = "forest"` (default) for deviations and intervals or
+#'   `type = "rope"` for normal confidence-distribution mass. Other controls
+#'   are described in [plot_facet_equivalence()].
+#' @return The existing equivalence plot payload and inference restrictions.
+#'   Grand-mean proximity does not establish pairwise equivalence.
+#' @seealso [mfrmr_plot_migration]
 #' @export
 plot.mfrm_facet_equivalence <- function(x, ...) {
-  plot_facet_equivalence(x, ...)
+  args <- list(...)
+  if (identical(args$type, "facet_equivalence")) {
+    args$type <- NULL
+    args <- .mfrm_plot_rename(args, "view", "type")
+  }
+  .mfrm_plot_call(plot_facet_equivalence, x, args)
 }

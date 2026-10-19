@@ -4436,7 +4436,7 @@ plot.mfrm_recovery_assessment <- function(x,
       col = recovery_assessment_status_palette(status_tbl$Status),
       border = NA,
       ylab = "Checklist checks",
-      main = payload$title
+      main = ""
     )
     return(invisible(out))
   }
@@ -4543,7 +4543,7 @@ plot.mfrm_recovery_assessment <- function(x,
     border = NA,
     ylim = ylim,
     ylab = spec$label,
-    main = payload$title
+    main = ""
   )
   if (nrow(reference_lines) > 0L && is.finite(reference_lines$value[1])) {
     graphics::abline(h = reference_lines$value[1], lty = 2, col = "grey35")
@@ -4767,7 +4767,7 @@ plot.mfrm_recovery_simulation <- function(x,
       border = NA,
       ylim = ylim,
       ylab = metric_label,
-      main = payload$title
+      main = ""
     )
     if (0 >= ylim[1] && 0 <= ylim[2]) graphics::abline(h = 0, col = "grey55")
     if (nrow(reference_lines) > 0L) {
@@ -4806,7 +4806,7 @@ plot.mfrm_recovery_simulation <- function(x,
       col = bar_cols,
       border = NA,
       ylab = "Replications",
-      main = payload$title
+      main = ""
     )
     return(invisible(out))
   }
@@ -4856,7 +4856,7 @@ plot.mfrm_recovery_simulation <- function(x,
       col = "#dbeafe",
       border = "#334e68",
       ylab = payload$metric_label,
-      main = payload$title
+      main = ""
     )
     graphics::abline(h = 0, col = "grey45", lty = 2)
     return(invisible(out))
@@ -4893,7 +4893,7 @@ plot.mfrm_recovery_simulation <- function(x,
     plot_tbl$EstimateForPlot,
     xlab = "Truth",
     ylab = payload$metric_label,
-    main = payload$title,
+    main = "",
     xlim = lim,
     ylim = lim,
     pch = 16,
@@ -5366,8 +5366,14 @@ simulation_evaluate_design_cell <- function(design,
 #' Start with `summary(x)$design_summary`, then plot one focal metric at a time
 #' (for example rater `Separation` or criterion `SeverityRMSE`).
 #'
-#' Higher separation/reliability is generally better, whereas lower
-#' `SeverityRMSE`, `MeanMisfitRate`, and `MeanElapsedSec` are preferable.
+#' Person separation/reliability describes how well the design distinguishes
+#' persons under the model. High rater separation/reliability instead means
+#' that severity differences are distinguishable; it does not mean agreement
+#' or better calibration. Low rater separation can reflect similar severity
+#' or inadequate precision. Interpret each facet against its purpose rather
+#' than maximizing every separation coefficient. Recovery RMSE and elapsed
+#' time concern accuracy and cost; a low misfit-screen rate alone does not
+#' establish useful detection, since sensitivity and false flags differ.
 #'
 #' When choosing among designs, look for the point where increasing
 #' `n_person` or `raters_per_person` yields diminishing returns in
@@ -5383,7 +5389,11 @@ simulation_evaluate_design_cell <- function(design,
 #' you vary person, rater, criterion, or assignment counts. For analytic
 #' generalizability-theory planning, pair observed variance-component review
 #' from [mfrm_generalizability()] with D-study projections from
-#' [mfrm_d_study()]. Read `IdentificationStatus`, `GStatus`, and `PhiStatus`
+#' [mfrm_d_study()]. The complementary multivariate observed-score route is
+#' [mfrm_multivariate_gstudy()] -> [mfrm_multivariate_d_study()]. See
+#' [mfrmr_workflow_methods] for choosing between simulation and G-theory:
+#' neither is automatically required by the other, and neither replaces the
+#' other's estimand. Read `IdentificationStatus`, `GStatus`, and `PhiStatus`
 #' before using the projected coefficients: boundary or singular mixed-model
 #' fits are design-identification warnings rather than high-stakes-ready
 #' reliability evidence.
@@ -5877,7 +5887,7 @@ summary.mfrm_design_evaluation <- function(object, digits = 3, ...) {
   out$planning_schema <- simulation_object_planning_schema(object)
   out$gpcm_boundary <- object$gpcm_boundary %||% data.frame()
   out$structural_design_review <- simulation_compact_structural_design_review_summary(
-    object,
+    out,
     digits = digits
   )
   out$digits <- digits
@@ -6106,7 +6116,7 @@ plot.mfrm_design_evaluation <- function(x,
     type = "n",
     xlab = x_label,
     ylab = metric_col,
-    main = paste("Design simulation:", facet, metric_col),
+    main = "",
     ylim = y_range
   )
   for (i in seq_along(groups)) {
@@ -8639,7 +8649,7 @@ plot.mfrm_diagnostic_screening <- function(x,
     ylim = y_range,
     xlab = x_label,
     ylab = paste("Diagnostic-screening", spec_bundle$metric),
-    main = payload$title
+    main = ""
   )
   for (i in seq_along(groups)) {
     g_tbl <- plot_tbl[as.character(plot_tbl$group) == groups[i], , drop = FALSE]
@@ -9907,11 +9917,7 @@ plot.mfrm_signal_detection <- function(x,
     type = "n",
     xlab = x_label,
     ylab = out$display_metric,
-    main = if (identical(signal, "bias")) {
-      paste("Bias screening simulation:", out$display_metric)
-    } else {
-      paste("DIF screening simulation:", out$display_metric)
-    },
+    main = "",
     ylim = y_range
   )
   for (i in seq_along(groups)) {

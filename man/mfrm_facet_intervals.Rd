@@ -8,12 +8,14 @@
 \usage{
 mfrm_facet_intervals(
   fit,
-  facet,
+  facet = NULL,
   contrasts = NULL,
   method = c("model", "sandwich"),
   clusters = NULL,
   adjust = FALSE,
-  level = 0.95
+  level = 0.95,
+  scale = c("native", "standardized"),
+  comparison_review = NULL
 )
 
 \method{print}{mfrm_facet_intervals}(x, ...)
@@ -26,12 +28,19 @@ fixed standard-normal person distribution, fixed quadrature and unit
 observation weights. Experimental two-family GPCM MML also supports
 \code{method = "model"} with fixed-grid EM or direct adaptive integration;
 see "Two-family location targets" below. Experimental direct MML native
-locations additionally support estimated intercept-only normal RSM/PCM
+locations additionally support estimated normal RSM/PCM populations,
+including conditional-normal latent regression,
 and one-family GPCM with fixed N(0,1) or an estimated intercept-only normal
 population, using fixed or adaptive integration; see "Native locations"
-below for their scope and separate numerical checks.}
+below for their scope and separate numerical checks. Native RSM/PCM CML
+results additionally support \verb{method = "model", scale = "native"}, including
+the saved targets from \code{fit_scope = "comparisons"}.
+Matching full RSM/PCM MML interaction fits use the \code{comparison_review}
+extension below; their explicit model and source checks remain separate.}
 
-\item{facet}{A non-person facet, for example \code{"Rater"}.}
+\item{facet}{A non-person facet, for example \code{"Rater"}. May be omitted
+when \code{comparison_review} supplies a facet-by-origin interaction target,
+or for a CML comparison-only fit, which already retains its targets.}
 
 \item{contrasts}{Optional numeric matrix with distinct target row names
 and columns named by every level of \code{facet}. Columns are aligned by name.
@@ -57,6 +66,20 @@ This scaling does not guarantee small-sample coverage.}
 
 \item{level}{Pointwise confidence level, strictly between zero and one.}
 
+\item{scale}{\code{"native"} (default) retains the fitted ability units.
+\code{"standardized"} divides an explicit within-facet zero-sum contrast, or
+the interaction contrasts declared by \code{comparison_review}, by
+the population SD, using full joint delta-method uncertainty. Requires
+\code{method = "model"} and a fixed N(0,1) or estimated intercept-only normal
+population; individual locations and latent regression are not supported.}
+
+\item{comparison_review}{Optional \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} review or its
+\verb{$comparison_review} for a matching full native RSM/PCM MML interaction fit.
+Uses its declared facet-by-origin contrasts instead of facet locations;
+omit \code{contrasts} and optionally \code{facet}. Requires \code{method = "model"}.
+See "MML interaction contrasts" for scope and assumptions.
+Omit this argument for a CML comparison-only fit; its saved review is reused.}
+
 \item{x, object}{An object returned by \code{mfrm_facet_intervals()}.}
 
 \item{...}{Unused by print and summary methods.}
@@ -80,6 +103,10 @@ and SEs missing while preserving the fitted point estimates.
 Native-location results retain checks, numerical comparisons, full and
 target covariance, target Jacobian and source identity, without an
 empirical Person-score rank requirement.
+Standardized results also retain \code{NativeEstimate}, the population SD,
+whether it was estimated, and the full transformation Jacobian.
+\code{CIEligible} describes numerical availability; \code{CoverageQualified = FALSE}
+does not claim finite-sample coverage for the transformed interval.
 }
 \description{
 Describe uncertainty about a fixed facet estimate, such as rater severity,
@@ -114,17 +141,79 @@ used with a warning. Successful inversion does not establish reliable
 normal intervals. Review interval width, boundary proximity and quadrature
 sensitivity; changing to sandwich covariance does not remove this concern.
 }
+\section{Conditional likelihood}{
+
+Native \code{fit_mfrm(method = "CML")} results use the inverse full conditional
+information, transformed through the fitted facet constraints and requested
+contrasts. Other facets and steps remain estimated. Only \code{method = "model"},
+\code{clusters = NULL}, \code{adjust = FALSE} and \code{scale = "native"} are supported.
+CML estimates no ability population SD: \code{scale = "standardized"} cannot be
+computed from that fit. For MML with an estimated intercept-only normal
+population, that option divides by the same fit's estimated SD and includes
+its covariance with the contrast; see "Population-SD-standardized contrasts".
+CML intervals are asymptotic, requiring the correct conditional response law,
+independent Persons and adequate identifiable information. Neither numerical
+acceptance nor a distribution-free ability treatment ensures small-sample
+coverage. \code{plot(ci)}, \code{summary(ci)} and RDS reuse apply to CML interval objects;
+attaching them to ordinary \code{mfrm_results()} is not supported.
+Non-fixed CML targets require finite, strictly positive representable variance.
+Rescale contrast coefficients if their units cause variance underflow or
+overflow; numerical zero variance is not a constraint-fixed target.
+
+For \code{fit_scope = "comparisons"}, call \code{mfrm_facet_intervals(fit)} without
+new \code{contrasts} or \code{comparison_review}. The saved estimates, joint target
+covariance and qualifications are reused without optimization or information
+recalculation. \code{level} changes only the pointwise normal critical value.
+Unidentified or numerically unavailable comparisons keep missing estimates
+and intervals, their reasons and \code{CIEligible = FALSE}; they are never zero-filled.
+\code{parameter_covariance} is the covariance of the fit's identified subspace,
+not of separately identified cell effects. Use \code{summary(ci)}, \code{plot(ci)},
+\code{apa_table(ci)} and \code{saveRDS(ci)}; the saved review retains group order,
+contrast weights and observed/empty cells. JML/MML comparison-only fits
+remain descriptive and are not covered by this interval route.
+}
+
+\section{Anchors and group means}{
+
+The ordinary fixed-population RSM/PCM route supports location anchors and
+group means. Write the fitted facet locations as \eqn{b=b_0+J\eta} and a
+requested comparison as \eqn{Cb}. Its covariance is
+\eqn{CJ V_\eta J^{\mathsf T}C^{\mathsf T}}, where \eqn{V_\eta} is extracted
+after computing the full joint covariance. Other facets and thresholds
+remain estimated; inverting only the selected facet's information would
+omit their estimation uncertainty. The affine offset \eqn{b_0} affects
+estimates, but has no variance when its supplied values are treated as exact.
+
+A comparison with \eqn{CJ=0} is fixed: its \code{Status} is \code{"fixed"}, \code{SE}
+is zero, and interval bounds are missing. This includes values implied by
+centering, not only rows in an anchor table. For example, with four raters,
+whole-facet centering and a fixed mean of 0.10 for the first three, the
+fourth rater is fixed at -0.30. The three group members can still differ
+unless other constraints fix them; their mean has no inferential interval.
+A difference between a free rater and an anchored rater can remain uncertain.
+These are conditional statements, not evidence that the source calibration
+or group-mean assumption is error-free. Estimated-population/native-location
+extensions still exclude anchors and groups.
+}
+
 \section{Native locations}{
 
-For estimated intercept-only normal RSM/PCM and one-family GPCM MML,
+For estimated normal RSM/PCM and intercept-only normal one-family GPCM MML,
 \code{method = "model"} supplies experimental pointwise normal intervals for
 locations or contrasts on the model's native ability scale. One-family
 GPCM also admits the explicit fixed-N(0,1) restriction
 (\code{gpcm_mml_identification = "fixed_standard_normal"}). Shared or separate
 slope/step owners are supported, with geometric-mean-one relative slopes.
 Use direct MML, fixed or adaptive integration, unit weights, additive
-centered facets and centered steps. Anchors, interactions, latent regression
-and sandwich covariance are unavailable in this added route.
+centered facets and centered steps. RSM/PCM also accepts a fitted full-rank
+conditional-normal regression, retaining its coefficient and residual-variance
+cross-information when computing structural uncertainty. The saved population
+table identifies coefficients and residual variance; it does not label
+regression coefficients as marginal population means. Anchors, GPCM latent
+regression and sandwich covariance remain unavailable here. Interactions
+use the separate \code{comparison_review} route below.
+Population-coefficient and variance intervals are separate targets and are
+not returned by this helper.
 
 The covariance transforms the inverse full joint marginal information,
 including all estimated population, slope and step coordinates. A
@@ -133,18 +222,91 @@ The source, category support, local solution and unregularized information
 must pass checks; covariance and score changes are also checked at a finer
 integration order at the same fitted parameter vector. This model-information
 procedure has no empirical Person-score rank requirement.
+For estimated RSM/PCM populations, a zero-residual-variance candidate at
+the retained nuisance estimates is compared with the fitted likelihood.
+A higher boundary likelihood beyond the numerical allowance prevents
+intervals. This check does not optimize or exclude the entire boundary.
 A numerical refusal preserves the native point and its reason with
 unavailable SE/bounds. Constraint-fixed targets have no inferential interval.
 
 These numerical checks do not establish sampling coverage, global
 identification or robustness to misspecification. Native locations are
-not divided by the estimated population SD; standardized targets would
-additionally need that SD's uncertainty and cross-covariances. A location
+not divided by the estimated population SD unless \code{scale = "standardized"}
+is requested for a zero-sum contrast (see below). A location
 difference need not produce a uniform rating difference with unequal slopes
 or steps. The calculation does not refit or change the saved fit/readiness.
 Save and attach \code{ci} with \code{mfrm_results(fit, intervals = list(locations = ci), compute = "never")}; select \code{plot(res, type = "facet_locations")} for
 RSM/PCM or \code{"gpcm_locations"} for one-family GPCM. Reports and exports retain
 the native scale, experimental status and unavailable outputs.
+}
+
+\section{Population-SD-standardized contrasts}{
+
+Set \code{scale = "standardized"} and supply explicit contrast rows whose
+coefficients sum to zero. For native contrast \eqn{d}, population SD
+\eqn{\sigma} and free log-variance \eqn{\lambda = \log(\sigma^2)}, the
+target is \eqn{t = d/\sigma}. Its Jacobian has location entries
+\eqn{J_d/\sigma} and log-variance entry \eqn{-t/2}. The covariance is
+transformed from the inverse full joint observed information, including
+the covariance between the contrast and log-variance. Dividing native
+interval endpoints by the fitted SD omits this uncertainty. With fixed
+N(0,1), the result equals the native contrast because the known SD is one.
+Conditional-normal regression is excluded: its residual SD is not a
+marginal population SD. Standardization does not equate expected ratings
+across models with different slopes or category steps.
+
+The existing source and numerical checks still apply. These are pointwise
+normal delta-method intervals, not profile intervals or finite-sample
+coverage guarantees. A ratio can be unstable near zero population SD;
+standardization does not resolve weak identification or boundary problems.
+}
+
+\section{MML interaction contrasts}{
+
+Supply \code{comparison_review} to obtain native or population-SD-standardized
+intervals for its explicitly weighted facet-by-origin interaction contrasts.
+The review must match the fitted responses, group identities, constraints,
+model, PCM step owner, signs and population design. Its model has one
+interaction, zero origin main facet and centered remaining facets and
+interaction margins. This extension requires a full, unadjusted RSM/PCM
+direct MML fit, unit weights and preserved categories, without shrinkage or
+additional anchors. Comparison-only MML fits, JML and GPCM are not admitted.
+CML comparison intervals remain available through \code{\link[=fit_mfrm]{fit_mfrm()}} but cannot
+estimate a population SD.
+
+Full conditional-map identification is necessary here. Source tables,
+categories, local solution, unregularized full information and finer-grid
+stability must pass the native-location checks above. A failed numerical
+check retains the point estimate with missing SE/bounds and a reason.
+Positive conditional rank and local information do not establish global
+marginal identification or finite-sample interval coverage; the output
+retains \code{MarginalIdentificationState} and \code{CoverageQualified = FALSE}.
+These are model-based asymptotic intervals, not a calibrated DFF classification.
+
+For \code{scale = "standardized"}, the denominator is the SD estimated in the
+\strong{same intercept-only normal MML fit} (\code{population_formula = ~1}). Such a
+fit assumes one common ability distribution across the declared origin
+groups. It is a different model from \code{~Group}, which allows group means.
+For \code{~Group}, native interaction intervals are supported, but its residual
+SD is not substituted for a marginal population SD. A fixed N(0,1) fit has
+known SD one; no estimated-SD uncertainty is introduced in that case.
+
+The joint delta method uses interaction derivatives divided by the fitted
+SD and derivative \code{-Estimate/2} for log population variance. All population,
+step and structural nuisance coordinates remain in the full information
+inverse. It includes the covariance between the numerator and denominator;
+dividing the native endpoints or SE by the fitted SD is insufficient.
+
+Read \code{table} with \code{comparison_review}: group subtraction order, panel weights,
+observed/empty cells and assumptions are retained. Use \code{plot(ci)}, \code{saveRDS(ci)}
+to retain \code{IdentificationBasis} and its explanation with the intervals.
+A free-Person response-map basis does not establish distribution-free MML
+inference; population-dependent conditional identification does not establish
+global marginal identification. Display the result directly
+or attach it as \code{mfrm_results(fit, intervals = list(school = ci), compute = "never")}.
+Plotting and reports reuse the saved uncertainty; they do not refit or
+recalculate information. These results do not extend the separate
+\code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}} consumer to models with fitted interactions.
 }
 
 \section{Two-family location targets}{
@@ -166,12 +328,19 @@ remain estimated nuisance parameters. Inverting a location-only Hessian,
 adding independent printed SEs, or using the EM conditional-objective
 Hessian would omit their joint estimation uncertainty.
 
-The source fit must pass the same identity, category support, local score
-rank, stationarity, full-information and finer-quadrature checks used for
+The source fit must pass the same identity, category support, score
+derivative, stationarity, full-information and finer-quadrature checks used for
 experimental two-family slope intervals in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}. The full
-covariance is checked, but passing these numerical checks does not establish
+covariance is checked; deficient empirical Person-score rank is a retained
+diagnostic and warning, not a veto on the inverse-observed-information
+method. Passing these numerical checks does not establish
 repeated-sample coverage for locations or contrasts. Evidence for component
 slope intervals does not qualify these different targets. These are
+reported separately as \code{CIEligible} (numerical interval availability) and
+\code{CoverageQualified = FALSE} in \code{table}. The latter means that nominal
+sampling coverage has not been established for the target and design;
+it is neither a coverage estimate of zero nor a numerical-failure flag.
+Saving, reporting or exporting the result retains both fields. These are
 experimental pointwise normal approximations, with no sandwich, profile,
 multiplicity or automatic significance decision. A failed check retains
 estimates and reasons with unavailable intervals, even if the coarse-grid
@@ -226,7 +395,8 @@ design, interpretation and a complete rater-feedback example.
 Use \code{\link[=plot]{plot()}}, \code{\link[=as_ggplot]{as_ggplot()}} and \code{\link[=plot_data]{plot_data()}} to display or extract the
 saved result, and \code{\link[=apa_table]{apa_table()}} for tables. Set \code{title = NULL},
 \code{subtitle = NULL} or \code{caption = NULL} in the plot to omit that text.
-For RSM/PCM, attach one result or a named list to \code{\link[=mfrm_results]{mfrm_results()}}, for example
+For supported RSM/PCM MML fits, attach one result or a named list to
+\code{\link[=mfrm_results]{mfrm_results()}}, for example
 \code{mfrm_results(fit, intervals = list(raters = intervals), include = c("fit", "plots"), compute = "never")}.
 The route \code{plot(res, type = "facet_raters")} shows the selected intervals.
 For two-family GPCM, the corresponding plot type is \code{"gpcm_raters"}.
@@ -235,14 +405,60 @@ contrast coefficients, cluster mapping and unavailable outcomes.
 The source fit must match; replay reloads the saved results without
 refitting or recomputing covariance. These intervals do not replace
 uncertainty in ordinary Wright maps, fit diagnostics or Person scores.
+For CML, keep the interval object itself: use \code{summary(intervals)},
+\code{plot(intervals)}, \code{apa_table(intervals)} and \code{saveRDS(intervals, file)}.
+Reopen it with \code{readRDS(file)}. Ordinary \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_report]{mfrm_report()}}
+and \code{\link[=export_mfrm_results]{export_mfrm_results()}} do not accept CML fits or their intervals.
 }
 
 \examples{
 ratings <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "RSM", method = "MML", rating_min = 1, rating_max = 4,
+  category_policy = "preserve")
 intervals <- mfrm_facet_intervals(fit, "Rater", method = "sandwich")
 summary(intervals)
 plot(intervals)
+
+# Compare two selected raters, rather than each rater against the origin.
+# Here choose the first two example labels; prespecify your own comparison.
+raters <- unique(as.character(ratings$Rater))
+contrast <- matrix(0, 1, length(raters), dimnames = list(
+  paste(raters[1], "minus", raters[2]), raters))
+contrast[1, 1:2] <- c(1, -1)
+difference <- mfrm_facet_intervals(fit, "Rater", contrasts = contrast)
+summary(difference)[, c("Target", "Estimate", "SE", "Lower", "Upper", "Status")]
+# With the default negative rater sign, a positive contrast means the first
+# rater is stricter. Units are native logits. An interval containing zero
+# leaves the direction uncertain; it does not establish equivalence.
+
+# Estimate the population SD in this same model before standardizing.
+# Even an intercept-only population model needs one row per person.
+persons <- unique(ratings["Person"])
+population_fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"),
+  "Score", model = "RSM", method = "MML", population_formula = ~ 1,
+  person_data = persons, person_id = "Person",
+  rating_min = 1, rating_max = 4, category_policy = "preserve", quad_points = 61)
+standardized <- mfrm_facet_intervals(population_fit, "Rater",
+  contrasts = contrast, scale = "standardized")
+summary(standardized)
+# Estimate is now in fitted ability-population SD units; its delta-method
+# interval includes uncertainty in that SD. It is not a Wald z statistic.
+
+# CML estimates the native contrast without an ability distribution.
+if (requireNamespace("lpSolve", quietly = TRUE)) {
+  cml_fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+    model = "RSM", method = "CML", rating_min = 1, rating_max = 4,
+    category_policy = "preserve")
+  cml_ci <- mfrm_facet_intervals(cml_fit, "Rater", contrasts = contrast)
+  summary(cml_ci)
+  apa_table(cml_ci)
+  file <- tempfile(fileext = ".rds") # Choose a lasting path for your analysis
+  saveRDS(cml_ci, file)
+  saved <- readRDS(file)
+  summary(saved) # Same conditional-information result, without refitting
+  # Use plot(saved) for a figure; ordinary mfrm_results() does not accept CML.
+}
 }
 \references{
 Zeileis, A. (2006). Object-oriented computation of sandwich
@@ -255,5 +471,5 @@ An object-oriented implementation of clustered covariances in R.
 }
 \seealso{
 \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}, \code{\link[=pool_mfrm_imputed]{pool_mfrm_imputed()}},
-\code{\link[=plot.mfrm_facet_intervals]{plot.mfrm_facet_intervals()}}
+\code{\link[=plot.mfrm_facet_intervals]{plot.mfrm_facet_intervals()}}, \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}
 }

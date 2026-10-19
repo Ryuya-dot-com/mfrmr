@@ -136,7 +136,7 @@ mfrm_results_viewer_response_time_boundary <- function() {
       "Response-time metadata supplied outside the fitted MFRM likelihood.",
       "Descriptive QC for rapid/slow timing patterns by event, person, facet, or score.",
       "A fitted speed parameter, joint speed-accuracy model, modified logit estimate, or automatic exclusion rule.",
-      "Use response_time_review(), plot_response_time_review(..., draw = FALSE), and plot_data_components() for reusable timing QC tables."
+      "Use response_time_review(), plot(..., draw = FALSE), and plot_data_components() for reusable timing QC tables."
     ),
     stringsAsFactors = FALSE
   )

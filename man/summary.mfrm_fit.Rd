@@ -13,7 +13,8 @@
   detail = NULL,
   diagnostics = NULL,
   compute = c("auto", "never"),
-  include_person = FALSE
+  include_person = FALSE,
+  comparison_review = NULL
 )
 }
 \arguments{
@@ -51,6 +52,11 @@ diagnostics.}
 \item{include_person}{Logical. Whether person identifiers may be printed in
 extreme-person tables and requested by the fit-pathway route. The default
 is \code{FALSE} for privacy-safe console output.}
+
+\item{comparison_review}{Optional prospective interaction review from
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. Explicitly requests fitted contrasts and retained-
+point numerical checks through \code{\link[=interaction_effect_table]{interaction_effect_table()}}, saved as
+\verb{$interaction_comparisons}. It does not fit a model or supply intervals.}
 }
 \value{
 An object of class \code{summary.mfrm_fit} with:
@@ -98,8 +104,16 @@ slope-boundary screening, and the final readiness decision. Supportive
 local evidence does not override an inconclusive boundary audit
 \item \code{interaction_overview}: model-estimated facet-interaction summary
 when the fit was specified with \code{facet_interactions}
+\item \code{interaction_comparisons}: explicitly requested joint-fit contrasts,
+retaining unavailable rows, the prospective review and numerical checks;
+absent unless \code{comparison_review} is supplied
 \item \code{settings_overview}: estimation-settings overview that pins the
-configuration that affects identification/scoring
+configuration that affects identification/scoring. \code{CenteringScope}
+distinguishes whole-facet (\code{"facet"}) from legacy remainder centering
+(\code{"remainder"}), separately from \code{NoncenterFacet}. Native fits saved before
+convention metadata retain the legacy interpretation. Recreate this
+summary from the fit to obtain new fields; reading an old summary does
+not update it or refit the model
 \item \code{attached_diagnostics}: logical flag indicating whether the
 \code{mfrm_fit} was returned with diagnostics already attached
 \item \code{attached_diagnostics_cols}: character vector of diagnostic
@@ -252,7 +266,7 @@ FACETS is run.
 Infit pathway only when they answer a specific follow-up question.
 \item For \code{RSM} / \code{PCM}, continue with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for element-level fit
 checks. For \code{GPCM}, continue with \code{\link[=compute_information]{compute_information()}} /
-\code{\link[=plot_information]{plot_information()}} or the fitted-object posterior scoring helpers.
+\link[=plot.mfrm_information]{plot(x)} or the fitted-object posterior scoring helpers.
 }
 }
 

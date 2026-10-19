@@ -141,6 +141,9 @@ test_that("import_tam_fit detects multi-facet fits", {
   expect_identical(imp$facets$others$Level, as.character(tam_mfr$item$item))
   expect_equal(nrow(imp$facets$others), nrow(tam_mfr$item))
   expect_identical(imp$source$native_parameters, tam_mfr$xsi.facets)
+  expect_true(all(imp$facets$person$ResponseStatus == "observed"))
+  expect_equal(sum(imp$facets$person$NObserved), sum(tam_mfr$resp.ind))
+  expect_identical(imp$facets$person$Person, as.character(tam_mfr$person$pid))
 })
 
 # --- eRm person-parameter schemas ---------------------------------------

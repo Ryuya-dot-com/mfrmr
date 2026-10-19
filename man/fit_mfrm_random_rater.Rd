@@ -109,6 +109,11 @@ omitted scores are not imputed. Informative assignment, nonnormal rater
 populations, PCM, anchors, interactions, testlets and latent regression
 are not implemented by this route. Connectedness alone does not guarantee
 adequate information about rater variance.
+A fixed-facet level with only minimum or only maximum scores has no finite
+calibration estimate. Such separation fails \code{checks$NumericalReady} and
+\code{checks$InformationPositive}, even if the optimizer reports convergence.
+\code{checks$FixedFacetSeparation} records this sufficient separation check;
+its absence does not exclude separation along combinations of facets.
 
 Both estimated zero variances are considered explicitly. One-sided variance
 scores check these boundaries; the derivative with respect to SD alone cannot

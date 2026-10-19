@@ -149,6 +149,9 @@ two. FACETS (Linacre, 2026) reports rater separation/reliability on
 the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 Rasch-metric version in \code{diagnostics$reliability} and this
 variance-share view here.
+For agreement or consistency between specific pairs on common units, use
+\code{\link[=pairwise_icc_table]{pairwise_icc_table()}} instead. A small rater variance share here does not
+establish pairwise agreement; residual disagreement can still be large.
 
 Set \code{ci_method = "boot"} to request intervals alongside the point
 estimates. The \code{Interpretation} column still uses point estimates.
@@ -203,7 +206,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
   #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
   # - Rater / Criterion ICC reads as variance share, NOT reliability;
-  #   here SMALL values are desirable (raters / items agree), and
+  #   small values indicate limited systematic facet differences, and
   #   shares > 0.10 hint at meaningful systematic facet differences.
   # - `Interpretation` summarises the variance-share band the helper
   #   has assigned to each row.
@@ -220,7 +223,7 @@ linear mixed-effects models using lme4. \emph{Journal of Statistical
 Software, 67}(1), 1-48.
 }
 \seealso{
-\code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}},
+\code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}}, \code{\link[=pairwise_icc_table]{pairwise_icc_table()}},
 \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}, \code{\link[=detect_facet_nesting]{detect_facet_nesting()}},
 \code{\link[=facet_small_sample_review]{facet_small_sample_review()}}.
 }

@@ -197,7 +197,7 @@ test_that("an overcrowded canvas reports its limit without deleting labels", {
   expect_true(all(is.finite(as.matrix(placed))))
 })
 
-test_that("pathway and CCC disclose the same reference profile in data and drawing", {
+test_that("pathway and CCC retain the reference profile outside the default figure", {
   fit <- make_toy_fit(maxit = 20)
   bundle <- .mfrmr_muffle_expected_warnings(
     plot(fit, type = "bundle", draw = FALSE), "^Review-only display:")
@@ -215,7 +215,8 @@ test_that("pathway and CCC disclose the same reference profile in data and drawi
     labels <- character()
     p <- .mfrmr_muffle_expected_warnings(plot(fit, type = type), "^Review-only display:")
     expect_identical(p$data$curve_basis, expected_basis)
-    expect_match(paste(labels, collapse = " "),
+    expect_false(any(grepl("additive effects and interactions fixed at zero", labels, fixed = TRUE)))
+    expect_match(paste(plot_data(p, "notes")$Text, collapse = " "),
       "additive effects and interactions fixed at zero", fixed = TRUE)
     expect_true(all(p$data$curve_basis$PredictorOffset == 0))
   }
@@ -261,6 +262,9 @@ test_that("category-count axes include expected counts above observed bars", {
 test_that("rater profiles reserve room for complete labels or explain the size limit", {
   fit <- make_toy_fit(maxit = 20)
   dx <- make_toy_diagnostics(fit)
+  # This layout test deliberately changes only display labels. Identity is
+  # checked separately; bypass it here rather than fitting a new labelled model.
+  local_mocked_bindings(mfrm_results_validate_diagnostics_identity = function(...) "layout_fixture")
   rater <- dx$measures$Facet == "Rater"
   dx$measures$Level[rater] <- paste("Long assessment team", dx$measures$Level[rater])
   grDevices::pdf(NULL, width = 8, height = 6)

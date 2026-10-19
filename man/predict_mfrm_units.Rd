@@ -20,7 +20,8 @@ predict_mfrm_units(
   n_draws = 0,
   seed = NULL,
   adaptive_quad_points = NULL,
-  scoring_prior = NULL
+  scoring_prior = NULL,
+  cut_scores = NULL
 )
 }
 \arguments{
@@ -79,9 +80,9 @@ The fixed or adaptive integration mode is inherited from \code{fit}.}
 handled. \code{"error"} (default) refuses scoring. \code{"review"} permits an
 explicitly review-only fitted-object calculation and labels the returned
 estimates and settings accordingly; it does not make the source fit ready.
-GPCM MML and intercept-only normal population models may pass the
+GPCM MML and RSM/PCM normal population models may pass the
 conditional-scoring checks described below even when their global inference
-audit remains incomplete. Population models with background covariates
+audit remains incomplete. GPCM population models with background covariates
 still require explicit review. Invalid calibration parameters or inconsistent
 stored prior parameters are refused under either policy. Older population
 results without the new check records retain their review-only restriction.}
@@ -110,11 +111,23 @@ finite; SD and its representable variance must be positive. Overrides of
 population models with background covariates are not supported. A supplied
 prior does not refit the calibration, estimate a new population, or bypass
 source checks. Numerical scoring checks run under the supplied prior.}
+
+\item{cut_scores}{Optional finite, strictly increasing ability cuts with
+optional distinct names. Requires ordinary RSM/PCM and unit weights.
+A \code{decisions} table returns continuous probabilities above cuts and within
+bands (\verb{Lower < ability <= Upper}), conditional on the point calibration
+and actual scoring prior. Calibration/population and cut-score estimation
+uncertainty are excluded. This is not a Person-difference test or a
+probability of passing a future administration. Cut labels alone do not
+establish CEFR alignment. Tiny tails have absolute, not relative, numerical
+accuracy. Use \code{apa_table(x, which = "decisions")} or export the saved table.}
 }
 \value{
 An object of class \code{mfrm_unit_prediction} with components:
 \itemize{
 \item \code{estimates}: posterior summaries by person
+\item \code{decisions}: optional cut-score and ability-band probabilities, with
+boundaries, labels, priors, availability and uncertainty basis
 \item \code{draws}: optional quadrature-grid posterior draws
 \item \code{row_review}: row-level preparation review for \code{new_data}
 \item \code{population_review}: optional person-level omission review for
@@ -229,10 +242,14 @@ source/batch checks, omitted rows and review-only labels remain visible.
 
 A finite calibration can define a person's posterior score without proving
 that the calibration is the unique global optimum. For one-family GPCM MML and models
-with an estimated intercept-only normal population, this function checks the
+with an estimated RSM/PCM normal population, this function checks the
 current likelihood, gradient and unregularized joint information using the
 same local-solution machinery as \code{\link[=compare_mfrm]{compare_mfrm()}}. Detected identification
 deficiencies, inadequate categories and failed convergence do not pass.
+RSM/PCM regressions additionally require the consistent full-rank source,
+unit weights, direct MML and centered unanchored facets/steps used by
+\code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}. Scoring reuses the fitted predictor coding
+and conditional residual variance; no population uncertainty is propagated.
 Boundary and identification audits labelled "not evaluated" remain so;
 they are not relabelled as completed by these local checks.
 
@@ -420,6 +437,64 @@ order and estimator remain recorded in the score table and saved settings.
 \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} provides the corresponding portable route.
 }
 
+\section{Conditional ability decisions}{
+
+Supply \code{cut_scores} on the calibration's ability scale to obtain
+\code{decisions}, with one row per Person and requested event. \code{Type = "above_cut"}
+gives \eqn{P(\theta > c \mid y, \widehat\psi)}; \code{Type = "ability_band"}
+gives the probability between successive cuts, including the two outer
+bands. \verb{Lower < ability <= Upper} defines every row. \code{Label} uses the
+supplied cut names (or \code{Cut1}, ...) and \code{Band1}, ... in increasing order.
+These events overlap: only the ability-band probabilities sum to one.
+
+\code{PriorMean} and \code{PriorSD} record the actual Person-specific normal prior;
+\code{Status} and \code{Reason} retain scoring availability. \code{available_conditional}
+means the applicable numerical checks passed, not that the model or the
+cut's substantive meaning has been validated. \code{review_only} requires
+inspection before interpretation. Source-roster scoring may return
+\code{prior_only} for missing-only Persons; portable scoring instead retains
+them as \code{unavailable} with \code{NA} probabilities. Fitted-object scoring omits
+Persons with no retained rows; inspect its row and population reviews.
+A Person absent from the input is never invented.
+
+Probabilities integrate the continuous posterior, rather than counting
+\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} draws or applying a normal approximation
+to EAP/SD. They condition on point calibration, population/prior parameters
+and supplied cuts, as recorded in \code{Uncertainty}. They do not propagate
+estimation error, compare two Persons or predict passing a future test.
+CEFR labels require externally justified cuts on this same scale.
+Very small tails have absolute, not relative, numerical accuracy; a
+returned zero or one is not a claim of impossibility or certainty.
+
+Review the scoring population as well as the calibration. An estimated
+normal prior is treated as known during scoring; its sampling uncertainty
+can matter especially with a small calibration cohort. A larger calibration
+cohort can improve parameter precision without correcting a prior that
+mismatches a new population's mean, spread or shape. Passing numerical checks
+does not establish that probabilities are accurate for that new population.
+A fixed reference prior is not a universal remedy: justify it for the target
+population on the calibration scale. If a prior override is supported,
+comparing externally justified alternatives is a sensitivity analysis, not
+evidence that the alternative giving the preferred classification is valid.
+Population-averaged accuracy also does not guarantee accuracy near each cut,
+within every subgroup or for each individual Person.
+
+Use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for eligible ordinary RSM MML source Persons,
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for ordinary RSM/PCM MML or JML fitted-object scoring, and
+\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} for eligible continuous-posterior RSM/PCM
+artifacts. Each route retains its existing source and population
+restrictions. Unit weights are required; GPCM, shared-rater and testlet
+cut probabilities are not supported. JML uses a separate scoring prior,
+not a population estimated by JML. \code{NULL} leaves the existing output unchanged.
+
+\code{summary(x)$decisions} and \code{\link[=apa_table]{apa_table()}} with \code{which = "decisions"} reuse
+saved probabilities without rounding them. Fitted-object and portable
+score batches also support \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and
+\code{\link[=export_summary_appendix]{export_summary_appendix()}}. Save the complete result with \code{\link[=saveRDS]{saveRDS()}}
+to retain cuts, priors and review states for later reporting. Existing
+score plots display EAPs and intervals, not these event probabilities.
+}
+
 \examples{
 toy <- load_mfrmr_data("example_core")
 keep_people <- unique(toy$Person)[1:18]
@@ -427,8 +502,7 @@ toy_fit <- fit_mfrm(
   toy[toy$Person \%in\% keep_people, , drop = FALSE],
   "Person", c("Rater", "Criterion"), "Score",
   method = "MML",
-  quad_points = 5,
-  maxit = 30
+  quad_points = 61
 )
 raters <- unique(toy$Rater)[1:2]
 criteria <- unique(toy$Criterion)[1:2]
@@ -438,23 +512,36 @@ new_units <- data.frame(
   Criterion = c(criteria[1], criteria[2], criteria[1], criteria[2]),
   Score = c(2, 3, 2, 4)
 )
-pred_units <- predict_mfrm_units(toy_fit, new_units, n_draws = 0)
+# Illustrative boundaries only: these labels do not establish CEFR levels.
+cuts <- c(Basic = -0.5, Advanced = 0.8)
+pred_units <- predict_mfrm_units(toy_fit, new_units,
+  scoring_quad_points = 121, cut_scores = cuts)
 summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
+pred_units$decisions
+apa_table(pred_units, which = "decisions")
 # Compare assumptions on the same response rows, without refitting.
 alternative <- predict_mfrm_units(
-  toy_fit, new_units, scoring_prior = list(mean = 0.5, sd = 1.5)
+  toy_fit, new_units, scoring_prior = list(mean = 0.5, sd = 1.5),
+  scoring_quad_points = 121, cut_scores = cuts
 )
 comparison <- dplyr::bind_rows(
   "Retained prior" = pred_units$estimates,
   "Alternative prior" = alternative$estimates, .id = "Scenario"
 )
-ggplot2::ggplot(comparison, ggplot2::aes(Scenario, Estimate)) +
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  ggplot2::ggplot(comparison, ggplot2::aes(Scenario, Estimate)) +
   ggplot2::geom_pointrange(ggplot2::aes(ymin = Lower, ymax = Upper)) +
   ggplot2::facet_wrap(~ Person) + ggplot2::theme_minimal() +
   ggplot2::labs(x = NULL, y = "Posterior EAP",
     caption = "95\% posterior intervals conditional on calibration and each prior")
 }
+# Retain the complete result; summaries and tables do not score again.
+saved <- tempfile(fileext = ".rds")
+saveRDS(pred_units, saved)
+apa_table(readRDS(saved), which = "decisions")
+unlink(saved)
+}
 \seealso{
-\code{\link[=predict_mfrm_population]{predict_mfrm_population()}}, \code{\link[=fit_mfrm]{fit_mfrm()}},
-\link{summary.mfrm_unit_prediction}
+\code{\link[=score_mfrm_persons]{score_mfrm_persons()}}, \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}, \code{\link[=classification_table]{classification_table()}}, \code{\link[=apa_table]{apa_table()}},
+\code{\link[=predict_mfrm_population]{predict_mfrm_population()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}, \link{summary.mfrm_unit_prediction}
 }

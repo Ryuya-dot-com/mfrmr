@@ -25,7 +25,10 @@
 
 \item{newdata}{Long-format ratings with the fitted column names. \code{NULL}
 reuses the source assignment, including missing-score rows. New Person and
-testlet labels are allowed; every fixed-facet level must be known.}
+testlet labels are allowed; every fixed-facet level must be known.
+If the testlet column is also a fixed facet, its labels must therefore
+be known. For example, with \code{testlet = "Rater"} and \code{"Rater"} in \code{facets},
+this function cannot score a new rater whose fixed severity was not fitted.}
 
 \item{level}{Conditional equal-tail posterior interval probability; default
 0.95. These are not calibration-adjusted frequentist confidence intervals.}

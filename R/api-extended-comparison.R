@@ -238,7 +238,7 @@ print.mfrm_extended_comparison <- function(x, ...) {
 #' @export
 plot.mfrm_extended_comparison <- function(x, style = c("paired", "difference"),
     facet = NULL, draw = TRUE, palette = c("accessible", "mono"), title = NULL,
-    caption = NULL, show_title = TRUE, show_notes = TRUE,
+    caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = metric %in% c("effects", "infit", "outfit"),
     text_scale = 1, point_size = 2.5,
     metric = c("effects", "expected_score", "variance", "infit", "outfit", "probability", "person"), category = NULL, ...) {

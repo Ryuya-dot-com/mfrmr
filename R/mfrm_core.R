@@ -1301,7 +1301,9 @@ build_facet_constraint <- function(levels,
                                    anchors = NULL,
                                    groups = NULL,
                                    group_values = NULL,
-                                   centered = TRUE) {
+                                   centered = TRUE,
+                                   centering_scope = c("remainder", "facet")) {
+  centering_scope <- match.arg(centering_scope)
   lvl <- as.character(levels)
   anchors_vec <- rep(NA_real_, length(lvl))
   names(anchors_vec) <- lvl
@@ -1331,6 +1333,42 @@ build_facet_constraint <- function(levels,
     group_values = group_values_map,
     centered = centered
   )
+  if (identical(centering_scope, "facet")) {
+    # Whole-facet centering is affine once anchors or group means are fixed.
+    # Keep old specifications without these fields on their original map.
+    spec$centering_scope <- "facet"
+    spec$groups[!is.na(spec$groups) & !nzchar(spec$groups)] <- NA_character_
+    grouped <- !is.na(spec$groups)
+    fixed_total <- sum(spec$anchors[!grouped], na.rm = TRUE)
+    fixed_magnitude <- sum(abs(spec$anchors[!grouped]), na.rm = TRUE)
+    for (gid in unique(spec$groups[grouped])) {
+      members <- which(spec$groups == gid)
+      value <- if (gid %in% names(spec$group_values)) spec$group_values[[gid]] else 0
+      if (length(value) != 1L || !is.finite(value)) {
+        stop("A group-mean constraint requires a finite target.", call. = FALSE)
+      }
+      spec$group_values[gid] <- value
+      target <- value * length(members)
+      if (all(is.finite(spec$anchors[members]))) {
+        residual <- sum(spec$anchors[members]) - target
+        scale <- max(1, abs(target), sum(abs(spec$anchors[members])))
+        if (abs(residual) > 1e-12 * scale) {
+          stop("Fixed anchors conflict with the mean of group '", gid, "'.",
+               call. = FALSE)
+        }
+      }
+      fixed_total <- fixed_total + target
+      fixed_magnitude <- fixed_magnitude + abs(target)
+    }
+    spec$remainder_sum <- if (isTRUE(centered)) -fixed_total else 0
+    remaining <- which(is.na(spec$anchors) & !grouped)
+    if (isTRUE(centered) && !length(remaining) &&
+        abs(fixed_total) > 1e-12 * max(1, fixed_magnitude)) {
+      stop("Fixed anchors and group means conflict with whole-facet centering. ",
+           "Revise the declared constraints or the facet's centering choice.",
+           call. = FALSE)
+    }
+  }
   spec$n_params <- count_facet_params(spec)
   spec
 }
@@ -1397,12 +1435,13 @@ expand_facet_with_constraints <- function(free, spec) {
   m <- length(ungrouped_idx)
   if (m == 0) return(out)
   if (centered) {
+    target <- spec$remainder_sum %||% 0
     if (m == 1) {
-      out[ungrouped_idx] <- 0
+      out[ungrouped_idx] <- target
     } else {
       seg <- free[(used + 1):(used + m - 1)]
       used <- used + (m - 1)
-      out[ungrouped_idx] <- c(seg, -sum(seg))
+      out[ungrouped_idx] <- c(seg, target - sum(seg))
     }
   } else {
     seg <- free[(used + 1):(used + m)]
@@ -1455,7 +1494,7 @@ constraint_grad_project <- function(grad_expanded, spec) {
           pos <- pos + 1L
         }
       }
-      # m == 1: constrained to 0, no free params
+      # m == 1: constrained to a constant, no free params
     } else {
       for (j in seq_len(m)) {
         grad_free[pos] <- grad_expanded[ungrouped_idx[j]]
@@ -1479,6 +1518,11 @@ collapse_facet_with_constraints <- function(expanded, spec,
       any(abs(expanded[fixed] - spec$anchors[fixed]) > tolerance)) {
     stop("Expanded facet coordinates violate a fixed anchor.", call. = FALSE)
   }
+  if (identical(spec$centering_scope, "facet") && isTRUE(spec$centered) &&
+      abs(sum(expanded)) > tolerance * max(1, sum(abs(expanded)))) {
+    stop("Expanded facet coordinates violate whole-facet centering.",
+         call. = FALSE)
+  }
   free <- numeric(0)
   free_index <- which(is.na(spec$anchors))
   groups <- as.character(spec$groups)
@@ -1498,7 +1542,7 @@ collapse_facet_with_constraints <- function(expanded, spec,
   ungrouped <- free_index[is.na(groups[free_index]) | !nzchar(groups[free_index])]
   if (length(ungrouped) > 0L) {
     if (isTRUE(spec$centered)) {
-      if (abs(sum(expanded[ungrouped])) > tolerance) {
+      if (abs(sum(expanded[ungrouped]) - (spec$remainder_sum %||% 0)) > tolerance) {
         stop("Expanded facet coordinates violate the active sum constraint.",
              call. = FALSE)
       }
@@ -2681,15 +2725,19 @@ prepare_constraint_specs <- function(prep,
                                      anchor_df = NULL,
                                      group_anchor_df = NULL,
                                      noncenter_facet = "Person",
-                                     dummy_facets = character(0)) {
+                                     dummy_facets = character(0),
+                                     centering_scope = "remainder",
+                                     anchor_review = NULL) {
+  centering_scope <- match.arg(centering_scope, c("facet", "remainder"))
   facet_names <- prep$facet_names
   all_facets <- c("Person", facet_names)
-  anchor_review <- audit_anchor_tables(
+  anchor_review <- anchor_review %||% audit_anchor_tables(
     prep = prep,
     anchor_df = anchor_df,
     group_anchor_df = group_anchor_df,
     noncenter_facet = noncenter_facet,
-    dummy_facets = dummy_facets
+    dummy_facets = dummy_facets,
+    centering_scope = centering_scope
   )
 
   anchor_df <- anchor_review$anchors
@@ -2750,7 +2798,8 @@ prepare_constraint_specs <- function(prep,
     anchors = anchor_map$Person,
     groups = group_map$Person,
     group_values = group_values$Person,
-    centered = !(identical(noncenter_facet, "Person"))
+    centered = !(identical(noncenter_facet, "Person")),
+    centering_scope = centering_scope
   )
 
   facet_specs <- lapply(facet_names, function(facet) {
@@ -2759,7 +2808,8 @@ prepare_constraint_specs <- function(prep,
       anchors = anchor_map[[facet]],
       groups = group_map[[facet]],
       group_values = group_values[[facet]],
-      centered = !identical(noncenter_facet, facet)
+      centered = !identical(noncenter_facet, facet),
+      centering_scope = centering_scope
     )
   })
   names(facet_specs) <- facet_names
@@ -2840,7 +2890,12 @@ resolve_step_and_slope_facets <- function(model,
       )
     }
   } else {
-    resolved_step <- as.character(step_facet[1])
+    if (length(step_facet) != 1L || !is.atomic(step_facet) ||
+        anyNA(step_facet) || !nzchar(as.character(step_facet))) {
+      stop("`step_facet` must name exactly one declared facet; multiple threshold owners are unsupported.",
+           call. = FALSE)
+    }
+    resolved_step <- as.character(step_facet)
   }
   if (!resolved_step %in% facet_names) {
     stop("step_facet = '", resolved_step, "' is not among the declared facets: ",
@@ -3001,7 +3056,8 @@ build_estimation_config <- function(prep,
                                     dummy_facets,
                                     anchor_df,
                                     group_anchor_df,
-                                    population = NULL) {
+                                    population = NULL,
+                                    centering_scope = "remainder") {
   config <- list(
     model = model,
     method = method,
@@ -3031,17 +3087,35 @@ build_estimation_config <- function(prep,
     anchor_df = anchor_df,
     group_anchor_df = group_anchor_df,
     noncenter_facet = noncenter_facet,
-    dummy_facets = dummy_facets
+    dummy_facets = dummy_facets,
+    centering_scope = centering_scope
   )
+
+  # MML integrates ability; theta_spec is not part of its parameter vector.
+  # Do not retain Person constraints that the likelihood cannot enforce.
+  theta_spec <- constraint_specs$theta_spec
+  if (identical(method, "MML") &&
+      (any(is.finite(theta_spec$anchors)) || any(!is.na(theta_spec$groups)))) {
+    stop(
+      "Person anchors and Person group anchors are not supported with MML. ",
+      "MML integrates Person ability rather than fixing individual values or ",
+      "their group mean. Common Persons in the rating design do not require ",
+      "anchors. Fixed Person constraints are available with JML, whose ",
+      "estimation assumptions differ.",
+      call. = FALSE
+    )
+  }
 
   config$theta_spec <- constraint_specs$theta_spec
   config$facet_specs <- constraint_specs$facet_specs
   config$noncenter_facet <- noncenter_facet
+  config$centering_scope <- centering_scope
   config$dummy_facets <- dummy_facets
   config$anchor_summary <- constraint_specs$anchor_summary
   config$anchor_review <- constraint_specs$anchor_review
   config$step_specs <- mfrmr_default_step_specs(config)
   config$source_columns <- prep$source_columns
+  config$repeated_ratings <- prep$repeated_ratings %||% "review"
   config$population_spec <- compact_population_spec(population, prep$levels$Person)
   config$gpcm_spec <- if (identical(model, "GPCM")) {
     build_gpcm_slope_spec(
@@ -4292,7 +4366,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
                           optimizer = "auto",
                           mml_engine = "direct",
                           checkpoint = NULL,
-                          mml_integration = "fixed") {
+                          mml_integration = "fixed",
+                          repeated_ratings = c("review", "independent"),
+                          centering_scope = "remainder") {
   # Internal validation instrumentation. The option is deliberately absent
   # from the public fitting API because elapsed time is volatile metadata, not
   # part of the statistical result. When enabled, timings are attached only
@@ -4334,7 +4410,8 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     rating_max = rating_max,
     weight_col = weight_col,
     keep_original = keep_original,
-    missing_codes = missing_codes
+    missing_codes = missing_codes,
+    repeated_ratings = repeated_ratings
   )
   phase_finish("prepare_data", phase_started, "input normalization and retained data")
 
@@ -4391,7 +4468,8 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     dummy_facets = dummy_facets,
     anchor_df = anchor_df,
     group_anchor_df = group_anchor_df,
-    population = population
+    population = population,
+    centering_scope = centering_scope
   )
   config <- cfg$config
   config$step_facet_source <- resolved_families$step_facet_source
@@ -6997,7 +7075,7 @@ add_gpcm_scorefile_delta_se <- function(scorefile,
   var <- rowSums((jac %*% cov_mat) * jac)
   var[is.finite(var) & var < 0 & abs(var) < 1e-10] <- 0
   se <- ifelse(is.finite(var) & var >= 0, sqrt(var), NA_real_)
-  z <- stats::qnorm((1 + ci_level) / 2)
+  z <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
   expected_lower <- base - z * se
   expected_upper <- base + z * se
   rating_min <- suppressWarnings(as.numeric(prep$rating_min %||% NA_real_))
@@ -7172,7 +7250,7 @@ add_gpcm_score_side_delta_se <- function(scorefile,
   expected <- suppressWarnings(as.numeric(scorefile$Expected %||% NA_real_))
   observed <- suppressWarnings(as.numeric(scorefile$Observed %||% NA_real_))
   residual <- suppressWarnings(as.numeric(scorefile$Residual %||% (observed - expected)))
-  z <- stats::qnorm((1 + ci_level) / 2)
+  z <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
 
   expected_lower <- expected - z * se
   expected_upper <- expected + z * se
@@ -7273,7 +7351,7 @@ add_gpcm_fair_average_delta_se <- function(raw_tbls,
 
   par <- as.numeric(res$opt$par %||% numeric(0))
   cov_mat <- symmetrize_matrix(covariance$cov)
-  z <- stats::qnorm((1 + ci_level) / 2)
+  z <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
   rating_min <- suppressWarnings(as.numeric(res$prep$rating_min %||% NA_real_))
   rating_max <- suppressWarnings(as.numeric(res$prep$rating_max %||% NA_real_))
   se_method <- if (identical(covariance$status, "regularized")) {
@@ -9308,7 +9386,9 @@ calc_facets_chisq <- function(measure_df) {
                           NA_real_)
     ) |>
     ungroup() |>
-    select(-EstimateVec, -SEVec)
+    select(-EstimateVec, -SEVec) |>
+    mutate(InferenceTier = "screening", SupportsFormalInference = FALSE,
+      StatisticBasis = "Diagonal-SE heterogeneity screen; covariance not propagated")
 }
 
 build_param_slices <- function(sizes) {
@@ -9335,11 +9415,12 @@ constraint_jacobian <- function(spec) {
     return(out)
   }
 
-  baseline <- expand_facet_with_constraints(numeric(n_params), spec)
-  for (j in seq_len(n_params)) {
-    free_vec <- numeric(n_params)
-    free_vec[j] <- 1
-    out[, j] <- expand_facet_with_constraints(free_vec, spec) - baseline
+  # The analytic projection avoids subtracting affine anchor offsets, which
+  # can turn an exactly fixed contrast into a tiny nonzero derivative.
+  for (i in seq_len(n_levels)) {
+    unit <- numeric(n_levels)
+    unit[i] <- 1
+    out[i, ] <- constraint_grad_project(unit, spec)
   }
   out
 }
@@ -9740,7 +9821,7 @@ compute_mml_structural_parameter_se <- function(res,
     }
   }
   covariance <- covariance %||% compute_mml_parameter_covariance(res)
-  z <- stats::qnorm((1 + ci_level) / 2)
+  z <- stats::qnorm((1 - ci_level) / 2, lower.tail = FALSE)
 
   add_unavailable <- function(tbl, kind) {
     if (!is.data.frame(tbl) || nrow(tbl) == 0L) return(tbl)
@@ -10066,7 +10147,7 @@ summarize_precision_basis <- function(df, se_col, distribution_basis = c("sample
   ok_se <- ok_est & is.finite(se_vals) & se_vals >= 0
   n_est <- sum(ok_est)
   n_se <- sum(ok_se)
-  complete_se <- n_est > 0L && n_se == n_est
+  complete_se <- n_est > 0L && n_se == n_est && !any(df[["Fixed"]] %in% TRUE)
 
   observed_mean <- if (n_est > 0L) mean(est[ok_est]) else NA_real_
   observed_var <- if (n_est == 0L) {
@@ -10123,7 +10204,8 @@ build_facet_precision_summary <- function(measure_df, variability_tbl = NULL) {
 
   variability_tbl <- as.data.frame(variability_tbl %||% data.frame(), stringsAsFactors = FALSE)
   variability_keep <- intersect(
-    c("Facet", "FixedChiSq", "FixedDF", "FixedProb", "RandomVar", "RandomChiSq", "RandomDF", "RandomProb"),
+    c("Facet", "FixedChiSq", "FixedDF", "FixedProb", "RandomVar", "RandomChiSq", "RandomDF", "RandomProb",
+      "InferenceTier", "SupportsFormalInference", "StatisticBasis"),
     names(variability_tbl)
   )
   variability_tbl <- variability_tbl[, variability_keep, drop = FALSE]
@@ -10555,9 +10637,11 @@ calc_reliability <- function(measure_df) {
         Converged = facet_converged,
         InferenceReady = facet_ready,
         PrecisionTier = facet_tier,
-        SupportsFormalInference = supports_formal,
+        SourceSupportsFormalInference = supports_formal,
+        SupportsFormalInference = FALSE,
+        ReliabilityBasis = "Approximate marginal-SE variance subtraction; covariance not propagated",
         ReliabilityUse = dplyr::case_when(
-          supports_formal ~ "primary_reporting",
+          supports_formal ~ "approximate_summary",
           identical(facet_tier, "model_based") ~ "review_before_reporting",
           identical(facet_tier, "hybrid") ~ "review_before_reporting",
           identical(facet_tier, "exploratory") ~ "screening_only",
@@ -10808,7 +10892,7 @@ mfrm_diagnostics <- function(res,
     mutate(Level = as.character(Level))
 
   measure_ci_level <- 0.95
-  measure_ci_z <- stats::qnorm(1 - (1 - measure_ci_level) / 2)
+  measure_ci_z <- stats::qnorm((1 - measure_ci_level) / 2, lower.tail = FALSE)
 
   measures <- bind_rows(
     person_tbl |>
@@ -11018,7 +11102,7 @@ mfrm_diagnostics <- function(res,
       ),
       "RealSE is a fit-adjusted companion to ModelSE: ModelSE * sqrt(max(Infit, 1)), so it is never smaller than ModelSE.",
       "CI_Lower and CI_Upper are symmetric 95% normal bands computed as Estimate +/- qnorm(0.975) * SE. `CI_Level` records 0.95 and `CI_Method` records the interval family. Use `CIEligible`, `InferenceReady`, `CIBasis`, and `CIUse` to distinguish primary-reporting intervals from review or screening approximations.",
-      "Reliability tables use observed variance minus mean squared SE, truncated at zero. Model and fit-adjusted values are companion indices, not confidence bounds. Finite-estimate and SE counts state the calculation basis; indices are unavailable if any finite estimate lacks an SE. For Persons scored by EAP this is a separation-based index, not posterior-variance EAP reliability. `Reliability`/`Separation` remain compatibility aliases for the model-based values, while `PrecisionTier`, `InferenceReady`, `SupportsFormalInference`, and `ReliabilityUse` indicate how strongly each facet summary supports formal reporting."
+      "Reliability tables use observed variance minus mean squared SE, truncated at zero. Model and fit-adjusted values are companion indices, not confidence bounds. Finite-estimate and SE counts state the calculation basis; indices are unavailable if any finite estimate lacks an SE. For Persons scored by EAP this is a separation-based index, not posterior-variance EAP reliability. `Reliability`/`Separation` remain compatibility aliases for the model-based values, while `SourceSupportsFormalInference` describes the input precision only. `ReliabilityUse` labels approximate or review summaries; `SupportsFormalInference` is FALSE for these derived indices, which do not propagate covariance among estimates."
     )
   )
   marginal_fit <- if (diagnostic_mode %in% c("marginal_fit", "both")) {

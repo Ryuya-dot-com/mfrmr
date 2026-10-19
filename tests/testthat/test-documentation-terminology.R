@@ -47,7 +47,7 @@ test_that("the public guide starts from data, fit, plot, and summary", {
   readme <- paste(readLines(file.path(pkg_root, "README.md"), warn = FALSE),
                   collapse = "\n")
 
-  data_pos <- regexpr("toy <- load_mfrmr_data", readme, fixed = TRUE)[1]
+  data_pos <- regexpr("ratings <- load_mfrmr_data", readme, fixed = TRUE)[1]
   fit_pos <- regexpr("fit <- fit_mfrm", readme, fixed = TRUE)[1]
   plot_pos <- regexpr("plot(fit)", readme, fixed = TRUE)[1]
   summary_pos <- regexpr("results <- summary(fit)", readme, fixed = TRUE)[1]
@@ -130,7 +130,7 @@ test_that("public estimator vocabulary keeps JMLE as an input alias only", {
     encoding = "UTF-8"
   ), collapse = "\n")
 
-  expect_match(fit_help, 'method = c("MML", "JML", "JMLE")', fixed = TRUE)
+  expect_match(fit_help, 'method = c("MML", "JML", "JMLE", "CML")', fixed = TRUE)
   expect_match(fit_help, '"JMLE"} is accepted as a', fixed = TRUE)
   expect_match(package_help, '"JMLE"} as a backward-compatible alias', fixed = TRUE)
   expect_false(grepl('method = "MMLE"', public_text, fixed = TRUE))

@@ -55,7 +55,7 @@ distinguish global facet effects from local anomalies.
 \enumerate{
 \item Run \code{facets_chisq_table(fit, ...)}.
 \item Inspect \code{summary(chi)} then facet rows in \code{chi$table}.
-\item Visualize with \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
+\item Visualize with \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")}.
 }
 }
 
@@ -88,5 +88,5 @@ p_chi$data$plot
 }
 }
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")}
 }

@@ -20,7 +20,7 @@ Invisible verdicts tibble from the QC pipeline.
 }
 \description{
 Visualizes the output from \code{\link[=run_qc_pipeline]{run_qc_pipeline()}} as either a traffic-light
-bar chart or a detail panel showing values versus thresholds.
+bar chart or a panel containing each check's explanation.
 }
 \details{
 Two plot types are provided for visual triage of QC results:
@@ -28,9 +28,9 @@ Two plot types are provided for visual triage of QC results:
 \item \strong{\code{"traffic_light"}} (default): A horizontal bar chart with one row
 per QC check.  Bars are coloured green (Pass), amber (Warn), or red
 (Fail).  Provides an at-a-glance summary of the current QC review state.
-\item \strong{\code{"detail"}}: A panel showing each check's observed value and its
-pass/warn/fail thresholds.  Useful for understanding how close a
-borderline result is to the next verdict level.
+\item \strong{\code{"detail"}}: A panel showing the saved \code{Detail} text beside each
+verdict. Read this explanation and the returned table to understand
+why a check was flagged or unavailable.
 }
 }
 \section{Interpretation}{
@@ -50,18 +50,14 @@ is not high agreement, and no colour establishes statistical validity or
 justifies deleting raters or collapsing categories without further review.
 }
 
-\examples{
-\donttest{
-toy <- load_mfrmr_data("study1")
-# These observed data trigger a category-support warning: the QC plot
-# displays that review requirement; convergence does not remove it.
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-qc <- run_qc_pipeline(fit)
-plot_qc_pipeline(qc, draw = FALSE)
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
-}
+
 \seealso{
-\code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}},
+\code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, \link[=plot.mfrm_fit]{plot(x, type = "qc")},
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

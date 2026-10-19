@@ -190,7 +190,9 @@ mfrmr_readiness_input_component <- function(prep, data_review, config) {
     complete = weight_policy != "invalid",
     reason_codes = reasons,
     audit_state = paste0(if (is.na(data_status)) "not_recorded" else data_status,
-                         ";weights=", weight_policy),
+                         ";weights=", weight_policy,
+                         if (identical(prep$repeated_ratings, "independent"))
+                           ";repeated_ratings=conditionally_independent_declared" else ""),
     provenance = "prepare_mfrm_data_preparation_notes_v1;observation_weight_policy_v1"
   )
 }

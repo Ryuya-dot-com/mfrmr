@@ -31,14 +31,14 @@ test_that('verified weak-information cautions reach intervals, curves and report
   expect_match(attr(relative,'diagnostics')$InferenceReview[1],'Ill-conditioned')
   expect_output(print(ci),'Caution: Ill-conditioned')
   expect_match(apa_table(ci)$table$InferenceReview[1],'Ill-conditioned')
-  expect_match(plot(ci,draw=FALSE)$labels$subtitle,'Ill-conditioned')
+  expect_match(paste(plot_data(plot(ci,draw=FALSE), "notes")$Text, collapse = "\n"),'Ill-conditioned')
   expect_null(plot(ci,draw=FALSE,subtitle=NULL)$labels$subtitle)
   grid <- data.frame(Theta=c(-1,0,1),Rater='R01',Criterion='C01')
   expect_warning(curves <- mfrm_curve_intervals(f,grid),'Ill-conditioned')
   expect_identical(curves$cautions,caution)
   expect_match(curves$table$InferenceReview[1],'Ill-conditioned')
   expect_output(print(curves),'Caution: Ill-conditioned')
-  expect_match(plot(curves,draw=FALSE)$labels$subtitle,'Ill-conditioned')
+  expect_match(paste(plot_data(plot(curves,draw=FALSE), "notes")$Text, collapse = "\n"),'Ill-conditioned')
   expect_null(plot(curves,draw=FALSE,subtitle=NULL)$labels$subtitle)
   saved <- mfrm_results(f,intervals=ci,include='fit',compute='never')
   expect_match(mfrm_report(saved)$tables$gpcm_inference_intervals$InferenceReview[1],'Ill-conditioned')
@@ -87,6 +87,47 @@ test_that('slope transformations retain full covariance, scale uncertainty and m
   bad <- cmat; bad[1,1] <- 2
   expect_error(confint(f,contrasts=bad),'summing to zero')
   expect_error(confint(f,adjust=TRUE),'sandwich')
+})
+
+test_that('extreme valid confidence levels preserve slope and curve tail probabilities', {
+  f <- readRDS(test_path('fixtures', 'mfrm-conditional-scoring-gpcm.rds'))$fit
+  # The target changes below do not change this fit's joint information.
+  # Compute it once; keep every transformation and independent tail check live.
+  information <- compute_mml_parameter_covariance(f)
+  local_mocked_bindings(compute_mml_parameter_covariance = function(res, ...) {
+    stopifnot(identical(res, f))
+    information
+  }, .package = 'mfrmr')
+  level <- 1 - .Machine$double.eps / 2
+  grid <- unique(f$prep$data[f$config$facet_names])[1:2, , drop = FALSE]
+  grid$Theta <- 0
+  # Independent inversion of the normal survival probability, including a
+  # Bonferroni tail too small to represent its complementary CDF below one.
+  critical <- function(n) uniroot(function(z)
+    pnorm(z, lower.tail = FALSE, log.p = TRUE) - log((1-level)/(2*n)),
+    c(0, 20), tol = 1e-12)$root
+  for (method in c('model', 'sandwich')) for (simultaneous in c('none', 'bonferroni')) {
+    for (scale in c('relative', 'standardized')) {
+      ci <- confint(f, level = level, scale = scale, method = method,
+        simultaneous = simultaneous)
+      tab <- attr(ci, 'diagnostics')
+      expect_true(all(tab$CIEligible))
+      z <- critical(if (simultaneous == 'none') 1 else nrow(tab))
+      expect_equal(log(as.numeric(ci[, 1])), log(tab$Estimate)-z*tab$LogSE, tolerance = 1e-10)
+      expect_equal(log(as.numeric(ci[, 2])), log(tab$Estimate)+z*tab$LogSE, tolerance = 1e-10)
+    }
+    for (type in c('probability', 'information')) {
+      ci <- mfrm_curve_intervals(f, grid, type = type, level = level,
+        method = method, simultaneous = simultaneous)
+      tab <- ci$table
+      expect_true(all(tab$CIEligible))
+      z <- critical(if (simultaneous == 'none') 1 else nrow(tab))
+      link <- if (type == 'probability') qlogis else log
+      link_se <- tab$SE / if (type == 'probability') tab$Estimate*(1-tab$Estimate) else tab$Estimate
+      expect_equal(link(tab$Lower), link(tab$Estimate)-z*link_se, tolerance = 1e-8)
+      expect_equal(link(tab$Upper), link(tab$Estimate)+z*link_se, tolerance = 1e-8)
+    }
+  }
 })
 
 test_that('GPCM sandwich aggregates Person vectors and preserves cluster failure reasons', {
@@ -364,8 +405,8 @@ test_that('singleton bootstrap warnings survive intervals and reports without gr
   expect_error(bootstrap_mfrm_gpcm(weak,nsim=2,seed=9156,null_fit=null),'category support')
   skip_if_not_installed('ggplot2')
   p <- plot(ci,draw=FALSE)
-  expect_match(p$labels$subtitle,'Singleton')
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"),'Singleton')
   expect_null(plot(ci,subtitle=NULL,draw=FALSE)$labels$subtitle)
-  expect_identical(plot(ci,subtitle='Custom',draw=FALSE)$labels$subtitle,'Custom')
+  expect_identical(plot_data(plot(ci,subtitle='Custom',draw=FALSE), "subtitle"),'Custom')
   expect_no_error(ggplot2::ggplot_build(p))
 })
