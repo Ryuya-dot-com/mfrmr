@@ -17,6 +17,31 @@ devtools::document()
 devtools::check(args = c("--no-manual"), document = FALSE)
 ```
 
+## Source control and retained evidence
+
+Use a separate Git checkout on each computer, outside file-sync folders. Exchange
+source changes as commits. A synced `.git` directory can mix a newer branch
+reference with an older index or worktree.
+
+Keep maintainer instructions, internal roadmaps and large generated study
+outputs out of Git. `.gitignore` does not untrack files already committed, and
+`.Rbuildignore` controls the package archive rather than repository visibility.
+Removing a file from current tracking does not erase it from earlier commits.
+
+Research runners and small synthetic regression fixtures remain versioned.
+Historical validation records can refer to locally retained output bundles that
+are not distributed in a fresh checkout. Restore the matching private evidence
+to its recorded relative paths before replay, preserving source, input and
+environment identity. Evidence-dependent checks report a skip when these files
+are absent; that skip is not evidence that the numerical validation passed.
+Ordinary package tests and hosted checks must not require private roadmaps.
+
+For external programs such as FACETS, transfer a completed input bundle, run it
+in a local directory, and return a completed output bundle. Record the source
+commit, program version, settings, stopping status and input/output checksums.
+Verify the received bundle before comparing results; avoid running against
+files still being synchronized.
+
 ## Building from a checkout with retained research results
 
 Stage the package files before building this research-heavy checkout. `R CMD

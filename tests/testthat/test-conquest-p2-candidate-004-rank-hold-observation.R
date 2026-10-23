@@ -84,6 +84,9 @@ test_that("the observation cannot load fits, recompute ranks, or launch", {
 })
 
 test_that("record and roadmap expose the claim-dependent fork", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_rank_hold_observation()
   record <- paste(readLines(file.path(
     ctx$validation,

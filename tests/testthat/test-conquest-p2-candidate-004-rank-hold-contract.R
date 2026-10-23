@@ -80,6 +80,9 @@ test_that("the contract cannot fit, launch, or use ConQuest as rank evidence", {
 })
 
 test_that("record and roadmap preserve the global hold", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_rank_hold_contract()
   record <- paste(readLines(file.path(
     ctx$validation,

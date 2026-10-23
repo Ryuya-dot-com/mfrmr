@@ -173,6 +173,9 @@ test_that("execution is opt-in, new-directory-only, and ConQuest-free", {
 })
 
 test_that("frozen record stays unopened while roadmap records the later run", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_mfrmr_preflight()
   record_path <- file.path(
     ctx$validation,

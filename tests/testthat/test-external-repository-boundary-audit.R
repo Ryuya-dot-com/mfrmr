@@ -12,6 +12,9 @@ load_external_repository_boundary_audit <- function() {
 }
 
 test_that("external repository evidence respects privacy and license boundary", {
+  skip_if_private_validation_missing(c(
+    "portfolio-purpose-and-conquest-audit-0.2.3.md"
+  ))
   env <- load_external_repository_boundary_audit()
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   audit <- env$mfrmr_external_repository_boundary_audit(root)

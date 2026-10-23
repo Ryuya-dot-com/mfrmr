@@ -568,6 +568,9 @@ test_that("G4C P2 has no unguarded random, fit, write, or engine path", {
 })
 
 test_that("G4C P1 and P2 records remain historical after P4 closure", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_calibration_harness()
   p1_record <- paste(readLines(file.path(
     ctx$validation,

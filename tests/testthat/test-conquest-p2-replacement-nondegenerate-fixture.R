@@ -121,6 +121,9 @@ test_that("the rejected fixture contract cannot fit or launch", {
 })
 
 test_that("the internal record retains rejection and the next design gate", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_replacement_fixture()
   record_path <- file.path(
     ctx$validation,

@@ -78,6 +78,9 @@ test_that("the execution observation cannot read output or launch a process", {
 })
 
 test_that("record and roadmap retain the completed four-arm denominator", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_execution_observation()
   record <- paste(readLines(file.path(
     ctx$validation,

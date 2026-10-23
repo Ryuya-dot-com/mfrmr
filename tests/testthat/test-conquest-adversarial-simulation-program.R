@@ -136,6 +136,9 @@ test_that("the architecture remains execution closed", {
 })
 
 test_that("record states the nonblocking review and generation firewall", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_program()
   record <- paste(readLines(file.path(
     ctx$validation,

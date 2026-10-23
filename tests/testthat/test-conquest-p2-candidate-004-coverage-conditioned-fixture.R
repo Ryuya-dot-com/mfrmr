@@ -78,6 +78,9 @@ test_that("candidate 004 generation contract fits and launches nothing", {
 })
 
 test_that("the frozen record stays unopened while the roadmap records outcome", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_fixture()
   record_path <- file.path(
     ctx$validation,

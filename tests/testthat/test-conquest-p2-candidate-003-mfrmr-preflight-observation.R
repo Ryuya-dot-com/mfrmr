@@ -83,6 +83,9 @@ test_that("the repository observation cannot read results, fit, or launch", {
 })
 
 test_that("internal records retain failure and successor ordering", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_003_mfrmr_observation()
   record_path <- file.path(
     ctx$validation,

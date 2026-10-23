@@ -194,6 +194,9 @@ test_that("G2 source has no RNG, fit, launch, or byte-identity acceptance", {
 })
 
 test_that("record and roadmap advance only to G3", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_dgp_oracles()
   record <- paste(readLines(file.path(
     ctx$validation,

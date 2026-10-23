@@ -194,6 +194,9 @@ test_that("the P2 fixture source cannot launch ConQuest", {
 })
 
 test_that("the P2 fixture record stays historical while later gates advance", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_additive_fixtures()
   record_path <- file.path(
     ctx$validation,

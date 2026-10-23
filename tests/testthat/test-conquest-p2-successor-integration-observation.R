@@ -64,6 +64,9 @@ test_that("the observation cannot rerun an oracle, fit, read, or launch", {
 })
 
 test_that("record and roadmap require adaptive density before candidate 004", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_successor_integration_observation()
   record_path <- file.path(
     ctx$validation,

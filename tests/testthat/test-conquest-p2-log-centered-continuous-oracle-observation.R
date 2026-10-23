@@ -86,6 +86,9 @@ test_that("the observation cannot evaluate, fit, read, launch, or hash", {
 })
 
 test_that("record and roadmap retain the bounded authorization", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_log_centered_continuous_oracle_observation()
   record_path <- file.path(
     ctx$validation,

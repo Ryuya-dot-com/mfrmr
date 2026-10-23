@@ -122,6 +122,9 @@ test_that("the adaptive contract fits and launches nothing", {
 })
 
 test_that("the record retains the consumed failed audit and candidate hold", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_adaptive_density_contract()
   record_path <- file.path(
     ctx$validation,

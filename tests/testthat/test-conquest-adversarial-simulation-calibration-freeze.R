@@ -383,6 +383,9 @@ test_that("G4 source itself cannot generate, fit, launch, or hash", {
 })
 
 test_that("G4 record and roadmap preserve the closed execution boundary", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_calibration_freeze()
   record <- paste(readLines(file.path(
     ctx$validation,

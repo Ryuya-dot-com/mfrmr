@@ -108,6 +108,9 @@ test_that("live authorization cannot launch, fit, or substitute hashes", {
 })
 
 test_that("record retains authorization while the roadmap supersedes its gate", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_live_authorization()
   record_path <- file.path(
     ctx$validation,

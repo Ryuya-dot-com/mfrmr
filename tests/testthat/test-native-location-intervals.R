@@ -172,6 +172,9 @@ test_that("standardized intervals survive public calculation, saved reports and 
 })
 
 test_that("native locations retain full nuisance covariance at fixed fitted points", {
+  skip_if_private_validation_missing(c(
+    "population-full-information-evidence-0.2.4.rds"
+  ))
   local_mocked_bindings(fit_mfrm = function(...) stop("No refitting"),
     simulate_mfrm_data = function(...) stop("No simulation"),
     mfrm_mml_person_scores_numeric = function(...) stop("No empirical Person-score rank gate"),

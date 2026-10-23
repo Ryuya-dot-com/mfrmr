@@ -112,6 +112,9 @@ test_that("the execution observation cannot launch or read ignored output", {
 })
 
 test_that("the internal record prioritizes fixture supersession over review", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_minimum_diagnostic_execution_observation()
   record_path <- file.path(
     ctx$validation,

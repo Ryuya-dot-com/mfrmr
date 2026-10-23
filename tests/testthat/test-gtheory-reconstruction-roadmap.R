@@ -1,4 +1,7 @@
 test_that("Draft.80 G-theory roadmap keeps formula and design semantics separate", {
+  skip_if_private_validation_missing(c(
+    "gtheory-reconstruction-roadmap-0.2.3.md"
+  ))
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   roadmap_path <- file.path(
     pkg_root, "inst", "validation",
@@ -23,6 +26,9 @@ test_that("Draft.80 G-theory roadmap keeps formula and design semantics separate
 })
 
 test_that("Draft.80 freezes interaction-specific D-study algebra", {
+  skip_if_private_validation_missing(c(
+    "gtheory-reconstruction-roadmap-0.2.3.md"
+  ))
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   roadmap <- paste(
     readLines(
@@ -48,6 +54,9 @@ test_that("Draft.80 freezes interaction-specific D-study algebra", {
 })
 
 test_that("Draft.80 keeps estimator boundaries and joint uncertainty explicit", {
+  skip_if_private_validation_missing(c(
+    "gtheory-reconstruction-roadmap-0.2.3.md"
+  ))
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   roadmap <- paste(
     readLines(
@@ -72,6 +81,9 @@ test_that("Draft.80 keeps estimator boundaries and joint uncertainty explicit", 
 })
 
 test_that("Draft.80 multivariate plan uses covariance and sharing operators", {
+  skip_if_private_validation_missing(c(
+    "gtheory-reconstruction-roadmap-0.2.3.md"
+  ))
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   roadmap <- paste(
     readLines(
@@ -93,6 +105,9 @@ test_that("Draft.80 multivariate plan uses covariance and sharing operators", {
 })
 
 test_that("Draft.80 remains a roadmap guard rather than a public scope claim", {
+  skip_if_private_validation_missing(c(
+    "release-evidence-checklist-0.2.3.csv"
+  ))
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   checklist <- utils::read.csv(
     file.path(

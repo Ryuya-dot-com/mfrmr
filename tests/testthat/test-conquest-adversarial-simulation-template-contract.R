@@ -169,6 +169,9 @@ test_that("G1 closes without sampling, fitting, or external execution", {
 })
 
 test_that("record and roadmap identify G2 as the next closed execution gate", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_templates()
   record <- paste(readLines(file.path(
     ctx$validation,

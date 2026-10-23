@@ -138,6 +138,9 @@ test_that("the ledger cannot read results, fit, or launch", {
 })
 
 test_that("record and roadmap expose synthesis without public edits", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p5_evidence_disposition_ledger()
   record <- paste(readLines(file.path(
     ctx$validation, "conquest-p5-evidence-disposition-ledger-record-0.2.3.md"

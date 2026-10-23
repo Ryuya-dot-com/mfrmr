@@ -474,6 +474,9 @@ test_that("P4 closes 18 capabilities but does not open live execution", {
 })
 
 test_that("P4 source and records stay execution-free and internal", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_calibration_p4()
   source <- paste(readLines(ctx$paths[17L], warn = FALSE), collapse = "\n")
   expect_false(grepl("unlink\\s*\\(", source, perl = TRUE))

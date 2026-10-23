@@ -1,4 +1,7 @@
 test_that("claim disposition preserves a nonblocking historical portfolio", {
+  skip_if_private_validation_missing(c(
+    "release-evidence-checklist-0.2.3.csv"
+  ))
   skip_if_not_installed("digest")
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   protocol <- file.path(root, "inst", "validation", "release-readiness.R")
@@ -42,6 +45,9 @@ test_that("claim disposition preserves a nonblocking historical portfolio", {
 })
 
 test_that("claim disposition rejects reorder and fallback mutation", {
+  skip_if_private_validation_missing(c(
+    "release-evidence-checklist-0.2.3.csv"
+  ))
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   protocol <- file.path(root, "inst", "validation", "release-readiness.R")
   skip_if_not(file.exists(protocol),
@@ -85,6 +91,9 @@ test_that("claim disposition rejects reorder and fallback mutation", {
 })
 
 test_that("claim disposition rejects a profile whose bound hash changed", {
+  skip_if_private_validation_missing(c(
+    "release-evidence-checklist-0.2.3.csv"
+  ))
   skip_if_not_installed("digest")
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   protocol <- file.path(root, "inst", "validation", "release-readiness.R")

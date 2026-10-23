@@ -269,6 +269,9 @@ test_that("the P2 metric contract is offline and path independent", {
 })
 
 test_that("the internal record closes construction but preserves review gates", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_metric_boundary_contract()
   record_path <- file.path(
     ctx$validation,

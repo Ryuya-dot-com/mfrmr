@@ -150,6 +150,9 @@ test_that("G4E source has no direct RNG, fit, launch, write, or hash route", {
 })
 
 test_that("G4E record and internal roadmap retain the live hold", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_engine_mechanics_authorization()
   record <- paste(readLines(file.path(
     ctx$validation,

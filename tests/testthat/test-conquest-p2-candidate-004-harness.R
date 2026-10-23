@@ -114,6 +114,9 @@ test_that("execution is explicit and cannot run in ordinary tests", {
 })
 
 test_that("record and roadmap keep execution unopened", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_harness()
   record_path <- file.path(
     ctx$validation, "conquest-p2-candidate-004-harness-record-0.2.3.md"

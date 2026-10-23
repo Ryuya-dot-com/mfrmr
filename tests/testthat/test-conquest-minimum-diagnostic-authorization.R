@@ -242,6 +242,9 @@ test_that("the authorization contract cannot execute ConQuest itself", {
 })
 
 test_that("the internal record replaces the monolithic pre-run review gate", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_minimum_diagnostic_authorization()
   record_path <- file.path(
     ctx$validation,

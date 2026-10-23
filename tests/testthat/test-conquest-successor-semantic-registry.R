@@ -192,6 +192,9 @@ test_that("the semantic registry is offline and contains no local engine path", 
 })
 
 test_that("the P1 record and roadmap distinguish completed P2 binding from open gates", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_successor_semantic_registry()
   record_path <- file.path(
     ctx$validation,

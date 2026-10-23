@@ -1911,6 +1911,10 @@ test_that("G6 final decision binds the successful matrix and bounded scope", {
 })
 
 test_that("internal strategic roadmap preserves the long-horizon decision axis", {
+  skip_if_private_validation_missing(c(
+    "measurement-model-extension-literature-roadmap-0.2.4.md",
+    "mfrmr-internal-strategic-roadmap.html"
+  ))
   ctx <- load_fixed_calibration_g4_contract()
   path <- file.path(
     ctx$validation,
@@ -2544,6 +2548,9 @@ test_that("0.2.4 candidate metadata transition is exact and adversarial", {
 })
 
 test_that("0.2.4 transition record binds the clean contract review", {
+  skip_if_private_validation_missing(c(
+    "mfrmr-internal-strategic-roadmap.html"
+  ))
   transition <- load_fixed_calibration_release_candidate_transition()
   record_path <- file.path(
     transition$validation,
@@ -3517,6 +3524,9 @@ test_that("score UX review invalidates the previous candidate before human sign-
 })
 
 test_that("score UX local validation closes repair but not release gates", {
+  skip_if_private_validation_missing(c(
+    "mfrmr-internal-strategic-roadmap.html"
+  ))
   ctx <- load_fixed_calibration_g4_contract()
   record_path <- file.path(
     ctx$validation,
@@ -3605,6 +3615,9 @@ test_that("first score UX hosted retry retains its source-truth failure", {
 })
 
 test_that("API consistency local record keeps hosted validation open", {
+  skip_if_private_validation_missing(c(
+    "mfrmr-internal-strategic-roadmap.html"
+  ))
   ctx <- load_fixed_calibration_g4_contract()
   record_path <- file.path(
     ctx$validation,
@@ -3664,6 +3677,9 @@ test_that("API consistency local record keeps hosted validation open", {
 })
 
 test_that("API consistency hosted run validates the unchanged production tree", {
+  skip_if_private_validation_missing(c(
+    "mfrmr-internal-strategic-roadmap.html"
+  ))
   ctx <- load_fixed_calibration_g4_contract()
   record_path <- file.path(
     ctx$validation,

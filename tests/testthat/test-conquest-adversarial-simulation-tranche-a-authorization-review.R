@@ -254,6 +254,9 @@ test_that("G4A cannot generate responses, fit models, or launch ConQuest", {
 })
 
 test_that("G4A record remains historical after the G4C harness freeze", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_tranche_a_authorization_review()
   record <- paste(readLines(file.path(
     ctx$validation,

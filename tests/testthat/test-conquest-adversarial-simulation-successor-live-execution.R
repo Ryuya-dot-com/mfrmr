@@ -171,6 +171,9 @@ test_that("G4O consumes a current-process preissue token before issue", {
 })
 
 test_that("G4O source is nonexecuting and preserves probe ordering", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_successor()
   source <- paste(readLines(ctx$path, warn = FALSE), collapse = "\n")
   body <- paste(deparse(body(ctx$env$mfrmr_cq_ag4o_execute)), collapse = "\n")

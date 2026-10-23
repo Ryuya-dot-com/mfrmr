@@ -132,6 +132,9 @@ test_that("the handoff cannot inspect artifacts, fit, or launch", {
 })
 
 test_that("record stays unreviewed while the successor program is nonblocking", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_independent_review_handoff()
   record <- paste(readLines(file.path(
     ctx$validation,

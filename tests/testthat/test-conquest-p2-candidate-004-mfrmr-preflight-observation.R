@@ -90,6 +90,9 @@ test_that("the observation cannot fit, integrate, read artifacts, or launch", {
 })
 
 test_that("record retains its boundary while roadmap may advance", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_mfrmr_preflight_observation()
   record_path <- file.path(
     ctx$validation,

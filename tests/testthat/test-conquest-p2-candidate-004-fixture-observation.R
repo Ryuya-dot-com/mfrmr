@@ -81,6 +81,9 @@ test_that("the observation cannot generate, fit, read, launch, or hash", {
 })
 
 test_that("record and roadmap keep later work blocked", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_fixture_observation()
   record_path <- file.path(
     ctx$validation,
