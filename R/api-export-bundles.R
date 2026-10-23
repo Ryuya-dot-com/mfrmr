@@ -3029,12 +3029,18 @@ resolve_conquest_overlap_column <- function(df, column, arg, role) {
   names(df)[matched_idx]
 }
 
+conquest_overlap_numeric_estimate <- function(values) {
+  # Factor codes are not the reported numerical estimates.
+  if (is.factor(values)) values <- as.character(values)
+  suppressWarnings(as.numeric(values))
+}
+
 normalize_conquest_overlap_table_component <- function(df,
                                                        id_col,
                                                        estimate_col,
                                                        id_name,
                                                        keep_extra_columns = TRUE) {
-  estimate_numeric <- suppressWarnings(as.numeric(df[[estimate_col]]))
+  estimate_numeric <- conquest_overlap_numeric_estimate(df[[estimate_col]])
   out <- data.frame(
     Identifier = trimws(as.character(df[[id_col]])),
     Estimate = estimate_numeric,
@@ -3648,9 +3654,10 @@ normalize_conquest_overlap_exports <- function(bundle,
   case_estimate_col <- resolve_export_column(
     cases, c("EAP_1", "EAP", "Estimate"), "case_file"
   )
+  # Normalization needs the original text to distinguish invalid cells from blanks.
   case_tbl <- data.frame(
     Person = trimws(as.character(cases[[case_id_col]])),
-    Estimate = suppressWarnings(as.numeric(cases[[case_estimate_col]])),
+    Estimate = cases[[case_estimate_col]],
     stringsAsFactors = FALSE
   )
   person_map <- bundle$person_map
@@ -4093,7 +4100,7 @@ review_conquest_overlap <- function(bundle,
 
   pop_tbl <- as.data.frame(bundle$mfrmr_population, stringsAsFactors = FALSE)
   pop_raw_estimate <- conquest_population[[pop_est_col]]
-  pop_numeric_estimate <- suppressWarnings(as.numeric(pop_raw_estimate))
+  pop_numeric_estimate <- conquest_overlap_numeric_estimate(pop_raw_estimate)
   cq_pop <- data.frame(
     Parameter = trimws(as.character(conquest_population[[pop_term_col]])),
     ConQuestEstimate = pop_numeric_estimate,
@@ -4169,7 +4176,7 @@ review_conquest_overlap <- function(bundle,
   item_tbl <- as.data.frame(bundle$mfrmr_item_estimates, stringsAsFactors = FALSE)
   item_tbl$MatchID <- item_match$match_ids
   item_raw_estimate <- conquest_item_estimates[[item_est_col]]
-  item_numeric_estimate <- suppressWarnings(as.numeric(item_raw_estimate))
+  item_numeric_estimate <- conquest_overlap_numeric_estimate(item_raw_estimate)
   cq_item <- data.frame(
     MatchID = trimws(as.character(conquest_item_estimates[[item_id_col]])),
     ConQuestEstimate = item_numeric_estimate,
@@ -4246,7 +4253,7 @@ review_conquest_overlap <- function(bundle,
 
   case_tbl <- as.data.frame(bundle$mfrmr_case_eap, stringsAsFactors = FALSE)
   case_raw_estimate <- conquest_case_eap[[case_est_col]]
-  case_numeric_estimate <- suppressWarnings(as.numeric(case_raw_estimate))
+  case_numeric_estimate <- conquest_overlap_numeric_estimate(case_raw_estimate)
   cq_case <- data.frame(
     Person = if (isTRUE(inputs$standardized)) as.character(conquest_case_eap[[case_person_col]]) else trimws(as.character(conquest_case_eap[[case_person_col]])),
     ConQuestEstimate = case_numeric_estimate,

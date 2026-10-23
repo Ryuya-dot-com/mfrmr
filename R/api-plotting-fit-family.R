@@ -3217,6 +3217,17 @@ draw_facet_plot <- function(facet_tbl,
 #' severities, other facet locations, and category thresholds on one logit
 #' scale. No plot options are needed for this first view.
 #'
+#' For adjusted-score comparisons, use `plot(fit, type = "fair_average",
+#' show_ci = TRUE)`. `metric = "FairM"` uses mean reference measures;
+#' `metric = "FairZ"` uses a zero reference, not a z-score. PCM averages
+#' expectations over administered scales with the table's observation weights
+#' and `totalscore` selection. Its conditional delta-method intervals use the
+#' derivative of that same average. RSM/PCM intervals hold thresholds, other
+#' effects and reference means fixed; they are diagnostic approximations,
+#' not full calibration-uncertainty intervals. Inspect the returned data and
+#' notes for the interval method and unavailable rows. See [fair_average_table()]
+#' for reference definitions and [plot_fair_average] for view-specific controls.
+#'
 #' This S3 plotting method provides the core fit-family visuals for
 #' `mfrmr`. When `type` is omitted, it returns the Wright map alone as
 #' an `mfrm_plot_data` object (the most useful single figure for a

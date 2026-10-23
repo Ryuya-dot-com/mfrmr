@@ -9,6 +9,8 @@ contracts, and settled primary-entry and naming decisions with migration
 guidance. The FACETS manual review has corrected fit standardization, PTMEA,
 facet displacement and chi-square df, PCM fair averages, bias expectations and
 summary tests, anchor validation/display, and unexpected-response screening.
+PCM fair-average plot intervals use the same weighted administered-scale
+expectation as their point estimates, retaining conditional uncertainty limits.
 The fit-table and ZSTD pathway defaults use the same df convention as diagnostics;
 refreshing their comparison columns preserves the recorded WHEXACT choice.
 Saved diagnostics and bias results require recreation from their original fit.
@@ -26,7 +28,8 @@ uses EAP plug-in scores and is not equivalent to posterior-averaged TAM or
 ConQuest item/parameter fit. ConQuest comparison exports now check the supported model and
 declare independent external numerical controls and reversible names; import
 validates coefficient coordinates, and incomplete item comparisons use a common
-centering set. Reviews retain stopping status, flag surplus IDs, and require
+centering set. Imports preserve factor labels and flag nonnumeric case estimates
+from native CSV exports. Reviews retain stopping status, flag surplus IDs, and require
 an established origin for EAP/intercept errors. Numerical precision still
 requires refinement or an independent reference. These repairs
 preserve descriptive comparison scope and do not establish general ConQuest
@@ -38,10 +41,12 @@ Exact, asymptotic, approximate, experimental and descriptive procedures retain
 their distinct qualifications; this is not a general finite-sample accuracy or
 coverage guarantee. A local Windows package-check attempt on an intermediate candidate passed
 examples and tutorials but exposed diagnostic-consumer and Unicode-handling
-defects. The corrected candidate passes the ordinary installed regression
+defects. That repaired Windows integration candidate passed the ordinary installed regression
 selection with affected-route reruns, static analysis, changed help examples
 and saved-result replay. This combines a completed check attempt with scoped
 repairs; it is not a second complete package check of the corrected archive.
+The subsequent fair-average plot and ConQuest import corrections have scoped
+source checks and fresh-session plot replay; they are not a new full check.
 Earlier exhaustive regression, example, dependency and documentation checks
 retain their original scope and source attribution. Final specification and
 source selection, supported-environment, execution-cost and hosted-site

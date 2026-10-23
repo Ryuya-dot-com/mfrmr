@@ -791,19 +791,67 @@ stack_fair_raw_tables <- function(raw_by_facet) {
 # Conditional Rasch-family derivative at the SAME reference profile as the
 # reported fair score. Inverting the fair score avoids reporting-scale,
 # Person-sign and mean-reference errors. Calibration is held fixed here.
-.fair_average_delta_variance <- function(fit, fair_df, metric = "FairM") {
+.fair_average_delta_variance <- function(fit, fair_df, metric = "FairM",
+                                         totalscore = TRUE, obs = NULL) {
   out <- rep(NA_real_, nrow(fair_df))
   if (!inherits(fit, "mfrm_fit") || !fit$config$model %in% c("RSM", "PCM")) return(out)
   params <- expand_params(fit$opt$par, build_param_sizes(fit$config), fit$config)
-  common <- if (fit$config$model == "RSM") params$steps else colMeans(params$steps_mat, na.rm = TRUE)
-  for (i in seq_len(nrow(fair_df))) {
-    steps <- common
-    if (fit$config$model == "PCM" && fair_df$Facet[i] == fit$config$step_facet) {
-      j <- match(fair_df$Level[i], fit$prep$levels[[fit$config$step_facet]])
-      if (is.na(j)) next
-      steps <- params$steps_mat[j, ]
+  pcm <- identical(fit$config$model, "PCM")
+  if (pcm) {
+    if (is.null(obs)) obs <- compute_obs_table(fit)
+    # Match calc_facets_report_tbls(): totalscore = FALSE excludes observations
+    # with another extreme facet, including those with multiple extreme facets.
+    if (!isTRUE(totalscore)) {
+      extreme_flags <- lapply(c("Person", fit$config$facet_names), function(facet) {
+        extreme <- vapply(split(obs$Observed, as.character(obs[[facet]])), function(y) {
+          all(y == fit$prep$rating_min) || all(y == fit$prep$rating_max)
+        }, logical(1))
+        as.character(obs[[facet]]) %in% names(extreme)[extreme]
+      })
+      names(extreme_flags) <- c("Person", fit$config$facet_names)
+      extreme_count <- Reduce(`+`, extreme_flags)
     }
-    cumulative <- c(0, cumsum(steps))
+    owner <- match(as.character(obs[[fit$config$step_facet]]),
+      fit$prep$levels[[fit$config$step_facet]])
+    weights <- get_weights(obs)
+  }
+  for (i in seq_len(nrow(fair_df))) {
+    if (pcm) {
+      facet <- fair_df$Facet[i]
+      use <- as.character(obs[[facet]]) == fair_df$Level[i]
+      if (!isTRUE(totalscore)) {
+        use <- use & (extreme_count == 0 | (extreme_count == 1 & extreme_flags[[facet]]))
+      }
+      rows <- which(use)
+      if (!length(rows) || anyNA(owner[rows]) ||
+          any(!is.finite(weights[rows]) | weights[rows] < 0) || sum(weights[rows]) <= 0) next
+      scale_weights <- tapply(weights[rows], owner[rows], sum)
+      scale_weights <- scale_weights / sum(scale_weights)
+      scale_steps <- lapply(as.integer(names(scale_weights)), function(j) {
+        c(0, cumsum(params$steps_mat[j, ]))
+      })
+      moments <- function(eta) {
+        per_scale <- vapply(scale_steps, function(cumulative) {
+          prob <- as.numeric(category_prob_rsm(eta, cumulative))
+          scores <- seq_along(prob) - 1
+          mean <- sum(prob * scores)
+          c(mean = mean + fit$prep$rating_min,
+            variance = sum(prob * (scores - mean)^2))
+        }, numeric(2))
+        as.numeric(per_scale %*% scale_weights)
+      }
+      target <- fair_df[[metric]][i]
+      if (!is.finite(target)) next
+      residual <- function(eta) moments(eta)[1] - target
+      boundary <- c(residual(-20), residual(20))
+      if (any(!is.finite(boundary)) || prod(sign(boundary)) > 0) next
+      eta <- stats::uniroot(residual, lower = -20, upper = 20, tol = 1e-10)$root
+      # The derivative is the mean of within-scale variances, without the
+      # between-scale term that would enter a mixture's total variance.
+      out[i] <- moments(eta)[2]
+      next
+    }
+    cumulative <- c(0, cumsum(params$steps))
     eta <- estimate_eta_from_target(fair_df[[metric]][i], cumulative,
                                     fit$prep$rating_min, fit$prep$rating_max)
     if (!is.finite(eta)) next
@@ -1795,10 +1843,13 @@ plot_unexpected <- function(x,
 #' zero reference measures instead. **FairZ is not a z-score.** The historical
 #' alias `StandardizedAdjustedAverage` refers to the reference environment,
 #' not z-standardization. Both metrics use fitted internal score coding.
-#' PCM/GPCM use an element's own thresholds for the step facet and the mean
-#' threshold profile for other facets. GPCM uses an element's own slope for
-#' the slope facet and slope 1 otherwise. These are reporting conventions,
-#' not averages of predictions over the observed person/assignment distribution.
+#' PCM averages expectations over the administered rating scales using the
+#' same observation weights and `totalscore` selection as the fair-score table.
+#' Its conditional derivative averages the within-scale score variances.
+#' GPCM uses an element's own thresholds for the step facet and the mean
+#' threshold profile for other facets, with its own slope for the slope facet
+#' and slope 1 otherwise. Person and other-facet measures remain at the chosen
+#' reference; these scores do not average over the observed person distribution.
 #'
 #' `plot_type = "measure"` connects measures (person ability or facet effects)
 #' to the reported fair score. Select `facet = "Person"` for an ability-to-score
@@ -1938,7 +1989,8 @@ plot_fair_average <- function(x,
       scale <- bundle$settings$uscale %||% 1
       if (!is.finite(scale)) scale <- 1
       if (scale != 0 && (bundle$settings$xtreme %||% 0) == 0) {
-        variance <- .fair_average_delta_variance(x, fair_df, metric)
+        variance <- .fair_average_delta_variance(x, fair_df, metric,
+          totalscore = bundle$settings$totalscore %||% TRUE, obs = diagnostics$obs)
         valid <- is.finite(variance) & variance > 1e-6 & is.finite(fair_df$ModelSE) & fair_df$ModelSE >= 0
         fair_df$CI_SE[valid] <- variance[valid] * fair_df$ModelSE[valid] / abs(scale)
         fair_df$CI_Status[valid] <- "conditional_approximation"
@@ -1991,8 +2043,8 @@ plot_fair_average <- function(x,
     "FairM: expected score at mean other-facet measures (and mean person measure for non-person rows)."
   } else "FairZ: expected score at zero other-facet/person reference; Z does not mean z-score."
   reference_note <- paste(reference_note,
-    "PCM/GPCM use own thresholds for the step facet and mean thresholds for other facets.",
-    "GPCM uses own slope for the slope facet, otherwise slope 1.")
+    "PCM averages administered-scale expectations using observation weights and the table's totalscore selection.",
+    "GPCM uses own thresholds for the step facet, otherwise mean thresholds; own slope for the slope facet, otherwise slope 1.")
   score_note <- paste("Scores use fitted internal category coding. Gaps also reflect assignment/person mix;",
     "they do not by themselves establish leniency, severity or bias.")
   if (plot_type == "measure") score_note <- paste(score_note,

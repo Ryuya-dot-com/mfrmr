@@ -128,6 +128,12 @@ test_that("view-specific controls cannot disappear into dots", {
   expect_error(plot(fit, type = "marginal_fit", view = "prop_diff", plot_type = "std_residual"), "only one")
   expect_error(plot(fit, type = "rater_severity", level = .9, ci_level = .95), "only one")
   expect_error(plot(fit, type = "ccc", view = "heatmap"), "not supported")
+  expect_error(plot(fit, type = "fair_average", diagnostics = d, typo = 1), "not supported")
+  expect_error(plot(fit, type = "fair_average", diagnostics = d, fit = fit),
+    "matches multiple formal arguments|not supported")
+  expect_error(plot(fit, type = "reliability", diagnostics = d, totalscore = FALSE), "not supported")
+  expect_error(do.call(plot, c(list(fit, type = "fair_average", diagnostics = d),
+    list(totalscore = TRUE, totalscore = FALSE))), "Name each plot argument once")
   product <- fit
   product$config$gpcm_spec <- list(component_levels = list(Rater = "1", Criterion = "1"))
   expect_error(plot(product, type = "reliability", diagnostics = d), "two-family|product|two slope")

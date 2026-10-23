@@ -295,3 +295,74 @@ test_that("ConQuest review preserves raw differences and aligns only a known ori
   expect_error(normalize_conquest_overlap_tables(pop, facility, cases), "conquest_item_estimate")
   expect_no_error(normalize_conquest_overlap_tables(pop, facility, cases, conquest_item_estimate = "Facility"))
 })
+
+test_that("ConQuest extracted factors retain estimate labels in every table route", {
+  b <- conquest_contract_fixture()$bundle
+  pop <- b$mfrmr_population
+  items <- data.frame(ItemID = b$item_map$ResponseVar,
+    Estimate = b$mfrmr_item_estimates$Estimate)
+  cases <- b$mfrmr_case_eap[, c("Person", "Estimate")]
+  # Deliberately choose labels that differ from the factor's integer codes.
+  pop$Estimate <- c(.25, -.5, .75)
+  items$Estimate <- seq(-.75, .75, length.out = nrow(items))
+  cases$Estimate <- seq(-1.25, 1.25, length.out = nrow(cases))
+  expected <- review_conquest_overlap(b, pop, items, cases,
+    conquest_location_shift = 0)
+  estimates <- list(pop, items, cases)
+  factors <- lapply(estimates, function(x) {
+    x$Estimate <- factor(as.character(x$Estimate))
+    x
+  })
+  direct <- do.call(review_conquest_overlap,
+    c(list(bundle = b), factors, list(conquest_location_shift = 0)))
+  normalized <- do.call(normalize_conquest_overlap_tables, factors)
+  normalized_tables <- normalized[c("conquest_population", "conquest_item_estimates",
+    "conquest_case_eap")]
+  for (i in seq_along(estimates)) {
+    expect_equal(normalized_tables[[i]]$Estimate, estimates[[i]]$Estimate,
+      tolerance = 1e-12)
+    expect_false(any(normalized_tables[[i]]$EstimateNonNumeric))
+  }
+  reviewed <- review_conquest_overlap(b, normalized, conquest_location_shift = 0)
+  for (component in c("overall", "population_comparison", "item_comparison", "case_comparison")) {
+    expect_equal(direct[[component]], expected[[component]], tolerance = 1e-12)
+    expect_equal(reviewed[[component]], expected[[component]], tolerance = 1e-12)
+  }
+  malformed <- lapply(factors, function(x) {
+    labels <- as.character(x$Estimate)
+    labels[1] <- "not-a-number"
+    x$Estimate <- factor(labels)
+    x
+  })
+  invalid <- do.call(normalize_conquest_overlap_tables, malformed)
+  expect_equal(unname(unlist(invalid$summary[c("PopulationNonNumeric",
+    "ItemNonNumeric", "CaseNonNumeric")])), rep(1, 3))
+  invalid_review <- do.call(review_conquest_overlap,
+    c(list(bundle = b), malformed, list(conquest_location_shift = 0)))
+  expect_equal(invalid_review$overall$AttentionNonNumeric, 3L)
+  expect_equal(invalid_review$overall$AttentionMissing, 0L)
+})
+
+test_that("ConQuest CSV case errors retain their reason through normalization", {
+  b <- conquest_contract_fixture()$bundle
+  directory <- withr::local_tempdir()
+  paths <- conquest_followup_exports(b, directory)
+  cases <- read.csv(paths[4], colClasses = "character", na.strings = "")
+  cases$EAP_1[1:5] <- c("not-a-number", "", "NaN", "Inf", "2.5e-1")
+  write.csv(cases, paths[4], row.names = FALSE)
+  normalized <- do.call(normalize_conquest_overlap_exports,
+    c(list(bundle = b), as.list(paths)))
+  expect_equal(normalized$summary$CaseNonNumeric, 3L)
+  expect_identical(normalized$conquest_case_eap$EstimateNonNumeric[1:5],
+    c(TRUE, FALSE, TRUE, TRUE, FALSE))
+  expect_true(is.na(normalized$conquest_case_eap$Estimate[1]))
+  expect_equal(normalized$conquest_case_eap$Estimate[5], .25)
+  reviewed <- review_conquest_overlap(b, normalized, conquest_location_shift = 0)
+  status <- reviewed$case_comparison$Status[
+    match(b$mfrmr_case_eap$Person[1:5], reviewed$case_comparison$Person)]
+  expect_identical(status, c("NonNumericInConQuest", "MissingInConQuest",
+    "NonNumericInConQuest", "NonNumericInConQuest", "Compared"))
+  expect_equal(reviewed$overall$AttentionNonNumeric, 3L)
+  expect_equal(reviewed$overall$AttentionMissing, 1L)
+  expect_equal(reviewed$overall$CaseRowsCompared, nrow(b$mfrmr_case_eap) - 4L)
+})

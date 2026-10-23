@@ -77,10 +77,13 @@ non-person rows it also uses the mean estimated person measure. FairZ uses
 zero reference measures instead. \strong{FairZ is not a z-score.} The historical
 alias \code{StandardizedAdjustedAverage} refers to the reference environment,
 not z-standardization. Both metrics use fitted internal score coding.
-PCM/GPCM use an element's own thresholds for the step facet and the mean
-threshold profile for other facets. GPCM uses an element's own slope for
-the slope facet and slope 1 otherwise. These are reporting conventions,
-not averages of predictions over the observed person/assignment distribution.
+PCM averages expectations over the administered rating scales using the
+same observation weights and \code{totalscore} selection as the fair-score table.
+Its conditional derivative averages the within-scale score variances.
+GPCM uses an element's own thresholds for the step facet and the mean
+threshold profile for other facets, with its own slope for the slope facet
+and slope 1 otherwise. Person and other-facet measures remain at the chosen
+reference; these scores do not average over the observed person distribution.
 
 \code{plot_type = "measure"} connects measures (person ability or facet effects)
 to the reported fair score. Select \code{facet = "Person"} for an ability-to-score

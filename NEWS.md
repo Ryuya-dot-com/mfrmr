@@ -1,5 +1,14 @@
 # mfrmr 0.2.4
 
+- PCM fair-average plot intervals now use the derivative of the same weighted
+  administered-scale expectation as the reported fair average. They remain
+  conditional delta-method intervals; uncertainty in other calibration
+  parameters and the reference population is not included. The public
+  `plot(..., type = "fair_average")` route accepts the table's score-selection
+  and reporting-scale controls.
+- ConQuest imports interpret factor-valued estimates by their labels and
+  preserve nonnumeric case-estimate flags when reading native CSV exports.
+  Recreate affected comparisons from the original tables or CSV files.
 - Unexpected-response plots now share the table's residual-only cutoff of 3,
   preserve saved screening thresholds and show a valid empty result when all
   responses were evaluated and none were flagged.

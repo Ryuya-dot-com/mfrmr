@@ -30,6 +30,81 @@ test_that("fair-score derivatives match the actual reference transformation", {
   }
 })
 
+test_that("PCM conditional intervals follow administered scales, weights and score selection", {
+  fit <- readRDS(test_path("fixtures", "anchored-facet-information.rds"))$PCM$fit
+  dx <- diagnose_mfrm(fit, residual_pca = "none")
+  original_dx <- dx
+  pars <- mfrmr:::expand_params(fit$opt$par, mfrmr:::build_param_sizes(fit$config), fit$config)
+  facet_means <- vapply(fit$config$facet_names, function(f) mean(pars$facets[[f]]), numeric(1))
+  signs <- fit$config$facet_signs
+  theta <- fit$facets$person$Estimate
+  theta_mean <- mean(theta[is.finite(theta)])
+  # Keep the saved calibration fixed while exercising unequal reporting weights
+  # and the explicit totalscore exclusion rule with one extreme Person.
+  dx$obs$Weight <- 1 + seq_len(nrow(dx$obs)) %% 7
+  dx$obs$Observed[dx$obs$Person == dx$obs$Person[1]] <- fit$prep$rating_min
+  facets <- c("Person", fit$config$facet_names)
+  extreme <- vapply(facets, function(f) {
+    vapply(as.character(dx$obs[[f]]), function(level) {
+      y <- dx$obs$Observed[as.character(dx$obs[[f]]) == level]
+      length(unique(y)) == 1L && y[1] %in% c(fit$prep$rating_min, fit$prep$rating_max)
+    }, logical(1))
+  }, logical(nrow(dx$obs)))
+  k <- 0:ncol(pars$steps_mat)
+  score <- function(eta, owner) {
+    log_p <- k * eta - c(0, cumsum(pars$steps_mat[owner, ]))
+    p <- exp(log_p - max(log_p)); p <- p / sum(p)
+    sum(k * p) + fit$prep$rating_min
+  }
+  results <- list()
+  for (totalscore in c(TRUE, FALSE)) {
+    raw <- mfrmr:::stack_fair_raw_tables(mfrmr:::calc_facets_report_tbls(fit, dx,
+      totalscore = totalscore))
+    for (metric in c("FairM", "FairZ")) {
+      actual <- mfrmr:::.fair_average_delta_variance(fit, raw, metric,
+        totalscore = totalscore, obs = dx$obs)
+      reference <- vapply(seq_len(nrow(raw)), function(i) {
+        facet <- raw$Facet[i]
+        use <- as.character(dx$obs[[facet]]) == raw$Level[i]
+        if (!totalscore) use <- use & rowSums(extreme[, setdiff(facets, facet), drop = FALSE]) == 0
+        owner <- match(as.character(dx$obs[[fit$config$step_facet]][use]),
+          fit$prep$levels[[fit$config$step_facet]])
+        w <- dx$obs$Weight[use]
+        if (!length(w)) return(NA_real_)
+        focal <- if (facet == "Person") raw$PrimaryMeasure[i] else signs[[facet]] * raw$PrimaryMeasure[i]
+        eta <- focal + if (metric == "FairZ") 0 else {
+          other <- setdiff(names(facet_means), facet)
+          sum(signs[other] * facet_means[other]) + if (facet == "Person") 0 else theta_mean
+        }
+        average <- function(e) sum(w * vapply(owner, function(j) score(e, j), numeric(1))) / sum(w)
+        expect_equal(raw[[metric]][i], average(eta), tolerance = 1e-12)
+        (average(eta + 1e-5) - average(eta - 1e-5)) / 2e-5
+      }, numeric(1))
+      expect_equal(actual, reference, tolerance = 1e-7)
+      results[[paste(totalscore, metric)]] <- actual
+    }
+  }
+  expect_gt(max(abs(results[["TRUE FairM"]] - results[["FALSE FairM"]]), na.rm = TRUE), 1e-6)
+  # Public plot dispatch must forward the same observation scope and reverse
+  # reporting-scale changes once, while retaining diagnostic-only intervals.
+  # Restore the actual saved analysis: controlled internal inputs above are
+  # deliberately not acceptable to the public diagnostics-identity guard.
+  dx <- original_dx
+  for (metric in c("FairM", "FairZ")) {
+    p <- plot(fit, type = "fair_average", diagnostics = dx, metric = metric,
+      totalscore = FALSE, show_ci = TRUE, draw = FALSE)$data$data
+    scaled <- plot(fit, type = "fair_average", diagnostics = dx, metric = metric,
+      totalscore = FALSE, show_ci = TRUE, umean = 50, uscale = -10, draw = FALSE)$data$data
+    at <- match(paste(p$Facet, p$Level), paste(scaled$Facet, scaled$Level))
+    reference <- mfrmr:::.fair_average_delta_variance(fit, p, metric,
+      totalscore = FALSE, obs = dx$obs)
+    expect_equal(p$CI_SE, reference * p$ModelSE, tolerance = 1e-7)
+    expect_equal(p$CI_SE, scaled$CI_SE[at], tolerance = 1e-8)
+    expect_equal(p$CI_Lower, scaled$CI_Lower[at], tolerance = 1e-8)
+    expect_true(all(!p$CI_Eligible))
+  }
+})
+
 test_that("fair-score relationship plots preserve data, notes and grayscale encodings", {
   fit <- make_toy_fit(maxit = 10)
   bundle <- fair_average_table(fit)
