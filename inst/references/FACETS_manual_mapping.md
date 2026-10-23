@@ -10,6 +10,17 @@ scores and the zero-bias summary also agree in that example. This does not
 establish equivalence for other models, versions, anchors, extreme treatments,
 missingness patterns or replication weights.
 
+A separate five-facet PCM comparison checks Criterion-specific 0:3 scales,
+unit-weight nonextreme observations, fair averages and core fit statistics.
+Independent response-probability calculations verify the native fair-score
+aggregation and conditional plot derivatives. Small calibration differences
+can move a fair average across a two-decimal rounding boundary, so identical
+printed values are not the numerical acceptance rule. This check does not
+establish every executable df or expected-correlation column as equivalent.
+Scorefile `S.E.` belongs to the measure; it is not a fair-average SE. The
+native plot's conditional interval holds the other calibration parameters
+fixed and remains diagnostic-only, without established coverage.
+
 Reviewed against the 0.2.4 development routes on October 23, 2026. Use
 `facets_feature_coverage()` for route limits and
 `help("mfrmr_methods_reference")` for calculation assumptions and literature.

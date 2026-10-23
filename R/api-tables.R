@@ -759,7 +759,7 @@ validate_unexpected_coverage <- function(x) {
 #'   MESA Press.
 #' - Linacre, J. M. (2026). *A user's guide to FACETS, version 4.5.0*.
 #'   Winsteps.com.
-#'   (FACETS Table 12 corresponds to the fair-average
+#'   (FACETS Table 7 corresponds to the fair-average
 #'   construction implemented here for `RSM` / `PCM` fits; the
 #'   slope-aware element-conditional construction for `GPCM`
 #'   is documented in this help page.)

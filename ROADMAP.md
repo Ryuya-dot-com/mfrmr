@@ -829,10 +829,10 @@ which precedes final delivery qualification and publication.
 
 | Milestone | Completion condition | Current state |
 | --- | --- | --- |
-| Final API, mathematical and inferential specification | Each supported target and procedure has explicit model assumptions, identification/existence conditions, an applicable derivation, independent implementation checks, numerical eligibility and evidence adequate for its statistical claims. Inputs, defaults, uncertainty and unavailable operations agree. Resolve required gaps; justify experimental and later allocations. | Accepted for the documented release scope. Exact, regular asymptotic, approximate and descriptive claims remain distinct; broader performance and calibration-inclusive inference retain their later-work allocation. |
-| Complete supported user workflows | The declared entry points lead to interpretable results, supported plots/tables, export and fresh-session reuse. Errors and unavailable results preserve their meaning; help and examples agree with the accepted mathematical specification. | Accepted for implemented workflows, including the reviewed corrections, migration and saved-result restrictions. This combines existing source-specific checks and affected-route verification; it does not claim a fresh complete run of every example or measured novice comprehension. |
-| Substantive specification and source freeze | The preceding outcomes are accepted; functionality, inference, numerical procedures and migration behavior are settled. One identified source and candidate archive agree with metadata, help, examples and release notes. | Accepted for the selected replacement archive: metadata, help, capability declarations, migration guidance and all tutorial outputs agree with the reviewed source. Local installed checks and saved-result replay pass; final package/platform qualification and publication remain separate. |
-| Final package and environment qualification | The selected source has attributable package, supported-platform, dependency, saved-result and documentation checks. Remaining failures and execution-time requirements are resolved; the package and website represent the same accepted behavior. | Complete local package checking now passes with two environment notes; the final documentation-only cleanup has a verified source bridge. All tutorials, ordinary examples, selected tests and both manuals pass. The full installed regression remains accepted as one complete run plus targeted repairs. Short examples and data loading are streamlined without changing numerical precision or test selection. Measured total check cost still exceeds the project targets. Supported-platform, dependency/site and execution-cost qualification remain open. |
+| Final API, mathematical and inferential specification | Each supported target and procedure has explicit model assumptions, identification/existence conditions, an applicable derivation, independent implementation checks, numerical eligibility and evidence adequate for its statistical claims. Inputs, defaults, uncertainty and unavailable operations agree. Resolve required gaps; justify experimental and later allocations. | Partially accepted. Existing method reviews and the bounded diagnostic/manual corrections retain their acceptance. Final MML numerical-default, downstream-eligibility and diagnostic-adoption decisions remain open. Exact, asymptotic, approximate and descriptive claims remain distinct; broader inference research is not automatically a release requirement. |
+| Complete supported user workflows | The declared entry points lead to interpretable results, supported plots/tables, export and fresh-session reuse. Errors and unavailable results preserve their meaning; help and examples agree with the accepted mathematical specification. | The implemented teaching, reporting, plotting and saved-result workflows retain their scoped acceptance, including affected-route repairs. Final acceptance must follow any remaining specification changes. These checks do not establish a fresh complete run of every example or measured novice comprehension. |
+| Substantive specification and source freeze | The preceding outcomes are accepted; functionality, inference, numerical procedures and migration behavior are settled. One identified source and candidate archive agree with metadata, help, examples and release notes. | Open. Earlier candidate archives retain their own build and validation evidence. The subsequent diagnostic, compatibility and documentation corrections require a replacement source/archive decision after the remaining substantive decisions are settled. A previously checked archive is not the current final source. |
+| Final package and environment qualification | The selected source has attributable package, supported-platform, dependency, saved-result and documentation checks. Remaining failures and execution-time requirements are resolved; the package and website represent the same accepted behavior. | Open. Earlier complete checks and regression runs retain their source-specific evidence. The later Windows integration combines a completed check attempt with scoped repairs, installed regression and saved-result replay; it is not a complete check of the latest source. Final supported-platform, dependency, website and execution-cost qualification follow substantive freeze. |
 | Verified publication | Authorized source, package and documentation are published consistently, with installed/downloaded outputs checked. GitHub availability, CRAN submission and CRAN acceptance have separate recorded states. | Not published; submission is not acceptance. |
 
 RSM/PCM CML supplies conditional structural inference without a fitted ability
@@ -866,8 +866,9 @@ selecting the replacement source. Unaffected evidence remains valid.
 Checked items are accepted within their stated scope and support the milestones
 above; the detailed items are not additional milestones. Existing G-theory
 derivations and design-specific checks retain their scope, as do the API repairs
-and reviewed workflows. The final substantive specification and replacement
-source are accepted; package/platform and publication qualification remain.
+and reviewed workflows. Final specification and replacement-source acceptance
+remain open after the subsequent corrections and outstanding substantive
+decisions; package/platform and publication qualification follow them.
 Research tasks below do not
 delay release merely because they remain unfinished; incorrect calculations,
 misleading claims or broken supported workflows do require correction.
@@ -1004,16 +1005,20 @@ misleading claims or broken supported workflows do require correction.
   connects supported claims to assumptions, derivations, independent checks,
   numerical admissibility and appropriately scoped performance evidence.
   General finite-sample guarantees and the listed later research are excluded.
-  Reconcile FACETS YES/NO and legacy linear ZSTD, displacement direction,
-  chi-square eligibility/df, PTMEA/PCM fair-average definitions, bias-table
-  targets and df, anchor validation and extreme-score reporting. Explain
-  estimator assumptions and cutoff-sensitive changes to users.
-  Unaffected specification reviews retain their acceptance.
+  The scoped FACETS ZSTD, displacement, chi-square, PTMEA/PCM fair-average,
+  bias-table, anchor and extreme-display corrections are implemented and
+  checked within their documented limits. Residual executable differences
+  remain explicit; general FACETS equivalence is not established. Settle the
+  remaining MML numerical-default, downstream-eligibility and diagnostic
+  decisions, including what belongs in this release. Unaffected specification
+  reviews retain their acceptance.
 - [ ] Close the implemented user workflows against that specification, retaining
   valid examples and saved reuse with the affected-route corrections. Model,
   target, scale and unavailable states remain explicit. Final package/platform
   qualification is separate from this workflow and interpretation acceptance.
-  Correct affected diagnostic help, method labels, reports and saved-result reuse.
+  Affected diagnostic help, method labels, reports and saved-result reuse have
+  scoped repairs and checks. Revisit only workflows affected by the final
+  specification; retain the valid completed evidence.
 - [ ] Freeze the substantive specification and identify its matching source,
   metadata and migration notes before execution-time qualification. The
   previous archive retains its local build and installed integration evidence.
