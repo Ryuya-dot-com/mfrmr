@@ -7,11 +7,15 @@ gmfrm_interval_fixture <- local({
       result <- mfrm_gmfrm_em(problem, start=saved$parameters, maxit=1L)
       # The retained optimum meets the current score tolerance without an EM step.
       fit <- mfrm_gmfrm_fit_result(problem, result)
-      ci <- suppressWarnings(confint(fit))
+      ci <- suppressWarnings(confint(fit, parm = "slopes"))
       cached <<- list(fit=fit, ci=ci, saved=saved)
     }
     cached
   }
+})
+
+test_that("two-family fits require an explicit component-slope target", {
+  expect_error(confint(gmfrm_interval_fixture()$fit), "two-family GPCM.*parm = 'slopes'")
 })
 
 test_that("a small optimization residual gives a retained numerical caution", {
@@ -20,7 +24,7 @@ test_that("a small optimization residual gives a retained numerical caution", {
   fit <- mfrm_gmfrm_fit_result(problem,mfrm_gmfrm_em(problem,start=x$parameters,maxit=1L))
   before <- fit
   expect_true(fit$summary$Converged)
-  expect_warning(ci <- confint(fit),"Small optimization residual")
+  expect_warning(ci <- confint(fit, parm = "slopes"),"Small optimization residual")
   expect_identical(fit,before)
   check <- attr(ci,"numerical_checks")
   expect_gt(check$CurvatureScaledGradient,1e-4)
@@ -31,7 +35,7 @@ test_that("a small optimization residual gives a retained numerical caution", {
   reference_se <- attr(x$reference_intervals,"diagnostics")$LogSE
   expect_lt(max(abs(log(ci)-log(x$reference_intervals))/reference_se),.001)
   expect_output(print(ci),"Small optimization residual")
-  expect_match(as_ggplot(ci)$labels$subtitle,"Small optimization residual")
+  expect_match(paste(plot_data(as_ggplot(ci), "notes")$Text, collapse = "\n"),"Small optimization residual")
   res <- mfrm_results(fit,include="fit",compute="never",intervals=list(slopes=ci))
   expect_match(mfrm_report(res)$markdown,"Small optimization residual")
   expect_identical(res$tables$gpcm_slopes_numerical_checks,check)
@@ -40,7 +44,7 @@ test_that("a small optimization residual gives a retained numerical caution", {
   bad <- mfrm_gmfrm_fit_result(unstable,mfrm_gmfrm_em(unstable,
     start=x$unstable$parameters,maxit=1L))
   expect_true(bad$summary$Converged)
-  unavailable <- confint(bad)
+  unavailable <- confint(bad, parm = "slopes")
   expect_true(all(is.na(unavailable)))
   check_bad <- attr(unavailable,"numerical_checks")
   expect_lt(check_bad$MaximumMeanScore,1e-6)
@@ -75,21 +79,21 @@ test_that("two-family intervals use the inverse full observed marginal informati
   expect_equal(checks$ComparisonPoints,61L)
   expect_lt(checks$QuadratureScoreShift,.01)
   expect_lt(checks$QuadratureCovarianceChange,.01)
-  expect_warning(confint(fit,level=.9,simultaneous="bonferroni"),"Experimental two-family")
+  expect_warning(confint(fit, parm = "slopes",level=.9,simultaneous="bonferroni"),"Experimental two-family")
   expect_false(fit$summary$InferenceReady)
   expect_false(fit$summary$ICEligible)
   expect_true(all(!fit$slopes$CIEligible))
   for (args in list(list(scale="relative"),list(method="sandwich"),
       list(contrasts=matrix(1)),list(adjust=TRUE))) {
-    expect_error(do.call(confint,c(list(fit),args)),"Two-family intervals currently require")
+    expect_error(do.call(confint,c(list(fit, parm = "slopes"),args)),"Two-family intervals currently require")
   }
-  expect_error(confint(fit,method="profile"),"identify one owner and level")
+  expect_error(confint(fit, parm = "slopes",method="profile"),"identify one owner and level")
 })
 
 test_that("failed checks retain estimates, missing bounds and an actionable reason", {
   fit <- gmfrm_interval_fixture()$fit
   fail <- function(x, reason) {
-    ci <- confint(x)
+    ci <- confint(x, parm = "slopes")
     expect_true(all(is.na(ci)))
     expect_equal(attr(ci,"diagnostics")$Estimate,fit$slopes$Estimate)
     expect_true(any(!attr(ci,"checks")$Passed))
@@ -113,18 +117,18 @@ test_that("a converged public fit can still fail the integration check", {
     mml_engine="em",maxit=500L)
   coarse <- do.call(fit_mfrm,c(args,list(quad_points=5L)))
   expect_true(coarse$summary$Converged)
-  ci <- confint(coarse)
+  ci <- confint(coarse, parm = "slopes")
   expect_true(all(is.na(ci)))
   checks <- attr(ci,"checks")
   expect_identical(checks$Check[!checks$Passed],"Quadrature sensitivity")
   expect_gt(attr(ci,"numerical_checks")$QuadratureScoreShift,1)
   fine <- do.call(fit_mfrm,c(args,list(quad_points=31L)))
-  expect_warning(ci_fine <- confint(fine),"Experimental two-family")
+  expect_warning(ci_fine <- confint(fine, parm = "slopes"),"Experimental two-family")
   expect_true(all(attr(ci_fine,"diagnostics")$CIEligible))
   expect_equal(as.numeric(ci_fine),as.numeric(gmfrm_interval_fixture()$ci),tolerance=1e-5)
   loose <- do.call(fit_mfrm,c(args,list(quad_points=31L,em_score_tol=1e-3)))
   expect_true(loose$summary$Converged)
-  ci_loose <- confint(loose)
+  ci_loose <- confint(loose, parm = "slopes")
   expect_true(all(is.na(ci_loose)))
   checks <- attr(ci_loose,"checks")
   expect_identical(checks$Check[!checks$Passed],"Stationary local maximum")
@@ -140,7 +144,7 @@ test_that("interval identities survive renamed facets and overlapping level labe
   problem <- mfrm_gmfrm_problem(d,2L,gauss_hermite_normal(31L),
     slope_facets=c("観点 名","Judge-ID"),person="Candidate",score="Rating")
   fit <- mfrm_gmfrm_fit_result(problem,mfrm_gmfrm_em(problem,start=x$saved$parameters,maxit=1L))
-  expect_warning(ci <- confint(fit),"Experimental two-family")
+  expect_warning(ci <- confint(fit, parm = "slopes"),"Experimental two-family")
   tab <- attr(ci,"diagnostics")
   expect_true(all(tab$CIEligible))
   expect_identical(tab$SlopeOwner,rep(c("観点 名","Judge-ID"),each=3))
@@ -155,8 +159,8 @@ test_that("saved two-family intervals keep owner identity and checks without rec
     compute_mml_parameter_covariance=function(...) stop("unexpected covariance"),.package="mfrmr")
   expect_output(print(ci),"Experimental Joint-information")
   expect_output(print(ci),"Task: geometric mean one; Rater: free slopes",fixed=TRUE)
-  expect_match(as_ggplot(ci)$labels$subtitle,"Experimental")
-  expect_match(as_ggplot(ci)$labels$caption,"different reference meanings",fixed=TRUE)
+  expect_match(paste(plot_data(as_ggplot(ci), "notes")$Text, collapse = "\n"),"Experimental")
+  expect_match(paste(plot_data(as_ggplot(ci), "notes")$Text, collapse = "\n"),"different reference meanings",fixed=TRUE)
   expect_null(as_ggplot(ci,caption=NULL)$labels$caption)
   expect_identical(plot_data(ci,"table")$SlopeOwner,attr(ci,"diagnostics")$SlopeOwner)
   expect_identical(plot_data(as_ggplot(ci),"checks"),attr(ci,"checks"))
@@ -178,5 +182,5 @@ test_that("saved two-family intervals keep owner identity and checks without rec
   saved <- readRDS(paths[grepl("\\.rds$",paths)][1])
   expect_identical(saved$gpcm_inference$slopes,ci)
   expect_true(any(grepl("gpcm_slopes_checks.*csv$",paths)))
-  expect_identical(as_ggplot(saved,type="gpcm_slopes")$labels$subtitle,as_ggplot(ci)$labels$subtitle)
+  expect_identical(plot_data(as_ggplot(saved,type="gpcm_slopes"), "subtitle"),plot_data(as_ggplot(ci), "subtitle"))
 })

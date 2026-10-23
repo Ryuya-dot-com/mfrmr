@@ -41,6 +41,15 @@
 #'   computes every Person's posterior and can be slow. Selecting outputs keeps
 #'   all scoring responses. No fixed effects or population variances are re-estimated.
 #'
+#'   With `newdata`, reusing a source rater ID does not import that rater's
+#'   saved conditional distribution. Shared-rater distributions are calculated
+#'   from the supplied responses and fitted population parameters. To retain
+#'   earlier responses, include them in the complete scoring table, with each
+#'   intended rating event appearing once. By contrast,
+#'   [predict.mfrm_random_rater()] with `rater = "observed"` uses the rater's
+#'   conditional distribution from the calibration responses at abilities you
+#'   supply; it does not estimate abilities from new responses.
+#'
 #'   Intervals condition on all supplied observed responses, fitted calibration
 #'   and the fitted or specified normal ability population. They exclude
 #'   calibration/population estimation uncertainty, are not fixed-ability
@@ -75,6 +84,9 @@
 #' @return An `mfrm_random_rater_scores` object with `table`, complete scoring
 #'   roster, data accounting, settings and source metadata for [mfrm_results()].
 #'   Save it with `saveRDS()`. Its summary and plots need no live optimizer.
+#'   Keep `table$Status` and `table$Reason` with exported scores: `prior_only`
+#'   describes the assumed population without observed responses for that Person;
+#'   `unavailable` withholds the estimate, SD and bounds with a recorded cause.
 #' @param x A scoring result.
 #' @param ... Unused.
 #' @seealso [predict.mfrm_random_rater()], [plot.mfrm_random_rater_scores()]
@@ -122,6 +134,7 @@ score_mfrm_random_rater <- function(object, newdata = NULL, persons = NULL,
       value <- c(Estimate = 0, ConditionalSD = ps, Lower = ps * stats::qnorm(alpha),
         Upper = ps * stats::qnorm(alpha, lower.tail = FALSE))
       status <- "prior_only"; difference <- interpolation <- 0
+      reason <- "No observed responses for this Person; the estimate, SD and interval describe only the assumed population, not measured individual ability."
     } else {
       value <- tryCatch(withCallingHandlers({
         low <- mfrm_random_rater_person_interval(input, object$calibration, person, quad_points, level)
@@ -163,15 +176,17 @@ mfrm_random_rater_person_interval <- function(input, calibration, person, quad_p
     fixed_person_sd = ps, focal_person = person)
   par <- c(calibration$beta, calibration$steps)
   cache <- new.env(parent = emptyenv())
-  logdensity <- function(z) vapply(z, function(x) {
+  loglikelihood <- function(z) vapply(z, function(x) {
     key <- sprintf("%a", x)
     if (!exists(key, envir = cache, inherits = FALSE)) {
-      value <- -as.numeric(obj$fn(c(par, ps * x))) + stats::dnorm(x, log = TRUE)
+      value <- -as.numeric(obj$fn(c(par, ps * x)))
       if (!is.finite(value)) stop("Conditional shared-rater integration is nonfinite.")
       assign(key, value, envir = cache)
     }
     get(key, envir = cache, inherits = FALSE)
   }, numeric(1))
+  offset <- loglikelihood(0)
+  logdensity <- function(z) (loglikelihood(z) - offset) + stats::dnorm(z, log = TRUE)
   mode <- stats::optimize(function(z) -logdensity(z), c(-20, 20), tol = 1e-8)$minimum
   if (abs(mode) > 19.9) stop("The conditional posterior mode is outside the scoring search range.")
   h <- .01
@@ -182,16 +197,17 @@ mfrm_random_rater_person_interval <- function(input, calibration, person, quad_p
   # the tails. Refinement checks the continuous integrals, not grid quantiles.
   for (n in c(65L, 129L, 257L, 513L, 1025L)) {
     knots <- seq(mode - span, mode + span, length.out = n)
-    spline <- stats::splinefun(knots, logdensity(knots), method = "natural")
+    spline <- stats::splinefun(knots, loglikelihood(knots) - offset, method = "natural")
     interpolated <- function(z) {
       inside <- z >= knots[1] & z <= tail(knots, 1)
       value <- numeric(length(z)); value[inside] <- spline(z[inside])
-      value[!inside] <- logdensity(z[!inside]); value
+      value[!inside] <- loglikelihood(z[!inside]) - offset; value
     }
     value <- mfrm_person_posterior_interval(interpolated, ps, level)
     if (!is.null(previous)) {
       delta <- abs(value - previous)
       if (all(is.finite(delta)) && all(delta < c(1e-8, 1e-8, 1e-6, 1e-6, 1e-7))) {
+        value["LogNormalizer"] <- value["LogNormalizer"] + offset
         return(list(value = value, difference = max(delta), density_points = n))
       }
     }
@@ -234,7 +250,7 @@ print.mfrm_random_rater_scores <- function(x, ...) {
 plot.mfrm_random_rater_scores <- function(x, draw = TRUE,
     style = c("interval", "precision", "distribution"),
     sort = c("input", "estimate", "uncertainty"), palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, reference = 0, text_scale = 1, point_size = 2.5, ...) {
   rlang::check_dots_empty()
   mfrm_extended_estimate_plot(x$table, x$table$Person, "random_rater_scores", "Conditional Person scores",

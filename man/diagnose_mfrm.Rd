@@ -9,7 +9,7 @@ diagnose_mfrm(
   interaction_pairs = NULL,
   top_n_interactions = 20,
   whexact = FALSE,
-  fit_df_method = c("engine", "facets", "both"),
+  fit_df_method = "facets",
   diagnostic_mode = c("both", "legacy", "marginal_fit"),
   residual_pca = c("none", "overall", "facet", "both"),
   pca_max_factors = 10L
@@ -22,23 +22,19 @@ diagnose_mfrm(
 
 \item{top_n_interactions}{Number of top interactions.}
 
-\item{whexact}{Logical controlling the ZSTD standardisation of
-mean-square fit statistics. \code{FALSE} (default) applies the
-Wilson-Hilferty cube-root transformation
-\eqn{(\mathrm{MnSq}^{1/3} - (1 - 2/(9\,\mathit{df})))/\sqrt{2/(9\,\mathit{df})}}
-(recommended; the Winsteps/FACETS convention for \code{WHEXACT=Y}).
-\code{TRUE} uses the simpler linear-normal standardisation
-\eqn{(\mathrm{MnSq} - 1)\sqrt{\mathit{df}/2}}, which is kept for
-backward compatibility with earlier mfrmr summaries and with
-FACETS' \code{WHEXACT=N} mode.}
+\item{whexact}{ZSTD transformation. \code{FALSE} (default) uses
+Wilson-Hilferty with the q/3 term (FACETS \code{WHEXACT=YES});
+\code{TRUE} omits that term (FACETS \code{WHEXACT=NO}), where
+q = sqrt(2/df). The historical logical names are retained.
+\code{"legacy_linear"} explicitly requests the former TRUE calculation,
+(MnSq - 1) * sqrt(df/2), which is not FACETS WHEXACT=NO.}
 
 \item{fit_df_method}{Degrees-of-freedom convention used for fit ZSTD.
-\code{"engine"} (default) keeps the package-native convention
+\code{"facets"} (default) uses the Wright-Masters fourth-moment approximation
+\code{df = 2 / q^2} and caps reported ZSTD at +/-9. \code{"engine"} retains
 \code{DF_Infit = sum(Var * Weight)} and \code{DF_Outfit = sum(Weight)}.
-\code{"facets"} uses the FACETS/Wright-Masters fourth-moment approximation
-\code{df = 2 / q^2} as the primary \code{InfitZSTD} / \code{OutfitZSTD} basis and caps
-reported ZSTD values at +/-9. \code{"both"} keeps the engine convention as the
-primary columns and adds \verb{*_FACETS} companion columns for comparison.}
+\code{"both"} uses engine primary columns and adds \verb{*_FACETS} companions.
+Engine transformations require df >= 1; the FACETS route admits df > 0.}
 
 \item{diagnostic_mode}{Diagnostic basis to compute: \code{"both"} (the
 current default) computes both the residual/EAP-based stack and
@@ -49,8 +45,8 @@ the strict latent-integrated first-order marginal-fit companion;
 doubles to quintuples wall-clock time relative to \code{"legacy"};
 pass \code{"legacy"} explicitly when iterating on large designs and
 only the residual stack is needed. Use \code{"both"} for RSM/PCM
-reporting fits because it enables \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and
-\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} follow-up.}
+reporting fits because it enables \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")} and
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")} follow-up.}
 
 \item{residual_pca}{Residual PCA mode: \code{"none"}, \code{"overall"}, \code{"facet"}, or \code{"both"}.}
 
@@ -125,6 +121,37 @@ residual/EAP stack, whereas the strict marginal path targets
 latent-integrated first-order category counts. When \code{diagnostic_mode = "both"}, the output includes a \code{diagnostic_basis} guide so downstream
 tables and summaries can distinguish these targets.
 
+\strong{Legacy response calculations.} Saved MML EAPs are matched to responses
+by Person identifier. JML retains optimizer-coordinate probabilities for
+compatibility diagnostics. In \code{obs}, \code{PersonMeasure} records the ability
+used, \code{PrimaryPersonMeasure} records the primary estimate (possibly
+infinite), and \code{PersonMeasureBasis} identifies the calculation. A finite
+JML optimizer value is not a finite primary estimate at a boundary.
+For supported ordinary fits, \link[=mfrm_fit_responses]{fitted()} instead uses
+primary JML limits. The posterior/corrected-JML targets have their own
+documented routes in \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}}.
+
+\code{obs$ConditionalVariance} retains the actual conditional variance.
+Legacy \code{Var}, \code{StdResidual} and \code{StdSq} are withheld when that variance is
+at or below \code{1e-10}. A positive value below this cutoff is a diagnostic
+screening convention, not a mathematically undefined Pearson residual;
+\link[=mfrm_fit_responses]{residuals(fit, "pearson")} retains representable positive
+variances within its supported scope. A zero variance makes the Pearson
+residual undefined. Expected ratings and raw residuals can remain available
+in either case. \code{PearsonAvailable}, \code{ResponseStatus} and \code{ResponseReason}
+explain each row, and are retained in score/residual file tables.
+
+Overall and element-level mean squares require every contributing row's
+standardized residual, variance and positive weight. If any is unavailable,
+the aggregate and its degrees of freedom remain \code{NA}; missing residuals
+are not counted as zero misfit or silently excluded. \code{FitResponseRows},
+\code{FitAvailableRows} and \code{FitUnavailableRows} count rows (not weight totals),
+while \code{FitStatus} and \code{FitReason} explain availability. These fields accompany
+\code{overall_fit}, \code{fit} and \code{measures}. FACETS-style degrees of freedom also
+require complete fourth moments. Regenerate older diagnostics and exports
+from the saved fit to obtain these explanations; model refitting is not
+required.
+
 Marginal expected counts integrate over each Person's posterior conditioned
 on the same observed responses, holding fitted calibration fixed. They are
 not expectations from an independent replication or a prior-only population
@@ -174,18 +201,18 @@ off-target outliers.  Expected value = 1.0.
 \item \strong{ZSTD}: Wilson-Hilferty cube-root transformation of MnSq to an
 approximate standard normal deviate.
 \item \strong{PTMEA}: within-element point-measure correlation between observed
-scores and fitted person measures. A positive value is directionally
+scores and the oriented sum of model measures (\code{obs$MeasureSum}),
+including Person rows. A positive value is directionally
 consistent with the fitted orientation; it is not a confirmatory test.
 }
 
 The MnSq values and the ZSTD values should be read separately. \code{mfrmr} keeps
-the package-native engine df convention by default because it is the basis
-used by the fitted observation-level diagnostics. FACETS reports closely related
-MnSq values but standardizes them with a Wright-Masters fourth-moment df
-approximation (\code{df = 2 / q^2}) and caps reported ZSTD values. Use
+the fourth-moment df convention by default. The former engine convention
+remains explicit. This changes some ZSTD screening decisions, not the
+underlying MnSq. MML residual diagnostics remain EAP plug-in quantities;
+this standardization does not make them posterior-integrated fit tests. Use
 \code{fit_df_method = "both"} to review these two standardization conventions
-side by side without changing the primary \code{InfitZSTD} / \code{OutfitZSTD}
-columns.
+side by side, using engine primary columns and FACETS companion columns.
 
 \strong{Residual basis under MML.} For \code{method = "MML"} fits, residuals,
 MnSq, and ZSTD are computed at the EAP person measures from the
@@ -197,6 +224,13 @@ this difference: it is a residual-basis difference, not a
 standardization difference. Refit with \code{method = "JML"} when an
 external FACETS fit comparison requires a JMLE-style residual basis
 (see \code{\link[=facets_fit_review]{facets_fit_review()}}).
+ConQuest MML parameter fit also has a different target: residuals are
+aggregated through the response design for each parameter, then averaged
+over posterior ability distributions. Its Infit averages a ratio, rather
+than dividing separately averaged residual sums and variances. Posterior
+integration of row residuals alone does not reproduce that statistic. Native
+marginal category-count diagnostics are another target. See the
+\href{https://conquestmanual.acer.org/s3-00.html}{ConQuest technical manual}.
 
 \strong{Heuristic misfit-screening guidelines (Bond & Fox, 2015):}
 \itemize{
@@ -244,6 +278,15 @@ screens, and use limited wording such as "evidence consistent with essential
 unidimensionality under the specified facet structure" rather than
 "unidimensionality was established."
 }
+\section{Saved diagnostic definitions}{
+
+New diagnostics carry \code{calculation_version = 2L}. Recreate older diagnostics
+with \code{diagnose_mfrm(fit)} before using current reports; no refit is needed.
+For historical ZSTD use \code{fit_df_method = "engine"} and, if applicable,
+\code{whexact = "legacy_linear"}. PTMEA, displacement, eligible chi-square df,
+fair scores and unexpected-response defaults use the corrected definitions.
+}
+
 \section{Reading key components}{
 
 Practical interpretation often starts with:
@@ -291,7 +334,10 @@ levels. Non-finite estimates are excluded from the spread and SE summaries.
 If any finite estimate lacks a valid SE, reliability, separation, strata and
 error-adjusted spread are unavailable, rather than combining different sets
 of levels. Excluded levels or incomplete uncertainty prevent a facet summary
-from supporting formal reporting. For EAP Persons, this separation-based
+from supporting formal reporting. A facet containing fixed values also has
+no aggregate reliability, separation or strata: a fixed anchor's zero
+conditional variance is not evidence of perfect measurement. Fixing a group
+mean alone does not fix each group member. For EAP Persons, this separation-based
 index is distinct from posterior-variance EAP reliability. High rater
 separation means distinguishable rater measures, not high rater agreement.
 
@@ -341,23 +387,27 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
 
 # Check model fit and the support for standard errors and intervals
 diagnostics <- diagnose_mfrm(fit)
+# Check each residual's basis and the coverage of aggregate fit statistics
+head(diagnostics$obs[, c("PersonMeasureBasis", "ConditionalVariance",
+  "PearsonAvailable", "ResponseReason")])
+diagnostics$overall_fit[, c("Infit", "Outfit", "FitUnavailableRows", "FitReason")]
 diagnostic_summary <- summary(diagnostics)
 diagnostic_summary$decision
 
@@ -366,7 +416,6 @@ diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
 
 # Distinguish residual-based checks from marginal model checks
 diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
-}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

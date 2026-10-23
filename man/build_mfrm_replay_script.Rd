@@ -70,6 +70,14 @@ data file at \code{data_file}.
 Anchor and group-anchor constraints are embedded directly from the fitted
 object's stored configuration, so the script can replay anchored analyses
 without manual table reconstruction.
+The script retains \code{centering_scope}; a native fit saved before this setting
+was recorded uses \code{"remainder"}. Running it performs a new fit under that
+convention, not a conversion of the saved object. To adopt whole-facet
+centering, review the generated call and change it to \code{"facet"}, preserving
+the intended population, uncentered facet, rubric and step/slope owners.
+Recheck the resulting constraints and readiness. Use \code{saveRDS()}/\code{readRDS()}
+to reopen an unchanged fit, or the replay from \code{\link[=export_mfrm_results]{export_mfrm_results()}} to
+reopen a saved results bundle without refitting.
 
 Adjustments made with \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} are replayed after
 fitting, using the most recently recorded prior and Person settings. The
@@ -157,8 +165,18 @@ you.
 }
 }
 
+\section{Saved-result reuse}{
+
+Supplied screening results must describe this fitted analysis. Results from
+another fit or older results without identity metadata are refused. See
+\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
+diagnostics without refitting the model.
+Supplied unit scores, plausible values and fit-derived forecasts must also
+match this calibration. A forecast created with \code{sim_spec} remains a separate
+scenario; its source is recorded without asserting a match to the fit.
+}
+
 \examples{
-\donttest{
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
@@ -172,7 +190,6 @@ fit <- fit_mfrm(
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 cat(substr(replay$script, 1, 120))
-}
 }
 \seealso{
 \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}, \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}

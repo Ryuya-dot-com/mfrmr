@@ -33,7 +33,7 @@ for(cell in plan$Cell) {
       obj <- capture(label,{
         if(kind %in% c('probability','information')) mfrmr::mfrm_curve_intervals(x$q101,target$grid,
           type=kind,method=method,simultaneous=adjustment) else {
-          opts <- list(object=x$q101,scale=if(kind %in% c('relative','ratio'))'relative' else 'standardized',
+          opts <- list(object=x$q101,parm='slopes',scale=if(kind %in% c('relative','ratio'))'relative' else 'standardized',
             method=method,simultaneous=adjustment)
           if(kind %in% c('ratio','difference')) {opts$contrasts <- target$contrasts; opts$contrast_scale <- kind}
           do.call(stats::confint,opts)

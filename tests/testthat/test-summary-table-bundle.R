@@ -620,6 +620,16 @@ test_that("summary table bundle role registry covers every supported spec role",
     )
   )
 
+  # Valid portable scores cover both dispositions and optional cut decisions.
+  saved <- readRDS(test_path("fixtures", "ordinary-score-integration.rds"))
+  calibration <- freeze_mfrm_calibration(validate_mfrm_calibration(
+    extract_mfrm_calibration(saved$fits[["PCM-JML"]], scoring_quad_points = 121)))
+  rows <- saved$new_data
+  rows <- rows[rows$Person %in% unique(rows$Person)[1:2], ]
+  rows$Event <- as.character(seq_len(nrow(rows)))
+  minimal_summaries$summary.mfrm_calibration_score <- summary(
+    score_mfrm_calibration(calibration, rows, event_id = "Event", cut_scores = c(Pass = 0)))
+
   emitted_roles <- character()
   for (cls in names(minimal_summaries)) {
     obj <- minimal_summaries[[cls]]
@@ -1181,10 +1191,15 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
         ParameterType = "facet",
         Facet = "Rater",
         Level = "R1",
+        ComparisonScale = "logit",
         Truth = 0.1,
         Estimate = 0.12,
         EstimateAligned = 0.11,
-        ErrorAligned = 0.01
+        ErrorAligned = 0.01,
+        ErrorRaw = 0.02,
+        SE = NA_real_,
+        RecoveryComparable = TRUE,
+        RecoveryBasis = "location_alignment"
       ),
       recovery_summary = tibble::tibble(
         ParameterType = "facet",
@@ -1244,6 +1259,10 @@ test_that("build_summary_table_bundle supports recovery simulation and assessmen
 
   recovery_bundle <- build_summary_table_bundle(rec)
   expect_identical(recovery_bundle$source_class, "mfrm_recovery_simulation")
+  expect_equal(recovery_bundle$tables$recovery_summary$RMSE, 0.01)
+  expect_true(is.na(recovery_bundle$tables$recovery_summary$Coverage95))
+  expect_match(recovery_bundle$tables$recovery_summary$CIReasons,
+               "legacy_interval_basis_unverified")
   expect_true(all(c(
     "overview", "recovery_summary", "rep_overview",
     "diagnostic_oc", "diagnostic_oc_summary", "ademp",

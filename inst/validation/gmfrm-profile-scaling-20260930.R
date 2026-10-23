@@ -12,7 +12,7 @@ writeLines(capture.output(sessionInfo()),file.path(out,"session-info.txt"))
 for(job in c("011-common_persons-0.5.rds","016-rotating_pairs-0.5.rds")) {
   old<-readRDS(file.path("validation-results/gmfrm-numerical-repair-20260930",job))
   fit<-old$fit$result
-  result<-gmfrm_profile_capture(function() confint(fit,method="profile",slope=c(Task="t3")))
+  result<-gmfrm_profile_capture(function() confint(fit, parm = "slopes",method="profile",slope=c(Task="t3")))
   z<-list(original=job,fit=fit,profile=result,source_hash=hashes)
   saveRDS(z,file.path(out,job))
   pr<-attr(result$result,"profile"); checks<-list()

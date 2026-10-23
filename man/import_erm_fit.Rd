@@ -61,14 +61,12 @@ one-way fitted-object import of the documented fields.
 }
 
 \examples{
-\donttest{
 if (requireNamespace("eRm", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:3, 60, replace = TRUE), nrow = 20)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
   fit <- eRm::PCM(response_matrix)
   imported <- import_erm_fit(fit, model = "PCM")
   imported$summary
-}
 }
 }
 \seealso{

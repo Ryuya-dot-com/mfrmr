@@ -289,4 +289,12 @@ test_that("shrinkage reports use eligible pairs and preserve their conditional m
   expect_equal(bands$ShrunkCI_Upper, 0)
   expect_false(bands$SupportsFormalInference)
   expect_match(bands$IntervalInterpretation, "Zero SE after full pooling", fixed = TRUE)
+  level <- 1 - .Machine$double.eps / 2
+  high <- mfrmr:::.add_shrinkage_ci_columns(data.frame(Estimate = 2, SE = .5,
+    ShrunkEstimate = 0, ShrunkSE = 0), ci_level = level)
+  expect_equal(high$CI_Lower, 2-.5*sqrt(qchisq(level, 1)))
+  expect_equal(high$CI_Upper, 2+.5*sqrt(qchisq(level, 1)))
+  expect_equal(high$ShrunkCI_Lower, 0)
+  expect_equal(high$ShrunkCI_Upper, 0)
+  expect_false(high$SupportsFormalInference)
 })

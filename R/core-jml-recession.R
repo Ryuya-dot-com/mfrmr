@@ -231,7 +231,7 @@ mfrmr_jml_structural_target_system <- function(config, sizes, params,
   }
 
   interaction_specs <- config$interaction_specs %||% list()
-  interaction_slice <- as.integer(slices$interactions %||% integer(0))
+  interaction_slice <- as.integer(slices[["interactions"]] %||% integer(0))
   interaction_cursor <- 0L
   if (length(interaction_specs) > 0L) {
     for (name in names(interaction_specs)) {
@@ -968,18 +968,22 @@ audit_mfrm_jml_additive_recession <- function(prep,
       detail = detail,
       limitations = if (joint_scope) {
         paste(
-          "This bounded audit certifies joint additive recession directions",
+          "This check identifies joint additive recession directions",
+          "(parameters that can diverge without reducing the likelihood)",
           "for structural targets and unresolved constraint-coupled extreme",
           "Person targets. Ordinary free extreme Persons remain governed by",
-          "the sufficient-score audit. GPCM log-slope recession and public-",
-          "table propagation are not part of this implementation slice."
+          "the sufficient-score check. GPCM log-slope recession is outside",
+          "this check. These diagnostics alone do not establish usable",
+          "estimates or intervals for every parameter."
         )
       } else {
         paste(
-          "This bounded audit certifies additive structural recession directions",
-          "with Person coordinates fixed. GPCM log-slope recession and public-",
-          "table propagation are not part of this implementation slice; joint",
-          "Person movement is evaluated by the companion additive audit."
+          "This check identifies additive structural recession directions",
+          "(parameters that can diverge without reducing the likelihood)",
+          "with Person coordinates fixed. GPCM log-slope recession is outside",
+          "this check; joint Person movement is evaluated by the joint additive",
+          "check. These diagnostics alone do not establish usable estimates",
+          "or intervals for every parameter."
         )
       }
     )

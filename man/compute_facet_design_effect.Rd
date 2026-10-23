@@ -80,7 +80,6 @@ and variance calculation that represent the actual design.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 if (requireNamespace("lme4", quietly = TRUE)) {
   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -90,7 +89,6 @@ if (requireNamespace("lme4", quietly = TRUE)) {
                                       icc_table = icc)
   print(deff)
   # Review clustering influence; EffectiveN is a descriptive row count.
-}
 }
 }
 \references{

@@ -87,25 +87,21 @@ information and conditional-SEM series without parsing the drawn figure.
 
 \enumerate{
 \item Compute information with \code{\link[=compute_information]{compute_information()}}.
-\item Plot with \code{plot_information(info)} for the total precision curve.
-\item Use \code{plot_information(info, type = "iif", facet = "Rater")} for
+\item Plot with \code{plot(info)} for the total precision curve.
+\item Use \code{plot(info, type = "iif", facet = "Rater")} for
 facet-level contributions.
 \item Use \code{draw = FALSE} when you want reusable plot data for custom graphics
 or reporting helpers.
 }
 }
 
-\examples{
-toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                 method = "MML", model = "RSM",
-                 quad_points = 7, maxit = 30)
-info <- compute_information(fit)
-tif_data <- plot_information(info, type = "tif", draw = FALSE)
-head(tif_data$data$plot)
-iif_data <- plot_information(info, type = "iif", facet = "Rater", draw = FALSE)
-head(iif_data$data$plot)
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
+
 \seealso{
 \code{\link[=compute_information]{compute_information()}}, \code{\link[=fit_mfrm]{fit_mfrm()}}
 }
+\keyword{internal}

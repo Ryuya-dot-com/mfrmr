@@ -82,9 +82,11 @@ mfrm_ordinary_response_probabilities <- function(input, rows, order) {
   logp <- lapply(indices, function(i) {
     logw <- outer(theta - input$offset[i], 0:length(input$steps)) -
       matrix(c(0, cumsum(input$steps)), length(theta), length(input$steps) + 1L, byrow = TRUE)
+    logw <- logw - row_max_fast(logw)
     logw - mfrm_testlet_logsum_rows(logw)
   })
-  logw <- log(rule$weights) + Reduce(`+`, lapply(seq_along(indices), function(j) logp[[j]][, input$y[indices[j]] + 1L]))
+  loglik <- Reduce(`+`, lapply(seq_along(indices), function(j) logp[[j]][, input$y[indices[j]] + 1L]))
+  logw <- (loglik - max(loglik)) + log(rule$weights)
   posterior <- exp(logw - max(logw)); posterior <- posterior / sum(posterior)
   result <- t(vapply(rows, function(i) colSums(exp(logp[[match(i, indices)]]) * posterior), numeric(length(input$score_levels))))
   list(probabilities = result, normalization_error = rowSums(result) - 1)

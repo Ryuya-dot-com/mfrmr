@@ -1,14 +1,250 @@
-# Development branch — not for submission
+# Unreleased 0.2.4 candidate — not for submission
 
-This branch is now 0.2.4.9000. Historical checks below identify the frozen
-0.2.4 rc.6 archive; they do not qualify the new development changes.
-September 30 development measurements are reported separately under check time.
-Reviewed September 30, 2026: check time is an unresolved submission blocker.
-The earlier zero-error/zero-warning results do not establish submission readiness.
-Mathematical and statistical scope decisions currently precede further runtime
-optimization; example selection will be reviewed after those decisions.
+The October 23 development snapshot incorporates the bounded FACETS and
+G-theory manual corrections, ConQuest comparison-contract repairs, and opt-in
+MML integration checking with adaptive refitting. FACETS corrections cover
+WHEXACT, fit df, PTMEA, signed displacement, chi-square eligibility, PCM fair
+scores, bias targets and tests, fixed anchors, and unexpected-response screening.
+Saved diagnostic and bias summaries require recreation from their original fit.
+The documented FACETS 4.5.0 and GENOVA comparisons are scoped numerical evidence,
+not general cross-software equivalence. Native MML EAP plug-in MnSq remains
+distinct from posterior-averaged TAM/ConQuest fit statistics.
 
-# mfrmr 0.2.4 — submission preparation
+The current verified Windows package archive has SHA256
+`204935ba94749a52971cffc1b976f7c017d4f9e24e2f49e501a630175569df52`.
+Its 1,012 code/help/test/tutorial inputs match the development source. The
+ordinary installed regression covered 126 files with 13,275 passing expectations
+and no failures or errors. Its 21 Unicode-conversion warnings were then repaired;
+the final seven affected files pass 895 expectations without warnings, failures,
+errors or skips. Independent source/installation comparisons attribute those
+final changes to two functions. Static code-usage analysis and fresh-session
+migration/replay checks pass.
+
+The initial Windows `R CMD check --no-manual` reported one ERROR and one NOTE;
+those findings were addressed by the ordinary regression and scoped final checks
+above. A second complete check, exhaustive tests, PDF manuals and a new hosted
+multi-platform/site qualification have not been completed for the final archive.
+Earlier clean checks below belong to their stated historical archives. This
+development snapshot is not a CRAN submission or release qualification. Remaining
+substantive numerical/API decisions precede final source and environment review.
+
+## Historical October 21 candidate
+
+The earlier October 21 archive has SHA256
+`c0c2cff9979654a5cecfad58cebcffd76cdd4efbefed42482a8617d972467cf6`.
+After classifying example workloads, nine simulation-result summary, plot and
+recommendation examples now load a 26,004-byte synthetic artifact and execute
+the consumer. Its complete regeneration recipe, settings, warnings and unresolved
+runs are retained. Generator entry-point examples remain live, and the examples
+explain that one replication per condition cannot establish simulation precision.
+All nine changed examples execute without warnings/errors; all other example
+programs are unchanged. The new installed replay test passes 42 expectations
+with generation/fitting disabled. Existing related example-policy and artifact
+tests pass 401 expectations. A test-only repair aligns two return-class checks
+with the documented plain-list results. Namespace bindings are restored.
+
+No executable package R expression, numerical setting or existing test selection
+changes in this revision; the replay test is added to ordinary checks. The 18
+built tutorial outputs/index are byte-identical and reused. No new `donttest`
+wrapper is introduced. Earlier bounded GPCM test reuse remains validated by its
+381 passing assertions. This is scoped verification with source/archive bridges,
+not a fresh complete package check, exhaustive regression or Windows timing.
+
+The preceding complete-check archive, SHA256
+`bce403f6890b39e9d3cd5a27a9952342df7345cc3a804ab38414755799feb07c`,
+completed `R CMD check --as-cran --timings` with **0 errors, 0 warnings and
+2 notes** on arm64 macOS. Its cosmetic successor (`7fc52177...`) removes exactly one generated
+trailing newline from one Rd file; the only other archive difference is the
+standard Packaged timestamp. All executable code, example programs, data,
+tests and built tutorial outputs are byte-identical. The source/archive bridge
+is verified; no second complete check of this cosmetic update is claimed.
+
+The notes concern unavailable remote clock verification and `xcrun_db` residue.
+All 18 tutorials, code/help checks, ordinary examples, selected tests and PDF/HTML
+manuals complete. Tests pass 13,072 expectations with three intentional On-CRAN
+skips. All 264 executed example topics take under five seconds on this host
+(maximum 4.502 seconds). Their programs are unchanged after removal of obsolete
+`donttest` wrappers; the examples now execute in one pass. External ConQuest
+examples and the interactive viewer retain their appropriate guards.
+
+The data loader uses R's existing lazy-data database. All nine datasets match
+`data()` exactly, including attributes; user edits remain independent, and
+fresh-session loading does not change the RNG. No numerical precision,
+optimizer control or test selection was reduced for timing. The earlier full
+installed regression plus scoped repairs remains valid within its recorded
+source and scope; this ordinary check is not a new exhaustive regression.
+
+The most recent complete-check command took 668.306 seconds, including a rounded 32-second
+installation. Check-only elapsed time is 636.306 seconds (635.806--636.806 from
+installation rounding), exceeding both the project's 480-second local headroom
+target and the previously applied 600-second ceiling. Examples take 165 seconds,
+tests 305, static code analysis 74, vignette rebuilding 18, and PDF/HTML manuals
+16 seconds each. No other heavy workload runs concurrently. Timing is not yet
+qualified; the affected-file saving is insufficient to close the local gap.
+Windows is treated as exceeding 600 seconds for planning, with current-source
+Windows performance still unmeasured.
+This is an identified working-tree candidate, not a clean release commit or
+published package. Historical checks below retain their original attribution.
+
+## Earlier October 19 delivery candidate
+
+The following results belong to the source archive with SHA256
+`f1b2b55187780047b80a0d80b5e63254cbbc3767e701111ff2d578bb85cea949`.
+It includes the final CML variance, normal-tail interval and help/workflow
+corrections, including a repaired person-data example and replayable G-study
+sampling-covariance example. API and inferential qualifications, defaults and migration
+behavior are settled within the [documented scope](ROADMAP.md). The version
+and date identify an unpublished candidate, not a CRAN release.
+
+The archive builds and installs locally, retaining all 17 unchanged tutorials
+and their index from the preceding standard build. All executable package R
+code is unchanged from the selected substantive source. One test reuses
+identical information for the same fit across confidence-level checks; a new
+test verifies the saved G-study example. No numerical accuracy, convergence
+criterion or supported design is reduced.
+
+That archive completed an ordinary macOS/R 4.6.1 `--as-cran --timings`
+check with **0 errors, 0 warnings and 2 notes**. Normal and `donttest` examples,
+10,956 ordinary test assertions (three declared On-CRAN skips), static analysis,
+vignette rebuilding and PDF/HTML manuals pass. The notes concern unavailable
+external time verification and `xcrun_db` residue. Remote incoming queries
+were disabled; external links and reverse dependencies were checked separately.
+
+With no concurrent heavy validation, the complete command took 671.055 seconds.
+Excluding the rounded 32-second installation gives **639.055 check-only seconds**
+(638.555--639.555 allowing for installation rounding). The 480-second local
+headroom target is not met. This is a valid local workload measurement, not a
+Windows result or evidence of satisfying the package's 600-second Windows
+ceiling. Required phases include static analysis (71 seconds), normal examples
+(41), `donttest` examples (161), tests (277), vignette rebuilding (18) and PDF/HTML
+manuals (15/14). No check scope or numerical accuracy was reduced.
+
+The preceding delivery archive
+(`bf1e9f0d02b94456e8ba6b8923c4d2ad61d3a78d2233673aa3378e06829c6db2`)
+had two errors in the same incomplete standardized-contrast example. Supplying
+its required person-level data fixed the example. That complete check
+supersedes that combined ordinary-check/scoped-repair evidence. The earlier
+557.794-second measurement remains invalid for cost qualification because its
+example workloads aborted and concurrent work occurred.
+
+That archive's saved-result checks pass in fresh sessions with optional
+dependencies present and hidden. The local documentation site is refreshed
+with source-matched reuse; its pages have no embedded example errors, broken
+local links or missing non-logo image alternatives.
+
+The complete installed `NOT_CRAN=true` suite ran against the corrected-example
+archive (`84f065bfc6387dfc31add5bee0db8ba3eef699bfe681086e8054f3fb1cd21432`).
+It recorded 36,715 passing assertions and nine errors/warnings caused by two
+test files using source-tree paths for packaged CSV data. The final archive
+fixes those paths and permits platform rounding in the saved-example test;
+these are its only changes from that archive. All 253 assertions in the three
+affected installed test files then pass without failures, errors, warnings or
+skips. Combining the unchanged full-suite results with those reruns gives
+36,873 passing assertions, zero failures/errors/warnings and 57 declared skips
+for repository-only sources, documentation and validation artifacts. Function
+definitions and the graphics function used by tests are restored after both
+runs. This is a complete run plus scoped repairs, not a second clean full run.
+
+The CRAN source index checked on October 19 contains 25,435 packages and no reverse Depends,
+Imports, LinkingTo, Suggests or Enhances for mfrmr. Non-CRAN consumers are outside
+this check. URL review covers 340 occurrences / 163 distinct references, including
+128 HTTP(S) URLs, with status exclusions disabled. Three new documentation URLs
+return 404 on the older hosted site; their current local pages are present and
+checked, but deployment and hosted verification remain required. Three other
+findings are PubMed browser verification (203), an Annenberg access refusal (403)
+and a Geyer-page connection timeout. Separate official-page/index retrieval
+confirms those references; these are attributed access findings, not a clean
+automated URL result. No blanket URL exclusions were added.
+
+Final integration, execution-cost qualification, matching Windows/remote checks
+and hosted URL/site verification remain open. No hosted-site publication or
+CRAN submission has been performed.
+
+The following integration record belongs to the earlier source and is retained
+with its original archive identity; its timings do not measure the October 20
+source.
+
+# Historical October 19 candidate integration
+
+Candidate preparation dated October 19, 2026. The current
+[roadmap](ROADMAP.md) accepts the implemented release claims and connected user
+workflows within their declared scope, including native RSM/PCM conditional
+estimation, same-fit population-SD MML contrasts and anchor migration. Broader
+inference research remains incomplete. Execution-cost and final platform
+qualification remain open; this candidate is not ready for CRAN submission. The date
+in DESCRIPTION and CITATION identifies candidate preparation, not publication.
+
+The October 19 macOS/R 4.6.1 ordinary `--as-cran` check completed normal and
+`donttest` examples, representative tests, vignette rebuilding and PDF/HTML
+manuals. Its initial result was **1 error, 1 warning and 4 notes**. The error
+was an obsolete test expectation that omitted CML from the available methods.
+The warning concerned duplicated `x`/`object` help entries. A help-width note
+identified a caption default that would be truncated in the PDF manual.
+All three are corrected. Focused tests against the corrected installation,
+installed help-usage and code/documentation checks, line-width checks, and
+regeneration of the affected PDF/HTML help pass. The caption returns exactly
+the same text. The corrected archive retains the unchanged executed tutorials
+and their index; saved CML/MML plots and reports replay without estimation.
+This combines an initial complete check with scoped corrections, rather than
+a new clean complete check of the corrected archive.
+
+The corrected source archive's SHA256 is
+`fc05132fb29fa744b5781ec724af377d2e8256d72cca831464d1a4c9c5286a82`.
+Initial check-only elapsed time was **676.979 seconds**, excluding the rounded
+32-second installation; the complete command took 708.979 seconds. The
+recorded 600-second delivery ceiling and 480-second headroom target remain
+unmet. The slow MINQUE example took 36.716 seconds. The other retained notes
+concern unavailable external time verification and temporary `xcrun_db`
+residue. Remote incoming queries were disabled. This run did not execute the
+exhaustive `NOT_CRAN=true` suite or a matching Windows check. No publication or
+CRAN submission has been performed.
+
+The records below belong to earlier sources and do not qualify this candidate.
+
+# Historical October 16 development integration
+
+The October 16 local macOS/R 4.6.1 complete ordinary check includes normal and
+`donttest` examples, representative tests, vignette rebuilding and PDF/HTML
+manuals. The initial run reports **1 error, 0 warnings and 5 notes**. Its error
+contains two obsolete test expectations: the balanced crossed default is now
+MLS, and six registered S3 methods were absent from the expected-method list.
+The other 10,010 assertions passed, with three declared skips. Both expectations
+are corrected; the two affected installed test files then pass all 60 assertions.
+The static-analysis note about unqualified `nlminb`/`qchisq` calls is also fixed
+with explicit `stats::` calls. Focused usage checks and a separate session with
+`stats` not attached pass. The corrected archive preserves the unchanged
+vignette outputs and matches the corrected source. This is combined evidence,
+not a new clean complete check of that archive.
+
+The remaining initial notes concern the development version, unavailable
+external time verification, a slow example and temporary `xcrun_db` residue.
+Remote incoming queries were disabled and repository indexes were unavailable.
+Check-only elapsed time was **690.694 seconds**, excluding the rounded 33-second
+installation; the complete command took 723.694 seconds. This exceeds both
+the local 600-second ceiling and the 480-second headroom target. The incomplete
+MINQUE sampling-covariance example took 37.561 seconds in the ordinary example
+pass and also executes in the `donttest` pass. Cost qualification remains open
+for final delivery, after required feature work; the elapsed time alone does
+not establish a statistical defect or an unusable analysis workflow. Successful
+numerical checks are retained. The
+October 15 result of 557.371 check-only seconds belongs to its earlier source
+and is not substituted for this measurement.
+
+The five-environment ordinary CI matrix passes on its identified development
+commit. It uses `--no-manual` and does not measure a complete Windows check.
+The current saved-result and optional-dependency presence/absence review also
+passes locally. These are separate evidence scopes, not a single final-source
+release check. Complete Windows timing remains deferred until the intended
+features are assembled; the final matching Windows check must still satisfy
+the required ceiling.
+
+No final submission archive, CRAN submission or release acceptance is claimed.
+The older records below identify rc.6 and September 30 development sources;
+retain their original attribution rather than using them as the final
+candidate's submission comments. Current source identities, logs and evidence
+reuse decisions are retained locally.
+
+# Historical mfrmr 0.2.4 rc.6 submission preparation
 
 Preparation draft, updated September 26, 2026. This source has not been
 submitted to CRAN. Both rc.6 Win-builder results have been retrieved and

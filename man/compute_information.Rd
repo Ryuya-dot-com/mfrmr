@@ -192,9 +192,9 @@ be used in reporting, follow with \code{\link[=precision_review_report]{precisio
 \enumerate{
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Run \code{compute_information(fit)}.
-\item Plot with \code{plot_information(info, type = "tif")}.
+\item Plot with \code{plot(info, type = "tif")}.
 \item If needed, inspect facet contributions with
-\code{plot_information(info, type = "iif", facet = "Rater")}.
+\code{plot(info, type = "iif", facet = "Rater")}.
 }
 }
 
@@ -208,5 +208,5 @@ head(info$tif)
 info$tif$Theta[which.max(info$tif$Information)]
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot_information]{plot_information()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \link[=plot.mfrm_information]{plot(x)}
 }

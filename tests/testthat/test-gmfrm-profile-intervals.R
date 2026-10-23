@@ -214,21 +214,21 @@ test_that("both families profile the literal marginal likelihood with nuisance r
 test_that("two-family profile targets need unambiguous owner and level identities", {
   x <- gmfrm_profile_fixture(); fit <- x$fit
   for (s in list(NULL, "t3", c(Task = "unknown"), c(unknown = "t3"), c(Task = "t1", Rater = "r1")))
-    expect_error(confint(fit, method = "profile", slope = s), "identify one owner and level")
-  expect_error(confint(fit, method = "profile", slope = c(Task = "t3"), scale = "relative"), "Two-family intervals currently require")
-  expect_error(confint(fit, method = "profile", slope = c(Task = "t3"), simultaneous = "bonferroni"), "multiplicity")
-  expect_error(confint(fit, method = "profile", slope = c(Task = "t3"), profile_control = list(maxit = NULL)), "positive finite")
-  expect_error(confint(fit, method = "sandwich"), "Two-family intervals currently require")
+    expect_error(confint(fit, parm = "slopes", method = "profile", slope = s), "identify one owner and level")
+  expect_error(confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t3"), scale = "relative"), "Two-family intervals currently require")
+  expect_error(confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t3"), simultaneous = "bonferroni"), "multiplicity")
+  expect_error(confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t3"), profile_control = list(maxit = NULL)), "positive finite")
+  expect_error(confint(fit, parm = "slopes", method = "sandwich"), "Two-family intervals currently require")
   failed <- fit; failed$summary$Converged <- FALSE
-  expect_error(confint(failed, method = "profile", slope = c(Task = "t3")), "per-Person")
+  expect_error(confint(failed, parm = "slopes", method = "profile", slope = c(Task = "t3")), "per-Person")
   # Cached QR factors are numerical workspace, not part of model identity.
   uncached <- failed
   uncached$config$gpcm_spec$log_slope_design@factors <- list()
-  expect_error(confint(uncached, method = "profile", slope = c(Task = "t3")), "per-Person")
+  expect_error(confint(uncached, parm = "slopes", method = "profile", slope = c(Task = "t3")), "per-Person")
   changed <- uncached
   changed$config$gpcm_spec$log_slope_design@x[1] <-
     changed$config$gpcm_spec$log_slope_design@x[1] + .01
-  expect_error(confint(changed, method = "profile", slope = c(Task = "t3")),
+  expect_error(confint(changed, parm = "slopes", method = "profile", slope = c(Task = "t3")),
                "product specification must match")
   # Reuse completed searches; this tests dispatch, checks and result identity,
   # not another costly calculation of the same endpoints.
@@ -238,7 +238,7 @@ test_that("two-family profile targets need unambiguous owner and level identitie
   }, .package = "mfrmr")
   for (owner in c("Task", "Rater")) {
     s <- setNames(if (owner == "Task") "t3" else "r3", owner)
-    ci <- suppressWarnings(confint(fit, method = "profile", slope = s))
+    ci <- suppressWarnings(confint(fit, parm = "slopes", method = "profile", slope = s))
     expect_equal(as.vector(ci), as.vector(x$profiles[[owner]]))
     expect_identical(attr(ci, "settings")$slope, s)
     expect_identical(attr(ci, "diagnostics")$SlopeOwner, owner)
@@ -255,7 +255,7 @@ test_that("two-family profile targets need unambiguous owner and level identitie
   p <- do.call(mfrm_gmfrm_problem, spec)
   renamed <- mfrm_gmfrm_fit_result(p, mfrm_gmfrm_em(p, start = fit$opt$par, maxit = 1, score_tol = 1e-7))
   for (owner in spec$slope_facets) {
-    ci <- suppressWarnings(confint(renamed, method = "profile", slope = setNames("level:3", owner)))
+    ci <- suppressWarnings(confint(renamed, parm = "slopes", method = "profile", slope = setNames("level:3", owner)))
     expect_identical(attr(ci, "diagnostics")$SlopeOwner, owner)
     expect_identical(attr(ci, "diagnostics")$SlopeLevel, "level:3")
   }
@@ -269,7 +269,7 @@ test_that("two-family saved profiles retain failures and meanings through existi
   for (ci in x$profiles) {
     p <- plot(ci, draw = FALSE)
     expect_identical(p$labels$x, "Component discrimination (log scale)")
-    expect_match(p$labels$caption, "Dotted: Wald limits")
+    expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "Dotted: Wald limits")
     expect_identical(plot_data(p, "slope_metadata"), attr(ci, "diagnostics"))
     expect_identical(plot_data(as_ggplot(attr(p, "mfrmr_plot_data"))), plot_data(p))
     expect_no_error(ggplot2::ggplot_build(p))

@@ -10,9 +10,9 @@ stop_if_product_slopes <- function(fit, helper) {
   if (mfrm_has_product_slopes(fit)) {
     stop(new_gpcm_scope_error(paste0("`", helper, "` is not available for two slope families. ",
       "Use summary(fit) and mfrm_curve_intervals(fit, newdata) for fitted curves without intervals; ",
-      "confint(fit) separately checks experimental component log-Wald intervals. ",
+      "confint(fit, parm = 'slopes') separately checks experimental component log-Wald intervals. ",
       "mfrm_response_diagnostics(fit) supplies descriptive posterior residuals with the fitted integration method. ",
-      if (mfrmr_adaptive_integration(fit$config)) "Adaptive two-family profiles remain unavailable. ",
+      "An explicit method = 'profile' call can separately review one named component slope. ",
       "saved curves can be passed to mfrm_results(fit, include = c('fit', 'plots'), compute = 'never', intervals = curves)."),
       helper = helper, status = "blocked", area = "Two-family GPCM outputs"))
   }
@@ -27,7 +27,8 @@ build_gpcm_product_slope_spec <- function(prep, slope_facets, step_facet) {
   levels <- prep$levels[slope_facets]
   n <- lengths(levels)
   if (any(n < 2L)) stop("Product slopes require at least two levels per facet.")
-  ids <- as.data.frame(lapply(prep$data[slope_facets], as.integer), check.names = FALSE)
+  ids <- as.data.frame(unname(lapply(prep$data[slope_facets], as.integer)), check.names = FALSE)
+  names(ids) <- slope_facets
   cells <- unique(ids)
   cells <- cells[order(cells[[1]], cells[[2]]), , drop = FALSE]
   rownames(cells) <- NULL
@@ -126,11 +127,13 @@ mfrm_gpcm_product_slope_targets <- function(par, config) {
   component_design <- as.matrix(Matrix::bdiag(
     sum_zero_jacobian(n[1]), diag(n[2])))
   metadata <- mfrm_gpcm_product_metadata(spec)
-  contexts <- as.data.frame(Map(function(ids, levels) levels[ids],
-                                spec$cells, spec$component_levels), check.names = FALSE)
+  contexts <- as.data.frame(unname(Map(function(ids, levels) levels[ids],
+                                spec$cells, spec$component_levels)), check.names = FALSE)
+  # data.frame list-name expansion can transliterate names in a C locale.
+  names(contexts) <- names(spec$component_levels)
   make_target <- function(design, labels, table, description) {
     jac <- matrix(0, nrow(design), length(par))
-    jac[, build_param_slices(sizes)$log_slopes] <- as.matrix(design)
+    jac[, build_param_slices(sizes)[["log_slopes"]]] <- as.matrix(design)
     value <- as.numeric(jac %*% par)
     list(value = value, estimate = exp(value), jacobian = jac,
          labels = labels, log_scale = TRUE, metadata = table,
@@ -280,18 +283,22 @@ mfrm_gpcm_product_inference <- function(fit) {
   rank <- mfrmr_transformation_rank_ladder(scaled)
   fine_rank <- mfrmr_transformation_rank_ladder(scaled_fine)
   out$score_rank <- rank$rank_ladder
+  score_rank <- if (rank$valid) min(rank$rank_ladder$Rank) else NA_integer_
+  fine_score_rank <- if (fine_rank$valid) min(fine_rank$rank_ladder$Rank) else NA_integer_
+  rank_deficient <- min(score_rank, fine_score_rank) < p
   derivative_error <- max(abs(scaled-scaled_fine))
   q <- config$estimation_control$quad_points
   out$numerical_checks <- data.frame(QuadraturePoints=q,ComparisonPoints=2L*q-1L,
     Integration=if (adaptive) "adaptive" else "fixed",
-    FreeParameters=p,ScoreRank=min(rank$rank_ladder$Rank),DerivativeDifference=derivative_error,
+    FreeParameters=p,ScoreRank=score_rank,FineScoreRank=fine_score_rank,
+    ScoreRankDeficient=rank_deficient,DerivativeDifference=derivative_error,
     MaximumMeanScore=NA_real_,CurvatureScaledGradient=NA_real_,InverseResidual=NA_real_,
     QuadratureScoreShift=NA_real_,QuadratureCovarianceChange=NA_real_)
-  if (!record("Local score rank", rank$valid && fine_rank$valid &&
-      all(rank$rank_ladder$Rank == p) && all(fine_rank$rank_ladder$Rank == p) &&
-      derivative_error <= 1e-6,
-      paste("Observed Person scores must span all",p,"free parameters stably at both derivative steps.",
-        "A failure does not by itself prove structural nonidentifiability."))) return(refuse())
+  # Empirical score rank governs an OPG/sandwich covariance, not the inverse
+  # observed Hessian used here. Retain it as a diagnostic, not an N > p veto.
+  if (!record("Score derivative stability", rank$valid && fine_rank$valid &&
+      is.finite(derivative_error) && derivative_error <= 1e-6,
+      "Person marginal-score derivatives must be finite and agree within 1e-6 after column scaling at both derivative steps.")) return(refuse())
   gradient <- -colSums(scores)
   scaled_gradient <- sqrt(max(0,drop(crossprod(gradient,info$cov%*%gradient))))
   tol <- if (adaptive) 1e-6 else min(fit$gmfrm$controls$score_tol %||% 1e-6,1e-6)
@@ -323,9 +330,12 @@ mfrm_gpcm_product_inference <- function(fit) {
   optimization_caution <- if (scaled_gradient > 1e-4) sprintf(
     "Small optimization residual: standardized Newton displacement is %.3g (above 1e-4, at most 0.01). The intervals retain this local numerical approximation.",
     scaled_gradient) else ""
+  rank_caution <- if (rank_deficient) sprintf(
+    "Observed Person-score rank is deficient (%d of %d free parameters). These model-based intervals use the observed Hessian, not an empirical score covariance; full-parameter sandwich inference is unavailable and finite-sample coverage is unqualified.",
+    min(score_rank, fine_score_rank), p) else ""
   out$check <- list(eligible=TRUE,
     review="Experimental local Wald approximation from full joint marginal information; sampling coverage is not qualified.",
     caution=trimws(paste("Experimental two-family intervals: local numerical checks passed, but global identification, boundary absence and sampling coverage are not established.",
-      optimization_caution,paste(mfrm_mml_information_caution(info),collapse=" "))))
+      optimization_caution,rank_caution,paste(mfrm_mml_information_caution(info),collapse=" "))))
   out
 }

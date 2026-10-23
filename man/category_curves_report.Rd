@@ -36,6 +36,17 @@ Build a category curve export bundle (preferred alias)
 }
 \details{
 Preferred high-level API for category-probability curve exports.
+\code{model_context} records the fitted step/slope owners. \code{curve_profiles} maps
+each \code{CurveGroup} to the owner levels, including separate-owner GPCM.
+Native curves are conditional reference profiles with additive locations
+fixed at zero; see the retained \code{CurveBasis} and \code{PredictorOffset} columns.
+This helper does not compute step/curve intervals or support two-family GPCM.
+\code{plot(out)} and its selected curve views use base graphics. Automatic
+\code{\link[=as_ggplot]{as_ggplot()}} conversion of this bundle is unavailable because curve
+families have distinct targets and scales; extract \code{plot_long} and retain
+its curve-family and group columns for custom figures. For fitted CCC
+graphics, \link[=plot.mfrm_fit]{plot(fit, type = "ccc")} has a dedicated conversion;
+review its reference-profile settings before comparing curves.
 Returns tidy curve coordinates and summary metadata for quick
 plotting/report integration without calling low-level helpers directly.
 The expected-score table also carries the per-curve score variance and
@@ -116,14 +127,15 @@ partial credit model}. Applied Psychological Measurement, 17(4),
 \code{boundary_status = "none"} when cumulative \code{.5} boundary lines should
 be suppressed. \code{plot(out, type = "category_probability")} and
 \code{plot(out, type = "conditional_probability")} are explicit aliases for
-the same category-probability curves as \code{type = "ccc"}. Use
+the same category-probability curves as \code{type = "ccc"}. The historical
+conditional alias is ordinary P(k), not the FACETS adjacent-conditional
+curve P(k)/(P(k-1)+P(k)); prefer the unambiguous \code{"ccc"} name. Use
 \code{plot_data(out, component = "plot_long")} when rebuilding the curves with
 ggplot2, plotly, or another R graphics system.
 }
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- category_curves_report(fit, theta_points = 101)
@@ -137,7 +149,6 @@ p_info <- plot(out, type = "category_information", draw = FALSE)
 head(p_info$data$category_information)
 curve_long <- plot_data(out, component = "plot_long")
 head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
-}
 }
 \seealso{
 \code{\link[=category_structure_report]{category_structure_report()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}},

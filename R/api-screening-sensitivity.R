@@ -153,7 +153,7 @@ print.mfrm_screening_sensitivity <- function(x, ...) {
 plot.mfrm_screening_sensitivity <- function(x, style = c("tiles", "curves"),
     direction = "either", metric = c("false_flags", "detection"), condition = NULL,
     quantity = c("rate", "unavailable"), draw = TRUE, palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, text_scale = 1, point_size = 2.5, ...) {
   rlang::check_dots_empty(); style <- match.arg(style); metric <- match.arg(metric)
   quantity <- match.arg(quantity); palette <- match.arg(palette)

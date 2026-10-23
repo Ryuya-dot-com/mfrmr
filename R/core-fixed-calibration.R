@@ -446,12 +446,21 @@ mfrmr_apply_typed_anchors <- function(config, anchors) {
     } else {
       NULL
     }
-    spec <- build_facet_constraint(
-      levels = config$facet_specs[[facet]]$levels,
-      anchors = anchors_map,
-      groups = groups_map,
-      group_values = group_values,
-      centered = isTRUE(config$facet_specs[[facet]]$centered)
+    spec <- tryCatch(
+      build_facet_constraint(
+        levels = config$facet_specs[[facet]]$levels,
+        anchors = anchors_map,
+        groups = groups_map,
+        group_values = group_values,
+        centered = isTRUE(config$facet_specs[[facet]]$centered),
+        centering_scope = config$facet_specs[[facet]]$centering_scope %||% "remainder"
+      ),
+      error = function(error) {
+        mfrmr_typed_anchor_abort(
+          "ANCHOR_CONSTRAINT_INCOMPATIBLE", "constraints.anchors",
+          paste0("facet `", facet, "`: ", conditionMessage(error))
+        )
+      }
     )
     for (group_id in unique(stats::na.omit(spec$groups))) {
       members <- which(spec$groups == group_id)
@@ -733,7 +742,11 @@ mfrmr_calibration_extract_identification <- function(fit) {
       ConstraintId = sprintf("facet_constraint::%d", facet_index),
       ParameterClass = "facet",
       OwnerFacet = facet,
-      ConstraintType = if (has_anchor) "typed_anchor_expansion" else "sum_to_zero",
+      ConstraintType = if (!isTRUE(spec$centered)) {
+        if (has_anchor) "typed_anchor_expansion_uncentered" else "uncentered"
+      } else if (has_anchor) {
+        paste0("typed_anchor_expansion_", spec$centering_scope %||% "remainder")
+      } else "sum_to_zero",
       Target = sprintf("facet_levels::%d", length(spec$levels)),
       Value = NA_real_,
       FreeDimension = as.integer(spec$n_params),
@@ -1089,8 +1102,11 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   quad_points <- as.integer(scoring_quad_points)
 
   params <- if (is.null(adjusted)) {
-    sizes <- build_param_sizes(fit$config)
-    expand_params(fit$opt$par, sizes, fit$config)
+    tryCatch({
+      sizes <- build_param_sizes(fit$config)
+      expand_params(fit$opt$par, sizes, fit$config)
+    }, error = function(e) mfrmr_calibration_abort("SOURCE_READINESS_INELIGIBLE", "fit",
+      paste("Source parameters do not match the retained model.", conditionMessage(e))))
   } else adjusted$params
   coordinates <- mfrmr_calibration_extract_coordinates(fit, params)
   interactions <- mfrmr_calibration_extract_interactions(fit, coordinates)
@@ -1292,8 +1308,9 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   if (jml && model != "GPCM") x$eligibility$source_scoring_evidence <- source_scoring
   if (product) {
     x$model$slope_composition <- "product"
-    x$model$observed_contexts <- unique(as.data.frame(lapply(
-      fit$prep$data[fit$config$slope_facet], as.character), check.names = FALSE))
+    x$model$observed_contexts <- unique(as.data.frame(unname(lapply(
+      fit$prep$data[fit$config$slope_facet], as.character)), check.names = FALSE))
+    names(x$model$observed_contexts) <- fit$config$slope_facet
     rownames(x$model$observed_contexts) <- NULL
   }
   x$integrity$semantic_components <- mfrmr_calibration_semantic_components(x)
@@ -1688,6 +1705,49 @@ mfrmr_review_calibration <- function(x) {
           }
         }
       }
+    }
+  }
+
+  # Older artifacts have ambiguous facet labels; keep their stored meaning.
+  # Explicit labels in new exports can be checked against their actual map.
+  if (nrow(refusals) == 0L) {
+    explicit <- c("uncentered", "typed_anchor_expansion_uncentered",
+                  "typed_anchor_expansion_facet", "typed_anchor_expansion_remainder")
+    selected <- which(identification$ParameterClass == "facet" &
+                        identification$ConstraintType %in% explicit)
+    for (i in selected) {
+      row <- identification[i, , drop = FALSE]
+      problem <- tryCatch({
+        facet <- row$OwnerFacet
+        facet_levels <- levels$Level[levels$Facet == facet]
+        direct <- anchors[anchors$AnchorType == "direct" &
+                            anchors$OwnerFacet == facet, , drop = FALSE]
+        group <- anchors[anchors$AnchorType == "group" &
+                           anchors$OwnerFacet == facet, , drop = FALSE]
+        if (!length(facet_levels) ||
+            (row$ConstraintType == "uncentered" && nrow(direct) + nrow(group) > 0L))
+          stop("facet levels or anchor declarations do not match the constraint type")
+        spec <- build_facet_constraint(
+          levels = facet_levels,
+          anchors = setNames(direct$Value, direct$Level),
+          groups = setNames(group$GroupId, group$Level),
+          group_values = setNames(group$Value[!duplicated(group$GroupId)],
+                                  unique(group$GroupId)),
+          centered = !row$ConstraintType %in% c("uncentered", "typed_anchor_expansion_uncentered"),
+          centering_scope = if (row$ConstraintType == "typed_anchor_expansion_facet") "facet" else "remainder"
+        )
+        if (!identical(row$FreeDimension, as.integer(spec$n_params)) ||
+            !identical(row$Target, sprintf("facet_levels::%d", length(facet_levels))))
+          stop("stored free dimension or target differs from the facet constraint map")
+        values <- coordinates[coordinates$ParameterClass == "facet" &
+                                coordinates$OwnerFacet == facet, , drop = FALSE]
+        if (nrow(values) != length(facet_levels) || anyDuplicated(values$Level))
+          stop("each facet level requires one stored coordinate")
+        collapse_facet_with_constraints(values$Value[match(facet_levels, values$Level)], spec)
+        NULL
+      }, error = function(error) conditionMessage(error))
+      if (!is.null(problem)) add("IDENTIFICATION_CONTRACT_INVALID",
+        paste0("constraints.identification[", i, "]"), problem)
     }
   }
 
@@ -2414,7 +2474,9 @@ mfrmr_score_calibration <- function(calibration,
                                     missing_response = "error",
                                     event_id = NULL,
                                     adaptive_quad_points = NULL,
-                                    scoring_prior = NULL) {
+                                    scoring_prior = NULL,
+                                    cut_scores = NULL) {
+  cut_scores <- mfrm_validate_cut_scores(cut_scores)
   scoring_prior <- tryCatch(prediction_validate_scoring_prior(scoring_prior),
     error = function(e) mfrmr_calibration_abort("SCORING_PRIOR_INVALID", "scoring_prior", conditionMessage(e)))
   adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
@@ -2423,6 +2485,10 @@ mfrmr_score_calibration <- function(calibration,
   gpcm <- identical(calibration$model$family, "GPCM")
   jml <- identical(calibration$model$estimator, "JML")
   product <- identical(calibration$header$schema_version, 6L)
+  if (!is.null(cut_scores) && (!calibration$model$family %in% c("RSM","PCM") ||
+      !endsWith(calibration$scoring_basis$scoring_algorithm, "_v2")))
+    mfrmr_calibration_abort("SCORING_BASIS_UNSUPPORTED", "cut_scores",
+      "Cut-score probabilities require ordinary RSM/PCM continuous-posterior calibration; re-extract legacy grid artifacts.")
   if (product && !is.null(scoring_prior))
     mfrmr_calibration_abort("SCORING_BASIS_UNSUPPORTED", "scoring_prior",
       "Two-family scoring retains the fixed N(0,1) prior; overrides are not supported.")
@@ -2770,6 +2836,9 @@ mfrmr_score_calibration <- function(calibration,
       internal_score[scoring_rows] - calibration$response$rating_min
     )
     scored_weights <- weights[scoring_rows]
+    if (!is.null(cut_scores) && any(scored_weights != 1))
+      mfrmr_calibration_abort("SCORING_BASIS_UNSUPPORTED", "cut_scores",
+        "Cut-score probabilities require unit observation weights.")
     review_idx <- list(person = person_index, score_k = score_k,
       weight = scored_weights,
       step_idx = if (calibration$model$family %in% c("PCM", "GPCM")) {
@@ -2824,22 +2893,16 @@ mfrmr_score_calibration <- function(calibration,
         slope <- if (is.null(review_params$slopes)) 1 else review_params$slopes[review_idx$slope_idx[row]]
         logits <- slope * (k_values * (person_nodes[person_index[row], node] + base_eta[row]) - cumulative_step)
         maximum <- max(logits)
-        observed_log_probability <- logits[score_k[row] + 1L] -
-          (maximum + log(sum(exp(logits - maximum))))
+        logits <- logits - maximum
+        observed_log_probability <- logits[score_k[row] + 1L] - log(sum(exp(logits)))
         log_likelihood[person_index[row], node] <-
           log_likelihood[person_index[row], node] +
           scored_weights[row] * observed_log_probability
       }
     }
 
-    log_posterior <- if (adaptive) log_likelihood + basis$log_weights else
-      sweep(log_likelihood, 2L, log(prior_weights), "+")
-    posterior <- matrix(NA_real_, nrow(log_posterior), ncol(log_posterior))
-    for (i in seq_len(nrow(log_posterior))) {
-      maximum <- max(log_posterior[i, ])
-      denominator <- maximum + log(sum(exp(log_posterior[i, ] - maximum)))
-      posterior[i, ] <- exp(log_posterior[i, ] - denominator)
-    }
+    posterior <- mfrm_mml_person_bundle(log_likelihood, seq_along(person_labels),
+      basis, include_posterior = TRUE)$posterior
     if (any(!is.finite(posterior)) ||
         any(abs(rowSums(posterior) - 1) > 1e-12)) {
       mfrmr_calibration_abort(
@@ -2861,7 +2924,8 @@ mfrmr_score_calibration <- function(calibration,
     }, numeric(1))
     if (endsWith(calibration$scoring_basis$scoring_algorithm, "_v2")) {
       intervals <- mfrmr_person_posterior_intervals(review_idx, review_config, review_params,
-        base_eta, person_labels, population_spec = population, interval_level = interval_level)
+        base_eta, person_labels, population_spec = population, interval_level = interval_level,
+        cut_scores = cut_scores)
       lower <- intervals[, "Lower"]; upper <- intervals[, "Upper"]
     }
     observations <- tabulate(person_index, nbins = length(person_labels))
@@ -3076,6 +3140,18 @@ mfrmr_score_calibration <- function(calibration,
   if (identical(calibration$header$schema_version,5L)) {
     out$estimates$CalibrationMethod <- rep("Corrected JML",nrow(out$estimates))
     out$estimates$CorrectionOrder <- rep(calibration$eligibility$source_scoring_evidence$local_calibration_review$correction_order,nrow(out$estimates))
+  }
+  if (!is.null(cut_scores)) {
+    out$settings$cut_scores <- cut_scores
+    probabilities <- matrix(NA_real_, length(all_person_labels), 2L*length(cut_scores)+1L)
+    if (nrow(estimates)) probabilities[match(person_labels,all_person_labels),] <- intervals[, -(1:2), drop=FALSE]
+    disposition <- person_dispositions[match(all_person_labels,person_dispositions$Person),]
+    out$decisions <- mfrm_decision_table(probabilities, all_person_labels, cut_scores,
+      prior_mean, prior_sd,
+      ifelse(disposition$Disposition == "scored", "available_conditional",
+        ifelse(disposition$Disposition == "scored_review", "review_only", "unavailable")),
+      disposition$ReasonCodes)
+    out$notes <- c(out$notes, mfrm_decision_note())
   }
   out
 }

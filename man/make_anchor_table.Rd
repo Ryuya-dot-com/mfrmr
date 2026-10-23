@@ -8,7 +8,7 @@ make_anchor_table(
   fit,
   facets = NULL,
   include_person = FALSE,
-  digits = 6,
+  digits = NULL,
   readiness_policy = c("error", "review")
 )
 }
@@ -19,9 +19,11 @@ make_anchor_table(
 
 \item{include_person}{Include person estimates as candidate anchors. Use only
 when cross-run person identity and the intended longitudinal constraint
-are substantively justified.}
+are substantively justified. Fixed Person values are supported only by
+a receiving JML fit; MML rejects Person anchors.}
 
-\item{digits}{Rounding digits for anchor values.}
+\item{digits}{\code{NULL} (default) preserves the fitted numeric values. A
+nonnegative integer explicitly rounds them for display or external use.}
 
 \item{readiness_policy}{How a source fit that is not inference-ready is
 handled. \code{"error"} (default) refuses anchor export or reuse. \code{"review"}
@@ -38,6 +40,11 @@ Build a candidate direct-anchor table from fitted estimates
 This function performs a mechanical conversion from fitted estimates to the
 \code{Facet}/\code{Level}/\code{Anchor} schema accepted by \code{fit_mfrm()}. The returned rows
 are candidate direct constraints, not an approved anchor set.
+\code{Anchor} uses the internal, untransformed location metric. The table does
+not include category thresholds, GPCM slopes, model settings or source SEs;
+it is not a complete saved calibration. See \code{\link[=extract_mfrm_calibration]{extract_mfrm_calibration()}} for that
+separate workflow. Fixing an estimated value does not propagate its source
+uncertainty into the new fit.
 
 By default, the function refuses export when the source fit is not
 inference-ready under the current readiness contract. Set
@@ -49,16 +56,17 @@ the same meaning, check the observed design's connectedness, and run
 receiving-data support; it does not validate the source fit or the
 substantive invariance assumption.
 
-The \code{digits} parameter controls rounding precision.  Use at least 4
-digits for research applications; excessive rounding (e.g., 1 digit)
-can introduce avoidable calibration error.
+Keep \code{digits = NULL} for recalibration. Rounding individual anchors can
+break their joint sum or group-mean constraint, even at six decimal places.
+Explicitly rounded values are different constraints and must be reviewed
+before reuse; the fitter does not silently recenter supplied anchors.
 }
 \section{Interpreting output}{
 
 \itemize{
 \item \code{Facet}: facet name to be anchored in later runs.
 \item \code{Level}: specific element/level name inside that facet.
-\item \code{Anchor}: fixed logit value (rounded by \code{digits}).
+\item \code{Anchor}: fixed logit value (rounded only when \code{digits} is supplied).
 }
 }
 
@@ -73,14 +81,15 @@ can introduce avoidable calibration error.
 }
 
 \examples{
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 7, maxit = 30
+  ratings, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", rating_min = 1, rating_max = 4,
+  category_policy = "preserve"
 )
-anchors_tbl <- make_anchor_table(fit)
-head(anchors_tbl)
-summary(anchors_tbl$Anchor)
+# Select a facet deliberately; matching labels alone do not prove invariance.
+anchors_tbl <- make_anchor_table(fit, facets = "Rater")
+anchors_tbl
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}

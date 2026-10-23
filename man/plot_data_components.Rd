@@ -26,7 +26,6 @@ what shape they have, and which ones are most useful for custom graphics,
 dashboards, or report assembly.
 }
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -50,5 +49,4 @@ head(locations)
 
 # A different plot type has different reusable tables
 plot_data_components(fit, type = "ccc")
-}
 }

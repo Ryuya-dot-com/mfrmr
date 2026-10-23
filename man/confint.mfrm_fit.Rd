@@ -2,11 +2,13 @@
 % Please edit documentation in R/api-gpcm-intervals.R
 \name{confint.mfrm_fit}
 \alias{confint.mfrm_fit}
-\title{Approximate confidence intervals and comparisons for GPCM slopes}
+\alias{confint.mfrm_cml_fit}
+\alias{confint.mfrm_comparison_fit}
+\title{Confidence intervals for native fit coefficients and GPCM slopes}
 \usage{
 \method{confint}{mfrm_fit}(
   object,
-  parm = "slopes",
+  parm = NULL,
   level = 0.95,
   scale = c("relative", "standardized"),
   contrasts = NULL,
@@ -19,11 +21,22 @@
   slope = NULL,
   profile_control = list()
 )
+
+\method{confint}{mfrm_cml_fit}(object, parm = NULL, level = 0.95, ...)
+
+\method{confint}{mfrm_comparison_fit}(object, parm = NULL, level = 0.95, ...)
 }
 \arguments{
-\item{object}{A GPCM MML result from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
+\item{object}{A native MML or CML result from \code{\link[=fit_mfrm]{fit_mfrm()}}. Comparison-only
+CML fits return intervals for their saved targets. JML structural-truth
+intervals are unsupported. Extended models have their own methods.}
 
-\item{parm}{Must be \code{"slopes"}; other parameter families are not included.}
+\item{parm}{\code{NULL} (default) selects all entries of \code{coef(object)}; exact
+coefficient names or positive integer positions select a distinct subset
+in the requested order. \code{"slopes"} explicitly selects the separate GPCM
+slope interface described below. Inspect \code{names(coef(object))} before
+selecting coefficients: their names identify free parameter coordinates,
+not all displayed facet levels.}
 
 \item{level}{Nominal confidence level strictly between zero and one.}
 
@@ -58,7 +71,7 @@ default FALSE. This is not a small-sample accuracy guarantee.}
 \code{"bonferroni"} adjusts for all rows requested in this call. It does not
 adjust for other analyses or post-selection of targets.}
 
-\item{...}{Unused.}
+\item{...}{Unused; additional arguments are rejected.}
 
 \item{slope}{For \code{method = "profile"}, one exact level from
 \code{object$slopes$SlopeFacet}, selected for the research question. Required;
@@ -75,7 +88,12 @@ These limit numerical searches, not the mathematical parameter space.
 Numerical acceptance tolerances are not relaxed by these settings.}
 }
 \value{
-A matrix of class \code{mfrm_slope_intervals} with columns \code{Lower} and
+For coefficient intervals, a numeric matrix with percentage-labelled
+lower/upper columns and row names matching the selected coefficients.
+Attributes \code{level}, \code{method}, \code{target}, \code{diagnostics} (estimate, SE,
+availability and reason), and available covariance checks/cautions retain
+the interpretation. Unidentified CML comparisons remain missing rows.
+For \code{parm = "slopes"}, a matrix of class \code{mfrm_slope_intervals} with columns \code{Lower} and
 \code{Upper}, named by slope level. Printing shows estimates, bounds and any
 explanations when a bound cannot be calculated.
 Attributes \code{level}, \code{method}, \code{target}, and \code{diagnostics} describe the
@@ -84,11 +102,13 @@ scale SEs, \code{CIEligible}, \code{CIUse}, and an \code{InferenceReview} explai
 availability. Unavailable intervals have missing bounds.
 }
 \description{
-Compute confidence intervals for relative or standardized discriminations
-and specified slope comparisons in a native GPCM MML fit. Model/sandwich
+By default, compute pointwise Wald intervals in the same free coordinates
+as \link[=mfrm_fit_extractors]{coef()} and \link[=mfrm_fit_extractors]{vcov()}.
+Explicit \code{parm = "slopes"} instead computes intervals for relative or
+standardized discriminations and slope comparisons in a native GPCM MML fit. Model/sandwich
 methods do not refit; an explicitly requested profile reoptimizes nuisance
 parameters at each candidate value.
-The default is a pointwise model-based interval for each relative slope in
+Within \code{parm = "slopes"}, the default is a pointwise model-based interval for each relative slope in
 a one-family fit. Two-family fits use their fixed standard-normal scale and
 the separately checked experimental approximation described below.
 A relative slope above one
@@ -96,6 +116,44 @@ means a steeper response curve than the geometric-average slope; it is
 not a measure of rater agreement or a recommended scoring weight.
 }
 \details{
+\strong{Coefficient intervals and migration.} Before this API revision,
+\code{confint(fit)} was a GPCM slope-only interface. Use
+\code{confint(fit, parm = "slopes", ...)} to retain that target, its plotting and
+report attachments. Omitting \code{parm} now selects the same coordinates as
+\code{coef(fit)}, including free step offsets, log slopes and estimated
+population parameters. Log-variance intervals are not SD intervals;
+log-slope intervals are not positive relative-slope intervals. Anchors and
+dependent centered levels are absent from these free coordinates.
+For labelled facet levels or contrasts, use \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}; for
+population targets use \code{\link[=mfrm_population_intervals]{mfrm_population_intervals()}}.
+
+Coefficient intervals use \eqn{\hat b_j \mathbin{\pm}
+z_{(1+\mathrm{level})/2}\sqrt{V_{jj}}}{b_j +/- z_{(1+level)/2} sqrt(V_jj)}.
+MML reuses the qualified full joint
+covariance from \code{vcov(fit)}, with the same model/design restrictions and
+numerical checks; it can reevaluate information but does not refit. CML
+reuses saved conditional information. Its comparison-only method also
+respects saved target eligibility, retaining unavailable targets and reasons.
+When only CML information fails, finite numerical points remain in the fit;
+the default interval matrix contains missing bounds and its \code{diagnostics}
+records the information failure. The same missing-bound contract applies
+to eligible ordinary fixed-population RSM/PCM MML fits whose information is
+unavailable, provided the \code{NA} covariance matrix fits the information memory
+budget (see \link{mfrm_fit_extractors}). Inspect \code{coef(fit)} and \code{summary(fit)} for
+the retained points and limitations. No interval is inferred from a finite
+point alone.
+Neither route scores Persons, supplies JML structural-truth inference,
+guarantees finite-sample coverage, or includes uncertainty in fixed anchors.
+Saved CML covariance is not a new evaluation of the likelihood or information.
+Inspect \code{attr(ci, "diagnostics")} and the saved checks/cautions before reporting.
+
+All arguments after \code{level}, other than \code{...}, belong to \code{parm = "slopes"}.
+Supplying them without that selection is an error, so a request for a
+standardized slope, sandwich or profile interval cannot silently return a
+free-coordinate Wald interval. Dedicated extended-model, G/D-study and
+bootstrap-result \code{confint()} methods retain their documented defaults.
+
+\strong{GPCM slope intervals (\code{parm = "slopes"}).}
 Relative slopes have geometric mean one. If \eqn{\eta} denotes the
 G-1 free log-slope coordinates and \eqn{J} expands them to G sum-zero
 log slopes, their covariance is \eqn{J V_{\eta} J^T}. Here
@@ -112,6 +170,15 @@ results do not receive intervals. These one-family rules differ from the
 two-family checks below. Positive curvature is a local check,
 not a proof of a global maximum or accurate integration. Use
 \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} and different starts for consequential results.
+A known deficit in the marginal response-distribution dimension or a
+recorded complete-pattern first-order rank failure prevents regular inference,
+even if numerical differentiation produces a positive Hessian. For example,
+two binary items answered once by every Person have only three independent
+response probabilities, whereas the default one-family GPCM estimates four
+free parameters. More Persons on that same design cannot identify this model.
+Returned points are descriptive and unavailable intervals retain the reason;
+this is not a general minimum sample-size rule. Absence of this deficit is
+only a necessary condition, not proof of identification.
 A positive but ill-conditioned information matrix can be used with a warning
 when two refined numerical Hessians agree, inversion without regularization
 is accurate and a curvature-scaled gradient is small. Failure of any check
@@ -140,6 +207,19 @@ model-based refit alternative use \code{\link[=bootstrap_mfrm_gpcm]{bootstrap_mf
 Relative and standardized slope differences are different targets; their
 interval performance need not be the same. See the GPCM scope vignette
 for these distinctions and the observed limits of approximation.
+}
+\section{Fixed anchors in a one-family fit}{
+
+Model and sandwich slope intervals can use fixed facet anchors and group
+means when the joint-information and numerical checks pass. They condition
+on the supplied values and do not propagate uncertainty from their source
+calibration. A location anchor does not fix a slope or a step threshold;
+a fixed group mean does not fix every group member. This does not extend
+the separate profile-slope, native-location or portable-GPCM routes to
+anchored fits. Those routes retain their own exclusions.
+}
+
+\section{Information workspace}{
 
 The joint-information calculation includes all estimated parameters. Option
 \code{mfrmr.max_information_bytes} (default 256 MiB) budgets eight dense p-by-p
@@ -157,10 +237,11 @@ boundary solutions or that intervals for other parameters are valid.
 This method recomputes uncertainty for saved fits; it does not trust old
 interval flags or alter the supplied object.
 }
+
 \section{Experimental two-family slope intervals}{
 
 For the fixed-standard-normal MML model with two slope facets,
-\code{confint(fit)} requests log-Wald intervals for both sets of component slopes.
+\code{confint(fit, parm = "slopes")} requests log-Wald intervals for both sets of component slopes.
 Fixed-grid EM and direct adaptive fits use their own fitted marginal objective.
 For adaptive fits, differentiation includes movement of the quadrature nodes,
 their scale and the integration Jacobian; it does not freeze the fitted nodes.
@@ -174,12 +255,17 @@ unit-slope p-values are supplied.
 
 The default \code{method = "model"} uses \code{scale = "standardized"}, without
 contrasts or cluster adjustments. Bonferroni adjusts for all component
-slopes in that call. For fixed-grid EM only, an explicit \code{method = "profile"} profiles one named
+slopes in that call. An explicit \code{method = "profile"} profiles one named
 owner/level, retaining both families' scale constraints and reoptimizing
 all remaining slopes, locations and steps. The N(0,1) population is fixed,
 not an estimated nuisance parameter. Use, for example,
-\code{confint(fit, method = "profile", slope = c(Task = "t1"))}.
+\code{confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t1"))}.
 Replace Task and t1 with your actual column and level names.
+Both fixed-grid EM and adaptive direct fits retain their fitted integration
+method. Adaptive nodes, scales and Jacobians are recalculated at every trial;
+the source's posterior quadrature is not held fixed during optimization.
+The interval uses the likelihood loss after nuisance reoptimization for each
+constrained log slope. Its chi-square(1) calibration remains asymptotic.
 The result preserves owner, level, scale reference and the same-target
 Wald comparison through saved plots, reports and exports. This is a
 component interval, not an interval for the product of two slopes.
@@ -189,13 +275,18 @@ Effective slope-product and curve intervals, sandwich intervals and model
 ranking are not supplied for this model.
 
 Checks reevaluate the source identity, category support, engine-specific convergence and
-unregularized marginal information. The observed Person-score Jacobian
-must span all free coordinates at relative SVD tolerances 1e-10, 1e-8 and
-1e-6, using numerical derivative steps 1e-5 and 5e-6. Columns are normalized
-to unit Euclidean length; their maximum difference must be at most 1e-6.
-Full rank is evidence of local separation at this fitted point for the
-quadrature model, not global identification. Failure of this sufficient
-check does not prove structural nonidentifiability.
+unregularized marginal information. Person marginal-score derivatives
+use steps 1e-5 and 5e-6; after scaling both by the first matrix's column
+lengths, their maximum difference must be at most 1e-6. Empirical score rank
+is retained at relative SVD tolerances 1e-10, 1e-8 and 1e-6, with minimum
+ranks for both derivative steps in \code{ScoreRank} and \code{FineScoreRank}.
+\code{ScoreRankDeficient} and an additional warning flag deficient rank.
+Full empirical score rank is not required for the inverse observed Hessian
+used here: this Hessian is not the empirical outer product of scores.
+Rank deficiency alone neither proves structural nonidentifiability nor
+makes the model-based interval unavailable. It does prevent a nonsingular
+full-parameter empirical sandwich covariance. The other numerical checks
+remain necessary, and small-sample coverage is not established.
 
 The fresh mean marginal score must meet the smaller of \code{em_score_tol} and
 1e-6 for EM, or 1e-6 for adaptive direct fitting; the full score scaled by its covariance must have length at most
@@ -228,32 +319,39 @@ constrained nuisance solution must pass the absolute 1e-4 gradient check
 at both quadrature orders. The shared profile algorithm and failure rules
 described below also apply. No superiority to Wald or general coverage is
 established, and this does not make a rejected near-zero-slope source eligible.
-The two-family EM optimizer uses a per-Person objective scale internally;
+Two-family profile optimizers use a per-Person objective scale internally;
 likelihood ratios and all acceptance checks use the total likelihood.
-Adaptive two-family profiles are unavailable; an adaptive log-Wald result
-does not qualify constrained profile searches or their integration checks.
+Passing adaptive log-Wald checks does not by itself qualify the constrained
+profile searches; every candidate still needs its own integration checks.
 
 Every available two-family interval carries an experimental warning:
 global identification, absence of boundary alternatives and sampling
 coverage remain unestablished. Failed checks retain estimates, missing
 bounds and reasons. Inspect \code{attr(ci, "checks")}, \code{attr(ci, "numerical_checks")}
 and \code{attr(ci, "score_rank")}, or \code{apa_table(ci, which = "checks")}.
+In \code{attr(ci, "diagnostics")}, \code{CIEligible} records numerical interval
+availability; \code{CoverageQualified = FALSE} separately records that nominal
+sampling coverage has not been established for the target and design.
+This is neither a coverage estimate of zero nor a numerical-failure flag.
+Both fields persist in interval tables, saved results and exports, including
+explicitly requested two-family profile intervals. Older saved results
+may lack \code{CoverageQualified}; absence does not establish coverage.
 Plots and saved results/reports retain the approximation and its checks.
 This calculation does not change the original point estimates or resolve
 other warnings about the fitted model.
 
 For an unresolved two-family profile, distinguish the original fit from
-the constrained searches. \code{maxit} in \code{\link[=fit_mfrm]{fit_mfrm()}} controls the original EM
+the constrained searches. \code{maxit} in \code{\link[=fit_mfrm]{fit_mfrm()}} controls the original
 fit; \code{profile_control = list(maxit = ...)} in \code{confint()} controls each
 constrained BFGS stage. Inspect \code{apa_table(ci, which = "profile_checks")}
 and \code{which = "profile_endpoints"}. Checks at the fitted slope can fail
 when the two constrained starts disagree even though the original fit
 passed its checks. Increasing \code{quad_points} requires refitting and addresses
 integration discrepancies; it does not resolve disagreement between starts.
-\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} compares fixed-grid refits while preserving
-the model and EM settings. Its \code{intervals} entries are model-based Wald
+\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} compares refits while preserving
+the model, engine and integration method. Its \code{intervals} entries are model-based Wald
 intervals; they do not repeat a profile search. To assess a profile on a
-finer grid, explicitly call \code{confint()} with \code{method = "profile"} on the
+finer grid, explicitly call \code{confint()} with \verb{parm = "slopes", method = "profile"} on the
 corresponding entry in \code{review$fits}. If the problem is instead a constrained
 optimizer reaching its iteration limit, increase \code{profile_control$maxit};
 increasing the original fit's \code{maxit} does not change that profile limit.
@@ -267,7 +365,7 @@ replacement for log-Wald intervals; no coverage advantage is established.
 
 \section{One prespecified profile interval for one slope family}{
 
-Use \code{confint(fit, method = "profile", slope = "R01")} to investigate how
+Use \code{confint(fit, parm = "slopes", method = "profile", slope = "R01")} to investigate how
 well one relative discrimination is determined. Choose a level that actually
 belongs to the fit's slope facet. At each candidate log slope the sum-zero
 log-slope constraint is retained, including when the selected level is the
@@ -292,6 +390,12 @@ not recommended as a routine Wald replacement.
 Two starts (retained and neutral) must agree within 1e-5 NLL. Optimizer codes,
 nuisance gradients (at most 1e-4) and higher-order integration (NLL change at
 most 1e-5, gradient change and reference gradient at most 1e-4) are checked.
+The constrained negative-log-likelihood Hessian must also be finite and
+positive definite at both quadrature orders: two starts can otherwise agree
+at a stationary nuisance maximum or saddle. The attempt table retains the
+smallest eigenvalues as \code{NuisanceMinEigenvalue} and \code{ReferenceMinEigenvalue}.
+Failed or unresolved curvature leaves the profile point unavailable; no
+eigenvalue adjustment is used. This local check is not a global optimum test.
 For two slope families, if the initial two optimization stages do not converge, the search can
 retry in coordinates scaled by local curvature, with at most \code{maxit}
 iterations in this additional stage. This changes only how the optimizer
@@ -328,14 +432,33 @@ reported separately from mathematical unboundedness.
 }
 
 \examples{
-# After fitting a GPCM with method = "MML":
-# intervals <- confint(fit, parm = "slopes", level = 0.95)
-# Inspect fit$slopes$SlopeFacet and choose one level before profiling:
-# ci <- confint(fit, method = "profile", slope = "R01")
-# plot(ci, type = "profile", title = NULL)
-# apa_table(ci, which = "profile_endpoints")
-# attr(intervals, "diagnostics")[, c("SlopeFacet", "Estimate",
-#   "CIEligible", "InferenceReview")]
+# Compare intervals for free coefficients and relative discriminations.
+ratings <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "GPCM", method = "MML", step_facet = "Criterion",
+  slope_facet = "Rater", rating_min = 1, rating_max = 4,
+  category_policy = "preserve", quad_points = 61)
+# The default matches coef(fit): steps, locations and log slopes.
+coefficients_ci <- confint(fit, level = 0.95)
+head(coefficients_ci)
+attr(coefficients_ci, "diagnostics") # Availability and interpretation
+# Explicitly request positive relative slopes for rater comparison:
+intervals <- confint(fit, parm = "slopes", level = 0.95)
+intervals
+attr(intervals, "diagnostics")[, c("SlopeFacet", "Estimate",
+  "CIEligible", "InferenceReview")]
+# Relative slopes have geometric mean one. A value above one means a
+# steeper response curve, not greater severity or better rater quality.
+# Missing bounds need the saved reason; availability is not a coverage test.
+plot(intervals)
+file <- tempfile(fileext = ".rds")
+saveRDS(intervals, file) # Use a lasting path for your analysis
+saved <- readRDS(file)
+apa_table(saved) # Reuse the intervals without fitting again
+
+# A separate, prespecified profile calculation can be requested with
+# confint(fit, parm = "slopes", method = "profile", slope = chosen_rater).
+# Choose chosen_rater from fit$slopes$SlopeFacet; see the profile section.
 }
 \references{
 Fischer, S. M., and Lewis, M. A. (2021). A robust and efficient

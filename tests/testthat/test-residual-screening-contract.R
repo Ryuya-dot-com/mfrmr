@@ -7,6 +7,8 @@ test_that("Q3 counts unordered pairs and retains unavailable comparisons", {
     ifelse(diag$obs$Rater == levels[2], -person,
       ifelse(diag$obs$Rater == levels[3], 0, NA_real_)))
   q <- q3_statistic(fit, diag)
+  expect_match(q$notes, "Standardized residuals")
+  expect_match(q$notes, "not raw-residual Yen Q3")
   expect_equal(nrow(q$pairs), choose(length(levels), 2))
   expect_equal(q$summary$AvailablePairs, 1)
   expect_equal(q$summary$UnavailablePairs, nrow(q$pairs) - 1)
@@ -16,6 +18,7 @@ test_that("Q3 counts unordered pairs and retains unavailable comparisons", {
   expect_true(any(grepl("No residual variation", q$pairs$Interpretation)))
   expect_true(any(grepl("Insufficient shared persons", q$pairs$Interpretation)))
   heat <- plot_local_dependence_heatmap(fit, diag, draw = FALSE)
+  expect_identical(q$notes, heat$data$caption)
   expect_equal(heat$data$matrix, t(heat$data$matrix))
   expect_true(is.na(heat$data$matrix[levels[4], levels[4]]))
 

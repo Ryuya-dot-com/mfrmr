@@ -742,7 +742,7 @@ test_that("estimated-population scoring cannot bypass unresolved source validity
     stale$estimates$SourceScoringReady <- TRUE
     if (inherits(stale, c("mfrm_unit_prediction", "mfrm_plausible_values"))) {
       expect_error(summary(stale), "requires explicit review-only eligibility")
-      expect_error(mfrmr:::export_validate_optional_object(stale, class(stale)[1], "prediction"),
+      expect_error(mfrmr:::export_validate_optional_object(stale, class(stale)[1], "prediction", fit = fit),
                    "requires explicit review-only eligibility")
     }
     expect_error(print(stale), "requires explicit review-only eligibility")

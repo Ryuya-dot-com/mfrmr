@@ -82,24 +82,23 @@ package-native aliases such as \code{AdjustedAverage},
 \code{StandardizedAdjustedAverage}, \code{ModelBasedSE}, and \code{FitAdjustedSE} are
 appended to the formatted outputs.
 
-For the Rasch-family \code{RSM} / \code{PCM} branch, these tables follow the
-standard FACETS Linacre construction: fair averages are
-Rasch-measure-to-score transformations evaluated in a standardized
-mean/zero-facet environment.
-FairM uses mean other-facet measures (and mean person measure for non-person
-rows); FairZ uses zero references. Neither integrates over the observed
-assignment/person distribution. FairZ and its historical alias
-\code{StandardizedAdjustedAverage} are expected scores, not z-scores.
-If a free JML Person measure is infinite, the mean Person reference is
-unavailable: non-Person FairM values are \code{NA}, with the reason recorded in
-\code{FairMReference}. Finite optimizer traces are not substituted into that
-mean. FairZ uses a zero Person reference and does not require this mean.
+\code{RSM} fair scores use the shared scale. \code{PCM} retains each observation's
+step profile, converts the reference predictor to an expected score, then
+averages with rating weights. Averaging thresholds before conversion is
+not equivalent. FairM replaces other element locations by their means;
+FairZ replaces them by zero. The PCM scale exposure is retained, so fair
+scores can still depend on which scales were administered.
+The Person reference excludes nonfinite primary estimates and records
+eligible/excluded counts. With no finite Person reference, non-Person
+FairM is unavailable. FairZ does not need a Person mean. Neither target
+integrates over Person ability; these are expected scores, not z-scores.
 
 With \code{xtreme > 0}, \code{PrimaryMeasure} retains the fitted measure, including
 infinite JML estimates and fixed anchors, on the requested reporting scale.
 \code{MeasureBasis} identifies display-only replacements and \code{ExtremeAdjustment}
 records their amount in score units. The displayed \code{Measure} may differ
-from a fixed anchor; the anchor itself is unchanged. Measure SEs are
+from an unanchored extreme estimate. Fixed anchors retain their measure
+in both columns. Measure SEs are
 unavailable on replaced rows because the original SE does not describe the
 display adjustment. Fair-score calculations do not use the replacement.
 Recompute older diagnostics and recreate saved tables from the existing
@@ -112,9 +111,10 @@ element-conditional construction. For each slope-facet element
 computed at that element's own discrimination \eqn{a_{j^\star}}
 and threshold structure. Rows for non-slope facets (Person, Rater,
 \ldots) use the geometric-mean-one slope by the GPCM
-identification convention, so those rows remain continuous with
-the standard PCM Linacre fair-average and reduce to it exactly
-when all slopes equal one.
+identification convention and average the threshold profiles before score
+conversion. At unit slope the conversion reduces to the PCM kernel, but
+this aggregation need not equal PCM's average of administered-scale
+expectations for non-step-facet rows.
 This is an identification-based reporting convention for the package's
 \code{GPCM} route, not a unique free-discrimination score-side analogue
 to FACETS fair averages. Do not report it as FACETS score-side equivalence
@@ -147,7 +147,7 @@ descriptive follow-up prompts, not standalone evidence of rater bias.
 \enumerate{
 \item Run \code{fair_average_table(fit, ...)}.
 \item Inspect \code{summary(t12)} and \code{t12$stacked}.
-\item Visualize with \code{\link[=plot_fair_average]{plot_fair_average()}}.
+\item Visualize with \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}.
 }
 }
 
@@ -193,7 +193,7 @@ fair-average value.}
 availability (\code{ok} or \code{regularized}) does not establish inferential validity.
 \code{FairCIReportingUse} distinguishes diagnostic-only and unavailable rows.
 Full-refit coverage remains unverified. For RSM/PCM, this table does not
-supply fair-score SEs; \code{\link[=plot_fair_average]{plot_fair_average()}} can compute a conditional
+supply fair-score SEs; \link[=plot.mfrm_fit]{plot(x, type = "fair_average")} can compute a conditional
 interval from a fitted model by propagating only the focal measure SE.
 Summaries identify \code{FairMetric}: FairM for mean/both reference tables, FairZ
 for zero-reference tables, with matching score/SE column names.
@@ -226,7 +226,6 @@ slope-aware extension.)
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -250,7 +249,6 @@ fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
 head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
 # FairM uses the mean reference for the other facets; it is in score units
 # It is a conditional model prediction, not a guarantee of fairness
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=displacement_table]{displacement_table()}}

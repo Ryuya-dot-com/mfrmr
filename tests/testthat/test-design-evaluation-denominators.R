@@ -41,8 +41,15 @@ design_evaluation_denominator_fixture <- function() {
 test_that("design recommendations retain failed runs in convergence denominators", {
   x <- design_evaluation_denominator_fixture()
   runs <- x$rep_overview
+  build_schema <- mfrmr:::simulation_planning_schema
+  schema_calls <- 0L
+  local_mocked_bindings(simulation_planning_schema = function(...) {
+    schema_calls <<- schema_calls + 1L
+    build_schema(...)
+  }, .package = "mfrmr")
 
   s <- summary(x, digits = 10)
+  expect_identical(schema_calls, 1L)
   partial <- s$design_summary[s$design_summary$design_id == "D1", ]
   full <- s$design_summary[s$design_summary$design_id == "D2", ]
   expect_equal(partial$Reps, c(10, 10))

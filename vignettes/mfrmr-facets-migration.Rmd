@@ -26,10 +26,12 @@ boundary between the two systems. `GPCM` can be fit in `mfrmr`, but its slope-aw
 score semantics are intentionally outside the score-side FACETS output-contract
 route.
 
-The software reference target for this migration boundary is FACETS 64-bit
-4.5.1 (July 2026). A cited manual may retain its published 4.5.0 edition;
-software version and documentation edition are recorded separately. The
-coverage described here is not an external numerical-parity result.
+The local numerical comparison uses FACETS 64-bit 4.5.0. The online update
+history lists 4.5.3 (October 2026); a current web manual is not a version-pinned
+executable specification. The 4.5.1 history says the gtheory interface was
+replaced while the linked help still names gtheory. Keep the executable,
+manual edition and statistical decomposition distinct. The bounded executed
+comparisons below do not certify all FACETS options or versions.
 
 ## Mental model
 
@@ -58,10 +60,183 @@ contract.
 | Output | Tables 0-30 plus graphic files | Returned R objects with `summary()` and `plot()` methods |
 | Anchoring | Element/group anchors, rating-scale calibration, and reusable starting values | Element and group anchors; no general threshold/scale anchors or fixed-calibration starting-value bundle |
 | Repeated cells | Multiple observations may be represented within a design cell | Exact Person-by-facet duplicates are retained but force Data review; distinguish legitimate repeats with an event/occasion facet |
-| Bias / interaction | Table 14 | `estimate_bias()` and `bias_interaction_report()` |
-| Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and `plot_wright_unified()` |
+| Bias / interaction | Table 13 cell effects; Table 14 pairwise comparisons | `estimate_bias()` and `bias_interaction_report()`; conditional screens with the differences below |
+| Wright map / variable map | Graphic variable-map output | `plot(fit, type = "wright")` and `plot()` |
 | Fair average | Table 7 fair-M average | `fair_average_table()` |
 | Reproducibility | Specification, input data, FACETS version, and recorded run environment/settings | `build_mfrm_manifest()` plus `build_mfrm_replay_script()` |
+
+## Why results and decisions can differ
+
+Match the statistical question before comparing numbers. A FACETS-style table
+name does not guarantee the same calculation. For an existing FACETS study,
+first align the response model, retained categories, orientation, anchors and
+centering, observations and replication weights, and extreme-score treatment.
+Compare unrounded logits before user scaling. Then compare response
+probabilities, mean squares, df and standardization separately. FACETS uses
+[score-residual and measure-change convergence criteria](https://www.winsteps.com/facetman64/convergencecriteria.htm);
+an optimizer's success code alone does not establish agreement with them.
+
+The corrected candidate has a bounded executed comparison against FACETS
+4.5.0: complete binary ordinary JML data with unit weights and matched signs.
+Locations, SEs, MnSq, PTMEA and WHEXACT YES/NO agree within external report
+precision; bias estimates, baseline expected scores and the zero-bias summary
+also agree. This is not a drop-in equivalence claim for other models or options.
+
+| Quantity | Current definition | Consequence for interpretation |
+|---|---|---|
+| Fit ZSTD | Diagnostics default to FACETS fourth-moment df. `whexact = FALSE` is YES and `TRUE` is NO; both use the cube root. | Use `fit_df_method = "engine"` and `whexact = "legacy_linear"` to reproduce the former engine/TRUE convention. `"both"` exposes df sensitivity. Cutoff decisions may change. |
+| Point-measure correlation | PTMEA now uses the oriented measure sum for each response, including Person rows. | Old Person-only correlations must be recomputed. |
+| Displacement | Updates now include facet orientation and the score derivative. | Negative-facet released estimates now move in the correct coordinate; this is still a conditional one-step diagnostic. |
+| Facet chi-square | The statistic and df use the same finite estimates and positive finite SEs. | Excluded levels are reported; a missing SE cannot silently contribute df. |
+| PCM fair averages | Expectations under administered scales are averaged using response weights. | Averaging thresholds first can give different scores and is no longer used. |
+| Bias cell tail area | Weighted count minus 1 is retained. FACETS 4.5.0 reports count 8 and df 7 in the executed example, although Table 13 says count minus 2. | Specify the executable version; the web description alone does not establish its calculation. Neither reference is a calibrated fairness test. |
+| Bias expected score | `Expctd Score` and `Obs-Exp Average` now refer to the main analysis. | Separate after-bias columns show how much of that departure the shift explains. |
+| Bias summary chi-square | Tests the cells against zero with df equal to the cell count. | A common nonzero bias no longer disappears through centering. |
+| Pairwise bias | Uses `target + bias/TargetSign`, conditional cell SEs and modified Rasch-Welch df rounded down, matching FACETS 4.5.0 unequal-count results. | `df_method = "classical"` retains the earlier continuous Welch reference. Missing references withhold comparisons; neither mode includes calibration uncertainty. |
+| Unexpected responses | Defaults to `abs(z) >= 3`, `rule = "residual"`. | The older probability OR rule is opt-in; rankings now treat tied modes symmetrically. |
+
+Definitions are given in the official [WHEXACT](https://www.winsteps.com/facetman64/whexact.htm),
+[point-measure](https://www.winsteps.com/facetman64/gstats.htm),
+[Table 7](https://www.winsteps.com/facetman64/table7.htm),
+[fair-average](https://www.winsteps.com/facetman64/fairaverage.htm), and
+[Table 13](https://winsteps.com/facetman64/table13.htm) documentation.
+The count-minus-1 observation above describes the executed version and example,
+not a correction to the external manual or a claim about every FACETS version.
+
+Recompute `diagnose_mfrm()` from a saved fit, then recreate `estimate_bias()`
+and reports. Corrected native diagnostics and bias results carry
+`calculation_version = 2`; do not add that field manually to old values.
+These diagnostic changes do not require refitting the calibration.
+
+For a negatively oriented rater, the model predictor contains
+`-severity + bias`, so its context-specific severity is `severity - bias`.
+The [Table 14 examples](https://www.winsteps.com/facetman64/table14.htm)
+make this direction explicit. Reversing the contrast leaves a two-sided tail
+area unchanged but reverses the substantive feedback. Pairwise df also needs
+its own version specification: the current
+[t-statistics manual](https://www.winsteps.com/facetman64/t-statistics.htm)
+describes a 2025 modification alongside classical Welch. The executed
+FACETS 4.5.0 unequal-count comparison confirms the modified formula and
+integer truncation for the tail area. `DFUnrounded` and `DFMethod` retain
+that choice; `df_method = "classical"` reproduces the earlier reference.
+
+Corrected pairwise tables carry `CalculationVersion = 3`. Recreate
+`build_fixed_reports()` and `bias_pairwise_report()` from the current bias
+bundle. First recreate old bias bundles from the saved fit and current
+diagnostics; no main calibration refit is needed. Historical report values
+are not automatically corrected by reloading them.
+Local and contrast SEs describe conditional cell uncertainty; calibration
+uncertainty and cross-cell covariance are not propagated. The earlier claim
+that these contrasts were generally conservative was incorrect.
+Check `ScreenUnavailable` in the pairwise summary before reading `Flagged`;
+the summary covers the full family even when `top_n` limits the table.
+
+The [Table 4 rule](https://www.winsteps.com/facetman64/table4.htm) and its
+[default threshold](https://www.winsteps.com/facetman64/unexpected.htm) now
+match the native residual-only default. To retain the exploratory probability
+screen, request `abs_z_min = 2, prob_max = .30, rule = "either"`. A fixed .30
+cutoff has no universal interpretation: five equally likely categories each
+have probability .2, so it flags every response. For tied modes, `MostLikely`
+is missing, `MostLikelyCount` records the tie and `CategoryGap` uses the nearest
+mode. This ranking cannot decide which rater is unfair or which ratings to remove.
+
+Category reports now distinguish the observed generating-measure average
+(`AvgMeasure`), model-expected generating-measure average (`ExpectedMeasure`),
+Person-only mean and expected response score. Category residual MnSq is
+descriptive: conditioning on the observed category removes the universal
+unit baseline, so category ZSTD and its flags are unavailable. This does not
+turn a missing fit flag into evidence that the category functions well.
+
+In `category_structure_report()`, `MedianThreshold` now means a cumulative
+50% boundary; `AndrichThreshold` retains the adjacent-category step. Recreate
+saved structure reports. Half-score crossings outside `theta_range` stay
+missing, and modal peaks describe only the requested grid. The random
+chi-square likewise cannot establish normality: with equal SEs and positive
+adjusted variance it is fixed by the number of eligible elements, regardless
+of shape. Chi-square summaries retain unavailable flags and use the full
+family before truncation.
+
+For external files, fixed-field import requires validated all-field headings
+and element number after the statistics; other layouts should use named
+delimited columns. Native score exports contain observations, not the elements
+in a FACETS Scorefile. Native Tables 5 and 11 omit parts of FACETS' response
+moments and variance reports. A single co-observation graph component also
+does not prove identification; inspect the fitted design audit. The historical
+`conditional_probability` plotting alias is ordinary P(k), not FACETS'
+adjacent-conditional probability; use `ccc` to name the native quantity clearly.
+
+Match denominators as well as cutoffs.
+[FACETS Totalscore](https://www.winsteps.com/facetman64/totalscore.htm) defaults
+to `No`, while `fair_average_table()` defaults to `totalscore = TRUE`.
+Native raw `TotalScore`/`TotalCount` and weighted `WeightdScore`/`WeightdCount`
+are distinct; `ObservedAverage` uses the weighted values. Scores 0 and 2 with
+weights 1 and 3 have raw total/count 2/2 but weighted total/count 6/4 and
+average 1.5. Keeping both counts is useful for describing the data, provided
+the comparison uses the same [replication semantics](https://www.winsteps.com/facetman64/weighting.htm)
+and extreme-row inclusion. Weights do not by themselves establish the
+independence or sampling uncertainty of repeated ratings.
+
+### When a native definition has a useful purpose
+
+- **JML extremes:** an all-low/all-high free Person has an unbounded ordinary
+  JML estimate. Keeping this status separate from a finite adjusted display
+  avoids an optimizer-dependent ranking. FACETS also recognizes the boundary
+  and supplies an explicitly adjusted finite value through
+  [Xtreme](https://www.winsteps.com/facetman64/xtremescore.htm).
+  mfrmr's current `xtreme` instead inverts an average-score target, does not
+  incorporate exposure in that adjustment, and does not update fair scores.
+  It is not an implementation of FACETS Xtreme. Neither a display adjustment
+  nor an optimizer's finite stopping value establishes a decision probability.
+- **FairM references:** non-Person FairM values use the mean of finite Person
+  estimates, excluding infinite JML estimates. `FairMReferencePersons` and
+  `FairMExcludedPersons` identify the reference, and no eligible Persons leaves
+  the score unavailable. The reference describes this finite subset; it is not
+  an estimate of the mean ability of an unrestricted population.
+- **MML and posterior scoring:** integration over a specified population can
+  stabilize sparse Person scores and makes posterior uncertainty available.
+  It also introduces distributional assumptions and shrinkage. A score near
+  a pass/fail cut can move for that reason. It is not automatically preferable
+  to JML for every population, assignment design or individual decision.
+  Posterior cut probabilities condition on the stated calibration and scoring
+  prior; they are not probabilities of passing a future administration.
+- **Missing categories and unidentified comparisons:** preserving the declared
+  score ladder and refusing an unsupported contrast avoids silently changing
+  the question. FACETS permits different category/identification conventions;
+  see [Table 8.1](https://www.winsteps.com/facetman64/table8_1ratingscale.htm) and
+  [subset connectedness](https://www.winsteps.com/facetman64/subset-connectedness.htm).
+  A supported within-subset comparison can remain meaningful when a comparison
+  across subsets is unidentified. Missing output must identify its affected
+  target rather than imply that every descriptive result is unusable.
+- **Uncertainty:** posterior SD, conditional information SE, structural
+  covariance and fit-enlarged SE answer different questions. The implemented
+  `RealSE = ModelSE * sqrt(max(Infit, 1))` agrees with the FACETS
+  [enlargement formula](https://www.winsteps.com/facetman64/standarderror.htm),
+  but this does not make their underlying ModelSE equal or make RealSE a
+  general dependence-robust SE. A supplied fixed anchor is not a newly
+  estimated parameter; missing sampling SE does not establish that the
+  external anchor is known without error.
+
+### Decisions near a cutoff
+
+Record the estimand, method, scale, reference population, eligibility, statistic
+and exact comparison rule with a decision. Read both the magnitude of the
+departure and its uncertainty. A fit flag or a bias-screening tail area alone
+does not identify an unfair rater or justify deleting ratings.
+
+Use unrounded values for an available calculation. A FACETS token such as
+`2.00` at a ZSTD cutoff cannot reveal whether the unreported value was below
+or above 2; retain a boundary-indeterminate comparison. Do not choose between
+YES/NO, df conventions, priors or category recoding after seeing which one
+crosses a desired cutoff. A change of convention that changes a decision
+requires a stated rationale and sensitivity report, even if both calculations
+are internally valid. Missing uncertainty is not evidence that a criterion
+has been met.
+
+For pass/fail work, keep the operational cut rule separate from a model's
+expected score or fair average. `classification_table()` describes
+its supplied calibrated rating plan and cut rules; posterior scoring answers
+a different conditional question. Neither automatically validates the cuts,
+future rating plan or substantive consequences.
 
 ## A one-shot legacy-compatible call
 
@@ -103,9 +278,11 @@ Do not infer readiness from `Converged` alone: require `InferenceReady = TRUE`
 for the numerical-readiness criteria and review the terminal-gradient guidance when severity
 is `"review"` or `"fail"`. Numerical readiness does not override a Data,
 Design, or Stability hold; use the readiness table before interpreting or
-reporting the fit. For new analysis scripts, prefer `fit_mfrm(method = "MML")`
-directly. MML integrates over the person distribution under an N(0, 1) prior
-and exposes per-person posterior SEs that JML cannot produce.
+reporting the fit. Choose the estimator for the intended question. The default
+MML route integrates over a fixed N(0, 1) population and exposes Person
+posterior SDs; other supported population specifications must be selected
+explicitly. Its assumptions and shrinkage must be justified for the target
+population. A posterior SD and a JML sampling SE are different quantities.
 
 ## Translating the specification file
 
@@ -155,25 +332,35 @@ than copying FACETS category-dropping behavior implicitly.
 
 ### Anchoring
 
-A FACETS `D = 2, A =` block:
+A FACETS `Labels=` block with direct anchoring:
 
 ```
-D = 2
-A = 1, 0.0
-    2, 0.5
+Labels =
+2, Rater, A
+1 = R1, 0.0
+2 = R2, 0.5
+*
 ```
 
 becomes an `anchors` data frame:
 
 ```r
 anchors <- data.frame(
-  facet = "Rater",
-  level = c("R1", "R2"),
-  estimate = c(0.0, 0.5),
+  Facet = "Rater",
+  Level = c("R1", "R2"),
+  Anchor = c(0.0, 0.5),
   stringsAsFactors = FALSE
 )
-fit <- fit_mfrm(..., anchors = anchors)
+fit <- fit_mfrm(..., anchors = anchors, anchor_policy = "error")
 ```
+
+Use labels that match the input data. `Anchor` is a recognized value column;
+`estimate` is not. With the default warning policy, a malformed anchor table
+can be reported and then omitted from fitting. For migration, stop on such
+issues and inspect the normalized anchors before interpreting results.
+These values must be on mfrmr's logit scale. Convert user-scaled FACETS
+measures back using the original origin and multiplier; copying a scaled
+number into a logit anchor changes the model.
 
 `review_mfrm_anchors()` normalizes and reports on the constraint block before
 the fit runs, surfacing duplicate/direct-group overlap and local support-count
@@ -183,7 +370,7 @@ identity evidence separately.
 
 ### Bias and interaction
 
-For FACETS Table 14 bias output between Rater and Criterion, the closest mfrmr
+For FACETS Table 13 cell-bias output between Rater and Criterion, the closest mfrmr
 screening route is:
 
 ```r
@@ -194,6 +381,21 @@ summary(bias)
 ```
 
 `estimate_all_bias()` enumerates every non-person facet pair in one call.
+
+```r
+screens <- estimate_all_bias(fit, diagnostics = diag)
+summary(screens)                     # Pair counts, availability and magnitude
+head(summary(screens)$cells)         # Signed effects, SEs and observed counts
+plot(screens)                       # All retained cells grouped by pair
+plot(screens, pair = "Rater x Criterion")  # Individual heatmap
+```
+
+These are exploratory conditional screens: baseline calibration and Person
+uncertainty are held fixed. `ScreenPositive` counts available statistics with
+absolute value at least two; it is `NA` when none is available. Review errors,
+unavailable cells and observed counts before interpreting zero flags. The batch
+does not supply collection-wide multiplicity control, and a flagged cell alone
+does not establish unfairness.
 
 ### Wright map / variable map
 
@@ -214,11 +416,13 @@ plot(res, type = "wright", renderer = "native", show_ci = TRUE,
 Read `review$decision` before using the FACETS-organized tables. It reports the
 same stored mfrmr readiness decision shown by `print(fit)`; the `facets`
 profile changes the organization of the review, not the estimator and not the
-evidence threshold. `FormalInference = "No"` therefore remains a stop on
-substantive reporting even when a familiar FACETS-style table or plot is
-available.
+evidence threshold. `FormalInference = "No"` withholds the corresponding formal
+inferential claim even when a familiar table or plot is available. It does not
+turn every descriptive result into an unusable result: report a valid
+descriptive target with its limitation, and identify which comparisons or
+uncertainty statements are unavailable.
 
-`plot_wright_unified()` is the corresponding explicit helper when the Wright
+`plot()` is the corresponding explicit helper when the Wright
 map is the main figure. For readers who expect the FACETS Table 6-style
 asterisk ruler and horizontal, rubric-labelled category transitions, define
 one label for every retained original score:
@@ -276,23 +480,30 @@ FACETS comparison use the same language.
 
 ### Group anchoring and DFF
 
-FACETS `D = ..., G =` group-anchor blocks for differential facet
-functioning translate to the `group_anchors` argument and the
-`analyze_dff()` follow-up:
+FACETS `G` group anchors constrain sums over specified elements. mfrmr's
+`GroupValue` is the mean target for the group. For example, the following
+schematic input constrains the mean of two Rater elements to zero; it does
+not define response groups for a DFF analysis:
 
 ```r
 group_anchors <- data.frame(
-  facet = "Criterion",
-  level = "Content",
-  group = c("Native", "Non-native"),
-  estimate = c(0.0, 0.0),
+  Facet = "Rater",
+  Level = c("R1", "R2"),
+  Group = c("PanelA", "PanelA"),
+  GroupValue = c(0.0, 0.0),
   stringsAsFactors = FALSE
 )
-fit_g <- fit_mfrm(..., group_anchors = group_anchors)
-dff <- analyze_dff(fit_g, diag, facet = "Criterion",
-                   group = "FirstLanguage", method = "refit")
+fit_g <- fit_mfrm(..., group_anchors = group_anchors, anchor_policy = "error")
+diag_g <- diagnose_mfrm(fit_g)
+dff <- analyze_dff(fit_g, diag_g, facet = "Criterion",
+                   group = "FirstLanguage", data = ratings_with_language,
+                   method = "refit")
 ```
 
+Replace `...` with the fitting arguments for your data and supply
+`ratings_with_language` containing the response-group column `FirstLanguage`.
+Use diagnostics from `fit_g`, not from a different fit. Assigning the same
+element to two different groups is not this mean-constraint construction.
 A group-anchor target is an external mean constraint, not an empirical link.
 Its use requires a defensible equal-mean or known-target assumption for the
 declared elements and does not connect otherwise unobserved rating subsets.
@@ -382,15 +593,15 @@ After a FACETS-oriented package-native fit is in hand, the recommended mfrmr
 reporting workflow extends the analysis with:
 
 - `review_mfrm_anchors()` before anchored fitting, and
-  `detect_anchor_drift()` / `plot_anchor_drift()` when common elements define
+  `detect_anchor_drift()` / `plot()` when common elements define
   a cross-form or cross-wave link.
 - `diagnose_mfrm(diagnostic_mode = "both")` for the strict marginal screen
   alongside the residual stack.
 - `rating_scale_table()`, `category_structure_report()`, and
   `category_curves_report()` for category-functioning evidence.
-- `fair_average_table()` when FACETS Table 12-style fair-average review is
+- `fair_average_table()` when FACETS Table 7 fair-average review is
   needed.
-- `plot(fit, type = "wright")` or `plot_wright_unified()` for a variable-map
+- `plot(fit, type = "wright")` or `plot()` for a variable-map
   view of targeting and threshold placement.
 - `estimate_bias()`, `bias_interaction_report()`, and
   `bias_pairwise_report()` when FACETS Table 14-style local interaction

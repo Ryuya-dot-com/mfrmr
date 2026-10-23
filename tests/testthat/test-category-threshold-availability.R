@@ -43,7 +43,7 @@ test_that("category counts and fit flags preserve unavailable inputs", {
   complete <- calc_category_stats(obs)
   expect_equal(complete$Count, c(3, 1.5))
   expect_equal(complete$Infit, c(1, 1))
-  expect_false(any(complete$InfitFlag))
+  expect_true(all(is.na(complete$InfitFlag)))
   obs$StdSq[1] <- NA
   incomplete_fit <- calc_category_stats(obs)
   expect_true(is.na(incomplete_fit$Infit[1]))
@@ -115,7 +115,7 @@ test_that("rating and category summaries expose coverage without internal mode c
   structure <- category_structure_report(fit, diag, drop_unused = TRUE)
   expect_equal(summary(structure)$summary$Categories, nrow(cat_tbl))
   expect_true(is.na(summary(structure)$summary$FlaggedStats))
-  expect_equal(summary(structure)$summary$UnavailableFlagDecisions, 4 * (nrow(cat_tbl) - 1))
+  expect_equal(summary(structure)$summary$UnavailableFlagDecisions, nrow(cat_tbl) - 1)
   printed <- paste(capture.output(print(summary(structure))), collapse = " ")
   expect_false(grepl("legacy|DiagnosticMode", printed))
 })
@@ -123,12 +123,18 @@ test_that("rating and category summaries expose coverage without internal mode c
 test_that("QC distinguishes unavailable ordering from a binary scale", {
   fit <- make_toy_fit()
   diag <- make_toy_diagnostics(fit)
-  fit$steps$Estimate[2] <- NA_real_
+  changed <- fit
+  changed$steps$Estimate[2] <- NA_real_
+  expect_error(run_qc_pipeline(changed, diag), "fit/diagnostics mismatch")
+  # Exercise the QC formatter with controlled threshold summaries, without
+  # mixing a changed calibration and diagnostics from the original fit.
+  step_order <- calc_step_order(changed$steps)
+  order_steps <- calc_step_order
+  testthat::local_mocked_bindings(calc_step_order = function(...) step_order)
   qc <- run_qc_pipeline(fit, diag)
   expect_identical(qc$verdicts$Verdict[7], "Warn")
   expect_gt(qc$details$category_structure$threshold_coverage$Unavailable, 0)
-  fit$config$n_cat <- 2L
-  fit$steps <- data.frame(Step = "Step_1", Estimate = 0)
+  step_order <- order_steps(data.frame(Step = "Step_1", Estimate = 0), expected_steps = 1L)
   # This branch tests the QC formatter using matching count data explicitly.
   testthat::local_mocked_bindings(calc_category_stats = function(...) data.frame(Category = 0:1, Count = c(100, 100)))
   qc <- run_qc_pipeline(fit, diag)

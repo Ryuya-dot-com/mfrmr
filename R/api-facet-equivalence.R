@@ -70,6 +70,11 @@
 #' as `"all_pairs_equivalent"`, `"partial_pairwise_equivalence"`, or
 #' `"no_pairwise_equivalence_established"`. No pair may be omitted from the
 #' all-pairs summary. Heterogeneity and ROPE summaries do not change this rule.
+#' The all-pairs conclusion is an intersection-union decision: if any pair is
+#' truly outside the bound, declaring all pairs equivalent requires falsely
+#' passing that pair's test. Its asymptotic type-I error is therefore at most
+#' alpha when each pair's approximation is valid. This does not provide
+#' simultaneous confidence intervals or error control for selected pairs.
 #'
 #' @section Interpreting output:
 #' Start with `summary$Decision` and examine the corresponding `pairwise`
@@ -89,6 +94,12 @@
 #'   or contrast with an estimated level, can still have nonzero uncertainty.
 #'   The forest plot displays these deviations, not the anchored locations.
 #'   No uncertainty in supplied anchor values is propagated.
+#' - `CIReason`, `DeviationCIReason`, and pairwise `CI90Reason` distinguish
+#'   `"available"`, `"fixed"`, `"numerical_resolution"` (the requested width
+#'   rounds away), and `"outside_numeric_range"`. Unavailable endpoints are
+#'   `NA`; estimates and SEs remain. `ROPEStatus = "unavailable"` means the
+#'   deviation interval could not be displayed, not that it is inside the bound.
+#'   The fixed-alpha TOST p-values do not depend on the display `ci_level`.
 #'
 #' @section Recommended next step:
 #' Review numerical integration and the model's uncertainty assumptions before
@@ -100,7 +111,7 @@
 #' 1. Fit and review an MML model with [fit_mfrm()].
 #' 2. Prespecify the practical bound and run `analyze_facet_equivalence()`.
 #' 3. Read `summary` and `pairwise`.
-#' 4. Use [plot_facet_equivalence()] for descriptive grand-mean proximity.
+#' 4. Use [plot(x, type = "facet_equivalence")][plot.mfrm_fit] for descriptive grand-mean proximity.
 #'
 #' @section Output:
 #' A bundle with `summary`, `chi_square`, `pairwise`, `rope`, `forest`, and
@@ -108,7 +119,7 @@
 #' must be recomputed before using `summary()`, `print()`, or plotting.
 #'
 #' @return A named list with class `mfrm_facet_equivalence`.
-#' @seealso [facets_chisq_table()], [fair_average_table()], [plot_facet_equivalence()]
+#' @seealso [facets_chisq_table()], [fair_average_table()], [plot(x, type = "facet_equivalence")][plot.mfrm_fit]
 #' @concept confidence intervals
 #' @concept facet equivalence
 #' @concept reporting workflow
@@ -118,14 +129,12 @@
 #' average bioavailability. *Journal of Pharmacokinetics and
 #' Biopharmaceutics, 15*(6), 657-680.
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 31, maxit = 150)
 #' eq <- analyze_facet_equivalence(fit, facet = "Rater")
 #' eq$summary[, c("Facet", "Elements", "Decision", "MeanROPE")]
 #' head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
-#' }
 #' @export
 analyze_facet_equivalence <- function(fit,
                                       diagnostics = NULL,
@@ -249,8 +258,19 @@ analyze_facet_equivalence <- function(fit,
   separation <- if (rmse > 0) true_sd / rmse else NA_real_
   reliability <- separation ^ 2 / (1 + separation ^ 2)
 
-  z_ci <- stats::qnorm(1 - (1 - conf_level) / 2)
+  z_ci <- stats::qnorm((1 - conf_level) / 2, lower.tail = FALSE)
   z_tost <- stats::qnorm(0.95)
+  interval <- function(estimate, se, z, fixed = rep(FALSE, length(estimate))) {
+    lower <- estimate - z * se
+    upper <- estimate + z * se
+    reason <- rep("available", length(estimate))
+    reason[!is.finite(lower) | !is.finite(upper)] <- "outside_numeric_range"
+    unresolved <- reason == "available" & !(lower < estimate & upper > estimate)
+    reason[unresolved] <- "numerical_resolution"
+    reason[fixed] <- "fixed"
+    lower[reason != "available"] <- upper[reason != "available"] <- NA_real_
+    list(lower = lower, upper = upper, reason = reason)
+  }
   pair_idx <- utils::combn(seq_len(n_elem), 2)
   pairwise_tbl <- if (is.null(dim(pair_idx))) {
     data.frame()
@@ -265,13 +285,15 @@ analyze_facet_equivalence <- function(fit,
       p_lower <- stats::pnorm(z_lower, lower.tail = FALSE)
       p_upper <- stats::pnorm(z_upper, lower.tail = TRUE)
       p_tost <- max(p_lower, p_upper)
+      ci <- interval(diff, se_diff, z_tost)
       data.frame(
         ElementA = labels[i],
         ElementB = labels[j],
         Diff = diff,
         SE_Diff = se_diff,
-        CI90_Lower = diff - z_tost * se_diff,
-        CI90_Upper = diff + z_tost * se_diff,
+        CI90_Lower = ci$lower,
+        CI90_Upper = ci$upper,
+        CI90Reason = ci$reason,
         P_Lower = p_lower,
         P_Upper = p_upper,
         P_TOST = p_tost,
@@ -286,6 +308,8 @@ analyze_facet_equivalence <- function(fit,
   n_pairs <- nrow(pairwise_tbl)
   n_equiv <- if (n_pairs > 0) sum(pairwise_tbl$Equivalent, na.rm = TRUE) else 0L
 
+  marginal_ci <- interval(est, se, z_ci, fixed)
+  deviation_ci <- interval(est - grand_mean, deviation_se, z_ci)
   rope_tbl <- data.frame(
     Element = labels,
     Fixed = fixed,
@@ -293,16 +317,28 @@ analyze_facet_equivalence <- function(fit,
     Deviation = est - grand_mean,
     SE = se,
     DeviationSE = deviation_se,
-    DeviationCI_Lower = est - grand_mean - z_ci * deviation_se,
-    DeviationCI_Upper = est - grand_mean + z_ci * deviation_se,
-    CI_Lower = ifelse(fixed, NA_real_, est - z_ci * se),
-    CI_Upper = ifelse(fixed, NA_real_, est + z_ci * se),
+    DeviationCI_Lower = deviation_ci$lower,
+    DeviationCI_Upper = deviation_ci$upper,
+    DeviationCIReason = deviation_ci$reason,
+    CI_Lower = marginal_ci$lower,
+    CI_Upper = marginal_ci$upper,
+    CIReason = marginal_ci$reason,
     stringsAsFactors = FALSE
   )
-  rope_tbl$ROPEPct <- 100 * (
-    stats::pnorm(equivalence_bound, mean = rope_tbl$Deviation, sd = rope_tbl$DeviationSE) -
-      stats::pnorm(-equivalence_bound, mean = rope_tbl$Deviation, sd = rope_tbl$DeviationSE)
-  )
+  rope_tbl$ROPEPct <- 100 * vapply(seq_len(n_elem), function(i) {
+    # Reflection avoids subtracting two lower-tail probabilities near one.
+    center <- abs(rope_tbl$Deviation[i]); sd <- rope_tbl$DeviationSE[i]
+    upper <- stats::pnorm(equivalence_bound, center, sd)
+    mass <- upper - stats::pnorm(-equivalence_bound, center, sd)
+    if (mass < upper * 1e-6) {
+      # Integrate on a fixed domain when a narrow band loses CDF precision.
+      half_width <- equivalence_bound / sd
+      mass <- half_width * stats::integrate(function(t)
+        stats::dnorm(half_width * t - center / sd), -1, 1,
+        rel.tol = 1e-10, abs.tol = 0)$value
+    }
+    mass
+  }, numeric(1))
   rope_tbl$ROPEStatus <- ifelse(
     rope_tbl$DeviationCI_Lower >= -equivalence_bound & rope_tbl$DeviationCI_Upper <= equivalence_bound,
     "inside",
@@ -312,6 +348,7 @@ analyze_facet_equivalence <- function(fit,
       "overlap"
     )
   )
+  rope_tbl$ROPEStatus[rope_tbl$DeviationCIReason != "available"] <- "unavailable"
 
   mean_rope <- if (nrow(rope_tbl) > 0) mean(rope_tbl$ROPEPct, na.rm = TRUE) else NA_real_
   all_pairs_equivalent <- n_pairs > 0L && n_equiv == n_pairs
@@ -375,6 +412,10 @@ analyze_facet_equivalence <- function(fit,
       covariance_basis = "mml_observed_information_contrasts"
     )
   )
+  if (any(c(pairwise_tbl$CI90Reason, rope_tbl$CIReason,
+            rope_tbl$DeviationCIReason) %in% c("numerical_resolution", "outside_numeric_range"))) {
+    out$notes <- "Some interval endpoints are unavailable at the requested numeric precision; inspect CIReason, DeviationCIReason and CI90Reason. Estimates, SEs and the fixed-alpha TOST remain separate from display intervals."
+  }
   cautions <- mfrm_mml_information_caution(covariance)
   if (length(cautions)) {
     out$cautions <- cautions
@@ -441,15 +482,16 @@ validate_facet_equivalence_bundle <- function(x) {
 #' @concept facet equivalence
 #' @concept visual diagnostics
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 31, maxit = 150)
 #' eq <- analyze_facet_equivalence(fit, facet = "Rater")
-#' pdat <- plot_facet_equivalence(eq, type = "forest", draw = FALSE)
+#' pdat <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
 #' c(pdat$facet, pdat$type)
-#' }
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_facet_equivalence <- function(x,
                                    diagnostics = NULL,
                                    facet = NULL,
@@ -485,7 +527,7 @@ plot_facet_equivalence <- function(x,
     type = type,
     title = paste0(as.character(settings$facet), ": deviation from facet mean"),
     note = paste(c("Mean-deviation intervals do not establish pairwise equivalence.",
-      x$cautions), collapse = " "),
+      x$notes, x$cautions), collapse = " "),
     cautions = x$cautions,
     information_review = x$information_review,
     inference_ready = TRUE,
@@ -504,9 +546,10 @@ plot_facet_equivalence <- function(x,
     cols <- ifelse(
       forest_df$ROPEStatus == "inside",
       "#2E8B57",
-      ifelse(forest_df$ROPEStatus == "outside", "#C0392B", "#D68910")
+      ifelse(forest_df$ROPEStatus == "outside", "#C0392B",
+        ifelse(forest_df$ROPEStatus == "unavailable", "grey50", "#D68910"))
     )
-    xlim <- range(c(forest_df$DeviationCI_Lower, forest_df$DeviationCI_Upper,
+    xlim <- range(c(forest_df$Deviation, forest_df$DeviationCI_Lower, forest_df$DeviationCI_Upper,
                     -out$equivalence_bound, out$equivalence_bound), finite = TRUE)
     do.call(graphics::plot, c(list(
       x = forest_df$Deviation,
@@ -515,7 +558,7 @@ plot_facet_equivalence <- function(x,
       yaxt = "n",
       ylab = "",
       xlab = "Deviation from facet mean (logits)",
-      main = out$title,
+      main = "",
       pch = 19,
       col = cols
     ), dots))
@@ -542,18 +585,34 @@ plot_facet_equivalence <- function(x,
       ylim = c(0, 100),
       col = cols,
       ylab = "Normal reference mass within bound (%)",
-      main = paste0(out$facet, ": descriptive grand-mean proximity"),
+      main = "",
       ...
     )
     out$bar_midpoints <- mids
   }
 
-  if (length(x$cautions)) graphics::mtext(
-    "Weak information: review interval and test reliability.", side = 3, line = 0.3, cex = .8)
   invisible(out)
 }
 
+#' Plot a saved facet-equivalence analysis
+#' @param x A result from [analyze_facet_equivalence()].
+#' @param ... Use `type = "forest"` (default) for deviations and intervals or
+#'   `type = "rope"` for normal confidence-distribution mass. Other controls
+#'   are described in [plot_facet_equivalence()].
+#' @details
+#' When an interval cannot be represented at the requested numeric precision,
+#' the forest retains its estimate as a grey point without a whisker. Inspect
+#' `data$DeviationCIReason` and `note` in the returned payload for the reason.
+#' This does not change the pairwise TOST decision stored in the analysis.
+#' @return The existing equivalence plot payload and inference restrictions.
+#'   Grand-mean proximity does not establish pairwise equivalence.
+#' @seealso [mfrmr_plot_migration]
 #' @export
 plot.mfrm_facet_equivalence <- function(x, ...) {
-  plot_facet_equivalence(x, ...)
+  args <- list(...)
+  if (identical(args$type, "facet_equivalence")) {
+    args$type <- NULL
+    args <- .mfrm_plot_rename(args, "view", "type")
+  }
+  .mfrm_plot_call(plot_facet_equivalence, x, args)
 }

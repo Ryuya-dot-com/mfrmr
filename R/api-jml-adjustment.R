@@ -17,6 +17,7 @@ stop_if_jml_adjustment <- function(fit, helper) {
 
 mfrm_jml_note <- function() paste(
   "Experimental profile-score-adjusted JML. RootSE describes local variation around the adjusted-equation solution; residual bias may remain.",
+  "Method qualification is incomplete; numerical availability does not establish statistical accuracy.",
   "It is not a standard error with established coverage for the true structural parameter. Person profiles condition on the adjusted calibration.",
   "No confidence intervals for structural parameters, ordinary fit tests, likelihood ranking or rater-quality classifications are supplied.")
 
@@ -28,7 +29,7 @@ mfrm_fit_adjusted_jml <- function(args, supplied) {
     stop("Corrected JML requires model = 'GPCM', method = 'JML', an explicit step_facet, and the same slope_facet (or NULL).", call. = FALSE)
   allowed <- c("data", "person", "facets", "score", "rating_min", "rating_max",
     "keep_original", "category_policy", "model", "method", "step_facet", "slope_facet",
-    "maxit", "jml_correction_order", "jml_correction_sampling")
+    "maxit", "jml_correction_order", "jml_correction_sampling", "repeated_ratings")
   bad <- setdiff(supplied, allowed)
   if (length(bad)) stop("These arguments are not supported by corrected JML: ", paste(bad, collapse = ", "),
     ". This route uses observed unit-weight ratings, centered fixed facets, no anchors/interactions, and its recorded equation-solving tolerances.", call. = FALSE)
@@ -44,7 +45,8 @@ mfrm_fit_adjusted_jml <- function(args, supplied) {
   if (!is.numeric(args$data[[args$score]]) || is.complex(args$data[[args$score]]) || any(!is.finite(args$data[[args$score]])))
     stop("Corrected JML requires finite numeric observed scores.", call. = FALSE)
   prep <- prepare_mfrm_data(args$data, args$person, args$facets, args$score,
-    rating_min=args$rating_min, rating_max=args$rating_max, keep_original=args$keep_original)
+    rating_min=args$rating_min, rating_max=args$rating_max, keep_original=args$keep_original,
+    repeated_ratings=args$repeated_ratings %||% "review")
   if (!identical(as.numeric(prep$data$Score), as.numeric(args$data[[args$score]])) ||
       prep$rating_min != args$rating_min || prep$rating_max != args$rating_max)
     stop("Corrected JML preserves the declared category ladder. Use category_policy = 'preserve'; do not collapse categories implicitly.", call. = FALSE)
@@ -79,7 +81,7 @@ mfrm_fit_adjusted_jml <- function(args, supplied) {
     n_cat=prep$rating_max-prep$rating_min+1L, n_person=length(problem$persons),
     rating_min=prep$rating_min, rating_max=prep$rating_max,
     source_columns=list(person=args$person,facets=args$facets,score=args$score,weight=NULL),
-    replay_inputs=replay, attached_diagnostics=FALSE,
+    replay_inputs=replay, attached_diagnostics=FALSE, repeated_ratings=prep$repeated_ratings,
     gpcm_estimator_family="profile_score_adjusted_jml",
     estimation_control=list(maxit=args$maxit, jml_correction=result$policy))
   summary <- data.frame(Model="GPCM", Method="Corrected JML", MethodUsed="JML",
@@ -205,7 +207,7 @@ mfrm_jml_report <- function(x, style) {
 }
 
 mfrm_jml_plot <- function(x, type=NULL, facet=NULL, draw=TRUE, title=NULL,
-    show_title=TRUE, show_notes=TRUE, palette=NULL, style=c("points","distribution"),
+    show_title=FALSE, show_notes=FALSE, palette=NULL, style=c("points","distribution"),
     sort=c("input","estimate"), caption=NULL, show_labels=TRUE, text_scale=1,
     point_size=2.5, ...) {
   rlang::check_dots_empty()

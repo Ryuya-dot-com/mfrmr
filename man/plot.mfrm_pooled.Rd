@@ -37,6 +37,8 @@ endpoints; it does not substitute normal intervals from the standard errors.
 Default and \code{component = "table"} retain the complete interval view.
 Target order, contrasts, degrees of freedom, confidence level and
 complete-data information cautions remain attached through \code{\link[=plot_data]{plot_data()}}.
+Numerical interval-availability reasons and saved inference notes are
+retained. Both base and ggplot views show a cross for a missing interval.
 Fixed targets have open diamonds without intervals. In ggplot conversion,
 infinite endpoints have arrows (their tips are display limits, not finite
 bounds); missing intervals have crosses at the saved estimate. Missing

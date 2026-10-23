@@ -28,7 +28,7 @@
 #' @export
 plot.mfrm_response_diagnostics <- function(x, facet = NULL, style = c("paired", "scatter"),
     draw = TRUE, palette = c("accessible", "mono"), title = NULL, caption = NULL,
-    show_title = TRUE, show_notes = TRUE, show_labels = TRUE, text_scale = 1,
+    show_title = FALSE, show_notes = FALSE, show_labels = TRUE, text_scale = 1,
     point_size = 2.5, ...) {
   rlang::check_dots_empty()
   style <- match.arg(style); palette <- match.arg(palette)

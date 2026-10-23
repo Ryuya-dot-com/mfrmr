@@ -109,7 +109,11 @@ mfrmr_constraint_jacobian_sparse <- function(spec, block) {
           add_column(
             level_idx = level_idx,
             reference_idx = reference,
-            constraint = "sum_zero"
+            constraint = if (identical(spec$centering_scope, "facet")) {
+              "whole_facet_sum_zero"
+            } else {
+              "sum_zero"
+            }
           )
         }
       }
@@ -355,7 +359,7 @@ mfrmr_estimability_eta_design <- function(prep, idx, config, sizes,
 
   if (isTRUE(include_population_beta) &&
       isTRUE(config$population_spec$active) &&
-      as.integer(sizes$beta %||% 0L) > 0L) {
+      as.integer(sizes[["beta"]] %||% 0L) > 0L) {
     pop <- config$population_spec
     lookup <- as.integer(pop$person_lookup %||% integer(0))
     if (length(lookup) != config$n_person || anyNA(lookup[idx$person])) {
@@ -372,7 +376,7 @@ mfrmr_estimability_eta_design <- function(prep, idx, config, sizes,
       Level = beta_names,
       ReferenceLevel = rep("", ncol(beta_matrix)),
       Constraint = rep("population_location", ncol(beta_matrix)),
-      OptimizerIndex = as.integer(slices$beta %||% rep(NA_integer_, ncol(beta_matrix)))
+      OptimizerIndex = as.integer(slices[["beta"]] %||% rep(NA_integer_, ncol(beta_matrix)))
     )
     append_block(
       "beta", Matrix::Matrix(beta_matrix, sparse = TRUE), beta_map
@@ -966,7 +970,7 @@ mfrmr_nonlinear_transformation_audit <- function(
   results <- list()
 
   if ("log_slopes" %in% nonlinear_blocks) {
-    slice <- as.integer(slices$log_slopes %||% integer(0))
+    slice <- as.integer(slices[["log_slopes"]] %||% integer(0))
     free <- as.numeric(par[slice])
     product_slopes <- !is.null(config$gpcm_spec$log_slope_design)
     log_jacobian <- as.matrix(gpcm_log_slope_design(config$gpcm_spec))
@@ -1017,7 +1021,7 @@ mfrmr_nonlinear_transformation_audit <- function(
   }
 
   if ("log_sigma2" %in% nonlinear_blocks) {
-    slice <- as.integer(slices$log_sigma2 %||% integer(0))
+    slice <- as.integer(slices[["log_sigma2"]] %||% integer(0))
     free <- as.numeric(par[slice])
     valid_config <- identical(config$method, "MML") &&
       isTRUE(config$population_spec$active) && length(free) == 1L
@@ -1092,7 +1096,7 @@ mfrmr_nonlinear_transformation_audit <- function(
 
 mfrmr_gpcm_log_slope_map <- function(config, sizes) {
   levels <- as.character(config$gpcm_spec$levels %||% character(0))
-  n_free <- as.integer(sizes$log_slopes %||% 0L)
+  n_free <- as.integer(sizes[["log_slopes"]] %||% 0L)
   if (n_free == 0L) return(mfrmr_estimability_map())
   if (!is.null(config$gpcm_spec$log_slope_design)) {
     component_levels <- config$gpcm_spec$component_levels
@@ -1109,7 +1113,7 @@ mfrmr_gpcm_log_slope_map <- function(config, sizes) {
       Facet = owner, Level = level,
       ReferenceLevel = c(rep(tail(component_levels[[1]], 1), n[1] - 1L), rep("", n[2])),
       Constraint = c(rep("sum_zero_log_slopes", n[1] - 1L), rep("free_log_slope", n[2])),
-      OptimizerIndex = as.integer(build_param_slices(sizes)$log_slopes)))
+      OptimizerIndex = as.integer(build_param_slices(sizes)[["log_slopes"]])))
   }
   if (length(levels) != n_free + 1L) {
     stop(
@@ -1125,7 +1129,7 @@ mfrmr_gpcm_log_slope_map <- function(config, sizes) {
     Level = levels[seq_len(n_free)],
     ReferenceLevel = rep(levels[length(levels)], n_free),
     Constraint = rep("sum_zero_log_slopes", n_free),
-    OptimizerIndex = as.integer(slices$log_slopes)
+    OptimizerIndex = as.integer(slices[["log_slopes"]])
   )
 }
 
@@ -1666,13 +1670,15 @@ mfrmr_mml_person_design_groups <- function(
     reuse_identical_designs = TRUE) {
   person_ids <- sort(unique(as.integer(idx$person)))
   person_ids <- person_ids[is.finite(person_ids)]
+  person_rows <- split(seq_along(idx$person),
+    factor(as.integer(idx$person), levels = person_ids))
   canonical_rows <- vector("list", length(person_ids))
   signatures <- character(length(person_ids))
   population_spec <- config$population_spec %||% list(active = FALSE)
 
   for (person_position in seq_along(person_ids)) {
     person_id <- person_ids[person_position]
-    rows <- which(as.integer(idx$person) == person_id)
+    rows <- person_rows[[person_position]]
     order_keys <- list()
     if (!is.null(idx$step_idx)) {
       order_keys[[length(order_keys) + 1L]] <- as.integer(idx$step_idx[rows])
@@ -1748,6 +1754,50 @@ mfrmr_mml_person_design_groups <- function(
     unique_person_designs = as.integer(length(group_positions)),
     reuse_identical_designs = isTRUE(reuse_identical_designs)
   )
+}
+
+# A finite response distribution has at most K^m - 1 free probabilities per
+# distinct design. Repeating Persons improves precision, not this dimension.
+mfrm_mml_inference_identification <- function(fit, sizes = NULL) {
+  cfg <- fit$config
+  out <- list(excluded = FALSE,
+    free_dimension = if (is.null(sizes)) length(fit$opt$par) else sum(unlist(sizes)),
+    probability_dimension_bound = NA_real_, detail = "")
+  if (!identical(cfg$method, "MML")) return(out)
+  data <- fit$prep$data
+  if (is.data.frame(data) && nrow(data) && is.factor(data$Person) &&
+      length(cfg$n_cat) == 1L && is.finite(cfg$n_cat) && cfg$n_cat >= 2 &&
+      length(data$Weight) == nrow(data) && all(is.finite(data$Weight)) &&
+      all(data$Weight == 1)) {
+    counts <- tabulate(as.integer(data$Person))
+    # A single sufficiently rich design makes this necessary bound inconclusive;
+    # no design grouping or exponential response enumeration is then needed.
+    if (max(cfg$n_cat^counts - 1) < out$free_dimension) {
+      idx <- build_indices(fit$prep, cfg$step_facet, cfg$slope_facet,
+        cfg$interaction_specs, gpcm_spec = cfg$gpcm_spec)
+      groups <- mfrmr_mml_person_design_groups(idx, cfg)
+      representatives <- groups$person_ids[groups$representative_positions]
+      out$probability_dimension_bound <- sum(cfg$n_cat^counts[representatives] - 1)
+      if (out$free_dimension > out$probability_dimension_bound) {
+        out$excluded <- TRUE
+        out$detail <- sprintf(paste(
+          "The marginal response distributions have at most %g independent probabilities",
+          "for %g free parameters. This design cannot identify the full model;",
+          "more Persons with the same designs do not remove the deficit.",
+          "Point estimates remain descriptive; joint covariance, regular intervals",
+          "and inferential model comparisons are unavailable."),
+          out$probability_dimension_bound, out$free_dimension)
+        return(out)
+      }
+    }
+  }
+  if (isTRUE(cfg$estimability_audit$nonlinear_local_estimability$local_first_order_rank_deficient)) {
+    out$excluded <- TRUE
+    out$detail <- paste("The complete marginal response-pattern score map is first-order rank deficient.",
+      "Regular joint-information inference is unavailable; a positive numerical Hessian",
+      "does not resolve this finding. This local result alone is not a global nonidentification theorem.")
+  }
+  out
 }
 
 mfrmr_mml_all_pattern_workload <- function(idx, n_categories) {
@@ -1896,7 +1946,7 @@ mfrmr_mml_optimizer_parameter_map <- function(prep, idx, config, sizes) {
   if (identical(config$model, "GPCM")) {
     maps[[length(maps) + 1L]] <- mfrmr_gpcm_log_slope_map(config, sizes)
   }
-  if (as.integer(sizes$log_sigma2 %||% 0L) > 0L) {
+  if (as.integer(sizes[["log_sigma2"]] %||% 0L) > 0L) {
     slices <- build_param_slices(sizes)
     maps[[length(maps) + 1L]] <- mfrmr_estimability_map(
       Block = "log_sigma2",
@@ -1905,7 +1955,7 @@ mfrmr_mml_optimizer_parameter_map <- function(prep, idx, config, sizes) {
       Level = "residual_variance",
       ReferenceLevel = "",
       Constraint = "positive_via_log_scale",
-      OptimizerIndex = as.integer(slices$log_sigma2)
+      OptimizerIndex = as.integer(slices[["log_sigma2"]])
     )
   }
   map <- do.call(rbind, maps)
@@ -2006,7 +2056,7 @@ audit_mfrm_mml_observed_pattern_score <- function(
     readiness_effect = "none_observed_patterns_diagnostic_only",
     detail = paste(
       "No nonlinear MML block required the observed Person-pattern score",
-      "audit in this implementation slice."
+      "audit."
     )
   )
   if (!identical(config$method, "MML") ||
@@ -2336,7 +2386,7 @@ audit_mfrm_mml_all_pattern_information <- function(
     readiness_effect = "none_all_patterns_local_diagnostic_only",
     detail = paste(
       "No nonlinear MML block required the all-response-pattern expected",
-      "information audit in this implementation slice."
+      "information audit."
     )
   )
   if (!identical(config$method, "MML") ||

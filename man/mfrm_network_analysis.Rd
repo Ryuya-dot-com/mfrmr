@@ -85,7 +85,6 @@ Muller, K. (2026). \emph{igraph: Network Analysis and Visualization}.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -96,7 +95,6 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   head(net$node_metrics)
   net$cut_nodes
   plot(net, type = "centrality", draw = FALSE)
-}
 }
 }
 \seealso{

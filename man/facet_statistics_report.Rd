@@ -16,7 +16,9 @@ facet_statistics_report(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for the same \code{fit}.
+Mismatched or outdated diagnostics are rejected. Recompute diagnostics
+after refitting; the model itself does not need to be fitted again.}
 
 \item{metrics}{Numeric columns in \code{diagnostics$measures} to summarize.}
 
@@ -65,7 +67,6 @@ The returned bundle now includes:
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- facet_statistics_report(fit)
@@ -73,8 +74,7 @@ summary(out)
 p_fs <- plot(out, draw = FALSE)
 p_fs$data$plot
 }
-}
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}},
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")},
 \link{mfrmr_reports_and_tables}
 }

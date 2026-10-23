@@ -45,7 +45,7 @@ gmfrm_adaptive_procedure <- function(data, plan) {
       gpcm_mml_start = plan$initialization %||% "neutral"))
     inference <- if (is.null(fitting$value)) list(value = NULL, error = "Source unavailable",
       warnings = character(), seconds = 0, cpu = 0) else gmfrm_adaptive_capture(function()
-        confint(fitting$value, method = "model", level = plan$level))
+        confint(fitting$value, parm = "slopes", method = "model", level = plan$level))
     retry <- !nzchar(inference$error) &&
       gmfrm_adaptive_refine(attr(inference$value, "checks"), q)
     stages[[as.character(q)]] <- list(order = q, fitting = fitting,

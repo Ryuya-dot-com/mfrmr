@@ -28,7 +28,7 @@ done <- parallel::mclapply(files,function(path) {
   stopifnot(replay$em_score_tol==manifest$plan$em_score_tol,replay$maxit==manifest$plan$maxit)
   z$seconds <- unname(system.time(withCallingHandlers(tryCatch({
     z$fit <- do.call(fit_mfrm,replay)
-    z$ci <- confint(z$fit,level=manifest$plan$level)
+    z$ci <- confint(z$fit, parm = "slopes",level=manifest$plan$level)
   },error=function(e) z$error <<- conditionMessage(e)),warning=function(w) {
     z$warnings <<- c(z$warnings,conditionMessage(w)); invokeRestart("muffleWarning")
   }))["elapsed"])

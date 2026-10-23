@@ -134,7 +134,7 @@ the methods and predictor controls used below. `WorkshopHours` can help predict
 unrecorded attributes without becoming a clustering feature. The identifier
 is neither imputed nor used to predict other variables.
 
-```{r imputation, fig.alt="Imputation-chain means and standard deviations across iterations for experience years and annual rating workload. These traces help review mixing; they do not establish that the imputation model is appropriate."}
+```{r imputation, fig.width=8, fig.height=6, fig.alt="Imputation-chain means and standard deviations across iterations for experience years and annual rating workload. These traces help review mixing; they do not establish that the imputation model is appropriate."}
 eligible <- subset(features$missing, Reason == "Not recorded")
 imputation_data <- raters[c("Rater", feature_names, "WorkshopHours")]
 where <- matrix(FALSE, nrow(imputation_data), ncol(imputation_data),
@@ -736,19 +736,24 @@ custom graphics.
 
 ### Reopen an analysis without repeating imputation or clustering
 
-Keep the complete imputed analysis to retain every completion, its PCA basis
-and partition, the fitted imputation model, and the co-membership summary.
-A saved plot view also retains the selected display settings. The example
-uses a temporary file; choose a permanent path to continue in a later session.
+Keep the comparison result to retain both analyses, every completion, its
+transformation and partition, the fitted imputation model, and the co-membership
+summaries. A saved plot view also retains the selected display settings.
+The same saving route applies to `comparison`, `feature_comparison` and
+`method_comparison` above. The example uses temporary files; choose permanent
+paths to continue in a later session.
 
 ```{r feature-save-reopen}
 feature_file <- tempfile(fileext = ".rds")
 feature_view <- plot(first_numeric$pca, type = "scores", groups = first_numeric,
   labels = FALSE, preset = "monochrome", draw = FALSE)
-saveRDS(list(analysis = numeric_reduced, view = feature_view), feature_file)
+saveRDS(list(comparison = numeric_comparison, view = feature_view), feature_file)
 saved_features <- readRDS(feature_file)
-summary(saved_features$analysis)  # Review all completions.
+summary(saved_features$comparison)
+saved_features$comparison$analysis_summary  # Each setting and completion.
 plot_data(saved_features$view)    # Inspect this first-completion view.
+feature_summary_file <- tempfile(fileext = ".csv")
+write.csv(summary(saved_features$comparison), feature_summary_file, row.names = FALSE)
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   saved_figure <- as_ggplot(saved_features$view)
 }
@@ -756,7 +761,9 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 
 Changing a session plotting option does not restyle a saved view. Create a
 new view from the saved analysis to change its preset; changing the analysis
-settings requires a new analysis. These feature results use their own
+settings requires a new analysis. The CSV contains only the comparison summary;
+keep the RDS for its analyses, transformations, omitted IDs and assumptions.
+These feature results use their own
 `summary()`, `plot()` and `plot_data()` methods. They are separate from
 `mfrm_results()` and from the pooled response-score intervals described in
 `vignette("mfrmr-response-imputation")`. Saved feature files retain identifiers

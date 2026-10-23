@@ -193,7 +193,7 @@ audit_mfrm_mml_gpcm_slope_boundary <- function(
     levels, slope_facet, params$log_slopes, params$slopes
   )
 
-  if (n_levels <= 1L || as.integer(sizes$log_slopes %||% 0L) == 0L) {
+  if (n_levels <= 1L || as.integer(sizes[["log_slopes"]] %||% 0L) == 0L) {
     targets <- mfrmr_jml_gpcm_slope_targets(
       levels, slope_facet, params$log_slopes, params$slopes,
       positive = rep(FALSE, n_levels), negative = rep(FALSE, n_levels),
@@ -490,7 +490,7 @@ audit_mfrm_mml_gpcm_slope_boundary <- function(
   loading_rows <- list()
   loading_cursor <- 0L
   slices <- build_param_slices(sizes)
-  optimizer_indices <- as.integer(slices$log_slopes %||% integer(0))
+  optimizer_indices <- as.integer(slices[["log_slopes"]] %||% integer(0))
   for (certificate_index in certified_rows) {
     certificate <- certificates[certificate_index, , drop = FALSE]
     expanded_direction <- rep(0, n_levels)

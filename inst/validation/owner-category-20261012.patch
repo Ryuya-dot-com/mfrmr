@@ -1,0 +1,1157 @@
+diff --git a/NEWS.md b/NEWS.md
+--- a/NEWS.md
++++ b/NEWS.md
+@@ -1,4 +1,14 @@
+ # mfrmr 0.2.4.9000 (development version)
++
++* Category reports now retain raw and weighted category counts within the
++  fitted step-owning facet, with explicit denominators, original score labels
++  and zero-exposure states. Stored step SEs/intervals are joined by owner and
++  step with estimate/source checks; unverified legacy sources remain review
++  outputs. Bare-fit category reports no longer request full diagnostics or
++  covariance implicitly; supply `diagnose_mfrm()` output for those companions.
++  Tables, curve-profile maps and saved plot data preserve model roles. Ordinary
++  PCM/GPCM fitting now rejects multiple or missing explicit step-owner names.
++  No threshold model, interval method or two-family diagnostic scope is added.
+ 
+ * Saved slope intervals distinguish computed, partial, review-only and missing
+   bounds in print, tables and plots. Partial endpoints remain visible without
+diff --git a/R/api-estimation.R b/R/api-estimation.R
+--- a/R/api-estimation.R
++++ b/R/api-estimation.R
+@@ -87,7 +87,7 @@
+ #' @param method `"MML"` (default) or `"JML"`. `"JMLE"` is accepted as a
+ #'   backward-compatible alias for the same joint-maximum-likelihood path.
+ #' @param step_facet Facet whose levels receive separate step parameters in
+-#'   `PCM` and `GPCM`. Supply it explicitly for a final analysis. If it
++#'   `PCM` and `GPCM`. Supply exactly one facet name for a final analysis. If it
+ #'   is omitted for `PCM`, mfrmr uses a unique item-like facet name (for
+ #'   example, `Item`, `Task`, or `Criterion`) when available; otherwise it
+ #'   retains the first-facet fallback with a warning. `GPCM` always requires an
+@@ -5211,6 +5211,7 @@
+     residual_pca = residual_pca,
+     pca_max_factors = pca_max_factors
+   )
++  out$parameter_uncertainty$source <- mfrm_native_location_identity(fit)
+   class(out) <- c("mfrm_diagnostics", class(out))
+   out
+ }
+diff --git a/R/api-methods.R b/R/api-methods.R
+--- a/R/api-methods.R
++++ b/R/api-methods.R
+@@ -1833,6 +1833,7 @@
+   caveats <- as.data.frame(object$caveats %||% data.frame(), stringsAsFactors = FALSE)
+   notes <- c(
+     base_note,
++    object$notes %||% character(),
+     category_usage_note(object$category_usage),
+     threshold_order_note(object$threshold_coverage),
+     marginal_coverage_notes(object$marginal_fit$coverage),
+@@ -1896,6 +1897,7 @@
+   caveats <- as.data.frame(object$caveats %||% data.frame(), stringsAsFactors = FALSE)
+   notes <- c(
+     base_note,
++    object$notes %||% character(),
+     category_usage_note(usage),
+     marginal_coverage_notes(object$marginal_fit$coverage),
+     "Flag counts describe available decisions in the displayed rows; unavailable decisions do not indicate an absence of warnings.",
+@@ -3309,6 +3311,11 @@
+     list(
+       plot = type,
+       category_table = cat_tbl,
++      owner_category_table = x$owner_category_table,
++      threshold_table = x$threshold_table,
++      model_context = x$model_context,
++      curve_profiles = x$curve_profiles,
++      notes = x$notes,
+       mode_boundaries = mode_tbl,
+       mean_halfscore_points = half_tbl
+     )
+@@ -3787,6 +3794,8 @@
+     "category_curves",
+     list(
+       plot = type,
++      model_context = x$model_context,
++      curve_profiles = x$curve_profiles,
+       expected_ogive = ogive,
+       probabilities = probs,
+       cumulative_probabilities = cumulative,
+@@ -3911,6 +3920,8 @@
+   new_mfrm_plot_data(
+     "rating_scale",
+     list(plot = type, category_table = cat_tbl, threshold_table = thr_tbl,
++         owner_category_table = x$owner_category_table, model_context = x$model_context,
++         notes = x$notes,
+          category_usage = x$category_usage, threshold_coverage = x$threshold_coverage)
+   )
+ }
+diff --git a/R/api-plotting-fit-family.R b/R/api-plotting-fit-family.R
+--- a/R/api-plotting-fit-family.R
++++ b/R/api-plotting-fit-family.R
+@@ -291,6 +291,7 @@
+   groups <- list()
+   step_points <- tibble::tibble()
+ 
++  profiles <- data.frame(CurveGroup = "Common", StepLevel = "Common", SlopeLevel = NA_character_)
+   if (model == "RSM") {
+     if (!"Step" %in% names(step_tbl)) {
+       step_tbl$Step <- paste0("Step_", seq_len(nrow(step_tbl)))
+@@ -373,6 +374,9 @@
+   }
+ 
+   if (length(groups) == 0) stop("No step groups available for pathway/CCC plots.")
++  profiles$StepOwner <- if (model == "RSM") "Common" else x$config$step_facet
++  profiles$SlopeOwner <- if (model == "GPCM") x$config$slope_facet else NA_character_
++  if (model != "GPCM") profiles$SlopeLevel <- NA_character_
+ 
+   list(
+     model = model,
+@@ -380,6 +384,7 @@
+     categories = categories,
+     rating_min = rating_min,
+     n_cat = n_cat,
++    profiles = profiles,
+     curve_basis = "zero_additive_facet_profile",
+     predictor_offset = 0,
+     groups = groups,
+diff --git a/R/api-reports.R b/R/api-reports.R
+--- a/R/api-reports.R
++++ b/R/api-reports.R
+@@ -4323,10 +4323,13 @@
+ #' Build a category structure report (preferred alias)
+ #'
+ #' @param fit Output from [fit_mfrm()].
+-#' @param diagnostics Optional output from [diagnose_mfrm()].
++#' @param diagnostics Optional matching output from [diagnose_mfrm()]. Reuses
++#'   stored uncertainty and marginal-fit results; omitted diagnostics do not
++#'   trigger a covariance calculation.
+ #' @param theta_range Theta/logit range used to derive transition points.
+ #' @param theta_points Number of grid points used for transition-point search.
+-#' @param drop_unused If `TRUE`, remove zero-count categories from outputs.
++#' @param drop_unused If `TRUE`, remove zero-count rows from the global category
++#'   display. Owner-specific counts and their denominators remain complete.
+ #' @param include_fixed If `TRUE`, include a legacy-compatible fixed-width text
+ #'   block.
+ #' @param fixed_max_rows Maximum rows per fixed-width section.
+@@ -4348,6 +4351,16 @@
+ #' 3. `out$median_thresholds` for adjacent-threshold caveats when zero-count
+ #'    categories are retained.
+ #' 4. `plot(out)` for quick visual check.
++#'
++#' `owner_category_table`, `threshold_table`, `model_context` and `notes`
++#' follow [rating_scale_table()], including source checks and uncertainty
++#' status. The global usage display does not replace owner-specific counts.
++#' `curve_profiles` maps each `CurveGroup` to its step/slope owners and levels.
++#' Curves and the legacy-named `median_thresholds` use zero additive facet
++#' locations; they are reference profiles, not full ability-axis crossings.
++#' Stored step SEs are reported only in `threshold_table`, not transferred to
++#' modal, half-score or cumulative boundaries. Two-family GPCM remains
++#' unsupported by this helper.
+ #'
+ #' @section Typical workflow:
+ #' 1. [fit_mfrm()] -> model.
+@@ -4402,6 +4415,11 @@
+ #'
+ #' @details
+ #' Preferred high-level API for category-probability curve exports.
++#' `model_context` records the fitted step/slope owners. `curve_profiles` maps
++#' each `CurveGroup` to the owner levels, including separate-owner GPCM.
++#' Native curves are conditional reference profiles with additive locations
++#' fixed at zero; see the retained `CurveBasis` and `PredictorOffset` columns.
++#' This helper does not compute step/curve intervals or support two-family GPCM.
+ #' Returns tidy curve coordinates and summary metadata for quick
+ #' plotting/report integration without calling low-level helpers directly.
+ #' The expected-score table also carries the per-curve score variance and
+diff --git a/R/api-results.R b/R/api-results.R
+--- a/R/api-results.R
++++ b/R/api-results.R
+@@ -2000,6 +2000,8 @@
+     status <- added$status
+   }
+ 
++  notes <- c(notes, components$rating_scale$notes %||% character(),
++    components$category_structure$notes %||% character())
+   readiness <- mfrm_results_fit_readiness(
+     fit = fit,
+     fit_summary = summaries$fit %||% NULL
+@@ -5036,7 +5038,14 @@
+     tables = tables,
+     source = x
+   )
++  category_notes <- unique(c(x$components$rating_scale$notes %||% character(),
++    x$components$category_structure$notes %||% character()))
++  keys <- grep("^(rating_scale|category_structure)_", names(x$tables), value = TRUE)
++  out$tables <- c(out$tables, x$tables[setdiff(keys, names(out$tables))])
++  if (length(category_notes)) out$tables$category_notes <- data.frame(Note = category_notes)
+   out$markdown <- mfrm_report_markdown(out)
++  if (length(category_notes)) out$markdown <- paste(out$markdown,
++    "## Category interpretation", paste0("- ", category_notes, collapse = "\n"), sep = "\n\n")
+   if (!is.null(x$population_intervals)) {
+     out$markdown <- paste(out$markdown, "## Conditional-normal population uncertainty",
+       "Saved experimental pointwise intervals use full joint information. Residual variance is conditional on the fitted predictors; sampling coverage remains unqualified.", sep="\n\n")
+diff --git a/R/api-tables.R b/R/api-tables.R
+--- a/R/api-tables.R
++++ b/R/api-tables.R
+@@ -1046,7 +1046,10 @@
+ #' Build a rating-scale diagnostics report
+ #'
+ #' @param fit Output from [fit_mfrm()].
+-#' @param diagnostics Optional output from [diagnose_mfrm()].
++#' @param diagnostics Optional matching output from [diagnose_mfrm()]. Stored
++#'   step uncertainty and marginal-fit results are reused when supplied. Without
++#'   diagnostics, only observed/plug-in category statistics and step points are
++#'   calculated; no covariance or full diagnostic calculation is started.
+ #' @param whexact Use exact ZSTD transformation for category fit.
+ #' @param drop_unused If `TRUE`, remove categories with zero count from the
+ #'   displayed category table. Usage totals still cover the full declared scale;
+@@ -1055,9 +1058,12 @@
+ #' @details
+ #' This helper provides category usage/fit statistics and threshold summaries
+ #' for reviewing score-category functioning.
+-#' The category usage portion is a global observed-score screen. In PCM fits
+-#' with a `step_facet`, threshold diagnostics should be interpreted within each
+-#' `StepFacet` rather than as one pooled whole-scale verdict.
++#' `category_table` is a global observed-score screen. `owner_category_table`
++#' retains every declared category within each level of the fitted `step_facet`
++#' (or one `Common` family for RSM). Its percentages use that owner's total
++#' weight. These are observed ratings, not independent Persons or planned
++#' assignments. Missing categories alone cannot establish structural absence.
++#' `drop_unused` only filters the global display; owner counts stay complete.
+ #'
+ #' Typical checks:
+ #' - sparse category usage (`Count`, `ExpectedCount`)
+@@ -1079,12 +1085,22 @@
+ #' - `threshold_table` for adjacent-step gaps and ordering within each
+ #'   `StepFacet`.
+ #'
+-#' For MML step uncertainty, inspect
+-#' `diagnostics$parameter_uncertainty$steps` from [diagnose_mfrm()]. A bare fit
+-#' supplies point estimates to `threshold_table`; passing separate diagnostics
+-#' here does not attach their SEs or intervals to that table. Check `SE_Status`
+-#' and, when present, `CIEligible` / `CIUse` before reporting intervals. Retain
+-#' `StepFacet` for PCM threshold families. A facet-location SE is not a step SE.
++#' Stored `diagnostics$parameter_uncertainty$steps` are matched by threshold
++#' family and step, with fitted estimates and source identity checked. Inspect
++#' `SE_Status`, `CIEligible`, `CIUse` and `UncertaintySourceStatus`. Missing rows
++#' remain unavailable; duplicate or mismatched keys are rejected. Older
++#' diagnostics without full source identity retain their numbers for review,
++#' with `SourceCIEligible` / `SourceCIUse` retaining their original labels.
++#' They are not promoted to primary interval reporting. A bare fit supplies
++#' step points with `SE_Status = "not_supplied"`. A binary centered step has
++#' no free within-owner contrast (`fixed_by_step_centering`).
++#'
++#' Native thresholds here are centered step offsets. They are not full
++#' ability-axis crossings, cumulative-50% boundaries or decision cuts. An SE
++#' for a step does not include the covariance required for a crossing or an
++#' adjacent-step difference. Threshold disorder is descriptive, not an
++#' automatic category-merging rule. Two-family GPCM diagnostics remain
++#' unsupported by this helper; use its dedicated response/curve routes.
+ #'
+ #' @section Typical workflow:
+ #' 1. Fit model: [fit_mfrm()].
+@@ -1116,13 +1132,26 @@
+ #'     Structured score-support caveats for retained zero-count categories.}
+ #' }
+ #'
++#' The `owner_category_table` contains `StepOwner` (facet name), `StepFacet`
++#' (level), `Category` (model score), `CategoryLabel` (original score), raw and
++#' weighted counts (`RawCount`, `Count`), denominators (`OwnerRatings`,
++#' `OwnerWeight`), `Percent`, `ZeroCount` and `UsageStatus`. Status distinguishes
++#' observed, not observed, zero weight, no exposure and unavailable counts.
++#' No-exposure counts are zero but percentages are unavailable.
++#'
+ #' The `threshold_table` data.frame contains:
+ #' \describe{
+ #'   \item{Step}{Step label (e.g., `Step_1`, `Step_2`). Use `LowerCategory`
+ #'     and `UpperCategory` to identify the corresponding score transition.}
+ #'   \item{Estimate}{Estimated threshold/step difficulty (logits).}
++#'   \item{StepOwner}{Name of the facet owning the steps, or `Common` for RSM.}
+ #'   \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
+ #'     threshold sets.}
++#'   \item{SE, CI_Lower, CI_Upper, SE_Status, CIEligible, CIUse}{Stored
++#'     step uncertainty and reporting status, without new inference.}
++#'   \item{LowerCategoryLabel, UpperCategoryLabel}{Original scores at the transition.}
++#'   \item{LowerOwnerCount, UpperOwnerCount, OwnerSupportStatus}{Weighted
++#'     counts and support within this threshold owner, not pooled frequencies.}
+ #'   \item{GapFromPrev}{Difference between adjacent numbered thresholds within
+ #'     the same `StepFacet`. Missing thresholds are not skipped to form a gap.
+ #'     No automatic category-merging rule is applied.}
+@@ -1140,7 +1169,10 @@
+ #'
+ #' @return A named list with:
+ #' - `category_table`: category-level counts, expected counts, fit, and ZSTD
+-#' - `threshold_table`: model step/threshold estimates
++#' - `owner_category_table`: unfiltered counts within each step owner
++#' - `model_context`: model, estimator, step/slope owners and step scale
++#' - `notes`: interpretation outside the figure
++#' - `threshold_table`: model step/threshold estimates and stored uncertainty
+ #' - `summary`: one-row summary with available/unavailable category counts and
+ #'   adjacent-threshold comparisons. Category-fit means identify their available
+ #'   denominators and describe displayed rows. Missing fit statistics/flags stay
+@@ -1181,6 +1213,8 @@
+ #' categories <- rating_scale_table(fit)
+ #' review <- summary(categories)
+ #' review$summary
++#' categories$model_context
++#' head(categories$owner_category_table)
+ #'
+ #' # Bars show observed counts; the line shows model-expected counts
+ #' # Recreate saved tables with the original fit and diagnostics after updating.
+@@ -1211,15 +1245,16 @@
+   if (!inherits(fit, "mfrm_fit")) {
+     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
+   }
+-  if (is.null(diagnostics)) {
+-    diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+-  }
+-  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "rating_scale_table()")
+-  if (is.null(diagnostics$obs) || nrow(diagnostics$obs) == 0) {
++  stop_if_product_slopes(fit, "rating_scale_table()")
++  if (!is.null(diagnostics)) {
++    mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "rating_scale_table()")
++  }
++  obs <- if (is.null(diagnostics)) compute_obs_table(fit) else diagnostics$obs
++  if (is.null(obs) || nrow(obs) == 0) {
+     stop("`diagnostics$obs` is empty. Run diagnose_mfrm() first.")
+   }
+ 
+-  cat_tbl <- as.data.frame(calc_category_stats(diagnostics$obs, res = fit, whexact = whexact), stringsAsFactors = FALSE)
++  cat_tbl <- as.data.frame(calc_category_stats(obs, res = fit, whexact = whexact), stringsAsFactors = FALSE)
+   cat_tbl <- augment_category_table_with_marginal_fit(cat_tbl, diagnostics)
+   cat_tbl <- annotate_score_category_caveats(cat_tbl, prep = fit$prep)
+   usage <- summarize_category_usage(cat_tbl)
+@@ -1227,14 +1262,11 @@
+     cat_tbl <- cat_tbl[is.na(cat_tbl$Count) | cat_tbl$Count > 0, , drop = FALSE]
+   }
+ 
+-  ordered_steps <- calc_step_order(fit$steps, expected_steps = fit$config$n_cat - 1L,
+-    expected_facets = fit$config$facet_levels[[fit$config$step_facet %||% ""]])
+-  threshold_coverage <- summarize_threshold_order(ordered_steps)
+-  step_tbl <- as.data.frame(ordered_steps)
+-  if (nrow(step_tbl)) {
+-    step_tbl$GapFromPrev <- step_tbl$Spacing
+-    step_tbl <- annotate_threshold_caveats(step_tbl, prep = fit$prep)
+-  }
++  context <- category_model_context(fit)
++  owner_usage <- category_owner_usage(fit, obs)
++  thresholds <- category_threshold_table(fit, diagnostics, owner_usage)
++  threshold_coverage <- thresholds$coverage
++  step_tbl <- thresholds$table
+   threshold_monotonic <- threshold_coverage$ThresholdMonotonic
+ 
+   marginal_fit_available <- has_marginal_fit_bundle(diagnostics)
+@@ -1296,6 +1328,9 @@
+ 
+   out <- list(
+     category_table = cat_tbl,
++    owner_category_table = owner_usage,
++    model_context = context,
++    notes = category_owner_notes(context),
+     threshold_table = step_tbl,
+     summary = summary_tbl,
+     caveats = caveats,
+@@ -4404,20 +4439,11 @@
+   if (!inherits(fit, "mfrm_fit")) {
+     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
+   }
+-  fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
+-  if (is.null(diagnostics) && !identical(fit_model, "GPCM")) {
+-    diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+-  }
++  stop_if_product_slopes(fit, "category_structure_report()")
+   if (!is.null(diagnostics)) {
+     mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "category_structure_report()")
+   }
+-  obs_tbl <- if (!is.null(diagnostics$obs) && nrow(diagnostics$obs) > 0) {
+-    diagnostics$obs
+-  } else if (identical(fit_model, "GPCM")) {
+-    compute_obs_table(fit)
+-  } else {
+-    NULL
+-  }
++  obs_tbl <- if (is.null(diagnostics)) compute_obs_table(fit) else diagnostics$obs
+   if (is.null(obs_tbl) || nrow(obs_tbl) == 0) {
+     stop("`diagnostics$obs` is empty. Run diagnose_mfrm() first.")
+   }
+@@ -4435,6 +4461,9 @@
+     category_table <- category_table[is.na(category_table$Count) | category_table$Count > 0, , drop = FALSE]
+   }
+ 
++  context <- category_model_context(fit)
++  owner_usage <- category_owner_usage(fit, obs_tbl)
++  thresholds <- category_threshold_table(fit, diagnostics, owner_usage)
+   curve_spec <- build_step_curve_spec(fit)
+   theta_grid <- seq(theta_range[1], theta_range[2], length.out = theta_points)
+   curve_tbl <- build_curve_tables(curve_spec, theta_grid)
+@@ -4516,6 +4545,13 @@
+ 
+   out <- list(
+     category_table = category_table,
++    owner_category_table = owner_usage,
++    threshold_table = thresholds$table,
++    threshold_coverage = thresholds$coverage,
++    model_context = context,
++    curve_profiles = curve_spec$profiles,
++    notes = c(category_owner_notes(context),
++      "Curves and median_thresholds are zero-additive-facet reference profiles, not full ability-axis crossings."),
+     category_usage = category_usage,
+     mode_peaks = mode_peaks,
+     mode_boundaries = mode_boundaries,
+@@ -4538,6 +4574,8 @@
+       title = "Legacy-compatible Table 8 Bar-chart Export",
+       sections = list(
+         list(title = "Category table", data = category_table, max_rows = fixed_max_rows),
++        list(title = "Category counts by step owner", data = owner_usage, max_rows = fixed_max_rows),
++        list(title = "Step offsets and stored uncertainty", data = thresholds$table, max_rows = fixed_max_rows),
+         list(title = "Mode peaks", data = mode_peaks, max_rows = fixed_max_rows),
+         list(title = "Mode boundaries", data = mode_boundaries, max_rows = fixed_max_rows),
+         list(title = "Median thresholds", data = median_thresholds, max_rows = fixed_max_rows),
+@@ -4607,6 +4645,7 @@
+   if (!inherits(fit, "mfrm_fit")) {
+     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
+   }
++  stop_if_product_slopes(fit, "category_curves_report()")
+   theta_points <- max(51L, as.integer(theta_points))
+   theta_range <- as.numeric(theta_range)
+   if (length(theta_range) != 2 || !all(is.finite(theta_range)) || theta_range[1] >= theta_range[2]) {
+@@ -4676,6 +4715,8 @@
+   }
+ 
+   out <- list(
++    model_context = category_model_context(fit),
++    curve_profiles = curve_spec$profiles,
+     graphfile = round_numeric(graph_tbl_facets),
+     graphfile_syntactic = round_numeric(graph_tbl_syntactic),
+     probabilities = round_numeric(as.data.frame(prob_df, stringsAsFactors = FALSE)),
+diff --git a/R/core-category-reporting.R b/R/core-category-reporting.R
+new file mode 100644
+--- /dev/null
++++ b/R/core-category-reporting.R
+@@ -0,0 +1,129 @@
++category_model_context <- function(fit) {
++  common <- identical(fit$config$model, "RSM")
++  data.frame(Model = fit$config$model, Method = fit$config$method,
++    StepOwner = if (common) "Common" else fit$config$step_facet,
++    StepSelection = fit$config$step_facet_source %||% "not_recorded",
++    SlopeOwner = paste(fit$config$slope_facet %||% character(), collapse = ", "),
++    StepScale = if (inherits(fit, "mfrm_imported_fit")) "imported_source_threshold" else "centered_step_offset",
++    stringsAsFactors = FALSE)
++}
++
++category_original_labels <- function(categories, fit) {
++  labels <- as.character(categories)
++  map <- fit$prep$score_map
++  if (is.data.frame(map) && all(c("InternalScore", "OriginalScore") %in% names(map))) {
++    idx <- match(categories, map$InternalScore)
++    labels[!is.na(idx)] <- as.character(map$OriginalScore[idx[!is.na(idx)]])
++  }
++  labels
++}
++
++category_owner_usage <- function(fit, obs) {
++  context <- category_model_context(fit)
++  owner <- context$StepOwner
++  common <- identical(fit$config$model, "RSM")
++  levels <- if (common) "Common" else fit$config$facet_levels[[owner]]
++  categories <- seq(fit$prep$rating_min, fit$prep$rating_max)
++  owner_known <- common || (owner %in% names(obs) &&
++    all(!is.na(obs[[owner]]) & as.character(obs[[owner]]) %in% levels))
++  weights <- obs$Weight %||% rep(1, nrow(obs))
++  do.call(rbind, lapply(as.character(levels), function(level) {
++    rows <- if (common) rep(TRUE, nrow(obs)) else if (owner_known) as.character(obs[[owner]]) == level else rep(FALSE, nrow(obs))
++    scores <- obs$Observed[rows]
++    score_ok <- owner_known && length(scores) == sum(rows) &&
++      all(is.finite(scores) & scores %in% categories)
++    weight_ok <- score_ok && all(is.finite(weights[rows]) & weights[rows] >= 0)
++    raw <- if (score_ok) vapply(categories, function(k) sum(scores == k), integer(1)) else rep(NA_integer_, length(categories))
++    count <- if (weight_ok) vapply(categories, function(k) sum(weights[rows][scores == k]), numeric(1)) else rep(NA_real_, length(categories))
++    total <- if (weight_ok) sum(weights[rows]) else NA_real_
++    data.frame(StepOwner = owner, StepFacet = level, Category = categories,
++      CategoryLabel = category_original_labels(categories, fit), RawCount = raw,
++      Count = count, OwnerRatings = if (owner_known) sum(rows) else NA_integer_,
++      OwnerWeight = total, Percent = if (is.finite(total) && total > 0) 100 * count / total else NA_real_,
++      ZeroCount = count == 0,
++      UsageStatus = if (!weight_ok) "unavailable" else if (!sum(rows)) "no_exposure" else
++        ifelse(raw == 0, "not_observed", ifelse(count == 0, "zero_weight", "observed")),
++      stringsAsFactors = FALSE)
++  }))
++}
++
++category_threshold_table <- function(fit, diagnostics, usage) {
++  steps <- calc_step_order(fit$steps, expected_steps = fit$config$n_cat - 1L,
++    expected_facets = fit$config$facet_levels[[fit$config$step_facet %||% ""]])
++  coverage <- summarize_threshold_order(steps)
++  tab <- as.data.frame(steps)
++  if (!nrow(tab)) return(list(table = tab, coverage = coverage))
++  tab$GapFromPrev <- tab$Spacing
++  tab <- as.data.frame(annotate_threshold_caveats(tab, prep = fit$prep))
++  tab$StepOwner <- category_model_context(fit)$StepOwner
++  tab$LowerCategoryLabel <- category_original_labels(tab$LowerCategory, fit)
++  tab$UpperCategoryLabel <- category_original_labels(tab$UpperCategory, fit)
++  if (is.data.frame(usage) && nrow(usage)) {
++    for (side in c("Lower", "Upper")) {
++      counts <- usage[c("StepFacet", "Category", "Count")]
++      names(counts)[2:3] <- c(paste0(side, "Category"), paste0(side, "OwnerCount"))
++      tab <- dplyr::left_join(tab, counts, by = c("StepFacet", paste0(side, "Category")))
++    }
++    tab$OwnerSupportStatus <- ifelse(is.na(tab$LowerOwnerCount) | is.na(tab$UpperOwnerCount),
++      "unavailable", ifelse(tab$LowerOwnerCount == 0 | tab$UpperOwnerCount == 0,
++        "zero_count_adjacent_category", "observed_adjacent_categories"))
++    weak <- tab$OwnerSupportStatus == "zero_count_adjacent_category"
++    tab$WeaklyIdentified[weak] <- TRUE
++    tab$ThresholdCaveat[weak] <- "Adjacent category has zero weighted count within this step owner; review exposure and category support."
++  }
++
++  tab$SE <- tab$CI_Lower <- tab$CI_Upper <- rep(NA_real_, nrow(tab))
++  tab$SE_Status <- "not_supplied"
++  tab$CIEligible <- FALSE
++  tab$CIUse <- "unavailable"
++  tab$UncertaintySourceStatus <- "not_supplied"
++  uncertainty <- diagnostics$parameter_uncertainty
++  se <- as.data.frame(uncertainty$steps %||% data.frame())
++  if (nrow(se)) {
++    source_verified <- !is.null(uncertainty$source)
++    if (source_verified && !identical(uncertainty$source, mfrm_native_location_identity(fit))) {
++      stop("fit/diagnostics mismatch: stored step uncertainty belongs to a different calibration.", call. = FALSE)
++    }
++    if (!"StepFacet" %in% names(se) && identical(fit$config$model, "RSM")) se$StepFacet <- "Common"
++    keys <- c("StepFacet", "Step")
++    if (!all(c(keys, "Estimate") %in% names(se)) || anyNA(se[keys]) || anyDuplicated(se[keys]) ||
++        anyDuplicated(tab[keys]) || nrow(dplyr::anti_join(se, tab, by = keys))) {
++      stop("Stored step uncertainty must have unique matching owner/level/step keys.", call. = FALSE)
++    }
++    idx <- dplyr::left_join(tab[keys], cbind(se[keys], .Index = seq_len(nrow(se))), by = keys)$.Index
++    matched <- !is.na(idx)
++    if (!isTRUE(all.equal(as.numeric(tab$Estimate[matched]), as.numeric(se$Estimate[idx[matched]]),
++                         tolerance = 1e-10, check.attributes = FALSE))) {
++      stop("fit/diagnostics mismatch: stored step estimates differ from the fitted thresholds.", call. = FALSE)
++    }
++    fields <- intersect(c("SE", "CI_Lower", "CI_Upper", "CI_Level", "SE_Method", "SE_Status",
++      "SE_Detail", "InferenceReady", "SupportsFormalInference", "CIEligible", "CIUse"), names(se))
++    for (field in fields) {
++      if (!field %in% names(tab)) tab[[field]] <- se[[field]][rep(NA_integer_, nrow(tab))]
++      tab[[field]][matched] <- se[[field]][idx[matched]]
++    }
++    tab$UncertaintySourceStatus[matched] <- if (source_verified) "source_verified" else "legacy_structural_match"
++    if (!source_verified) {
++      # Old diagnostics retain their numbers, but cannot certify the entire calibration.
++      tab$SourceCIEligible <- tab$CIEligible
++      tab$SourceCIUse <- tab$CIUse
++      tab$CIEligible[matched] <- FALSE
++      tab$CIUse[matched & (is.finite(tab$CI_Lower) | is.finite(tab$CI_Upper))] <- "review_before_reporting"
++      if ("SupportsFormalInference" %in% names(tab)) tab$SupportsFormalInference[matched] <- FALSE
++    }
++  }
++  if (identical(as.integer(fit$config$n_cat), 2L) && !inherits(fit, "mfrm_imported_fit")) {
++    tab$SE_Status <- "fixed_by_step_centering"
++    tab$CIEligible <- FALSE
++    tab$CIUse <- "not_applicable"
++  }
++  list(table = tab, coverage = coverage)
++}
++
++category_owner_notes <- function(context) {
++  c(paste0("Step owner: ", context$StepOwner, "; selection: ", context$StepSelection, "."),
++    "Category counts are observed ratings, not independent Persons. Owner percentages use each owner's total weight; no-exposure percentages are unavailable.",
++    "An unobserved category does not establish structural absence. Review the rating plan and rubric before merging categories.",
++    "Step SEs describe the stored step offsets, not full ability-axis crossings, adjacent-step gaps or decision cuts. No additional covariance calculation is requested.",
++    "Legacy step uncertainty without full source identity is retained for review; inspect SE_Status, CIUse and UncertaintySourceStatus.")
++}
+diff --git a/R/mfrm_core.R b/R/mfrm_core.R
+--- a/R/mfrm_core.R
++++ b/R/mfrm_core.R
+@@ -2840,7 +2840,12 @@
+       )
+     }
+   } else {
+-    resolved_step <- as.character(step_facet[1])
++    if (length(step_facet) != 1L || !is.atomic(step_facet) ||
++        anyNA(step_facet) || !nzchar(as.character(step_facet))) {
++      stop("`step_facet` must name exactly one declared facet; multiple threshold owners are unsupported.",
++           call. = FALSE)
++    }
++    resolved_step <- as.character(step_facet)
+   }
+   if (!resolved_step %in% facet_names) {
+     stop("step_facet = '", resolved_step, "' is not among the declared facets: ",
+diff --git a/man/category_curves_report.Rd b/man/category_curves_report.Rd
+--- a/man/category_curves_report.Rd
++++ b/man/category_curves_report.Rd
+@@ -36,6 +36,11 @@
+ }
+ \details{
+ Preferred high-level API for category-probability curve exports.
++\code{model_context} records the fitted step/slope owners. \code{curve_profiles} maps
++each \code{CurveGroup} to the owner levels, including separate-owner GPCM.
++Native curves are conditional reference profiles with additive locations
++fixed at zero; see the retained \code{CurveBasis} and \code{PredictorOffset} columns.
++This helper does not compute step/curve intervals or support two-family GPCM.
+ Returns tidy curve coordinates and summary metadata for quick
+ plotting/report integration without calling low-level helpers directly.
+ The expected-score table also carries the per-curve score variance and
+diff --git a/man/category_structure_report.Rd b/man/category_structure_report.Rd
+--- a/man/category_structure_report.Rd
++++ b/man/category_structure_report.Rd
+@@ -17,13 +17,16 @@
+ \arguments{
+ \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
+ 
+-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
++\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Reuses
++stored uncertainty and marginal-fit results; omitted diagnostics do not
++trigger a covariance calculation.}
+ 
+ \item{theta_range}{Theta/logit range used to derive transition points.}
+ 
+ \item{theta_points}{Number of grid points used for transition-point search.}
+ 
+-\item{drop_unused}{If \code{TRUE}, remove zero-count categories from outputs.}
++\item{drop_unused}{If \code{TRUE}, remove zero-count rows from the global category
++display. Owner-specific counts and their denominators remain complete.}
+ 
+ \item{include_fixed}{If \code{TRUE}, include a legacy-compatible fixed-width text
+ block.}
+@@ -59,6 +62,16 @@
+ categories are retained.
+ \item \code{plot(out)} for quick visual check.
+ }
++
++\code{owner_category_table}, \code{threshold_table}, \code{model_context} and \code{notes}
++follow \code{\link[=rating_scale_table]{rating_scale_table()}}, including source checks and uncertainty
++status. The global usage display does not replace owner-specific counts.
++\code{curve_profiles} maps each \code{CurveGroup} to its step/slope owners and levels.
++Curves and the legacy-named \code{median_thresholds} use zero additive facet
++locations; they are reference profiles, not full ability-axis crossings.
++Stored step SEs are reported only in \code{threshold_table}, not transferred to
++modal, half-score or cumulative boundaries. Two-family GPCM remains
++unsupported by this helper.
+ }
+ 
+ \section{Typical workflow}{
+diff --git a/man/fit_mfrm.Rd b/man/fit_mfrm.Rd
+--- a/man/fit_mfrm.Rd
++++ b/man/fit_mfrm.Rd
+@@ -122,7 +122,7 @@
+ backward-compatible alias for the same joint-maximum-likelihood path.}
+ 
+ \item{step_facet}{Facet whose levels receive separate step parameters in
+-\code{PCM} and \code{GPCM}. Supply it explicitly for a final analysis. If it
++\code{PCM} and \code{GPCM}. Supply exactly one facet name for a final analysis. If it
+ is omitted for \code{PCM}, mfrmr uses a unique item-like facet name (for
+ example, \code{Item}, \code{Task}, or \code{Criterion}) when available; otherwise it
+ retains the first-facet fallback with a warning. \code{GPCM} always requires an
+diff --git a/man/rating_scale_table.Rd b/man/rating_scale_table.Rd
+--- a/man/rating_scale_table.Rd
++++ b/man/rating_scale_table.Rd
+@@ -14,7 +14,10 @@
+ \arguments{
+ \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
+ 
+-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
++\item{diagnostics}{Optional matching output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Stored
++step uncertainty and marginal-fit results are reused when supplied. Without
++diagnostics, only observed/plug-in category statistics and step points are
++calculated; no covariance or full diagnostic calculation is started.}
+ 
+ \item{whexact}{Use exact ZSTD transformation for category fit.}
+ 
+@@ -26,7 +29,10 @@
+ A named list with:
+ \itemize{
+ \item \code{category_table}: category-level counts, expected counts, fit, and ZSTD
+-\item \code{threshold_table}: model step/threshold estimates
++\item \code{owner_category_table}: unfiltered counts within each step owner
++\item \code{model_context}: model, estimator, step/slope owners and step scale
++\item \code{notes}: interpretation outside the figure
++\item \code{threshold_table}: model step/threshold estimates and stored uncertainty
+ \item \code{summary}: one-row summary with available/unavailable category counts and
+ adjacent-threshold comparisons. Category-fit means identify their available
+ denominators and describe displayed rows. Missing fit statistics/flags stay
+@@ -52,9 +58,12 @@
+ \details{
+ This helper provides category usage/fit statistics and threshold summaries
+ for reviewing score-category functioning.
+-The category usage portion is a global observed-score screen. In PCM fits
+-with a \code{step_facet}, threshold diagnostics should be interpreted within each
+-\code{StepFacet} rather than as one pooled whole-scale verdict.
++\code{category_table} is a global observed-score screen. \code{owner_category_table}
++retains every declared category within each level of the fitted \code{step_facet}
++(or one \code{Common} family for RSM). Its percentages use that owner's total
++weight. These are observed ratings, not independent Persons or planned
++assignments. Missing categories alone cannot establish structural absence.
++\code{drop_unused} only filters the global display; owner counts stay complete.
+ 
+ Typical checks:
+ \itemize{
+@@ -83,12 +92,22 @@
+ \code{StepFacet}.
+ }
+ 
+-For MML step uncertainty, inspect
+-\code{diagnostics$parameter_uncertainty$steps} from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. A bare fit
+-supplies point estimates to \code{threshold_table}; passing separate diagnostics
+-here does not attach their SEs or intervals to that table. Check \code{SE_Status}
+-and, when present, \code{CIEligible} / \code{CIUse} before reporting intervals. Retain
+-\code{StepFacet} for PCM threshold families. A facet-location SE is not a step SE.
++Stored \code{diagnostics$parameter_uncertainty$steps} are matched by threshold
++family and step, with fitted estimates and source identity checked. Inspect
++\code{SE_Status}, \code{CIEligible}, \code{CIUse} and \code{UncertaintySourceStatus}. Missing rows
++remain unavailable; duplicate or mismatched keys are rejected. Older
++diagnostics without full source identity retain their numbers for review,
++with \code{SourceCIEligible} / \code{SourceCIUse} retaining their original labels.
++They are not promoted to primary interval reporting. A bare fit supplies
++step points with \code{SE_Status = "not_supplied"}. A binary centered step has
++no free within-owner contrast (\code{fixed_by_step_centering}).
++
++Native thresholds here are centered step offsets. They are not full
++ability-axis crossings, cumulative-50\% boundaries or decision cuts. An SE
++for a step does not include the covariance required for a crossing or an
++adjacent-step difference. Threshold disorder is descriptive, not an
++automatic category-merging rule. Two-family GPCM diagnostics remain
++unsupported by this helper; use its dedicated response/curve routes.
+ }
+ 
+ \section{Typical workflow}{
+@@ -128,13 +147,26 @@
+ Structured score-support caveats for retained zero-count categories.}
+ }
+ 
++The \code{owner_category_table} contains \code{StepOwner} (facet name), \code{StepFacet}
++(level), \code{Category} (model score), \code{CategoryLabel} (original score), raw and
++weighted counts (\code{RawCount}, \code{Count}), denominators (\code{OwnerRatings},
++\code{OwnerWeight}), \code{Percent}, \code{ZeroCount} and \code{UsageStatus}. Status distinguishes
++observed, not observed, zero weight, no exposure and unavailable counts.
++No-exposure counts are zero but percentages are unavailable.
++
+ The \code{threshold_table} data.frame contains:
+ \describe{
+ \item{Step}{Step label (e.g., \code{Step_1}, \code{Step_2}). Use \code{LowerCategory}
+ and \code{UpperCategory} to identify the corresponding score transition.}
+ \item{Estimate}{Estimated threshold/step difficulty (logits).}
++\item{StepOwner}{Name of the facet owning the steps, or \code{Common} for RSM.}
+ \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
+ threshold sets.}
++\item{SE, CI_Lower, CI_Upper, SE_Status, CIEligible, CIUse}{Stored
++step uncertainty and reporting status, without new inference.}
++\item{LowerCategoryLabel, UpperCategoryLabel}{Original scores at the transition.}
++\item{LowerOwnerCount, UpperOwnerCount, OwnerSupportStatus}{Weighted
++counts and support within this threshold owner, not pooled frequencies.}
+ \item{GapFromPrev}{Difference between adjacent numbered thresholds within
+ the same \code{StepFacet}. Missing thresholds are not skipped to form a gap.
+ No automatic category-merging rule is applied.}
+@@ -193,6 +225,8 @@
+ categories <- rating_scale_table(fit)
+ review <- summary(categories)
+ review$summary
++categories$model_context
++head(categories$owner_category_table)
+ 
+ # Bars show observed counts; the line shows model-expected counts
+ # Recreate saved tables with the original fit and diagnostics after updating.
+diff --git a/tests/testthat/test-category-owner-reporting.R b/tests/testthat/test-category-owner-reporting.R
+new file mode 100644
+--- /dev/null
++++ b/tests/testthat/test-category-owner-reporting.R
+@@ -0,0 +1,130 @@
++category_owner_fixture <- function() {
++  readRDS(test_path("fixtures", "native-location-pcm-regression.rds"))$fit
++}
++
++category_owner_diagnostics <- function(fit) {
++  steps <- as.data.frame(fit$steps)
++  steps$SE <- seq_len(nrow(steps)) / 100
++  steps$CI_Lower <- steps$Estimate - 1.96 * steps$SE
++  steps$CI_Upper <- steps$Estimate + 1.96 * steps$SE
++  steps$SE_Status <- "regularized"
++  steps$CIEligible <- FALSE
++  steps$CIUse <- "review_before_reporting"
++  structure(list(obs = compute_obs_table(fit), facet_names = fit$config$facet_names,
++    fit_readiness = as.data.frame(mfrmr_get_readiness_record(fit)$fit),
++    parameter_uncertainty = list(steps = steps,
++      source = mfrm_native_location_identity(fit))), class = "mfrm_diagnostics")
++}
++
++test_that("ordinary threshold ownership is scalar and retains documented defaults", {
++  resolve <- function(step, model = "PCM", method = "MML", slope = NULL)
++    resolve_step_and_slope_facets(model, step, slope, c("Rater", "Task"), method)
++  for (bad in list(c("Task", "Rater"), character(), NA_character_, "", list("Task"))) {
++    expect_error(resolve(bad), "exactly one")
++  }
++  expect_error(resolve("Person"), "not among")
++  expect_identical(resolve(NULL)$step_facet, "Task")
++  expect_identical(resolve(NULL)$step_facet_source, "inferred_from_name")
++  expect_identical(resolve("Rater", "GPCM", slope = "Task")$slope_facet, "Task")
++  expect_error(resolve("Rater", "GPCM", "JML", "Task"), "require MML")
++  expect_warning(fallback <- resolve_step_and_slope_facets("PCM", NULL, NULL, c("Judge", "Domain")), "first")
++  expect_identical(fallback$step_facet, "Judge")
++})
++
++test_that("owner counts distinguish exposure, weight, unavailable and unobserved categories", {
++  fit <- list(config = list(model = "PCM", method = "JML", step_facet = "Judge",
++    facet_levels = list(Judge = c("A", "B", "C"))),
++    prep = list(rating_min = 1, rating_max = 3,
++      score_map = data.frame(InternalScore = 1:3, OriginalScore = c(2, 4, 8))))
++  obs <- data.frame(Judge = c("A", "A", "A", "B", "B"),
++    Observed = c(1, 1, 3, 2, 3), Weight = c(1, 2, 1, 0, 2))
++  out <- category_owner_usage(fit, obs)
++  expect_equal(out$Count, c(3, 0, 1, 0, 0, 2, 0, 0, 0))
++  expect_equal(out$RawCount, c(2, 0, 1, 0, 1, 1, 0, 0, 0))
++  expect_equal(out$Percent[1:6], c(75, 0, 25, 0, 0, 100))
++  expect_true(all(is.na(out$Percent[7:9])))
++  expect_equal(out$UsageStatus, c("observed", "not_observed", "observed",
++    "not_observed", "zero_weight", "observed", rep("no_exposure", 3)))
++  expect_identical(out$CategoryLabel, rep(c("2", "4", "8"), 3))
++  obs$Weight[1] <- NA_real_
++  missing <- category_owner_usage(fit, obs)
++  expect_true(all(is.na(missing$Count[1:3])))
++  expect_equal(missing$Count[4:9], out$Count[4:9])
++  obs$Judge[1] <- NA_character_
++  expect_true(all(is.na(category_owner_usage(fit, obs)$Count)))
++})
++
++test_that("stored step uncertainty is joined by keys and retains review status", {
++  f <- category_owner_fixture()
++  d <- category_owner_diagnostics(f)
++  original <- d$parameter_uncertainty$steps
++  d$parameter_uncertainty$steps <- original[nrow(original):1, ]
++  out <- rating_scale_table(f, d)
++  expect_equal(out$threshold_table$SE, original$SE)
++  expect_true(all(out$threshold_table$SE_Status == "regularized"))
++  expect_true(all(out$threshold_table$CIUse == "review_before_reporting"))
++  expect_true(all(out$threshold_table$UncertaintySourceStatus == "source_verified"))
++  d$parameter_uncertainty$steps <- original[-2, ]
++  expect_true(is.na(rating_scale_table(f, d)$threshold_table$SE[2]))
++  d$parameter_uncertainty$steps <- rbind(original, original[1, ])
++  expect_error(rating_scale_table(f, d), "unique matching")
++  d$parameter_uncertainty$steps <- original
++  d$parameter_uncertainty$steps$Estimate[1] <- original$Estimate[1] + .1
++  expect_error(rating_scale_table(f, d), "stored step estimates")
++  d <- category_owner_diagnostics(f)
++  d$parameter_uncertainty$source$source$parameters[1] <- 99
++  expect_error(category_structure_report(f, d), "different calibration")
++  d$parameter_uncertainty$source <- NULL
++  d$parameter_uncertainty$steps$CIEligible <- TRUE
++  d$parameter_uncertainty$steps$CIUse <- "primary_reporting"
++  legacy <- rating_scale_table(f, d)$threshold_table
++  expect_equal(legacy$SE, original$SE)
++  expect_true(all(legacy$SourceCIEligible))
++  expect_false(any(legacy$CIEligible))
++  expect_true(all(legacy$CIUse == "review_before_reporting"))
++  expect_true(all(legacy$UncertaintySourceStatus == "legacy_structural_match"))
++})
++
++test_that("saved PCM and GPCM category workflows do not request fitting or covariance", {
++  local_mocked_bindings(fit_mfrm = function(...) stop("No refitting"),
++    simulate_mfrm_data = function(...) stop("No generation"),
++    compute_mml_parameter_covariance = function(...) stop("No covariance calculation"),
++    diagnose_mfrm = function(...) stop("No implicit diagnostics"))
++  for (f in list(category_owner_fixture(),
++    readRDS(test_path("fixtures", "native-location-rsm-zero-boundary.rds"))$fit, readRDS(test_path("fixtures", "native-location-fixed-gpcm.rds")),
++    readRDS(test_path("fixtures", "mfrm-conditional-scoring-gpcm.rds"))$fit)) {
++    rating <- rating_scale_table(f)
++    owner <- rating$owner_category_table
++    expect_equal(aggregate(Count ~ Category, owner, sum)$Count, rating$category_table$Count)
++    expect_true(all(is.na(rating$threshold_table$SE)))
++    structure <- category_structure_report(f)
++    expect_equal(structure$threshold_table, rating$threshold_table)
++    expect_identical(structure$owner_category_table, owner)
++    curves <- category_curves_report(f)
++    expect_true(all(curves$curve_profiles$StepOwner == rating$model_context$StepOwner))
++    for (x in list(rating, structure, curves)) {
++      payload <- plot(x, draw = FALSE)$data
++      expect_identical(payload$model_context, x$model_context)
++      path <- tempfile(); on.exit(unlink(path), add = TRUE)
++      saveRDS(x, path)
++      expect_identical(readRDS(path), x)
++    }
++  }
++  two <- readRDS(test_path("fixtures", "gmfrm-explicit-start.rds"))$fit
++  expect_error(rating_scale_table(two), "two|Two")
++  expect_error(category_structure_report(two), "two|Two")
++  expect_error(category_curves_report(two), "two|Two")
++})
++
++test_that("a binary centered step has no free sampling contrast", {
++  f <- category_owner_fixture()
++  f$config$n_cat <- 2L
++  f$prep$rating_max <- 1
++  f$steps <- f$steps[f$steps$Step == "Step_1", ]
++  f$steps$Estimate <- 0
++  usage <- category_owner_usage(f, data.frame(Criterion = "1", Observed = 0, Weight = 1))
++  out <- category_threshold_table(f, NULL, usage)
++  expect_true(out$coverage$NotApplicable)
++  expect_true(all(out$table$SE_Status == "fixed_by_step_centering"))
++  expect_true(all(out$table$CIUse == "not_applicable"))
++})
+diff --git a/vignettes/mfrmr-reporting-and-apa.Rmd b/vignettes/mfrmr-reporting-and-apa.Rmd
+--- a/vignettes/mfrmr-reporting-and-apa.Rmd
++++ b/vignettes/mfrmr-reporting-and-apa.Rmd
+@@ -337,26 +337,54 @@
+ ```{r categories, fig.alt = "Category-use and threshold summaries for the synthetic four-category rubric. Review ordering and sparse use together rather than treating a single display as validation of the scale."}
+ scale <- rating_scale_table(fit, diagnostics = diag)
+ scale$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
+-scale$threshold_table
+ plot(scale)
+-```
+-
+-For a threshold table with uncertainty, use the diagnostics already computed:
++scale$notes
++```
++
++Check the threshold owner and the denominator before interpreting sparse use:
++
++```{r category-owner}
++scale$model_context
++scale$owner_category_table[, c(
++  "StepFacet", "CategoryLabel", "RawCount", "Count", "Percent", "UsageStatus"
++)]
++```
++
++This RSM uses a single `Common` threshold family. For PCM, `StepOwner` records
++the selected `step_facet`, and `StepFacet` identifies each level of that facet.
++For example, rater-owned PCM thresholds describe each rater's category
++transitions; criterion-owned thresholds describe each criterion's transitions.
++`RawCount` counts ratings and `Count` sums their weights. The percentage
++denominator is the total weight within that owner level, not the number of
++persons. Local zero counts remain visible even if a category is used elsewhere.
++No-exposure percentages are unavailable, and a zero count alone does not
++establish structural absence.
++
++The threshold table already includes uncertainty from the supplied diagnostics:
+ 
+ ```{r threshold-uncertainty}
+-steps <- diag$parameter_uncertainty$steps
+-steps[, c("Step", "Estimate", "SE", "CI_Lower", "CI_Upper", "CI_Level")]
+-steps[, c("Step", "SE_Status", "CIEligible", "CIUse")]
++steps <- scale$threshold_table
++steps[, c("StepFacet", "Step", "Estimate", "SE", "CI_Lower", "CI_Upper")]
++steps[, c("StepFacet", "Step", "SE_Status", "CIEligible", "CIUse",
++          "UncertaintySourceStatus")]
+ ```
+ 
+ `Step_1`, `Step_2`, and `Step_3` are the transitions 1–2, 2–3, and 3–4 here.
+-The table uses MML observed-information SEs and 95% normal intervals. A bare
+-fit's `steps` table supplies point estimates; `rating_scale_table()` does not
+-automatically add the uncertainty from a separately supplied diagnostics
+-object. Check its availability and reporting status before quoting intervals.
+-For PCM, retain `StepFacet` to identify the threshold family. Do not substitute
+-a criterion-location SE for a threshold SE, or a centered step for the combined
+-criterion-plus-step location. These distinctions matter when preparing tables
++The supplied diagnostics use MML observed-information SEs and 95% normal
++intervals. Their estimates and owner/step keys must match the fit. New
++diagnostics also record the calibration identity; older diagnostics without
++that identity retain their numbers with a review status. Source verification
++does not establish interval coverage. Check availability and reporting status
++before quoting intervals. Calling `rating_scale_table(fit)` without diagnostics
++returns points and category counts without computing covariance; its SEs are
++unavailable.
++
++Retain `StepFacet` in PCM output and original category labels when reporting
++recoded scores. A centered step offset is not the full ability-axis crossing:
++that crossing also includes the applicable facet locations. Its SE, and the SE
++of a difference between steps, require the relevant covariance terms. Do not
++substitute a criterion-location SE or an individual step SE. These distinctions
++matter when preparing tables
+ such as the criterion-specific thresholds and SEs in Eckes (2005, Table 5).
+ 
+ The bars show observed category counts; the line shows fitted expected counts.
+@@ -393,6 +421,103 @@
+ environment, uncertainty treatment, and full-sample counts of changed
+ decisions. The six-row preview is not that analysis. Statistical adjustment
+ alone does not establish fairness or authorize replacing operational scores.
++
++### If the score will determine pass or fail
++
++An additional score-use question is: **under a specified future rating plan,
++how often would the scoring rule misclassify a person, and how precise is
++measurement near the cut?** For this illustration, every person receives six
++ratings from two named raters across the three criteria. The true pass cut is
++0 logits; the operational sum rule passes sums of at least 9. The sum uses
++category indices 0–3, so 9 corresponds to an original 1–4 score sum of 15 for
++six complete ratings. These are illustrative decisions, not recommended cuts
++or cuts inferred from the fitted data.
++
++```{r decision-plan}
++decision_plan <- expand.grid(
++  Rater = sort(unique(as.character(toy$Rater)))[1:2],
++  Criterion = sort(unique(as.character(toy$Criterion))),
++  stringsAsFactors = FALSE
++)
++decisions <- classification_table(
++  fit, rating_plan = decision_plan,
++  cut_scores = c(Pass = 0), score_cuts = 9, operational_cuts = 0,
++  theta = c(-1, -0.25, 0, 0.25, 1),
++  theta_weights = c(0.10, 0.20, 0.30, 0.25, 0.15)
++)
++decisions$cuts
++decisions$table[, c("Theta", "Method", "Accuracy", "Consistency", "SEM", "Status", "SourceStatus")]
++decisions$marginal
++```
++
++The five ability points and their masses define an explicitly hypothetical
++discrete population. They are not fitted EAP scores or a continuous-normal
++quadrature rule. Equality enters the higher category: the mass at 0 belongs
++to the true-pass group. Thus the true-fail and true-pass proportions are 0.30
++and 0.70. Without supplied population weights, the function returns conditional
++results but does not invent a population average.
++
++`lee_sum` calculates the finite summed-score distribution for the stated sum
++rule. `rudner_normal` approximates decisions based on an ML ability estimate
++and its stated ability cut. Those operational rules need not agree; the
++expected sum at 0 in `$cuts` is a diagnostic, not an instruction to round a
++cut. Do not rank the two methods' accuracy without first establishing a common
++decision rule. The normal approximation can be poor for short plans or
++extreme abilities. Neither route evaluates the earlier EAP scoring rule.
++
++`SEMAtTrueCut` and the nearby `SEM` values are in ability logits, conditional
++on this calibration and locally independent ratings. They exclude uncertainty
++in estimated facet/step parameters and are not posterior SDs. Consistency
++concerns two conditionally independent repetitions of the same fixed plan;
++it does not generalize to different raters, retake policies or random tasks.
++This API supports ordinary RSM/PCM; two-family GMFRM is outside its scope.
++
++Report an error's denominator as part of its name. For a binary decision,
++`Overclassification` in `$marginal` is the population joint probability of
++false pass, and `Underclassification` is that of false fail. The joint matrix allows
++three different, useful descriptions of each error:
++
++```{r decision-errors}
++error_rates <- do.call(rbind, lapply(
++  split(decisions$classification_matrix, decisions$classification_matrix$Method),
++  function(d) {
++    false_pass <- sum(d$Probability[d$TrueCategory == 1 & d$ObservedCategory == 2])
++    false_fail <- sum(d$Probability[d$TrueCategory == 2 & d$ObservedCategory == 1])
++    joint <- c(false_pass, false_fail)
++    true_group <- c(sum(d$Probability[d$TrueCategory == 1]),
++                    sum(d$Probability[d$TrueCategory == 2]))
++    decision_group <- c(sum(d$Probability[d$ObservedCategory == 2]),
++                        sum(d$Probability[d$ObservedCategory == 1]))
++    # A missing or zero conditioning mass gives an undefined rate, not zero.
++    given_true <- given_decision <- rep(NA_real_, 2)
++    ok <- is.finite(true_group) & true_group > 0
++    given_true[ok] <- joint[ok] / true_group[ok]
++    ok <- is.finite(decision_group) & decision_group > 0
++    given_decision[ok] <- joint[ok] / decision_group[ok]
++    data.frame(
++      Method = d$Method[1], Error = c("False pass", "False fail"),
++      JointProbability = joint, TrueGroupProbability = true_group,
++      RateGivenTrueGroup = given_true, DecisionGroupProbability = decision_group,
++      RateGivenDecisionGroup = given_decision,
++      Status = d$Status[1], SourceStatus = decisions$source$status
++    )
++  }
++))
++rownames(error_rates) <- NULL
++error_rates
++```
++
++For false pass, the denominators are everyone, people truly below the cut,
++and people declared to pass, respectively. For false fail, the last two are
++people truly at/above the cut and people declared to fail. For example, a
++joint false-pass probability of 0.06 in a population with 0.30 true failures
++would mean a conditional false-pass rate of 0.06/0.30 = 0.20; those are
++illustrative arithmetic values, not the fitted results above. Missing method
++probabilities remain missing in the calculation; no `na.rm = TRUE` discards
++them. Zero denominators give `NA`. Retain `Status` and `SourceStatus` as well
++as the rates: numerical availability does not validate the source calibration,
++population, plan or operational cut. Inspect `decisions$notes` and
++`?classification_table` before interpreting or exporting the results.
+ 
+ ## A short Methods and Results example
+ 
+@@ -514,7 +639,7 @@
+ | Estimates and uncertainty | `as.data.frame(fit)`; `fit_measures_table()`; person/facet/step summaries. | Units, direction, reference constraints, SE and interval basis and level, uncertainty for planned contrasts, effect magnitude, and practical interpretation. Do not invent unavailable contrast tests. |
+ | Model fit and local diagnostics | `diag_summary$overall_fit`, `$diagnostic_basis`; `plot_marginal_fit()`, `unexpected_response_table()`, optional residual PCA. | Which assumptions each analysis probes, diagnostic mode, thresholds and their rationale/source, inspected flags, and follow-up decisions. Global fit does not establish validity; PCA does not prove unidimensionality. |
+ | Precision, separation, and agreement | `prec$profile`, `$checks`, `$fit_separation_basis`; `diag_summary$reliability`; `agreement$summary` and `$pairs`. | Interpreted score, relevant error sources/replications, index definition, adjustment and uncertainty basis, paired-rating denominator and overlap. Separate rater severity, inconsistency, agreement, and person-score precision. |
+-| Category functioning | `scale$category_table`, `$threshold_table`, category plots; `diag$parameter_uncertainty$steps` for step SEs, intervals, and reporting status. | Intended categories, threshold family and reference, sparse-category implications, rubric-based interpretation, and reasons and consequences of any recoding. Distinguish step uncertainty from facet-location uncertainty. |
++| Category functioning | `scale$category_table`, `$owner_category_table`, `$model_context`, `$threshold_table` and `$notes`; stored step SEs and status are joined from matching diagnostics. | Intended categories, threshold owner, counts and denominators, sparse-category implications, rubric-based interpretation, and reasons and consequences of any recoding. Distinguish step uncertainty from facet-location and full-crossing uncertainty. |
+ | Comparisons, bias, DFF, or linking, when relevant | `compare_mfrm()`, `build_model_choice_review()`, `estimate_bias()`, `analyze_dff()`, or `build_linking_review()`. | Planned contrasts, same-data/comparability checks, numerical sensitivity, reference groups and anchor rationale, uncertainty, multiplicity, and departures from plan. Screening flags alone do not establish unfairness or drift absence. |
+ | Latent regression or simulation, when relevant | Population coefficients/coding/caveats; recovery/evaluation helpers. | Covariate coding and omissions; or generating conditions, repetitions, random seeds, failures, evaluation metrics and Monte Carlo uncertainty. Explain each analysis's role and distinguish empirical results from results under simulation assumptions. |
+ | Answer, limitations, and implications | Tables, plots, and generated draft text supply supporting results. | Answer each question in words, with direction, magnitude, uncertainty, conditions, alternative explanations, limitations, and implications for the intended score use. Do not infer validity or causality from fit alone. |
+@@ -559,8 +684,8 @@
+ Full paths and data-handling notes remain in `bundle$written_files`.
+ `data = toy` includes the original input CSV needed by the fit replay script.
+ Omitting `data` leaves a `your_data.csv` placeholder to replace manually.
+-The bundle's core step CSV contains point estimates; save the diagnostic
+-step table as well when reporting its SEs and intervals.
++The bundle's core step CSV contains point estimates; save the joined threshold
++table below as well when reporting its SEs, intervals and source status.
+ 
+ Save the selected manuscript table, its caption and note, the threshold
+ uncertainty table, and the draft carrying your supplied context:
+@@ -570,6 +695,15 @@
+ write.csv(rater_table, file.path(output_dir, "Table1-raters.csv"), row.names = FALSE)
+ writeLines(capture.output(print(rater_apa)), file.path(output_dir, "Table1-raters.txt"))
+ write.csv(steps, file.path(output_dir, "Step-uncertainty.csv"), row.names = FALSE)
++write.csv(scale$owner_category_table, file.path(output_dir, "Category-owner-counts.csv"), row.names = FALSE)
++writeLines(scale$notes, file.path(output_dir, "Category-notes.txt"))
++saveRDS(list(classification = decisions, error_rates = error_rates), file.path(output_dir, "Decision-analysis.rds"))
++write.csv(error_rates, file.path(output_dir, "Decision-error-rates.csv"), row.names = FALSE)
++writeLines(c(decisions$notes,
++  "False pass conditions on true failure or declared pass; false fail on true pass or declared failure.",
++  "JointProbability uses the whole supplied population; missing/zero conditioning mass gives an undefined conditional rate.",
++  "Use Decision-analysis.rds for the rating plan, category map, cuts, population weights and source assessment."),
++  file.path(output_dir, "Decision-notes.txt"))
+ write.csv(mfrmr_example_operational_design, file.path(output_dir, "Planned-ratings.csv"), row.names = FALSE)
+ write.csv(data_summary$structural_missingness, file.path(output_dir, "Planned-missingness.csv"), row.names = FALSE)
+ writeLines(apa$report_text, file.path(output_dir, "Methods-Results-draft.txt"))
+@@ -593,7 +727,7 @@
+ ), file.path(output_dir, "Figure1-Wright-caption.txt"))
+ 
+ # Filenames are shown here; output_dir retains the folder location.
+-list.files(output_dir, pattern = "^(Table1|Step-uncertainty|Planned|Figure1|Methods-Results)")
++list.files(output_dir, pattern = "^(Table1|Step-uncertainty|Category|Decision|Planned|Figure1|Methods-Results)")
+ ```
+ 
+ `Table1-raters.csv` retains unrounded values and does not contain the table caption or
+@@ -601,6 +735,10 @@
+ caption. The bundle generates its own generic APA draft, so retain
+ `Methods-Results-draft.txt` for the draft with the `context` supplied above.
+ Check and edit that text against the study record before manuscript use.
++`Decision-analysis.rds` separately retains the fixed-plan calculation, its
++assumptions and the error-rate denominators. `readRDS()` reopens those results
++without fitting. Keep it with `Decision-error-rates.csv` and `Decision-notes.txt`;
++the generic result bundle does not automatically include this plain-list output.
+ Figures omit titles and explanatory footnotes by default. Keep these separately
+ in the manuscript: `plot_data(figure, "title")` retrieves the suggested title,
+ and `plot_data(figure, "notes")` retrieves descriptions and cautions.
+diff --git a/vignettes/mfrmr-workflow.Rmd b/vignettes/mfrmr-workflow.Rmd
+--- a/vignettes/mfrmr-workflow.Rmd
++++ b/vignettes/mfrmr-workflow.Rmd
+@@ -479,9 +479,34 @@
+ ```{r category-review, fig.alt = "Category-use and threshold summaries for the fitted rubric. Sparse categories and transition ordering should be reviewed together with the rating design."}
+ scale_toy <- rating_scale_table(fit_toy, diagnostics = diag_toy)
+ scale_toy$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
+-scale_toy$threshold_table
++scale_toy$model_context
++scale_toy$owner_category_table[, c(
++  "StepFacet", "CategoryLabel", "RawCount", "Count", "Percent", "UsageStatus"
++)]
++scale_toy$threshold_table[, c("StepFacet", "Step", "Estimate", "SE", "CIUse")]
+ plot(scale_toy)
+-```
++scale_toy$notes
++```
++
++`StepOwner` tells you which facet supplies the thresholds. This RSM has one
++`Common` family, so its owner counts describe the whole sample. With PCM,
++`step_facet = "Criterion"` gives counts and thresholds for each criterion;
++`step_facet = "Rater"` gives them for each rater. Choose the owner from the
++rubric and analysis question. Criterion-owned thresholds cannot describe
++differences in raters' threshold spread.
++
++`RawCount` counts rating rows; `Count` sums their weights, and `Percent` uses
++the total weight within the indicated owner level. These are not counts of
++independent persons. A category unused by one owner can be common overall.
++`UsageStatus` distinguishes unobserved categories, zero-weight observations
++and owners with no ratings; the last have unavailable percentages. An observed
++zero does not establish that a category is structurally impossible.
++
++The threshold table reuses SEs and intervals from the supplied diagnostics.
++Check `SE_Status`, `CIUse` and `UncertaintySourceStatus` before reporting them.
++Without diagnostics, the same call returns counts and fitted threshold points
++without requesting covariance calculations; its SEs are unavailable. Notes
++remain in the returned object, outside the plot.
+ 
+ The bars show observed category counts; the line shows fitted expected counts.
+ Look for rarely used categories, changes in average person measure across

@@ -37,25 +37,15 @@ a forecast-uncertainty result
 Summarize a population-level design forecast
 }
 \examples{
-\donttest{
-spec <- build_mfrm_sim_spec(
-  n_person = 16,
-  n_rater = 3,
-  n_criterion = 2,
-  raters_per_person = 2,
-  assignment = "rotating"
-)
-pred <- predict_mfrm_population(
-  sim_spec = spec,
-  design = list(person = 18),
-  reps = 1,
-  maxit = 30,
-  seed = 123
-)
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+pred <- saved$population
 s <- summary(pred)
 s$overview
 s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
-}
 }
 \seealso{
 \code{\link[=predict_mfrm_population]{predict_mfrm_population()}}

@@ -1,6 +1,7 @@
 # F orchestration/accounting contracts, without calibration fitting.
 fscore <- new.env(parent=globalenv())
-for (name in c("mml-stages-20261001","jml-stages-20261001","recovery-20261002","f-scoring-20261002")) {
+for (name in c("mml-stages-20261001","jml-stages-20261001","recovery-20261002","f-scoring-20261002",
+    "lr-scoring-20261004")) {
   p <- test_path("..","..","inst","validation",paste0("mfrm-wide-map-",name,".R"))
   skip_if_not(file.exists(p),"Repository-only F scoring")
   sys.source(p,fscore)
@@ -46,6 +47,49 @@ test_that("held-out panels preserve reserved streams, balanced rosters and linke
   expect_identical(y$panels$population_L1$DataId,a$DataId)
   expect_identical(y$panels$population_L2$DataId,b$DataId)
   expect_equal(y$panels$population_L2$Family,"F-pop")
+})
+
+test_that("Gaussian future covariates preserve paired responses and never pass truth to scoring", {
+  input <- f_input(); future <- fscore$wide_f_ab_panels(input)
+  root <- test_path("..","..","validation-results","mfrm-wide-map-r50-20261001","lr-inputs")
+  skip_if_not(file.exists(file.path(root,"inputs.csv")),"Prepared Gaussian D-LR inputs")
+  index <- read.csv(file.path(root,"inputs.csv"))
+  row <- index[index$ControlConditionId==input$ConditionId &
+    index$Replicate==input$Replicate & index$Rho==0, ]
+  expect_equal(nrow(row),1)
+  path <- file.path(root,row$Bundle)
+  set.seed(315); before <- .Random.seed
+  a <- fscore$dlr_f_panels(input,path,0,future)
+  b <- fscore$dlr_f_panels(input,path,.5,future)
+  expect_identical(.Random.seed,before)
+  expect_identical(a,fscore$dlr_f_panels(input,path,0,future))
+  expect_identical(names(a$panels),c("population_L1","population_L2"))
+  pa <- a$panels$population_L1; pb <- b$panels$population_L1
+  expect_identical(pa$data,future$panels$population_L1$data)
+  expect_identical(pa$DataId,pb$DataId)
+  expect_false(identical(pa$PanelId,pb$PanelId))
+  expect_equal(pb$person_data$X,.5*pb$planned$Theta/row$SD+sqrt(.75)*pa$person_data$X)
+  expect_identical(pb$person_data,b$panels$population_L2$person_data)
+  seeds <- c(list(readRDS(path)$rng$covariate),unlist(future$registry,recursive=FALSE))
+  expect_false(any(vapply(seeds,identical,TRUE,y=b$seed)))
+  calls <- list(); old <- fscore$wide_f_predict
+  on.exit(fscore$wide_f_predict <- old)
+  fscore$wide_f_predict <- function(fit,data,prior,q,person_data) {
+    calls[[length(calls)+1L]] <<- list(data=data,prior=prior,persons=person_data)
+    if(q==31L) stop(f_failure,call.=FALSE)
+    list(checked="scoring input fixture")
+  }
+  source <- f_fake_source(); out <- tempfile()
+  result <- fscore$wide_f_run(source,pb,"retained",out,list(version=1))
+  expect_equal(result$selected_order,61L)
+  expect_identical(calls[[1]],calls[[2]])
+  expect_identical(names(calls[[1]]$persons),c("Person","X"))
+  expect_identical(calls[[1]]$persons,pb$person_data)
+  expect_null(calls[[1]]$prior)
+  expect_false(any(c("Theta","Z") %in% names(calls[[1]]$data)))
+  fscore$wide_f_predict <- function(...) stop("No replay scoring")
+  expect_identical(fscore$wide_f_run(source,pb,"retained",out,list(version=1)),result)
+  expect_error(fscore$wide_f_run(source,pb,"reference",tempfile(),list(version=1)))
 })
 
 test_that("only the exact batch integration refusal retries, with unchanged rows and calibration", {
@@ -103,6 +147,11 @@ test_that("F error and inclusion retain zero-delivery calibrations and cluster-l
   expect_equal(z$Bias,2); expect_equal(z$RMSE,sqrt(5))
   expect_equal(z$IntervalAvailability,.25); expect_equal(z$ConditionalInclusion,1)
   expect_equal(z$ReturnedAndCovered,.25)
+  # Other planned but refused batches do not supply conditional precision.
+  expect_true(all(is.na(z[c("BiasMCSE","MSEMCSE","RMSEMCSE",
+    "WidthMCSE","ConditionalInclusionMCSE")])))
+  expect_equal(unname(fscore$wide_f_ratio(c(4,9),c(2,3))),c(2.6,.48))
+  expect_equal(unname(fscore$wide_f_ratio(c(4,9,0),c(2,3,0))),c(2.6,.24*sqrt(3)))
   expect_true(is.na(fscore$wide_f_summary(c[c$Replicate==1, ],1)$BiasMCSE))
   partial <- fscore$wide_f_summary(c)
   expect_false(partial$Complete); expect_true(is.na(partial$Availability)); expect_true(is.na(partial$RMSE))

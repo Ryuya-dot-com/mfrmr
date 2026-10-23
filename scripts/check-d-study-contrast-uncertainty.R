@@ -101,7 +101,7 @@ for (row in c(0L, idx[1L], tail(idx, 1L))) {
   g <- structure(list(components = comps, score_scale = setNames(c(1, 1), rownames(saved$weights)),
     design = list(scores = rownames(saved$weights), calculation_version = 2L,
                   counts = saved$dimensions)), class = 'mfrm_multivariate_gstudy')
-  d <- mfrm_multivariate_d_study(g, plans, saved$weights)$coefficients
+  d <- mfrm_d_study(g, plans, saved$weights)$coefficients
   for (composite in names(truth)) {
     v <- as.numeric(extract_theta(matrix(z, 1, dimnames = list(NULL, names(z))), saved$weights[, composite]))
     expected <- t(vapply(1:3, function(i) project(v, plans[i, ])$value, numeric(4)))

@@ -12,8 +12,10 @@
 #' @param ... Unused.
 #' @return A one-row matrix with `Lower` and `Upper`, and attributes `level`,
 #'   `method`, `profile` and `note`. The profile retains every evaluated SD,
-#'   refitted likelihood and numerical checks. Unresolved profiles stop with an
-#'   explanatory error rather than substituting a Wald interval.
+#'   refitted likelihood, `LR` (twice the loss from the source fit), information
+#'   checks and `Detail`. Unresolved numerical checks or endpoint searches stop
+#'   with an `mfrm_profile_error`; its `profile` field retains the evaluations.
+#'   A failed search does not establish that a statistical interval is absent.
 #'   With `parm = "raters"`, one row per rater, computed from saved estimates
 #'   and `PredictionSE` without refitting or RTMB. Attributes retain the method,
 #'   target, level and interpretation. Unresolved numerical/information checks,
@@ -22,15 +24,30 @@
 #'   with the same level/method/target/note attributes and availability guards.
 #'   Default calibration tables omit bounds; this explicit calculation uses
 #'   saved SEs without refitting and does not establish finite-sample coverage.
+#'   Both normal-interval routes retain row-level `IntervalStatus`, `CIEligible` and
+#'   plain-language `InferenceReview` in `attr(ci, "diagnostics")`, together
+#'   with saved estimates/SEs, and source checks in `attr(ci, "checks")`.
+#'   Export the diagnostics table when saving CSV; a two-column numeric matrix
+#'   alone loses the explanation. See [confint.mfrm_testlet()] for the status
+#'   meanings. A missing interval does not turn a retained point into a
+#'   reliable estimate, and more iterations cannot by themselves remove an
+#'   estimated-variance boundary restriction.
 #' @details For `parm = "rater_sd"`, fixed facets, steps and any estimated
 #'   ability SD are refitted at
 #'   each candidate rater SD, including zero. A specified known ability SD
-#'   stays fixed. Earlier saved fits retain their known N(0,1) population. The interval is the connected profile region around the fitted SD
-#'   satisfying twice the log-likelihood loss no greater than
-#'   `qchisq(level, df = 1)`. It uses the same approximate marginal likelihood as
+#'   stays fixed. Earlier saved fits retain their known N(0,1) population. The
+#'   search brackets a lower and upper crossing of twice the log-likelihood
+#'   loss with `qchisq(level, df = 1)`, around the fitted SD. It uses the same approximate marginal likelihood as
 #'   the fit. The lower bound is zero when the zero-variance submodel belongs
-#'   to this region. An estimated boundary can therefore have a positive upper
+#'   to the likelihood-ratio region. An estimated boundary can therefore have a positive upper
 #'   limit even though ordinary Wald intervals are unavailable.
+#'   Each nonzero endpoint must attain the likelihood-ratio cutoff to
+#'   `1e-4 * min(1, cutoff)` absolute accuracy. Insufficient floating-point
+#'   resolution stops the search instead of reporting coincident limits.
+#'   Profile refits require positive nuisance information. With known ability
+#'   SD, nuisance curvature is checked at both integration orders.
+#'   These local numerical checks do not prove a global optimum or exclude
+#'   disconnected likelihood-ratio regions between sampled candidates.
 #'
 #'   This is an asymptotic likelihood-ratio interval, not a finite-sample coverage
 #'   guarantee. The chi-square reference is nonregular at a true zero variance;
@@ -64,15 +81,15 @@ confint.mfrm_random_rater <- function(object, parm = "rater_sd", level = .95, ..
       !is.finite(level) || level <= 0 || level >= 1) stop("Supply 0 < level < 1.", call. = FALSE)
   if (identical(parm, "calibration")) return(mfrm_extended_calibration_confint(object, level))
   if (identical(parm, "raters")) {
-    se <- object$raters$PredictionSE
-    if (!isTRUE(object$checks$NumericalReady) || !isTRUE(object$checks$InformationPositive) ||
-        isTRUE(object$checks$EstimatedVarianceBoundary) ||
-        isTRUE(object$checks$EstimatedPersonVarianceBoundary)) se[] <- NA_real_
-    se[!is.finite(se) | se < 0] <- NA_real_
-    bounds <- object$raters$Estimate + stats::qnorm((1 + level) / 2) * cbind(Lower = -se, Upper = se)
+    diagnostics <- object$raters
+    intervals <- mfrm_extended_normal_intervals(object, diagnostics$Estimate,
+      diagnostics$PredictionSE, level)
+    diagnostics[names(intervals)] <- intervals
+    bounds <- as.matrix(diagnostics[c("Lower", "Upper")])
     rownames(bounds) <- object$raters$Rater
     return(structure(bounds, level = level, method = "First-order normal prediction approximation",
       target = "Realized uncentered rater effects relative to the population mean",
+      diagnostics = diagnostics, checks = object$checks,
       note = "Nominal coverage is not established. Explicit approximation only; not a rater-quality classification or a rater-difference interval."))
   }
   if (!is.null(object$settings$fixed_rater_sd)) stop("The rater SD was fixed, not estimated.", call. = FALSE)
@@ -90,11 +107,16 @@ confint.mfrm_random_rater <- function(object, parm = "rater_sd", level = .95, ..
       fixed_person_sd = fixed_person_sd)
     start <- c(object$calibration$beta, object$calibration$steps)
   }
-  target <- -object$loglik + stats::qchisq(level, 1) / 2
+  cutoff <- stats::qchisq(level, 1)
   records <- list()
+  abort_profile <- function(message) rlang::abort(message,
+    class = "mfrm_profile_error",
+    profile = if (length(records)) do.call(rbind, records) else data.frame())
+  if (!is.finite(cutoff) || cutoff <= 0) abort_profile(
+    "The likelihood-ratio cutoff is below numerical resolution; no limits are reported.")
   evaluate <- function(sd) {
     key <- sprintf("%.17g", sd)
-    if (!is.null(records[[key]])) return(records[[key]]$NLL - target)
+    if (!is.null(records[[key]])) return(records[[key]]$LR - cutoff)
     if (is.null(fixed_person_sd)) {
       refit <- mfrm_random_rater_fit(object$input, object$settings$quad_points,
         fixed_sd = sd, maxit = object$settings$maxit, fixed_person_sd = NULL,
@@ -107,7 +129,8 @@ confint.mfrm_random_rater <- function(object, parm = "rater_sd", level = .95, ..
         EstimatedPersonVarianceBoundary = checks$EstimatedPersonVarianceBoundary,
         OptimizerCode = checks$OptimizerCode, MaxGradient = checks$MaxGradient,
         LogLikDifference = checks$LogLikDifference, GradientDifference = checks$GradientDifference,
-        NumericalReady = good)
+        InformationPositive = checks$InformationPositive, NumericalReady = good,
+        Detail = if (good) "" else "Refit numerical/information checks or estimated Person-variance boundary failed.")
     } else {
       fn <- function(p) as.numeric(low$fn(c(p, sd)))
       gr <- function(p) head(as.vector(low$gr(c(p, sd))), length(start))
@@ -123,31 +146,82 @@ confint.mfrm_random_rater <- function(object, parm = "rater_sd", level = .95, ..
       nll <- fn(opt$par); gradient <- gr(opt$par)
       high_nll <- as.numeric(high$fn(c(opt$par, sd)))
       high_gradient <- head(as.vector(high$gr(c(opt$par, sd))), length(start))
-      good <- opt$convergence == 0L && max(abs(gradient)) < 1e-4 &&
-        abs(high_nll - nll) < 1e-5 && max(abs(high_gradient - gradient)) < 1e-4
+      good <- isTRUE(opt$convergence == 0L && max(abs(gradient)) < 1e-4 &&
+        abs(high_nll - nll) < 1e-5 && max(abs(high_gradient - gradient)) < 1e-4)
+      detail <- if (good) "" else "Nuisance optimization or higher-order integration checks failed."
+      minimum <- rep(NA_real_, 2L)
+      information_positive <- FALSE
+      if (good) {
+        # Stationarity and agreement of values/gradients do not exclude a
+        # nuisance maximum. Differentiate only the coordinates being refitted.
+        curvature <- tryCatch(lapply(list(low, high), function(objective) {
+          H <- stats::optimHess(opt$par,
+            function(p) as.numeric(objective$fn(c(p, sd))),
+            function(p) head(as.vector(objective$gr(c(p, sd))), length(start)))
+          eigen(H, symmetric = TRUE, only.values = TRUE)$values
+        }), error = function(e) {
+          detail <<- paste("Nuisance curvature could not be verified:", conditionMessage(e))
+          NULL
+        })
+        if (!is.null(curvature)) {
+          minimum <- vapply(curvature, min, numeric(1))
+          information_positive <- all(vapply(curvature, function(values)
+            all(is.finite(values)) && min(values) > max(values) * 1e-10, logical(1)))
+          if (!information_positive) detail <-
+            "Nuisance curvature is not positive definite at both integration orders."
+        }
+        good <- information_positive
+      }
       records[[key]] <<- data.frame(SD = sd, NLL = nll, OptimizerCode = opt$convergence,
         MaxGradient = max(abs(gradient)),
         LogLikDifference = abs(high_nll - nll), GradientDifference = max(abs(high_gradient - gradient)),
-        NumericalReady = good)
+        NuisanceMinEigenvalue = minimum[1], ReferenceMinEigenvalue = minimum[2],
+        InformationPositive = information_positive, NumericalReady = good, Detail = detail)
       records[[key]]$PersonSD <<- fixed_person_sd
       records[[key]]$EstimatedPersonVarianceBoundary <<- FALSE
     }
-    if (!good) rlang::abort(paste0("Profile numerical checks failed at rater SD ", signif(sd, 5),
-      ". Review integration, optimization, information and any estimated Person-variance boundary before interpreting limits."),
-      class = "mfrm_profile_error", profile = do.call(rbind, records))
-    if (nll < -object$loglik - 1e-5) stop("The profile found a better likelihood than the source fit; refit before interpreting limits.", call. = FALSE)
-    nll - target
+    # Subtract likelihoods before applying the cutoff: adding a small cutoff
+    # to a large NLL can round it away.
+    records[[key]]$LR <<- 2 * (nll + object$loglik)
+    if (!good) abort_profile(paste0("Profile numerical checks failed at rater SD ", signif(sd, 5),
+      ". ", records[[key]]$Detail,
+      " Review integration, optimization, information and any estimated Person-variance boundary before interpreting limits."))
+    if (nll < -object$loglik - 1e-5) abort_profile(
+      "The profile found a better likelihood than the source fit; refit before interpreting limits.")
+    records[[key]]$LR - cutoff
   }
   estimate <- object$calibration$rater_sd
+  origin <- evaluate(estimate)
+  if (abs(origin + cutoff) > min(2e-5, 1e-4 * cutoff) || origin >= 0) abort_profile(
+    "The profile at the fitted SD is inconsistent with the source likelihood or requested cutoff; refit before interpreting limits.")
+  crossing <- function(interval) {
+    tolerance <- 1e-4 * min(1, cutoff)
+    # Stop once the likelihood criterion is met instead of spending expensive
+    # nuisance refits chasing machine precision in the SD coordinate.
+    criterion <- function(sd) {
+      residual <- evaluate(sd)
+      if (abs(residual) <= tolerance) 0 else residual
+    }
+    root <- tryCatch(stats::uniroot(criterion, interval,
+      tol = .Machine$double.eps * max(1, estimate), check.conv = TRUE)$root,
+      error = function(e) {
+        if (inherits(e, "mfrm_profile_error")) stop(e)
+        abort_profile(paste("Profile endpoint search failed:", conditionMessage(e)))
+      })
+    if (!is.finite(root) || abs(evaluate(root)) > tolerance) {
+      abort_profile("The profile endpoint did not attain the likelihood-ratio cutoff within numerical resolution; no limits are reported.")
+    }
+    root
+  }
   at_zero <- evaluate(0)
-  lower <- if (at_zero <= 0) 0 else stats::uniroot(evaluate, c(0, estimate), tol = 1e-5)$root
+  lower <- if (at_zero <= 0) 0 else crossing(c(0, estimate))
   upper <- max(.25, estimate * 1.5)
   for (i in 1:12) {
     if (evaluate(upper) >= 0) break
     upper <- upper * 2
   }
-  if (evaluate(upper) < 0) stop("No upper profile crossing was found within the search range; no finite limit is reported.", call. = FALSE)
-  upper <- stats::uniroot(evaluate, c(estimate, upper), tol = 1e-5)$root
+  if (evaluate(upper) < 0) abort_profile("No upper profile crossing was found within the search range; no finite limit is reported.")
+  upper <- crossing(c(estimate, upper))
   profile <- do.call(rbind, records); rownames(profile) <- NULL
   profile <- profile[order(profile$SD), ]
   structure(matrix(c(lower, upper), 1L, dimnames = list("rater_sd", c("Lower", "Upper"))),
@@ -158,10 +232,8 @@ confint.mfrm_random_rater <- function(object, parm = "rater_sd", level = .95, ..
 # Strip automatic endpoints from current and earlier saved fits consistently.
 mfrm_random_rater_table <- function(object, intervals = "none") {
   tab <- object$raters
-  tab$Lower <- tab$Upper <- rep(NA_real_, nrow(tab))
-  if (identical(intervals, "normal")) {
-    bounds <- confint(object, parm = "raters")
-    tab$Lower <- bounds[, "Lower"]; tab$Upper <- bounds[, "Upper"]
-  }
+  result <- mfrm_extended_normal_intervals(object, tab$Estimate, tab$PredictionSE,
+    .95, requested = identical(intervals, "normal"))
+  tab[names(result)] <- result
   tab
 }

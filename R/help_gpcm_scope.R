@@ -1,4 +1,4 @@
-#' GPCM Workflow Availability
+#' GPCM workflow and score availability
 #'
 #' @description
 #' Check which `GPCM` workflows can be used in `mfrmr`, the limits that
@@ -33,8 +33,14 @@
 #' for JML estimation and boundary
 #' conventions and [predict_mfrm_units()] for conditional scoring.
 #'
-#' @param status Which rows to return: `"all"` (default), `"supported"`,
+#' @param status Which rows to return. For `view = "workflows"` or
+#'   `"unavailable"`, use `"all"` (default), `"supported"`,
 #'   `"supported_with_caveat"`, `"blocked"`, or `"deferred"`.
+#'   For `view = "scores"`, use `"all"`, `"available_with_caveat"`,
+#'   `"supporting_route"`, or `"unavailable"`.
+#' @param view The table to read: `"workflows"` (default) gives the general
+#'   map; `"scores"` describes package-native versus FACETS-style score
+#'   quantities; `"unavailable"` lists blocked/deferred routes and alternatives.
 #'
 #' @details
 #' `Status` has the following user-facing meanings:
@@ -49,6 +55,21 @@
 #' deferred row, use `RecommendedRoute` to choose a supported analysis or a
 #' Rasch-family alternative.
 #'
+#' In the score view, `available_with_caveat` denotes an available quantity
+#' within its `Limitation`, `supporting_route` denotes related evidence or a
+#' reference model rather than a replacement for that quantity, and
+#' `unavailable` denotes a quantity not supplied. Package-native GPCM scores
+#' and uncertainty are not FACETS score-side equivalents. These statuses are
+#' kept separate from the general workflow statuses to preserve their meaning.
+#'
+#' In 0.2.4, this is the single public entry for all three tables. Replace
+#' `gpcm_score_side_contract(status)` with
+#' `gpcm_capability_matrix(status, view = "scores")`, and
+#' `gpcm_runtime_guard_coverage()` with
+#' `gpcm_capability_matrix(view = "unavailable")`. Each view retains its former
+#' column schema and status meanings. These tables describe supported routes;
+#' they do not inspect a particular fit or certify its inferential eligibility.
+#'
 #' @section Connected outputs and unavailable extensions:
 #' For the current one-slope-family model, use `summary(fit)` to review the
 #' model and numerical status, `plot(fit, type = ...)` for available location,
@@ -57,13 +78,17 @@
 #' and `plot()` methods; attach selected results to [mfrm_results()] for
 #' [mfrm_report()] and [export_mfrm_results()]. A plot of locations or fit
 #' statistics is not a plot of slope uncertainty.
-#' [mfrm_facet_intervals()] separately supplies experimental native-scale
-#' model intervals for one-family MML locations and within-facet contrasts.
+#' [mfrm_facet_intervals()] separately supplies native-scale model-information
+#' Wald intervals for one-family MML locations and within-facet contrasts.
 #' Direct fixed/adaptive MML, centered additive facets/steps and unit weights
 #' are required, with an estimated intercept-only normal population or the
 #' explicit fixed-N(0,1) restriction. Shared/separate slope and step owners are
 #' supported. Full-information and finer-grid checks preserve refusal reasons;
-#' sampling coverage and standardized-location intervals remain unqualified.
+#' regular asymptotic validity assumes a correctly specified, identified
+#' interior marginal model with nonsingular limiting information.
+#' Finite-sample coverage is not guaranteed. Explicit zero-sum contrasts can
+#' be standardized by the same fit's population SD using the full delta method;
+#' individual standardized-location intervals are not supplied.
 #'
 #' Portable calibration has its own row and [mfrm_calibration_capabilities()]
 #' gives estimator-specific source restrictions. Two slope families are available
@@ -79,12 +104,14 @@
 #' Attach them with `mfrm_results(fit, intervals = curves)` for reports and
 #' saved exports. Without attachments, `mfrm_results(fit)` collects the saved
 #' fit and its numerical status; neither call calculates new diagnostics.
-#' Separately use `ci <- confint(fit)` for experimental component log-Wald intervals
+#' Separately use `ci <- confint(fit, parm = "slopes")` for experimental component log-Wald intervals
 #' and attach `intervals = list(slopes = ci, curves = curves)`. Local numerical
 #' checks do not establish global identification or sampling coverage; failed
 #' checks retain missing bounds.
-#' For fixed-grid EM, an explicit `confint(fit, method = "profile", slope = c(Task = "t1"))`
+#' An explicit `confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t1"))`
 #' profiles one two-family component, using the actual owner/level names.
+#' It preserves the fitted fixed or adaptive integration method; adaptive nodes,
+#' scales and Jacobians are recomputed throughout the constrained searches.
 #' It retains nuisance reoptimization, numerical checks, unavailable endpoints
 #' and a same-target Wald comparison. Neither method has qualified coverage.
 #' Use [mml_quadrature_sensitivity()] to compare
@@ -92,8 +119,7 @@
 #' each order's experimental log-Wald checks. Optional `adaptive_quad_points` also adds fixed-calibration
 #' integration checks for two families; the posterior moments in that review
 #' are numerical diagnostics, not a Person-scoring workflow. Person-score
-#' comparisons remain unavailable for two families. Adaptive two-family fitting
-#' does not yet supply profile intervals.
+#' comparisons remain unavailable for two families.
 #' For both engines, [mfrm_response_diagnostics()] supplies same-data posterior
 #' predictive residuals with fixed calibration, including descriptive Infit/Outfit
 #' without reference cutoffs. It retains the fitted integration method and
@@ -244,7 +270,7 @@
 #'
 #' @section Different requirements for intervals and model comparison:
 #' These decisions are separate, and do not follow from unidimensionality:
-#' - **Slope intervals:** [confint.mfrm_fit()] uses the inverse joint observed
+#' - **Slope intervals:** [confint.mfrm_fit()] with `parm = "slopes"` uses the inverse joint observed
 #'   information, including estimated population parameters, and the sum-zero
 #'   log-slope transformation. It checks likelihood consistency, convergence,
 #'   positive unregularized information, unit weights and a grid of at least
@@ -332,7 +358,7 @@
 #' Transformed intervals require the joint parameter covariance. Multiplying
 #' relative-slope interval endpoints by an estimated population SD omits its
 #' uncertainty and covariance with the slopes. Use [confint.mfrm_fit()] with
-#' `scale = "standardized"` for the full transformation; with covariates the SD
+#' `parm = "slopes", scale = "standardized"` for the full transformation; with covariates the SD
 #' is the residual population SD. TAM's documented `tam.se()` omits
 #' parameter covariances; ConQuest distinguishes the covariance of parameter
 #' estimates from the latent-population covariance. Neither marginal SEs nor
@@ -350,13 +376,17 @@
 #' calibration; they are not slope intervals or calibration-aware confidence
 #' intervals. An unstable calibration also limits their interpretation.
 #'
-#' @return A data.frame of class `mfrmr_gpcm_capabilities` with one row per
-#' workflow family and columns:
+#' @return For `view = "workflows"`, a data.frame of class
+#' `mfrmr_gpcm_capabilities` with one row per workflow family and columns:
 #' - `Area`
 #' - `Helpers`
 #' - `Status`
 #' - `Boundary`
 #' - `RecommendedRoute`
+#'
+#' For `view = "scores"`, an ordinary data.frame with `Capability`, `Status`,
+#' `Limitation` and `Alternative`. For `view = "unavailable"`, an ordinary
+#' data.frame with `Area`, `Helper`, `Status`, `Boundary` and `RecommendedRoute`.
 #'
 #' @section Typical workflow:
 #' 1. Call `gpcm_capability_matrix()` before using `GPCM` in a new workflow.
@@ -370,11 +400,23 @@
 #' gpcm_capability_matrix()
 #' gpcm_capability_matrix("supported")
 #' gpcm_capability_matrix("blocked")
+#' gpcm_capability_matrix(view = "scores")
+#' gpcm_capability_matrix("unavailable", view = "scores")
+#' gpcm_capability_matrix(view = "unavailable")
+#' @aliases gpcm_score_side_contract gpcm_runtime_guard_coverage
 #' @concept GPCM boundaries
 #' @concept route selection
 #' @export
-gpcm_capability_matrix <- function(status = c("all", "supported", "supported_with_caveat", "blocked", "deferred")) {
-  status <- match.arg(status)
+gpcm_capability_matrix <- function(status = "all", view = c("workflows", "scores", "unavailable")) {
+  view <- match.arg(view)
+  if (view == "scores") return(.gpcm_score_capabilities(status))
+  status <- match.arg(status, c("all", "supported", "supported_with_caveat", "blocked", "deferred"))
+  if (view == "unavailable") {
+    out <- .gpcm_unavailable_routes()
+    if (status != "all") out <- out[out$Status == status, , drop = FALSE]
+    rownames(out) <- NULL
+    return(out)
+  }
   out <- .gpcm_capability_registry(status)
   out <- out[, c(
     "Area", "Helpers", "Status", "Boundary", "RecommendedRoute"
@@ -468,7 +510,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "Design evaluation and population forecasting under GPCM",
       "Diagnostic and signal-detection design screening under GPCM",
       "Differential facet functioning screening under GPCM",
-      "Posterior-predictive and Bayesian workflows",
+      "Native MCMC and posterior-predictive sampling",
       "Residual-bias screening under GPCM",
       "Score-side scorefile export under GPCM",
       "FACETS output-contract score-side review",
@@ -484,10 +526,10 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "diagnose_mfrm(); analyze_residual_pca(); unexpected_response_table();",
         "displacement_table(); measurable_summary_table();",
         "rating_scale_table(); interrater_agreement_table();",
-        "facet_quality_dashboard(); plot_qc_dashboard();",
-        "plot_marginal_fit(); plot_marginal_pairwise()"
+        "facet_quality_dashboard(); plot(x, type = \"qc\");",
+        "plot(x, type = \"marginal_fit\"); plot(x, type = \"marginal_pairwise\")"
       ),
-      "predict_mfrm_units(); sample_mfrm_plausible_values(); compute_information(); plot_information()",
+      "predict_mfrm_units(); sample_mfrm_plausible_values(); compute_information(); plot(x)",
       paste(
         "plot(fit, type = c(\"wright\", \"pathway\", \"ccc\", \"ccc_surface\"));",
         "category_structure_report(); category_curves_report();",
@@ -495,9 +537,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       "reporting_checklist(); precision_review_report(); build_summary_table_bundle(); export_summary_appendix()",
       "build_misfit_casebook()",
-      "compare_mfrm(); build_model_choice_review(); build_weighting_review(); compute_information(); plot_information(); build_summary_table_bundle(); export_summary_appendix()",
+      "compare_mfrm(); build_model_choice_review(); build_weighting_review(); compute_information(); plot(x); build_summary_table_bundle(); export_summary_appendix()",
       "build_linking_review()",
-      "build_mfrm_sim_spec(); extract_mfrm_sim_spec(); simulate_mfrm_data(); evaluate_mfrm_recovery(); assess_mfrm_recovery()",
+      "build_mfrm_sim_spec(); extract_mfrm_sim_spec(); simulate_mfrm_data(); simulate_mfrm_recovery(); assess_mfrm_recovery()",
       paste(
         "mfrm_results(include = \"gpcm_review\"); mfrm_report();",
         "export_mfrm_results(); build_apa_outputs(); build_visual_summaries();",
@@ -507,9 +549,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "fair_average_table()",
       "evaluate_mfrm_design(); predict_mfrm_population()",
       "evaluate_mfrm_diagnostic_screening(); evaluate_mfrm_signal_detection()",
-      "analyze_dff(); analyze_dif(); dif_interaction_table(); dif_report(); plot_dif_heatmap(); plot_dif_summary()",
+      "analyze_dff(); analyze_dif(); dif_interaction_table(); dif_report(); plot(x, type = \"heatmap\"); plot(x, type = \"summary\")",
       NA_character_,
-      "estimate_bias(); unexpected_after_bias_table()",
+      "estimate_all_bias(); estimate_bias(); summary(); plot(); unexpected_after_bias_table()",
       "facets_output_file_bundle(include = \"score\")",
       "facets_output_contract_review()",
       "estimation_iteration_report()",
@@ -554,6 +596,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "method = 'profile' supplies an experimental one-relative-slope nuisance profile within its separate scope;",
         "bootstrap_mfrm_gpcm() and mfrm_curve_intervals() supply bootstrap inference and curve uncertainty.",
         "These inference routes require MML; JML formal slope intervals are not implemented.",
+        "mfrm_facet_intervals() separately supplies one-family MML location/contrast Wald intervals from full joint information under its identified regular-model assumptions; finite-sample coverage is not guaranteed.",
         "MML information-criterion ranking requires the separate likelihood",
         "and local-solution checks in compare_mfrm()."
       ),
@@ -648,8 +691,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "any stronger subgroup-comparison wording is used."
       ),
       paste(
-        "mfrmr does not currently provide posterior-predictive checks or MCMC",
-        "estimation for GPCM."
+        "mfrmr does not run native GPCM MCMC or posterior-predictive sampling.",
+        "export_mfrm_model() separately writes Stan code for eligible two-family MML sources, adding explicit structural priors; one-family GPCM code export is unavailable.",
+        "Conditional posterior response diagnostics are a different, non-MCMC calculation."
       ),
       paste(
         "Bias point estimates use the slope-aware GPCM kernel: the bias",
@@ -663,7 +707,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "review rather than standalone fairness claims. The post-bias",
         "unexpected-response comparison uses the same conditional fitted",
         "quantities and is an in-sample descriptive screen; it does not show",
-        "that bias has been removed."
+        "that bias has been removed. estimate_all_bias() collects eligible facet pairs and retains failed/unavailable results; it does not supply collection-wide multiplicity control."
       ),
       paste(
         "Supported with caveat for package-native scorefile export only.",
@@ -701,7 +745,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "Summary and fitted curves connect to saved results/reports; curve intervals are unavailable.",
         "Both routes support separately checked experimental component log-Wald intervals using their fitted integration method. Global identification and coverage remain unestablished.",
         "mfrm_facet_intervals() separately supplies experimental model-based location and within-facet contrast intervals from the inverse full marginal information. Failed numerical checks retain points and missing bounds; no sandwich or step/curve intervals are supplied.",
-        "For fixed-grid EM, method = 'profile' and a named slope value profile one owner/level, with nuisance reoptimization and saved Wald comparison; adaptive profiles remain unavailable and coverage improvement is not established.",
+        "method = 'profile' and a named slope value profile one owner/level with the fitted fixed or adaptive integration, nuisance reoptimization and saved Wald comparison; coverage improvement is not established.",
         "mml_quadrature_sensitivity() preserves the fitting engine/integration method; optional adaptive_quad_points adds fixed-calibration integration diagnostics, not Person scoring or a change of estimator.",
         "For both engines, mfrm_response_diagnostics() integrates ability with both slope families fixed, retaining the fitted integration method and complete Person record; descriptive residuals connect to plots/reports/exports without fit cutoffs or formal tests.",
         "predict_mfrm_units() separately supplies experimental new-Person EAP, posterior SD and continuous posterior intervals under the retained N(0,1) prior with known levels and unit weights. Source/batch numerical checks are distinct; intervals exclude calibration uncertainty and do not establish coverage or population transport.",
@@ -735,7 +779,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       paste(
         "Use fitted-object posterior scoring and `compute_information()` /",
-        "`plot_information()`; keep portable calibration and population",
+        "`plot(x)`; keep portable calibration and population",
         "forecasting on their separately documented routes."
       ),
       paste(
@@ -779,7 +823,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "slope_facet = step_facet)` or `predict_mfrm_population()` for",
         "caveated design-level operating-characteristic review; inspect",
         "`gpcm_boundary` and keep slope-recovery adequacy on",
-        "`evaluate_mfrm_recovery()`."
+        "`simulate_mfrm_recovery()`."
       ),
       paste(
         "Use `evaluate_mfrm_diagnostic_screening(..., model = \"GPCM\",",
@@ -791,22 +835,22 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       paste(
         "Use `analyze_dff()` / `analyze_dif()` and `dif_interaction_table()`",
         "as screening surfaces, then carry `gpcm_boundary` through",
-        "`summary()`, `dif_report()`, `plot_dif_heatmap()`, and",
-        "`plot_dif_summary()` before writing claims."
+        "`summary()`, `dif_report()`, `plot(x, type = \"heatmap\")`, and",
+        "`plot(x, type = \"summary\")` before writing claims."
       ),
       paste(
-        "Use the current MML fitting and fitted-object posterior scoring routes, or",
-        "use external Bayesian software when posterior sampling is required."
+        "Use MML and conditional posterior scoring for their stated targets.",
+        "For eligible two-family sources use export_mfrm_model(format = 'stan'), then run the external sampler and review priors, diagnostics and posterior fit; code export is not native Bayesian estimation."
       ),
       paste(
-        "Run `estimate_bias()` first; use `unexpected_after_bias_table()` only",
+        "Use `estimate_all_bias()` for exploratory pairs or `estimate_bias()` for one specified pair; use `unexpected_after_bias_table()` only",
         "for a descriptive before/after flag comparison, then confirm important",
         "patterns with substantive facet-pair review or external validation."
       ),
       paste(
         "Use `facets_output_file_bundle(include = \"score\")` for a",
         "package-native GPCM scorefile with explicit caveat columns;",
-        "inspect `gpcm_score_side_contract()`, and do not treat it as",
+        "inspect `gpcm_capability_matrix(view = 'scores')`, and do not treat it as",
         "FACETS score-side equivalence."
       ),
       paste(
@@ -859,38 +903,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
   out
 }
 
-#' GPCM Score-Side Availability
-#'
-#' @description
-#' Show which `GPCM` score-side quantities are available, the limits on
-#' their interpretation, and the alternative route when a quantity is not
-#' available.
-#'
-#' @details
-#' Package-native expected-score and uncertainty fields are not FACETS
-#' score-side equivalents. A row marked `available_with_caveat` can be used
-#' within its stated `Limitation`; `supporting_route` identifies a related
-#' output that can inform interpretation; and `unavailable` identifies a route
-#' that should be replaced by the listed `Alternative`.
-#'
-#' @param status Which rows to return: `"all"` (default),
-#'   `"available_with_caveat"`, `"supporting_route"`, or `"unavailable"`.
-#'
-#' @return A data.frame with columns:
-#' - `Capability`
-#' - `Status`
-#' - `Limitation`
-#' - `Alternative`
-#'
-#' @seealso [gpcm_capability_matrix()], [gpcm_runtime_guard_coverage()],
-#'   [facets_output_contract_review()], [facets_output_file_bundle()]
-#' @examples
-#' gpcm_score_side_contract()
-#' gpcm_score_side_contract("unavailable")
-#' @concept GPCM boundaries
-#' @concept FACETS compatibility
-#' @export
-gpcm_score_side_contract <- function(status = "all") {
+.gpcm_score_capabilities <- function(status = "all") {
   status <- as.character(status[1])
   public_status <- c(
     "all", "available_with_caveat", "supporting_route", "unavailable"
@@ -928,7 +941,7 @@ gpcm_score_side_contract <- function(status = "all") {
 .gpcm_score_side_contract_registry <- function() {
   data.frame(
     # These selectors preserve calls accepted before the public status names
-    # were simplified. They are not returned by gpcm_score_side_contract().
+    # were simplified. They are not returned by gpcm_capability_matrix(view = 'scores').
     CompatibilityStatus = c(
       rep("implemented_with_caveat", 3L),
       "required_for_full_facets_review",
@@ -984,31 +997,7 @@ gpcm_score_side_contract <- function(status = "all") {
   )
 }
 
-#' Unavailable GPCM Routes and Alternatives
-#'
-#' @description
-#' List `GPCM` routes that are not currently available and show the
-#' supported alternative for each route.
-#'
-#' @details
-#' A `blocked` row names a helper that intentionally stops instead of returning
-#' an unsupported `GPCM` result. A `deferred` row has no public helper.
-#' In either case, read `Boundary` for the reason and `RecommendedRoute` for a
-#' currently available analysis route.
-#'
-#' @return A data.frame with columns:
-#' - `Area`
-#' - `Helper`
-#' - `Status`
-#' - `Boundary`
-#' - `RecommendedRoute`
-#'
-#' @seealso [gpcm_capability_matrix()], [mfrmr_workflow_methods],
-#'   [mfrmr-package]
-#' @examples
-#' gpcm_runtime_guard_coverage()
-#' @export
-gpcm_runtime_guard_coverage <- function() {
+.gpcm_unavailable_routes <- function() {
   matrix <- .gpcm_capability_registry()
   registry <- .gpcm_runtime_guard_registry()
   idx <- match(registry$CapabilityID, matrix$CapabilityID)

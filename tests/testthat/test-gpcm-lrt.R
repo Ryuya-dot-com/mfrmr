@@ -21,6 +21,30 @@ gpcm_lrt_fixture <- function(owner = "Criterion", slope_owner = owner) {
   })
 }
 
+test_that("comparison identities change only for the new anchored convention", {
+  old <- gpcm_lrt_fixture()[[1]]
+  current <- old
+  current$config$centering_scope <- "facet"
+  expect_identical(normalize_compare_signature(current), normalize_compare_signature(old))
+  for (scope in c("remainder", "facet")) {
+    fit <- old
+    fit$config$centering_scope <- scope
+    fit$config$facet_specs$Rater <- build_facet_constraint(fit$prep$levels$Rater,
+      anchors = c(R1 = .7), centering_scope = scope)
+    signature <- normalize_compare_signature(fit)
+    if (scope == "remainder") {
+      expect_null(signature$centering_scope)
+      legacy <- fit
+      legacy$config$centering_scope <- NULL
+      expect_identical(normalize_compare_signature(legacy), signature)
+    } else {
+      expect_identical(signature$centering_scope, "facet")
+      expect_match(audit_compare_mfrm_nesting(list(legacy, fit), c("old", "new"))$reason,
+        "centering_scope")
+    }
+  }
+})
+
 test_that("PCM/GPCM nesting isolates relative slopes and preserves population design", {
   audit <- function(pair) mfrmr:::audit_compare_mfrm_nesting(pair, c("first", "second"))
   for (owner in c("Criterion", "Rater")) {

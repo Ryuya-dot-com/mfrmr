@@ -12,6 +12,11 @@ test_that("normal rater intervals require selection and reuse saved estimates", 
   expect_identical(rownames(ci), c("B", "A"))
   expect_match(attr(ci, "target"), "uncentered")
   expect_match(attr(ci, "note"), "not established")
+  level <- 1 - .Machine$double.eps / 2
+  high <- confint(fit, parm = "raters", level = level)
+  z <- sqrt(qchisq(level, 1))
+  expect_equal(unname(high[, "Lower"]), fit$raters$Estimate-z*fit$raters$PredictionSE)
+  expect_equal(unname(high[, "Upper"]), fit$raters$Estimate+z*fit$raters$PredictionSE)
   expect_error(confint(fit, parm = "raters", level = Inf), "level")
   default <- plot(fit, draw = FALSE)$data
   expect_true(all(is.na(default$table$Lower) & is.na(default$table$Upper)))

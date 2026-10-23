@@ -16,12 +16,15 @@ apply_empirical_bayes_shrinkage(
 
 \item{facet_prior_sd}{Optional numeric scalar. When supplied, the
 shrinkage variance is fixed at \code{facet_prior_sd^2} instead of being
-estimated from the data. Useful when a prior is elicited from
+estimated from the data. Its square must be representable, and positive
+when the supplied SD is positive. Useful when a prior is elicited from
 expert knowledge or a previous fit.}
 
 \item{shrink_person}{Logical. When \code{TRUE}, the same empirical-Bayes
-shrinkage is also applied to \code{fit$facets$person}. Default \code{FALSE},
-since MML person estimates already reflect a N(0, sigma^2) prior.}
+adjustment is also applied to ordinary-JML Person estimates with
+available sampling SEs. Default \code{FALSE}. Other estimators are refused:
+MML EAP estimates already use a population prior, and their posterior
+SDs are not sampling SEs for a second normal-model update.}
 }
 \value{
 The same \code{mfrm_fit}, with augmented columns and a new
@@ -52,6 +55,10 @@ and the fitted identification/anchor constraints. It is neither a calibrated
 SE nor a guaranteed lower bound. Unequal shrinkage can break the original
 sum-to-zero constraint. Original estimates, anchors and predictions are
 unchanged; this helper does not refit a hierarchical MFRM.
+The normal-normal formula is exact for an independent Gaussian observation
+with a known Gaussian prior variance. Applying it to jointly calibrated
+MFRM estimates is a descriptive approximation; a James-Stein improvement
+in risk is not established for this adjustment.
 
 A zero estimated prior variance fully pools eligible estimates at zero and
 gives zero plug-in SE; this does not establish perfect precision. Optional
@@ -59,12 +66,16 @@ plot whiskers are descriptive normal bands. Their legacy \code{CI} column names
 do not confer confidence-interval coverage; \code{SupportsFormalInference} is
 false. Invalid estimate/SE pairs retain their original values with unavailable
 shrinkage factors. With fewer than three valid pairs no shrinkage is applied.
+Unrepresentable moment variances also leave the original values unchanged,
+with unavailable factors and an explanatory \code{Note} in the report.
 
 The report records complete-pair counts and mean shrinkage over those pairs.
 \code{EffectiveDF} sums retained weights over eligible levels, conditional on the
 chosen prior variance; it is not model degrees of freedom for testing or IC.
 Reapply this helper to existing fits to refresh old reports; no MFRM refit
-is needed. Regenerate previously saved plots and exports as well.
+is needed. Regenerate previously saved plots and exports as well. Updated
+reports carry \code{CalculationVersion = 2}: positive prior variances no longer
+produce zero plug-in SE merely because a shrinkage factor rounded to one.
 Reapplication replaces the previous adjustment; \code{shrink_person = FALSE}
 removes any previous Person shrinkage columns. The original fitting inputs
 remain recorded separately from the latest post-fit shrinkage settings.
@@ -86,7 +97,6 @@ sentence automatically when \code{fit$config$facet_shrinkage} is set.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -104,7 +114,6 @@ head(fit_eb$facets$others[, c("Facet", "Level", "Estimate",
                                "ShrunkEstimate", "ShrinkageFactor")])
 # Look for: rows where `ShrinkageFactor` is large (close to 1) had
 #   their estimates pulled most strongly toward the facet mean (0).
-}
 }
 \references{
 Efron, B., & Morris, C. (1973). Combining possibly related

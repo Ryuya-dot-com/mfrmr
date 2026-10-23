@@ -66,21 +66,49 @@ mfrmr_adaptive_person_kernel <- function(idx, config, params, base_eta, mu, sigm
   if (any(!is.finite(slope)) || any(slope <= 0)) {
     stop("The retained slopes are not positive finite values.", call. = FALSE)
   }
+  # Thresholds are fixed for this parameter vector throughout mode finding,
+  # quadrature and CDF integration; reuse the same cumulative sums.
+  step_cum <- if (config$model == "RSM") {
+    c(0, cumsum(params$steps))
+  } else {
+    t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
+  }
+  n <- length(idx$score_k)
+  rows <- seq_len(n)
+  step_rows <- if (config$model == "RSM") {
+    matrix(step_cum, n, length(categories), byrow = TRUE)
+  } else step_cum[idx$step_idx, , drop = FALSE]
   function(z, include_linear_part = FALSE, include_moments = TRUE) {
     # CDF integration needs only likelihoods; retain the R moment/gradient path.
     if (!include_moments && mfrm_use_cpp11_backend(config, include_linear_part)) {
       bundle <- mfrm_mml_logprob_bundle_cpp11(
         idx, config, list(nodes = mu + sigma * z, weights = rep(1, length(z))),
-        params, base_eta, include_probs = FALSE
+        params, base_eta, step_cum = step_cum, include_probs = FALSE
       )
       return(list(log_likelihood = colSums(bundle$log_prob_mat)))
     }
-    bundle <- mfrm_mml_logprob_bundle_r(
-      idx, config, list(nodes = mu + sigma * z, weights = rep(1, length(z))),
-      params, base_eta, include_probs = include_moments, include_linear_part = include_linear_part
-    )
-    if (!include_moments) return(list(log_likelihood = colSums(bundle$log_prob_mat)))
-    moments <- vapply(bundle$prob_list, function(probability) {
+    # Stack nodes within this Person so fixed row/category work is not repeated.
+    node_rows <- rep(rows, length(z))
+    eta <- base_eta[node_rows] + rep(mu + sigma * z, each = n)
+    linear <- outer(eta, categories) - step_rows[node_rows, , drop = FALSE]
+    log_num <- if (identical(config$model, "GPCM")) linear * slope[node_rows] else linear
+    flat_rows <- seq_along(node_rows)
+    row_max <- log_num[cbind(flat_rows, max.col(log_num, ties.method = "first"))]
+    log_num <- log_num - row_max
+    log_denom <- log(rowSums(exp(log_num)))
+    log_prob <- log_num[cbind(flat_rows, idx$score_k[node_rows] + 1L)] - log_denom
+    if (!is.null(idx$weight)) log_prob <- log_prob * idx$weight[node_rows]
+    log_likelihood <- colSums(matrix(log_prob, n, length(z)))
+    if (!include_moments) return(list(log_likelihood = log_likelihood))
+    probability <- exp(log_num - log_denom)
+    node_indices <- lapply(seq_along(z), function(q) rows + (q - 1L) * n)
+    prob_list <- lapply(node_indices, function(i) probability[i, , drop = FALSE])
+    linear_part_list <- if (include_linear_part) {
+      if (identical(config$model, "GPCM")) {
+        lapply(node_indices, function(i) linear[i, , drop = FALSE])
+      } else vector("list", length(z))
+    } else NULL
+    moments <- vapply(prob_list, function(probability) {
       expected <- as.vector(probability %*% categories)
       variance <- rowSums(probability *
         (rep(categories, each = nrow(probability)) - expected)^2)
@@ -90,9 +118,9 @@ mfrmr_adaptive_person_kernel <- function(idx, config, params, base_eta, mu, sigm
     if (any(!is.finite(moments))) {
       stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive posterior score or information."))
     }
-    list(log_likelihood = colSums(bundle$log_prob_mat),
+    list(log_likelihood = log_likelihood,
          score = moments[1L, ] - z, information = moments[2L, ] + 1,
-         prob_list = bundle$prob_list, linear_part_list = bundle$linear_part_list)
+         prob_list = prob_list, linear_part_list = linear_part_list)
   }
 }
 
@@ -157,19 +185,22 @@ mfrmr_adaptive_quadrature_review <- function(
       evaluate <- mfrmr_adaptive_person_kernel(
         local_idx, config, params, base_eta[observations], mu[person], sigma
       )
-      summarize <- function(z, joint) {
+      summarize <- function(z, likelihood, log_weights) {
+        offset <- max(likelihood)
+        joint <- (likelihood - offset) + log_weights
         if (any(!is.finite(joint))) {
           stop(new_adaptive_quadrature_numeric_error("Non-finite integration terms."))
         }
         normalizer <- logsumexp(joint)
-        probability <- exp(joint - normalizer)
+        probability <- exp(joint - max(joint))
+        probability <- probability / sum(probability)
         center <- sum(probability * z)
-        value <- c(log_marginal = normalizer, eap = mu[person] + sigma * center,
+        value <- c(log_marginal = offset + normalizer, eap = mu[person] + sigma * center,
                    sd = sigma * sqrt(sum(probability * (z - center)^2)))
         if (any(!is.finite(value))) stop("Non-finite posterior moments.", call. = FALSE)
         value
       }
-      fixed <- summarize(quad$nodes, log(quad$weights) + evaluate(quad$nodes)$log_likelihood)
+      fixed <- summarize(quad$nodes, evaluate(quad$nodes)$log_likelihood, log(quad$weights))
       # For non-negative weights and positive slopes the normal-prior log
       # posterior is strictly concave: information = 1 + sum(w a^2 Var(K)).
       location <- mfrmr_adaptive_posterior_location(evaluate)
@@ -178,9 +209,9 @@ mfrmr_adaptive_quadrature_review <- function(
       adaptive <- vapply(rules, function(rule) {
         z <- mode + scale * rule$nodes
         # The density ratio and Jacobian retain the original prior/integral.
-        joint <- log(rule$weights) + evaluate(z)$log_likelihood +
+        log_weights <- log(rule$weights) +
           stats::dnorm(z, log = TRUE) - stats::dnorm(rule$nodes, log = TRUE) + log(scale)
-        summarize(z, joint)
+        summarize(z, evaluate(z)$log_likelihood, log_weights)
       }, c(log_marginal = 0, eap = 0, sd = 0))
       out$FixedLogMarginal <- fixed["log_marginal"]
       out$AdaptiveLogMarginal <- adaptive["log_marginal", ]
@@ -265,8 +296,8 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
   })
   cumulative <- do.call(rbind, Reduce(`+`, cumulative, accumulate = TRUE))
   log_slope_design <- mfrmr_empty_sparse_matrix(n, p)
-  if (length(slices$log_slopes)) {
-    log_slope_design[, slices$log_slopes] <-
+  if (length(slices[["log_slopes"]])) {
+    log_slope_design[, slices[["log_slopes"]]] <-
       gpcm_log_slope_design(config$gpcm_spec)[idx$slope_idx, , drop = FALSE]
   }
   person_ids <- sort(unique(idx$person))
@@ -306,17 +337,17 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
       at_mode <- evaluate(mode, include_linear_part = TRUE)
       scale <- location$scale
       mean_derivative <- variance_derivative <- numeric(p)
-      if (length(slices$beta)) {
-        mean_derivative[slices$beta] <-
+      if (length(slices[["beta"]])) {
+        mean_derivative[slices[["beta"]]] <-
           population$design_matrix[population$person_lookup[person], ]
       }
-      if (length(slices$log_sigma2)) variance_derivative[slices$log_sigma2] <- 1
+      if (length(slices[["log_sigma2"]])) variance_derivative[slices[["log_sigma2"]]] <- 1
       # Projects category-logit derivatives into the optimizer's actual free
       # coordinates, including anchored steps and signed facet interactions.
       project <- function(coefficient, linear) {
         answer <- as.numeric(Matrix::crossprod(designs[[i]]$cumulative,
           as.vector(coefficient[, -1L, drop = FALSE] * slope)))
-        if (length(slices$log_slopes)) {
+        if (length(slices[["log_slopes"]])) {
           answer <- answer + as.numeric(Matrix::crossprod(designs[[i]]$log_slope,
             rowSums(coefficient * linear) * slope))
         }
@@ -345,14 +376,16 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
         (2 * curvature)
       z <- mode + scale * rule$nodes
       nodes <- evaluate(z, include_linear_part = TRUE)
-      joint <- log(rule$weights) + nodes$log_likelihood + stats::dnorm(z, log = TRUE) -
+      offset <- max(nodes$log_likelihood)
+      joint <- log(rule$weights) + (nodes$log_likelihood - offset) + stats::dnorm(z, log = TRUE) -
         stats::dnorm(rule$nodes, log = TRUE) + log(scale)
       if (any(!is.finite(joint))) {
         stop(new_adaptive_quadrature_numeric_error("Non-finite integration terms."))
       }
       normalizer <- logsumexp(joint)
-      posterior <- exp(joint - normalizer)
-      value <- value - normalizer
+      posterior <- exp(joint - max(joint))
+      posterior <- posterior / sum(posterior)
+      value <- value - (offset + normalizer)
       # Projection is linear: average category derivatives before multiplying
       # by the same sparse designs. Keep the slope's residual-times-logit
       # average separate; a product of averages would change the gradient.
@@ -363,14 +396,14 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
         residual <- -nodes$prob_list[[q]]
         residual[observed] <- residual[observed] + 1
         residual_mean <- residual_mean + posterior[q] * residual
-        if (length(slices$log_slopes)) {
+        if (length(slices[["log_slopes"]])) {
           slope_mean <- slope_mean + posterior[q] *
             rowSums(residual * nodes$linear_part_list[[q]])
         }
       }
       fixed_derivative <- as.numeric(Matrix::crossprod(designs[[i]]$cumulative,
         as.vector(residual_mean[, -1L, drop = FALSE] * (w * slope))))
-      if (length(slices$log_slopes)) {
+      if (length(slices[["log_slopes"]])) {
         fixed_derivative <- fixed_derivative + as.numeric(Matrix::crossprod(
           designs[[i]]$log_slope, slope_mean * (w * slope)))
       }

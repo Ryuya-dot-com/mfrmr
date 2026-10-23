@@ -98,9 +98,9 @@ writable::list mfrm_cpp_rsm_logprob_bundle(integers score_k,
           prob_row[static_cast<size_t>(k)] = prob;
           denom_sum += prob;
         }
-        const double log_denom = row_max + std::log(denom_sum);
+        const double log_denom = std::log(denom_sum);
 
-        double lp = log_num[static_cast<size_t>(obs_col)] - log_denom;
+        double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
         if (has_weight) {
           lp *= weight_vec[i];
         }
@@ -129,9 +129,9 @@ writable::list mfrm_cpp_rsm_logprob_bundle(integers score_k,
         for (int k = 0; k < k_cat; ++k) {
           denom_sum += std::exp(log_num[static_cast<size_t>(k)] - row_max);
         }
-        const double log_denom = row_max + std::log(denom_sum);
+        const double log_denom = std::log(denom_sum);
 
-        double lp = log_num[static_cast<size_t>(obs_col)] - log_denom;
+        double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
         if (has_weight) {
           lp *= weight_vec[i];
         }
@@ -201,9 +201,9 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
           prob_row[static_cast<size_t>(k)] = prob;
           denom_sum += prob;
         }
-        const double log_denom = row_max + std::log(denom_sum);
+        const double log_denom = std::log(denom_sum);
 
-        double lp = log_num[static_cast<size_t>(obs_col)] - log_denom;
+        double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
         if (has_weight) {
           lp *= weight_vec[i];
         }
@@ -232,9 +232,9 @@ writable::list mfrm_cpp_pcm_logprob_bundle(integers score_k,
         for (int k = 0; k < k_cat; ++k) {
           denom_sum += std::exp(log_num[static_cast<size_t>(k)] - row_max);
         }
-        const double log_denom = row_max + std::log(denom_sum);
+        const double log_denom = std::log(denom_sum);
 
-        double lp = log_num[static_cast<size_t>(obs_col)] - log_denom;
+        double lp = (log_num[static_cast<size_t>(obs_col)] - row_max) - log_denom;
         if (has_weight) {
           lp *= weight_vec[i];
         }

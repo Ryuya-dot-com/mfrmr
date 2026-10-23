@@ -871,8 +871,8 @@ build_bias_contract_checks <- function(case_id,
     use_a <- isTRUE(bias_tbl$FacetA[1] == target_facet)
     target_level_col <- if (use_a) "FacetA_Level" else "FacetB_Level"
     context_level_col <- if (use_a) "FacetB_Level" else "FacetA_Level"
-    bias_lookup <- bias_tbl[, c(target_level_col, context_level_col, "Bias Size", "S.E.", "d.f."), drop = FALSE]
-    names(bias_lookup) <- c("Target", "Context", "BiasSize", "BiasSE", "BiasDF")
+    bias_lookup <- bias_tbl[, c(target_level_col, context_level_col, "Bias Size", "S.E.", "Observd Count"), drop = FALSE]
+    names(bias_lookup) <- c("Target", "Context", "BiasSize", "BiasSE", "BiasCount")
 
     lookup_key <- paste(bias_lookup$Target, bias_lookup$Context, sep = "\r")
     pair1_idx <- match(paste(pair_tbl$Target, pair_tbl$Context1, sep = "\r"), lookup_key)
@@ -882,10 +882,10 @@ build_bias_contract_checks <- function(case_id,
 
     local1_err <- abs((suppressWarnings(as.numeric(pair_tbl$`Local Measure1`)) -
                          suppressWarnings(as.numeric(pair_tbl$`Target Measure`))) -
-                        suppressWarnings(as.numeric(pair1_lookup$BiasSize)))
+                        suppressWarnings(as.numeric(pair1_lookup$BiasSize)) / pair_tbl$TargetSign)
     local2_err <- abs((suppressWarnings(as.numeric(pair_tbl$`Local Measure2`)) -
                          suppressWarnings(as.numeric(pair_tbl$`Target Measure`))) -
-                        suppressWarnings(as.numeric(pair2_lookup$BiasSize)))
+                        suppressWarnings(as.numeric(pair2_lookup$BiasSize)) / pair_tbl$TargetSign)
     contrast_err <- with(pair_tbl, abs(Contrast - (`Local Measure1` - `Local Measure2`)))
     se_expected <- sqrt(suppressWarnings(as.numeric(pair1_lookup$BiasSE))^2 +
                           suppressWarnings(as.numeric(pair2_lookup$BiasSE))^2)
@@ -896,8 +896,8 @@ build_bias_contract_checks <- function(case_id,
       },
       se1 = suppressWarnings(as.numeric(pair1_lookup$BiasSE)),
       se2 = suppressWarnings(as.numeric(pair2_lookup$BiasSE)),
-      df1 = suppressWarnings(as.numeric(pair1_lookup$BiasDF)),
-      df2 = suppressWarnings(as.numeric(pair2_lookup$BiasDF))
+      df1 = suppressWarnings(as.numeric(pair1_lookup$BiasCount)) - 1,
+      df2 = suppressWarnings(as.numeric(pair2_lookup$BiasCount)) - 1
     )
     df_pair_err <- abs(suppressWarnings(as.numeric(pair_tbl$`d.f.`)) - df_expected)
     local_max <- finite_max(c(local1_err, local2_err))
@@ -911,7 +911,7 @@ build_bias_contract_checks <- function(case_id,
         Metric = "LocalMeasureIdentity",
         MaxError = local_max,
         Status = score_reference_metric(local_max),
-        Detail = "Local target measures matched overall target measures plus the corresponding context-specific bias terms."
+        Detail = "Local target measures matched overall target measures plus the context-specific predictor shift divided by the target orientation."
       ),
       tibble::tibble(
         Case = case_id,
@@ -965,7 +965,8 @@ build_conquest_overlap_dry_run_checks <- function(case_id, fit_obj) {
     conquest_case_person = "PID",
     conquest_case_estimate = "EAP"
   )
-  audit <- review_conquest_overlap(bundle, normalized)
+  # These synthetic tables copy the same native coordinates, not external fits.
+  audit <- review_conquest_overlap(bundle, normalized, conquest_location_shift = 0)
   overall <- as.data.frame(audit$overall, stringsAsFactors = FALSE)
 
   row_metric <- function(metric, value, pass_max, warn_max, detail) {
@@ -1330,14 +1331,12 @@ summarize_reference_benchmark_case <- function(case_id, case_type, fit_runs, des
 #'
 #' @return An object of class `mfrm_reference_benchmark`.
 #' @examples
-#' \donttest{
 #' bench <- reference_case_benchmark(
 #'   cases = "synthetic_truth",
 #'   method = "JML",
 #'   maxit = 30
 #' )
 #' summary(bench)
-#' }
 #' @export
 reference_case_benchmark <- function(cases = c(
                                        "synthetic_truth",

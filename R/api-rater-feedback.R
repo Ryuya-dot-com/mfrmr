@@ -84,13 +84,19 @@ mfrm_rater_feedback <- function(x, facet, rater, audience, label, max_cases, int
     if (!ci$settings$method %in% c("model", "sandwich")) stop("Unsupported saved interval method.", call. = FALSE)
     ends <- as.numeric(c(tab$Lower, tab$Upper))
     ends <- if (sign == 1) -rev(ends) else ends
-    available <- identical(as.character(tab$Status), "available") && all(is.finite(ends))
+    valid_bounds <- all(is.finite(ends)) && ends[1] <= ends[2]
+    available <- identical(as.character(tab$Status), "available") && valid_bounds &&
+      (!"CIEligible" %in% names(tab) || isTRUE(tab$CIEligible))
+    reason <- mfrm_rater_interval_reason(available,
+      if (identical(as.character(tab$Status), "available") && !valid_bounds)
+        "invalid_bounds" else as.character(tab$Status))
+    if (!available) ends[] <- NA_real_
     tables$uncertainty <- data.frame(Level = as.numeric(ci$settings$level),
       Lower = ends[1], Upper = ends[2], Method = as.character(ci$settings$method),
-      Available = available)
+      Available = available, Reason = reason)
     notes["uncertainty"] <- paste(
       if (available) "Saved approximate pointwise interval for this fixed rater's severity." else
-        "The saved individual-rater interval is unavailable; do not interpret its endpoints as a usable interval.",
+        paste("The saved individual-rater interval is unavailable.", reason),
       "It conditions on the fitted facet levels and does not classify rater quality or guarantee coverage.",
       if (ci$settings$method == "sandwich") "The sandwich calculation assumes independent declared clusters and does not correct biased estimates." else
         "The model-based calculation relies on the fitted model's assumptions."
@@ -272,12 +278,18 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
       stop("The saved interval must retain this component's estimate, scale and method.", call. = FALSE)
     available <- isTRUE(tab$CIEligible) && all(is.finite(c(tab$CI_Lower, tab$CI_Upper))) &&
       tab$CI_Lower > 0 && tab$CI_Lower <= tab$CI_Upper
-    tables$uncertainty <- data.frame(Level = as.numeric(level), Lower = as.numeric(tab$CI_Lower),
-      Upper = as.numeric(tab$CI_Upper), Method = if (settings$method == "model") "Log-Wald" else "Profile likelihood",
-      Adjustment = if (adjustment == "none") "Pointwise" else "Bonferroni", Available = available)
+    reason <- mfrm_rater_interval_reason(available,
+      if (isTRUE(tab$CIEligible) && !available) "invalid_bounds" else NULL,
+      checks = attr(ci, "checks"), endpoints = attr(ci, "profile")$endpoints)
+    tables$uncertainty <- data.frame(Level = as.numeric(level),
+      Lower = if (available) as.numeric(tab$CI_Lower) else NA_real_,
+      Upper = if (available) as.numeric(tab$CI_Upper) else NA_real_,
+      Method = if (settings$method == "model") "Log-Wald" else "Profile likelihood",
+      Adjustment = if (adjustment == "none") "Pointwise" else "Bonferroni",
+      Available = available, Reason = reason)
     notes["uncertainty"] <- paste(
       if (available) "Saved experimental interval for this component slope only." else
-        "The saved component-slope interval is unavailable; any retained endpoints do not form a usable interval.",
+        paste("The saved component-slope interval is unavailable.", reason),
       "It does not describe uncertainty in location or category steps. Coverage is not established; this is not a test of rater quality or a comparison with another rater.",
       if (adjustment == "bonferroni") "The saved Bonferroni adjustment retains the original family of targets; selecting one recipient does not change it.")
   }
@@ -330,6 +342,56 @@ mfrm_gmfrm_rater_feedback <- function(x, facet, rater, audience, label, max_case
   out
 }
 
+# Only fixed descriptions cross the recipient boundary, never source free text.
+mfrm_rater_interval_reason <- function(available, status = NULL, checks = NULL, endpoints = NULL) {
+  if (available) return("Saved interval is numerically available under its stated assumptions; coverage is not guaranteed.")
+  reasons <- c(
+    fixed = "This value is fixed by a model constraint; no inferential interval is supplied.",
+    insufficient_cluster_rank = "There is insufficient independent-group information for the requested sandwich interval; model-based bounds are not substituted.",
+    nonpositive_variance = "The estimated variance is nonpositive or nonfinite; uncertainty cannot be calculated.",
+    nonfinite_bounds = "The interval bounds cannot be represented as finite numbers.",
+    invalid_bounds = "The saved bounds are missing, nonfinite or invalid for this interval.",
+    numerical_review_failed = "The source estimation or information checks did not pass.")
+  if (length(status) == 1L && !is.na(status) && status %in% names(reasons))
+    return(unname(reasons[status]))
+  profile_reasons <- c(
+    source_profile_failed = "Profile checks at the fitted value failed.",
+    numerical_or_start_failure = "Numerical checks or agreement between starting values failed.",
+    nonmonotone_profile = "The searched likelihood did not change consistently away from the fitted value.",
+    endpoint_search_failed = "An interval endpoint search failed.",
+    endpoint_check_failed = "An interval endpoint did not meet the numerical accuracy checks.",
+    crossing_not_found = "No likelihood cutoff crossing was found within the searched range; this does not establish an unbounded interval.",
+    source_likelihood_improved = "The search found a better source likelihood; the original fit needs review.")
+  if (is.data.frame(endpoints) && "Status" %in% names(endpoints)) {
+    known <- unique(as.character(endpoints$Status))
+    known <- known[known %in% names(profile_reasons)]
+    if (length(known)) return(paste(unname(profile_reasons[known]), collapse = " "))
+  }
+  if (is.data.frame(checks) && all(c("Check", "Passed") %in% names(checks))) {
+    failed <- as.character(checks$Check[!checks$Passed %in% TRUE])
+    descriptions <- c(
+      "Scope" = "The saved analysis does not meet the method's supported conditions.",
+      "Model identity" = "The saved model and source data did not agree.",
+      "Slope identity" = "The saved slope values and model constraints did not agree.",
+      "EM convergence" = "Estimation did not meet the convergence checks.",
+      "Direct convergence" = "Estimation did not meet the convergence checks.",
+      "Category support" = "The observed categories do not support this interval approximation.",
+      "Joint information" = "The joint information matrix could not support an unregularized uncertainty calculation.",
+      "Likelihood identity" = "The saved likelihood did not match its numerical reevaluation.",
+      "Score workspace" = "The numerical verification exceeded its configured memory allowance.",
+      "Score derivatives" = "The numerical derivatives could not be verified.",
+      "Score derivative stability" = "The numerical derivatives were not sufficiently stable.",
+      "Stationary local maximum" = "The fitted solution did not meet the local optimum checks.",
+      "Refined quadrature information" = "The more accurate integration did not provide usable information.",
+      "Quadrature sensitivity" = "The numerical integration was not sufficiently stable.")
+    known <- failed[failed %in% names(descriptions)]
+    if (length(known)) return(paste(unique(unname(descriptions[known])), collapse = " "))
+    if (length(failed)) return("The saved source checks did not pass; ask the analyst to review the full interval result.")
+    if (nrow(checks)) return("The variance or interval bounds could not be calculated despite passing the source checks.")
+  }
+  "The saved interval is marked unavailable or lacks usable diagnostics; ask the analyst to review the full interval result."
+}
+
 mfrm_rater_feedback_render <- function(x, html = TRUE) {
   headings <- c(severity = "Scoring tendency", exposure = "Ratings included",
     uncertainty = "Uncertainty in scoring tendency", fit = "Consistency with the model",
@@ -337,7 +399,7 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
     steps = "Category-step offsets", residuals = "Saved response residuals")
   product <- "slope" %in% names(x$tables)
   if (product) headings["uncertainty"] <- "Uncertainty in the component slope"
-  headings <- headings[names(x$tables)]
+  headings <- headings[setdiff(names(x$tables), "interpretation_notes")]
   display <- lapply(x$tables, function(tab) {
     tab[] <- lapply(tab, function(col) {
       if (is.numeric(col)) ifelse(is.na(col), "Not available", format(round(col, 3), trim = TRUE)) else col
@@ -348,6 +410,8 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
   names(display$exposure) <- if (product) c("Rating rows", "People rated", "Observed counterpart levels", "Fitted counterpart levels") else
     c("Rating rows", "People rated", "Weight total")
   if (nrow(display$uncertainty)) {
+    # The same reason is shown beside the table and retained in its CSV fields.
+    display$uncertainty$Reason <- NULL
     display$uncertainty$Level <- paste0(100 * x$tables$uncertainty$Level, "%")
     if (!product) display$uncertainty$Method <- ifelse(display$uncertainty$Method == "model", "Model-based", "Sandwich")
     display$uncertainty$Available <- ifelse(display$uncertainty$Available, "Available", "Unavailable")
@@ -404,6 +468,8 @@ mfrm_rater_feedback_render <- function(x, html = TRUE) {
 print.mfrm_rater_feedback <- function(x, ...) {
   cat(x$title, "\n", x$label, "\n", x$review, "\n", sep = "")
   print(x$tables$severity, row.names = FALSE)
+  cat("\n", x$notes[["uncertainty"]], "\n", sep = "")
+  if (nrow(x$tables$uncertainty)) print(x$tables$uncertainty, row.names = FALSE)
   invisible(x)
 }
 

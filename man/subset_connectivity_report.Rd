@@ -48,13 +48,14 @@ and edge tables with \code{draw = FALSE}; drawing uses \code{igraph} when availa
 
 \enumerate{
 \item Run \code{subset_connectivity_report(fit)}.
-\item Confirm near-single-subset structure when possible.
-\item Use results to justify linking/anchoring strategy.
+\item Inspect graph coverage alongside \code{identification_audit}. A common
+criterion can connect panels whose person/rater locations remain confounded.
+\item Use the model rank and population assumptions to assess linking; a single
+co-observation component is not a FACETS identification subset.
 }
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- subset_connectivity_report(fit)
@@ -66,7 +67,6 @@ p_sub$data$plot
 p_design$data$plot
 p_net$data$edges
 out$summary[, c("Subset", "Observations", "ObservationPercent")]
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}},

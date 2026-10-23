@@ -31,7 +31,9 @@ export_mfrm_bundle(
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When \code{NULL},
 diagnostics are reused from \code{run_mfrm_facets()} when available, otherwise
 computed with \code{residual_pca = "none"} (or \code{"both"} when visual summaries
-are requested).}
+are requested).
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.}
 
 \item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}} or a named list of
 bias bundles.}
@@ -104,6 +106,17 @@ CSV/text/replay artifacts and a lightweight HTML page from the fitted object.
 Use \code{\link[=mfrm_results]{mfrm_results()}} and \code{\link[=mfrm_report]{mfrm_report()}} first when you want to inspect a
 results object before writing files; use \code{export_mfrm_bundle()} when the
 goal is a project-folder bundle from \code{fit}.
+For only the core CSV tables without automatic diagnostics, use
+\code{\link[=export_mfrm_tables]{export_mfrm_tables()}}. For a complete saved R result that reloads without
+refitting, use \code{\link[=export_mfrm_results]{export_mfrm_results()}}. The optional \code{"script"} component
+here is a refitting recipe, not a copy of the fitted R object.
+
+The returned \code{written_files} and optional ZIP include only files written
+by this call. With \code{overwrite = TRUE}, the ZIP is built afresh and checked
+before replacing an existing archive; obsolete members are not retained.
+If ZIP creation fails, any older ZIP remains in place but is not counted
+as a new output: \code{summary$ZipWritten} is zero and \code{notes} explains the failure.
+Unrequested loose files in the folder are left in place.
 
 Every bundle is an analysis archive, not a deidentified or automatically
 shareable package. Core tables, anchors, predictions, replay sidecars,
@@ -143,7 +156,7 @@ Common starting points are:
 
 Depending on \code{include}, the exporter can write:
 \itemize{
-\item core CSV tables via \code{\link[=export_mfrm]{export_mfrm()}}
+\item core CSV tables via \code{\link[=export_mfrm_tables]{export_mfrm_tables()}}
 \item checklist CSVs via \code{\link[=reporting_checklist]{reporting_checklist()}}
 \item facet-dashboard CSVs and interpretation notes via \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
 including screening settings in CSV and HTML; HTML tables show every
@@ -202,8 +215,18 @@ replay script, and HTML summary.
 }
 }
 
+\section{Saved-result reuse}{
+
+Supplied screening results must describe this fitted analysis. Results from
+another fit or older results without identity metadata are refused. See
+\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
+diagnostics without refitting the model.
+Supplied unit scores, plausible values and fit-derived forecasts must also
+match this calibration. A forecast created with \code{sim_spec} remains a separate
+scenario; its source is recorded without asserting a match to the fit.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -224,10 +247,9 @@ head(data.frame(
 ))
 # Full paths and data-handling notes remain in bundle$written_files.
 }
-}
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=mfrm_report]{mfrm_report()}},
 \code{\link[=export_mfrm_results]{export_mfrm_results()}}, \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}},
-\code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, \code{\link[=export_mfrm]{export_mfrm()}},
+\code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}, \code{\link[=export_mfrm_tables]{export_mfrm_tables()}},
 \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}
 }

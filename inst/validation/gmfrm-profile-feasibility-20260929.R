@@ -60,9 +60,9 @@ gmfrm_profile_feasibility_run <- function(out, cores=2L) {
     unavailable <- list(result=NULL,error=paste("Source fit unavailable:",fitted$error),
       warnings=character(),seconds=0,cpu=0)
     wald <- if(is.null(fit)) unavailable else gmfrm_profile_capture(function()
-      confint(fit,method="model",level=plan$level))
+      confint(fit, parm = "slopes",method="model",level=plan$level))
     profiles <- lapply(plan$targets,function(target) if(is.null(fit)) unavailable else
-      gmfrm_profile_capture(function() confint(fit,method="profile",slope=target,
+      gmfrm_profile_capture(function() confint(fit, parm = "slopes",method="profile",slope=target,
         level=plan$level,profile_control=plan$profile_control)))
     rows <- do.call(rbind,lapply(seq_along(plan$targets),function(j) {
       target <- plan$targets[[j]]; owner <- names(target); lev <- unname(target)

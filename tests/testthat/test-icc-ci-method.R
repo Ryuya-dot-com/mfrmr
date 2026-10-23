@@ -187,15 +187,41 @@ test_that("hierarchical wrapper retains CI results and saved intervals require r
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_warning(plot(h, type = "icc"))
-  # Test the graphic's actual annotations without generating an extra artifact.
+  # Keep annotations out of the figure and available in the returned notes.
   title <- NULL
   testthat::local_mocked_bindings(barplot = function(height, main, ...) {
     title <<- main
     graphics::plot.new()
     seq_along(height)
   }, arrows = function(...) NULL, .package = "graphics")
-  expect_no_error(plot(h, type = "icc"))
-  expect_match(title, "95% parametric bootstrap CI")
+  before <- h
+  expect_no_error(p <- plot(h, type = "icc"))
+  expect_identical(title, "")
+  expect_identical(h, before)
+  expect_identical(p$icc, h$icc)
+  expect_match(plot_data(p, "notes")$Text, "95% parametric bootstrap CI")
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path), add = TRUE)
+  saveRDS(p, path)
+  expect_identical(plot_data(readRDS(path), "notes"), plot_data(p, "notes"))
+  if (requireNamespace("callr", quietly = TRUE)) {
+    # A source-loaded test must not reopen its result with an older installed release.
+    source_path <- getNamespaceInfo(asNamespace("mfrmr"), "path")
+    if (!file.exists(file.path(source_path, "R", "api-hierarchical-audit.R"))) source_path <- NULL
+    reopened <- callr::r(function(file, source_path) {
+      if (!is.null(source_path)) pkgload::load_all(source_path, quiet = TRUE)
+      mfrmr::plot_data(readRDS(file), "notes")
+    }, args = list(path, source_path), libpath = .libPaths())
+    expect_identical(reopened, plot_data(p, "notes"))
+  }
+  expect_no_error(crossed <- plot(p, type = "crosstab"))
+  expect_null(attr(crossed, "mfrmr_notes"))
+  partial <- h
+  partial$icc$ICC_CI_Lower[1] <- partial$icc$ICC_CI_Upper[1] <- NA_real_
+  partial$icc$ICC_CI_Status[1] <- "Incomplete bootstrap"
+  expect_no_error(p <- plot(partial, type = "icc"))
+  expect_match(plot_data(p, "notes")$Text, "95% parametric bootstrap CI")
+  expect_match(plot_data(p, "notes")$Text, "Intervals unavailable: Incomplete bootstrap")
   for (method in c("profile", "boot")) {
     old <- h$icc
     old$ICC_CI_Method <- method
@@ -210,8 +236,9 @@ test_that("hierarchical wrapper retains CI results and saved intervals require r
   h$icc <- .icc_call(ci_method = "boot", ci_boot_reps = 5)
   h$icc$ICC_CI_Lower <- h$icc$ICC_CI_Upper <- NA_real_
   h$icc$ICC_CI_Status <- "Incomplete bootstrap"
-  expect_no_error(plot(h, type = "icc"))
-  expect_match(title, "Intervals unavailable: Incomplete bootstrap")
+  expect_no_error(p <- plot(h, type = "icc"))
+  expect_identical(title, "")
+  expect_match(plot_data(p, "notes")$Text, "Intervals unavailable: Incomplete bootstrap")
 })
 
 test_that("constant-response bootstrap refits cannot contribute numerical variance residue", {

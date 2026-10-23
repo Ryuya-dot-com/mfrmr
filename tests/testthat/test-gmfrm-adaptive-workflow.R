@@ -29,7 +29,7 @@ test_that("two-family adaptive fitting preserves its objective and output scope"
     expand_params(fit$opt$par, setup$sizes, fit$config),
     gauss_hermite_normal(7L), fit$prep$levels$Person, 7L)
   expect_equal(fit$summary$LogLik, sum(review$AdaptiveLogMarginal), tolerance = 1e-12)
-  ci <- confint(fit)
+  ci <- confint(fit, parm = "slopes")
   expect_true(all(is.na(ci)))
   expect_match(attr(ci, "diagnostics")$InferenceReview[1], "Direct adaptive MML must pass")
   expect_output(print(fit), "adaptive Gauss-Hermite")
@@ -55,9 +55,9 @@ test_that("two-family adaptive fitting preserves its objective and output scope"
   unresolved$fit$summary$Converged <- TRUE
   unresolved$fit$opt$optimizer_diagnostics$ConvergenceSeverity <- "review"
   expect_match(mfrm_report(unresolved)$markdown, "did not pass its numerical")
-  # A component profile must also stop before using fixed-grid curvature.
-  expect_error(confint(fit, method = "profile", slope = c(`First owner` = "a2")),
-    "Adaptive two-family profile intervals are unavailable")
+  # A component profile must reject the same unconverged source.
+  expect_error(confint(fit, parm = "slopes", method = "profile", slope = c(`First owner` = "a2")),
+    "Direct adaptive MML must pass")
   expect_error(mfrm_response_diagnostics(fit), "Resolve the two-family convergence")
   expect_error(predict_mfrm_units(fit, data), "Resolve the two-family convergence")
   file <- tempfile(fileext = ".rds"); on.exit(unlink(file), add = TRUE)
@@ -113,7 +113,7 @@ test_that("adaptive two-family intervals retain the full covariance and output i
     mml_integration = "adaptive", quad_points = 31L, maxit = 500L, reltol = 1e-10)
   expect_true(fit$summary$Converged)
   before <- fit
-  expect_warning(ci <- confint(fit), "Experimental two-family")
+  expect_warning(ci <- confint(fit, parm = "slopes"), "Experimental two-family")
   expect_identical(fit, before)
   tab <- attr(ci, "diagnostics")
   expect_true(all(tab$CIEligible))
@@ -214,18 +214,18 @@ test_that("adaptive two-family intervals retain the full covariance and output i
   expect_identical(summary(restored$response_diagnostics), summary(response))
   expect_identical(mfrm_report(restored)$markdown, mfrm_report(results)$markdown)
   bad <- fit; bad$opt$value <- bad$opt$value + 1
-  unavailable <- confint(bad)
+  unavailable <- confint(bad, parm = "slopes")
   expect_true(all(is.na(unavailable)))
   expect_match(attr(unavailable, "diagnostics")$InferenceReview[1], "likelihood must match")
-  expect_error(confint(fit, method = "profile", slope = c(`First owner` = "same")),
-    "Adaptive two-family profile intervals are unavailable")
+  expect_error(confint(bad, parm = "slopes", method = "profile", slope = c(`First owner` = "same")),
+    "likelihood must match")
   expect_false(fit$summary$InferenceReady)
   expect_false(fit$summary$ICEligible)
   args <- fit$config$replay_inputs
   args$package_version <- NULL; args$data <- d; args$quad_points <- 3L
   coarse <- do.call(fit_mfrm, args)
   expect_true(coarse$summary$Converged)
-  missing <- confint(coarse)
+  missing <- confint(coarse, parm = "slopes")
   expect_true(all(is.na(missing)))
   expect_identical(with(attr(missing, "checks"), Check[!Passed]), "Quadrature sensitivity")
   # Saved output must remain usable without reoptimizing or integrating.

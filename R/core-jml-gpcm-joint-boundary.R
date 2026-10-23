@@ -443,9 +443,9 @@ mfrmr_jml_gpcm_joint_rate_boundary_limit <- function(
       }
       scaled <- slopes[group] * utilities[observation, top]
       scaled_max <- max(scaled)
-      denominator <- scaled_max + log(sum(exp(scaled - scaled_max)))
+      denominator <- log(sum(exp(scaled - scaled_max)))
       row_limit[observation] <-
-        slopes[group] * utilities[observation, observed] - denominator
+        (slopes[group] * utilities[observation, observed] - scaled_max) - denominator
     } else {
       valid <- FALSE
       row_limit[observation] <- NA_real_
@@ -620,7 +620,7 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
       }
     ))
   }
-  if (n_levels <= 1L || as.integer(sizes$log_slopes %||% 0L) == 0L) {
+  if (n_levels <= 1L || as.integer(sizes[["log_slopes"]] %||% 0L) == 0L) {
     return(finish(
       "no_free_log_slope_coordinates", TRUE, TRUE,
       "The unit-slope GPCM reduction has no joint log-slope pair path.",
@@ -769,10 +769,8 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
     nrow = n_observations, ncol = n_categories
   )
   row_max <- apply(scaled, 1L, max)
-  log_denominator <- row_max + log(rowSums(exp(
-    scaled - matrix(row_max, nrow = n_observations,
-                    ncol = n_categories)
-  )))
+  scaled <- scaled - row_max
+  log_denominator <- log(rowSums(exp(scaled)))
   observed_scaled <- scaled[cbind(seq_len(n_observations), score_k + 1L)]
   retained_log_likelihood <- sum(weight * (observed_scaled - log_denominator))
   optimizer_log_likelihood <- tryCatch(
@@ -1074,7 +1072,7 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
   )
 
   slices <- build_param_slices(sizes)
-  optimizer_log_slope_index <- as.integer(slices$log_slopes %||% integer(0))
+  optimizer_log_slope_index <- as.integer(slices[["log_slopes"]] %||% integer(0))
   loading_rows <- list()
   rate_loading_rows <- list()
   loading_cursor <- 0L

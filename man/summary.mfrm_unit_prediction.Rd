@@ -9,7 +9,8 @@
 \arguments{
 \item{object}{Output from \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.}
 
-\item{digits}{Number of digits used in numeric summaries.}
+\item{digits}{Number of digits used in numeric summaries. Decision
+probabilities, cut boundaries and scoring priors are not rounded.}
 
 \item{...}{Reserved for generic compatibility.}
 }
@@ -17,6 +18,7 @@
 An object of class \code{summary.mfrm_unit_prediction} with:
 \itemize{
 \item \code{estimates}: posterior summaries by person
+\item \code{decisions}: unrounded conditional probabilities, when requested
 \item \code{row_review}: row-preparation review
 \item \code{population_review}: optional person-level omission review for
 latent-regression scoring
@@ -27,25 +29,7 @@ latent-regression scoring
 \description{
 Summarize posterior unit scoring output
 }
-\examples{
-toy <- load_mfrmr_data("example_core")
-keep_people <- unique(toy$Person)[1:18]
-toy_fit <- fit_mfrm(
-  toy[toy$Person \%in\% keep_people, , drop = FALSE],
-  "Person", c("Rater", "Criterion"), "Score",
-  method = "MML",
-  quad_points = 5,
-  maxit = 30
-)
-new_units <- data.frame(
-  Person = c("NEW01", "NEW01"),
-  Rater = unique(toy$Rater)[1],
-  Criterion = unique(toy$Criterion)[1:2],
-  Score = c(2, 3)
-)
-pred_units <- predict_mfrm_units(toy_fit, new_units)
-summary(pred_units)
-}
 \seealso{
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for an executable scoring and reporting
+example; \code{\link[=apa_table]{apa_table()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}}
 }

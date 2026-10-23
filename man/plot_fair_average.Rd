@@ -15,8 +15,8 @@ plot_fair_average(
   ci_level = 0.95,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
-  show_title = TRUE,
-  show_notes = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
   ...
 )
 }
@@ -105,6 +105,12 @@ For a plot-selection guide and a longer walkthrough, see
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -137,7 +143,6 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -156,19 +161,19 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # How do the observed and reference-adjusted person averages compare?
-plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
-                  metric = "FairM", plot_type = "scatter")
+plot(fit, type = "fair_average", diagnostics = diagnostics,
+  facet = "Person", metric = "FairM", view = "scatter")
 
 # Optional: inspect the gap (observed average minus FairM)
-plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
-                  metric = "FairM", plot_type = "difference")
+plot(fit, type = "fair_average", diagnostics = diagnostics,
+  facet = "Person", metric = "FairM", view = "difference")
 # A positive gap means the observed average is higher than the model-based FairM
 }
-}
 \seealso{
-\code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},
+\link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link{mfrmr_visual_diagnostics}
 }
 \concept{confidence intervals}
 \concept{fair averages}
 \concept{visual diagnostics}
+\keyword{internal}

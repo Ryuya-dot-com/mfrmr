@@ -23,7 +23,9 @@ facets_fit_review(
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. If it does not
 contain FACETS-style fit columns, diagnostics are recomputed with
-\code{fit_df_method = "both"} and \code{residual_pca = "none"}.}
+\code{fit_df_method = "both"} and \code{residual_pca = "none"}.
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.}
 
 \item{facets_fit}{Optional external FACETS fit table, or a list of such
 tables. The helper matches rows by \code{Facet} and \code{Level}; a person-only table
@@ -95,14 +97,12 @@ sparse cell; such NA-vs-finite pairs are availability differences, not
 fit differences. Both notes are repeated in the returned \code{guidance} table.
 }
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
 )
 review <- facets_fit_review(fit)
 summary(review)
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facets_output_contract_review]{facets_output_contract_review()}},

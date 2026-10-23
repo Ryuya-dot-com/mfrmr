@@ -25,7 +25,7 @@ on demand when omitted.}
 \item{min_pairs}{Minimum number of persons with finite aggregated residuals
 at both levels required to retain a pair; a single integer of at least
 three. Unavailable pairs remain in the table with \code{NA} correlations and
-flags (mirrors \code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}).}
+flags (mirrors \link[=plot.mfrm_fit]{plot(x, type = "local_dependence")}).}
 
 \item{yen_threshold}{Legacy-named argument retained for compatibility. It
 applies the strict absolute heuristic \verb{|Q3-style| > threshold} (default
@@ -67,7 +67,16 @@ evaluated.}
 \item{\code{thresholds}}{The thresholds used, for reproducibility. The \code{yen}
 name is retained for compatibility.}
 \item{\code{facet}}{The facet whose levels were paired.}
+\item{\code{notes}}{Residual aggregation and interpretation qualifications,
+retained with the saved result.}
 }
+
+Save the complete result with \code{\link[base:saveRDS]{base::saveRDS()}} and export \code{q3$pairs} or
+\code{q3$summary} with \code{\link[utils:write.csv]{utils::write.csv()}}. There is no dedicated \code{plot(q3)}
+method. To obtain its companion matrix, use
+\code{plot(fit, type = "local_dependence", diagnostics = diagnostics, facet = facet, min_pairs = min_pairs, draw = FALSE)} with the same inputs. Save that plot
+payload separately for conversion with \code{\link[=as_ggplot]{as_ggplot()}} without recalculation.
+The heatmap displays correlations; it does not apply the three flag rules.
 }
 \description{
 Computes mfrmr's Q3-style screening index: the Pearson correlation of
@@ -122,8 +131,18 @@ See \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} and \code{vignet
 for complementary checks and the limits of exploratory network analysis.
 }
 
-\section{References}{
-
+\examples{
+toy <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
+                method = "JML", maxit = 300)
+q3 <- q3_statistic(fit)
+q3$summary
+# Look for: use MaxAbsQ3 and the pair table to rank follow-up. The default
+#   0.20/0.30 absolute rules are uncalibrated heuristics for this Q3-style
+#   index, not standalone local-independence tests.
+head(q3$pairs)
+}
+\references{
 \itemize{
 \item Yen, W. M. (1984). Effects of local item dependence on the fit
 and equating performance of the three-parameter logistic model.
@@ -146,20 +165,6 @@ appropriate cut-off? \emph{Journal of Educational Measurement, 62}(2),
 345-359. \doi{10.1111/jedm.12432}
 }
 }
-
-\examples{
-\donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 300)
-q3 <- q3_statistic(fit)
-q3$summary
-# Look for: use MaxAbsQ3 and the pair table to rank follow-up. The default
-#   0.20/0.30 absolute rules are uncalibrated heuristics for this Q3-style
-#   index, not standalone local-independence tests.
-head(q3$pairs)
-}
-}
 \seealso{
-\code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+\link[=plot.mfrm_fit]{plot(x, type = "local_dependence")}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
 }

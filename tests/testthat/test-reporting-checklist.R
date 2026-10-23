@@ -234,6 +234,7 @@ test_that("reporting_checklist surfaces failed bias-collection pairs", {
   ))
   bias_collection <- structure(
     list(
+      fit_identity = bias$fit_identity,
       by_pair = list(rater_criterion = bias),
       errors = data.frame(
         Interaction = "Task x Criterion",

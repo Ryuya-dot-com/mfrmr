@@ -10,9 +10,9 @@ test_that("paired intervals match independent quadratic forms and numerical grad
   for (incomplete in c(FALSE, TRUE)) {
     data <- if (incomplete) full[-c(1, 8, 23), ] else full
     data[1:3] <- lapply(data[1:3], as.character)
-    g <- mfrm_multivariate_gstudy(data, c("Content", "Organization"),
+    g <- mfrm_g_study(data, c("Content", "Organization"),
       method = if (incomplete) "minque0" else "anova")
-    d <- mfrm_multivariate_d_study(g, grid)
+    d <- mfrm_d_study(g, grid)
     result <- mfrm_multivariate_d_compare(d, score = "Content", assumption = "normal")
     metrics <- c("G", "Phi", "RelativeSEM", "AbsoluteSEM")
     N <- nrow(data); H <- diag(N) - 1/N
@@ -26,7 +26,7 @@ test_that("paired intervals match independent quadratic forms and numerical grad
     AV <- lapply(A, function(a) a %*% V)
     C <- outer(1:7, 1:7, Vectorize(function(i, j) 2 * sum(AV[[i]] * t(AV[[j]]))))
     contrast <- function(g) {
-      tab <- mfrm_multivariate_d_study(g, grid)$coefficients
+      tab <- mfrm_d_study(g, grid)$coefficients
       values <- as.matrix(tab[tab$Score == "Content", metrics])
       as.vector(t(sweep(values[-1, ], 2, values[1, ], "-")))
     }
@@ -42,8 +42,8 @@ test_that("paired intervals match independent quadratic forms and numerical grad
     expect_equal(result$comparisons$Upper - result$comparisons$Lower,
       2 * qnorm(.975) * result$comparisons$SE)
     if (!incomplete) {
-      minque <- mfrm_multivariate_gstudy(data, c("Content", "Organization"), method = "minque0")
-      alternate <- mfrm_multivariate_d_compare(mfrm_multivariate_d_study(minque, grid),
+      minque <- mfrm_g_study(data, c("Content", "Organization"), method = "minque0")
+      alternate <- mfrm_multivariate_d_compare(mfrm_d_study(minque, grid),
         score = "Content", assumption = "normal")
       expect_equal(alternate$comparisons, result$comparisons, tolerance = 1e-10)
     }
@@ -57,11 +57,11 @@ test_that("paired intervals match independent quadratic forms and numerical grad
 
 test_that("composite scaling, facet names and replay preserve paired intervals", {
   data <- mvdc_fixture()
-  g <- mfrm_multivariate_gstudy(data, c("Content", "Organization"),
+  g <- mfrm_g_study(data, c("Content", "Organization"),
     facets = c(Assessor = "Rater", Occasion = "Task"))
   grid <- data.frame(Assessor = c(2, 3), Occasion = c(6, 4))
   w <- c(Content = .5, Organization = .5)
-  d <- mfrm_multivariate_d_study(g, grid, cbind(Equal = w, Scaled = -3 * w))
+  d <- mfrm_d_study(g, grid, cbind(Equal = w, Scaled = -3 * w))
   a <- mfrm_multivariate_d_compare(d, composite = "Equal", assumption = "normal")
   b <- mfrm_multivariate_d_compare(d, composite = "Scaled", assumption = "normal")
   for (column in c("Difference", "SE", "Lower", "Upper")) {
@@ -69,8 +69,8 @@ test_that("composite scaling, facet names and replay preserve paired intervals",
   }
   expect_equal(b$covariance, a$covariance * outer(c(1, 1, 3, 3), c(1, 1, 3, 3)))
   data$Total <- rowSums(data[c("Content", "Organization")]) / 2
-  scalar <- mfrm_multivariate_d_compare(mfrm_multivariate_d_study(
-    mfrm_multivariate_gstudy(data, "Total", facets = c(Assessor = "Rater", Occasion = "Task")), grid),
+  scalar <- mfrm_multivariate_d_compare(mfrm_d_study(
+    mfrm_g_study(data, "Total", facets = c(Assessor = "Rater", Occasion = "Task")), grid),
     assumption = "normal")
   expect_equal(scalar$comparisons$SE, a$comparisons$SE)
   path <- tempfile(fileext = ".rds"); on.exit(unlink(path))
@@ -82,9 +82,9 @@ test_that("composite scaling, facet names and replay preserve paired intervals",
 })
 
 test_that("boundary and identical-plan outcomes remain explicit", {
-  g <- mfrm_multivariate_gstudy(mvdc_fixture(), c("Content", "Organization"))
+  g <- mfrm_g_study(mvdc_fixture(), c("Content", "Organization"))
   g$components$Person[,] <- 0
-  d <- mfrm_multivariate_d_study(g, data.frame(Raters = c(2, 2, 3), Tasks = c(6, 6, 4)))
+  d <- mfrm_d_study(g, data.frame(Raters = c(2, 2, 3), Tasks = c(6, 6, 4)))
   result <- mfrm_multivariate_d_compare(d, score = "Content", assumption = "normal")
   expect_equal(result$comparisons$Difference[1:4], rep(0, 4))
   expect_equal(result$comparisons$SE[1:4], rep(0, 4))
@@ -101,7 +101,7 @@ test_that("boundary and identical-plan outcomes remain explicit", {
   expect_true(all(payload$unavailable$Difference == 0))
   expect_true(all(is.na(payload$unavailable$Lower)))
   g$components$Person[,] <- -1
-  missing <- mfrm_multivariate_d_compare(mfrm_multivariate_d_study(g, d$design_grid),
+  missing <- mfrm_multivariate_d_compare(mfrm_d_study(g, d$design_grid),
     score = "Content", assumption = "normal")
   expect_true(all(is.na(missing$comparisons$Difference[missing$comparisons$Metric %in% c("G", "Phi")])))
   expect_true(all(grepl("Point projection", missing$comparisons$Status[1:2])))
@@ -113,9 +113,9 @@ test_that("boundary and identical-plan outcomes remain explicit", {
 test_that("saved comparisons retain source row accounting and unnormalized weights", {
   data <- mvdc_fixture()
   data$Content[1] <- NA_real_
-  g <- mfrm_multivariate_gstudy(data, c("Content", "Organization"),
+  g <- mfrm_g_study(data, c("Content", "Organization"),
     facets = c(Assessor = "Rater", Occasion = "Task"), method = "minque0", missing = "omit")
-  d <- mfrm_multivariate_d_study(g, data.frame(Assessor = c(2, 3), Occasion = c(6, 4)),
+  d <- mfrm_d_study(g, data.frame(Assessor = c(2, 3), Occasion = c(6, 4)),
     c(Content = 2, Organization = -1))
   before <- serialize(d, NULL)
   a <- mfrm_multivariate_d_compare(d, assumption = "normal")
@@ -140,8 +140,8 @@ test_that("saved comparisons retain source row accounting and unnormalized weigh
 })
 
 test_that("unsupported assumptions and malformed comparison requests fail clearly", {
-  g <- mfrm_multivariate_gstudy(mvdc_fixture(), "Content")
-  d <- mfrm_multivariate_d_study(g, data.frame(Raters = c(2, 3), Tasks = c(6, 4)))
+  g <- mfrm_g_study(mvdc_fixture(), "Content")
+  d <- mfrm_d_study(g, data.frame(Raters = c(2, 3), Tasks = c(6, 4)))
   expect_error(mfrm_multivariate_d_compare(d), "assumption")
   expect_error(mfrm_multivariate_d_compare(d, assumption = "robust"), "assumption")
   for (reference in list(0, 3, NA_real_, 1.1, 1+1i, matrix(1))) {
@@ -153,7 +153,7 @@ test_that("unsupported assumptions and malformed comparison requests fail clearl
   expect_error(mfrm_multivariate_d_compare(d, score = "Content", composite = "Equal",
     assumption = "normal"), "either")
   one <- mvdc_fixture(); one <- one[one$Rater == one$Rater[1], ]
-  d1 <- mfrm_multivariate_d_study(mfrm_multivariate_gstudy(one, "Content", rater = NULL),
+  d1 <- mfrm_d_study(mfrm_g_study(one, "Content", rater = NULL),
     data.frame(Tasks = c(2, 4)))
   expect_error(mfrm_multivariate_d_compare(d1, assumption = "normal"), "two common")
   d$gstudy$data <- NULL
@@ -161,8 +161,8 @@ test_that("unsupported assumptions and malformed comparison requests fail clearl
 })
 
 test_that("comparison plots retain interval endpoints and reject generic conversion", {
-  g <- mfrm_multivariate_gstudy(mvdc_fixture(), "Content")
-  d <- mfrm_multivariate_d_study(g, data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)))
+  g <- mfrm_g_study(mvdc_fixture(), "Content")
+  d <- mfrm_d_study(g, data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)))
   result <- mfrm_multivariate_d_compare(d, reference = 2, assumption = "normal")
   before <- serialize(result, NULL)
   for (type in c("coefficients", "sem")) {
@@ -186,8 +186,8 @@ test_that("comparison plots retain interval endpoints and reject generic convers
 })
 
 test_that("comparison plots draw and replay on a standard landscape device", {
-  g <- mfrm_multivariate_gstudy(mvdc_fixture(), c("Content", "Organization"))
-  d <- mfrm_multivariate_d_study(g,
+  g <- mfrm_g_study(mvdc_fixture(), c("Content", "Organization"))
+  d <- mfrm_d_study(g,
     data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)),
     weights = c(Content = .5, Organization = .5))
   result <- mfrm_multivariate_d_compare(d, assumption = "normal")

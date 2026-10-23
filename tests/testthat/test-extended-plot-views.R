@@ -47,11 +47,11 @@ test_that("both renderers honor controls and retain interpretation metadata", {
     p <- as_ggplot(raw)
     expect_null(p$labels$title); expect_null(p$labels$caption)
     expect_match(p$labels$alt, style)
-    expect_match(attr(p, "mfrmr_notes")$Text, "calibration fixed")
+    expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "calibration fixed")
     expect_equal(unique(attr(p, "mfrmr_display_data")$Colour), "#222222")
     expect_equal(p$theme$text$size, 13.2)
     expect_silent(ggplot2::ggplotGrob(p))
-    expect_identical(as_ggplot(x, style = style, title = "", caption = "")$labels$title, NULL)
+    expect_null(as_ggplot(x, style = style, title = "", caption = "")$labels$title)
   }
   x$table$Estimate <- x$table$Lower <- x$table$Upper <- NA_real_
   x$table$Status <- "unavailable"
@@ -70,7 +70,11 @@ test_that("calibration and rater plots use the same view contract", {
   for (style in c("interval", "precision", "distribution")) {
     p <- plot(fit, style = style, draw = FALSE,
       intervals = if (style == "precision") "normal" else "none")
-    if (style != "precision") expect_identical(p$data$table, expected)
+    if (style != "precision") {
+      expect_identical(p$data$table[names(expected)], expected)
+      expect_identical(p$data$table$IntervalStatus,
+        c(rep("not_requested", 3), "invalid_estimate_or_se", "not_requested"))
+    }
     expect_identical(p$data$checks, fit$checks)
     if (requireNamespace("ggplot2", quietly = TRUE)) expect_silent(ggplot2::ggplotGrob(as_ggplot(p)))
   }
@@ -88,9 +92,9 @@ test_that("calibration and rater plots use the same view contract", {
   old <- new_mfrm_plot_data("random_rater_severity", list(table = fit$raters,
     settings = fit$settings, checks = fit$checks))
   if (requireNamespace("ggplot2", quietly = TRUE)) {
-    expect_match(as_ggplot(old)$labels$caption, "first[[:space:]]+order")
+    expect_match(paste(plot_data(as_ggplot(old), "notes")$Text, collapse = "\n"), "first[[:space:]]+order")
     old$data$checks$EstimatedVarianceBoundary <- TRUE
-    expect_match(as_ggplot(old)$labels$caption, "zero")
+    expect_match(paste(plot_data(as_ggplot(old), "notes")$Text, collapse = "\n"), "zero")
   }
 })
 

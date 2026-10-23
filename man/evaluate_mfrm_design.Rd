@@ -30,7 +30,9 @@ evaluate_mfrm_design(
   sim_spec = NULL,
   seed = NULL,
   progress = interactive(),
-  parallel = c("no", "future")
+  parallel = c("no", "future"),
+  file = NULL,
+  file_refit = c("never", "on_change", "always")
 )
 }
 \arguments{
@@ -127,6 +129,17 @@ seeds before either route, so serial and future execution receive identical
 stochastic inputs for the same ordered design grid. Parallel dispatch
 applies to replications within each design row; actual worker concurrency
 depends on the active future plan.}
+
+\item{file}{Optional RDS path for saving and reusing the simulation. A missing
+\code{.rds} extension is appended. Its parent directory must already exist.
+\code{NULL} (default) performs no file reads or writes.}
+
+\item{file_refit}{File reuse policy. \code{"never"} (default) loads a matching
+completed result or resumes matching saved trials; incompatible files
+produce an error. \code{"on_change"} restarts when inputs or implementation/
+environment differ. \code{"always"} replaces the file with a new run. Unlike
+\code{brms::brm(file_refit = "never")}, this function checks compatibility even
+under \code{"never"}; it does not silently return a different analysis.}
 }
 \value{
 An object of class \code{mfrm_design_evaluation} with components:
@@ -161,6 +174,8 @@ used
 \item \code{notes}: short interpretation notes
 \item \code{settings}: simulation settings
 \item \code{ademp}: simulation-study metadata (aims, DGM, estimands, methods, performance measures)
+\item \code{reproducibility}: file identity, original inputs and per-trial seeds when
+\code{file} is supplied.
 }
 }
 \description{
@@ -177,6 +192,23 @@ For each design condition, the function:
 \item computes diagnostics with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
 \item stores recovery and precision summaries by facet
 }
+
+Severity recovery compares relative locations after aligning group means
+within each trial. PCM/GPCM generating step means are absorbed into the
+owning facet truth before comparison, consistently with the fitted
+identification. \code{MeanSeverityRMSE} is the mean of available trial RMSEs,
+with MCSE across trials; it differs from a pooled-row RMSE. \code{SeverityBias}
+averages to zero by construction and cannot demonstrate unbiased individual
+estimates. \code{RecoveryAvailableReps} counts finite trial recovery metrics;
+review it alongside all-trial convergence and failures.
+
+Older PCM/GPCM results without this truth-coordinate review retain their
+historical tables. New summaries and recommendations withhold their recovery
+metrics with \code{RecoveryBasis = "legacy_step_location_truth_unverified"}.
+Re-summarizing cannot reconstruct the missing trial-level truth/estimates;
+rerun in a new file for corrected recovery, preserving the old evidence.
+Other saved diagnostics remain available. Numerical agreement and successful
+examples do not establish finite-sample performance or population forecasting.
 
 The result is intended for planning questions such as:
 \itemize{
@@ -230,7 +262,7 @@ refits \code{GPCM}, and summarizes facet-level operating characteristics.
 The route remains a role-based person x rater-like x criterion-like planner:
 it does not validate diagnostic-screening or signal-detection rules, does
 not provide a fully arbitrary-facet planner, and does not replace
-\code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} for slope-recovery adequacy review.
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for slope-recovery adequacy review.
 
 Recovery metrics are reported only when the generator and fitted model target
 the same facet-parameter contract. In practice this means the same
@@ -271,8 +303,14 @@ generator/fitted-model contract does not align.
 Start with \code{summary(x)$design_summary}, then plot one focal metric at a time
 (for example rater \code{Separation} or criterion \code{SeverityRMSE}).
 
-Higher separation/reliability is generally better, whereas lower
-\code{SeverityRMSE}, \code{MeanMisfitRate}, and \code{MeanElapsedSec} are preferable.
+Person separation/reliability describes how well the design distinguishes
+persons under the model. High rater separation/reliability instead means
+that severity differences are distinguishable; it does not mean agreement
+or better calibration. Low rater separation can reflect similar severity
+or inadequate precision. Interpret each facet against its purpose rather
+than maximizing every separation coefficient. Recovery RMSE and elapsed
+time concern accuracy and cost; a low misfit-screen rate alone does not
+establish useful detection, since sensitivity and false flags differ.
 
 When choosing among designs, look for the point where increasing
 \code{n_person} or \code{raters_per_person} yields diminishing returns in
@@ -288,7 +326,11 @@ separation, reliability, strata, RMSE, and fit-screen rates change when
 you vary person, rater, criterion, or assignment counts. For analytic
 generalizability-theory planning, pair observed variance-component review
 from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with D-study projections from
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}. Read \code{IdentificationStatus}, \code{GStatus}, and \code{PhiStatus}
+\code{\link[=mfrm_d_study]{mfrm_d_study()}}. The complementary multivariate observed-score route is
+\code{\link[=mfrm_g_study]{mfrm_g_study()}} -> \code{\link[=mfrm_d_study]{mfrm_d_study()}}. See
+\link{mfrmr_workflow_methods} for choosing between simulation and G-theory:
+neither is automatically required by the other, and neither replaces the
+other's estimand. Read \code{IdentificationStatus}, \code{GStatus}, and \code{PhiStatus}
 before using the projected coefficients: boundary or singular mixed-model
 fits are design-identification warnings rather than high-stakes-ready
 reliability evidence.
@@ -313,8 +355,45 @@ reporting}. Psychological Methods.
 }
 }
 
+\section{Saving and resuming simulations}{
+
+Pass the same \code{file} and analysis arguments on a subsequent call to reuse
+the completed result without generation or fitting, or to resume an
+interrupted run. The identity includes generator inputs/specification,
+fitting controls, requested replications, seed, RNG kind, package R code
+and native library fingerprints, relevant numerical/diagnostic R options,
+R/platform, numerical libraries and
+dependency versions. Changing \code{reps} starts a different study; extension of
+an existing study is not supported. \code{progress} and \code{parallel} do not change
+the identity. Cached results retain the settings of their original run.
+
+Recovery runs and serial design evaluations save after every finished
+trial. Future design evaluations save after a whole design row returns;
+an interrupted row may need to run again. A partially completed optimizer
+is not resumed. Fit failures are completed attempts and are saved too;
+resuming does not redraw failures until they succeed. An unexpected error
+outside the recorded fit/diagnostic failure routes stops the call and leaves
+earlier checkpoints available. These files do not change the interpretation
+or eligibility of the underlying estimates and intervals.
+
+Per-trial seeds are allocated before computation and retained even when
+\code{seed = NULL}; an explicit seed is preferable for reproducing a new run in
+another file. Each trial controls generation, fitting and diagnostics with
+its own seed. A matching environment is required for automatic reuse;
+recorded seeds alone do not guarantee identical floating-point results on
+other systems. Keep the analysis script and software environment as well.
+
+After completion, \code{readRDS(file)} returns the usual result object with an
+additional \code{reproducibility} component containing identity, inputs and
+trial seeds. Before completion the file is an internal checkpoint; resume
+through the same public function. Writes use a temporary file in the same
+directory and checked replacement. A \code{.lock} directory prevents concurrent
+writers. Normal returns/errors release it; after process termination, remove
+a remaining lock only after checking that no writer is active. Unreadable
+files are never silently reused or replaced by \code{"on_change"}.
+}
+
 \examples{
-\donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
   design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -325,7 +404,6 @@ s_eval <- summary(sim_eval)
 s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
-}
 }
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \link{summary.mfrm_design_evaluation}, \link{plot.mfrm_design_evaluation}

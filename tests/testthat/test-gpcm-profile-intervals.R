@@ -37,6 +37,48 @@ test_that("profile endpoints recover an independent quadratic likelihood interva
   expect_true(all(is.finite(limited$profile$NLL)))
 })
 
+test_that("profile points reject stationary nuisance maxima at either integration order", {
+  # The source has positive information, but y=0 becomes a nuisance maximum
+  # when cos(x)<0. Both retained and neutral starts stay at y=0. The true
+  # profiled NLL there is x^2/2 - cos(x)^2/4, not x^2/2.
+  ev <- list(value = function(p) p[1]^2/2 + cos(p[1])*p[2]^2/2 + p[2]^4/4,
+    gradient = function(p) c(p[1]-sin(p[1])*p[2]^2/2, cos(p[1])*p[2]+p[2]^3))
+  failed <- mfrm_gpcm_profile_nuisance(ev, ev, c(0,0), c(1,0), 2, 100)
+  expect_identical(failed$check$OptimizerCode, 0L)
+  expect_equal(failed$check$MaxGradient, 0)
+  # Central differentiation of the cubic gradient adds h^2 (h = .001).
+  expect_lte(abs(failed$check$NuisanceMinEigenvalue - cos(2)), 1.01e-6)
+  expect_false(failed$check$Passed)
+  expect_match(failed$check$Detail, "curvature.*not positive definite")
+  # This is local qualification, not a proof that the interval does not exist.
+  ans <- mfrm_gpcm_profile_search(ev, ev, c(0,0), c(1,0), .95)
+  expect_true(all(is.na(ans$endpoints$Bound)))
+  expect_true(any(grepl("curvature", ans$profile$Detail)))
+  root <- uniroot(function(x) x^2 - cos(x)^2/2 - qchisq(.95,1), c(pi/2, 3))$root
+  expect_gt(root, qnorm(.975))
+  recovered <- mfrm_gpcm_profile_nuisance(ev, ev, c(0,1), c(1,0), 2, 100)
+  expect_true(recovered$check$Passed)
+  expect_equal(recovered$check$NLL, 2 - cos(2)^2/4, tolerance = 1e-8)
+  expect_gt(recovered$check$NuisanceMinEigenvalue, 0)
+  # Pointwise value/gradient agreement alone cannot qualify the reference grid.
+  positive <- list(value = function(p) sum(p^2)/2, gradient = function(p) p)
+  negative <- list(value = function(p) (p[1]^2-p[2]^2)/2,
+    gradient = function(p) c(p[1], -p[2]))
+  reference <- mfrm_gpcm_profile_nuisance(positive, negative, c(0,0), c(1,0), 0, 100)
+  expect_equal(reference$check$NLLChange, 0)
+  expect_equal(reference$check$GradientChange, 0)
+  expect_gt(reference$check$NuisanceMinEigenvalue, 0)
+  expect_lt(reference$check$ReferenceMinEigenvalue, 0)
+  expect_false(reference$check$Passed)
+  flat <- list(value = function(p) p[1]^2/2, gradient = function(p) c(p[1], 0))
+  expect_false(mfrm_gpcm_profile_nuisance(flat, flat, c(0,0), c(1,0), 0, 100)$check$Passed)
+  unavailable <- positive
+  unavailable$gradient <- function(p) { if (p[2] != 0) stop("unavailable derivative"); p }
+  broken <- mfrm_gpcm_profile_nuisance(positive, unavailable, c(0,0), c(1,0), 0, 100)
+  expect_false(broken$check$Passed)
+  expect_match(broken$check$Detail, "curvature could not be verified: unavailable derivative")
+})
+
 test_that("profile search scaling preserves total-likelihood cutoffs", {
   n <- 240
   center <- c(.2, -.3)
@@ -119,25 +161,33 @@ test_that("better source likelihoods and numerical errors are retained, not prom
 test_that("profile API validates its target and retains unresolved endpoint reasons", {
   fit <- readRDS(test_path('fixtures','mfrm-conditional-scoring-gpcm.rds'))$fit
   slope <- fit$config$gpcm_spec$levels[1]
-  expect_error(confint(fit,method='profile'),'one exact slope-level')
-  expect_error(confint(fit,method='profile',slope='unknown'),'one exact slope-level')
-  expect_error(confint(fit,method='profile',slope=slope,scale='standardized'),'one relative slope')
-  expect_error(confint(fit,slope=slope),'require method')
-  expect_error(confint(fit,method='profile',slope=slope,profile_control=list(tolerance=1)),'accepts only')
-  expect_error(confint(fit,method='profile',slope=slope,profile_control=list(maxit=NULL)),'positive finite')
+  expect_error(confint(fit, parm = "slopes",method='profile'),'one exact slope-level')
+  expect_error(confint(fit, parm = "slopes",method='profile',slope='unknown'),'one exact slope-level')
+  expect_error(confint(fit, parm = "slopes",method='profile',slope=slope,scale='standardized'),'one relative slope')
+  expect_error(confint(fit, parm = "slopes",slope=slope),'require method')
+  expect_error(confint(fit, parm = "slopes",method='profile',slope=slope,profile_control=list(tolerance=1)),'accepts only')
+  expect_error(confint(fit, parm = "slopes",method='profile',slope=slope,profile_control=list(maxit=NULL)),'positive finite')
   changed <- fit; changed$config$population_spec$design_columns <- 'X'
-  expect_error(confint(changed,method='profile',slope=slope),'intercept-only')
+  expect_error(confint(changed, parm = "slopes",method='profile',slope=slope),'intercept-only')
   saved <- readRDS(test_path('fixtures','gpcm-profile-separate.rds'))
   result <- attr(saved,'profile')
   local_mocked_bindings(mfrm_gpcm_profile_search=function(...) result,.package='mfrmr')
   # Version 2 compares stored values without ALTREP materialization state.
   before <- serialize(fit, NULL, version = 2)
-  out <- confint(fit,method='profile',slope=slope)
+  out <- confint(fit, parm = "slopes",method='profile',slope=slope)
   expect_equal(as.vector(out),as.vector(saved))
   expect_match(attr(out,'target'),'Criterion C1')
   expect_identical(serialize(fit, NULL, version = 2), before)
+  # The saved search is a test double: this checks only the Wald comparator,
+  # not profile endpoints at a different likelihood-ratio cutoff.
+  level <- 1 - .Machine$double.eps / 2
+  high <- confint(fit, parm = "slopes", method='profile', slope=slope, level=level)
+  wald <- attr(out, 'wald'); high_wald <- attr(high, 'wald')
+  se <- (log(wald$Upper)-log(wald$Lower))/(2*sqrt(qchisq(.95, 1)))
+  expect_equal(log(high_wald$Lower), log(wald$Estimate)-sqrt(qchisq(level, 1))*se)
+  expect_equal(log(high_wald$Upper), log(wald$Estimate)+sqrt(qchisq(level, 1))*se)
   result$endpoints$Status[1] <- 'crossing_not_found'; result$endpoints$Bound[1] <- NA_real_
-  expect_warning(unresolved <- confint(fit,method='profile',slope=slope),'no cutoff crossing')
+  expect_warning(unresolved <- confint(fit, parm = "slopes",method='profile',slope=slope),'no cutoff crossing')
   expect_true(is.na(unresolved[1,1])); expect_true(is.finite(unresolved[1,2]))
   expect_false(attr(unresolved,'diagnostics')$CIEligible)
   expect_false(grepl('crossing_not_found',attr(unresolved,'diagnostics')$InferenceReview,fixed=TRUE))

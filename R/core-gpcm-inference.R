@@ -20,7 +20,7 @@ mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
     }
     query$data[[facet]] <- factor(values, levels = prep$levels[[facet]])
   }
-  key <- function(data) do.call(paste, c(lapply(data[facets], as.integer), sep = ":"))
+  key <- function(data) do.call(paste, c(unname(lapply(data[facets], as.integer)), sep = ":"))
   contexts <- data.frame(InputRow = seq_len(nrow(newdata)),
     ObservedContext = key(query$data) %in% key(prep$data))
   # Location and interaction indices need no fitted crossing index: prediction
@@ -53,6 +53,12 @@ mfrm_gpcm_response_evaluator <- function(prep, config, newdata) {
   list(newdata = newdata, contexts = contexts, evaluate = evaluate)
 }
 
+mfrm_gpcm_anchor_note <- function(fit) {
+  if (!nrow(mfrmr_calibration_extract_anchors(fit))) return(NULL)
+  paste("Conditional on supplied anchors and group means;",
+    "uncertainty in their source calibration is not propagated.")
+}
+
 # Joint information and transformations shared by slope/curve inference.
 mfrm_gpcm_inference_source <- function(fit) {
   list(signature = normalize_compare_signature(fit), parameters = fit$opt$par,
@@ -83,21 +89,26 @@ mfrm_gpcm_inference <- function(fit, method = "model", clusters = NULL, adjust =
   check <- mfrm_gpcm_slope_inference_check(fit, information)
   out <- list(covariance = information$cov, information = information, check = check,
               method = method, clusters = NULL, person_scores = NULL, cluster_scores = NULL)
-  if (!isTRUE(check$eligible) || method == "model") return(out)
-  scores <- mfrm_mml_person_scores_numeric(fit)
-  sandwich <- mfrm_cluster_sandwich(information$cov, scores, clusters, adjust)
-  out$covariance <- sandwich$covariance
-  out$person_scores <- scores
-  out$cluster_scores <- sandwich$cluster_scores
-  out$clusters <- sandwich$clusters
-  out$cluster_rank <- sandwich$rank
-  out$adjustment_factor <- sandwich$factor
-  if (sandwich$rank < ncol(scores)) {
-    out$check <- list(eligible = FALSE,
-      review = "Independent-cluster scores do not span the free parameters; sandwich intervals are unavailable.")
-  } else out$check$review <- paste(
-    "Independent-cluster sandwich approximation for the working-model target.",
-    "It requires many independent clusters and does not correct biased estimates or selective assignment.")
+  if (isTRUE(check$eligible) && method == "sandwich") {
+    scores <- mfrm_mml_person_scores_numeric(fit)
+    sandwich <- mfrm_cluster_sandwich(information$cov, scores, clusters, adjust)
+    out$covariance <- sandwich$covariance
+    out$person_scores <- scores
+    out$cluster_scores <- sandwich$cluster_scores
+    out$clusters <- sandwich$clusters
+    out$cluster_rank <- sandwich$rank
+    out$adjustment_factor <- sandwich$factor
+    if (sandwich$rank < ncol(scores)) {
+      out$check <- list(eligible = FALSE,
+        review = "Independent-cluster scores do not span the free parameters; sandwich intervals are unavailable.")
+    } else out$check$review <- paste(
+      "Independent-cluster sandwich approximation for the working-model target.",
+      "It requires many independent clusters and does not correct biased estimates or selective assignment.")
+  }
+  out$check$anchor_note <- mfrm_gpcm_anchor_note(fit)
+  if (length(out$check$anchor_note) && method == "sandwich" && isTRUE(check$eligible)) {
+    out$check$review <- paste(out$check$review, out$check$anchor_note)
+  }
   out
 }
 
@@ -126,8 +137,7 @@ mfrm_mml_person_scores_numeric <- function(fit, relative_step = 1e-5) {
   scores
 }
 
-mfrm_cluster_sandwich <- function(bread, scores, clusters, adjust) {
-  ids <- rownames(scores)
+mfrm_sandwich_clusters <- function(ids, clusters) {
   if (is.null(clusters)) clusters <- data.frame(Person = ids, Cluster = ids)
   if (!is.data.frame(clusters) || anyDuplicated(names(clusters)) ||
       !all(c("Person", "Cluster") %in% names(clusters)) || nrow(clusters) != length(ids) ||
@@ -137,9 +147,15 @@ mfrm_cluster_sandwich <- function(bread, scores, clusters, adjust) {
     stop("`clusters` must map every fitted Person exactly once to one nonmissing Cluster.", call. = FALSE)
   }
   clusters <- data.frame(Person = ids, Cluster = as.character(clusters$Cluster[match(ids, clusters$Person)]))
+  if (length(unique(clusters$Cluster)) < 2L)
+    stop("Sandwich inference needs at least two independent clusters.", call. = FALSE)
+  clusters
+}
+
+mfrm_cluster_sandwich <- function(bread, scores, clusters, adjust) {
+  clusters <- mfrm_sandwich_clusters(rownames(scores), clusters)
   cluster_scores <- rowsum(scores, clusters$Cluster, reorder = FALSE)
   n <- nrow(cluster_scores)
-  if (n < 2L) stop("Sandwich inference needs at least two independent clusters.", call. = FALSE)
   scale <- sqrt(colSums(cluster_scores^2))
   nonzero <- scale > 0
   rank <- if (!any(nonzero)) 0L else qr(sweep(cluster_scores[, nonzero, drop = FALSE],
@@ -157,8 +173,8 @@ mfrm_gpcm_slope_target <- function(fit, scale, contrasts, contrast_scale) {
   slices <- build_param_slices(sizes)
   par <- fit$opt$par
   jac <- matrix(0, length(labels), length(par))
-  jac[, slices$log_slopes] <- sum_zero_jacobian(length(labels))
-  if (scale == "standardized" && length(slices$log_sigma2)) jac[, slices$log_sigma2] <- .5
+  jac[, slices[["log_slopes"]]] <- sum_zero_jacobian(length(labels))
+  if (scale == "standardized" && length(slices[["log_sigma2"]])) jac[, slices[["log_sigma2"]]] <- .5
   log_estimate <- drop(jac %*% par)
   if (is.null(contrasts)) {
     coefficients <- diag(length(labels)); dimnames(coefficients) <- list(labels, labels)

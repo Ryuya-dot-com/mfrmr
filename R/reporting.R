@@ -697,16 +697,25 @@ collapse_apa_paragraph <- function(sentences, width = 92L,
   paste(wrapped, collapse = "\n")
 }
 
+mfrm_centering_scope <- function(config) {
+  config$centering_scope %||%
+    if (length(config$facet_specs)) "remainder" else "not_recorded"
+}
+
 summarize_anchor_constraints <- function(config) {
   anchor_tbl <- as.data.frame(config$anchor_summary %||% data.frame(), stringsAsFactors = FALSE)
   noncenter <- as.character(config$noncenter_facet %||% "Person")
   dummy_facets <- as.character(config$dummy_facets %||% character(0))
+  centering <- switch(mfrm_centering_scope(config),
+    facet = " Centered facets sum to zero across all levels, including anchors and group totals.",
+    remainder = " Legacy centering sets the ungrouped, unanchored remainder to sum to zero.",
+    " The centering convention was not recorded.")
   if (nrow(anchor_tbl) == 0) {
     dummy_txt <- if (length(dummy_facets) > 0) paste(dummy_facets, collapse = ", ") else "none"
     return(
       paste0(
         "Constraint settings: noncenter facet = ", noncenter,
-        "; anchored levels = 0; group anchors = 0; dummy facets = ", dummy_txt, "."
+        "; anchored levels = 0; group anchors = 0; dummy facets = ", dummy_txt, ".", centering
       )
     )
   }
@@ -741,7 +750,7 @@ summarize_anchor_constraints <- function(config) {
     "Constraint settings: noncenter facet = ", noncenter,
     "; anchored levels = ", fmt_count(anchored_total), " (facets: ", anchor_txt, ")",
     "; group anchors = ", fmt_count(grouped_total), " (facets: ", group_txt, ")",
-    "; dummy facets = ", dummy_txt, "."
+    "; dummy facets = ", dummy_txt, ".", centering
   )
 }
 
@@ -1211,7 +1220,8 @@ build_apa_note_map_from_contract <- function(contract) {
       "Table 4. Bias/interaction effects\n",
       "Note. Bias contrasts are in logits and represent observed minus expected scores with main effects held fixed. ",
       "The reported t and probability columns are screening metrics based on conditional plug-in information, not formal hypothesis tests. ",
-      "Rows with screening tail area below .05 = ", fmt_count(summaries$bias_sig_n), "."
+      "Rows with screening tail area below .05 = ", fmt_count(summaries$bias_sig_n), ". ",
+      mfrm_bias_uncertainty_note()
     )
   } else {
     note_map$table4 <- paste0(
@@ -1244,7 +1254,7 @@ build_apa_note_map_from_contract <- function(contract) {
     "Wright map\nNote. Persons and facet elements are located on a common logit scale; ",
     orientation_clause
   )
-  note_map$pathway_map <- "Pathway map\nNote. Curves show expected score across theta/logit levels from estimated thresholds. This expected-score display is distinct from the Bond-and-Fox-style measure-versus-fit pathway bubble chart, which is available via plot_bubble()."
+  note_map$pathway_map <- "Pathway map\nNote. Curves show expected score across theta/logit levels from estimated thresholds. This expected-score display is distinct from the Bond-and-Fox-style measure-versus-fit pathway bubble chart, which is available via plot(x, type = \"bubble\")."
   note_map$facet_distribution <- "Facet estimate distribution\nNote. Distributions summarize severity/difficulty spread within each facet."
   note_map$step_thresholds <- "Step/threshold estimates\nNote. Adjacent threshold estimates are compared within each family; unavailable comparisons and decreasing pairs require separate review."
   note_map$category_curves <- "Category characteristic curves\nNote. Curves show category response probability across theta/logit levels; peaks describe the fitted model and do not by themselves establish category adequacy."
@@ -1472,9 +1482,83 @@ build_apa_report_text_from_contract <- function(contract) {
   paste0(method_text, "\n\n", results_text)
 }
 
+mfrm_separation_interpretation <- function() {
+  paste(
+    "Separation reliability describes differences among facet locations relative to their estimation errors.",
+    "High Person values indicate distinguishable abilities; high rater values indicate distinguishable severities, not inter-rater agreement.",
+    "Low rater values can also reflect imprecision and do not establish agreement.",
+    "The index does not test every rater pair or quantify the practical size of severity differences.",
+    "Reliability, separation and Strata are approximate compatibility indices using marginal SEs; joint-information SEs do not validate this variance decomposition.",
+    "They do not account for covariance among estimates. EAP-based separation is not posterior-variance EAP reliability.",
+    "Model and fit-adjusted values are companion indices, not confidence limits. Strata describes hypothetical distinguishable strata, not discovered groups.",
+    "Facet heterogeneity chi-square summaries use diagonal SE weights, not full-covariance joint tests."
+  )
+}
+
+reporting_interrater_text <- function(diagnostics) {
+  if (is.null(diagnostics)) return("")
+  s <- as.data.frame(diagnostics$interrater$summary %||% data.frame())
+  if (!nrow(s)) return(paste(
+    "No inter-rater agreement summary was stored in the supplied diagnostics.",
+    "Its absence does not establish agreement; check the rater facet and shared ratings."
+  ))
+  value <- function(name) to_float(s[[name]][1L])
+  facet <- as.character(s$RaterFacet[1L] %||% "")
+  if (is.na(facet) || !nzchar(facet)) facet <- "the stored rater facet"
+  opportunities <- value("OpportunityCount")
+  if (!is.finite(opportunities)) opportunities <- value("TotalPairs")
+  text <- paste0("Inter-rater agreement for ", facet,
+    " is reported separately from separation reliability.")
+  text <- c(text, paste(
+    "Diagnostics match scores within Person and all remaining non-rater facets;",
+    "each compared pair contributes one opportunity per matched context."
+  ))
+  if (is.finite(opportunities)) {
+    text <- c(text, paste0("The denominator is ", fmt_count(opportunities),
+      " matched-context opportunities across rater pairs, not a count of independent people."))
+    if (opportunities == 0) text <- c(text,
+      "No matched opportunities were available; agreement is unavailable, not zero.")
+  } else {
+    text <- c(text, "The matched-opportunity denominator was not stored.")
+  }
+  if (all(is.finite(c(value("AvailablePairs"), value("Pairs"))))) {
+    text <- c(text, paste0(fmt_count(value("AvailablePairs")), " of ",
+      fmt_count(value("Pairs")), " candidate rater pairs have matched scores."))
+  }
+  metric <- function(name) if (is.finite(value(name))) fmt_num(value(name)) else "unavailable"
+  text <- c(text, paste0("Observed exact agreement = ", metric("ExactAgreement"),
+    "; observed adjacent agreement (absolute score difference at most 1, including exact matches) = ",
+    metric("AdjacentAgreement"), "; model-expected exact agreement = ",
+    metric("ExpectedExactAgreement"), "."))
+  if (is.finite(value("RepeatedCells")) && value("RepeatedCells") > 0) {
+    text <- c(text, paste0(fmt_count(value("RepeatedCells")),
+      " rater/context cells contain repeated ratings; their scores are averaged using observation weights,",
+      " and model-expected agreement is unavailable for comparisons involving these cells."))
+  }
+  if (is.finite(value("ExpectedUnavailableContexts")) && value("ExpectedUnavailableContexts") > 0) {
+    text <- c(text, paste0("Valid fitted probabilities are unavailable for ",
+      fmt_count(value("ExpectedUnavailableContexts")),
+      " matched opportunities; the overall model-expected value is withheld rather than computed on a different denominator."))
+  }
+  if (any(grepl("primary_estimate_unavailable", s$ExpectedReason, fixed = TRUE))) {
+    text <- c(text, "Some primary Person, facet, step or slope estimates are unavailable; finite optimizer proxies are not used for expected agreement.")
+  }
+  if (!"ExpectedReason" %in% names(s)) {
+    text <- c(text, "The stored summary lacks the primary-estimate availability audit. Regenerate diagnose_mfrm() from the saved fit before interpreting its model-expected agreement.")
+  }
+  text <- c(text, paste(
+    "The model-expected baseline uses fitted category probabilities with calibration fixed;",
+    "it is not chance agreement or an inferential test.",
+    "It assumes conditional independence at the saved Person point score (EAP for MML), rather than integrating over the Person posterior.",
+    "These descriptive summaries do not classify rater quality or establish fairness."
+  ))
+  paste(text, collapse = " ")
+}
+
 build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, context = list(), whexact = FALSE) {
   mfrm_results_validate_diagnostics_identity(res, diagnostics,
                                              helper = "APA reporting")
+  mfrm_validate_bias_identity(res, bias_results, helper = "APA reporting")
   summary <- if (!is.null(res$summary) && nrow(res$summary) > 0) res$summary[1, , drop = FALSE] else NULL
   prep <- res$prep
   config <- res$config
@@ -1598,49 +1682,22 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   method_design_sentences <- c(method_design_sentences, design_overview_sentence, design_facets_sentence)
   method_sentences <- c(method_sentences, design_overview_sentence, design_facets_sentence)
 
-  # Sample adequacy sentence. Lead authors who are about to write
-  # a Methods section into the fixed-effects assumption: facets are not
-  # partially pooled, so small-N levels carry wide SE without shrinkage.
+  # Describe retained rating counts without equating them with independent
+  # examinees, effective sample size, or qualified measurement precision.
   facet_flag <- as.character(summary$FacetSampleSizeFlag %||% NA_character_)
   facet_min_n <- suppressWarnings(as.integer(summary$FacetMinLevelN %||% NA_integer_))
-  if (!is.na(facet_flag)) {
-    adequacy_sentence <- switch(
-      facet_flag,
-      sparse = paste0(
-        "At least one facet level had sparse coverage (minimum level N = ",
-        if (is.na(facet_min_n)) "NA" else facet_min_n,
-        "). mfrmr estimates facets as fixed effects without partial pooling, so ",
-        "sparse levels retain wide standard errors; consider reviewing the output ",
-        "of `facet_small_sample_review()` before generalising."
-      ),
-      marginal = paste0(
-        "The smallest facet-level N was ",
-        if (is.na(facet_min_n)) "NA" else facet_min_n,
-        ", below the 30-examinee floor (Linacre, 1994) used as the marginal-band ",
-        "anchor in this package's adapted screening bands. Facet estimates remain ",
-        "fixed-effect and unshrunk; see `facet_small_sample_review()` for per-level detail."
-      ),
-      standard = paste0(
-        "Facet-level sample sizes met the package's `standard` band ",
-        "(smallest level N = ",
-        if (is.na(facet_min_n)) "NA" else facet_min_n,
-        "), an mfrmr-specific watermark adapted from Linacre's (1994) 30/100 ",
-        "guidance; facets were nonetheless estimated as fixed effects with ",
-        "sum-to-zero identification (see `facet_small_sample_review()`)."
-      ),
-      strong = paste0(
-        "Facet-level sample sizes were strong (smallest level N = ",
-        if (is.na(facet_min_n)) "NA" else facet_min_n,
-        "), though facets were still estimated as fixed effects with sum-to-zero ",
-        "identification; `analyze_hierarchical_structure()` is available for ",
-        "nesting and variance-component follow-up."
-      ),
-      NULL
+  if (!is.na(facet_flag) && facet_flag %in% c("sparse", "marginal", "standard", "strong")) {
+    adequacy_sentence <- paste0(
+      "The smallest non-person facet-level count was ",
+      if (is.na(facet_min_n)) "NA" else facet_min_n,
+      " retained rating rows, placing it in the package's '", facet_flag,
+      "' screening band. These counts are not counts of independent examinees ",
+      "or effective sample sizes and do not establish precision or interval ",
+      "coverage. Review targeting, connectedness and estimator-specific ",
+      "uncertainty alongside `facet_small_sample_review()`."
     )
-    if (!is.null(adequacy_sentence)) {
-      method_design_sentences <- c(method_design_sentences, adequacy_sentence)
-      method_sentences <- c(method_sentences, adequacy_sentence)
-    }
+    method_design_sentences <- c(method_design_sentences, adequacy_sentence)
+    method_sentences <- c(method_sentences, adequacy_sentence)
   }
 
   # Empirical-Bayes / Laplace shrinkage note. When the caller opted
@@ -1883,10 +1940,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       row <- rel_tbl[i, , drop = FALSE]
       paste0(row$Facet, " ", reliability_label, " = ", fmt_num(row$Reliability), " (separation = ", fmt_num(row$Separation), ").")
     }, character(1))
-    reliability_basis_sentence <- paste0(
-      "These are Rasch/FACETS-style separation indices (measure spread ",
-      "relative to measurement error), not inter-rater agreement."
-    )
+    reliability_basis_sentence <- mfrm_separation_interpretation()
     person_reliability_note <- if (identical(method, "MML") &&
                                    any(rel_tbl$Facet == "Person", na.rm = TRUE)) {
       paste0(
@@ -1904,24 +1958,10 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     results_fit_precision_sentences <- c(results_fit_precision_sentences, reliability_sentence)
     results_sentences <- c(results_sentences, reliability_sentence)
   }
-  interrater_sentence <- ""
-  if (nrow(interrater_summary) > 0) {
-    exact <- to_float(interrater_summary$ExactAgreement[1])
-    expected_exact <- to_float(interrater_summary$ExpectedExactAgreement[1])
-    adjacent <- to_float(interrater_summary$AdjacentAgreement[1])
-    if (any(is.finite(c(exact, expected_exact, adjacent)))) {
-      facet_label <- if (nzchar(rater_facet)) rater_facet else "the rater facet"
-      parts <- character(0)
-      if (is.finite(exact)) parts <- c(parts, paste0("exact agreement = ", fmt_num(exact)))
-      if (is.finite(expected_exact)) parts <- c(parts, paste0("expected exact agreement = ", fmt_num(expected_exact)))
-      if (is.finite(adjacent)) parts <- c(parts, paste0("adjacent agreement = ", fmt_num(adjacent)))
-      interrater_sentence <- paste0(
-        "Observed inter-rater agreement is reported separately from separation reliability: for ",
-        facet_label, ", ", paste(parts, collapse = ", "), "."
-      )
-      results_fit_precision_sentences <- c(results_fit_precision_sentences, interrater_sentence)
-      results_sentences <- c(results_sentences, interrater_sentence)
-    }
+  interrater_sentence <- reporting_interrater_text(diagnostics)
+  if (nzchar(interrater_sentence)) {
+    results_fit_precision_sentences <- c(results_fit_precision_sentences, interrater_sentence)
+    results_sentences <- c(results_sentences, interrater_sentence)
   }
 
   measures_ci_tbl <- as.data.frame(diagnostics$measures %||% data.frame(), stringsAsFactors = FALSE)
@@ -2468,7 +2508,7 @@ build_visual_warning_map <- function(res,
       warnings$strict_marginal_fit <- c(
         warnings$strict_marginal_fit,
         paste0(
-          "Inspect the largest cell with plot_marginal_fit(): ",
+          "Inspect the largest cell with plot(x, type = \"marginal_fit\"): ",
           format_reporting_marginal_cell_label(marginal_state$top_cell),
           " (|standardized residual| = ", fmt_num(abs(marginal_state$top_cell$StdResidual[1])), ")."
         )
@@ -2507,7 +2547,7 @@ build_visual_warning_map <- function(res,
       warnings$strict_pairwise_local_dependence <- c(
         warnings$strict_pairwise_local_dependence,
         paste0(
-          "Inspect the largest pair with plot_marginal_pairwise(): ",
+          "Inspect the largest pair with plot(x, type = \"marginal_pairwise\"): ",
           format_reporting_marginal_pair_label(marginal_state$top_pair),
           " (maximum available |standardized residual| = ",
           fmt_num(top_pair_max_abs),
@@ -2767,7 +2807,7 @@ build_visual_summary_map <- function(res,
     }
     summaries$strict_marginal_fit <- c(
       summaries$strict_marginal_fit,
-      "Use plot_marginal_fit() to inspect the highest-residual category cells."
+      "Use plot(x, type = \"marginal_fit\") to inspect the highest-residual category cells."
     )
   }
 
@@ -2797,7 +2837,7 @@ build_visual_summary_map <- function(res,
     }
     summaries$strict_pairwise_local_dependence <- c(
       summaries$strict_pairwise_local_dependence,
-      "Use plot_marginal_pairwise() to inspect exact and adjacent agreement gaps."
+      "Use plot(x, type = \"marginal_pairwise\") to inspect exact and adjacent agreement gaps."
     )
   }
 

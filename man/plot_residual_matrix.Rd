@@ -38,10 +38,16 @@ An \code{mfrm_plot_data} whose \code{data} slot bundles the residual
 \description{
 Visualizes the person x element matrix of standardized residuals
 from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} as a heatmap. Complements
-\code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}} (which shows raw responses) by exposing
+\link[=plot.mfrm_fit]{plot(x, type = "guttman")} (which shows raw responses) by exposing
 the residual structure directly: large positive cells show
 under-prediction, negative cells over-prediction.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -74,11 +80,10 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 300)
-p <- plot_residual_matrix(fit, top_n_persons = 12, draw = FALSE)
+p <- plot(fit, type = "residual_matrix", top_n_persons = 12, draw = FALSE)
 dim(p$data$matrix)
 # Look for: |residual| > 2 or > 3 crosses conventional two- or
 #   three-standard-deviation review bands; these are heuristic screens,
@@ -86,8 +91,8 @@ dim(p$data$matrix)
 #   high-magnitude cells at one facet level warrant pattern review but
 #   do not by themselves establish scoring drift.
 }
-}
 \seealso{
-\code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}}, \code{\link[=plot_unexpected]{plot_unexpected()}},
+\link[=plot.mfrm_fit]{plot(x, type = "guttman")}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")},
 \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

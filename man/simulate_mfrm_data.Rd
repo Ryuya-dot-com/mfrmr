@@ -141,7 +141,8 @@ The data-generating process is:
 \item Draw person abilities: \eqn{\theta_n \sim N(0, \texttt{theta\_sd}^2)}
 \item Draw rater severities: \eqn{\delta_j \sim N(0, \texttt{rater\_sd}^2)}
 \item Draw criterion difficulties: \eqn{\beta_i \sim N(0, \texttt{criterion\_sd}^2)}
-\item Generate evenly-spaced step thresholds spanning \eqn{\pm}\code{step_span/2}
+\item Unless thresholds are supplied, generate evenly spaced thresholds from
+\code{-step_span} to \code{step_span}; the single binary threshold is zero
 \item For each observation, compute the linear predictor
 \eqn{\eta = \theta_n - \delta_j - \beta_i + \epsilon} where
 \eqn{\epsilon \sim N(0, \texttt{noise\_sd}^2)} (optional)
@@ -152,7 +153,9 @@ The data-generating process is:
 Latent-value generation is explicit:
 \itemize{
 \item \code{latent_distribution = "normal"} draws centered normal person/rater/
-criterion values using the supplied standard deviations
+criterion values using the supplied standard deviations. Values are assigned
+independently to level IDs, without sorting them by severity or difficulty;
+zero is the distribution mean, not a forced sample mean.
 \item \code{latent_distribution = "empirical"} resamples centered support values
 recorded in \code{sim_spec$empirical_support}
 \item if \code{sim_spec$population$active = TRUE}, person measures are generated from
@@ -160,10 +163,28 @@ the stored latent-regression population model and template person
 covariates rather than from \code{theta_sd}
 }
 
-When \code{dif_effects} is supplied, the specified logit shift is added to
+Latent-regression transformations and factor coding retain their template
+basis during generation and refitting. \code{mfrm_population_data$population_formula}
+is a formula-compatible \code{terms} object carrying this basis, factor levels and
+contrasts. Pass it together with the returned \code{person_data} when fitting
+generated data manually. Old specifications containing transformed predictors
+but no stored basis must be rebuilt from the original template or source fit.
+Previously saved generated data/results are not silently reinterpreted.
+
+Earlier versions sorted normal rater/criterion draws before assigning IDs,
+imposing an association with ID order and any ID-specific steps/slopes.
+Correcting that ordering changes seeded datasets. Preserve old generated
+data and results for historical reproduction; new runs use the corrected
+generator and a matching saved specification/software environment.
+
+When \code{dif_effects} is supplied, the specified linear-predictor shift is added to
 \eqn{\eta} for the focal group on the target facet level, creating a
 known DIF signal.  Similarly, \code{interaction_effects} injects a known
 bias into specific facet-level combinations.
+For RSM/PCM this is also the adjacent-category log-odds shift. For GPCM,
+the shift in adjacent-category log odds is the specified effect multiplied
+by the observation's discrimination. A common injected effect therefore
+need not imply equal response-probability changes across facet levels.
 
 The generator targets the common two-facet rating design (persons
 \eqn{\times} raters \eqn{\times} criteria).  \code{raters_per_person}
@@ -203,6 +224,24 @@ skeleton stored in \code{sim_spec$design_skeleton}, optionally carrying over
 \code{Group} and \code{Weight}
 }
 
+With an active population model, \code{population_assignment = "matched"} in
+\code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} draws covariates and
+skeleton/profile assignments from the same template Person. Independent
+draws require \code{population_assignment = "independent"}. A population \code{Group}
+column supplies the response \code{Group}; it is not drawn a second time.
+Conflicting group labels or unmatched template IDs fail with an explanation.
+Stored specifications without \code{population_assignment} retain independent
+sampling; rebuild them to request matched sampling. The ambiguous case of
+independently drawn tables both defining \code{Group} now errors.
+
+Skeleton rows retain observation multiplicity. Repeated cells receive new,
+conditionally independent responses given the generated latent values and
+signals. Study runners declare this assumption via
+\code{repeated_ratings = "independent"} when refitting these generated data.
+This does not establish independence of repeated ratings in the source data,
+or simulate serial, occasion or peer-network dependence. \code{Weight} is passed
+through to fitting, not interpreted as additional independently generated rows.
+
 Sparse linked simulation is intended for planned-missing rating designs in
 which connectivity is maintained through common linking persons. The
 returned \code{mfrm_sparse_design} attribute summarizes design density, planned
@@ -222,6 +261,9 @@ Returned data include attributes:
 \itemize{
 \item \code{mfrm_truth}: simulated true parameters (for parameter-recovery checks)
 \item \code{mfrm_truth$signals}: injected DIF and interaction signal tables
+\item \code{mfrm_truth$population$template_person} and
+\code{mfrm_truth$design$template_person}: source template IDs keyed by generated
+Person, where population or assignment templates are used
 \item \code{mfrm_truth$slope_table}: simulated discrimination table for
 \code{GPCM}
 \item \code{mfrm_population_data}: generated one-row-per-person background data when
@@ -229,6 +271,8 @@ the simulation specification stores an active latent-regression generator,
 including model-matrix xlevel and contrast provenance for categorical
 covariates
 \item \code{mfrm_simulation_spec}: generation settings (for reproducibility)
+including the effective \code{population_assignment} (\code{"matched"},
+\code{"independent"} or \code{"none"}) and the conditional response-independence rule
 \item \code{mfrm_sparse_design}: sparse-design diagnostics when
 \code{assignment = "sparse_linked"}, including design density, planned missing
 rate, rater coverage, and rater-pair common-person counts

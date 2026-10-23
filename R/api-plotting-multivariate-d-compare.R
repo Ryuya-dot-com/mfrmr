@@ -30,8 +30,9 @@
 #'   without an interval is retained as an open circle; an asterisk marks rows
 #'   with unavailable intervals. Missing values are never replaced by zero.
 #'   Each difference panel has its own horizontal scale.
-#'   Original score units apply to SEM differences. The figure identifies the
-#'   score/composite, its weights and the reference counts. All plotted plans
+#'   Original score units apply to SEM differences. [plot_data()] identifies the
+#'   score/composite, its weights and the reference counts. Explanatory notes and
+#'   a suggested title are returned rather than drawn. All plotted plans
 #'   are future complete crossed plans, even when the source design is incomplete.
 #' @return Invisibly, an `mfrm_plot_data` object. [plot_data()] extracts the exact
 #'   comparison `table`, point-projection `series` (including the reference),
@@ -93,15 +94,12 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
   apply_plot_preset(style)
   old <- graphics::par()[c("mfrow", "mar", "oma", "cex", "mex")]
   on.exit(graphics::par(old), add = TRUE)
-  title_lines <- strwrap(title, 90)
-  subtitle_lines <- strsplit(subtitle, "\n", fixed = TRUE)[[1L]]
-  note_lines <- strwrap(note, 95)
   labels <- if (type == "coefficients") c("G: relative ordering", "Phi: absolute score levels") else
     c("Relative SEM: ordering", "Absolute SEM: score levels")
   # Keep margin line spacing compact so recorded panels also fit landscape devices.
   graphics::par(mfrow = c(2, 1), mex = .65,
     mar = if (view == "plans") c(6, 6, 2.5, 1) else c(5, 12, 2.5, 1),
-    oma = c(length(note_lines) + 1, 0, length(title_lines) + length(subtitle_lines) + 1.5, 0))
+    oma = c(.2, 0, .2, 0))
   for (j in seq_along(metrics)) {
     if (view == "plans") {
       tab <- series[series$Metric == metrics[j], , drop = FALSE]
@@ -140,10 +138,5 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
     graphics::points(tab$Difference[finite], position[finite], pch = ifelse(ok[finite], 16, 1))
     if (!any(finite)) graphics::text(mean(limits), mean(position), "Point projections unavailable")
   }
-  graphics::mtext(title_lines, side = 3, outer = TRUE,
-    line = rev(seq_along(title_lines)) + length(subtitle_lines) - .2, font = 2, cex = .85)
-  graphics::mtext(subtitle_lines, side = 3, outer = TRUE,
-    line = rev(seq_along(subtitle_lines)) - .6, cex = .75)
-  graphics::mtext(note_lines, side = 1, outer = TRUE, line = seq_along(note_lines) - .5, cex = .75)
   invisible(out)
 }

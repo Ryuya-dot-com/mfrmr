@@ -1,3 +1,49 @@
+test_that("polishing cannot trade resolved likelihood loss for a smaller gradient", {
+  # Two local minima have different heights. Adding a constant must not make
+  # the worse one preferable; both gradients can satisfy the stopping rule.
+  fn <- function(x, offset) offset + (x^2 - 1)^2 - .003 * (x^3/3 - x)
+  gr <- function(x) (x^2 - 1) * (4*x - .003)
+  stage <- function(x, offset) list(opt = list(par = x, value = fn(x, offset)),
+    diagnostics = list(ConvergenceSeverity = "pass", TerminalGradientSupNorm = abs(gr(x))))
+  for (offset in c(0, 1e6)) {
+    current <- stage(-1 + 1e-6, offset)
+    worse <- stage(1, offset)
+    expect_gt(worse$opt$value - current$opt$value, .0039)
+    expect_false(mfrm_optimizer_stage_is_better(worse, current))
+    current$diagnostics$ConvergenceSeverity <- "review"
+    expect_false(mfrm_optimizer_stage_is_better(worse, current))
+    expect_true(mfrm_optimizer_stage_is_better(stage(-1, offset), current))
+  }
+  current <- stage(-1 + 1e-6, 1e6)
+  rounded <- stage(-1, 1e6)
+  rounded$opt$value <- current$opt$value + .Machine$double.eps * 1e6
+  expect_true(mfrm_optimizer_stage_is_better(rounded, current))
+  rounded$opt$value <- Inf
+  expect_false(mfrm_optimizer_stage_is_better(rounded, current))
+})
+
+test_that("the optimizer retains its better point after rejected polishing stages", {
+  fn <- function(x) 1e6 + (x^2 - 1)^2 - .003 * (x^3/3 - x)
+  gr <- function(x) (x^2 - 1) * (4*x - .003)
+  calls <- 0L
+  local_mocked_bindings(
+    make_param_cache = function(...) list(),
+    make_mfrm_direct_evaluator = function(...) list(value = fn, gradient = gr, diagnostics = function() list()),
+    optim = function(par, ...) {
+      calls <<- calls + 1L
+      x <- if (calls == 1L) par else 1
+      list(par = x, value = fn(x), convergence = 0L, counts = c("function" = 1L, "gradient" = 1L))
+    }, .package = "mfrmr")
+  expect_warning(out <- run_mfrm_direct_optimization(-1 + 1e-4, "JML", list(),
+    list(model = "RSM"), list(), quad_points = 3L, maxit = 20L, reltol = 1e-9), "convergence review")
+  expect_gt(calls, 1L)
+  expect_equal(out$par, -1 + 1e-4)
+  expect_equal(out$value, fn(out$par))
+  expect_identical(out$optimizer_diagnostics$ConvergenceSeverity, "review")
+  expect_identical(out$optimizer_polish$Stages$StageLabel[out$optimizer_polish$Stages$Selected], "initial")
+  expect_false(out$optimizer_polish$Succeeded)
+})
+
 test_that("curvature restart resolves a large-offset stationary point accurately", {
   h <- diag(c(900, 15000))
   fn <- function(p) 86000 + sum(p * (h %*% p)) / 2
@@ -145,6 +191,23 @@ test_that("a stalled optimizer restarts only from a safe curvature proposal", {
   expect_identical(unsafe$optimizer_diagnostics$ConvergenceSeverity, "review")
   expect_true(nzchar(tail(unsafe$optimizer_polish$Stages$Error, 1)))
   expect_false(tail(unsafe$optimizer_polish$Stages$Selected, 1))
+  for (model in c("RSM", "PCM", "GPCM")) {
+    fixed <- run(model = model, population = TRUE)
+    expect_identical(fixed$optimizer_diagnostics$ConvergenceSeverity, "pass")
+    expect_lt(fixed$optimizer_diagnostics$TerminalGradientSupNorm, 1e-10)
+    expect_identical(fixed$optimizer_polish$Stages$StageLabel[
+      fixed$optimizer_polish$Stages$Selected], "curvature_restart")
+    rejected <- run(model = model, population = TRUE, indefinite = TRUE)
+    expect_identical(rejected$optimizer_diagnostics$ConvergenceSeverity, "review")
+    restart <- rejected$optimizer_polish$Stages$StageLabel == "curvature_restart"
+    expect_true(any(restart))
+    expect_true(nzchar(rejected$optimizer_polish$Stages$Error[restart]))
+    expect_false(any(rejected$optimizer_polish$Stages$Selected[restart]))
+  }
+  fixed_gpcm <- run(model = "GPCM")
+  expect_identical(fixed_gpcm$optimizer_diagnostics$ConvergenceSeverity, "pass")
+  expect_identical(fixed_gpcm$optimizer_polish$Stages$StageLabel[
+    fixed_gpcm$optimizer_polish$Stages$Selected], "curvature_restart")
   for (x in list(run(code=1L),run(method="JML"),
                 run(model="GPCM", integration="adaptive", population=TRUE),
                 run(model="GPCM", integration="adaptive", reltol=1e-6),

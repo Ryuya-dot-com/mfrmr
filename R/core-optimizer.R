@@ -240,7 +240,9 @@ mfrm_optimizer_stage_is_better <- function(candidate, current) {
   current_value <- as.numeric(current$opt$value %||% Inf)
   if (!is.finite(candidate_value)) return(FALSE)
   if (is.finite(current_value)) {
-    objective_slack <- 1e-8 * max(1, abs(current_value))
+    # A smaller gradient cannot justify a resolved likelihood loss. Allow only
+    # floating-point noise, as in the curvature restart/rescaling checks.
+    objective_slack <- 64 * .Machine$double.eps * max(1, abs(current_value))
     if (candidate_value > current_value + objective_slack) return(FALSE)
   }
 
@@ -765,9 +767,9 @@ run_mfrm_direct_optimization <- function(start,
   if (isTRUE(polish_triggered) &&
       identical(selected$diagnostics$ConvergenceReason, "code_zero_large_gradient") &&
       identical(method, "MML") &&
-      ((config$model %in% c("RSM", "PCM") && !mfrmr_adaptive_integration(config)) ||
-       (identical(config$model, "GPCM") && mfrmr_adaptive_integration(config))) &&
-      !isTRUE(config$population_spec$active) &&
+      ((config$model %in% c("RSM", "PCM", "GPCM") && !mfrmr_adaptive_integration(config)) ||
+       (identical(config$model, "GPCM") && mfrmr_adaptive_integration(config) &&
+        !isTRUE(config$population_spec$active))) &&
       length(start) <= 64L) {
     candidate <- run_stage(
       par = selected$opt$par, stage_method = selected$method,
@@ -938,10 +940,26 @@ mfrm_checkpoint_parameter_names <- function(sizes) {
   }), use.names = FALSE)
 }
 
-mfrm_checkpoint_fingerprint <- function(object) {
+mfrm_checkpoint_fingerprint <- function(object, canonical = FALSE) {
   path <- tempfile("mfrmr-checkpoint-fingerprint-", fileext = ".bin")
   on.exit(unlink(path), add = TRUE)
-  writeBin(serialize(object, NULL, version = 3), path)
+  if (canonical) {
+    # Attribute insertion order is not model state (e.g. empty data frames
+    # built by different R versions). Preserve every attribute and value.
+    normalize <- function(x) {
+      attrs <- attributes(x)
+      if (is.list(x)) x <- lapply(x, normalize)
+      if (length(attrs)) attributes(x) <- lapply(attrs[order(names(attrs), method = "radix")], normalize)
+      x
+    }
+    object <- normalize(object)
+  }
+  bytes <- serialize(object, NULL, version = if (canonical) 2 else 3)
+  # XDR serialization starts with X\n and three four-byte integers. The
+  # second integer identifies the writing R version, not the object's state.
+  # Retain the historical checkpoint format unless explicitly requested.
+  if (canonical) bytes[7:10] <- as.raw(0)
+  writeBin(bytes, path)
   as.character(unname(tools::md5sum(path)))
 }
 

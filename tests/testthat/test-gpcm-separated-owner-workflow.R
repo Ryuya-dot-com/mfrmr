@@ -31,7 +31,7 @@ test_that("MML keeps distinct owners through inference, curves and saved output"
   expect_setequal(f$steps$StepFacet, paste0("R",1:3))
   expect_identical(f$slopes$SlopeFacet, paste0("C",1:2))
   expect_equal(prod(f$slopes$Estimate),1,tolerance=1e-12)
-  ci <- confint(f)
+  ci <- confint(f, parm = "slopes")
   expect_true(all(attr(ci,"diagnostics")$CIEligible))
   cv <- mfrm_gpcm_inference(f,method="sandwich")
   expect_true(cv$check$eligible)
@@ -55,10 +55,10 @@ test_that("MML keeps distinct owners through inference, curves and saved output"
   marked <- curves; marked$contexts <- query$contexts
   expect_output(print(marked), "Unobserved combinations")
   if (requireNamespace("ggplot2", quietly = TRUE)) {
-    expect_match(plot(marked, draw = FALSE)$labels$caption, "not observed together")
+    expect_match(paste(plot_data(plot(marked, draw = FALSE), "notes")$Text, collapse = "\n"), "not observed together")
     expect_null(plot(marked, caption = NULL, draw = FALSE)$labels$caption)
     unavailable <- marked; unavailable$table$CIEligible[1] <- FALSE
-    caption <- plot(unavailable, draw = FALSE)$labels$caption
+    caption <- paste(plot_data(plot(unavailable, draw = FALSE), "notes")$Text, collapse = "\n")
     expect_match(caption, "Intervals unavailable")
     expect_match(caption, "not observed together")
   }

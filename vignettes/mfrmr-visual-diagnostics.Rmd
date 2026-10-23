@@ -39,6 +39,23 @@ public plotting family shown here.
 
 ## Find a figure by purpose
 
+Use `plot()` on the fitted model or saved analysis result. In 0.2.4, the
+33 former standalone drawing helpers are no longer exported. For existing
+scripts, `help("mfrmr_plot_migration")` gives every replacement and explains
+which `type`, `view` and `metric` controls apply.
+
+For observed rating agreement before model fitting, the
+[rating-agreement tutorial](mfrmr-rating-agreement.html#see-the-disagreement-then-compare-the-coefficients)
+shows matched-score counts and pairwise QWK with retained sample sizes. Those
+custom ggplots use `pairwise_kappa_table()` output. They are distinct from
+the fitted-workflow exact-agreement/correlation heatmap below.
+
+For group comparisons of a rater or task, the
+[DFF tutorial](mfrmr-linking-and-dff.html#compare-group-residuals) pairs a
+summary figure with response counts, display omissions and exclusion reasons.
+It explains why residual differences and linked-refit differences have
+different sign interpretations and what subgroup linking can establish.
+
 Use the plot guide before choosing a specialized function. It includes rater
 feedback, category curves, external-feature groups and G/D-study planning.
 
@@ -119,6 +136,67 @@ the original plot and custom graphics from `plot_data(p)`. This is a selected
 map, not a claim that every plot or component has been covered. Graphical
 support does not extend the model's statistical assumptions.
 
+## Latent regression: coefficients and specified comparisons
+
+Latent regression asks how the conditional mean of ability relates to Person
+predictors. It differs from a residual PCA or a plot of rater attributes.
+An example coefficient might describe a group difference under the fitted
+coding, rather than an individual learner's score or a rater's severity.
+
+The bundled-data example in `?mfrm_population_intervals` fits an RSM model
+with a clearly labeled fictional predictor, calculates intervals once and
+creates `ci`. After running that example, inspect the result as follows:
+
+```{r population-interval-views, eval=FALSE}
+summary(ci)                           # estimates, intervals and status
+p <- plot(ci, type = "contrasts")     # the saved comparison, without refitting
+plot_data(p, "contrast_weights")      # which conditional means were compared?
+plot_data(p, "population_coding")     # factor levels and coding, if applicable
+plot_data(p, "notes")                 # assumptions and experimental limits
+as_ggplot(p)                          # the same saved values for customization
+```
+
+Use `plot(ci)` for coefficients. A coefficient for a continuous predictor is
+per unit of its fitted predictor; the intercept depends on zero values and
+factor coding. Read the saved formula and trained terms in
+`plot_data(p, "population_spec")` when transformations or interactions are
+involved. Different predictor units prevent a simple ranking of importance by
+coefficient magnitude. A positive mean difference predicts higher *coded*
+ratings; the rubric determines whether higher ratings are favorable.
+
+Filled points and lines show available pointwise intervals. A cross and
+`CI unavailable` label retain a point whose interval could not be supplied;
+inspect its `Status`, `InferenceReview` and saved checks. A wide interval is
+still shown. Numerical availability does not establish coverage, and crossing
+zero is not an automatic practical decision. These RSM/PCM intervals remain
+experimental. Residual variance stays in `summary(ci)` because its units differ
+from coefficients and mean contrasts. Save `ci` to preserve all targets and
+numerical checks, and save `p` when retaining this particular display.
+
+## Connect a figure to a claim
+
+Choose the proposed score interpretation before choosing a figure. The
+[methods guide](../reference/mfrmr_methods_reference.html#use-results-as-evidence-about-a-construct)
+shows how to connect that claim to a design, expected pattern, competing
+explanation and conclusion. These are complementary views; a report need not
+include every figure.
+
+| Figure | What to read | What the figure does not establish |
+| --- | --- | --- |
+| Wright map | Whether fitted persons and rubric transitions occupy comparable parts of the scale, with the stated uncertainty | Coverage of all intended content or proof of one latent dimension |
+| Category curves and counts | Predicted category use alongside actual category support for the relevant owner | That a rarely dominant category should automatically be merged |
+| Fit pathway and residual displays | Where the selected model leaves unexpected variation | A psychological cause, halo/horn, or a rule for excluding a rater |
+| G-study component/covariance plots | Where score variation and relations arise, including interactions and combined residual | A correlation scale, a latent factor solution, or which individual judge caused an effect |
+| D-study curves and interval forests | Dependability/SEM for specified plans, or a separately requested paired difference | A winner, a universally adequate cutoff, or a paired test inferred from marginal interval overlap |
+
+For example, satisfactory fit and a high G coefficient can coexist with
+uncertain relations between criteria. Those results address different claims;
+one does not override the other. Read the
+[worked covariance example](mfrmr-gtheory.html#examine-a-construct-claim)
+for an unresolved result and a reporting example. Keep methods, unavailable
+states and notes with saved figures. A colour change or a new panel layout
+does not change their inferential scope.
+
 ## Minimal setup
 
 ```{r setup}
@@ -146,6 +224,22 @@ subset(
 
 ## 1. Targeting and scale structure
 
+### Establish what higher scores mean
+
+A logit value needs a rubric direction and a model role. For comprehensibility,
+1 = difficult / 4 = easy makes higher Person locations mean easier speech;
+1 = easy / 4 = difficult makes them mean more difficult speech. In both cases,
+higher Person locations predict higher coded scores. With the default negative
+Rater orientation, higher Rater locations predict **lower** coded scores, so
+"stricter" is appropriate only when higher scores are more favorable.
+
+Record both endpoint labels with the analysis. `positive_facets` changes the
+orientation of the selected facet parameters; it does not reverse the outcome
+categories. Renaming categories in a figure also leaves the model unchanged.
+The [visual-diagnostics help](../reference/mfrmr_visual_diagnostics.html#read-score-direction-and-diagnostic-terms-first)
+explains recoding, anchors and the terms used below. The package can report
+the fitted signs but cannot infer the substantive meaning of your rubric.
+
 ### Wright map {#figure-wright}
 
 Use the Wright map first when you want one shared logit view of persons,
@@ -168,6 +262,36 @@ The locations used in the figure remain available as a table:
 ```{r wright-values}
 head(plot_data(wright, component = "locations"))
 ```
+
+Read the accompanying definitions and fitted directions outside the figure:
+
+```{r wright-interpretation}
+knitr::kable(plot_data(wright, "notes"), row.names = FALSE)
+```
+
+To find a particular judge, use their ID from the fitted data. The `> ` prefix
+marks your selection in color or monochrome; it does not flag a statistical
+problem. Use another facet name in the list to select its levels instead.
+
+```{r wright-highlight}
+judge <- as.character(toy$Rater[1])
+focused <- plot(fit, type = "wright", highlight = list(Rater = judge),
+                draw = FALSE)
+subset(plot_data(focused, "locations"), Highlighted)
+```
+
+Selected levels remain visible even if the compact `top_n` selection would
+omit them. They are added to the usual selection, so inspect
+`plot_data(focused, "retention")` for the displayed and omitted counts.
+`top_n = Inf` retains all levels. Selection does not recenter or refit the
+model, and the automatic logit range is determined before compaction.
+
+Here **Step** means a transition between adjacent score categories: 1 to 2,
+2 to 3, or 3 to 4. At a transition's crossing, those two categories are equally
+probable; other categories remain possible, so this does not mean 50 percent
+each. The displayed reference sets other additive facet effects to zero.
+For a particular judge and criterion, their effects shift the crossing along
+the Person scale. A Step is not a developmental stage or a contest pass mark.
 
 The native view above remains the recommended analytic figure because it keeps
 facet uncertainty and fitted step locations visible. For a closer FACETS-facing handoff, switch the
@@ -216,9 +340,12 @@ Interpretation:
 ### Fit pathway {#figure-fit-pathway}
 
 The expected-score pathway is not a fit pathway. To review measure against
-Infit, place Infit on the horizontal axis and include person rows explicitly:
+Infit, place Infit on the horizontal axis. This focused view retains all facet
+levels and the 12 persons furthest from expected fit. It is a review screen,
+not a representative sample of person fit. Labels are limited to flagged
+facet levels; the table below identifies every displayed row.
 
-```{r fit-pathway, dev="png", fig.alt = "Infit mean squares against fitted locations for persons and facet levels, with requested location intervals. Mean-square bands are descriptive review thresholds, not automatic decisions."}
+```{r fit-pathway, dev="png", fig.alt = "Infit mean squares against fitted locations for all facet levels and the 12 persons furthest from expected fit, with requested location intervals. Labels are limited to flagged facet levels; the accompanying table identifies the points. Mean-square bands are descriptive review thresholds, not automatic decisions."}
 fit_pathway <- plot(
   fit,
   type = "fit_pathway",
@@ -226,6 +353,9 @@ fit_pathway <- plot(
   fit_stat = "Infit",
   fit_scale = "mnsq",
   include_person = TRUE,
+  top_n_person = 12,
+  person_labels = "none",
+  facet_labels = "flagged",
   show_ci = TRUE,
   preset = "publication"
 )
@@ -238,9 +368,28 @@ Interpretation:
 - Vertical whiskers show measure uncertainty; person and non-person rows have distinct uncertainty bases, recorded in the draw-free payload metadata.
 - Treat displaced or flagged rows as review prompts, not automatic exclusions.
 
+**Overfit** means less residual variation than the model expects (mean square
+below 1); **underfit** means more (above 1). The selected bands determine
+screening flags, so not every deviation from 1 triggers a flag. Infit and
+Outfit weight residuals differently; ZSTD has a zero-centered reference.
+Calibrated speech-contest judges can agree or have similar severity without
+overfit. If low fit values occur, inspect actual residual patterns, category
+use and rating independence before attributing them to training. Shared
+discussion/copying and consistent independent rubric use are different
+processes. Neither a low nor a high value alone establishes the cause or
+justifies removing a judge. See the linked help for the definitions and sources.
+
 ```{r fit-pathway-values}
-head(plot_data(fit_pathway, component = "table"))
+fit_values <- plot_data(fit_pathway, component = "table")
+fit_values[, c("Facet", "Level", "FitValue", "Measure", "CIEligible")]
 ```
+
+`CIEligible = FALSE` means that a location interval is unavailable under the
+stored inference rules, not that its uncertainty is zero. Inspect `CIBasis`
+and `CIUse` in the same table before interpreting whiskers. Set
+`top_n_person = Inf` to retain all persons, or `include_person = FALSE` to
+focus on facet levels. A crowded view can be read through its table without
+changing the model or the fit-screening rules.
 
 ### Category probabilities {#figure-category-curves}
 
@@ -263,19 +412,20 @@ head(plot_data(category_curves, component = "probabilities"))
 # as_ggplot(category_curves)
 ```
 
+For observed counts and stored step points, save `rating_scale_table(fit, diag)`
+and use `plot(result, type = "counts")` or `type = "thresholds"`; both support
+`as_ggplot()`. Counts in that figure are pooled: inspect `owner_category_table`
+for each step owner's denominator and category support. Stored step SEs are
+not curve or gap intervals. The separate `category_curves_report()` bundle
+uses base graphics for its multi-family overview and selected curve views;
+custom graphics from `plot_data()` must retain the curve family and group.
+
 ## 2. Local response and level issues
 
 Unexpected-response screening is useful for case-level review.
 
 ```{r unexpected, fig.alt = "Observed ratings screened by standardized residual size and fitted response probability. Highlighted observations merit contextual review rather than automatic deletion."}
-plot_unexpected(
-  fit,
-  diagnostics = diag,
-  abs_z_min = 1.5,
-  prob_max = 0.4,
-  plot_type = "scatter",
-  preset = "publication"
-)
+plot(fit, type = "unexpected", diagnostics = diag, abs_z_min = 1.5, prob_max = 0.4, view = "scatter", preset = "publication")
 ```
 
 Interpretation:
@@ -286,13 +436,7 @@ Interpretation:
 Displacement focuses on level movement rather than individual responses.
 
 ```{r displacement, fig.alt = "Level-specific displacement summaries for the fitted facets, including unanchored levels. The displayed shifts are diagnostic summaries, not evidence that a level changed over time."}
-plot_displacement(
-  fit,
-  diagnostics = diag,
-  anchored_only = FALSE,
-  plot_type = "lollipop",
-  preset = "publication"
-)
+plot(fit, type = "displacement", diagnostics = diag, anchored_only = FALSE, view = "lollipop", preset = "publication")
 ```
 
 Interpretation:
@@ -334,18 +478,14 @@ subset(
   c("Item", "Available", "NextAction")
 )
 
-plot_marginal_fit(
-  diag_strict,
-  top_n = 12,
-  preset = "publication"
-)
+plot(diag_strict, type = "marginal_fit", top_n = 12, preset = "publication")
 ```
 
 Interpretation:
 
 - Treat strict marginal plots as exploratory corroboration screens, not as standalone inferential tests.
 - Use the checklist rows to confirm that the current run actually supports the strict branch before routing figures into a report.
-- When pairwise follow-up is needed, continue with `plot_marginal_pairwise(diag_strict, preset = "publication")`.
+- When pairwise follow-up is needed, continue with `plot(diag_strict, type = "marginal_pairwise", preset = "publication")`.
 
 ## 3. Linking and coverage {#figure-linking}
 
@@ -382,11 +522,32 @@ correlations. The latter two do not establish assignment connectedness or a
 common scale. Their centrality statistics are graph-theoretic quantities, not
 rating-scale central tendency, MFRM severity logits, or causal halo evidence.
 
+For a severity comparison, use `plot(fit, type = "rater_severity",
+diagnostics = diagnostics, draw = FALSE)` and inspect its returned `data`
+component with `plot_data()`. `CIUse`, `SE_Method` and `IntervalStatus` explain
+whether the whiskers support reporting, screening or further review. They are
+normal uncertainty bands; "severity profile" does not mean a likelihood-profile
+interval. Ordinary JML bands remain exploratory. Fixed values use diamonds,
+points without intervals use crosses, and unavailable estimates keep their
+rows. `as_ggplot()` preserves the saved endpoints and notes. Comparing two
+individual whiskers does not replace an interval for their contrast.
+
+No magnitude bands are drawn by default. Explicit `show_bands = TRUE` adds
+gray distance-from-zero guides; their numerical ranges are retained in the
+`Band` column. They are not homogeneity or equivalence decisions. Locations
+of -0.5 and +0.5 are one logit apart even though both lie in the central range.
+An origin shift can change the ranges without changing that difference.
+Use `analyze_facet_equivalence()` with a substantively justified bound and
+eligible MML contrast uncertainty for a separate equivalence analysis.
+An insignificant difference or overlapping individual intervals is insufficient.
+Older saved plots retain their original colors and labels; redraw from the
+saved fit and matching diagnostics to adopt the new default.
+
 If you are working across administrations, follow up with anchor-drift plots:
 
 ```{r eval = FALSE}
 drift <- detect_anchor_drift(current_fit, baseline = baseline_anchors)
-plot_anchor_drift(drift, type = "heatmap", preset = "publication")
+plot(drift, type = "heatmap", preset = "publication")
 ```
 
 ## 4. Residual structure and interaction screens
@@ -394,11 +555,11 @@ plot_anchor_drift(drift, type = "heatmap", preset = "publication")
 Residual PCA is a follow-up layer after the main fit screen.
 
 ```{r residual-pca, fig.alt = "Scree display of residual principal components when the requested decomposition is available. Residual components are diagnostic summaries, not automatically substantive dimensions."}
-diag_pca <- diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)
-pca <- analyze_residual_pca(diag_pca, mode = "both")
+diag_pca <- diagnose_mfrm(fit, residual_pca = "none")
+pca <- analyze_residual_pca(diag_pca, mode = "both", pca_max_factors = 4)
 summary(pca)
 if (nrow(pca$overall_table) > 0L) {
-  plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+  plot(pca, type = "residual_pca", mode = "overall", view = "scree", preset = "publication")
 }
 ```
 
@@ -429,9 +590,9 @@ that certifies unidimensionality or selects a latent dimension count:
 
 | Question | Current mfrmr route | Interpretation |
 | --- | --- | --- |
-| Is there organized residual variation? | `analyze_residual_pca()` and `plot_residual_pca()`; optionally `parallel = TRUE`. | Exploratory PCA of standardized residuals. The default reference permutes residual columns. `parallel_method = "model_bootstrap"` generates ratings and refits supported RSM/PCM MML models; it is not yet a calibrated dimensionality test. |
-| Which levels have associated residuals? | `q3_statistic()` and `plot_local_dependence_heatmap()` with an explicit `facet`. | Standardized residuals are averaged within Person/level cells and correlated across shared persons. This differs from original raw-residual Yen Q3. Default facet Rater asks about raters, not automatically about rubric dimensions. |
-| Which category or rating-context margins are poorly reproduced? | `diagnose_mfrm(..., diagnostic_mode = "both")`, `plot_marginal_fit()` and `plot_marginal_pairwise()`. | Descriptive marginal screens. Their scales omit parts of joint/calibration uncertainty; they are not a calibrated M2/C2 omnibus test. |
+| Is there organized residual variation? | `analyze_residual_pca()` and `plot()`; optionally `parallel = TRUE`. | Exploratory PCA of standardized residuals. The default reference permutes residual columns. `parallel_method = "model_bootstrap"` generates ratings and refits supported RSM/PCM MML models; it is not yet a calibrated dimensionality test. |
+| Which levels have associated residuals? | `q3_statistic(fit, facet = "Criterion")` and `plot(fit, type = "local_dependence", facet = "Criterion")`; use your intended facet. | Standardized residuals are averaged within Person/level cells and correlated across shared persons. This differs from original raw-residual Yen Q3. Default facet Rater asks about raters, not automatically about rubric dimensions. |
+| Which category or rating-context margins are poorly reproduced? | `diagnose_mfrm(..., diagnostic_mode = "both")`, then `plot(diag, type = "marginal_fit")` or `plot(diag, type = "marginal_pairwise")`. | Descriptive marginal screens. Their scales omit parts of joint/calibration uncertainty; they are not a calibrated M2/C2 omnibus test. |
 | Is a substantive two-dimensional model preferable? | No native multidimensional GMFRM fitting/comparison route yet. | Requires a specified alternative and comparable likelihood or predictive targets; PCA does not supply that comparison. |
 
 A supported first-pass workflow, with the paired facet chosen to match the
@@ -445,7 +606,17 @@ summary(pca)
 # Replace Criterion with the fitted facet relevant to the question.
 q3 <- q3_statistic(fit, diagnostics = diag, facet = "Criterion")
 q3$pairs
+q3$notes
 ```
+
+`plot(pca, type = "scree")` draws the saved overall PCA;
+`plot(pca, type = "loadings", mode = "facet", facet = "Criterion")` uses its
+saved facet analysis. Preserve the full `pca` result with `saveRDS()` so its
+reference, unavailable scopes and warnings accompany the figure. There is
+no dedicated `plot(q3)` method: obtain the companion heatmap from `fit` with
+the same `diagnostics`, `facet` and `min_pairs`, and save its draw-free payload.
+`as_ggplot()` can then convert that payload without recalculating residuals;
+`plot_data(p, "notes")` retains the qualifications outside the figure.
 
 Two hundred permutations are an example setting, not a qualification threshold.
 Check missing comparisons, overlap counts, aggregation and the reported
@@ -644,6 +815,16 @@ reference is qualified.
 
 For interaction screening, use the packaged bias example.
 
+Here **bias** means an additional departure for a particular combination,
+such as one judge scoring Content, after accounting for the fitted baseline.
+It is distinct from overall rater severity or proof of unfairness. A positive
+`Bias Size` increases expected coded scores; with high-is-good scoring this
+favors the combination, whereas a positive default Rater severity reduces
+scores. Reverse-coded rubrics reverse that substantive interpretation.
+The profile below uses mean **absolute** bias, so it describes magnitude;
+inspect signed rows in `bias$table` to see direction. Its uncertainty holds
+the baseline calibration fixed.
+
 ```{r bias, fig.alt = "Rater-by-criterion interaction profiles from the fitted bias analysis. Differences identify combinations for review and do not establish a causal explanation."}
 bias_df <- load_mfrmr_data("example_bias")
 
@@ -660,17 +841,39 @@ fit_bias <- fit_mfrm(
 diag_bias <- diagnose_mfrm(fit_bias, residual_pca = "none")
 bias <- estimate_bias(fit_bias, diag_bias, facet_a = "Rater", facet_b = "Criterion")
 
-plot_bias_interaction(
-  bias,
-  plot = "facet_profile",
-  preset = "publication"
-)
+bias_figure <- plot(bias, type = "bias", view = "facet_profile", preset = "publication")
 ```
+
+The definition, sign, magnitude-only profile and uncertainty qualifications
+are retained in `plot_data(bias_figure, "notes")` and shown by
+`print(bias_figure)`.
 
 Interpretation:
 
 - Facet profiles are useful for seeing whether a small number of levels drives most flagged interaction cells.
-- Treat these plots as screening evidence; confirm with the corresponding tables and narrative reports.
+- Treat these plots as screening evidence and inspect the corresponding tables,
+  cell counts and calibration limitations. Several views of the same estimates
+  are not independent confirmation of bias.
+
+For repeat plotting, save `bias_interaction_report(bias, ...)` after choosing
+the review thresholds. `plot(result, type = "scatter")` compares the
+observed-minus-expected score average with conditional bias in logits;
+`type = "ranked"` shows saved interaction estimates. These two views support
+`as_ggplot()`, including conditional bounds when `show_ci = TRUE`. They hold
+calibration fixed. The other bias views use base or custom graphics.
+
+Rater centrality and halo have different targets. `rater_centrality_table()`
+returns indirect indices in a plain list; save the list and review source
+status and unavailable-index reasons alongside its data frames.
+`rater_halo_network_analysis()` returns observed-score profile correlations.
+Its `edge_distribution`, selected `halo_summary` metric and retained-edge
+`matrix` views support `as_ggplot()`; use base graphics for the network.
+Save the whole halo result to retain its pair counts, edge filters and caveats.
+Neither result is automatically added to an aggregate `mfrm_report()`.
+These views do not distinguish halo from horn effects: a negative impression
+can lower several criterion ratings together without creating a negative
+correlation. For a beginner explanation of severity, centrality, halo/horn
+and local dependence, see `help("mfrmr_methods_reference")`.
 
 ## 5. Custom figures without losing the evidence boundary
 
@@ -711,6 +914,39 @@ you change colors, labels, panels, or rendering technology while preserving the
 same measurement scale, reference lines, caveats, and reporting role used by
 the package-native plot.
 
+### Save a figure with its values and notes
+
+Saving only a PNG loses the underlying values and interpretation notes. Save
+the complete returned object as well. This example uses a temporary filename;
+choose a project filename to keep it beyond this R session. Keep the rubric
+alongside the plot: the labels below are the illustrative labels used earlier,
+not wording that mfrmr inferred from the scores. Use your actual rubric wording.
+
+```{r save-figure}
+figure_file <- tempfile(fileext = ".rds")
+figure_record <- list(plot = wright,
+  rubric = c(`1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"))
+saveRDS(figure_record, figure_file)
+saved_record <- readRDS(figure_file)
+saved_figure <- saved_record$plot
+saved_record$rubric
+print(saved_figure)
+identical(plot_data(saved_figure, "locations"), plot_data(wright, "locations"))
+```
+
+For the supported Wright-map conversion, redraw the saved values without
+refitting or recalculating uncertainty:
+
+```{r reopen-figure, eval = FALSE}
+as_ggplot(saved_figure)
+```
+
+`as_ggplot()` requires the optional ggplot2 package. Save the fit and matching
+diagnostics too if you want to choose a different analysis view later. The
+plot guide above distinguishes dedicated conversions, different table-based
+views and plots without automatic conversion. This example does not promise
+the same layout for every renderer or conversion of every plot family.
+
 ### Set an appearance once for several plots
 
 Use `options(mfrmr.plot_preset = "monochrome")` to set a common default in the
@@ -742,13 +978,12 @@ screening thresholds or the user's global ggplot theme.
 ### Use a common title argument
 
 In the development version, eight existing helpers accept `title`:
-`plot_marginal_fit()`, `plot_marginal_pairwise()`, `plot_unexpected()`,
-`plot_interrater_agreement()`, `plot_facets_chisq()`, `plot_bubble()`,
-`plot_bias_interaction()` and `plot_facet_quality_dashboard()`.
+`plot()`, `plot()`, `plot()`,
+`plot()`, `plot()`, `plot()`,
+`plot()` and `plot()`.
 
 ```{r title-controls, fig.alt="Infit and Outfit mean squares for fitted facet levels, with the title omitted. Bubble sizes reflect rating counts; reference lines and the saved descriptive review band remain unchanged."}
-plain <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
-                     title = NULL, preset = "monochrome", draw = FALSE)
+plain <- plot(fit, type = "bubble", diagnostics = diag, view = "infit_outfit", title = NULL, preset = "monochrome", draw = FALSE)
 as_ggplot(plain)
 # Reuse the saved values, screening references and interval settings.
 plain$data$reference_lines
@@ -769,7 +1004,7 @@ consult `mfrmr_output_guide("plots")` for the supported route.
 
 ### Fair Scores and annotations outside the figure
 
-Use `plot_type = "measure"` to relate measures to fair scores, `"scatter"`
+Use `view = "measure"` to relate measures to fair scores, `"scatter"`
 to compare observed and fair scores, or `"difference"` to rank their gaps.
 FairM uses mean reference measures; FairZ uses zero reference measures.
 FairZ is an expected score on the internal score scale, not a z-score.
@@ -777,11 +1012,7 @@ Observed-minus-fair gaps also reflect assignment and person mix, so they do
 not by themselves establish rater bias.
 
 ```{r fair-score-data, eval=FALSE}
-p_fair <- plot_fair_average(
-  fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
-  plot_type = "measure", show_ci = TRUE, preset = "monochrome",
-  show_title = FALSE, show_notes = FALSE, draw = FALSE
-)
+p_fair <- plot(fit, type = "fair_average", diagnostics = diag, facet = "Rater", metric = "FairZ", view = "measure", show_ci = TRUE, preset = "monochrome", show_title = FALSE, show_notes = FALSE, draw = FALSE)
 p_fair$data$notes
 p_fair$data$plot_data
 p_fair$data$excluded
@@ -819,30 +1050,53 @@ The package ships a complementary visual layer for teaching and
 diagnostic follow-up. These helpers are not default reporting figures;
 use them after the main screens above.
 
-- `plot_guttman_scalogram(fit, diagnostics)` renders a person x
+- `plot(fit, type = "guttman", diagnostics = diagnostics)` renders a person x
   facet-level response matrix with an unexpected-response overlay, for
   teaching-oriented scalogram intuition and local triage.
-- `plot_residual_qq(fit, diagnostics)` plots a Normal Q-Q of
+- `plot(fit, type = "residual_qq", diagnostics = diagnostics)` plots a Normal Q-Q of
   person-level standardized residual aggregates as exploratory
   follow-up on residual tail behavior.
-- `plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b))` tracks rater
+- `plot(fit_a, type = "trajectory", comparison = list(T2 = fit_b), labels = c("T1", "T2"))` tracks rater
   severity across named waves. The helper does not perform linking;
   supply waves that have already been placed on a common anchored
   scale (see `vignette("mfrmr-linking-and-dff")`) before interpreting
   movement as rater drift.
-- `plot_rater_agreement_heatmap(fit, diagnostics)` renders a
+- `plot(fit, type = "agreement", view = "heatmap", diagnostics = diagnostics)` renders a
   compact pairwise rater x rater agreement matrix; pass
   `metric = "correlation"` to colour by the Pearson-style `Corr`
   column instead of exact agreement.
 - `response_time_review(data, person, facets, time)` summarizes
   response-time metadata by person, facet, and score category. Pair it with
-  `plot_response_time_review()` for distribution and grouped timing plots.
+  `plot()` for distribution and grouped timing plots.
   This is a descriptive QC layer, not a joint speed-accuracy model.
-- `plot_shrinkage_funnel(fit_eb, show_ci = TRUE)` draws raw and
+- `plot(fit_eb, type = "shrinkage", view = "funnel", show_ci = TRUE)` draws raw and
   empirical-Bayes shrunken facet estimates on the same row, with
   optional confidence whiskers for both estimates. Use this only after
   `apply_empirical_bayes_shrinkage()` or `fit_mfrm(..., facet_shrinkage =
   "empirical_bayes")`.
+
+### Save the agreement result and its review rules
+
+Keep the agreement table when drawing several views. Its matched-context
+counts and saved thresholds explain the figure; correlation describes score
+ordering, while exact agreement describes equal scores. Neither supplies an
+automatic rater-quality decision. Model-expected agreement is a fitted-model
+baseline, not chance agreement.
+
+```{r saved-agreement-view, fig.alt="Exact agreement for matched rater pairs with the fitted-model expected agreement overlaid. Review flags and the horizontal guide use the thresholds saved in the agreement result."}
+agreement <- interrater_agreement_table(fit, diagnostics = diag, rater_facet = "Rater")
+p_agreement <- plot(agreement)
+# Alternative saved view: plot(agreement, type = "agreement", metric = "correlation")
+# Optional ggplot conversion: as_ggplot(p_agreement)
+```
+
+Save `agreement` with `saveRDS()` to choose another pair view after reopening,
+or save `p_agreement` to retain the selected view and its appearance. Inspect
+`plot_data(p_agreement, "notes")` for the qualifications outside the figure.
+Bar colors follow the combined exact/correlation flag, so a bar above its
+displayed threshold can still be flagged by the other rule. To change the
+rules, recreate `agreement` from the existing fit with explicit `exact_warn`
+and `corr_warn`; changing a reference line alone would contradict the flags.
 
 ### Response-time QC context
 
@@ -869,8 +1123,8 @@ rt <- response_time_review(
 )
 
 summary(rt)
-plot_response_time_review(rt, type = "distribution", preset = "publication")
-plot_response_time_review(rt, type = "person", preset = "publication")
+plot(rt, type = "distribution", preset = "publication")
+plot(rt, type = "person", preset = "publication")
 ```
 
 Interpretation:
@@ -889,13 +1143,7 @@ toward the facet mean and whether the uncertainty remains wide after pooling.
 ```{r shrinkage-funnel, fig.alt = "Raw and empirically shrunken facet estimates with their displayed uncertainty. Movement toward a facet center reflects shrinkage, not a change in observed ratings."}
 fit_eb <- apply_empirical_bayes_shrinkage(fit)
 
-shrink <- plot_shrinkage_funnel(
-  fit_eb,
-  show_ci = TRUE,
-  ci_level = 0.95,
-  preset = "publication",
-  draw = FALSE
-)
+shrink <- plot(fit_eb, type = "shrinkage", view = "funnel", show_ci = TRUE, ci_level = 0.95, preset = "publication", draw = FALSE)
 
 head(shrink$data$table[, c(
   "Facet", "Level", "RawEstimate", "RawCI_Lower", "RawCI_Upper",
@@ -903,12 +1151,7 @@ head(shrink$data$table[, c(
   "ShrinkageFactor"
 )])
 
-plot_shrinkage_funnel(
-  fit_eb,
-  show_ci = TRUE,
-  ci_level = 0.95,
-  preset = "publication"
-)
+plot(fit_eb, type = "shrinkage", view = "funnel", show_ci = TRUE, ci_level = 0.95, preset = "publication")
 ```
 
 Interpretation:
@@ -971,6 +1214,29 @@ For imputed features, group comparisons and PCA, continue with
 
 ### D-study planning {#figure-d-study-planning}
 
+For data preparation, interpretation of plan differences and saved reopening,
+start with [Plan an assessment with G theory](mfrmr-gtheory.html).
+For several score criteria in a single panel, use
+`plot(d, score = c("V", "W"), metric = "Phi")`, with names from your result.
+Select named composites with `composite = c("Equal", "Difference")`.
+For two-facet results, add `x_var = "Tasks", panel_by = "Raters", ncol = 2`
+to separate the rater counts into panels with shared axes and score colors;
+reverse `x_var` and `panel_by` to separate task counts. `as_ggplot()` retains
+this layout using `facet_wrap()`. Panels retain unavailable results and nested
+count labels such as "Raters per Task".
+Add `reference = 0.8` only if that is your chosen criterion; guides are not
+universal adequacy rules. Both plot families omit reference lines by default;
+`plot(main_effects_d, reference = c(0.7, 0.8))` restores its earlier guides.
+
+Use three complementary views: `plot(g, weights = ...)` shows the G-study's
+raw sources of score variation; `plot(d)` and `plot(d, type = "sem")` show
+future plan projections; `plot(comparison, view = "differences")` shows the
+eligible paired differences with uncertainty. Raw components are in squared
+score units and retain negative estimates. They are not percentages or
+future-plan error contributions. G-study component and D-study projection
+plots support `as_ggplot()` for editing; retrieve cautions with
+`plot_data(p, "notes")` and preserve them outside the figure.
+
 A D-study asks how a specified measurement design would perform if we changed
 facet counts. The packaged MGENOVA manual example has two scores, V and W,
 observed for Persons crossed with Tasks. Here the target is their equal-weight
@@ -978,8 +1244,8 @@ composite. There is no rater facet in this example.
 
 ```{r d-study-input}
 tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
-gstudy <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
-planned <- mfrm_multivariate_d_study(gstudy,
+gstudy <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
+planned <- mfrm_d_study(gstudy,
   data.frame(Tasks = c(3, 6, 12)), weights = c(V = 0.5, W = 0.5))
 ```
 
@@ -1001,7 +1267,7 @@ plot_data(planning_plot, component = "table")
 # plot(planned, type = "sem")
 ```
 
-Use `?mfrm_multivariate_d_study` for score/composite selection and supported
+Use `?mfrm_d_study` for score/composite selection and supported
 crossed or nested designs. An ordinary `mfrm_d_study` object has its own base
 plot; its automatic ggplot conversion is currently unavailable.
 
@@ -1032,16 +1298,16 @@ fresh-session workflow.
 For a compact visual workflow:
 
 1. `reporting_checklist()` when you want the package to route which figures are already supported.
-2. `plot_qc_dashboard()` for one-page triage.
-3. `plot_unexpected()`, `plot_displacement()`, `plot_marginal_fit()`, and `plot_interrater_agreement()` for local follow-up.
+2. `plot()` for one-page triage.
+3. `plot()`, `plot()`, `plot()`, and `plot()` for local follow-up.
 4. `plot(fit, type = "wright")` and `plot(fit, type = "pathway")` for targeting and scale interpretation.
-5. `plot_residual_pca()`, `plot_bias_interaction()`, and `plot_information()` for deeper structural review.
-6. `response_time_review()` and `plot_response_time_review()` when response-time metadata are available.
-7. `plot_shrinkage_funnel(show_ci = TRUE)` when empirical-Bayes shrinkage was applied.
+5. `plot()`, `plot()`, and `plot()` for deeper structural review.
+6. `response_time_review()` and `plot()` when response-time metadata are available.
+7. `plot(show_ci = TRUE, type = "shrinkage", view = "funnel")` when empirical-Bayes shrinkage was applied.
 8. `summary(scores)` and `plot(scores)` for a separately created portable
    score batch; do not use these as source-fit diagnostics.
-9. `plot_guttman_scalogram()`, `plot_residual_qq()`,
-   `plot_rater_trajectory()`, and `plot_rater_agreement_heatmap()` as
+9. `plot()`, `plot()`,
+   `plot()`, and `plot()` as
    the teaching / drift / agreement-heatmap follow-up layer.
 
 ## Related help

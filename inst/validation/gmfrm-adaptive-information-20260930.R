@@ -24,7 +24,7 @@ elapsed <- system.time({
   relative <- function(x) norm(solve(t(root), t(solve(t(root), x))), "2")
   numeric_scores <- mfrm_mml_person_scores_numeric(fine)
   warnings <- character()
-  ci <- withCallingHandlers(confint(fit), warning = function(w) {
+  ci <- withCallingHandlers(confint(fit, parm = "slopes"), warning = function(w) {
     warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning")
   })
   results <- mfrm_results(fit, include = "fit", compute = "never", intervals = list(slopes = ci))

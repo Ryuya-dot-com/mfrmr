@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-tables.R
 \name{facets_output_file_bundle}
 \alias{facets_output_file_bundle}
-\title{Build a legacy-compatible output-file bundle (\verb{GRAPH=} / \verb{SCORE=})}
+\title{Build native graph and observation-score output files}
 \usage{
 facets_output_file_bundle(
   fit,
@@ -23,7 +23,11 @@ facets_output_file_bundle(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} (used for score file).}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} (used for score file).
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.
+Exported score rows are observations, whereas FACETS Scorefile rows are
+elements. These formats are not interchangeable.}
 
 \item{include}{Output components to include: \code{"graph"} and/or \code{"score"}.}
 
@@ -31,7 +35,9 @@ facets_output_file_bundle(
 
 \item{theta_points}{Number of points on the theta grid for graph coordinates.}
 
-\item{digits}{Rounding digits for numeric fields.}
+\item{digits}{Rounding digits for numeric fields. \code{ConditionalVariance} in
+the score table and delimited export retains full precision so small
+positive variances remain distinguishable from zero.}
 
 \item{score_se_method}{For \code{GPCM} scorefile exports, which
 observation-level score uncertainty columns to compute. \code{"both"}
@@ -63,7 +69,7 @@ A named list including:
 }
 }
 \description{
-Build a legacy-compatible output-file bundle (\verb{GRAPH=} / \verb{SCORE=})
+Build native graph and observation-score output files
 }
 \details{
 Legacy-compatible output files often include:
@@ -98,8 +104,9 @@ For reproducible pipelines, prefer \code{graphfile_syntactic} and keep
 For new scripts, prefer \code{\link[=category_curves_report]{category_curves_report()}} or
 \code{\link[=category_structure_report]{category_structure_report()}} for scale outputs, then use
 \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} for file handoff. Use
-\code{facets_output_file_bundle()} only when a legacy-compatible graphfile or
-scorefile contract is required.
+\code{facets_output_file_bundle()} for its native graph/observation-row contract.
+Its score file is not the element-level FACETS Scorefile format; use
+\code{\link[=read_facets_fit_table]{read_facets_fit_table()}} to import actual FACETS element output.
 }
 
 \section{GPCM boundary}{
@@ -119,7 +126,7 @@ columns are on the expected-score scale.
 The scorefile also carries explicit score-side caveat columns. It is not a
 FACETS score-side equivalence file, does not export FACETS-equivalent
 score-side standard errors, and does not establish an operational
-score-scale decision. Use \code{\link[=gpcm_score_side_contract]{gpcm_score_side_contract()}} and
+score-scale decision. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} with \code{view = "scores"} and
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the current scope.
 }
 
@@ -134,14 +141,12 @@ score-scale decision. Use \code{\link[=gpcm_score_side_contract]{gpcm_score_side
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 out <- facets_output_file_bundle(fit, diagnostics = diagnose_mfrm(fit, residual_pca = "none"))
 summary(out)
 p_out <- plot(out, draw = FALSE)
 p_out$data$plot
-}
 }
 \seealso{
 \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},

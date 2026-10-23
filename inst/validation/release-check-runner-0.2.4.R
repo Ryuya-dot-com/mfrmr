@@ -48,7 +48,7 @@ mfrmr_release_check_main <- function(package_root = ".",
   timed <- identical(profile, "cran-timing")
   if (timed) {
     withr::local_envvar(c(NOT_CRAN = "false", `_R_CHECK_TIMINGS_` = "0",
-      `_R_CHECK_DONTTEST_EXAMPLES_` = "false", OMP_NUM_THREADS = "1",
+      `_R_CHECK_DONTTEST_EXAMPLES_` = "true", OMP_NUM_THREADS = "1",
       OPENBLAS_NUM_THREADS = "1", VECLIB_MAXIMUM_THREADS = "1"))
     mfrmr_release_check_assert(
       requireNamespace("RTMB", quietly = TRUE) && utils::packageVersion("RTMB") >= "2.0" &&

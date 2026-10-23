@@ -63,7 +63,7 @@ run_separate_owner_pilot <- function(output_dir, limit=80L) {
       rows$Reason[3:8] <- 'Point-estimate target; no step interval evaluated'
       cv <- mfrmr:::compute_mml_parameter_covariance(fit)
       checks$InformationStatus <- cv$status
-      intervals <- confint(fit,level=.95)
+      intervals <- confint(fit, parm = "slopes",level=.95)
       tab <- attr(intervals,'diagnostics'); at <- match(rows$Target[1:2],tab$SlopeFacet)
       rows$Lower[1:2] <- tab$CI_Lower[at]; rows$Upper[1:2] <- tab$CI_Upper[at]
       rows$Available[1:2] <- tab$CIEligible[at]; rows$Reason[1:2] <- tab$InferenceReview[at]

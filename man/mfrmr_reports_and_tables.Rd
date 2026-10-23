@@ -8,9 +8,70 @@ Quick guide to choosing the right report or table helper in \code{mfrmr}.
 Use this page when you know the reporting question but have not yet decided
 which bundle, table, or reporting helper to call.
 }
+\section{Recommended report route}{
+
+For ordinary MML/JML \code{mfrm_fit} results, start here. The Examples section
+follows the same route with bundled data.
+\enumerate{
+\item Inspect \code{summary(fit)$decision} before interpreting the estimates.
+\item Collect \code{res <- mfrm_results(fit)}. By default it computes missing
+requested diagnostics. Pass existing matching checks through
+\code{diagnostics = diagnostics} to reuse them; \code{compute = "never"} leaves
+missing diagnostics unavailable. Saved intervals are explicit attachments.
+\item Read \code{summary(res)$triage} and \verb{$next_actions}; use \verb{$plot_map} to find
+supported figures. A failed or unavailable component needs its own
+explanation, not an automatically substituted analysis.
+\item Choose \code{mfrm_report(res)} for an analyst report, \code{plot(res, ...)} for
+a supported figure, or \code{\link[=export_mfrm_results]{export_mfrm_results()}} for tables and an archive.
+Save the complete object with \code{saveRDS(res, file)} for later R use.
+Reopen with \code{readRDS(file)}; reading or displaying saved outputs does not
+refit the model. Reports and figures are optional, not required to save.
+}
+
+Native CML and comparison-only fits do not supply ordinary consolidated
+reports. Read \code{summary(fit)}; for CML use \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, then
+\code{summary(ci)}, \code{plot(ci)}, \code{\link[=apa_table]{apa_table()}} and \code{saveRDS(ci, file)}.
+G/D-study and observed-agreement results also have their own summary and
+saving routes. For GPCM or extended measurement models, \code{\link[=mfrm_results]{mfrm_results()}}
+states the supported sections and attachments; model-specific uncertainty
+limits remain in the collected results.
+
+Individual helpers below answer additional questions. \code{\link[=build_apa_outputs]{build_apa_outputs()}}
+drafts manuscript text; \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} collects selected
+tables for \code{\link[=export_summary_appendix]{export_summary_appendix()}}. Neither is a prerequisite for
+\code{\link[=mfrm_report]{mfrm_report()}}. Use \code{mfrmr_output_guide("beginner")} for a compact
+question-to-function map, or the full guide for specialist routes.
+}
+
+\section{Choose what to save}{
+
+\itemize{
+\item \code{\link[=export_mfrm_tables]{export_mfrm_tables()}}: core CSV tables from a fitted model. Supplied
+matching diagnostics enrich the tables; this call does not compute them.
+\item \code{\link[=export_mfrm_results]{export_mfrm_results()}}: selected tables/reports and, by default, the
+complete results RDS plus a script that reloads it without refitting.
+\item \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}: fit-level tables, optional diagnostics and a
+refitting recipe. Its \code{"script"} component reruns the analysis; it does
+not preserve a fitted R object. Supply the original data for a colocated
+replay CSV, or replace the script's data-path placeholder yourself.
+\item \code{\link[=export_summary_appendix]{export_summary_appendix()}}: selected summary tables for a manuscript.
+Display rounding follows \code{digits}; retain the source R object for reuse.
+}
+
+No export certifies estimates as usable or changes their uncertainty target.
+Inspect availability and caveat fields along with estimates. For G/D-study
+or native CML objects, use \code{saveRDS()} for the complete object and \code{write.csv()}
+for a selected supported summary table; the MFRM exporters do not widen their
+accepted model classes.
+}
+
 \section{Start with the question}{
 
 \itemize{
+\item "How can I read assessment-plan estimates and uncertainty together?"
+Use \code{\link[=summary.mfrm_multivariate_d_study]{summary.mfrm_multivariate_d_study()}} with \code{intervals = TRUE} and
+\code{assumption = "normal"}, or supply saved intervals. Its \code{table},
+\code{intervals} and \code{notes} retain methods, design and interpretation limits.
 \item "How should I document the model setup and run settings?"
 Use \code{\link[=specifications_report]{specifications_report()}}.
 \item "Was data filtered, dropped, or mapped in unexpected ways?"
@@ -24,9 +85,9 @@ Use \code{\link[=facet_statistics_report]{facet_statistics_report()}}, \code{\li
 Use \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=category_structure_report]{category_structure_report()}}, and
 \code{\link[=category_curves_report]{category_curves_report()}}.
 \item "Is the design linked well enough across subsets, forms, or waves?"
-Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
+Use \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and \link[=plot.mfrm_anchor_drift]{plot(x)}.
 \item "What should go into the manuscript text and tables?"
-For \code{RSM} / \code{PCM}, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
+For ordinary MML/JML \code{RSM} / \code{PCM}, use \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
 and \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or \code{\link[=export_summary_appendix]{export_summary_appendix()}}. For
 \code{GPCM}, use the same route only where
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} marks it as \code{supported_with_caveat}: direct
@@ -34,39 +95,16 @@ table/plot helpers, summary-table appendix export, caveated
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, and caveated \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}} are available
 with a \code{gpcm_boundary}; score-side exports and design-forecasting evidence
 use their own caveated or blocked \code{GPCM} routes.
+\item "How can I estimate my model in Stan or brms?"
+\code{\link[=export_mfrm_model]{export_mfrm_model()}} writes code, data, mappings and explicit Bayesian
+priors for supported ordinary MML specifications. Export does not run a
+sampler; posterior credible intervals are distinct from MML intervals.
 \item "Did a simulation recover the known generating parameters well enough?"
-Use \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} for the recovery study,
+Use \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} for the recovery study,
 \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} for the adequacy checklist, and then
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} or \code{\link[=export_summary_appendix]{export_summary_appendix()}} for the
 appendix handoff.
 }
-}
-
-\section{Recommended report route}{
-
-\enumerate{
-\item Start with \code{\link[=specifications_report]{specifications_report()}} and \code{\link[=data_quality_report]{data_quality_report()}} to
-document the run and confirm usable data.
-\item Continue with \code{\link[=estimation_iteration_report]{estimation_iteration_report()}} and
-\code{\link[=precision_review_report]{precision_review_report()}} to judge convergence and inferential strength.
-\item Use \code{\link[=facet_statistics_report]{facet_statistics_report()}} and \code{\link[=subset_connectivity_report]{subset_connectivity_report()}} to
-describe spread, linkage, and measurability.
-\item Add \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=category_structure_report]{category_structure_report()}}, and
-\code{\link[=category_curves_report]{category_curves_report()}} to document scale functioning.
-\item For \code{RSM} / \code{PCM}, finish with \code{\link[=reporting_checklist]{reporting_checklist()}} and
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} for manuscript-oriented output, then
-\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} for reusable handoff tables or
-\code{\link[=export_summary_appendix]{export_summary_appendix()}} for direct appendix export. For
-\code{GPCM}, the same report/export route is available only as a caveated
-sensitivity-reporting layer with \code{gpcm_boundary}; keep FACETS-style
-score-side review and design forecasting on their separate capability
-rows.
-}
-
-If you are unsure which helper to call, start with
-\code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}. It returns a compact purpose-to-helper table that
-separates \verb{*_table}, \verb{*_report}, \verb{*_review}, \verb{*_bundle}, \verb{export_*}, and
-compatibility routes.
 }
 
 \section{Which output answers which question}{
@@ -118,6 +156,25 @@ table without rebuilding the analysis object path.}
 }
 }
 
+\section{Read availability and method limits separately}{
+
+An available table or a passed numerical check does not establish that its
+intervals have accurate repeated-sample coverage. For implemented experimental
+methods, incomplete qualification means that a stated statistical property
+remains unestablished; inspect the specific limitation before interpreting it.
+Corrected JML retains this explanation in \code{interpretation_notes}, two-family
+GPCM in \code{gpcm_interpretation_notes}, and attached population intervals in
+\verb{population_<name>_interpretation_notes}. These tables accompany the other
+result tables in reports and CSV exports; keep them with the estimates.
+
+An \code{IntervalStatus} of \code{Incomplete} has a different meaning: only one endpoint
+was computed. It is neither an infinite bound nor a qualified one-sided
+interval. \code{Unavailable} means the requested result was not supplied; inspect
+its reason. \code{CIEligible}, where present, concerns that interval procedure's
+checks, not a universal coverage guarantee. Keep numerical status, method
+limitations and unavailable results when saving or sharing an analysis.
+}
+
 \section{Practical interpretation rules}{
 
 \itemize{
@@ -141,8 +198,10 @@ still needs missing diagnostics or clearer caveats.
 }
 }
 
-\section{Typical workflow}{
+\section{Additional task-specific workflows}{
 
+These extend the basic route for eligible ordinary fits; they are not
+extra steps required for every report and do not apply to native CML.
 \itemize{
 \item Run documentation:
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=specifications_report]{specifications_report()}} -> \code{\link[=data_quality_report]{data_quality_report()}}.
@@ -163,7 +222,7 @@ or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 \code{\link[=export_summary_appendix]{export_summary_appendix()}} or caveated \code{\link[=export_mfrm_bundle]{export_mfrm_bundle()}}, with
 \code{gpcm_boundary} retained in report/export objects.
 \item Recovery simulation handoff:
-\code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} -> \code{\link[=plot]{plot()}} / \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} ->
+\code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} -> \code{\link[=plot]{plot()}} / \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
 }
 }
@@ -180,20 +239,22 @@ or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
+
+summary(fit)$decision # Review the fit before interpreting it
 
 # Build the comprehensive results and report
 res <- mfrm_results(fit)
@@ -208,5 +269,10 @@ estimates <- as.data.frame(fit)
 head(subset(estimates, Facet == "Person")) # First six persons
 subset(estimates, Facet == "Rater")       # All raters
 subset(estimates, Facet == "Criterion")   # All criteria
-}
+
+# Keep the full result, including methods and unavailable-output reasons
+file <- tempfile(fileext = ".rds") # Choose a lasting path for your analysis
+saveRDS(res, file)
+saved <- readRDS(file)
+summary(saved)$triage # No refitting or repeated diagnostic calculation
 }

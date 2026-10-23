@@ -89,6 +89,31 @@ test_that("mids input retains its model and enforces original data and where", {
   expect_error(do.call(mfrm_response_imputations, bad), "identifier")
 })
 
+test_that("imputation review preserves numeric evidence without text rounding", {
+  a <- response_fixture()
+  a$data$Aux <- rep(1, nrow(a$data))
+  a$completed <- lapply(a$completed, function(d) { d$Aux <- rep(1, nrow(d)); d })
+  bad <- a; bad$completed[[1]]$Aux[1] <- 1 + 2e-15
+  expect_error(do.call(mfrm_response_imputations, bad), "observed predictor")
+  a$completed[[1]]$Aux <- as.integer(a$completed[[1]]$Aux)
+  expect_s3_class(do.call(mfrm_response_imputations, a), "mfrm_response_imputations")
+  a$data$Aux[2] <- NA
+  a$completed[[1]]$Aux[2] <- 2
+  expect_s3_class(do.call(mfrm_response_imputations, a), "mfrm_response_imputations")
+  for (nm in c("Person", "Rater", "Task")) {
+    bad <- response_fixture()
+    levels <- unique(bad$data[[nm]])
+    bad$data[[nm]] <- c(1, 1 + 2e-15)[match(bad$data[[nm]], levels)]
+    bad$completed <- lapply(bad$completed, function(d) { d[[nm]] <- bad$data[[nm]]; d })
+    expect_error(do.call(mfrm_response_imputations, bad), "distinct text labels")
+  }
+  bad <- response_fixture()
+  bad$data$Person <- rep(c(1, 2), each = 4)
+  bad$completed <- lapply(bad$completed, function(d) { d$Person <- bad$data$Person; d })
+  bad$completed[[1]]$Person[1] <- 1 + 2e-15
+  expect_error(do.call(mfrm_response_imputations, bad), "Identifiers")
+})
+
 local({
   d <- load_mfrmr_data("example_core")
   d$Event <- paste0("E", seq_len(nrow(d)))
@@ -160,10 +185,17 @@ local({
     expect_error(pool_mfrm_imputed(fitted, "Person"), "non-person")
     bad <- fitted; bad$fits[2] <- list(NULL)
     expect_error(pool_mfrm_imputed(bad, "Rater"), "imputation.*2")
+    bad <- fitted; bad$imputations$settings$imputations <- 3L
+    expect_error(pool_mfrm_imputed(bad, "Rater"), "every analysis")
     bad <- fitted; bad$fits[[2]]$config$facet_signs[1] <- -bad$fits[[2]]$config$facet_signs[1]
     expect_error(pool_mfrm_imputed(bad, "Rater"), "one category scale")
     bad <- fitted; bad$fits <- rev(bad$fits)
     expect_error(pool_mfrm_imputed(bad, "Rater"), "do not match completion")
+    bad <- fitted
+    bad$imputations$data$Score[1] <- if (bad$imputations$data$Score[1] == 1) 2 else 1
+    expect_error(pool_mfrm_imputed(bad, "Rater"), "Observed")
+    bad <- fitted; bad$imputations$events$Omitted[1] <- TRUE
+    expect_error(pool_mfrm_imputed(bad, "Rater"), "no longer matches")
     expect_error(pool_mfrm_imputed(fitted, "Rater", ci_level = 1), "ci_level")
     expect_error(pool_mfrm_imputed(fitted, "Rater", df_complete = 0), "df_complete")
     expect_error(pool_mfrm_imputed(fitted, "Rater", matrix(1, 1, 4)), "contrasts")
@@ -171,6 +203,47 @@ local({
     v$status <- "regularized"
     local_mocked_bindings(compute_mml_parameter_covariance = function(...) v)
     expect_error(pool_mfrm_imputed(fitted, "Rater"), "unregularized")
+  })
+
+  test_that("MI interval arithmetic preserves confidence tails and marks lost resolution", {
+    same <- fitted
+    same$fits[[2]] <- same$fits[[1]]
+    same$imputations$completed[[2]] <- same$imputations$completed[[1]]
+    ordinary <- pool_mfrm_imputed(same, "Rater")
+    level <- 1 - .Machine$double.eps / 2
+    wide <- pool_mfrm_imputed(same, "Rater", ci_level = level)
+    # Independent normal reference is exact for the B=0, infinite-df limit.
+    z <- qnorm((1 - level) / 2, lower.tail = FALSE)
+    expect_equal(wide$table$Upper, ordinary$table$Estimate + z * ordinary$table$SE)
+    expect_true(all(is.finite(wide$table$Lower)))
+    expect_true(all(wide$table$IntervalReason == "available"))
+    tiny <- pool_mfrm_imputed(same, "Rater", ci_level = 1e-18)
+    expect_identical(tiny$table$Estimate, ordinary$table$Estimate)
+    expect_identical(tiny$total, ordinary$total)
+    expect_true(all(is.na(tiny$table$Lower)))
+    expect_true(all(tiny$table$IntervalReason == "numerical_resolution"))
+    expect_identical(plot_data(plot(tiny, draw = FALSE))$notes, tiny$notes)
+    finite <- pool_mfrm_imputed(same, "Rater", df_complete = 50)
+    expect_equal(finite$table$DF, rep(50 * 51 / 53, nrow(finite$table)))
+    expect_equal(finite$table$Upper,
+      finite$table$Estimate + qt(.975, 50 * 51 / 53) * finite$table$SE)
+  })
+
+  test_that("Barnard-Rubin df keeps a small positive within-variance fraction", {
+    original <- compute_mml_parameter_covariance
+    local_mocked_bindings(compute_mml_parameter_covariance = function(fit) {
+      v <- original(fit); v$cov <- v$cov * 1e-30; v
+    })
+    # Isolate arithmetic; the tiny covariance is not a claimed real calibration.
+    result <- pool_mfrm_imputed(fitted, "Rater", df_complete = 50)
+    within <- diag(result$within); between <- diag(result$between)
+    expected_df <- 50 * 51 / 53 * within / (within + 1.5 * between)
+    expect_true(all(result$table$MissingVarianceFraction == 1))
+    expect_true(all(result$table$DF > 0))
+    expect_equal(unname(result$table$DF / expected_df), rep(1, length(expected_df)), tolerance = 1e-12)
+    expect_true(all(is.na(result$table$Lower)))
+    expect_true(all(result$table$IntervalReason == "interval_outside_numeric_range"))
+    expect_true(all(is.finite(result$table$Estimate)))
   })
 
   test_that("unchanging imputations and exact anchors keep their distinct uncertainty meanings", {

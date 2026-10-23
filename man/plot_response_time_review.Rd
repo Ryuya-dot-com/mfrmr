@@ -40,6 +40,12 @@ Draw or return reusable plot data for a \code{\link[=response_time_review]{respo
 Plot types are descriptive screening views and do not represent a joint
 response-time model.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -78,8 +84,8 @@ rt <- response_time_review(
   toy, person = "Person", facets = c("Rater", "Criterion"),
   score = "Score", time = "ResponseTime"
 )
-plot_response_time_review(rt, type = "distribution", draw = FALSE)
-plot_response_time_review(rt, type = "person", draw = FALSE)
+plot(rt, type = "distribution", draw = FALSE)
+plot(rt, type = "person", draw = FALSE)
 }
 \seealso{
 \code{\link[=response_time_review]{response_time_review()}}, \code{\link[=plot_data_components]{plot_data_components()}},
@@ -87,3 +93,4 @@ plot_response_time_review(rt, type = "person", draw = FALSE)
 }
 \concept{response time}
 \concept{visual diagnostics}
+\keyword{internal}

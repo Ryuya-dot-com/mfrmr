@@ -39,6 +39,9 @@
 #'   latent abilities from responses or impute missing assigned scores.
 #'   Use [score_mfrm_random_rater()] for conditional Person scoring from a
 #'   complete joint response roster.
+#'   Supplying a score column in `newdata` does not update rater distributions
+#'   or estimate abilities. Use the scoring function and its complete-roster
+#'   rules when the input is a new batch of observed responses.
 #' @export
 predict.mfrm_random_rater <- function(object, newdata, ability,
                                       rater = c("observed", "new"), quad_points = 41L, ...) {
@@ -129,7 +132,7 @@ predict.mfrm_random_rater <- function(object, newdata, ability,
 plot.mfrm_random_rater <- function(x, draw = TRUE,
     style = c("interval", "precision", "distribution"),
     sort = c("input", "estimate", "uncertainty"), palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, reference = 0, text_scale = 1, point_size = 2.5,
     intervals = c("none", "normal"), ...) {
   rlang::check_dots_empty()

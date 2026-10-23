@@ -59,6 +59,9 @@ or \code{"monochrome"}.}
 \code{overview}, \code{estimates}, \code{review}, \code{row_review}, \code{settings}, and \code{notes}.
 When adaptive integration was requested and scored rows exist, it also
 retains unrounded \code{quadrature_review} and a compact \code{quadrature_overview}.
+When cut scores were requested, \code{decisions} preserves every probability,
+cut boundary and actual scoring prior without rounding; unavailable
+Persons remain in that table with \code{NA} probabilities.
 \code{plot()} returns an \code{mfrm_plot_data} with the selected plotting table,
 selection accounting, unplotted Person dispositions, interpretation
 guidance, and plotting settings.
@@ -104,6 +107,11 @@ differ from the requested level.
 Its print method shows at most ten rows from each table so routine console
 output stays compact. Base and ggplot2 renderers distinguish scored and
 review states by shape as well as colour.
+\code{as_ggplot(p)} and \code{as_ggplot(p, component = "data")} preserve the same
+selected view, saved bounds, review symbols and unplotted dispositions.
+Use \code{\link[=plot_data]{plot_data()}} to extract other components. Changing the interval level
+requires an explicit scoring call; conversion does not recompute intervals.
+Notes remain in the returned object and are not automatically drawn.
 }
 \section{Session plot defaults}{
 
@@ -137,31 +145,35 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 dat <- load_mfrmr_data("example_core")
 ids <- unique(dat$Person)
 training <- dat[dat$Person \%in\% ids[1:18], , drop = FALSE]
 fit <- fit_mfrm(
   training, "Person", c("Rater", "Criterion"), "Score",
-  model = "RSM", method = "MML", quad_points = 5, maxit = 20
+  model = "RSM", method = "MML", quad_points = 31
 )
 q_review <- mml_quadrature_sensitivity(
-  fit, training, quad_points = c(5, 7), theta_points = 41
+  fit, training, quad_points = c(31, 61), theta_points = 41
 )
-fit <- q_review$fits$q7
+summary(q_review) # Inspect movement; these grids are not universal cutoffs.
+fit <- q_review$fits$q61
 calibration <- freeze_mfrm_calibration(
   validate_mfrm_calibration(extract_mfrm_calibration(
-    fit, quadrature_review = q_review
+    fit, quadrature_review = q_review, scoring_quad_points = 121
   ))
 )
 new_rows <- dat[dat$Person \%in\% ids[19:20], , drop = FALSE]
-scores <- score_mfrm_calibration(calibration, new_rows)
+scores <- score_mfrm_calibration(calibration, new_rows,
+  cut_scores = c(Basic = -0.5, Advanced = 0.8))
 summary(scores)
-plot(scores, type = "interval")
+apa_table(scores, which = "decisions")
+build_summary_table_bundle(scores)$table_index
+plot(scores, type = "interval", draw = FALSE)
 plot(scores, type = "edge_mass", draw = FALSE)
-}
 }
 \seealso{
 \link{mfrm_calibration_workflow}, \link{mfrm_calibration_capabilities},
-\code{\link[=plot_data]{plot_data()}}, \code{\link[=plot_data_components]{plot_data_components()}}, \code{\link[=as_ggplot]{as_ggplot()}}
+\code{\link[=plot_data]{plot_data()}}, \code{\link[=plot_data_components]{plot_data_components()}}, \code{\link[=as_ggplot]{as_ggplot()}}, \code{\link[=apa_table]{apa_table()}},
+\code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=export_summary_appendix]{export_summary_appendix()}},
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for conditional-decision interpretation
 }

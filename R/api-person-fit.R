@@ -134,7 +134,6 @@
 #'
 #' @seealso [diagnose_mfrm()]
 #' @examples
-#' \donttest{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
@@ -161,7 +160,6 @@
 #'        c("Person", "ReportValue", "ReviewReason", "ReportCaveat"))
 #' # With MML/EAP scores, lz_star is unavailable; lz is an uncorrected screening index
 #' # A flag alone does not establish invalid responses or justify excluding a person
-#' }
 #' @export
 compute_person_fit_indices <- function(diagnostics, fit = NULL) {
   if (is.null(diagnostics) || !is.list(diagnostics) ||
@@ -525,7 +523,7 @@ summary.mfrm_person_fit_indices <- function(object,
       "overview / status_summary / lz_star_status_summary",
       "top_review",
       "build_misfit_casebook() / unexpected_response_table()",
-      "plot_person_fit(..., fit_index = \"loglik\", draw = FALSE) / plot_data()"
+      "plot(..., type = \"person_fit\", fit_index = \"loglik\", draw = FALSE) / plot_data()"
     ),
     stringsAsFactors = FALSE
   )

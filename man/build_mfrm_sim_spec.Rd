@@ -37,7 +37,8 @@ build_mfrm_sim_spec(
   population_formula = NULL,
   population_coefficients = NULL,
   population_sigma2 = NULL,
-  population_covariates = NULL
+  population_covariates = NULL,
+  population_assignment = c("matched", "independent")
 )
 
 \method{print}{mfrm_sim_spec}(x, ...)
@@ -136,7 +137,11 @@ describing an observed response skeleton used when
 \code{assignment = "skeleton"}. The canonical names \code{Rater} and \code{Criterion}
 are also accepted. \code{TemplatePersonReuse = TRUE} asks
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} to keep the template-person order instead of
-resampling templates, which is used by \code{\link[=build_peer_review_sim_spec]{build_peer_review_sim_spec()}}.}
+resampling templates, which is used by \code{\link[=build_peer_review_sim_spec]{build_peer_review_sim_spec()}}.
+This flag must be uniform across the skeleton. Every row is retained,
+including repeated Person-by-facet cells. Each generates a separate
+conditionally independent response; \code{Weight} is carried into fitting and
+does not multiply the number of generated responses.}
 
 \item{sparse_controls}{Optional named list used when
 \code{assignment = "sparse_linked"}. Supported entries are \code{link_fraction}
@@ -168,7 +173,23 @@ per template person and the background variables referenced by
 \code{population_formula}. Numeric/logical and categorical factor/character
 variables are expanded through the same \code{stats::model.matrix()} contract
 used by latent-regression fitting. During simulation, template rows are
-resampled to the requested \code{n_person}.}
+resampled with replacement to the requested \code{n_person}. Transformations
+such as \code{scale()}, \code{poly()} and splines retain the basis learned from the
+full template; they are not recomputed for each simulated sample. Stored
+factor levels and contrasts also carry through the study runners' refits.
+A resampled cohort can still have a rank-deficient design and fail fitting;
+that trial remains a failure rather than being redrawn until it succeeds.}
+
+\item{population_assignment}{How an active population model is associated
+with \code{"resampled"} or \code{"skeleton"} assignments. The default \code{"matched"}
+draws one template Person jointly for covariates and assignments. Both
+tables must cover the same \code{TemplatePerson} IDs, with matching \code{Group}
+labels if present in both. \code{"independent"} samples covariate rows separately
+and intentionally breaks these associations. In that case both tables
+cannot define \code{Group}; rename a covariate if it represents a different
+grouping. For other assignment designs this setting has no effect.
+Population-template \code{Group}, when present, supplies the response group;
+\code{group_levels} must include all template labels and does not rebalance them.}
 
 \item{x}{An \code{mfrm_sim_spec} object.}
 
@@ -278,7 +299,6 @@ specification that tells \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}
 }
 
 \examples{
-\donttest{
 spec <- build_mfrm_sim_spec(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
   assignment = "rotating"
@@ -286,7 +306,6 @@ spec <- build_mfrm_sim_spec(
 spec$model
 spec$assignment
 nrow(spec$threshold_table)
-}
 }
 \seealso{
 \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}}, \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}

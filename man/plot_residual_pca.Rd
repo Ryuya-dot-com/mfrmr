@@ -100,6 +100,12 @@ specific facet after global PCA review.
 }
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -131,30 +137,7 @@ Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochr
 appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
-\examples{
-\donttest{
-toy_full <- load_mfrmr_data("example_core")
-toy_people <- unique(toy_full$Person)[1:24]
-toy <- toy_full[match(toy_full$Person, toy_people, nomatch = 0L) > 0L, , drop = FALSE]
-fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-)
-diag <- diagnose_mfrm(fit, residual_pca = "overall")
-pca <- analyze_residual_pca(diag, mode = "overall")
-plt <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
-head(plt$data)
-pca_pa <- analyze_residual_pca(diag, mode = "overall", parallel = TRUE, parallel_reps = 10)
-pa <- plot_residual_pca(pca_pa, mode = "overall", plot_type = "parallel_scree", draw = FALSE)
-head(pa$data)
-plt_load <- plot_residual_pca(
-  pca, mode = "overall", plot_type = "loadings", component = 1, draw = FALSE
-)
-head(plt_load$data)
-if (interactive()) {
-  plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
-}
-}
-}
 \seealso{
 \code{\link[=analyze_residual_pca]{analyze_residual_pca()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
 }
+\keyword{internal}

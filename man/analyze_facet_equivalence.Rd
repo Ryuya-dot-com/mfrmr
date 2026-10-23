@@ -100,6 +100,11 @@ interval lies strictly inside the bound. \code{Decision} summarizes all pairs
 as \code{"all_pairs_equivalent"}, \code{"partial_pairwise_equivalence"}, or
 \code{"no_pairwise_equivalence_established"}. No pair may be omitted from the
 all-pairs summary. Heterogeneity and ROPE summaries do not change this rule.
+The all-pairs conclusion is an intersection-union decision: if any pair is
+truly outside the bound, declaring all pairs equivalent requires falsely
+passing that pair's test. Its asymptotic type-I error is therefore at most
+alpha when each pair's approximation is valid. This does not provide
+simultaneous confidence intervals or error control for selected pairs.
 }
 
 \section{Interpreting output}{
@@ -124,6 +129,12 @@ its marginal interval is absent. Its deviation from an estimated mean,
 or contrast with an estimated level, can still have nonzero uncertainty.
 The forest plot displays these deviations, not the anchored locations.
 No uncertainty in supplied anchor values is propagated.
+\item \code{CIReason}, \code{DeviationCIReason}, and pairwise \code{CI90Reason} distinguish
+\code{"available"}, \code{"fixed"}, \code{"numerical_resolution"} (the requested width
+rounds away), and \code{"outside_numeric_range"}. Unavailable endpoints are
+\code{NA}; estimates and SEs remain. \code{ROPEStatus = "unavailable"} means the
+deviation interval could not be displayed, not that it is inside the bound.
+The fixed-alpha TOST p-values do not depend on the display \code{ci_level}.
 }
 }
 
@@ -141,7 +152,7 @@ desired decision.
 \item Fit and review an MML model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
 \item Prespecify the practical bound and run \code{analyze_facet_equivalence()}.
 \item Read \code{summary} and \code{pairwise}.
-\item Use \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}} for descriptive grand-mean proximity.
+\item Use \link[=plot.mfrm_fit]{plot(x, type = "facet_equivalence")} for descriptive grand-mean proximity.
 }
 }
 
@@ -153,14 +164,12 @@ must be recomputed before using \code{summary()}, \code{print()}, or plotting.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 31, maxit = 150)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
 eq$summary[, c("Facet", "Elements", "Decision", "MeanROPE")]
 head(eq$pairwise[, c("ElementA", "ElementB", "Equivalent")])
-}
 }
 \references{
 Schuirmann, D. J. (1987). A comparison of the two one-sided tests
@@ -169,7 +178,7 @@ average bioavailability. \emph{Journal of Pharmacokinetics and
 Biopharmaceutics, 15}(6), 657-680.
 }
 \seealso{
-\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=plot_facet_equivalence]{plot_facet_equivalence()}}
+\code{\link[=facets_chisq_table]{facets_chisq_table()}}, \code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facet_equivalence")}
 }
 \concept{confidence intervals}
 \concept{facet equivalence}

@@ -96,14 +96,14 @@ draw_new <- function(distribution, target) {
     }
     data <- design
     data[scores] <- sweep(y, 2L, c(10, 20), '+')
-    g <- tryCatch(mfrm_multivariate_gstudy(data, scores, method = 'minque0'), error = identity)
+    g <- tryCatch(mfrm_g_study(data, scores, method = 'minque0'), error = identity)
     result$trials$Attempted[b] <- TRUE
     result$trials$FitReturned[b] <- !inherits(g, 'error')
     result$trials$Error[b] <- if (inherits(g, 'error')) conditionMessage(g) else ''
     if (!inherits(g, 'error')) {
       result$estimates[b, ] <- unlist(lapply(g$components, function(a) a[upper.tri(a, diag = TRUE)]))
       if (b == 1L) {
-        d <- mfrm_multivariate_d_study(g, plans, saved$weights)$coefficients
+        d <- mfrm_d_study(g, plans, saved$weights)$coefficients
         for (composite in colnames(saved$weights)) {
           theta <- as.numeric(extract_theta(result$estimates[b, , drop = FALSE], saved$weights[, composite]))
           reference <- t(vapply(1:3, function(i) project(theta, plans[i, ])$value, numeric(4)))

@@ -6,7 +6,7 @@ gmfrm_feedback_fixture <- local({
       data <- fit$gmfrm$specification$data
       rows <- which(data$Person %in% unique(data$Person)[c(1, 20, 160)])
       diagnostics <- mfrm_response_diagnostics(fit, rows = rows, quad_points = 121L)
-      intervals <- suppressWarnings(confint(fit))
+      intervals <- suppressWarnings(confint(fit, parm = "slopes"))
       cached <<- mfrm_results(fit, response_diagnostics = diagnostics, intervals = list(slopes = intervals))
     }
     cached
@@ -48,7 +48,9 @@ test_that("two-family recipient sheets preserve component targets and saved resi
     expect_match(sheet$notes["residuals"], "no expectation-one")
     expect_identical(mfrm_report(x, "rater", "tables", facet, id), sheet$tables)
     expect_identical(mfrm_report(x, "rater", "markdown", facet, id), sheet$markdown)
-    expect_identical(mfrm_report(x, "rater", facet = facet, rater = id, audience = "researcher")$tables, sheet$tables)
+    numeric_tables <- setdiff(names(sheet$tables), "interpretation_notes")
+    expect_identical(mfrm_report(x, "rater", facet = facet, rater = id, audience = "researcher")$tables[numeric_tables],
+      sheet$tables[numeric_tables])
     expect_output(print(sheet), "Two-family GPCM")
   }
   expect_identical(x, before)
@@ -128,6 +130,41 @@ test_that("arbitrary owner names and private fields stay out of distributed shee
   expect_match(h$html, "@media print", fixed = TRUE)
   expect_false(grepl("src=|href=", h$html))
   expect_identical(paste(readLines(h$path, warn = FALSE), collapse = "\n"), h$html)
+})
+
+test_that("two-family sheets explain failed checks and withhold partial intervals", {
+  x <- gmfrm_feedback_fixture()
+  sheet <- function(x) mfrm_report(x, "rater", facet = "Rater", rater = "r1")
+  # Saved-state presentation tests; no claim of a newly fitted boundary case.
+  ci <- x$gpcm_inference$slopes
+  attr(ci, "diagnostics")$CIEligible[] <- FALSE
+  attr(ci, "diagnostics")$InferenceReview[] <- "PRIVATE_REVIEW"
+  attr(ci, "checks") <- data.frame(Check = "Joint information", Passed = FALSE, Detail = "PRIVATE_DETAIL")
+  x$gpcm_inference$slopes <- ci
+  s <- sheet(x)
+  expect_match(s$tables$uncertainty$Reason, "joint information")
+  expect_true(all(is.na(s$tables$uncertainty[c("Lower", "Upper")])))
+  expect_false(grepl("PRIVATE_", paste(capture.output(dput(s)), collapse = "\n")))
+  ci <- x$gpcm_inference$slopes
+  attr(ci, "settings")$method <- "profile"
+  attr(ci, "profile") <- list(endpoints = data.frame(Side = c("PRIVATE_LOWER", "PRIVATE_UPPER"),
+    Status = c("computed", "crossing_not_found"), Detail = "PRIVATE_DETAIL"))
+  attr(ci, "diagnostics")$CI_Upper[] <- NA_real_
+  x$gpcm_inference$slopes <- ci
+  original <- serialize(x, NULL)
+  s <- sheet(x)
+  expect_false(s$tables$uncertainty$Available)
+  expect_match(s$tables$uncertainty$Reason, "cutoff crossing")
+  expect_match(s$tables$uncertainty$Reason, "does not establish an unbounded interval")
+  expect_true(all(is.na(s$tables$uncertainty[c("Lower", "Upper")])))
+  expect_match(s$markdown, "cutoff crossing")
+  expect_output(print(s), "cutoff crossing")
+  expect_false(grepl("PRIVATE_", paste(capture.output(dput(s)), collapse = "\n")))
+  expect_identical(serialize(x, NULL), original)
+  h <- mfrm_report(x, "rater", "html", "Rater", "r1")
+  on.exit(unlink(h$path))
+  expect_match(h$html, "cutoff crossing")
+  expect_false(grepl("PRIVATE_", h$html))
 })
 
 test_that("saved two-family recipient sheets reopen without fitting or integration", {

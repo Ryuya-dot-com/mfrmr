@@ -25,7 +25,7 @@ test_that("two-family new-Person moments and intervals match independent continu
     mfrm_gmfrm_em = function(...) stop("no refitting"), .package = "mfrmr")
   expect_identical(summary(restored), summary(pred))
   expect_identical(restored$estimates, pred$estimates)
-  expect_silent(export_validate_optional_object(restored, "mfrm_unit_prediction", "prediction"))
+  expect_silent(export_validate_optional_object(restored, "mfrm_unit_prediction", "prediction", fit = x$fit))
   expect_s3_class(build_summary_table_bundle(restored), "mfrm_summary_table_bundle")
   missing <- restored; missing$settings$score_integration_review <- NULL
   expect_error(summary(missing), "inconsistent numerical review")

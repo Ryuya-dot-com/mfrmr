@@ -185,6 +185,30 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
   ))
 })
 
+test_that("capability views preserve their tables and reject cross-view selectors", {
+  expect_identical(gpcm_capability_matrix(),
+                   gpcm_capability_matrix(view = "workflows"))
+  schemas <- list(
+    scores = c("Capability", "Status", "Limitation", "Alternative"),
+    unavailable = c("Area", "Helper", "Status", "Boundary", "RecommendedRoute")
+  )
+  for (view in names(schemas)) {
+    tbl <- gpcm_capability_matrix(view = view)
+    expect_identical(class(tbl), "data.frame")
+    expect_identical(names(tbl), schemas[[view]])
+    for (status in unique(tbl$Status)) {
+      expected <- tbl[tbl$Status == status, , drop = FALSE]
+      rownames(expected) <- NULL
+      expect_identical(gpcm_capability_matrix(status, view = view), expected)
+    }
+  }
+  expect_error(gpcm_capability_matrix(view = "unknown"), "arg")
+  expect_error(gpcm_capability_matrix("unavailable"), "arg")
+  expect_error(gpcm_capability_matrix("supported", view = "scores"), "status")
+  expect_error(gpcm_capability_matrix("unavailable", view = "unavailable"), "arg")
+  expect_identical(nrow(gpcm_capability_matrix("supported", view = "unavailable")), 0L)
+})
+
 test_that("fit-specific GPCM boundaries expose owner and primary-slope status", {
   fit <- structure(
     list(
@@ -248,6 +272,11 @@ test_that("gpcm_capability_matrix filters by status", {
 
 test_that("GPCM availability separates portable scoring from unfinished estimation routes", {
   tbl <- gpcm_capability_matrix()
+  sampling <- tbl[tbl$Area == "Native MCMC and posterior-predictive sampling", ]
+  expect_identical(sampling$Status, "deferred")
+  expect_true(is.na(sampling$Helpers))
+  expect_match(sampling$RecommendedRoute, "export_mfrm_model", fixed = TRUE)
+  expect_match(sampling$Boundary, "one-family GPCM code export is unavailable", fixed = TRUE)
   portable <- tbl[tbl$Area == "Portable calibration and later-person scoring", ]
   expect_equal(nrow(portable), 1L)
   expect_identical(portable$Status, "supported_with_caveat")
@@ -263,7 +292,7 @@ test_that("GPCM availability separates portable scoring from unfinished estimati
   rows <- tbl[match(unfinished, tbl$Area), ]
   expect_identical(rows$Status, "deferred")
   expect_true(all(is.na(rows$Helpers)))
-  expect_true(unfinished %in% gpcm_runtime_guard_coverage()$Area)
+  expect_true(unfinished %in% gpcm_capability_matrix(view = 'unavailable')$Area)
   scoped <- tbl[match(c("Simultaneous estimation of multiple slope families",
     "GPCM fitting with EM or hybrid optimization"), tbl$Area), ]
   expect_true(all(scoped$Status == "supported_with_caveat"))
@@ -295,11 +324,11 @@ test_that("gpcm_capability_matrix prints a compact first screen", {
   expect_lt(length(printed), 40L)
 })
 
-test_that("gpcm_score_side_contract exposes user-facing availability only", {
-  contract <- gpcm_score_side_contract()
-  available <- gpcm_score_side_contract("available_with_caveat")
-  supporting <- gpcm_score_side_contract("supporting_route")
-  unavailable <- gpcm_score_side_contract("unavailable")
+test_that("the GPCM score view exposes user-facing availability only", {
+  contract <- gpcm_capability_matrix(view = 'scores')
+  available <- gpcm_capability_matrix("available_with_caveat", view = 'scores')
+  supporting <- gpcm_capability_matrix("supporting_route", view = 'scores')
+  unavailable <- gpcm_capability_matrix("unavailable", view = 'scores')
   registry <- .gpcm_score_side_contract_registry()
   matrix <- gpcm_capability_matrix()
   score_row <- matrix[matrix$Area == "Score-side scorefile export under GPCM", , drop = FALSE]
@@ -332,12 +361,12 @@ test_that("gpcm_score_side_contract exposes user-facing availability only", {
     )
   )
 
-  legacy <- gpcm_score_side_contract("implemented_with_caveat")
+  legacy <- gpcm_capability_matrix("implemented_with_caveat", view = 'scores')
   expect_true(nrow(legacy) > 0L)
   expect_true(all(legacy$Status == "available_with_caveat"))
   expect_identical(score_row$Status[1], "supported_with_caveat")
   expect_identical(review_row$Status[1], "blocked")
-  expect_true(grepl("gpcm_score_side_contract", score_row$RecommendedRoute[1], fixed = TRUE))
+  expect_true(grepl("gpcm_capability_matrix(view = 'scores')", score_row$RecommendedRoute[1], fixed = TRUE))
   expect_true(grepl("full FACETS output-contract reviews", review_row$RecommendedRoute[1], fixed = TRUE))
 })
 
@@ -379,7 +408,7 @@ test_that("private GPCM route data contain only runtime product fields", {
 
 test_that("GPCM unavailable-route table stays user-facing", {
   matrix <- gpcm_capability_matrix()
-  coverage <- gpcm_runtime_guard_coverage()
+  coverage <- gpcm_capability_matrix(view = 'unavailable')
   outstanding <- matrix[matrix$Status %in% c("blocked", "deferred"), , drop = FALSE]
 
   expect_s3_class(coverage, "data.frame")
@@ -448,7 +477,7 @@ test_that("GPCM scorefile export is caveated while full contract review stays bl
   expect_match(msg, "Recommended route:", fixed = TRUE)
   expect_false(grepl("Next validation step:", msg, fixed = TRUE))
   expect_match(msg, "gpcm_capability_matrix()", fixed = TRUE)
-  expect_match(msg, "gpcm_score_side_contract()", fixed = TRUE)
+  expect_match(msg, "gpcm_capability_matrix(view = 'scores')", fixed = TRUE)
 })
 
 test_that("GPCM partial report, QC, export, and linking helpers return caveated objects", {

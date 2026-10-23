@@ -36,6 +36,7 @@ test_that("corrected calibration scores agree with independent continuous poster
   for (prior in list(NULL,list(mean=.4,sd=1.3))) {
     native <- predict_mfrm_units(f,z$rows[!is.na(z$rows[[x$score]]),],
       scoring_quad_points=101L,scoring_prior=prior)
+    expect_identical(native$fit_identity, prediction_fit_identity(f))
     scored <- score_mfrm_calibration(z$cal,z$rows,event_id="Event",
       missing_response="omit",scoring_prior=prior)
     expect_s3_class(summary(native),"summary.mfrm_unit_prediction")

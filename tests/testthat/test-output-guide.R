@@ -59,6 +59,15 @@ test_that("mfrmr_output_guide returns a stable purpose-to-helper map", {
   expect_true(any(grepl("precision_review_report", guide$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("build_summary_table_bundle", guide$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("facets_output_file_bundle", guide$MainFunction, fixed = TRUE)))
+  bias <- guide[grepl("estimate_all_bias()", guide$MainFunction, fixed = TRUE), ]
+  expect_true(nrow(bias) > 0L)
+  expect_true(all(grepl("collection-wide", bias$DecisionBoundary, fixed = TRUE)))
+  expect_true(all(grepl("unavailable", bias$DecisionBoundary, fixed = TRUE)))
+  expect_true(all(grepl("plot(screens)", bias$NextStep, fixed = TRUE)))
+  plans <- mfrmr_output_guide("gtheory")
+  expect_match(plans$NextStep, "error_components", fixed = TRUE)
+  expect_match(plans$Notes, "confint.mfrm_multivariate_d_study", fixed = TRUE)
+  expect_match(plans$Notes, "IntervalCenter", fixed = TRUE)
 })
 
 test_that("mfrmr_output_guide supports focused scopes", {
@@ -100,8 +109,8 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_match(public$MainFunction[1], "rating_max", fixed = TRUE)
   expect_match(public$MainFunction[1], 'method = "MML"', fixed = TRUE)
   expect_match(public$MainFunction[2], 'profile = "fit"', fixed = TRUE)
-  expect_match(public$MainFunction[3], 'profile = "facets"', fixed = TRUE)
-  expect_match(public$MainFunction[3], "review$results", fixed = TRUE)
+  expect_match(public$MainFunction[3], 'mfrm_results(fit)', fixed = TRUE)
+  expect_match(public$MainFunction[3], "summary(res)", fixed = TRUE)
   expect_match(public$MainFunction[4], 'renderer = "native"', fixed = TRUE)
   expect_match(public$MainFunction[4], "show_ci = TRUE", fixed = TRUE)
   expect_match(public$MainFunction[4], "top_n = Inf", fixed = TRUE)
@@ -199,7 +208,7 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(nrow(response_time) >= 2L)
   expect_true(any(response_time$Scope == "reviews"))
   expect_true(any(response_time$Scope == "r"))
-  expect_true(any(grepl("plot_response_time_review",
+  expect_true(any(grepl("plot(timing",
                         response_time$MainFunction,
                         fixed = TRUE)))
   expect_true(any(grepl("speed-accuracy",
@@ -244,7 +253,7 @@ test_that("mfrmr_output_guide supports focused scopes", {
   expect_true(any(gpcm$Scope == "gpcm" &
                     grepl("gpcm_capability_matrix", gpcm$MainFunction, fixed = TRUE)))
   expect_true(any(gpcm$Scope == "gpcm" &
-                    grepl("gpcm_runtime_guard_coverage", gpcm$MainFunction, fixed = TRUE)))
+                    grepl("gpcm_capability_matrix(view = 'unavailable')", gpcm$MainFunction, fixed = TRUE)))
   expect_true(any(gpcm$ObjectRole == "unavailable-route alternatives"))
   expect_true(any(grepl("inspect the source object and help page",
                         gpcm$DecisionBoundary,
@@ -312,6 +321,16 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
                     coverage$Status == "supported_with_caveat" &
                     grepl("mfrm_d_study", coverage$mfrmrRoute, fixed = TRUE) &
                     grepl("IdentificationStatus", coverage$Capability, fixed = TRUE)))
+  gtheory <- subset(coverage, FACETSReference == "gtheory.htm")
+  expect_equal(nrow(gtheory), 1L)
+  expect_match(gtheory$mfrmrRoute, "mfrm_g_study()", fixed = TRUE)
+  expect_match(gtheory$mfrmrRoute, "mfrm_d_study()", fixed = TRUE)
+  expect_match(gtheory$Limitation, "Component SEs/intervals use balanced ANOVA", fixed = TRUE)
+  expect_match(gtheory$Limitation, "two-score covariance intervals have explicit generalized and conservative choices", fixed = TRUE)
+  expect_match(gtheory$Limitation, "Joint reml_profile covariance intervals also accept identifiable incomplete sources", fixed = TRUE)
+  expect_match(gtheory$Limitation, "experimental reml_profile G/Phi and SEM intervals", fixed = TRUE)
+  expect_match(gtheory$Limitation, "sparse future plans", fixed = TRUE)
+  expect_identical(gtheory$ValidationEvidence, "external_match_not_established")
   expect_true(any(grepl("Connectivity network graph", coverage$FACETSFeature, fixed = TRUE) &
                     coverage$Status == "implemented" &
                     grepl("mfrm_network_analysis", coverage$mfrmrRoute, fixed = TRUE) &
@@ -514,7 +533,7 @@ test_that("mfrmr_output_guide gives FACETS, ConQuest, and R user pathways", {
   expect_true(any(grepl("make_anchor_table", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("group_anchors", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("detect_anchor_drift", facets$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("plot_anchor_drift", facets$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("plot(drift", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("fit_measures_table", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("facets_fit_df_guide", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("df_sensitivity", facets$MainFunction, fixed = TRUE)))
@@ -524,8 +543,8 @@ test_that("mfrmr_output_guide gives FACETS, ConQuest, and R user pathways", {
   expect_true(any(grepl("estimate_bias", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("bias_interaction_report", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("bias_pairwise_report", facets$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("plot_bias_interaction", facets$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("plot_wright_unified", facets$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("plot(bias", facets$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("view = \"unified\"", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("type = \"wright\"", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("data_quality_report", facets$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("write_mfrm_residual_file", facets$MainFunction, fixed = TRUE)))
@@ -552,9 +571,9 @@ test_that("mfrmr_output_guide gives FACETS, ConQuest, and R user pathways", {
   expect_true(any(grepl("mfrmr_interval_guide", r_path$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("plot_long", r_path$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("type = \"pathway\"", r_path$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("plot_bias_interaction", r_path$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("plot_information", r_path$MainFunction, fixed = TRUE)))
-  expect_true(any(grepl("plot_response_time_review", r_path$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("plot(bias", r_path$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("plot(info", r_path$MainFunction, fixed = TRUE)))
+  expect_true(any(grepl("plot(timing", r_path$MainFunction, fixed = TRUE)))
   expect_true(any(grepl("plot_data_components", r_path$NextStep, fixed = TRUE)))
   expect_true(any(grepl("mfrmr_interval_guide", r_path$NextStep, fixed = TRUE)))
   expect_true(any(grepl("pathway_long", r_path$NextStep, fixed = TRUE)))
@@ -691,25 +710,25 @@ test_that("plot_data extracts reusable payloads and selected components", {
 
   info <- compute_information(fit, theta_points = 21)
   sem_long <- plot_data(
-    plot_information(info, type = "sem", draw = FALSE),
+    plot(info, type = "sem", draw = FALSE),
     component = "plot_long"
   )
   expect_s3_class(sem_long, "data.frame")
   expect_true(any(sem_long$ValueName == "ConditionalSEM"))
-  sem_components <- plot_data_components(plot_information(info, type = "sem", draw = FALSE))
+  sem_components <- plot_data_components(plot(info, type = "sem", draw = FALSE))
   expect_true(any(sem_components$Component == "conditional_sem"))
 
   bias <- suppressWarnings(suppressMessages(
     estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 1)
   ))
   bias_long <- plot_data(
-    plot_bias_interaction(bias, plot = "heatmap", draw = FALSE),
+    plot(bias, type = "heatmap", draw = FALSE),
     component = "plot_long"
   )
   expect_s3_class(bias_long, "data.frame")
   expect_true(any(bias_long$Layer == "heatmap_cell"))
   bias_components <- plot_data_components(
-    plot_bias_interaction(bias, plot = "heatmap", draw = FALSE)
+    plot(bias, type = "heatmap", draw = FALSE)
   )
   expect_true(any(bias_components$Component == "flag_summary" &
                     bias_components$Role == "summary_or_guidance"))

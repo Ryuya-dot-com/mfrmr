@@ -46,8 +46,8 @@ test_that("dendrogram coordinates match stats dendrogram midpoints, heights and 
     }
     expect_equal(nrow(boxes), p$data$k)
     expect_true(all(boxes$linetype == "dashed"))
-    expect_match(g$labels$caption, "Heights do not measure branch support", fixed = TRUE)
-    if (tied) expect_match(g$labels$caption, "Tied heights", fixed = TRUE)
+    expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "Heights do not measure branch support", fixed = TRUE)
+    if (tied) expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "Tied heights", fixed = TRUE)
     expect_silent(ggplot2::ggplotGrob(g))
   }
 })
@@ -116,5 +116,5 @@ test_that("height ties away from the selected cut do not trigger the cut caution
   membership <- stats::cutree(p$data$tree, 2)
   p$data$table$Cluster <- unname(membership[match(ids, p$data$tree$labels)])
   expect_true(anyDuplicated(p$data$tree$height) > 0L)
-  expect_false(grepl("Tied heights", as_ggplot(p)$labels$caption, fixed = TRUE))
+  expect_false(grepl("Tied heights", paste(plot_data(as_ggplot(p), "notes")$Text, collapse = "\n"), fixed = TRUE))
 })

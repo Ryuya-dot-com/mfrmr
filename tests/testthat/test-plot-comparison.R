@@ -130,7 +130,7 @@ test_that("comparison renderers retain notes, layout and monochrome encodings", 
     g <- as_ggplot(p)
     expect_null(g$labels$title)
     expect_null(g$labels$subtitle)
-    expect_identical(attr(g, "mfrmr_notes"), p$data$notes)
+    expect_identical(utils::head(plot_data(g, "notes"), nrow(p$data$notes)), p$data$notes)
     expect_true(nrow(p$data$fit_readiness) > 0)
     expect_no_warning(ggplot2::ggplot_build(g))
     expect_no_warning(print(g))

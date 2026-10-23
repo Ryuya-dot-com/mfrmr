@@ -240,8 +240,12 @@ test_that("Draft.82 collapsed lme4 identity reproduces current helper", {
     ),
     class = "mfrm_fit"
   )
+  # The historical oracle stores a one-dimensional array; the public score
+  # contract requires a numeric vector, without changing any score values.
+  public_data <- fixture$Data
+  public_data$Score <- as.numeric(public_data$Score)
   public <- mfrm_generalizability(
-    public_fit, data = fixture$Data,
+    public_fit, data = public_data,
     object_facet = "Person", random_facets = c("Rater", "Item"),
     reml = TRUE
   )
@@ -254,9 +258,11 @@ test_that("Draft.82 collapsed lme4 identity reproduces current helper", {
     public$variance_components$Source
   )[collapsed$Components$ComponentId]
   expect_equal(
-    round(collapsed$Components$Estimate, 6),
+    collapsed$Components$Estimate,
     as.numeric(public_estimate),
-    tolerance = 1e-12
+    # Dropping the historical array attribute can perturb lme4's numerical
+    # optimizer; this still detects the former six-decimal output rounding.
+    tolerance = 1e-8
   )
   expect_equal(nrow(collapsed$Components), 4L)
   expect_error(

@@ -27,7 +27,8 @@ preparation, and \code{"technical"} emphasizes appendix/reproducibility routes.
 native additive RSM/PCM or two-family GPCM MML results; it requires
 \code{facet} and \code{rater}.}
 
-\item{output}{Return format: \code{"object"} for an \code{mfrm_report} object,
+\item{output}{Return format: \code{"object"} for an \code{mfrm_report} object
+(\code{mfrm_rater_feedback} when \code{style = "rater"}),
 \code{"markdown"} for a character scalar, \code{"html"} for a temporary HTML file,
 or \code{"tables"} for the report's named data-frame list.}
 
@@ -106,6 +107,16 @@ results without a roster do not reconstruct one from calibration rows.
 It does not supply ordinary residual diagnostics or
 fit/APA wording templates; \code{template_index} is empty. See the model-specific
 section in \code{\link[=mfrm_results]{mfrm_results()}} for supported tables and plots.
+The \verb{Response residuals} row distinguishes an unsupplied saved
+\code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} result (\code{not_computed}) from a supplied result
+with no available observed-row results (\code{unavailable}) or results requiring review.
+If needed, compute these diagnostics separately for a numerically ready fit
+and attach them through \code{mfrm_results(fit, response_diagnostics = diagnostics)}.
+Available summaries remain descriptive (\code{caveat}): ordinary-model cutoffs
+do not apply, and they do not establish model adequacy. Report creation
+never computes the missing diagnostics. Older result bundles can be passed
+to \code{mfrm_report()} again to update the report; previously exported files
+retain their original text.
 
 For ordinary models, the
 \code{first_screen} table is the compact entry point: it gives an overall row and
@@ -163,6 +174,26 @@ collapsed into a single pass/fail statement; bias screens are not treated
 as final fairness conclusions; pathway/misfit rows are case-review prompts;
 and drift/equating claims require multiple fitted forms or waves.
 }
+\section{Stored agreement in ordinary-model reports}{
+
+When diagnostics are present, the narrative and
+\code{tables$interrater_interpretation} distinguish observed agreement from the
+fitted-model expected baseline and from separation reliability.
+\code{tables$interrater_summary} retains the stored numerical summary unchanged.
+The denominator counts matched-context opportunities across rater pairs,
+not independent people. Unavailable values, zero matched opportunities and
+an absent stored summary are described explicitly; no missing agreement
+statistic is computed during reporting. Reports without diagnostics retain
+their existing component-status explanation rather than inventing values.
+These summaries share their interpretation with \code{\link[=build_apa_outputs]{build_apa_outputs()}}.
+See \code{\link[=interrater_agreement_table]{interrater_agreement_table()}} for calculations and matching conventions.
+Markdown and HTML contain the same explanation; export with
+\code{export_mfrm_results(res, include = "report")} to retain the summary and
+interpretation as CSV files as well. Existing saved APA drafts retain their
+original wording until regenerated with \code{\link[=build_apa_outputs]{build_apa_outputs()}} and the same
+saved fit/diagnostics. Regeneration does not refit the model.
+}
+
 \section{Two-family GPCM reports}{
 
 Reports retain all saved non-Person fitted locations, category steps and
@@ -199,6 +230,24 @@ the complete \code{res} with \code{\link[base:saveRDS]{base::saveRDS()}} and rel
 The RDS file retains fitted data and identifiers for the analyst; it is not
 the recipient's sheet. Reloading and reporting reuse the saved analysis
 without updating it for new ratings.
+\code{output = "tables"} includes an \code{interpretation_notes} table with the
+overall review, audience-specific guidance and section explanations. Keep
+this table with the numerical tables when saving CSV files or sharing them.
+These explanations are the sheet's fixed, recipient-safe text; free-form
+notes from the source analysis are not copied. The same table is available
+in the sheet object's \verb{$tables}. HTML and Markdown show the explanations
+beside their sections, without duplicating them as another table.
+The \code{uncertainty} table retains \code{Available} and a recipient-safe \code{Reason},
+distinguishing constraint-fixed values, insufficient independent-cluster
+information, unusable variance/bounds and failed numerical/profile checks
+where the saved diagnostics identify the cause. If the interval is
+unavailable, both bounds are missing in the sheet, even when the analyst's
+saved result retains one computed endpoint. This does not mean zero
+uncertainty or an unbounded interval. The original saved analysis is
+unchanged; unidentified reasons direct the recipient to the analyst.
+Printing the sheet also shows interval availability and its explanation.
+Recreate sheets from saved \code{mfrm_results} objects to obtain these fields;
+reading an older sheet does not update its contents.
 
 The additive RSM/PCM sheet includes scoring tendency (severity), exposure, available saved
 fixed-facet uncertainty, ordinary Infit/Outfit, category use and selected
@@ -233,7 +282,7 @@ are centered offsets, not standalone thresholds. This individual sheet does
 not display location or step intervals; use the analyst report for separately
 requested location intervals. A larger slope is not evidence of competence or accuracy.
 
-Attach saved \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} output through \code{intervals} in
+Attach saved \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} output from \code{parm = "slopes"} through \code{intervals} in
 \code{\link[=mfrm_results]{mfrm_results()}} to include a matching experimental component-slope interval.
 \code{interval} chooses among named attachments; pointwise/Bonferroni meaning,
 profile/log-Wald method and unavailable bounds are retained. No location
@@ -261,17 +310,17 @@ with other report styles, even when explicitly supplied as \code{NULL}.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 
 # Fit the model
 fit <- fit_mfrm(
-  data = toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
   method = "MML",
   model = "RSM"
 )
@@ -292,7 +341,6 @@ sheet$path
 # Review in a browser, then choose a permanent path for continuing work.
 recipient_file <- tempfile(fileext = ".html")
 stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))
-}
 }
 \seealso{
 \code{\link[=mfrm_results]{mfrm_results()}}, \code{\link[=export_mfrm_results]{export_mfrm_results()}},

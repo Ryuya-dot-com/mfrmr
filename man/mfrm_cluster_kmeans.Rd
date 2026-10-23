@@ -55,6 +55,9 @@ An \code{mfrm_clusters} object with memberships, original-unit profiles,
 cluster sizes and silhouettes, \code{centers} in the fitted space, per-cluster
 \code{withinss}, \code{totss}, \code{tot.withinss}, the input PCA when used, original
 feature data, transformation and settings. K-means has no medoids.
+Numeric profiles use original feature units and sample SDs: SD is \code{NA}
+for a one-entity group and zero for identical values in a larger group.
+A singleton's silhouette is zero by convention, not evidence of separation.
 }
 \description{
 Divide people, raters or tasks into k groups with similar numeric attributes.

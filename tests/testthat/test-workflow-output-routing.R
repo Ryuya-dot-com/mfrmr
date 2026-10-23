@@ -34,8 +34,8 @@ test_that("D-study conversion keeps both panels and availability with explicit s
   d <- expand.grid(Person = paste0("P",1:8), Rater = paste0("R",1:3), Task = paste0("T",1:2))
   d$Score <- withr::with_seed(264, rnorm(8)[match(d$Person,unique(d$Person))] +
     rnorm(3)[match(d$Rater,unique(d$Rater))] + rnorm(nrow(d)))
-  g <- mfrm_multivariate_gstudy(d,"Score")
-  plans <- mfrm_multivariate_d_study(g,data.frame(Raters=c(1,2,3),Tasks=2))
+  g <- mfrm_g_study(d,"Score")
+  plans <- mfrm_d_study(g,data.frame(Raters=c(1,2,3),Tasks=2))
   for (type in c("coefficients", "sem")) {
     payload <- plot(plans,type=type,x_var="Raters",draw=FALSE)
     base <- as_ggplot(payload)
@@ -67,7 +67,7 @@ test_that("the output guide connects dedicated analysis families without claimin
   }
   expect_match(mfrmr_output_guide("features")$MainFunction,"mfrm_pca",fixed=TRUE)
   expect_match(mfrmr_output_guide("imputation")$MainFunction,"pool_mfrm_imputed",fixed=TRUE)
-  expect_match(mfrmr_output_guide("gtheory")$MainFunction,"mfrm_multivariate_d_study",fixed=TRUE)
+  expect_match(mfrmr_output_guide("gtheory")$MainFunction,"mfrm_d_study()",fixed=TRUE)
   expect_false(any(mfrmr_output_guide("gpcm")$Scope %in% c("features","gtheory")))
   expect_equal(nrow(mfrmr_output_guide("beginner")),6)
 })

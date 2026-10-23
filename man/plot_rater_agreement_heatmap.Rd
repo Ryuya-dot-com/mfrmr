@@ -32,16 +32,28 @@ offered here.}
 }
 \value{
 An \code{mfrm_plot_data} object whose \code{data} slot bundles the
-rater x rater matrix and the raw pairwise rows.
+rater x rater matrix, raw pairwise rows, matching settings and palette.
+\code{\link[=as_ggplot]{as_ggplot()}} preserves the selected metric, facet labels and unavailable
+cells, with a fixed 0--1 exact-agreement or -1--1 correlation scale.
+The \code{"monochrome"} preset applies to both renderers. Self comparisons
+are unavailable, not estimated perfect agreement. Save the plot payload
+with \code{\link[base:saveRDS]{base::saveRDS()}} to convert it without recomputing diagnostics;
+interpretation notes remain in \code{plot_data(p, "notes")}.
 }
 \description{
 Summarizes inter-rater agreement as a symmetric rater x rater
 heatmap. Cells are coloured by the chosen agreement metric: exact
 agreement proportion by default, or the Pearson-style \code{Corr} column
 from \code{\link[=interrater_agreement_table]{interrater_agreement_table()}} when \code{metric = "correlation"}.
-The plot is a compact alternative to \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}'s
+The plot is a compact alternative to \link[=plot.mfrm_fit]{plot(x, type = "agreement")}'s
 bar chart when the rater count exceeds ~6 pairs.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -74,11 +86,10 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
-p <- plot_rater_agreement_heatmap(fit, draw = FALSE)
+p <- plot(fit, type = "agreement", view = "heatmap", draw = FALSE)
 dim(p$data$matrix)
 # Look for (default `metric = "exact"`):
 # - Off-diagonal cells close to the corresponding entry of
@@ -88,13 +99,14 @@ dim(p$data$matrix)
 # - With `metric = "correlation"` the colour scale switches to
 #   `[-1, 1]`; positive cells = pairs agree on relative ordering,
 #   negative cells = pairs systematically rank persons in opposite
-#   directions and are the highest-priority review cases.
-}
+#   directions. Review context, exposure and sample size before deciding
+#   whether any rater needs follow-up.
 }
 \seealso{
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}} for the underlying numeric
-table; \code{\link[=plot_guttman_scalogram]{plot_guttman_scalogram()}} for a complementary
+table; \link[=plot.mfrm_fit]{plot(x, type = "guttman")} for a complementary
 person-by-element view of residual structure;
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for the diagnostics bundle the heatmap
 reads from.
 }
+\keyword{internal}

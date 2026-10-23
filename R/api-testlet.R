@@ -49,6 +49,14 @@
 #'   shared across Persons, covariate-dependent ability means and nonnormal
 #'   ability populations are not included. Estimating one ability variance
 #'   does not establish homogeneous populations across assignment groups.
+#'   After integrating both random effects, different Persons are independent
+#'   under the model; ratings within a Person are not. Regular likelihood
+#'   inference requires an identified interior model and growing information
+#'   across independent Persons. The full calibration information includes
+#'   every estimated variance; treating an estimated variance as known would
+#'   omit nuisance-parameter uncertainty. A positive numerical Hessian alone
+#'   does not prove identification, and fixed-order quadrature agreement does
+#'   not establish an asymptotic approximation rate.
 #'
 #'   Zero is evaluated explicitly for both estimated variances using their
 #'   one-sided variance scores, including the joint-zero submodel. All
@@ -140,6 +148,10 @@
 #' @return An `mfrm_testlet` object with calibration, covariance, calibration
 #'   table, checks, all optimization runs, input/omission accounting and settings.
 #'   It contains no native pointers; use `saveRDS()` and `readRDS()`.
+#'   Calibration tables retain `IntervalStatus`, `CIEligible` and `InferenceReview`
+#'   for missing or explicitly requested normal bounds; see
+#'   [confint.mfrm_testlet()] for the status meanings. A retained point is not
+#'   certified by interval availability. Inspect `checks` before interpreting it.
 #' @param object,x An `mfrm_testlet` result.
 #' @param ... Unused.
 #' @references Wang, W.-C. and Wilson, M. (2005). The Rasch testlet model.
@@ -329,6 +341,7 @@ mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, perso
   for (j in seq_len(nd)) {
     eta <- latent - sum(input$design_X[j, ] * par[seq_len(nb)])
     logw <- outer(eta, 0:ns) - matrix(c(0, cumsum(steps)), length(eta), ns + 1L, byrow = TRUE)
+    logw <- logw - row_max_fast(logw)
     den <- mfrm_testlet_logsum_rows(logw)
     if (gradient) {
       prob <- exp(logw - den)
@@ -338,7 +351,7 @@ mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, perso
     for (y in 0:ns) {
       residual <- if (gradient) y - mean else NULL
       g <- if (gradient) cbind(-outer(residual, input$design_X[j, ]),
-        vapply(seq_len(ns), function(k) rowSums(prob[, (k + 1L):(ns + 1L), drop = FALSE]) - as.numeric(y >= k), numeric(length(eta))),
+        matrix(vapply(seq_len(ns), function(k) rowSums(prob[, (k + 1L):(ns + 1L), drop = FALSE]) - as.numeric(y >= k), numeric(length(eta))), length(eta), ns),
         if (v > 0) residual * rep(gamma / (2 * v), each = nq) else rep(0, length(eta))) else NULL
       cache[[j + y * nd]] <- list(logp = matrix(logw[, y + 1L] - den, nq, ng),
         g = g, residual = if (gradient) matrix(residual, nq, ng),
@@ -358,8 +371,10 @@ mfrm_testlet_kernel <- function(input, par, theta, rule, gradient = FALSE, perso
         S <- S + count * cell$residual; V <- V + count * cell$variance
       }
     }
-    lw <- sweep(lc, 2L, logweights, "+"); marginal <- mfrm_testlet_logsum_rows(lw)
-    loglik[, pi] <- loglik[, pi] + marginal
+    offset <- row_max_fast(lc)
+    lw <- sweep(lc - offset, 2L, logweights, "+")
+    marginal <- mfrm_testlet_logsum_rows(lw)
+    loglik[, pi] <- loglik[, pi] + (offset + marginal)
     if (gradient) {
       if (v == 0) g[, npar] <- as.vector(.5 * (S^2 - V))
       weights <- exp(lw - marginal)
@@ -384,7 +399,8 @@ mfrm_testlet_evaluate <- function(input, par, rule) {
   person_variance <- mfrm_testlet_person_variance(input, par)
   theta <- sqrt(person_variance) * rule$nodes
   kernel <- mfrm_testlet_kernel(input, par, theta, rule, gradient = TRUE)
-  lw <- sweep(kernel$loglik, 1L, log(rule$weights), "+")
+  offset <- row_max_fast(t(kernel$loglik))
+  lw <- sweep(sweep(kernel$loglik, 2L, offset, "-"), 1L, log(rule$weights), "+")
   normalizer <- mfrm_testlet_logsum_rows(t(lw)); posterior <- exp(sweep(lw, 2L, normalizer, "-"))
   gradient <- vapply(seq_len(dim(kernel$score)[3]), function(a) sum(posterior * kernel$score[, , a]), numeric(1))
   if (length(par) > length(gradient)) {
@@ -393,7 +409,8 @@ mfrm_testlet_evaluate <- function(input, par, rule) {
     gradient <- c(gradient, sum(posterior * score))
   }
   means <- colSums(theta * posterior)
-  sds <- sqrt(pmax(0, colSums(theta^2 * posterior) - means^2))
+  sds <- sqrt(colSums(sweep(matrix(theta, length(theta), ncol(posterior)), 2L, means, "-")^2 * posterior))
+  normalizer <- offset + normalizer
   list(loglik = sum(normalizer), gradient = gradient, person_loglik = normalizer,
     moments = cbind(Estimate = means, ConditionalSD = sds))
 }

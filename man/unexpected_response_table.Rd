@@ -7,10 +7,10 @@
 unexpected_response_table(
   fit,
   diagnostics = NULL,
-  abs_z_min = 2,
+  abs_z_min = 3,
   prob_max = 0.3,
   top_n = 100,
-  rule = c("either", "both")
+  rule = c("residual", "either", "both")
 )
 }
 \arguments{
@@ -25,7 +25,8 @@ unexpected_response_table(
 \item{top_n}{Maximum number of ranked rows to return in \code{table}.
 Summary counts and percentages always use all flagged observations.}
 
-\item{rule}{Flagging rule: \code{"either"} (default) or \code{"both"}.}
+\item{rule}{\code{"residual"} (default) uses only the absolute residual cutoff;
+\code{"either"} and \code{"both"} also use the category-probability cutoff.}
 }
 \value{
 A named list with:
@@ -39,8 +40,10 @@ A named list with:
 Build an unexpected-response screening report
 }
 \details{
+The default is the FACETS Table 4 absolute residual rule, with cutoff 3.
 A response is flagged as unexpected when:
 \itemize{
+\item \code{rule = "residual"}: \verb{|StdResidual| >= abs_z_min}.
 \item \code{rule = "either"}: \verb{|StdResidual| >= abs_z_min} OR \code{ObsProb <= prob_max}
 \item \code{rule = "both"}: both conditions must be met.
 }
@@ -70,9 +73,10 @@ conservative your screening should be.
 \section{Typical workflow}{
 
 \enumerate{
-\item Start with \code{rule = "either"} for broad screening.
+\item Start with the default residual screen. Category probability is an optional
+case-review aid, not a tail probability or calibrated false-alarm rate.
 \item Re-run with \code{rule = "both"} for strict subset.
-\item Inspect top rows and visualize with \code{\link[=plot_unexpected]{plot_unexpected()}}.
+\item Inspect top rows and visualize with \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}.
 }
 }
 
@@ -94,7 +98,8 @@ The \code{table} data.frame contains:
 \item{Residual, StdResidual}{Raw and standardized residuals.}
 \item{ObsProb}{Probability of the observed category under the model.}
 \item{MostLikely, MostLikelyProb}{Most probable category and its
-probability.}
+probability. Tied modes give \code{MostLikely = NA}; \code{MostLikelyCount}
+records their number, and CategoryGap uses the nearest tied mode.}
 \item{Severity}{Composite severity index (higher = more unexpected).}
 \item{Direction}{"Higher than expected" or "Lower than expected".}
 \item{FlagLowProbability, FlagLargeResidual}{Logical flags for each
@@ -114,8 +119,15 @@ rule outcome is determined or unavailable.}
 }
 }
 
+\section{Saved-result reuse}{
+
+The returned \code{fit_identity} records the fitted analysis for reuse with
+reports and exports. Recreate older results from the saved fit and matching
+diagnostics using the original screening options; no model refit is needed.
+See \link{mfrmr_compatibility_layer} for migration instructions.
+}
+
 \examples{
-\donttest{
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
@@ -134,7 +146,6 @@ unexpected$summary # Counts and percentages for all flagged observations
 unexpected$table   # Only the five highest-ranked cases
 plot(unexpected)
 # The rule is exploratory: inspect the scoring context before changing a rating
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=fair_average_table]{fair_average_table()}},

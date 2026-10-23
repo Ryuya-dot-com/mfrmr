@@ -40,6 +40,10 @@ Medoid, Silhouette), \code{cluster_summary}, numeric and categorical \code{profi
 \code{medoids}, the reviewed \code{feature_data}, and \code{settings}. Silhouette values
 describe within-sample separation, not membership probabilities or
 resampling stability. \code{summary()} returns the cluster-size/silhouette table.
+Numeric profiles report the mean, median and sample SD in the original
+feature units. SD is \code{NA} for a one-entity group and zero for identical
+values in a group with at least two entities. A singleton's silhouette is
+zero by convention; it is not evidence of group separation.
 }
 \description{
 Partition an entity-level feature table using Gower dissimilarities and
@@ -49,8 +53,12 @@ an identical compatibility alias; it does not select an algorithm for you.
 }
 \details{
 Numeric differences are divided by the feature range among included
-entities; nominal features use match/mismatch, ordered factors use their
-declared order, and logical features use symmetric binary differences.
+entities; nominal features use match/mismatch and logical features use
+symmetric binary differences. Ordered factors use equally spaced integer
+codes in their declared level order, divided by the observed code range.
+Unused intermediate levels retain their spacing. The Gower dissimilarity
+is the weighted mean of these feature contributions, dividing by the sum
+of the selected weights. Weights apply to features, not entities.
 Numeric 0/1 features are treated as numeric, not asymmetric presence/absence.
 Every selected feature must vary among included entities. Gower scaling,
 feature types, weights, omission policy, and numeric ranges are retained.

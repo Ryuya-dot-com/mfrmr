@@ -209,6 +209,7 @@ test_that("analyze_dif refit replays baseline score and estimation controls", {
     expect_identical(args$reltol, fit$config$replay_inputs$reltol)
     expect_identical(args$optimizer, fit$config$replay_inputs$optimizer)
     expect_identical(args$mml_engine, fit$config$replay_inputs$mml_engine)
+    expect_identical(args$repeated_ratings, fit$config$replay_inputs$repeated_ratings)
   }
   expect_true(all(vapply(
     dif$group_fits,
@@ -219,6 +220,12 @@ test_that("analyze_dif refit replays baseline score and estimation controls", {
 
 test_that("analyze_dif refit fails closed for unreplayable baseline structures", {
   local_dif_fixtures()
+  # Deliberately altered model settings test the replay guards; identity
+  # mismatches are checked independently at the public diagnostics boundary.
+  testthat::local_mocked_bindings(
+    mfrm_results_validate_diagnostics_identity = function(...) invisible(NULL),
+    .package = "mfrmr"
+  )
 
   population_fit <- fit
   population_fit$config$population_active <- TRUE

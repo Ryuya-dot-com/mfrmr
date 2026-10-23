@@ -592,6 +592,10 @@ build_facets_style_wright_data <- function(fit,
     paste0("(", facet_ruler$Level, ")"),
     facet_ruler$Level
   )
+  highlighted <- facet_ruler$Highlighted %in% TRUE
+  facet_ruler$DisplayLabel[highlighted] <- paste0(
+    "> ", facet_ruler$DisplayLabel[highlighted]
+  )
   facet_ruler <- add_wright_ci_display_metadata(
     facet_ruler,
     lower = lower,
@@ -723,7 +727,8 @@ draw_wright_facets_style <- function(plot_data,
     xlim = c(0.45, n_col + 0.55),
     ylim = yr,
     xaxt = "n", yaxt = "n", xlab = "", ylab = "Logit ruler",
-    main = title %||% "FACETS-style Wright map"
+    main = .mfrm_plot_display_title(plot_data, title = title,
+      fallback = "FACETS-style Wright map")
   )
   rows <- facets_data$ruler_rows
   major <- !is.na(rows$Major) & rows$Major

@@ -129,6 +129,9 @@ summary.mfrm_pca <- function(object, ...) object$variance
 #'   cluster sizes and silhouettes, `centers` in the fitted space, per-cluster
 #'   `withinss`, `totss`, `tot.withinss`, the input PCA when used, original
 #'   feature data, transformation and settings. K-means has no medoids.
+#'   Numeric profiles use original feature units and sample SDs: SD is `NA`
+#'   for a one-entity group and zero for identical values in a larger group.
+#'   A singleton's silhouette is zero by convention, not evidence of separation.
 #' @details Uses [stats::kmeans()] with Hartigan-Wong updates and the stated
 #'   random starts. Warnings, nonconvergence and nonfinite sums of squares stop
 #'   the analysis; no failed run is silently presented as a usable result.

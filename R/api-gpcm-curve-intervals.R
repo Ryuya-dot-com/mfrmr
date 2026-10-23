@@ -16,11 +16,12 @@
 #'   sum over all observed exposures as in [compute_information()].
 #' @param method,clusters,adjust,level,simultaneous As in [confint.mfrm_fit()].
 #' @param x A saved `mfrm_curve_intervals` result.
-#' @param title,subtitle Optional plot text; NULL removes it.
+#' @param title,subtitle Optional returned text; NULL removes it. Figure text
+#'   is not drawn. Use `plot_data(p, "title")` and `plot_data(p, "notes")`.
 #' @param palette Optional vector of colors, one per category/series. Line
 #'   types distinguish series in addition to color. The default is colorblind friendly.
 #' @param draw Draw the ggplot immediately? Default TRUE; FALSE returns it only.
-#' @param caption Optional plot caption. If omitted, unavailable intervals are
+#' @param caption Optional returned caption. If omitted, unavailable intervals are
 #'   counted and explained, along with unobserved combinations of fitted levels.
 #'   Two-family point-only curves instead state that calibration intervals
 #'   are unavailable for the entire plot, without marking every curve point.
@@ -52,12 +53,12 @@
 #'   its interval results unchanged. See the GPCM scope vignette
 #'   for the evaluated grid, denominators and source limitations; an available
 #'   interval is not a finite-sample coverage certification.
-#'   Printing and the default plot subtitle identify the approximation.
+#'   Printing and the returned plot description identify the approximation.
 #'   Custom plot text may omit that description; retain the method and its
 #'   limitations in the figure legend or accompanying report.
 #'   For one-family curves, crosses mark retained estimates whose intervals
 #'   are unavailable. Two-family curves have no calibration intervals; the
-#'   default subtitle and caption state this without covering curves in crosses.
+#'   returned subtitle and caption state this without covering curves in crosses.
 #'   A context with only one supplied ability value retains colored points.
 #'   Panel labels put each facet on its own line. With many rating contexts,
 #'   supply the comparisons of interest in `newdata` or enlarge the exported
@@ -80,19 +81,41 @@
 #'   unobserved combination of fitted facet levels (`ObservedContext`). This
 #'   records the retained rating design, not statistical identification or
 #'   interval reliability. Its plot method returns a ggplot with the plotted data available
-#'   in `plot$data`; titles can be omitted and the plot can be customized.
+#'   in `plot$data`; descriptions and cautions are available through
+#'   `plot_data(p, "notes")`, separately from the figure.
 #' @seealso [confint.mfrm_fit()], [category_curves_report()], [compute_information()]
 #' @details A numerically verified but ill-conditioned information inverse can
 #'   supply intervals with a warning, as described in [confint.mfrm_fit()].
 #'   The warning is saved in `cautions` and the table's `InferenceReview`, and
-#'   appears in printing and the default plot subtitle. A custom subtitle,
+#'   appears in printing and the returned plot description. A custom subtitle,
 #'   including NULL, changes the display without removing saved diagnostics.
+#'   In a one-family fit with fixed facet anchors or group means, model and
+#'   sandwich intervals condition on those supplied values. Their source
+#'   calibration uncertainty is not propagated. Fixing a facet location does
+#'   not fix its slope, thresholds or whole response curve. Availability still
+#'   depends on the joint-information and numerical checks described above.
 #' @examples
-#' # After fitting a GPCM:
-#' # grid <- expand.grid(Theta = seq(-3, 3, length.out = 41),
-#' #                     Rater = "R01", Criterion = "C01")
-#' # curves <- mfrm_curve_intervals(fit, grid)
-#' # plot(curves, title = NULL, subtitle = NULL)
+#' # How do category probabilities vary with ability in one rating context?
+#' ratings <- load_mfrmr_data("example_core")
+#' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+#'   model = "GPCM", method = "MML", step_facet = "Criterion",
+#'   slope_facet = "Rater", rating_min = 1, rating_max = 4,
+#'   category_policy = "preserve", quad_points = 61)
+#' # Select actual labels from the example; replace them with your context.
+#' grid <- expand.grid(Theta = seq(-2, 2, length.out = 21),
+#'   Rater = unique(ratings$Rater)[1],
+#'   Criterion = unique(ratings$Criterion)[1])
+#' curves <- mfrm_curve_intervals(fit, grid)
+#' # At ability zero, read the probabilities of the original score categories.
+#' subset(curves$table, Theta == 0,
+#'   select = c(Category, Estimate, Lower, Upper, CIEligible, InferenceReview))
+#' plot(curves)
+#' # Ribbons describe calibration uncertainty at fixed ability, not uncertainty
+#' # about an individual's ability. They are pointwise, not simultaneous bands.
+#' file <- tempfile(fileext = ".rds")
+#' saveRDS(curves, file) # Keep the complete result, including context and notes
+#' saved <- readRDS(file)
+#' saved$settings
 #' @export
 mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "information"),
     method = c("model", "sandwich"), clusters = NULL, adjust = FALSE,
@@ -121,6 +144,9 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
     paste("Approximate calibration uncertainty at fixed ability and rating context; finite-sample coverage is not guaranteed.",
       inference$check$caution %||% "")
     else inference$check$review, n)
+  if (isTRUE(inference$check$eligible) && length(inference$check$anchor_note)) {
+    reason <- paste(reason, inference$check$anchor_note)
+  }
   if (isTRUE(inference$check$eligible)) {
     jac <- mfrmr_numeric_transformation_jacobian(evaluate, fit$opt$par, relative_step = 1e-5)
     if (jac$valid) {
@@ -132,7 +158,7 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
   inverse <- if (type == "probability") stats::plogis else exp
   interior <- is.finite(estimate) & estimate > 0 & (type != "probability" | estimate < 1)
   link_se <- se / if (type == "probability") (estimate * (1-estimate)) else estimate
-  critical <- stats::qnorm(1-(1-level)/(2 * if (simultaneous == "bonferroni") n else 1))
+  critical <- stats::qnorm((1-level)/(2 * if (simultaneous == "bonferroni") n else 1), lower.tail = FALSE)
   low <- high <- rep(NA_real_, n)
   usable <- interior & is.finite(link_se) & link_se > 0 & isTRUE(inference$check$eligible)
   low[usable] <- inverse(transform(estimate[usable]) - critical*link_se[usable])
@@ -151,6 +177,7 @@ mfrm_curve_intervals <- function(fit, newdata, type = c("probability", "informat
   rownames(tab) <- NULL
   structure(list(table = tab, newdata = newdata, contexts = response$contexts,
     cautions = inference$check$caution,
+    anchor_note = inference$check$anchor_note,
     source = mfrm_gpcm_inference_source(fit),
     settings = list(type = type, method = method, clusters = inference$clusters,
       adjust = adjust, level = level, simultaneous = simultaneous, facets = facets,
@@ -175,6 +202,7 @@ print.mfrm_curve_intervals <- function(x, ...) {
       "of", nrow(x$contexts), "input rows; see contexts.\n")
   }
   if (!isTRUE(x$settings$point_only)) cat("Approximate intervals; numerical availability does not establish nominal coverage.\n")
+  if (length(x$anchor_note)) cat(x$anchor_note, "\n")
   for (reason in unique(x$table$InferenceReview[!x$table$CIEligible])) {
     cat("  ", reason, "\n", sep = "")
   }
@@ -237,7 +265,7 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
     ggplot2::scale_color_manual(values = palette) +
     ggplot2::scale_fill_manual(values = palette) +
     ggplot2::scale_linetype_manual(values = rep(c("solid", "dashed", "dotted", "dotdash", "longdash", "twodash"), length.out = nlevels(tab$Series))) +
-    ggplot2::labs(title = title, subtitle = subtitle, caption = caption, x = "Ability (native scale)",
+    ggplot2::labs(x = "Ability (native scale)",
       y = if (x$settings$type == "probability") "Category probability" else "Information per rating",
       color = if (x$settings$type == "probability") "Category" else "Series",
       fill = if (x$settings$type == "probability") "Category" else "Series",
@@ -258,7 +286,11 @@ plot.mfrm_curve_intervals <- function(x, title = "GPCM curve uncertainty",
       show.legend = c(shape = TRUE, color = FALSE, fill = FALSE, linetype = FALSE)) +
     ggplot2::scale_shape_manual(values = c(Unavailable = 4), name = "Interval")
   attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("gpcm_curve_intervals",
-    list(table = tab, settings = x$settings, title = title, subtitle = subtitle, caption = caption))
+    list(table = tab, settings = x$settings, title = title, subtitle = subtitle, caption = caption,
+      cautions = x$cautions, contexts = x$contexts, uncertainty_note = x$anchor_note))
+  p <- .mfrmr_gg_labs(p, attr(p, "mfrmr_plot_data")$data,
+    x = "Ability (native scale)",
+    y = if (x$settings$type == "probability") "Category probability" else "Information per rating")
   if (isTRUE(draw)) print(p)
   invisible(p)
 }

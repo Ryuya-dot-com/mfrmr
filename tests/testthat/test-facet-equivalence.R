@@ -156,6 +156,43 @@ local({
     expect_error(analyze_facet_equivalence(fit), "positive-definite covariance")
   })
 
+  test_that("ROPE mass is symmetric and retains narrow normal bands", {
+    reference <- fit
+    reference$facets$others$Estimate[reference$facets$others$Facet == "Rater"] <- c(-10, 10, 0, 0)
+    covariance <- compute_mml_parameter_covariance(fit)
+    slice <- covariance$param_slices$Rater
+    covariance$cov[slice, slice] <- (diag(3) - 1 / 4) / .75
+    local_mocked_bindings(compute_mml_parameter_covariance = function(...) covariance)
+    eq <- analyze_facet_equivalence(reference, facet = "Rater", equivalence_bound = .1)
+    expected <- 100 * integrate(dnorm, 9.9, 10.1, abs.tol = 0, rel.tol = 1e-10)$value
+    expect_gt(eq$rope$ROPEPct[1], 0)
+    expect_equal(eq$rope$ROPEPct[1:2] / expected, c(1, 1), tolerance = 1e-12)
+    narrow <- analyze_facet_equivalence(reference, facet = "Rater", equivalence_bound = 1e-20)
+    expected <- 100 * 2e-20 * dnorm(c(10, 10, 0, 0))
+    expect_equal(narrow$rope$ROPEPct / expected, rep(1, 4), tolerance = 1e-12)
+  })
+
+  test_that("unresolved display intervals retain SEs and independent TOST decisions", {
+    covariance <- compute_mml_parameter_covariance(fit)
+    local_mocked_bindings(compute_mml_parameter_covariance = function(...) covariance)
+    ordinary <- analyze_facet_equivalence(fit, facet = "Rater")
+    narrow <- analyze_facet_equivalence(fit, facet = "Rater", ci_level = 1e-20)
+    expect_identical(narrow$pairwise, ordinary$pairwise)
+    expect_identical(narrow$rope$DeviationSE, ordinary$rope$DeviationSE)
+    expect_true(all(is.na(narrow$rope$DeviationCI_Lower)))
+    expect_true(all(is.na(narrow$rope$DeviationCI_Upper)))
+    expect_true(all(narrow$rope$DeviationCIReason == "numerical_resolution"))
+    expect_true(all(narrow$rope$CIReason == "numerical_resolution"))
+    expect_true(all(narrow$rope$ROPEStatus == "unavailable"))
+    expect_identical(narrow$summary$Decision, ordinary$summary$Decision)
+    expect_match(paste(capture.output(print(summary(narrow))), collapse = " "), "numeric precision")
+    payload <- plot(narrow, draw = FALSE)
+    expect_identical(payload$data, narrow$forest)
+    expect_match(payload$note, "numeric precision")
+    grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
+    expect_no_warning(plot(narrow))
+  })
+
   test_that("mismatched or incomplete diagnostics cannot override the fit", {
     changed <- diagnostics
     rows <- which(changed$measures$Facet == "Rater")

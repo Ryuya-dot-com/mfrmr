@@ -24,8 +24,10 @@ approximations for fixed-facet levels and steps, excluding population SDs.}
 \value{
 A one-row matrix with \code{Lower} and \code{Upper}, and attributes \code{level},
 \code{method}, \code{profile} and \code{note}. The profile retains every evaluated SD,
-refitted likelihood and numerical checks. Unresolved profiles stop with an
-explanatory error rather than substituting a Wald interval.
+refitted likelihood, \code{LR} (twice the loss from the source fit), information
+checks and \code{Detail}. Unresolved numerical checks or endpoint searches stop
+with an \code{mfrm_profile_error}; its \code{profile} field retains the evaluations.
+A failed search does not establish that a statistical interval is absent.
 With \code{parm = "raters"}, one row per rater, computed from saved estimates
 and \code{PredictionSE} without refitting or RTMB. Attributes retain the method,
 target, level and interpretation. Unresolved numerical/information checks,
@@ -34,6 +36,14 @@ With \code{parm = "calibration"}, one row per fixed-facet level or step,
 with the same level/method/target/note attributes and availability guards.
 Default calibration tables omit bounds; this explicit calculation uses
 saved SEs without refitting and does not establish finite-sample coverage.
+Both normal-interval routes retain row-level \code{IntervalStatus}, \code{CIEligible} and
+plain-language \code{InferenceReview} in \code{attr(ci, "diagnostics")}, together
+with saved estimates/SEs, and source checks in \code{attr(ci, "checks")}.
+Export the diagnostics table when saving CSV; a two-column numeric matrix
+alone loses the explanation. See \code{\link[=confint.mfrm_testlet]{confint.mfrm_testlet()}} for the status
+meanings. A missing interval does not turn a retained point into a
+reliable estimate, and more iterations cannot by themselves remove an
+estimated-variance boundary restriction.
 }
 \description{
 Population-SD profiles and explicit shared-rater model intervals
@@ -42,12 +52,19 @@ Population-SD profiles and explicit shared-rater model intervals
 For \code{parm = "rater_sd"}, fixed facets, steps and any estimated
 ability SD are refitted at
 each candidate rater SD, including zero. A specified known ability SD
-stays fixed. Earlier saved fits retain their known N(0,1) population. The interval is the connected profile region around the fitted SD
-satisfying twice the log-likelihood loss no greater than
-\code{qchisq(level, df = 1)}. It uses the same approximate marginal likelihood as
+stays fixed. Earlier saved fits retain their known N(0,1) population. The
+search brackets a lower and upper crossing of twice the log-likelihood
+loss with \code{qchisq(level, df = 1)}, around the fitted SD. It uses the same approximate marginal likelihood as
 the fit. The lower bound is zero when the zero-variance submodel belongs
-to this region. An estimated boundary can therefore have a positive upper
+to the likelihood-ratio region. An estimated boundary can therefore have a positive upper
 limit even though ordinary Wald intervals are unavailable.
+Each nonzero endpoint must attain the likelihood-ratio cutoff to
+\code{1e-4 * min(1, cutoff)} absolute accuracy. Insufficient floating-point
+resolution stops the search instead of reporting coincident limits.
+Profile refits require positive nuisance information. With known ability
+SD, nuisance curvature is checked at both integration orders.
+These local numerical checks do not prove a global optimum or exclude
+disconnected likelihood-ratio regions between sampled candidates.
 
 This is an asymptotic likelihood-ratio interval, not a finite-sample coverage
 guarantee. The chi-square reference is nonregular at a true zero variance;

@@ -55,8 +55,13 @@ plot_bias_interaction(
 \item{show_ci}{Logical. When \code{TRUE} and \code{plot} is \code{"scatter"} or
 \code{"ranked"}, draw confidence-interval whiskers for \verb{Bias Size}.
 \code{GPCM} rows use the conditional profile-likelihood limits
-returned by \code{\link[=estimate_bias]{estimate_bias()}} when available; otherwise the interval
-uses the per-cell standard error from \code{\link[=estimate_bias]{estimate_bias()}}. Ignored for
+returned by \code{\link[=estimate_bias]{estimate_bias()}}. Search-limited or unverified bounds use
+dashed whiskers; missing profile bounds are retained without substituting
+a different method. Rows without profile output use conditional per-cell
+standard errors. These screening approximations omit calibration
+uncertainty. \code{CI_Status}, \code{CI_Complete} and returned notes retain this
+distinction; \code{CI_Complete} describes endpoint computation, not coverage.
+Ignored for
 \code{"heatmap"}, \code{"abs_t_hist"}, and \code{"facet_profile"}.}
 
 \item{ci_level}{Confidence level used when \code{show_ci = TRUE}; default
@@ -97,17 +102,23 @@ With \code{draw = FALSE}, the returned plot data include \code{plot_long},
 view-specific \code{ranked_table}, \code{scatter_data}, \code{facet_profile}, and heatmap
 components. Use these fields when rebuilding the same screening view in
 ggplot2, plotly, Quarto, or a dashboard.
+Saved report thresholds determine flags, reference lines and returned notes;
+recreate \code{\link[=bias_interaction_report]{bias_interaction_report()}} from the saved bias object to change
+them. Scatter and ranked views support \code{\link[=as_ggplot]{as_ggplot()}}; the other views require
+their base renderer or custom graphics. Conditional bounds and their status
+remain separate from calibration-inclusive uncertainty.
 }
 \section{Plot types}{
 
 \describe{
-\item{\code{"scatter"} (default)}{Scatter plot of bias size (x) vs
-screening t-statistic (y). Points colored by flag status. Dashed reference
-lines at \code{abs_bias_warn} and \code{abs_t_warn}.  Use for overall triage
-of interaction effects.}
-\item{\code{"ranked"}}{Ranked bar chart of top \code{top_n} interactions sorted
-by \code{sort_by} criterion (absolute t, absolute bias, or probability).
-Bars colored red for flagged cells.}
+\item{\code{"scatter"} (default)}{Observed-minus-expected score average (x)
+versus conditional bias size in logits (y). Points use the saved flag
+status; horizontal guides show the saved absolute-bias threshold and
+zero, with a vertical guide at zero score difference.}
+\item{\code{"ranked"}}{Conditional bias size (x) for up to \code{top_n} saved
+ranked interactions (y). Points are colored by flag status; optional
+whiskers retain the conditional uncertainty and incomplete-bound status.
+A saved report retains the ranking chosen when it was constructed.}
 \item{\code{"heatmap"}}{Facet A by facet B matrix of signed bias size.
 Cells retain reusable matrix and flag tables for dashboards. This is
 a Table 13 follow-up display: it supports pattern recognition but does
@@ -126,9 +137,10 @@ individual facet levels drive systematic interaction patterns.}
 Start with \code{"scatter"} or \code{"ranked"} for triage, then confirm pattern shape
 using \code{"abs_t_hist"} and \code{"facet_profile"}.
 
-Consistent flags across multiple views are stronger screening signals of
-systematic interaction bias than a single extreme row, but they do not by
-themselves establish formal inferential evidence.
+These views reuse the same estimates and flags. Agreement between views
+is not independent corroborating evidence of bias. Review exposure,
+calibration uncertainty and substantive explanations before drawing
+conclusions about a rater.
 }
 
 \section{Typical workflow}{
@@ -138,6 +150,12 @@ themselves establish formal inferential evidence.
 \item Plot with \code{plot = "ranked"} for top interactions.
 \item Cross-check using \code{plot = "scatter"} and \code{plot = "facet_profile"}.
 }
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -171,23 +189,10 @@ Restore previous settings with \code{old <- options(mfrmr.plot_preset = "monochr
 appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
-\examples{
-\donttest{
-toy <- load_mfrmr_data("example_bias")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_bias_interaction(
-  fit,
-  diagnostics = diagnose_mfrm(fit, residual_pca = "none"),
-  facet_a = "Rater",
-  facet_b = "Criterion",
-  preset = "publication",
-  draw = FALSE
-)
-}
-}
 \seealso{
-\code{\link[=bias_interaction_report]{bias_interaction_report()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=plot_displacement]{plot_displacement()}}
+\code{\link[=bias_interaction_report]{bias_interaction_report()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")}
 }
 \concept{bias screening}
 \concept{confidence intervals}
 \concept{visual diagnostics}
+\keyword{internal}

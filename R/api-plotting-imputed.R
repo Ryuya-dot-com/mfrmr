@@ -16,6 +16,8 @@
 #'   Default and `component = "table"` retain the complete interval view.
 #'   Target order, contrasts, degrees of freedom, confidence level and
 #'   complete-data information cautions remain attached through [plot_data()].
+#'   Numerical interval-availability reasons and saved inference notes are
+#'   retained. Both base and ggplot views show a cross for a missing interval.
 #'   Fixed targets have open diamonds without intervals. In ggplot conversion,
 #'   infinite endpoints have arrows (their tips are display limits, not finite
 #'   bounds); missing intervals have crosses at the saved estimate. Missing
@@ -49,28 +51,25 @@ plot.mfrm_pooled <- function(x, draw = TRUE, preset = "standard",
   }
   out <- new_mfrm_plot_data("pooled_facet_intervals", list(table = tab,
     contrasts = x$contrasts, settings = x$settings, title = title,
-    cautions = x$cautions, information_review = x$information_review,
-    subtitle = subtitle, xlab = "Estimate (logits)", preset = style$name))
+    cautions = x$cautions, notes = x$notes, information_review = x$information_review,
+    subtitle = subtitle, xlab = "Estimate (logits)", preset = style$name,
+    caption = "Open diamonds: fixed targets without intervals; crosses: unavailable intervals; arrows in ggplot: infinite endpoints, not finite bounds."))
   if (!draw) return(invisible(out))
   apply_plot_preset(style)
-  extra_lines <- if (is.null(subtitle)) 0L else
-    max(0L, length(strsplit(subtitle, "\n", fixed = TRUE)[[1L]]) - 1L)
-  old <- graphics::par(mar = c(5, 10, 5 + extra_lines, 2))
+  old <- graphics::par(mar = c(4.5, 10, 1.5, 2))
   on.exit(graphics::par(old), add = TRUE)
   y <- rev(seq_len(nrow(tab)))
   limits <- range(c(0, tab$Estimate, tab$Lower, tab$Upper), finite = TRUE)
   if (diff(limits) == 0) limits <- limits + c(-0.1, 0.1)
   fixed <- tab$Status == "fixed"
   graphics::plot(tab$Estimate, y, xlim = limits, ylim = c(0.5, nrow(tab) + 0.5),
-    pch = ifelse(fixed, 5, 16), col = style$accent_primary, yaxt = "n",
+    pch = ifelse(fixed, 5, ifelse(is.na(tab$Lower) | is.na(tab$Upper), 4, 16)),
+    col = style$accent_primary, yaxt = "n",
     xlab = "Estimate (logits)", ylab = "", main = "")
   graphics::abline(v = 0, col = style$grid, lty = 2)
   graphics::segments(tab$Lower[!fixed], y[!fixed], tab$Upper[!fixed], y[!fixed],
     col = style$accent_primary, lwd = 2)
   graphics::axis(2, at = y, labels = tab$Target, las = 1)
-  if (!is.null(title)) graphics::title(main = title, line = 3 + extra_lines)
-  if (!is.null(subtitle)) graphics::mtext(subtitle, side = 3, line = 0.3, cex = 0.8)
-  if (any(fixed)) graphics::mtext("Open diamonds: fixed by model constraints", side = 1, line = 3, cex = 0.8)
   invisible(out)
 }
 

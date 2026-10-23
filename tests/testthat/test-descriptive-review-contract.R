@@ -3,15 +3,16 @@ test_that("agreement preserves matched context identity and expected coverage", 
                     Task = rep(c('c', 'b|c'), each = 2),
                     Rater = rep(c('r1', 'r2'), 2), Observed = c(0, 0, 1, 0))
   probabilities <- rbind(c(.8,.2),c(.8,.2),c(.2,.8),c(.6,.4))
+  res <- list(facets = list(person = data.frame(Person = unique(obs$Person), Estimate = 0)))
   local_mocked_bindings(compute_prob_matrix = function(...) probabilities, .package = 'mfrmr')
-  a <- calc_interrater_agreement(obs, c('Person','Task','Rater'), 'Rater', res = list())
+  a <- calc_interrater_agreement(obs, c('Person','Task','Rater'), 'Rater', res = res)
   expect_equal(a$pairs$N, 2)
   expect_equal(a$pairs$Exact, .5)
   expect_equal(a$pairs$ExpectedExact, mean(c(.68,.44)))
   single <- calc_interrater_agreement(obs[1:2,], c('Person','Task','Rater'), 'Rater')
   expect_equal(single$summary$Contexts, 1)
   probabilities[3,] <- NA_real_
-  a <- calc_interrater_agreement(obs, c('Person','Task','Rater'), 'Rater', res = list())
+  a <- calc_interrater_agreement(obs, c('Person','Task','Rater'), 'Rater', res = res)
   expect_equal(a$pairs$ExpectedAvailableContexts, 1)
   expect_equal(a$pairs$ExpectedUnavailableContexts, 1)
   expect_true(is.na(a$pairs$ExpectedExact))
@@ -22,7 +23,7 @@ test_that("agreement preserves matched context identity and expected coverage", 
   expect_equal(rater_network_direction_pairs(wide$wide, wide$raters)$DirectionN, 2)
   repeated <- obs[c(1,1,2,3,4),]
   probabilities <- rbind(c(.8,.2),c(.8,.2),c(.8,.2),c(.2,.8),c(.6,.4))
-  a <- calc_interrater_agreement(repeated, c('Person','Task','Rater'), 'Rater', res = list())
+  a <- calc_interrater_agreement(repeated, c('Person','Task','Rater'), 'Rater', res = res)
   expect_equal(a$summary$RepeatedCells, 1)
   expect_true(is.na(a$pairs$ExpectedExact))
 })

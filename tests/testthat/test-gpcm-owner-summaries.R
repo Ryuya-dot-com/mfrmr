@@ -62,7 +62,7 @@ test_that("shared summary and printing retain both references without advertisin
   expect_identical(s$slope_overview, mfrm_fit_slope_overview(input$config, input$slopes))
   expect_identical(s$settings_overview$SlopeFacet, x$owners)
   expect_true(all(s$settings_overview$StepFacet == x$owners[2]))
-  printed <- paste(capture.output(print(s)), collapse = "\n")
+  printed <- gsub("[[:space:]]+", " ", paste(capture.output(print(s)), collapse = " "))
   expect_match(printed, "Within-facet geometric mean 1", fixed = TRUE)
   expect_match(printed, "Fixed standard-normal ability scale", fixed = TRUE)
   expect_match(printed, "second family free", fixed = TRUE)
@@ -145,7 +145,8 @@ test_that("an actual EM result retains likelihood, posterior, stopping rule and 
   expect_identical(s$section_status$Status[s$section_status$Section == "fit_summary"], "ok")
   expect_false(any(s$required_visual$Available | s$required_visual$Required))
   expect_true(all(is.na(s$required_visual$Route)))
-  printed <- paste(capture.output(print(fit)), capture.output(print(s)), collapse = " ")
+  printed <- gsub("[[:space:]]+", " ",
+    paste(c(capture.output(print(fit)), capture.output(print(s))), collapse = " "))
   expect_match(printed, "experimental component-slope intervals", fixed = TRUE)
   expect_false(grepl("compare_mfrm\\(|plot\\(fit", printed))
   expect_error(summary(fit, profile = "facets", compute = "never"), "only the fit summary")

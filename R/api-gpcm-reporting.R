@@ -1,5 +1,18 @@
 # Saved GPCM inference is displayed and exported without refitting or changing
 # the ordinary fit diagnostics. Tables always retain the requested target/method.
+mfrm_gpcm_product_note <- function() paste(
+  "Method qualification is incomplete (experimental two-family GPCM).",
+  "Numerical convergence and available bounds do not establish general interval coverage or rater-quality decisions.",
+  "Inspect the saved numerical checks and target-specific restrictions; curve/step intervals and ordinary fit/bias tests remain unavailable.")
+
+mfrm_slope_interval_display <- function(tab) {
+  lower <- tab$CI_Lower; upper <- tab$CI_Upper
+  ifelse(is.infinite(lower) | is.infinite(upper), "Unbounded",
+    ifelse(is.finite(lower) & is.finite(upper),
+      ifelse(tab$CIEligible %in% TRUE, "Available", "Review"),
+      ifelse(is.finite(lower) | is.finite(upper), "Incomplete", "Unavailable")))
+}
+
 mfrm_gpcm_inference_tables <- function(x) {
   if (inherits(x, "mfrm_facet_intervals") && (isTRUE(x$settings$two_family) ||
       identical(x$settings$procedure, "mml_native_location_model_v1")))
@@ -7,7 +20,8 @@ mfrm_gpcm_inference_tables <- function(x) {
   if (inherits(x, "mfrm_slope_intervals")) {
     tab <- attr(x, "diagnostics")
     tab <- tab[intersect(c("SlopeFacet", "SlopeOwner", "SlopeLevel", "ScaleReference", "Estimate", "SE", "LogSE", "CI_Lower", "CI_Upper",
-      "NullValue", "PValue", "CIEligible", "InferenceReview"), names(tab))]
+      "NullValue", "PValue", "CIEligible", "CIUse", "CoverageQualified", "InferenceReview"), names(tab))]
+    tab$IntervalStatus <- mfrm_slope_interval_display(tab)
     tab$Target <- attr(x, "target"); tab$Method <- attr(x, "method")
     tab$ConfidenceLevel <- paste0(format(100 * attr(x, "level"), trim = TRUE), "%")
     tab$Adjustment <- if (attr(x, "simultaneous") == "none") "Pointwise" else "Bonferroni"
@@ -142,8 +156,10 @@ mfrm_gpcm_results_score_tables <- function(fit, scores) {
     notes <- prediction_output_notes(scores)
   }
   identity <- source$local_calibration_review$source_identity
-  if (is.null(identity) || !identical(identity, prediction_gmfrm_source_identity(fit)))
-    stop("Saved scores must match this fit's calibration, data, owner/category coding, integration and source status. Re-score older outputs without source identity; the fit need not be re-estimated.", call. = FALSE)
+  legacy <- is.character(identity) && length(identity) == 1L &&
+    isTRUE(startsWith(identity, "gmfrm_scoring_source_v1:"))
+  if (is.null(identity) || !identical(identity, prediction_gmfrm_source_identity(fit, legacy)))
+    stop("Saved scores must match this fit's calibration, data, owner/category coding, integration and source status. Re-score older outputs if their source identity is absent or incompatible; the fit need not be re-estimated.", call. = FALSE)
   settings <- scores$settings
   params <- expand_params(fit$opt$par, build_param_sizes(fit$config), fit$config)
   if (portable) {
@@ -161,8 +177,9 @@ mfrm_gpcm_results_score_tables <- function(fit, scores) {
     score_map <- as.data.frame(fit$prep$score_map)
     score_map$OrderIndex <- seq_len(nrow(score_map))
     score_map <- score_map[c("OriginalScore", "InternalScore", "OrderIndex")]
-    contexts <- unique(as.data.frame(lapply(fit$prep$data[fit$config$slope_facet],
-      as.character), check.names = FALSE))
+    contexts <- unique(as.data.frame(unname(lapply(fit$prep$data[fit$config$slope_facet],
+      as.character)), check.names = FALSE))
+    names(contexts) <- fit$config$slope_facet
     rownames(contexts) <- NULL
     coordinates <- mfrmr_calibration_extract_coordinates(fit, params)
     matching <- identical(semantic$parameter_coordinates, coordinates) &&
@@ -251,6 +268,8 @@ mfrm_gpcm_product_point_tables <- function(fit) {
 
 mfrm_gpcm_results_attach <- function(out, inputs) {
   if (mfrm_has_product_slopes(out$fit)) {
+    out$tables$gpcm_interpretation_notes <- data.frame(Note = mfrm_gpcm_product_note())
+    out$notes <- unique(c(out$notes, mfrm_gpcm_product_note()))
     if ("fit" %in% out$include) {
       points <- mfrm_gpcm_product_point_tables(out$fit)
       names(points) <- paste0("gpcm_", names(points))
@@ -300,7 +319,7 @@ mfrm_gpcm_product_report <- function(x, style) {
   n_intervals <- sum(vapply(intervals,function(z) sum(attr(z,"diagnostics")$CIEligible),integer(1)))
   interval_note <- if (length(intervals)) paste(n_intervals,
     "experimental slope intervals are available; inspect the saved checks and unavailable rows. Curve intervals remain unavailable.") else
-    "No slope intervals were attached. Curve intervals are unavailable. Use confint(fit) for the separately checked experimental slope approximation."
+    "No slope intervals were attached. Curve intervals are unavailable. Use confint(fit, parm = 'slopes') for the separately checked experimental slope approximation."
   locations <- Filter(function(z) inherits(z, "mfrm_facet_intervals"), x$gpcm_inference %||% list())
   n_locations <- sum(vapply(locations, function(z) sum(z$table$CIEligible), integer(1)))
   interval_note <- paste(interval_note, if (length(locations)) paste(n_locations,
@@ -310,7 +329,7 @@ mfrm_gpcm_product_report <- function(x, style) {
     Area = c("Overall", "Numerical fit", "Calibration intervals", "Other outputs"),
     Status = c("review", if (numerical) "ok" else "review", if (n_intervals + n_locations) "caveat" else "unavailable", "unavailable"),
     Readiness = c("Provisional analysis", "Numerical only", "Output-specific checks", "Not supported"),
-    MainIssue = c("This report retains numerical estimates, conditional curves and explicitly attached experimental slope or location intervals.",
+    MainIssue = c(mfrm_gpcm_product_note(),
       if (adaptive) {
         if (numerical) "Direct adaptive MML met its optimizer and gradient checks." else
           "Direct adaptive MML did not pass its numerical convergence checks."
@@ -366,6 +385,7 @@ mfrm_gpcm_product_report <- function(x, style) {
       fit$opt$mml_initialization$selected %||% "neutral",
       fit$opt$mml_initialization$total_seconds %||% NA_real_)))
   tables <- c(list(model_settings = settings), points, tables)
+  tables$gpcm_interpretation_notes <- data.frame(Note = mfrm_gpcm_product_note())
   out <- structure(list(title = "mfrmr Two-family GPCM Report", style = style,
     source_include = x$include, decision = x$tables$fit_summary_decision,
     fit_readiness = x$fit_readiness, fit_readiness_components = x$fit_readiness_components,
@@ -402,11 +422,14 @@ mfrm_gpcm_product_report <- function(x, style) {
 #' Plot the selected inference result without fitting or recomputing covariance.
 #' These plots describe discrimination or specified contrasts, not rater severity,
 #' agreement, quality or recommended scoring weights.
-#' @param x Saved [confint.mfrm_fit()] or [bootstrap_mfrm_gpcm()] output.
-#' @param title,subtitle Optional plot text; NULL removes it. The interval
-#'   subtitle defaults to the saved target, method, confidence level and any
+#' @param x Saved [confint.mfrm_fit()] output from `parm = "slopes"`, or
+#'   [bootstrap_mfrm_gpcm()] output.
+#' @param title,subtitle Optional returned metadata; NULL removes it. The interval
+#'   description defaults to the saved target, method, confidence level and any
 #'   saved numerical or bootstrap cautions. Custom text overrides this default, while the
-#'   diagnostics remain in the plot data and interval tables.
+#'   diagnostics remain in the plot data and interval tables. Titles and notes
+#'   are not drawn. Use `plot_data(p, "notes")` for descriptions and cautions,
+#'   and `plot_data(p, "title")` for the suggested figure title.
 #' @param reference Optional finite numeric vertical reference. Default NULL;
 #'   no quality threshold or scoring-policy cutoff is selected.
 #' @param draw TRUE draws the ggplot; FALSE returns it only.
@@ -414,9 +437,13 @@ mfrm_gpcm_product_report <- function(x, style) {
 #'   target and level. Otherwise unused.
 #' @details Crosses retain unavailable intervals. Open circles retain intervals
 #'   with infinite endpoints; the plot does not replace them with finite bounds.
-#'   The accompanying table contains all bounds and failure reasons.
+#'   Incomplete intervals retain the computed endpoint as a tick, without a
+#'   connecting interval line. A missing endpoint is not an infinite endpoint
+#'   or a calibrated one-sided interval. Finite review-only bounds use a dashed
+#'   line. The table retains `IntervalStatus`, `CIEligible`, `CIUse` (when saved),
+#'   all bounds and failure reasons; returned notes explain the display.
 #'   For a bootstrap LRT, a histogram shows resolved null statistics and a line
-#'   the observed statistic. The annotation counts every unresolved replicate.
+#'   the observed statistic. The returned notes count every unresolved replicate.
 #'
 #'   Use [apa_table()] for target-aware tables, [plot_data()] for plotted values,
 #'   and [as_ggplot()] for customization. Attach one result or a named list with
@@ -436,14 +463,14 @@ mfrm_gpcm_product_report <- function(x, style) {
 #'   `"profile"` displays saved likelihood evaluations and the same-target Wald
 #'   limits. The default is `"profile"` for saved profile calculations and
 #'   `"interval"` otherwise. This never initiates profiling.
-#' @param caption For saved slope intervals, optional caption. NULL removes it.
+#' @param caption For saved slope intervals, optional returned caption. NULL removes it.
 #'   Two-family intervals state the distinct family references by default.
 #'   Profile plots supply a
 #'   default explanation of line styles and missing coordinates when omitted.
 #' @return Invisibly a ggplot, retaining an `mfrm_plot_data` attribute for
 #'   [plot_data()]. No fitting or resampling is performed.
 #' @examples
-#' # ci <- confint(fit, scale = "standardized", method = "sandwich")
+#' # ci <- confint(fit, parm = "slopes", scale = "standardized", method = "sandwich")
 #' # plot(ci, title = NULL)
 #' # apa_table(ci)
 #' # plot_data(ci, "table")
@@ -459,10 +486,15 @@ plot.mfrm_slope_intervals <- function(x, title = "GPCM slope uncertainty",
   if (!is.null(reference) && (!is.numeric(reference) || length(reference) != 1L ||
       is.complex(reference) || !is.finite(reference))) stop("`reference` must be NULL or one finite number.", call. = FALSE)
   tab <- mfrm_gpcm_inference_tables(x)$intervals
-  tab$Display <- ifelse(is.infinite(tab$CI_Lower) | is.infinite(tab$CI_Upper), "Unbounded",
-    ifelse(tab$CIEligible, "Available", "Unavailable"))
+  tab$Display <- tab$IntervalStatus
   tab$Level <- factor(tab$SlopeFacet, levels = rev(tab$SlopeFacet))
-  finite <- tab[tab$Display == "Available", , drop = FALSE]
+  finite <- tab[tab$Display %in% c("Available", "Review"), , drop = FALSE]
+  partial <- tab[tab$Display == "Incomplete", , drop = FALSE]
+  partial$Bound <- ifelse(is.finite(partial$CI_Lower), partial$CI_Lower, partial$CI_Upper)
+  interval_note <- paste(
+    "Incomplete: only the computed endpoint is shown as a tick; the other endpoint remains unknown.",
+    "This is neither an infinite endpoint nor a calibrated one-sided interval.",
+    "Review: finite bounds retained with a dashed line; consult CIEligible, CIUse and InferenceReview.")
   if (missing(subtitle) && length(attr(x, "cautions"))) {
     subtitle <- paste(subtitle, paste(attr(x, "cautions"), collapse = " "), sep = "\n")
   }
@@ -486,7 +518,7 @@ plot.mfrm_slope_intervals <- function(x, title = "GPCM slope uncertainty",
     wald <- attr(x, "wald")
     payload <- new_mfrm_plot_data("gpcm_slope_profile",
       list(table = tab, endpoints = saved$endpoints, wald = wald, title = title,
-        subtitle = subtitle, caption = caption, reference = reference,
+        subtitle = subtitle, caption = caption, cautions = attr(x, "cautions"), reference = reference,
         target = attr(x, "target"), slope_metadata = attr(x, "diagnostics"),
         x_label = if ("SlopeOwner" %in% names(attr(x, "diagnostics"))) "Component discrimination (log scale)" else "Relative discrimination (log scale)",
         level = attr(x, "level"), cutoff = saved$cutoff))
@@ -496,20 +528,27 @@ plot.mfrm_slope_intervals <- function(x, title = "GPCM slope uncertainty",
   }
   p <- ggplot2::ggplot(tab, ggplot2::aes(y = .data$Level, x = .data$Estimate)) +
     ggplot2::geom_segment(data = finite, ggplot2::aes(x = .data$CI_Lower,
-      xend = .data$CI_Upper, yend = .data$Level), color = "#0072B2", linewidth = .8) +
+      xend = .data$CI_Upper, yend = .data$Level), color = "#0072B2", linewidth = .8,
+      linetype = ifelse(finite$Display == "Review", "dashed", "solid")) +
+    ggplot2::geom_point(data = partial, ggplot2::aes(x = .data$Bound),
+      shape = 124, size = 4, color = "#0072B2") +
     ggplot2::geom_point(ggplot2::aes(shape = .data$Display), size = 2.8, color = "#0072B2") +
-    ggplot2::scale_shape_manual(values = c(Available = 16, Unavailable = 4, Unbounded = 1)) +
-    ggplot2::labs(title = title, subtitle = subtitle, caption = caption, x = attr(x, "target"), y = NULL,
+    ggplot2::scale_shape_manual(values = c(Available = 16, Incomplete = 4, Review = 2, Unavailable = 4, Unbounded = 1)) +
+    ggplot2::labs(x = attr(x, "target"), y = NULL,
       shape = "Interval", alt = paste("Saved GPCM interval plot;", sum(tab$Display == "Available"),
         "finite intervals,", sum(tab$Display == "Unbounded"), "unbounded,",
-        sum(tab$Display == "Unavailable"), "unavailable. Crosses and open circles retain unresolved targets.")) +
+        sum(tab$Display == "Incomplete"), "incomplete,", sum(tab$Display == "Review"), "review,",
+        sum(tab$Display == "Unavailable"), "unavailable. Ticks retain computed partial bounds.")) +
     .mfrmr_gg_theme() + ggplot2::theme(plot.subtitle = ggplot2::element_text(size = 9))
   if (!is.null(reference)) p <- p + ggplot2::geom_vline(xintercept = reference, linetype = "dashed", color = "grey40")
   attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("gpcm_slope_intervals",
-    list(table = tab, title = title, subtitle = subtitle, caption = caption, target = attr(x, "target"),
+    list(table = tab, title = title, subtitle = subtitle, caption = caption,
+      cautions = c(attr(x, "cautions"), interval_note), target = attr(x, "target"),
+      uncertainty_note = attr(x, "anchor_note"),
       method = attr(x, "method"), level = attr(x, "level"), adjustment = attr(x, "simultaneous"),
       checks = attr(x, "checks"), numerical_checks = attr(x, "numerical_checks"),
       score_rank = attr(x, "score_rank")))
+  p <- .mfrmr_gg_labs(p, attr(p, "mfrmr_plot_data")$data, x = attr(x, "target"))
   if (isTRUE(draw)) print(p)
   invisible(p)
 }
@@ -525,15 +564,18 @@ plot.mfrm_gpcm_bootstrap <- function(x, title = "GPCM bootstrap inference",
   }
   rlang::check_dots_empty(); .require_mfrmr_ggplot2()
   tab <- x$trials
+  caption <- paste(sum(tab$Available), "resolved of", nrow(tab),
+    "planned replicates; unresolved:", sum(!tab$Available))
   p <- ggplot2::ggplot(tab[tab$Available, , drop = FALSE], ggplot2::aes(x = .data$LR)) +
     ggplot2::geom_histogram(bins = 25, fill = "#0072B2", color = "white") +
     ggplot2::geom_vline(xintercept = x$test$LR, linetype = "dashed", linewidth = .8) +
-    ggplot2::labs(title = title, subtitle = subtitle, x = "Null likelihood-ratio statistic", y = "Replicates",
-      caption = paste(sum(tab$Available), "resolved of", nrow(tab), "planned replicates; unresolved:", sum(!tab$Available)),
+    ggplot2::labs(x = "Null likelihood-ratio statistic", y = "Replicates",
       alt = "Histogram of resolved PCM-null bootstrap likelihood-ratio statistics with the observed statistic marked. Unresolved replicate counts are retained.") +
     .mfrmr_gg_theme()
   attr(p, "mfrmr_plot_data") <- new_mfrm_plot_data("gpcm_bootstrap_test",
-    list(table = tab, test = x$test, title = title, subtitle = subtitle))
+    list(table = tab, test = x$test, title = title, subtitle = subtitle, caption = caption))
+  p <- .mfrmr_gg_labs(p, attr(p, "mfrmr_plot_data")$data,
+    x = "Null likelihood-ratio statistic", y = "Replicates")
   if (isTRUE(draw)) print(p)
   invisible(p)
 }
@@ -581,11 +623,12 @@ mfrm_gg_gpcm_profile <- function(x) {
     ggplot2::geom_hline(yintercept = d$cutoff, linetype = "dashed") +
     ggplot2::geom_vline(xintercept = unlist(d$wald[c("Lower", "Upper")]), linetype = "dotted") +
     ggplot2::scale_x_log10() +
-    ggplot2::labs(title = d$title, subtitle = d$subtitle, caption = d$caption,
-      x = d$x_label %||% "Relative discrimination (log scale)", y = "Twice the log-likelihood loss", shape = "Numerical check",
+    ggplot2::labs(shape = "Numerical check",
       alt = "Saved local slope profile. Dashed horizontal cutoff and dotted Wald limits; unresolved points use crosses. Gaps are not interpolated.") +
     .mfrmr_gg_theme() + ggplot2::theme(plot.subtitle = ggplot2::element_text(size = 9))
   if (!is.null(d$reference)) p <- p + ggplot2::geom_vline(xintercept = d$reference, linetype = "dotdash")
+  p <- .mfrmr_gg_labs(p, d, x = d$x_label %||% "Relative discrimination (log scale)",
+    y = "Twice the log-likelihood loss")
   attr(p, "mfrmr_plot_data") <- x
   p
 }

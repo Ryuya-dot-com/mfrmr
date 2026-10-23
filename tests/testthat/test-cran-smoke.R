@@ -128,7 +128,7 @@ test_that("CRAN smoke covers the primary MML review and export route", {
   output_dir <- tempfile("mfrmr-cran-smoke-")
   on.exit(unlink(output_dir, recursive = TRUE, force = TRUE), add = TRUE)
   expect_warning(
-    written <- export_mfrm(
+    written <- export_mfrm_tables(
       fit,
       diagnostics = diagnostics,
       output_dir = output_dir,

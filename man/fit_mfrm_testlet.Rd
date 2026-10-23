@@ -76,6 +76,10 @@ intervals; default 0.95. Numerical and variance-boundary restrictions remain.}
 An \code{mfrm_testlet} object with calibration, covariance, calibration
 table, checks, all optimization runs, input/omission accounting and settings.
 It contains no native pointers; use \code{saveRDS()} and \code{readRDS()}.
+Calibration tables retain \code{IntervalStatus}, \code{CIEligible} and \code{InferenceReview}
+for missing or explicitly requested normal bounds; see
+\code{\link[=confint.mfrm_testlet]{confint.mfrm_testlet()}} for the status meanings. A retained point is not
+certified by interval availability. Inspect \code{checks} before interpreting it.
 }
 \description{
 Account for extra dependence among ratings of the same person, for example
@@ -106,6 +110,14 @@ overlapping memberships, PCM, correlated effects, random rater effects
 shared across Persons, covariate-dependent ability means and nonnormal
 ability populations are not included. Estimating one ability variance
 does not establish homogeneous populations across assignment groups.
+After integrating both random effects, different Persons are independent
+under the model; ratings within a Person are not. Regular likelihood
+inference requires an identified interior model and growing information
+across independent Persons. The full calibration information includes
+every estimated variance; treating an estimated variance as known would
+omit nuisance-parameter uncertainty. A positive numerical Hessian alone
+does not prove identification, and fixed-order quadrature agreement does
+not establish an asymptotic approximation rate.
 
 Zero is evaluated explicitly for both estimated variances using their
 one-sided variance scores, including the joint-zero submodel. All

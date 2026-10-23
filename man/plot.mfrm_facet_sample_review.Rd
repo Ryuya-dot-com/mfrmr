@@ -22,14 +22,16 @@ smallest level counts per facet. \code{NULL} (default) keeps all.}
 \item{...}{Reserved.}
 }
 \value{
-Invisibly, the data.frame used for the plot.
+Invisibly, the data.frame used for the plot, with the review's
+interpretation limits in its \code{notes} attribute.
 }
 \description{
 Per-level observation counts rendered as a horizontal bar chart
-coloured by the Linacre sample-size band assigned in
+coloured by the count band assigned in
 \code{\link[=facet_small_sample_review]{facet_small_sample_review()}}. Vertical dashed lines mark the
 sparse / marginal / standard thresholds so reviewers see where
-every facet level sits relative to the Linacre (1994) guidance.
+every facet level sits relative to the selected screening thresholds.
+Counts and colours do not establish measurement precision.
 }
 \section{Session plot defaults}{
 

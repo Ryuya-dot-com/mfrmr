@@ -23,6 +23,7 @@ plot_wright_unified(
   wright_range = NULL,
   extreme_placement = c("ends", "estimate"),
   persons_per_star = NULL,
+  highlight = NULL,
   ...
 )
 }
@@ -86,6 +87,17 @@ their fitted \code{"estimate"} in the FACETS-style renderer.}
 
 \item{persons_per_star}{Number of persons represented by one \code{*}; \code{NULL}
 selects a compact value automatically.}
+
+\item{highlight}{Optional named list of non-person facet level IDs, for
+example \code{list(Rater = c("R01", "R02"))}, for Wright maps only (including
+\code{view = "unified"} and the Wright component of a bundle). Selected labels
+receive a \verb{> } prefix in both renderers and saved ggplot conversion.
+Levels outside the usual \code{top_n} selection are added, so the displayed
+count may exceed that limit. Fitted locations and uncertainty do not
+change; the automatic scale uses all fitted locations before compaction.
+Selection is not a statistical flag. Inspect \code{locations$Highlighted},
+\code{retention} and \code{notes} in the returned plot data. Unknown IDs or levels
+without finite locations are rejected. \code{NULL} selects no levels.}
 
 \item{...}{Additional graphical parameters.}
 }
@@ -159,7 +171,7 @@ targeting problems.
 
 \enumerate{
 \item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
-\item Plot with \code{plot_wright_unified(fit)}.
+\item Plot with \code{plot(fit, type = "wright", view = "unified")}.
 \item Compare person distribution with facet level locations.
 \item Use \code{show_thresholds = TRUE} when you want the category structure in the
 same view.
@@ -168,8 +180,8 @@ same view.
 
 \section{When to use this instead of plot_information}{
 
-Use \code{plot_wright_unified()} when your main question is targeting or coverage
-on the shared logit scale. Use \code{\link[=plot_information]{plot_information()}} when your main question
+Use \code{plot()} when your main question is targeting or coverage
+on the shared logit scale. Use \link[=plot.mfrm_information]{plot(x)} when your main question
 is measurement precision across theta.
 }
 
@@ -178,6 +190,12 @@ is measurement precision across theta.
 For a plot-selection guide and a longer walkthrough, see
 \link{mfrmr_visual_diagnostics} and
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -216,16 +234,11 @@ toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", model = "RSM", maxit = 30)
-map_data <- plot_wright_unified(fit, draw = FALSE)
+map_data <- plot(fit, type = "wright", view = "unified", draw = FALSE)
 names(map_data)
-facets_map <- plot_wright_unified(
-  fit,
-  renderer = "facets",
-  category_labels = c(
+facets_map <- plot(fit, type = "wright", view = "unified", renderer = "facets", category_labels = c(
     `1` = "Beginning", `2` = "Developing", `3` = "Secure", `4` = "Advanced"
-  ),
-  draw = FALSE
-)
+  ), draw = FALSE)
 facets_map$facets_style$settings
 }
 \seealso{
@@ -234,3 +247,4 @@ facets_map$facets_style$settings
 \concept{Wright maps}
 \concept{confidence intervals}
 \concept{visual diagnostics}
+\keyword{internal}

@@ -138,6 +138,10 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   `information_review` retains any numerical-refinement review at each
 #'   imputation's list position. `cautions` identifies affected imputations;
 #'   when present, `InferenceCaution` also accompanies the pooled table.
+#'   `IntervalReason` distinguishes available intervals, fixed targets,
+#'   numerical resolution loss and intervals outside the numeric range.
+#'   An unavailable interval retains its point estimate and variance.
+#'   `notes` records the imputation and inference assumptions for saved reuse.
 #'
 #' @details For a common target, `Qbar` is the mean completed-data estimate,
 #'   `Ubar` the mean complete-data covariance and `B` their between-imputation
@@ -147,6 +151,13 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #'   A zero between-imputation variance has infinite large-sample degrees of
 #'   freedom. Full covariances are transformed before scalar inference, so
 #'   rater differences include covariance between the two estimates.
+#' The finite-data adjustment uses
+#' \eqn{\nu_{obs}=\nu_{com}(\nu_{com}+1)/(\nu_{com}+3)\,\bar U/T}
+#' and \eqn{1/\nu=1/\nu_{old}+1/\nu_{obs}}. These t references are
+#' approximations, not exact finite-sample pivots for an MFRM.
+#' Positive interval widths that cannot be distinguished from zero at the
+#' returned estimate, and endpoints outside floating-point range, are withheld
+#' with a reason rather than reported as zero uncertainty or infinite bounds.
 #'
 #' All fits must share categories, facet levels, signs, anchors, interactions
 #' and identification. Known anchors are fixed and their uncertainty is
@@ -168,6 +179,10 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 #' inference. Proper calibration priors in the imputer and MML estimates in
 #' the completed-data analyses do not give exactly identical Bayesian moments:
 #' that interpretation is a large-sample approximation requiring review.
+#' The finite-imputation correction and `MonteCarloSE` assume independent
+#' completed-data draws. Repeating completions is not additional Monte Carlo
+#' evidence; correlated MCMC draws require sampling review. Identical completed
+#' values can occur legitimately and are not automatically rejected.
 #'
 #' Congeniality concerns the imputation distribution and the complete-data
 #' analysis together, including its variance estimator. Preserving categories
@@ -211,7 +226,8 @@ summary.mfrm_imputed_fits <- function(object, ...) object$analysis_summary
 pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
                              df_complete = Inf) {
   if (!inherits(x, "mfrm_imputed_fits") || length(x$fits) < 2L ||
-      length(x$fits) != length(x$imputations$completed)) {
+      length(x$fits) != length(x$imputations$completed) ||
+      !isTRUE(length(x$fits) == x$imputations$settings$imputations)) {
     stop("`x` must retain every analysis from fit_mfrm_imputed().", call. = FALSE)
   }
   if (!is.character(facet) || length(facet) != 1L || is.na(facet) ||
@@ -238,6 +254,15 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
     stop("Fits must share one category scale, facet levels, constraints and model specification.", call. = FALSE)
   }
   s <- x$imputations$settings
+  reviewed <- review_mfrm_imputations(x$imputations$data, x$imputations$completed,
+    s$person, s$facets, s$score, s$event_id,
+    x$imputations$events$ID[x$imputations$events$Imputed], s$categories,
+    s$assigned, x$imputations$imputation_model, s$missing)
+  if (!identical(reviewed$events, x$imputations$events) ||
+      !identical(reviewed$support, x$imputations$support)) {
+    stop("The saved imputation review no longer matches its roster. Recreate the review and analyses.",
+      call. = FALSE)
+  }
   rows <- x$imputations$events$Assigned & !x$imputations$events$Omitted
   for (i in seq_along(x$fits)) {
     prep <- prepare_mfrm_data(x$imputations$completed[[i]][rows, , drop = FALSE],
@@ -289,13 +314,30 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
   lambda <- ifelse(fixed, NA_real_, (1 + 1 / m) * diag(between) / variance)
   df <- (m - 1) / lambda^2
   if (is.finite(df_complete)) {
-    df_observed <- (df_complete + 1) / (df_complete + 3) * df_complete * (1 - lambda)
-    df <- 1 / (1 / df + 1 / df_observed)
+    # U/T avoids cancellation when the between-imputation fraction rounds to 1.
+    df_observed <- (df_complete + 1) / (df_complete + 3) *
+      df_complete * (diag(within) / variance)
+    df <- pmin(df, df_observed) / (1 + pmin(df, df_observed) / pmax(df, df_observed))
   }
   se <- sqrt(variance)
-  margin <- stats::qt(1 - (1 - ci_level) / 2, df) * se
+  cutoff <- rep(NA_real_, length(df))
+  valid_df <- !fixed & !is.na(df) & df > 0
+  cutoff[valid_df] <- stats::qt(log1p(-ci_level) - log(2), df[valid_df],
+    lower.tail = FALSE, log.p = TRUE)
+  margin <- cutoff * se
+  lower <- estimate - margin; upper <- estimate + margin
+  interval_reason <- rep("available", length(estimate))
+  interval_reason[fixed] <- "fixed"
+  invalid <- !fixed & (is.na(df) | df <= 0 |
+    !is.finite(margin) | !is.finite(lower) | !is.finite(upper))
+  interval_reason[invalid] <- "interval_outside_numeric_range"
+  unresolved <- !fixed & !invalid & (cutoff <= 0 | margin <= 0 |
+    lower >= estimate | upper <= estimate)
+  interval_reason[unresolved] <- "numerical_resolution"
+  lower[interval_reason != "available"] <- NA_real_
+  upper[interval_reason != "available"] <- NA_real_
   result <- data.frame(Target = colnames(q), Estimate = estimate, SE = se,
-    Lower = estimate - margin, Upper = estimate + margin, DF = df,
+    Lower = lower, Upper = upper, DF = df, IntervalReason = interval_reason,
     WithinVariance = diag(within), BetweenVariance = diag(between),
     TotalVariance = variance, MissingVarianceFraction = lambda,
     MonteCarloSE = sqrt(diag(between) / m),
@@ -305,6 +347,11 @@ pool_mfrm_imputed <- function(x, facet, contrasts = NULL, ci_level = 0.95,
     settings = list(facet = facet, imputations = m, ci_level = ci_level,
       df_complete = df_complete, scale = "logits; fixed-standard-normal person distribution",
       covariance = "MML observed information", intervals = "pointwise multiple-imputation t intervals"),
+    notes = c(
+      "Pointwise model-based MI inference requires proper imputations and adequate complete-data inference; preserving the roster does not establish MAR or congeniality.",
+      "The finite-imputation correction and MonteCarloSE assume independent completion draws. Repeated or correlated draws do not provide the same Monte Carlo information.",
+      "Fixed anchors exclude anchor uncertainty. Finite complete-data degrees of freedom require a justified target-specific reference distribution.",
+      "Unavailable interval endpoints retain the point estimate and variance; inspect IntervalReason. No multiplicity adjustment is supplied."),
     analyses = x)
   class(out) <- "mfrm_pooled"
   cautions <- vapply(unique(cautions[nzchar(cautions)]), function(note)
@@ -327,6 +374,7 @@ print.mfrm_pooled <- function(x, ...) {
   print(x$table[setdiff(names(x$table), "InferenceCaution")], row.names = FALSE)
   for (caution in x$cautions) print_wrapped_line(paste0("Caution: ", caution))
   cat("Pointwise model-based intervals; fixed anchors exclude anchor uncertainty.\n")
+  cat("Proper imputations, independent completion draws and adequate complete-data inference are assumed.\n")
   if (is.infinite(x$settings$df_complete)) cat("Large-sample complete-data reference assumed.\n")
   invisible(x)
 }

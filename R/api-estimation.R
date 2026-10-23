@@ -1,7 +1,7 @@
 #' Fit many-facet ordered-response models with a flexible number of facets
 #'
-#' Estimate person abilities while accounting for rater severity and other
-#' influences on scores, such as criterion difficulty. A facet is one such
+#' Estimate effects on ordered ratings, such as rater severity and criterion
+#' difficulty, and Person abilities where the estimator supplies them. A facet is one such
 #' source of variation; its levels are the individual raters or criteria.
 #' Each data row is one rating. Supply its column names with `person`,
 #' `facets`, and `score`, as in the complete example below.
@@ -11,7 +11,9 @@
 #' one facet. MML permits a different facet to supply category steps;
 #' JML requires the same facet for both roles. See "GPCM model and
 #' inference" below for the current limits on uncertainty and comparisons.
-#' In the example, `toy` stores the data and `fit` stores the fitted model.
+#' In the example, `ratings` stores the data and `fit` stores the fitted model.
+#' The loading line reads an existing packaged synthetic dataset; you do not
+#' need to generate ratings or create an empty object first.
 #' Quoted column names such as `"Person"` must match the data, including case.
 #' For your own CSV, see the "Use your own CSV" section of
 #' `vignette("mfrmr-workflow", package = "mfrmr")`. If the vignette is not
@@ -23,12 +25,23 @@
 #' population distribution are analysis choices even when arguments are omitted.
 #'
 #' @param data A data.frame in long format with one row per observed rating
-#'   event.
+#'   event. Grouped or rowwise tibbles are analyzed as one table; dplyr grouping
+#'   metadata is ignored. The named model columns define the design.
 #' @param person Column name for the person (character scalar).
-#' @param facets Character vector of facet column names.
+#' @param facets Character vector of facet column names. Facets cannot be named
+#'   `Person`, `Score`, `Weight`, `score_k`, `theta`, `steps`, `interactions`,
+#'   `log_slopes`, `beta` or `log_sigma2`, which are reserved data/parameter
+#'   names. Rename such facet columns before analysis. Similar names such as
+#'   `beta_group` are supported and matched exactly. Data-column names remain
+#'   available for their intended roles, such as `person = "Person"`,
+#'   `score = "Score"` and `weight = "Weight"`.
 #' @param score Column name for the observed ordered category score. Values
-#'   must be coercible to numeric integer category codes. Fractional values are
-#'   rejected. Binary `0/1` or `1/2` responses are supported as the ordered
+#'   must be coercible to real integer category codes within R's integer range.
+#'   Shared preparation rounds values within `1e-6` of an integer to the
+#'   nearest category, recording normalization in `fit$prep$preparation_notes`;
+#'   other fractional values are rejected. Corrected JML and two-family GPCM
+#'   require exact integer inputs; normalize roundoff explicitly before those
+#'   specialized fits. Binary `0/1` or `1/2` responses are supported as the ordered
 #'   two-category special case. When `keep_original = FALSE`, unused
 #'   intermediate categories are collapsed to a contiguous internal scale and
 #'   the mapping is recorded in `fit$prep$score_map`. If `rating_min` /
@@ -46,7 +59,9 @@
 #' @param rating_max Optional maximum category value. Supply this with
 #'   `rating_min` when the intended score scale includes unobserved boundary
 #'   categories.
-#' @param weight Optional weight column name.
+#' @param weight Optional weight column name. Numeric weights retain their
+#'   supplied precision; character/factor weights are parsed from their labels.
+#'   Retained weights must have a finite sum and are not automatically rescaled.
 #' @param category_policy Optional explicit category choice: `"collapse"`
 #'   maps gaps in the observed categories to consecutive scores;
 #'   `"preserve"` keeps the intended ladder, declared with `rating_min` and
@@ -84,14 +99,17 @@
 #'   surfaced by [build_mfrm_manifest()]. Equivalent to calling
 #'   [recode_missing_codes()] manually before the fit.
 #' @param model `"RSM"` (default), `"PCM"`, or `"GPCM"`.
-#' @param method `"MML"` (default) or `"JML"`. `"JMLE"` is accepted as a
+#' @param method `"MML"` (default), `"JML"`, or `"CML"`. `"JMLE"` is accepted as a
 #'   backward-compatible alias for the same joint-maximum-likelihood path.
+#'   Native CML supports RSM/PCM with preserved categories and unit weights;
+#'   see "Conditional maximum likelihood" for its distinct result class.
 #' @param step_facet Facet whose levels receive separate step parameters in
-#'   `PCM` and `GPCM`. Supply it explicitly for a final analysis. If it
+#'   `PCM` and `GPCM`. Supply exactly one facet name for a final analysis. If it
 #'   is omitted for `PCM`, mfrmr uses a unique item-like facet name (for
 #'   example, `Item`, `Task`, or `Criterion`) when available; otherwise it
 #'   retains the first-facet fallback with a warning. `GPCM` always requires an
-#'   explicit value. This argument is not used by `RSM`, which has one shared
+#'   explicit value. CML also requires an explicit PCM step owner.
+#'   This argument is not used by `RSM`, which has one shared
 #'   set of rating-scale thresholds.
 #' @param slope_facet Slope facet for the `GPCM` branch. mfrmr
 #'   estimates one positive slope for every level of this designated facet.
@@ -134,14 +152,41 @@
 #'   `interaction_effect_table()` and handled according to `interaction_policy`.
 #' @param interaction_policy How to handle sparse interaction cells:
 #'   `"warn"` (default), `"error"`, or `"silent"`.
-#' @param anchors Optional direct-anchor table with facet, level, and fixed
-#'   logit value columns. Each retained row is a computational equality
-#'   constraint; it is not merely a declaration that an element is common.
+#' @param anchors Optional table with `Facet`, `Level`, and `Anchor` columns.
+#'   Each retained row fixes a location in internal logit coordinates; it is
+#'   not merely a declaration that an element is common. Person anchors require
+#'   JML; MML rejects them. See **Anchors and scale constraints** below.
 #' @param group_anchors Optional group-mean constraint table with facet, level,
 #'   group, and target-value columns. Its use requires a defensible external
 #'   assumption about the group target; it does not create observed overlap.
-#' @param noncenter_facet One facet to leave non-centered.
+#'   Use columns `Facet`, `Level`, `Group`, and `GroupValue`. Person group
+#'   constraints require JML.
+#' @param noncenter_facet One facet to leave non-centered (default `"Person"`).
+#'   Other facets use the zero-sum convention selected by `centering_scope`.
+#' @param centering_scope `"facet"` (default) centers each declared facet across
+#'   all its levels, including direct anchors and group totals. `"remainder"`
+#'   reproduces the earlier convention that centers only levels outside direct
+#'   and group constraints. It does not change `noncenter_facet`, the population
+#'   model, or category steps. Unsupported specialized routes reject an explicit
+#'   setting. See **Anchors and scale constraints**.
+#' @param fit_scope `"full"` (default) fits the ordinary model and retains its
+#'   identification guards. `"comparisons"` explicitly fits only the targets in
+#'   `comparison_review`; see **Comparison-only estimation**.
+#' @param comparison_review For `fit_scope = "comparisons"`, the result of
+#'   [describe_mfrm_data()] with `comparisons`, or its `$comparison_review`.
+#'   Pass the review's `fit_arguments` and the same original ratings.
 #' @param dummy_facets Facets to fix at zero.
+#' @param repeated_ratings Treatment of repeated Person-by-facet cells.
+#'   `"review"` (default) retains the duplicate-cell warning and ordinary
+#'   MML/JML input-review state. Use `"independent"` only to declare that the
+#'   rows are distinct, conditionally independent rating events under the
+#'   specified model. Every row and its weight are retained; this argument
+#'   does not aggregate scores, add a facet, change the likelihood or establish
+#'   independence from the data. Other input, numerical and inference checks
+#'   still apply. The declaration is saved in preparation notes, configuration
+#'   and replay settings. Corrected JML already requires conditionally
+#'   independent repeated ratings; the argument records that assumption
+#'   explicitly there. It is not supported by the two-family GPCM route.
 #' @param positive_facets Facets with positive orientation.
 #' @param anchor_policy How to handle anchor-review issues: `"warn"` (default),
 #'   `"error"`, or `"silent"`.
@@ -199,9 +244,10 @@
 #'   The best non-worsening stage under the recorded selection rule is
 #'   retained. Requested and selected-stage settings remain in `fit$summary`,
 #'   and the complete stage history remains in `fit$opt$optimizer_polish`.
-#'   If ordinary polishing still stalls, fixed-grid RSM/PCM or adaptive GPCM
-#'   MML fits with a fixed population and at most 64 free parameters can use one local
-#'   curvature step to restart the selected optimizer. The step requires
+#'   If ordinary polishing still stalls, fixed-grid RSM/PCM/GPCM MML fits
+#'   (including estimated population parameters) or adaptive GPCM MML fits
+#'   with a fixed population can use one local curvature step to restart the
+#'   selected optimizer, provided there are at most 64 free parameters. The step requires
 #'   positive-definite, well-conditioned curvature, a smaller gradient and
 #'   an objective that does not worsen beyond floating-point roundoff.
 #'   The original convergence and terminal-gradient criteria still apply;
@@ -233,6 +279,20 @@
 #'   stage histories, seed trace and elapsed costs are stored in
 #'   `fit$opt$mml_initialization`; results and reports include its comparison table.
 #'   This comparison does not prove a global optimum or interval validity.
+#'   Alternatively, supply a plain named list of at least two finite native
+#'   free-parameter vectors. For example, reuse `p <- previous_fit$opt$par`
+#'   from the same model coding with `list(previous = p, neutral = 0 * p)`.
+#'   The order is first-owner free locations, second-owner locations,
+#'   second-owner free steps (within each level), first-owner free log slopes,
+#'   and second-owner log slopes, using the fitted level order. Vector lengths
+#'   must match; optional parameter names must exactly match the model's native
+#'   names. Reported positive slopes or expanded constrained parameters cannot
+#'   be supplied in place of native coordinates. Explicit starts replace the
+#'   default start roster and do not run an EM initialization. Their values are
+#'   reevaluated and optimized under the requested adaptive objective; no
+#'   likelihood, convergence flag, covariance or scoring eligibility is imported
+#'   from a previous calculation. The roster and vectors remain in the saved
+#'   initialization record and replay inputs, including quadrature refits.
 #' @param em_score_tol Stopping tolerance for the two-family GPCM MML-EM route
 #'   only. `NULL` selects `1e-6` for that route. Stops when the largest absolute
 #'   derivative of the negative marginal log likelihood, divided by the number
@@ -263,7 +323,7 @@
 #'   requires `method = "MML"`, `mml_engine = "direct"`, and no checkpoint.
 #'   The choice also controls the fitted likelihood, Hessian, posterior person
 #'   summaries, fitted-object scoring, and supported portable calibration.
-#'   `quad_points` remains the order; neither integration mode guarantees
+#'   For these two modes `quad_points` remains the order; neither guarantees
 #'   adequate accuracy at a particular order. Compare orders before reporting.
 #'   During adaptive optimization, trial values that cause numerical overflow
 #'   are rejected so the search can shorten its step. Starting values must still
@@ -274,6 +334,40 @@
 #'   map identification audit; GPCM also lacks an adaptive slope-boundary audit.
 #'   These fits remain review-only for formal parameter inference. ConQuest exports
 #'   currently require fixed integration.
+#'   `"auto"` first fits the fixed grid at `quad_points`, then checks every
+#'   Person's log marginal likelihood, EAP and posterior SD against two adaptive
+#'   orders. It also checks the change in the full marginal gradient and its
+#'   absolute maximum at the retained and finer rules. If any criterion fails,
+#'   it warm-starts adaptive refits at the orders in `mml_accuracy_control`.
+#'   It requires ordinary full direct MML (RSM, PCM or one-slope-family GPCM),
+#'   with no checkpoint. Population regression, anchors and interactions retain
+#'   their existing model restrictions. On success the resolved fixed/adaptive
+#'   rule and order control all subsequent fit calculations; inspect
+#'   `fit$config$mml_accuracy` for controls, stage history and final Person
+#'   checks. These checks concern the fitted response patterns; scoring new
+#'   patterns reuses the resolved rule and needs its own integration review.
+#'   The initial fixed rule is retained if its checks pass. Requested
+#'   settings are preserved for replay; explicit sensitivity refits use the
+#'   resolved rule at each requested order. If optimization fails or all
+#'   refinement orders are exhausted, an error of class
+#'   `mfrmr_mml_accuracy_error` carries `history`, `control` and the last
+#'   parameter vector instead of returning a fit.
+#' @param mml_accuracy_control Named list used only with
+#'   `mml_integration = "auto"`. Defaults are `adaptive_points = c(31, 61, 121)`
+#'   (strictly increasing integer refit orders, each checked against `2*q+1`),
+#'   `loglik_tol = 1e-7` (maximum absolute log-marginal difference per Person),
+#'   `posterior_tol = 1e-6` (maximum absolute EAP or posterior-SD difference,
+#'   on the ability scale), and `gradient_tol = 1e-4` (maximum absolute gradient
+#'   or gradient difference, in free optimization coordinates for the summed
+#'   negative log likelihood). At the initial fixed fit the first adaptive
+#'   order and its `2*q+1` refinement are used. All criteria and optimizer
+#'   convergence must pass. These are empirical numerical tolerances, not
+#'   certified error bounds, relative tolerances, a bound on parameter movement,
+#'   or a guarantee of a global optimum or interval coverage. Weak curvature
+#'   can amplify small gradient errors. Hessian precision and formal inference
+#'   require their separate checks; automatic integration does not qualify
+#'   previously unavailable identification or inference. `maxit` applies to
+#'   each fit, so refinement increases total computation.
 #' @param mml_engine MML optimization engine for `method = "MML"`:
 #'   `"direct"` (default) uses the selected direct optimizer on the marginal
 #'   log-likelihood,
@@ -296,6 +390,10 @@
 #'   deviations: portable RSM/PCM calibration and its anchors are defined on
 #'   the standard-normal basis, and a silent change of basis would change the
 #'   meaning of those stored values.
+#'   A formula-compatible `terms` object returned in
+#'   `attr(simulated_data, "mfrm_population_data")$population_formula` is also
+#'   accepted, preserving the simulation template's transformation basis,
+#'   factor levels and contrasts when refitting generated data.
 #' @param person_data Optional one-row-per-person data.frame holding background
 #'   variables for `population_formula`. Numeric, logical, factor, ordered
 #'   factor, and character predictors are expanded through `stats::model.matrix()`;
@@ -313,21 +411,23 @@
 #'   replay/export provenance.
 #' @param facet_shrinkage Character. `"none"` (default) keeps the unshrunk
 #'   fixed-effects estimates. `"empirical_bayes"` applies a post-hoc
-#'   James-Stein / empirical-Bayes shrinkage to each non-person facet
+#'   zero-centered normal-model adjustment to each non-person facet
 #'   (Efron & Morris, 1973); `fit$facets$others` gains `ShrunkEstimate`,
 #'   `ShrunkSE`, and `ShrinkageFactor` columns, and
 #'   `fit$shrinkage_report` records the per-facet prior variance and
-#'   effective degrees of freedom. `"laplace"` is retained as a compatibility
+#'   sum of retained weights (not model degrees of freedom). This descriptive
+#'   approximation has no general James-Stein risk guarantee; see
+#'   [apply_empirical_bayes_shrinkage()]. `"laplace"` is retained as a compatibility
 #'   alias for `"empirical_bayes"`; it does not fit a penalized likelihood.
 #' @param facet_prior_sd Optional numeric scalar. When supplied, the
 #'   shrinkage prior variance is fixed at `facet_prior_sd^2` instead
 #'   of being estimated by method of moments. Useful for eliciting a
 #'   prior from domain knowledge or a previous fit.
 #' @param shrink_person Logical. When `TRUE` and `facet_shrinkage` is
-#'   active, the same empirical-Bayes shrinkage is applied to
-#'   `fit$facets$person`. Default `FALSE`, since MML already integrates
-#'   over a normal population distribution for theta; the option mainly
-#'   benefits JML.
+#'   active, the same descriptive adjustment is applied to ordinary-JML
+#'   Person estimates with available sampling SEs. Default `FALSE`.
+#'   MML EAP/posterior SDs cannot be used as observations/sampling SEs
+#'   for a second normal-model update; use `FALSE` with other estimators.
 #' @param attach_diagnostics Logical. When `TRUE`, [diagnose_mfrm()] is
 #'   run once after the fit with `residual_pca = "none"`, and the
 #'   per-level `SE`, `Infit`, `Outfit`, `InfitZSTD`, `OutfitZSTD`, and
@@ -370,6 +470,50 @@
 #'   variation in their ability composition; neither estimates the variance
 #'   from reassessing the same Persons at fixed abilities. Omit this argument
 #'   when no correction is requested.
+#'
+#' @section Choose an estimator and the result you need:
+#' The ordinary worked example uses RSM/MML. Choose the model and estimation
+#' assumptions for your question before choosing a table or figure.
+#' - **Abilities, a population model or GPCM inference:** use `method = "MML"`
+#'   and inspect `summary(fit)$decision`. Its interpretation depends on the
+#'   declared ability distribution. Ordinary RSM/PCM fixes N(0,1) by default;
+#'   `population_formula = ~ 1` instead estimates its mean and SD. GPCM
+#'   estimates them by default. See the population and estimator sections.
+#' - **RSM/PCM structural effects without an ability distribution:** use
+#'   `method = "CML", category_policy = "preserve"`. Read
+#'   `summary(fit)$locations` and `$steps`, then [mfrm_facet_intervals()].
+#'   CML returns no Person abilities or population SD; ordinary diagnostics
+#'   and consolidated reports do not apply. The conditional-likelihood
+#'   section below and the facet-interval vignette give its assumptions.
+#' - **Joint point estimates or FACETS comparisons:** explicitly select JML
+#'   when that estimand is intended. With few ratings per Person, adding
+#'   Persons does not remove incidental-parameter bias. Stored structural
+#'   SEs or corrected-JML root uncertainty are not automatically truth intervals.
+#'
+#' Facet names are your column names, not fixed roles imposed by the package.
+#' For example, `facets = c("Judge", "Task")` uses those two columns; it does
+#' not require columns called Rater or Criterion. Supply the same names to
+#' follow-up functions and use the fitted level labels for contrasts or curves.
+#' Begin with the Examples section, then read only the specialist sections
+#' for your selected model. [mfrmr_methods_reference] separates measurement,
+#' G-theory assessment planning and observed-score agreement questions.
+#'
+#' @section Choose the arguments by their purpose:
+#' - **Identify the ratings:** `data` is the rating table; `person`, `facets`
+#'   and `score` are quoted column names, not the values in those columns.
+#' - **Declare the rubric:** set `rating_min`, `rating_max` and
+#'   `category_policy` consistently with [describe_mfrm_data()]. The default
+#'   can collapse gaps; preservation can reveal an unsupported category step.
+#' - **Choose the statistical model:** `model`, `step_facet`, `slope_facet`,
+#'   anchors and population arguments determine what is estimated. Ordinary
+#'   RSM/PCM MML with `population_formula = NULL` fixes N(0,1); the default
+#'   GPCM MML instead estimates the normal population mean and variance.
+#' - **Control computation:** `quad_points`, `maxit`, `reltol`, `optimizer`
+#'   and `mml_engine` govern numerical fitting. Increasing them does not change
+#'   the model's support or automatically justify statistical inference.
+#' - **Choose follow-up output:** `attach_diagnostics = TRUE` computes and
+#'   attaches diagnostics; the default leaves that separate. `summary(fit)`
+#'   explains the result's status; [diagnose_mfrm()] reviews response fit.
 #'
 #' @section Corrected JML:
 #' When each Person has few ratings, ordinary JML can retain structural bias
@@ -502,12 +646,12 @@
 #' `mfrm_results(fit, include = c("fit", "plots"), compute = "never",
 #' intervals = list(curves = curves))` to report saved curves. Their values can
 #' be inspected even after nonconvergence, but are not qualified estimates.
-#' Separately request `confint(fit)` for experimental component log-Wald intervals
+#' Separately request `confint(fit, parm = "slopes")` for experimental component log-Wald intervals
 #' from the full observed marginal information. Their numerical checks do not
 #' qualify global identification or sampling coverage; failed checks retain
 #' missing bounds. Attach the result alongside curves for saved plots/reports.
-#' For fixed-grid EM, to profile one component instead, explicitly request
-#' `confint(fit, method = "profile", slope = c(Task = "t1"))`, replacing the
+#' To profile one component with the fitted integration method, explicitly request
+#' `confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t1"))`, replacing the
 #' named owner and level with your fitted identifiers. This reoptimizes other
 #' coefficients; it is an experimental local interval without established coverage.
 #' [mfrm_response_diagnostics()] integrates each Person's ability posterior at
@@ -517,7 +661,8 @@
 #' Adaptive two-family log-Wald checks use the moving-node marginal objective
 #' and compare adaptive quadrature orders. Posterior residuals preserve the
 #' fitted integration method and complete conditioning record, with separate
-#' row-wise integration checks. Adaptive profile intervals remain unavailable.
+#' row-wise integration checks. Adaptive profile searches recalculate the nodes,
+#' scales and Jacobians at every constrained trial and keep separate checks.
 #' [predict_mfrm_units()] separately supplies experimental conditional new-Person
 #' EAP and posterior intervals with the retained N(0,1) prior, known levels,
 #' unit weights and separate source/batch checks; calibration uncertainty is excluded.
@@ -535,23 +680,6 @@
 #' general identification, convergence or coverage guarantee. See
 #' `vignette("mfrmr-gpcm-scope")` for a complete example and interpretation.
 #'
-#' @section Choose the arguments by their purpose:
-#' - **Identify the ratings:** `data` is the rating table; `person`, `facets`
-#'   and `score` are quoted column names, not the values in those columns.
-#' - **Declare the rubric:** set `rating_min`, `rating_max` and
-#'   `category_policy` consistently with [describe_mfrm_data()]. The default
-#'   can collapse gaps; preservation can reveal an unsupported category step.
-#' - **Choose the statistical model:** `model`, `step_facet`, `slope_facet`,
-#'   anchors and population arguments determine what is estimated. Ordinary
-#'   RSM/PCM MML with `population_formula = NULL` fixes N(0,1); the default
-#'   GPCM MML instead estimates the normal population mean and variance.
-#' - **Control computation:** `quad_points`, `maxit`, `reltol`, `optimizer`
-#'   and `mml_engine` govern numerical fitting. Increasing them does not change
-#'   the model's support or automatically justify statistical inference.
-#' - **Choose follow-up output:** `attach_diagnostics = TRUE` computes and
-#'   attaches diagnostics; the default leaves that separate. `summary(fit)`
-#'   explains the result's status; [diagnose_mfrm()] reviews response fit.
-#'
 #' @section GPCM model and inference:
 #' One selected facet supplies level-specific positive discriminations. With
 #' MML, a different facet may supply category steps. For example,
@@ -563,7 +691,7 @@
 #' unavailable inferential outputs are separate considerations.
 #'
 #' Free-slope fits retain numerical estimates for review. [confint.mfrm_fit()]
-#' supplies approximate relative-slope intervals for eligible MML solutions.
+#' with `parm = "slopes"` supplies approximate relative-slope intervals for eligible MML solutions.
 #' MML information-criterion ranking uses separate
 #' likelihood and local-solution checks in [compare_mfrm()].
 #' [compare_mfrm()] and [build_weighting_review()] also accept `nested = TRUE`
@@ -575,10 +703,14 @@
 #' @details
 #' Data must be in **long format** (one row per observed rating event).
 #' Exact duplicate Person-by-facet combinations are retained, warned once, and
-#' propagated as a Data review state. They are not treated as independent
-#' replication evidence. A legitimate re-rating or replicated scoring event
-#' should be represented by an event, occasion, or other distinguishing facet
-#' before fitting.
+#' propagated as a Data review state by default. Repeated cell keys alone do
+#' not establish dependence. With `repeated_ratings = "independent"`, the
+#' analyst declares distinct rating events that are independent conditional
+#' on Person ability and the model's effects. Keep event IDs in the source
+#' data for audit. Event IDs alone do not demonstrate independence; correlated
+#' re-ratings require a suitable dependence model. Adding an estimated occasion
+#' facet changes the response model and is appropriate only when intended.
+#' Repeated ratings do not increase the number of independent Persons.
 #'
 #' @section Model:
 #' `fit_mfrm()` estimates many-facet ordered-response models. The `RSM` and
@@ -676,6 +808,28 @@
 #' output now uses `"JML"` as the public label. See the "Estimation methods"
 #' section of [mfrmr-package] for details.
 #'
+#' @section Logistic metric (D = 1):
+#' Native `RSM`, `PCM` and `GPCM` models, including two-family GMFRM, use the
+#' logistic metric (L-metric), with scaling constant \eqn{D = 1}. No additional
+#' normal-ogive approximation factor such as 1.7 or 1.702 multiplies the
+#' adjacent-category predictor. This response-scale convention is separate
+#' from the ability distribution: fixing a population to \eqn{N(0,1)} does
+#' not change the link to a normal-ogive model or introduce a 1.7 multiplier.
+#'
+#' In `RSM`/`PCM`, increasing ability by one unit, holding everything else
+#' fixed, increases each adjacent-category log odds by one (one logit).
+#' In one-family `GPCM`, the change is \eqn{\alpha_g} logits; in two-family
+#' GMFRM it is the product of the two component slopes. Thus a one-unit
+#' change in ability is not universally a one-logit change when slopes vary.
+#'
+#' Before comparing or importing parameter values from other software,
+#' reconcile its scaling constant, slope placement and identification
+#' constraints with this model. Changing only the multiplier while retaining
+#' all parameter values changes response probabilities. An equivalent
+#' reparameterization must also transform any affected population parameters,
+#' anchors and, for Bayesian estimation, priors. See [export_mfrm_model()]
+#' for the same L-metric in the supported Stan/brms exports.
+#'
 #' @section Weighting policy:
 #' `mfrmr` treats `RSM` / `PCM` as the equal-weighting reference route for
 #' operational many-facet measurement. In that Rasch-family branch,
@@ -705,8 +859,8 @@
 #' also not response families in `fit_mfrm()`. Integer counts supplied as
 #' `score` are interpreted only as ordered category codes.
 #' Non-numeric score labels are dropped with a warning after coercion, whereas
-#' fractional numeric scores are rejected with an error instead of being
-#' silently truncated.
+#' fractional numeric scores outside the rounding tolerance described above
+#' are rejected with an error instead of being silently truncated.
 #'
 #' A positive numeric `weight` may encode a replication/likelihood weight for
 #' an ordered-rating row when weighting that conditional contribution is the
@@ -763,27 +917,29 @@
 #' of the original scale, set `keep_original = TRUE` in addition to supplying
 #' the full `rating_min` / `rating_max` range.
 #'
-#' @section Fixed effects assumption (facets have no prior):
-#' `fit_mfrm()` follows the Linacre (1989) many-facet Rasch specification:
-#' person ability is integrated out under a `N(0, 1)` distribution (or under
+#' @section Facet effects and rating counts:
+#' In MML, person ability is integrated out under a `N(0, 1)` distribution (or under
 #' the `N(X\beta, \sigma^2)` population model when `population_formula` is
 #' supplied). GPCM MML instead activates an intercept-only
 #' `N(\beta_0, \sigma^2)` population model by default so its common
-#' discrimination scale is estimable. Every facet parameter
-#' (`Rater`, `Criterion`, `Task`, ...) is estimated as a fixed effect
-#' identified by a sum-to-zero constraint. There is no hierarchical
-#' prior, no shrinkage, and no variance component for the facets.
+#' discrimination scale is estimable. JML instead estimates person parameters;
+#' native CML conditions on person totals. Non-person facet parameters
+#' (`Rater`, `Criterion`, `Task`, ...) are fitted as fixed effects,
+#' identified by the configured centering or anchor constraints. By default,
+#' these facets have no hierarchical prior or shrinkage. Optional
+#' `facet_shrinkage` applies a separate post-estimation adjustment; see its
+#' argument documentation for scope and uncertainty limitations.
 #'
-#' Practical implication: when a facet has very few observed levels
-#' (for example 3 raters) or some of its levels have very few ratings
-#' (for example 5 ratings per rater), the fixed-effect estimates retain
-#' wide SEs, and extreme estimates are not pulled toward the facet
-#' mean. Jones and Wind (2018) note that rater estimates in particular
-#' are "more sensitive to link reductions" than examinee or task
-#' estimates. For a publication-workflow review of this, use:
+#' Few ratings can limit information about an individual facet level; few
+#' distinct raters also limit what can be learned about a wider rater population.
+#' These are different concerns, and neither is resolved by a count threshold.
+#' Precision depends on targeting, connectedness, category use, dependence and
+#' the estimator. Jones and Wind (2018) examine repeated ratings in incomplete
+#' designs, finding particular sensitivity in examinee estimates. Useful reviews
+#' include:
 #'
-#' - [`facet_small_sample_review()`] for per-level N and SE bands against
-#'   Linacre (1994) sample-size guidelines.
+#' - [`facet_small_sample_review()`] for per-level retained rating counts,
+#'   count-screening labels and available SEs.
 #' - [`detect_facet_nesting()`] and
 #'   [`analyze_hierarchical_structure()`] when raters are nested in
 #'   regions, schools, or other strata that the additive fixed-effects
@@ -792,9 +948,10 @@
 #'   [`compute_facet_design_effect()`] for descriptive variance-
 #'   component summaries based on `lme4` (optional).
 #'
-#' `fit$summary$FacetSampleSizeFlag` summarizes the worst Linacre band
+#' `fit$summary$FacetSampleSizeFlag` summarizes the lowest rating-count band
 #' across non-person facet levels (`"sparse"` < 10, `"marginal"` < 30,
-#' `"standard"` < 50, `"strong"` >= 50).
+#' `"standard"` < 50, `"strong"` >= 50). These package screening bands are
+#' not guarantees of precision, interval coverage or sample adequacy.
 #'
 #' @section Estimator choice and the JML incidental-parameter caveat:
 #' Joint maximum likelihood (`method = "JML"` / `"JMLE"`) estimates
@@ -856,10 +1013,59 @@
 #'   Report its incidental-parameter limitation and the exploratory basis of
 #'   this package's JML structural SEs rather than treating estimator choice as
 #'   a universal reporting rule.
-#' - For supported Rasch-family formulations, conditional maximum likelihood
-#'   is a distribution-free alternative that conditions out person parameters.
-#'   A third-party CML fit can be imported from `eRm` with
-#'   [`import_erm_fit()`].
+#' - Native RSM/PCM CML conditions out Person parameters, requiring no ability
+#'   population distribution. It supplies structural-parameter intervals under
+#'   conditional-likelihood regularity; see "Conditional maximum likelihood".
+#'   General GPCM inference uses MML. JML remains a point-estimation/FACETS
+#'   comparison route, not a fixed-exposure truth-centered Wald procedure.
+#'   Third-party CML fits can still be imported with [import_erm_fit()].
+#'
+#' @section MML inference conditions:
+#' There is no ten-response-row minimum. Full RSM/PCM JML, native CML and
+#' fixed-population MML can accept one Person when their model-specific checks
+#' pass. One-Person JML/MML also requires `lpSolve` for a pre-fit additive
+#' recession check; a detected or unresolved boundary returns no finite estimate.
+#' Separate rating events must satisfy the assumed conditional independence;
+#' explicitly declared repeated ratings are not evidence that independence holds.
+#' The returned preparation note, interval cautions and summary explain the
+#' single-Person limitation. Any available model-information interval remains
+#' an unqualified normal approximation; one Person supplies neither independent-
+#' Person sandwich uncertainty nor empirical between-Person variation.
+#' Estimated-population MML, GPCM, corrected JML and comparison-only fitting
+#' retain their at-least-two-Person software scope. Data and anchor review can
+#' inspect one Person. The calibration interface still requires two observed
+#' score categories; these input checks do not establish identification or
+#' precision. Scoring one Person against saved calibration is a separate task;
+#' see [score_mfrm_calibration()]. Small supported datasets can
+#' return point estimates and asymptotic uncertainty when the model-specific
+#' checks pass. A singleton category count alone need not prevent RSM/PCM
+#' model-information intervals: [mfrm_facet_intervals()] performs a separate
+#' joint-information and quadrature review and retains the small-sample caution.
+#'
+#' MML integrates the joint response vector for each Person under the declared
+#' ability distribution. Model-based structural SEs use the inverse full
+#' marginal observed information, including estimated population and other
+#' nuisance coordinates. Holding these coordinates fixed gives a different
+#' uncertainty calculation. EAP Person scores are predictions under the fitted
+#' model, not additional free parameters in this information matrix.
+#'
+#' Regular likelihood inference requires the response and population models
+#' to be correct for the actual assignments and covariates, independent Persons,
+#' a fixed-dimensional identifiable model, a consistent interior solution,
+#' smooth derivatives and growing information in every free direction.
+#' This permits fixed exposure per Person under suitable designs; it does not
+#' establish consistency merely by increasing Person count. For an estimated
+#' normal population, zero variance is a boundary outside this regular argument.
+#' Numerical convergence or a positive local Hessian does not prove global
+#' identification, exclude a boundary solution or verify the population model.
+#'
+#' Finite quadrature approximates the continuous-normal likelihood. Optimizer
+#' and integration errors must be small relative to sampling uncertainty;
+#' a fixed quadrature order does not automatically maintain this property as
+#' sample size grows. Comparing quadrature orders diagnoses sensitivity but
+#' does not provide a continuous-integral error bound. See
+#' [mfrm_facet_intervals()] for the assumptions, available checks and the joint
+#' delta method for contrasts divided by the same fit's estimated population SD.
 #'
 #' @section All-minimum and all-maximum Persons:
 #' `fit_mfrm()` has no public option to remove Persons before fitting because
@@ -937,15 +1143,17 @@
 #' interactions for `RSM` and `PCM` only, estimated as fixed effects. GPCM
 #' interactions, person interactions, higher-order interactions, and
 #' random-effect facet interactions are deferred.
-#'
 
 #' This is ordered binary support, not a separate nominal-response model.
 #' In `PCM`, a binary fit still uses one threshold per `step_facet` level on
 #' the shared observed-score scale.
 #'
 #' Supported model/estimation combinations:
-#' - `model = "RSM"` with `method = "MML"` or `"JML"/"JMLE"`
-#' - `model = "PCM"` with a designated `step_facet` (defaults to first facet)
+#' - `model = "RSM"` with `method = "MML"`, `"JML"`/`"JMLE"`, or `"CML"`
+#' - `model = "PCM"` with a designated `step_facet`; CML requires it explicitly
+#' - Native CML returns a separate structural-parameter result with
+#'   conditional-information intervals; ordinary fit/scoring/diagnostic methods
+#'   below apply to MML/JML results
 #' - `facet_interactions` with `model = "RSM"` or `"PCM"` for explicit
 #'   two-way non-person facet interactions
 #' - `model = "GPCM"` uses one positive slope family. MML permits separate
@@ -966,7 +1174,7 @@
 #'   [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()], and
 #'   [simulate_mfrm_data()] when the slope-aware generator contract is stored
 #'   explicitly; direct recovery checks are available through
-#'   [evaluate_mfrm_recovery()] and [assess_mfrm_recovery()]. Slope-aware
+#'   [simulate_mfrm_recovery()] and [assess_mfrm_recovery()]. Slope-aware
 #'   [fair_average_table()] and [estimate_bias()] are available with their
 #'   documented caveats. Role-based design evaluation, population forecasting,
 #'   diagnostic-screening, and signal-detection helpers are available as
@@ -1046,20 +1254,28 @@
 #' \eqn{\hat{\boldsymbol{\beta}}}; `population_overview` reports the estimated
 #' population variance. These tables do **not** provide standard errors,
 #' confidence intervals, or asymptotic z / Wald statistics for the population
-#' parameters, and no `vcov()` method is exposed for these coefficients.
+#' parameters. For an estimated normal RSM/PCM population,
+#' [mfrm_population_intervals()] separately requests experimental pointwise
+#' coefficient, prespecified coefficient-contrast and log-variance intervals
+#' after full joint numerical checks.
+#' Its result has a `vcov()` method on coefficient/log-variance coordinates;
+#' the ordinary fit summary does not acquire automatic intervals.
 #' The internal MML observed-information calculation includes
 #' \eqn{(\boldsymbol{\beta}, \log\sigma^2)} when computing joint covariance
-#' for structural-parameter SEs. That internal calculation does not establish
-#' a supported population-parameter inference API. Treat the population
-#' tables as point estimates for descriptive reporting; **do not** quote
-#' \eqn{\hat{\beta}_j \pm 1.96 \cdot \mathrm{SE}} bounds from these tables.
+#' for structural-parameter SEs. Population intervals for GPCM remain
+#' unavailable through this new helper. Sampling coverage is not established
+#' by numerical checks. Treat the population summary tables as descriptive
+#' point estimates; use the separately saved interval result when reporting
+#' the experimental approximation and its limitations.
 #'
-#' Identification: the latent-regression intercept is identifiable only
-#' under the default `noncenter_facet = "Person"` (which sum-to-zero-
-#' centers all non-Person facets). `fit_mfrm()` therefore rejects an active
-#' latent-regression model with a different `noncenter_facet` rather than
-#' returning a confounded intercept.
+#' The implemented latent-regression identification requires
+#' `noncenter_facet = "Person"`. Without anchors, this sum-to-zero-centers
+#' all non-Person facets. With anchors, `centering_scope = "facet"` includes
+#' their contributions in each facet's zero sum; `"remainder"` retains the
+#' earlier restriction on the unconstrained remainder. The population model
+#' is never changed implicitly to accommodate anchors.
 #'
+#' @section Anchors and scale constraints:
 #' Anchor inputs are optional and have distinct roles:
 #' - `anchors` contains facet/level/fixed-value information and imposes direct
 #'   equality constraints on selected parameters.
@@ -1071,6 +1287,40 @@
 #'   proves that disconnected subsets are substantively comparable.
 #' Both are normalized internally, so column names can be flexible
 #' (`facet`, `level`, `anchor`, `group`, `groupvalue`, etc.).
+#'
+#' Direct anchors fix facet locations, not thresholds or GPCM slopes. Values
+#' must use the source model's internal metric and orientation, not transformed
+#' display units. [make_anchor_table()] exports this metric. For reuse of a
+#' complete fixed calibration, see [extract_mfrm_calibration()] and [score_mfrm_calibration()].
+#'
+#' With the default `noncenter_facet = "Person"`, a partial Rater anchor such
+#' as R01 = 0.7 makes the other Rater levels sum to -0.7 under the default
+#' `centering_scope = "facet"`. With one remaining level, it is fixed at -0.7.
+#' Group means contribute their target multiplied by the group's size, including
+#' directly fixed members. If anchors/groups cover all levels, their total must
+#' agree with the facet's zero sum. Contradictions stop review and fitting even
+#' with `anchor_policy = "silent"`.
+#'
+#' Use `centering_scope = "remainder"` to reproduce earlier partial anchoring:
+#' the ungrouped, unanchored levels sum to zero and a singleton is fixed at zero.
+#' Saved results retain their original constraints; reloading does not migrate
+#' estimates. Changing conventions requires refitting. Neither convention
+#' automatically disables centering as FACETS can do. Match `noncenter_facet`,
+#' the response design and population assumptions for TAM/ConQuest comparisons;
+#' the anchor value alone does not establish equivalence.
+#'
+#' A group target is an unweighted arithmetic mean of its declared levels,
+#' including any directly anchored members. It is not weighted by rating
+#' counts. In MML, individual abilities are integrated out: Person direct and
+#' group anchors are unsupported and rejected even with `anchor_policy =
+#' "silent"`. Sharing Persons across raters requires no fixed Person values.
+#'
+#' Uncertainty from estimating supplied anchor values is not propagated.
+#' Downstream SEs and intervals condition on those values and retain the
+#' selected estimator's other limitations. A missing SE for a fixed value
+#' does not mean its source calibration was error-free. See
+#' [mfrmr_linking_and_dff] for the theoretical background and a loading-first
+#' example, and [review_mfrm_anchors()] for receiving-data checks.
 #'
 #' Anchor review behavior:
 #' - `fit_mfrm()` automatically runs an anchor review.
@@ -1150,10 +1400,17 @@
 #' 1. Choose the model, estimation method, optimizer, tolerance, quadrature
 #'    rule, and initial `maxit` before examining coefficient or fit results.
 #'    The default `maxit = 400` is the package starting point for an analysis.
-#' 2. Use estimates substantively only when `FitReadiness == "ready"` and
-#'    `InferenceReady` is `TRUE`. Also inspect purpose-specific Design,
+#' 2. Inspect `FitReadiness` and `InferenceReady`, together with the eligibility
+#'    and reasons for the specific calculation. RSM/PCM model intervals can
+#'    pass their own singleton-category and information checks while the fit
+#'    retains its category review; see [mfrm_facet_intervals()]. This exception
+#'    does not waive numerical convergence. Also inspect purpose-specific Design,
 #'    Stability, Diagnostics, and Reporting workflow rows. Optimizer code zero
-#'    alone is insufficient.
+#'    alone is insufficient. A missing, nonfinite or incomplete terminal gradient
+#'    produces `ConvergenceReason = "code_zero_unavailable_gradient"` and review
+#'    status, even when the optimizer reports code zero. Resolve the numerical
+#'    evaluation before using the fit for inference; more iterations alone do
+#'    not establish a valid gradient.
 #' 3. If `ConvergenceStatus == "iteration_limit"`, keep that fit review-only.
 #'    Refit the same data, model, method, anchors, optimizer, tolerance, and
 #'    quadrature rule with the next ceiling in a prespecified sequence, such as
@@ -1222,26 +1479,26 @@
 #' invariance tests, because the discrimination parameter is free.
 #'
 #' @section Interpreting output:
-#' A typical first-pass read is:
-#' 1. `fit$summary` for convergence and global fit indicators.
-#' 2. `summary(fit)` for human-readable overviews.
-#' 3. for `RSM` / `PCM`, `diagnose_mfrm(fit)` for element-level fit,
-#'    approximate separation/reliability, and warning tables.
-#' 4. for `GPCM`, use [diagnose_mfrm()] and the residual-based
-#'    table helpers as exploratory screens, together with posterior scoring /
-#'    [compute_information()] where documented.
+#' Start with `summary(fit)` and the estimator selected above. For ordinary
+#' MML/JML results, read its `$decision` before interpreting the Person and
+#' facet overviews. For CML, read `$locations` and `$steps`, or `$comparisons`
+#' for a comparison-only fit; those results do not contain Person abilities.
+#' A reported estimate, numerical convergence and an eligible confidence
+#' interval are different claims. Read the associated checks and limitations.
 #'
 #' @section Typical workflow:
-#' 1. Fit the model with `fit_mfrm(...)`.
-#' 2. Validate convergence and scale structure with `summary(fit)`.
-#' 3. For `RSM` / `PCM`, run [diagnose_mfrm()] and proceed to reporting with
-#'    [build_apa_outputs()].
-#' 4. For `GPCM`, use the fitted object, slope summary,
-#'    [diagnose_mfrm()], residual-based table helpers, posterior scoring
-#'    helpers, [compute_information()], direct simulation/recovery helpers,
-#'    [fair_average_table()], and [estimate_bias()] with their documented
-#'    caveats. Use [gpcm_capability_matrix()] to confirm which helper families
-#'    are currently supported, caveated, blocked, or deferred.
+#' 1. Fit the prespecified model and inspect `summary(fit)`.
+#' 2. For ordinary MML/JML RSM/PCM, collect `res <- mfrm_results(fit)` and
+#'    inspect `summary(res)$triage` and `$next_actions`. Pass already computed
+#'    diagnostics through `diagnostics = diagnostics` to reuse them.
+#' 3. Choose `plot(res, ...)`, [mfrm_report()], [export_mfrm_results()] or
+#'    `saveRDS(res, file)` according to the output you need. See
+#'    [mfrmr_reports_and_tables] for the complete example.
+#' 4. For CML, use [mfrm_facet_intervals()] and its own summary, plot,
+#'    [apa_table()] and RDS saving. For GPCM or extended models, use
+#'    [gpcm_capability_matrix()] and [mfrm_results()] to select supported
+#'    outputs. Shared function names do not make ordinary diagnostics or
+#'    scoring available for every estimator or result class.
 #'
 #' @section Information-criterion contract:
 #' For an eligible fixed-facet `MML` fit, let `D = -2 * LogLik`, let `k` be
@@ -1312,8 +1569,204 @@
 #' - Sclove, S. L. (1987). *Application of model-selection criteria to some
 #'   problems in multivariate analysis*. Psychometrika, 52(3), 333-343.
 #'
+#' @section Conditional maximum likelihood:
+#' Set `method = "CML"` and `category_policy = "preserve"` for native many-facet
+#' RSM/PCM estimation. Declare the rubric range with `rating_min` and `rating_max`;
+#' PCM requires `step_facet`. Non-person facets and category steps have the
+#' ordinary sum-to-zero constraints. Supported two-way facet interactions keep
+#' zero marginal sums. Unit observation weights are required. The default
+#' `fit_scope = "full"` estimates the full identified structural model; the
+#' comparison-only route below reports selected contrasts in deficient models.
+#' The suggested package `lpSolve` supplies the finite-MLE check.
+#' Repeated Person-by-facet cells require correction or an explicit justified
+#' `repeated_ratings = "independent"` declaration before CML intervals are supplied.
+#'
+#' For Person \eqn{p}, let \eqn{s_p=\sum_j y_{pj}} and let \eqn{x_{pjk}}
+#' be the cumulative structural design vector for category \eqn{k}, with
+#' \eqn{x_{pj0}=0}. Conditioning on the observed roster and \eqn{s_p} gives
+#' \deqn{\ell_c(\beta)=\sum_{p,j}x_{pj,y_{pj}}^T\beta-
+#'   \sum_p\log [t^{s_p}]\prod_j\sum_{k=0}^K
+#'   \exp(x_{pjk}^T\beta)t^k.}
+#' A generalized ESF recursion computes the coefficients in log scale,
+#' conditional sufficient-statistic means and covariances. The score is observed
+#' minus conditional expected statistics; information is their conditional
+#' covariance. It contains cross-information for all estimated structural
+#' coordinates. No ability quadrature or ability population model is used.
+#'
+#' Person-constant effects disappear on conditioning. The information at zero
+#' checks identification for the actual rosters and totals; an unidentified or
+#' numerically rank-sensitive full model is refused. A dynamic-program graph
+#' represents conditional support for a linear-program recession check without
+#' enumerating response patterns. A detected or inconclusive recession check,
+#' or failed stationarity check prevents delivery of a full fit. If those checks
+#' pass but the fitted information cannot be evaluated or safely inverted,
+#' the finite numerical point estimates and conditional likelihood are retained
+#' with a warning. `checks$information_status` is `"unavailable"` and
+#' `checks$information_reason` explains why; the joint covariance is an `NA`
+#' matrix, not a regularized substitute. Non-fixed targets have missing SE and
+#' bounds, `CIEligible = FALSE` and an `InferenceReview` reason in summaries and
+#' facet intervals. Small score residuals alone do not certify accurate points
+#' in weak directions; examine the information warning before interpreting them.
+#' Inverse information, when available, is unregularized. Extreme-total Persons have
+#' zero conditional likelihood contribution and remain in `person_totals`.
+#'
+#' The full-scope result is an `mfrm_cml_fit`. `summary(fit)` contains `locations`, `steps`,
+#' `interactions` and checks; these tables use pointwise 95 percent normal
+#' intervals. [mfrm_facet_intervals()] accepts locations or named contrasts at
+#' another confidence level, with `method = "model"`. Plot the interval object
+#' with `plot(ci)` and retain it with `saveRDS()`. `vcov(fit)` is the covariance
+#' in free structural coordinates, or an `NA` matrix with an `unavailable_reason`
+#' attribute when information fails. Default `confint(fit)` retains missing
+#' bounds and reasons in its `diagnostics` attribute. `logLik(fit)` is the conditional log likelihood.
+#' Conditional and marginal/joint likelihood values are different objectives.
+#'
+#' The conditional model must hold for the actual rating roster: conditional
+#' on ability and the roster, ratings follow the specified independent RSM/PCM
+#' response law. A prespecified incomplete assignment is compatible with this
+#' assumption. Response-dependent assignment, stopping or missingness requires
+#' a separate justification that the conditional law is preserved. Conditioning
+#' alone does not supply that justification or repair local dependence.
+#'
+#' One sufficient regular regime has independent Persons, fixed structural
+#' dimension and category range, bounded ratings per Person, a finite true
+#' parameter, and conditional information \eqn{I_N(\beta_0)/N} converging to a
+#' positive-definite matrix. For example, the proportions of roster/total strata
+#' can stabilize while their combined support identifies every free direction.
+#' Then CML is consistent as Person count \eqn{N} grows, even with fixed ratings
+#' per Person, and inverse-information Wald intervals are asymptotically valid.
+#' Increasing the total number of Persons alone is insufficient: extreme totals
+#' add no information, and a direction supported by only a few Persons can
+#' remain imprecise. Growing numbers of facet levels/parameters require a
+#' separate asymptotic argument. Numerical checks on one fit do not establish
+#' these sampling conditions or guarantee finite-sample coverage.
+#' It does not estimate abilities, population means or a population SD. In
+#' particular, it cannot supply a contrast divided by that fit's estimated
+#' population SD; the MML delta-method route remains separate.
+#'
+#' Anchors, population regression, shrinkage, corrected JML and GPCM are outside
+#' this CML route. Full-scope CML also excludes dummy/uncentered facets; the
+#' comparison route uses the review's zero origin main facet.
+#' Unsupported explicit arguments are rejected even when equal to a default.
+#' Ordinary `mfrm_fit` scoring, diagnostics and consolidated reports are not
+#' attached to this separate class. These restrictions do not affect imported
+#' eRm fits. See Mair and Hatzinger (2007),
+#' <https://www.jstatsoft.org/article/view/v020i09>, for the linear Rasch-family
+#' CML framework.
+#'
+#' @section Comparison-only estimation:
+#' An incomplete assignment can identify a contrast even when the full model
+#' has aliased parameters. Set `fit_scope = "comparisons"` and supply an explicit
+#' `comparison_review` to estimate such contrasts. This route supports the
+#' review's unadjusted RSM/PCM models, unit-weight retained ratings, preserved
+#' categories, one facet-by-origin interaction, zero origin main effect and
+#' centered other facets/interaction margins. JML has free Person locations;
+#' MML uses the declared fixed normal or normal population regression model.
+#' CML conditions out Person abilities and requires no population distribution.
+#' PCM requires an explicit step owner. Repeated ratings retain their declared
+#' treatment and every response; a repeated row is not another independent Person.
+#'
+#' The retained responses, score map and actual model constraints must match
+#' the review. Its map is rebuilt. For JML/MML, a column-scaled SVD removes only
+#' null directions of the conditional adjacent-logit map. Every observed probability
+#' and invariant contrast is preserved; no substantive effect is fixed to zero
+#' to identify a previously unidentified target. For MML the transformation
+#' preserves the conditional law at every latent node and leaves the variance
+#' coordinate free. It therefore preserves the marginal likelihood, but does
+#' not prove global marginal identification. The bounded review requires
+#' `nrow(A) * ncol(A)` and `ncol(A)^2` no greater than two million, where `A`
+#' is the conditional adjacent-logit design matrix.
+#' Numerically sensitive or unevaluated maps yield unavailable estimates.
+#'
+#' JML first checks the observed-category recession cone using the optional
+#' `lpSolve` package. A detected recession or an inconclusive/unavailable check
+#' withholds all estimates. This route does not deliver extended-MLE contrasts
+#' when some parameters diverge. Unsupported category information also blocks
+#' estimates. Numerical acceptance requires optimizer convergence, full native
+#' gradient sup norm at most `max(1e-4, 10 * reltol)` and reduced observed
+#' information eigenvalues with minimum/maximum ratio greater than `1e-8`
+#' (the maximum is floored at one). No covariance is inferred from this check.
+#' MML population fits use three deterministic starting variances, requiring
+#' all starts to converge, target agreement within `1e-4` logits and objective
+#' agreement per Person within `1e-6`. Fixed-population MML has one start.
+#' MML also checks `2 * quad_points + 1` nodes at the retained point, requiring
+#' the same gradient tolerance and objective change per Person at most `1e-6`.
+#' These numerical criteria are not sampling-precision guarantees or a search
+#' proof of the global maximum. There is no automatic finer-grid refit.
+#'
+#' `interaction_effect_table(fit)` and `summary(fit)` return the declared
+#' comparisons, retaining unidentified and failed rows with `Estimate = NA`
+#' and `EstimateReason`. Available JML/MML estimates are `descriptive_only`, in logits.
+#' Positive MML conditional ranks keep primary `State = "not_evaluated"`.
+#' JML/MML SEs and interval endpoints remain missing; `FormalInferenceEligible`
+#' is false. Save the full object or table as RDS to retain weights, empty cells,
+#' assumptions and checks. CSV retains visible columns only.
+#'
+#' For CML, declare `method = "CML"` in the prospective review. Identification
+#' uses differences between every possible response pattern at the observed
+#' Person totals and rosters, constructed by a dynamic program. A target is
+#' identifiable only if its coefficient vector is in that row space. The same
+#' dense size bound applies to the support-difference matrix and intermediate
+#' state vectors. Extreme totals add no information. The zero origin main facet
+#' is coding for an effect eliminated by conditioning, not an equal-ability
+#' population assumption. `FreePersonState` remains a separate response-map audit.
+#'
+#' CML optimizes the conditional likelihood in the identified subspace. This
+#' preserves probabilities given the Person total, not arbitrary unconditional
+#' category probabilities. If \eqn{\beta=T\gamma+v}, where \eqn{v} is a
+#' conditional null direction, an identified target \eqn{C\beta} satisfies
+#' \eqn{Cv=0}. Its covariance is
+#' \deqn{CT(T^T I_N T)^{-1}T^T C^T.}
+#' This expression is invariant to the choice of basis \eqn{T} for the
+#' identified coordinates and includes covariance with all estimable nuisance
+#' directions. The asymptotic argument above applies in that subspace when it
+#' stabilizes and its normalized information has a positive-definite limit.
+#' Numerical identification in one sample does not establish those conditions.
+#' It checks finite-MLE existence on the complete
+#' conditional support and refuses all estimates if any recession is detected
+#' or cannot be checked; extended-MLE target inference is outside scope.
+#' Stationarity and unregularized information checks match full-scope CML.
+#' If all checks pass, identified targets have `EstimateStatus = "conditional_wald"`,
+#' `FormalInferenceEligible = TRUE`, `SE`, and pointwise 95 percent `Lower`/`Upper`
+#' limits. If only information fails, identified finite numerical points instead
+#' have `EstimateStatus = "conditional_point"`, `FormalInferenceEligible = FALSE`,
+#' missing SE/bounds and an `EstimateReason` explaining the failure. Unidentified,
+#' boundary or unqualified-stationarity targets do not acquire point estimates.
+#' `$covariance` retains available joint covariance; unidentified or
+#' failed covariance entries remain `NA`. The result also retains
+#' `person_totals`. These are asymptotic intervals under the CML assumptions above,
+#' not a finite-sample coverage guarantee or a calibrated DFF classification.
+#' CML comparison fits estimate no population SD and cannot standardize by one.
+#' Use `mfrm_facet_intervals(fit, level = .95)` to reuse their saved targets
+#' through the existing interval plots and APA tables, preserving unavailable
+#' rows; changing the confidence level does not refit the model.
+#' Population and quadrature arguments are rejected for CML.
+#'
+#' The result is an `mfrm_comparison_fit`, not an ordinary `mfrm_fit`.
+#' Individual cell estimates, Person scoring, ordinary fit diagnostics and
+#' prediction are not exposed through this class. `representation` and
+#' `optimization` retain numerical coordinates for auditing only; their
+#' representatives are not identified parameter estimates. Additional anchors,
+#' shrinkage, corrected JML, GPCM, alternate MML engines/integration, checkpoints
+#' and attached diagnostics are outside this route. Explicit arguments outside
+#' data preparation, the reviewed model and basic optimizer/quadrature controls
+#' are rejected, including unsupported arguments set to their default values.
+#'
+#' The estimable-function criterion is discussed by Lenth (2015),
+#' <https://journal.r-project.org/articles/RJ-2015-016/>. Recession directions
+#' and finite-MLE existence in exponential families are distinguished by
+#' Geyer (2009), <https://www.stat.umn.edu/geyer/gdor/>. These principles do not
+#' establish global MML identification or finite-sample inference here.
+#'
 #' @return
-#' An object of class `mfrm_fit` (named list) with:
+#' With `method = "CML", fit_scope = "full"`, an `mfrm_cml_fit` with structural estimates,
+#' joint `covariance` and `information` (missing where unavailable), `person_totals`, `checks`, preparation,
+#' configuration and optimizer controls; see "Conditional maximum likelihood".
+#' With `fit_scope = "comparisons"`, an `mfrm_comparison_fit` containing
+#' `comparisons`, the prospective `comparison_review`, numerical/category/boundary
+#' `checks`, preparation/configuration, controls and audit-only parameter
+#' `representation`/`optimization`. CML adds contrast `covariance` and
+#' `person_totals`. Its `summary()` returns the comparison table.
+#' Otherwise, an object of class `mfrm_fit` (named list) with:
 #' - `summary`: one-row model summary including `LogLik`, `Deviance`, canonical
 #'   free dimension `Npar`, response-row/weight/Person counts, the versioned
 #'   information-criterion contract, Person-based MML `AIC`/`BIC`/`SABIC`,
@@ -1400,24 +1853,24 @@
 #'   evaluation-cache counters. For direct fitting, its core fields originate
 #'   from [stats::optim()]; EM additionally records engine-specific diagnostics.
 #'
-#' @seealso [diagnose_mfrm()], [estimate_bias()], [build_apa_outputs()],
+#' @seealso [mfrm_fit_extractors], [mfrm_fit_responses], [diagnose_mfrm()], [estimate_bias()], [build_apa_outputs()],
 #'   [gpcm_capability_matrix], [mfrmr_workflow_methods],
 #'   [mfrmr_reporting_and_apa]
 #' @examples
-#' \donttest{
 #' # Load the package
 #' library(mfrmr)
 #'
 #' # Load example ratings and look at the first six rows
-#' toy <- load_mfrmr_data("example_operational")
-#' head(toy)
+#' ratings <- load_mfrmr_data("example_operational")
+#' head(ratings)
 #'
 #' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = toy,
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
+#'   rating_min = 1, rating_max = 4, category_policy = "preserve",
 #'   method = "MML",
 #'   model = "RSM"
 #' )
@@ -1432,7 +1885,6 @@
 #'
 #' # Check the interpretation status and recommended next step
 #' results$decision
-#' }
 #' @export
 fit_mfrm <- function(data,
                      person,
@@ -1444,7 +1896,7 @@ fit_mfrm <- function(data,
                      keep_original = FALSE,
                      missing_codes = NULL,
                      model = c("RSM", "PCM", "GPCM"),
-                     method = c("MML", "JML", "JMLE"),
+                     method = c("MML", "JML", "JMLE", "CML"),
                      step_facet = NULL,
                      slope_facet = NULL,
                      facet_interactions = NULL,
@@ -1474,13 +1926,23 @@ fit_mfrm <- function(data,
                      attach_diagnostics = FALSE,
                      checkpoint = NULL,
                      gpcm_mml_identification = c("free_population", "fixed_standard_normal"),
-                     mml_integration = c("fixed", "adaptive"),
+                     mml_integration = c("fixed", "adaptive", "auto"),
                      category_policy = NULL,
                      em_score_tol = NULL,
                      jml_correction_order = NULL,
                      jml_correction_sampling = c("fixed_rosters", "random_rosters"),
-                     gpcm_mml_start = NULL) {
+                     gpcm_mml_start = NULL,
+                     repeated_ratings = c("review", "independent"),
+                     centering_scope = c("facet", "remainder"),
+                     fit_scope = c("full", "comparisons"),
+                     comparison_review = NULL,
+                     mml_accuracy_control = NULL) {
   supplied_arguments <- names(as.list(match.call())[-1L])
+  fit_scope <- match.arg(fit_scope)
+  if (fit_scope == "full" && !is.null(comparison_review))
+    stop("Use fit_scope = 'comparisons' to fit a comparison review, or extract comparisons from a full fit with interaction_effect_table().", call. = FALSE)
+  centering_scope <- match.arg(centering_scope)
+  repeated_ratings <- match.arg(repeated_ratings)
   keep_original <- resolve_mfrm_category_policy(
     keep_original, category_policy, !missing(keep_original))
   # If users opt in to preparation messages, suppress duplicates that would
@@ -1568,6 +2030,16 @@ fit_mfrm <- function(data,
   optimizer <- normalize_mfrm_optimizer(match.arg(optimizer))
   mml_engine <- tolower(match.arg(mml_engine))
   mml_integration <- match.arg(mml_integration)
+  if (identical(mml_integration, "auto")) {
+    if (!identical(method, "MML") || !identical(mml_engine, "direct") ||
+        !is.null(checkpoint) || fit_scope != "full" || length(slope_facet) > 1L) {
+      stop("`mml_integration = 'auto'` requires ordinary full MML with the direct engine, at most one slope facet and no checkpoint.",
+        call. = FALSE)
+    }
+    mml_accuracy_control <- mfrmr_mml_accuracy_control(mml_accuracy_control)
+  } else if (!is.null(mml_accuracy_control)) {
+    stop("`mml_accuracy_control` requires `mml_integration = 'auto'`.", call. = FALSE)
+  }
   if (identical(mml_integration, "adaptive") &&
       (!identical(method, "MML") || !identical(mml_engine, "direct") || !is.null(checkpoint))) {
     stop("`mml_integration = 'adaptive'` requires MML with the direct engine and no checkpoint.",
@@ -1580,8 +2052,10 @@ fit_mfrm <- function(data,
   facet_shrinkage <- match.arg(facet_shrinkage)
   if (!is.null(facet_prior_sd)) {
     if (!is.numeric(facet_prior_sd) || length(facet_prior_sd) != 1L ||
-        !is.finite(facet_prior_sd) || facet_prior_sd < 0) {
-      stop("`facet_prior_sd` must be NULL or a single non-negative finite number.",
+        !is.finite(facet_prior_sd) || facet_prior_sd < 0 ||
+        !is.finite(facet_prior_sd^2) ||
+        (facet_prior_sd > 0 && facet_prior_sd^2 == 0)) {
+      stop("`facet_prior_sd` must be NULL or a non-negative finite scalar whose square is representable (positive when the SD is positive).",
            call. = FALSE)
     }
   }
@@ -1589,6 +2063,22 @@ fit_mfrm <- function(data,
       is.na(shrink_person)) {
     stop("`shrink_person` must be a single logical value.", call. = FALSE)
   }
+  if (!identical(facet_shrinkage, "none") && isTRUE(shrink_person) &&
+      (!identical(method, "JML") || !is.null(jml_correction_order))) {
+    stop("`shrink_person = TRUE` requires ordinary JML estimates with sampling SEs. EAP posterior SDs are not sampling SEs. Use shrink_person = FALSE to retain the original Person estimates.", call. = FALSE)
+  }
+
+  if (method == "CML" && fit_scope == "full") {
+    arguments <- mget(names(formals(fit_mfrm)), envir = environment(), inherits = FALSE)
+    return(mfrmr_fit_cml(arguments, supplied_arguments))
+  }
+
+  if (fit_scope == "comparisons") {
+    arguments <- mget(names(formals(fit_mfrm)), envir = environment(), inherits = FALSE)
+    return(mfrmr_fit_comparisons(arguments, supplied_arguments))
+  }
+
+  supplied_arguments <- setdiff(supplied_arguments, c("fit_scope", "comparison_review"))
 
   if (!is.null(gpcm_mml_start) &&
       !(length(slope_facet) == 2L && identical(model, "GPCM") &&
@@ -1748,9 +2238,14 @@ fit_mfrm <- function(data,
     min_obs_per_element = min_obs_per_element,
     min_obs_per_category = min_obs_per_category,
     noncenter_facet = noncenter_facet,
-    dummy_facets = dummy_facets
+    dummy_facets = dummy_facets,
+    repeated_ratings = repeated_ratings,
+    centering_scope = centering_scope
   )
 
+  schema_issues <- anchor_review$issues[c("anchor_schema_mismatch", "group_anchor_schema_mismatch")]
+  if (any(vapply(schema_issues, nrow, integer(1)) > 0L))
+    stop("Malformed anchor schema: nonempty constraints cannot be discarded. Direct anchors require facet, level and anchor/value/measure; group anchors also require group/subset and groupvalue/value/anchor.", call. = FALSE)
   anchors <- anchor_review$anchors
   group_anchors <- anchor_review$group_anchors
 
@@ -1794,7 +2289,10 @@ fit_mfrm <- function(data,
     optimizer = optimizer,
     mml_engine = mml_engine,
     mml_integration = mml_integration,
-    checkpoint = checkpoint
+    mml_accuracy_control = mml_accuracy_control,
+    checkpoint = checkpoint,
+    repeated_ratings = repeated_ratings,
+    centering_scope = centering_scope
   )
 
   fit$config$anchor_review <- anchor_review
@@ -1932,6 +2430,7 @@ fit_mfrm <- function(data,
     anchors = anchors,
     group_anchors = group_anchors,
     noncenter_facet = as.character(noncenter_facet),
+    centering_scope = centering_scope,
     dummy_facets = if (length(dummy_facets) > 0L) as.character(dummy_facets) else NULL,
     positive_facets = if (length(positive_facets) > 0L) as.character(positive_facets) else NULL,
     anchor_policy = as.character(anchor_policy),
@@ -1944,6 +2443,7 @@ fit_mfrm <- function(data,
     optimizer = as.character(optimizer),
     mml_engine = as.character(mml_engine),
     mml_integration = mml_integration,
+    mml_accuracy_control = mml_accuracy_control,
     population_formula = population_formula,
     person_id = if (is.null(person_id)) NULL else as.character(person_id),
     population_policy = as.character(population_policy),
@@ -1951,6 +2451,7 @@ fit_mfrm <- function(data,
     facet_prior_sd = facet_prior_sd,
     shrink_person = isTRUE(shrink_person),
     attach_diagnostics = isTRUE(attach_diagnostics),
+    repeated_ratings = repeated_ratings,
     package_version = as.character(utils::packageVersion("mfrmr"))
   )
 
@@ -1970,7 +2471,10 @@ fit_mfrm <- function(data,
 #' model-estimated deviations from the additive main-effects MFRM, not the
 #' residual screening statistics returned by [estimate_bias()].
 #'
-#' @param fit An `mfrm_fit` object returned by [fit_mfrm()].
+#' @param fit An `mfrm_fit` or `mfrm_comparison_fit` returned by [fit_mfrm()].
+#' @param comparison_review Optional result of [describe_mfrm_data()] with
+#'   `comparisons`, or its `$comparison_review` component. Returns the declared
+#'   interaction contrasts from a matching joint fit instead of individual cells.
 #'
 #' @details
 #' mfrmr supports two-way interactions between non-person facets,
@@ -1984,9 +2488,57 @@ fit_mfrm <- function(data,
 #' of substantive interest. For exploratory screening without adding parameters
 #' to the fitted model, use [estimate_bias()] or [estimate_all_bias()].
 #'
+#' With `comparison_review`, first fit the declared model using the review's
+#' `fit_arguments` and the original ratings. The fit must match the retained
+#' responses, origins, score coding, model, constraints, facet orientation,
+#' step owner and population design. Only native, unadjusted RSM/PCM fits
+#' without shrinkage are supported. The contrast is the declared weighted
+#' sum of Group1-minus-Group2 interaction effects, in logits. Positive means
+#' a relative shift toward higher coded scores; it is not an absolute school
+#' effect or evidence of unfairness. Location and step effects are not added.
+#'
+#' This route reevaluates the retained likelihood and full gradient without
+#' optimization. Objective agreement must be within `1e-6` and the gradient
+#' sup norm within `max(1e-4, 10 * reltol)`, matching the ordinary numerical
+#' stopping tolerance. For MML it also evaluates `2 * q + 1` quadrature nodes,
+#' requiring the finer-grid gradient to meet that tolerance and the absolute
+#' negative-log-likelihood change per Person to be at most `1e-6`.
+#' These are numerical checks, not statistical precision criteria. A failed
+#' check retains the row with `Estimate = NA` and an explanation; the separate
+#' `OptimizerEstimate` is a diagnostic trace. No refit or partial fit is run.
+#'
+#' `EstimateStatus = "descriptive_only"` requires full conditional-map rank,
+#' numerical convergence, current readiness information and no recorded
+#' blocking condition or boundary exclusion. It does not certify finite-MLE
+#' existence, global marginal identification or sampling performance. MML
+#' retains `State = "not_evaluated"` for positive conditional ranks even when
+#' a descriptive fitted contrast is available. `BoundaryState`,
+#' `FitReadiness`, `NumericalState` and `QuadratureState` remain separate.
+#' `SE`, `Lower`, `Upper` remain missing and `FormalInferenceEligible` remains
+#' false. A target-only identified contrast in a rejected full model remains
+#' unavailable through this route. Save the returned table with `saveRDS()`
+#' to preserve its review and checks without recalculation; CSV retains the
+#' visible columns but not the attributes.
+#'
+#' For a `mfrm_comparison_fit` created with `fit_scope = "comparisons"`, omit
+#' `comparison_review`: the table already contains the declared targets and
+#' their partial-fit checks. Extraction does not fit again. See [fit_mfrm()]
+#' for its likelihood-preserving parameterization, availability requirements
+#' and limits. For full RSM/PCM MML fits, [mfrm_facet_intervals()] with the same
+#' `comparison_review` separately supplies model-information intervals and
+#' supported population-SD standardization; extraction here stays descriptive.
+#' CML comparison fits add conditional-information SEs and pointwise
+#' 95 percent Wald limits for identified targets, with `conditional_wald` status;
+#' unidentified rows remain missing. The ordinary full-fit route above remains unchanged.
+#'
 #' @return A tibble with one row per interaction cell. Returns an empty tibble
-#'   when the fit has no model-estimated facet interactions.
-#' @seealso [fit_mfrm()], [estimate_bias()], [compare_mfrm()]
+#'   when the fit has no model-estimated facet interactions. With
+#'   `comparison_review`, one row per requested contrast with availability,
+#'   numerical and readiness fields; attributes `comparison_review`,
+#'   `fit_checks` and `notes` preserve the prospective question, source
+#'   fingerprint and numerical evidence, and interpretation limits.
+#' @seealso [fit_mfrm()], [describe_mfrm_data()], [summary.mfrm_fit()],
+#'   [estimate_bias()], [compare_mfrm()], [mfrmr_linking_and_dff]
 #' @examples
 #' toy <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
@@ -1997,10 +2549,18 @@ fit_mfrm <- function(data,
 #' )
 #' head(interaction_effect_table(fit))
 #' @export
-interaction_effect_table <- function(fit) {
+interaction_effect_table <- function(fit, comparison_review = NULL) {
+  if (inherits(fit, "mfrm_comparison_fit")) {
+    if (!is.null(comparison_review))
+      stop("A comparison fit retains its declared targets; omit comparison_review when extracting it.", call. = FALSE)
+    return(fit$comparisons)
+  }
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object returned by fit_mfrm().",
          call. = FALSE)
+  }
+  if (!is.null(comparison_review)) {
+    return(mfrmr_fitted_comparison_table(fit, comparison_review))
   }
   tbl <- fit$interactions$effects
   if (is.null(tbl)) {
@@ -2221,6 +2781,12 @@ prepare_mfrm_population_scaffold <- function(data,
   }
 
   population_policy <- match.arg(population_policy)
+  if (inherits(population_formula, "terms")) {
+    population_contrasts <- population_contrasts %||%
+      attr(population_formula, "mfrm_population_contrasts", exact = TRUE)
+    population_xlevels <- population_xlevels %||%
+      attr(population_formula, "mfrm_population_xlevels", exact = TRUE)
+  }
   population_formula <- tryCatch(
     stats::as.formula(population_formula),
     error = function(e) {
@@ -2410,7 +2976,9 @@ format_anchor_review_message <- function(anchor_review) {
   paste0(
     "Anchor review detected ", sum(nonzero$N), " issue row(s): ",
     paste(labels, collapse = "; "),
-    ". Invalid rows were removed; duplicate keys keep the last row."
+    ". Invalid rows, if any, were removed; duplicate keys keep the last row.",
+    if (any(nonzero$Issue == "overlap_anchor_group"))
+      " Overlapping direct and group anchors retain both constraints." else ""
   )
 }
 
@@ -2702,7 +3270,7 @@ normalize_compare_signature <- function(fit) {
     group_tbl <- group_tbl[do.call(order, c(group_tbl[intersect(c("Facet", "Level", "Group"), names(group_tbl))], na.last = TRUE)), , drop = FALSE]
   }
 
-  list(
+  signature <- list(
     model = as.character(cfg$model %||% NA_character_),
     method = as.character(cfg$method %||% NA_character_),
     person = as.character(cfg$person_col %||% NA_character_),
@@ -2722,11 +3290,18 @@ normalize_compare_signature <- function(fit) {
       cfg$facet_interactions
     ),
     noncenter_facet = as.character(cfg$noncenter_facet %||% "Person"),
+    centering_scope = cfg$centering_scope %||% "remainder",
     dummy_facets = sort(as.character(cfg$dummy_facets %||% character(0))),
     positive_facets = sort(as.character(cfg$positive_facets %||% character(0))),
     anchors = anchor_tbl,
     group_anchors = group_tbl
   )
+  # Preserve saved legacy identities when the constraint equations are unchanged.
+  if (nrow(anchor_tbl) + nrow(group_tbl) == 0L ||
+      identical(signature$centering_scope, "remainder")) {
+    signature$centering_scope <- NULL
+  }
+  signature
 }
 
 same_signature_component <- function(x, y) {
@@ -2784,6 +3359,7 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
     score_map = same_signature_component(sigs[[1]]$score_map, sigs[[2]]$score_map),
     weight = same_signature_component(sigs[[1]]$weight, sigs[[2]]$weight),
     noncenter_facet = same_signature_component(sigs[[1]]$noncenter_facet, sigs[[2]]$noncenter_facet),
+    centering_scope = same_signature_component(sigs[[1]]$centering_scope, sigs[[2]]$centering_scope),
     dummy_facets = same_signature_component(sigs[[1]]$dummy_facets, sigs[[2]]$dummy_facets),
     positive_facets = same_signature_component(sigs[[1]]$positive_facets, sigs[[2]]$positive_facets),
     anchors = same_signature_component(sigs[[1]]$anchors, sigs[[2]]$anchors),
@@ -2967,7 +3543,7 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
         !identical(spec$slope_facet, gpcm_slope) || !identical(spec$step_facet, gpcm_step) ||
         !identical(spec$identification, "sum_to_zero_log_slopes") ||
         !identical(spec$scale_reference, "geometric_mean_one") ||
-        !identical(as.integer(sizes[[2]]$log_slopes), restrictions) ||
+        !identical(as.integer(sizes[[2]][["log_slopes"]]), restrictions) ||
         !identical(sizes[[1]], sizes[[2]][names(sizes[[2]]) != "log_slopes"])) {
       review$reason <- "The G-1 free relative-slope restrictions and otherwise identical free-parameter blocks could not be verified."
       return(review)
@@ -3025,10 +3601,16 @@ resolve_mfrm_category_policy <- function(keep_original, category_policy,
 #' rating, and `person`, `facets`, and `score` name its columns.
 #'
 #' @param data A data.frame in long format (one row per rating event).
+#'   Grouped or rowwise tibbles are treated as one table; only the selected
+#'   model columns enter row filtering and the design review.
 #' @param person Column name for person IDs.
-#' @param facets Character vector of facet column names.
-#' @param score Column name for observed score.
-#' @param weight Optional weight/frequency column name.
+#' @param facets Character vector of facet column names. The reserved data
+#'   and parameter names listed in [fit_mfrm()] cannot name facets; rename
+#'   such columns before analysis.
+#' @param score Column name for observed score. The category-code and
+#'   near-integer normalization rules are the same as in [fit_mfrm()].
+#' @param weight Optional weight/frequency column name, with the numeric
+#'   precision and finite-sum rules of [fit_mfrm()].
 #' @param rating_min Optional minimum category value. Supply with
 #'   `rating_max` to retain unused boundary categories in the intended score
 #'   support.
@@ -3070,6 +3652,90 @@ resolve_mfrm_category_policy <- function(keep_original, category_policy,
 #'   flag. A facet level observed for fewer than this many distinct persons is
 #'   counted in `linkage_summary$SparseLevels`. This is a review threshold, not
 #'   a model-acceptance rule.
+#' @param comparisons Optional named specification for a prospective
+#'   facet-by-origin interaction review. See "Comparison-specific review".
+#'   Default `NULL` performs no model/target review or fitting.
+#'
+#' @section Comparison-specific review:
+#' Use `comparisons = list(facet = ..., group = ..., groups = c("A", "B"),
+#' contrasts = W, model = "RSM", method = "JML")` to review explicitly
+#' declared interaction comparisons before estimation. Both `facet` and
+#' `group` must occur in `facets`; each Person/recording must keep one origin
+#' group. `groups` gives the subtraction order, including when additional
+#' neutral origins are present. Unit weights and preserved categories are
+#' required. `W` is a numeric matrix with unique comparison row names and
+#' every reviewed facet level as a named column, including zero weights.
+#' Each nonzero row must sum to zero. For four raters, weights
+#' `c(.75, -.25, -.25, -.25)` compare the first rater's A-minus-B
+#' interaction with the equal-weight panel; `c(1, -1, 0, 0)` compares the
+#' first two raters' A-minus-B interactions. These are different targets.
+#'
+#' The prospective model has centered measurement facets, a zero-valued
+#' group main facet, and the named facet-by-group interaction with zero
+#' marginal sums. JML has free Person locations. Choose `model = "PCM"`
+#' with an explicit `step_facet` for facet-owned steps. Optional
+#' `positive_facets` records the location orientation. Anchors, extra
+#' interactions and nonunit weights are outside this review. GPCM interaction
+#' requests return `unsupported`, not an additive-model substitute.
+#'
+#' `method = "MML"` uses a fixed common standard-normal population unless
+#' `population_formula` is supplied (an intercept or the origin group only).
+#' `ConditionalState` refers to the linear response map; `FreePersonState`
+#' reviews the same response structure with unrestricted Persons. A same-law
+#' alias remains unidentified after mixing. A positive conditional rank alone
+#' does not certify the marginal model: those MML rows have
+#' `State = "not_evaluated"`. No fit or numerical marginal-rank calculation
+#' is performed. JML rows distinguish `all_parameters_identified`,
+#' `target_identified_only`, and `target_unidentified`. Numerically sensitive
+#' or oversized dense maps remain `not_evaluated`.
+#'
+#' `IdentificationBasis` interprets these checks for each requested target:
+#' `free_person_response_model` means the declared response map identifies
+#' it even with unrestricted Person locations. `population_restriction` means
+#' an unrestricted-Person alias is removed only after imposing the declared
+#' population restrictions in the conditional map. This does **not** certify
+#' marginal identification, and the corresponding MML `State` stays
+#' `not_evaluated`. `conditional_support` identifies a CML target from response
+#' patterns at the observed totals. `unidentified`, `not_evaluated` and
+#' `unsupported` remain separate. `IdentificationDetail` explains the scope;
+#' `Basis` retains the broader estimator/model basis.
+#'
+#' A fixed common N(0,1) population or estimated common normal population
+#' (`~1`) restricts origin groups to the same ability distribution. This is
+#' substantive, not arbitrary scale coding. Origin regression relaxes only
+#' the means allowed by its design and retains a common residual SD. Interpret
+#' the zero origin main effect jointly with those restrictions. A contrast
+#' identified in a free-Person response map does not make its MML estimator
+#' distribution-free. All conclusions still depend on the declared response
+#' model, including equal slopes and shared/facet-owned step restrictions.
+#'
+#' `method = "CML"` instead reviews conditional support at the actual Person
+#' totals and rating rosters. A dynamic program spans differences between all
+#' possible patterns at those totals, so extreme scores and unavailable category
+#' combinations do not manufacture information. `State` and `ConditionalState`
+#' distinguish full identification, target-only identification and unidentified
+#' targets; `FreePersonState` is the separate unrestricted-Person response-map
+#' review. Person-constant main effects disappear, and no population distribution
+#' or SD is estimated. Population formulas are not accepted for CML.
+#'
+#' Read `$comparison_review$table`, `$weights`, `$cells` and `$notes` together.
+#' The table preserves group direction, model, step owner and counts; counts
+#' cover nonzero-weight facet levels, while `cells` includes empty cells.
+#' `$fit_arguments` records the prospective structural settings; use matching
+#' input preparation when fitting. An identified target does not permit fitting
+#' a rejected full parameterization. `Estimate` stays missing and formal
+#' inference is unavailable. Save the review with its retained response rows.
+#' Pass it as `comparison_review` to [analyze_dff()] to preserve this separate
+#' prospective question alongside residual/refit effects; it does not certify
+#' those different effects. See `vignette("mfrmr-linking-and-dff")` for a
+#' school-assignment example and [mfrmr_linking_and_dff] for interpretation.
+#' A matching, fully supported joint fit can return descriptive contrasts via
+#' [interaction_effect_table()] or `summary(fit, comparison_review = review)`.
+#' These explicit calls add retained-point numerical checks, not partial
+#' estimation or formal uncertainty. To fit selected CML contrasts and obtain
+#' conditional-information Wald intervals, use `fit_mfrm(fit_scope = "comparisons",
+#' comparison_review = review)` with the CML review's `$fit_arguments`; see
+#' the comparison-only section of [fit_mfrm()].
 #'
 #' @details
 #' Set `rating_min` and `rating_max` from the rubric, including categories
@@ -3128,7 +3794,9 @@ resolve_mfrm_category_policy <- function(keep_original, category_policy,
 #'   text in the input data. For documented score markers such as `99` or `.`,
 #'   use [recode_missing_codes()] with explicit `columns` and `codes`.
 #' - **Repeated person-by-facet cells:** inspect `duplicate_cell_detail`.
-#'   Correct accidental duplicates; include a task or occasion facet when
+#'   Correct accidental duplicates; declare `repeated_ratings = "independent"`
+#'   for distinct conditionally independent events, or model dependence.
+#'   Include a task or occasion facet when
 #'   ratings represent distinct events in the design.
 #' - **Unused category or disconnected design:** inspect
 #'   `score_distribution` and `design_connectivity`. Review the rubric and
@@ -3187,17 +3855,19 @@ resolve_mfrm_category_policy <- function(keep_original, category_policy,
 #'   replaced with `NA` before row filtering
 #' - `score_support`: minimal prepared score-support metadata used by
 #'   `summary(ds)$caveats`
+#' - `comparison_review`: optional prospective interaction review, including
+#'   all requested rows and their explicit weights; also retained by `summary()`.
 #'
 #' @seealso [fit_mfrm()], [summary.mfrm_data_description()],
 #'   [recode_missing_codes()], [mfrmr_workflow_methods], [review_mfrm_anchors()]
 #' @examples
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
-#' head(toy)
+#' ratings <- load_mfrmr_data("example_operational")
+#' head(ratings)
 #'
 #' # Check the data before fitting; the intended score categories are 1 to 4
 #' data_review <- describe_mfrm_data(
-#'   data = toy,
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
@@ -3215,7 +3885,7 @@ resolve_mfrm_category_policy <- function(keep_original, category_policy,
 #' review <- summary(data_review)
 #' review$overview
 #' review$notes
-#' # For the next fit, use data = toy; data_review is a set of checks, not ratings
+#' # For the next fit, use data = ratings; data_review is a set of checks, not ratings
 #' @export
 describe_mfrm_data <- function(data,
                                person,
@@ -3233,7 +3903,9 @@ describe_mfrm_data <- function(data,
                                agreement_top_n = NULL,
                                expected_design = NULL,
                                min_linking_persons = 2L,
-                               category_policy = NULL) {
+                               category_policy = NULL,
+                               repeated_ratings = c("review", "independent"),
+                               comparisons = NULL) {
   keep_original <- resolve_mfrm_category_policy(
     keep_original, category_policy, !missing(keep_original))
   if (!is.numeric(min_linking_persons) || length(min_linking_persons) != 1L ||
@@ -3256,7 +3928,9 @@ describe_mfrm_data <- function(data,
     rating_max = rating_max,
     weight_col = weight,
     keep_original = keep_original,
-    missing_codes = missing_codes
+    missing_codes = missing_codes,
+    repeated_ratings = repeated_ratings,
+    allow_single_person = TRUE
   )
 
   df <- prep$data |>
@@ -3477,6 +4151,7 @@ describe_mfrm_data <- function(data,
 
   out <- list(
     overview = overview,
+    comparison_review = mfrmr_build_comparison_review(prep, comparisons),
     missing_by_column = missing_by_column,
     missing_rate_summary = missing_rate_summary,
     score_descriptives = score_desc,
@@ -3488,6 +4163,7 @@ describe_mfrm_data <- function(data,
     structural_missingness = structural_missingness,
     design_connectivity = as.data.frame(connectivity$summary, stringsAsFactors = FALSE),
     design_components = as.data.frame(connectivity$components, stringsAsFactors = FALSE),
+    repeated_ratings = prep$repeated_ratings,
     duplicate_cell_summary = duplicate_cells$summary,
     duplicate_cell_detail = duplicate_cells$detail,
     agreement = agreement_bundle,
@@ -3631,6 +4307,7 @@ recode_missing_codes <- function(data,
 #' @export
 print.mfrm_data_description <- function(x, ...) {
   cat("mfrm data description\n")
+  mfrmr_print_comparison_review(x$comparison_review)
   if (!is.null(x$overview) && nrow(x$overview) > 0) {
     print(x$overview, row.names = FALSE)
   }
@@ -3741,14 +4418,17 @@ collect_mfrm_design_caveats <- function(object) {
   if (nrow(duplicates) > 0L && isTRUE(duplicates$HasDuplicates[1L])) {
     add_caveat(
       area = "duplicate_cells",
-      severity = "warning",
-      condition = "duplicate_person_facet_cells",
+      severity = if (identical(object$repeated_ratings, "independent")) "info" else "warning",
+      condition = if (identical(object$repeated_ratings, "independent"))
+        "independent_repeated_ratings_declared" else "duplicate_person_facet_cells",
       facets = object$structural_missingness$settings$key %||% character(0),
       message = paste0(
         duplicates$DuplicateCells[1L],
         " Person x facet cell(s) contain multiple observed rows."
       ),
-      action = "Aggregate, deduplicate, or add a distinguishing facet before fitting."
+      action = if (identical(object$repeated_ratings, "independent"))
+        "Conditional independence was declared by the analyst; the data check does not verify it." else
+        "Review repeated events: correct accidental copies, model dependence, or explicitly declare conditional independence."
     )
   }
 
@@ -3957,7 +4637,7 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
       "data_review$design_components",
       "summary(describe_mfrm_data(...))",
       "summary(describe_mfrm_data(...))",
-      "summary(describe_mfrm_data(...)) / plot_interrater_agreement()",
+      "summary(describe_mfrm_data(...)) / plot(x, type = \"agreement\")",
       "summary(diagnose_mfrm(fit))"
     ),
     stringsAsFactors = FALSE
@@ -3997,6 +4677,7 @@ summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
 
   out <- list(
     overview = overview,
+    comparison_review = object$comparison_review,
     missing = missing_tbl,
     score_distribution = score_dist,
     facet_overview = facet_overview,
@@ -4024,6 +4705,7 @@ print.summary.mfrm_data_description <- function(x, ...) {
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
   cat("mfrm Data Description Summary\n")
+  mfrmr_print_comparison_review(x$comparison_review)
   if (!is.null(x$overview) && nrow(x$overview) > 0) {
     cat("\nOverview\n")
     print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
@@ -4240,7 +4922,9 @@ plot.mfrm_data_description <- function(x,
 #'   in recommendations (default `30`).
 #' @param min_obs_per_category Minimum weighted observations per score category
 #'   used in recommendations (default `10`).
-#' @param noncenter_facet One facet to leave non-centered.
+#' @param noncenter_facet One facet to leave non-centered. Other facets use
+#'   `centering_scope`, as in [fit_mfrm()].
+#' @inheritParams fit_mfrm
 #' @param dummy_facets Facets to fix at zero.
 #'
 #' @details
@@ -4258,14 +4942,20 @@ plot.mfrm_data_description <- function(x,
 #' anchors. It does not inspect source-fit readiness or establish that labels
 #' denote the same invariant elements across runs. Those substantive checks
 #' remain the caller's responsibility.
+#' This review has no estimation-method argument. A clean table can still
+#' request an unsupported model combination: in particular, `fit_mfrm()`
+#' rejects Person direct/group anchors with MML. See the scale-constraint
+#' section of [fit_mfrm()] before using partial anchors.
 #'
 #' **Anchor types:**
 #' - *Direct anchors* fix individual element measures to specific logit
-#'   values (e.g., Rater R1 anchored at 0.35 logits).
+#'   values (e.g., Rater R01 anchored at 0.35 logits). Use internal coordinates,
+#'   not values transformed for display with `Umean` or `Uscale`.
 #' - *Group anchors* constrain the mean of a set of elements to a
 #'   target value, allowing individual elements to vary freely around
 #'   that mean. The target requires an external justification such as a
 #'   defensible equal-mean or known-scale assumption.
+#'   The mean is unweighted over declared levels, not over rating rows.
 #' - When both types include the same element, both constraints are retained:
 #'   the direct anchor fixes that element and the group constraint still fixes
 #'   the declared group mean. Incompatible combinations are rejected by the
@@ -4279,8 +4969,10 @@ plot.mfrm_data_description <- function(x,
 #'
 #' @section Interpreting output:
 #' - `issue_counts`/`issues`: concrete data or specification problems.
-#' - `facet_summary`: constraint coverage by facet.
-#' - `design_checks`: whether anchor targets have enough observations.
+#' - `facet_summary`: constraint coverage by facet. `FreeLevels` counts levels
+#'   outside direct and group constraints, not free parameters. A group member
+#'   may still vary, whereas centering removes a degree of freedom outside groups.
+#' - `design_checks`: observation counts against the requested screening values.
 #' - `recommendations`: action items before estimation.
 #'
 #' @section Typical workflow:
@@ -4291,7 +4983,8 @@ plot.mfrm_data_description <- function(x,
 #' @return A list of class `mfrm_anchor_review` with:
 #' - `anchors`: cleaned direct constraints used by estimation
 #' - `group_anchors`: cleaned group-mean constraints used by estimation
-#' - `facet_summary`: counts of levels, constrained levels, and free levels
+#' - `centering_scope`: the reviewed whole-facet or legacy remainder convention
+#' - `facet_summary`: counts of levels inside/outside declared constraints
 #' - `design_checks`: observation-count checks by level/category
 #' - `thresholds`: active threshold settings used for recommendations
 #' - `issue_counts`: issue-type counts
@@ -4301,25 +4994,29 @@ plot.mfrm_data_description <- function(x,
 #' @seealso [fit_mfrm()], [describe_mfrm_data()], [make_anchor_table()],
 #'   [mfrmr_linking_and_dff]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#'
-#' anchors <- data.frame(
-#'   Facet = c("Rater", "Rater"),
-#'   Level = c("R1", "R1"),
-#'   Anchor = c(0, 0.1),
-#'   stringsAsFactors = FALSE
-#' )
+#' ratings <- load_mfrmr_data("example_operational")
+#' # Illustrative external value, not an estimate supplied with this dataset.
+#' anchors <- data.frame(Facet = "Rater", Level = "R01", Anchor = 0.35)
 #' review <- review_mfrm_anchors(
-#'   data = toy,
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   anchors = anchors
+#'   anchors = anchors,
+#'   rating_min = 1, rating_max = 4, category_policy = "preserve"
 #' )
+#' review$anchors                 # Check the retained value and matching ID.
 #' review$issue_counts
-#' summary(review)
-#' p_review <- plot(review, draw = FALSE)
-#' p_review$data$plot
+#' review$recommendations         # Explains the selected centering convention.
+#'
+#' # A duplicate is a separate input problem: resolve it before fitting.
+#' duplicate <- rbind(anchors, transform(anchors, Anchor = 0.10))
+#' problem <- review_mfrm_anchors(
+#'   ratings, "Person", c("Rater", "Criterion"), "Score",
+#'   anchors = duplicate
+#' )
+#' problem$issues$duplicate_anchors
+#' # Normalization retains the last value; it does not decide which is correct.
 #' @name review_mfrm_anchors
 #' @export
 review_mfrm_anchors <- function(data,
@@ -4338,7 +5035,10 @@ review_mfrm_anchors <- function(data,
                                 min_obs_per_category = 10,
                                 noncenter_facet = "Person",
                                 dummy_facets = NULL,
-                                category_policy = NULL) {
+                                category_policy = NULL,
+                                repeated_ratings = c("review", "independent"),
+                                centering_scope = c("facet", "remainder")) {
+  centering_scope <- match.arg(centering_scope)
   keep_original <- resolve_mfrm_category_policy(
     keep_original, category_policy, !missing(keep_original))
   prep <- prepare_mfrm_data(
@@ -4350,7 +5050,9 @@ review_mfrm_anchors <- function(data,
     rating_max = rating_max,
     weight_col = weight,
     keep_original = keep_original,
-    missing_codes = missing_codes
+    missing_codes = missing_codes,
+    repeated_ratings = repeated_ratings,
+    allow_single_person = TRUE
   )
 
   noncenter_facet <- sanitize_noncenter_facet(noncenter_facet, prep$facet_names)
@@ -4364,8 +5066,13 @@ review_mfrm_anchors <- function(data,
     min_obs_per_element = min_obs_per_element,
     min_obs_per_category = min_obs_per_category,
     noncenter_facet = noncenter_facet,
-    dummy_facets = dummy_facets
+    dummy_facets = dummy_facets,
+    centering_scope = centering_scope
   )
+  # Check the same equalities as fitting, reusing the cleaned tables.
+  prepare_constraint_specs(prep, noncenter_facet = noncenter_facet,
+    dummy_facets = dummy_facets, centering_scope = centering_scope,
+    anchor_review = review)
   class(review) <- unique(c("mfrm_anchor_review", class(review)))
   review
 }
@@ -4604,7 +5311,7 @@ plot.mfrm_anchor_review <- function(x,
         col = c(pal["anchored"], pal["grouped"], "#d9d9d9"),
         border = "white",
         ylab = "Levels",
-        main = if (is.null(main)) "Constraint profile by facet" else as.character(main[1])
+        main = ""
       )
       draw_rotated_x_labels(
         at = mids,
@@ -4659,8 +5366,10 @@ plot.mfrm_anchor_review <- function(x,
 #' @param facets Optional subset of facets to include.
 #' @param include_person Include person estimates as candidate anchors. Use only
 #'   when cross-run person identity and the intended longitudinal constraint
-#'   are substantively justified.
-#' @param digits Rounding digits for anchor values.
+#'   are substantively justified. Fixed Person values are supported only by
+#'   a receiving JML fit; MML rejects Person anchors.
+#' @param digits `NULL` (default) preserves the fitted numeric values. A
+#'   nonnegative integer explicitly rounds them for display or external use.
 #' @param readiness_policy How a source fit that is not inference-ready is
 #'   handled. `"error"` (default) refuses anchor export or reuse. `"review"`
 #'   permits explicit review-only extraction; those values must not be used as
@@ -4670,6 +5379,11 @@ plot.mfrm_anchor_review <- function(x,
 #' This function performs a mechanical conversion from fitted estimates to the
 #' `Facet`/`Level`/`Anchor` schema accepted by `fit_mfrm()`. The returned rows
 #' are candidate direct constraints, not an approved anchor set.
+#' `Anchor` uses the internal, untransformed location metric. The table does
+#' not include category thresholds, GPCM slopes, model settings or source SEs;
+#' it is not a complete saved calibration. See [extract_mfrm_calibration()] for that
+#' separate workflow. Fixing an estimated value does not propagate its source
+#' uncertainty into the new fit.
 #'
 #' By default, the function refuses export when the source fit is not
 #' inference-ready under the current readiness contract. Set
@@ -4681,14 +5395,15 @@ plot.mfrm_anchor_review <- function(x,
 #' receiving-data support; it does not validate the source fit or the
 #' substantive invariance assumption.
 #'
-#' The `digits` parameter controls rounding precision.  Use at least 4
-#' digits for research applications; excessive rounding (e.g., 1 digit)
-#' can introduce avoidable calibration error.
+#' Keep `digits = NULL` for recalibration. Rounding individual anchors can
+#' break their joint sum or group-mean constraint, even at six decimal places.
+#' Explicitly rounded values are different constraints and must be reviewed
+#' before reuse; the fitter does not silently recenter supplied anchors.
 #'
 #' @section Interpreting output:
 #' - `Facet`: facet name to be anchored in later runs.
 #' - `Level`: specific element/level name inside that facet.
-#' - `Anchor`: fixed logit value (rounded by `digits`).
+#' - `Anchor`: fixed logit value (rounded only when `digits` is supplied).
 #'
 #' @section Typical workflow:
 #' 1. Fit and diagnose a defensible reference run with [fit_mfrm()].
@@ -4699,19 +5414,20 @@ plot.mfrm_anchor_review <- function(x,
 #' @return A data.frame with `Facet`, `Level`, and `Anchor`.
 #' @seealso [fit_mfrm()], [review_mfrm_anchors()]
 #' @examples
-#' toy <- load_mfrmr_data("example_operational")
+#' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
-#'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", quad_points = 7, maxit = 30
+#'   ratings, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", rating_min = 1, rating_max = 4,
+#'   category_policy = "preserve"
 #' )
-#' anchors_tbl <- make_anchor_table(fit)
-#' head(anchors_tbl)
-#' summary(anchors_tbl$Anchor)
+#' # Select a facet deliberately; matching labels alone do not prove invariance.
+#' anchors_tbl <- make_anchor_table(fit, facets = "Rater")
+#' anchors_tbl
 #' @export
 make_anchor_table <- function(fit,
                               facets = NULL,
                               include_person = FALSE,
-                              digits = 6,
+                              digits = NULL,
                               readiness_policy = c("error", "review")) {
   stop_if_product_slopes(fit, "make_anchor_table()")
   if (!inherits(fit, "mfrm_fit")) {
@@ -4738,7 +5454,13 @@ make_anchor_table <- function(fit,
     )
   }
 
-  digits <- max(0L, as.integer(digits))
+  if (!is.null(digits) && (!is.numeric(digits) || is.complex(digits) ||
+      length(digits) != 1L || !is.finite(digits) || digits < 0 || digits != floor(digits))) {
+    stop("`digits` must be NULL or one nonnegative integer.", call. = FALSE)
+  }
+  anchor_values <- function(x) {
+    if (is.null(digits)) as.numeric(x) else round(as.numeric(x), digits = digits)
+  }
   out <- tibble::tibble()
 
   if (isTRUE(include_person) && !is.null(fit$facets$person) && nrow(fit$facets$person) > 0) {
@@ -4750,7 +5472,7 @@ make_anchor_table <- function(fit,
           dplyr::transmute(
             Facet = "Person",
             Level = as.character(.data$Person),
-            Anchor = round(as.numeric(.data$Estimate), digits = digits)
+            Anchor = anchor_values(.data$Estimate)
           )
       )
     }
@@ -4764,7 +5486,7 @@ make_anchor_table <- function(fit,
         dplyr::transmute(
           Facet = as.character(.data$Facet),
           Level = as.character(.data$Level),
-          Anchor = round(as.numeric(.data$Estimate), digits = digits)
+          Anchor = anchor_values(.data$Estimate)
         )
     )
   }
@@ -4789,22 +5511,18 @@ make_anchor_table <- function(fit,
 #' @param fit Output from [fit_mfrm()].
 #' @param interaction_pairs Optional list of facet pairs.
 #' @param top_n_interactions Number of top interactions.
-#' @param whexact Logical controlling the ZSTD standardisation of
-#'   mean-square fit statistics. `FALSE` (default) applies the
-#'   Wilson-Hilferty cube-root transformation
-#'   \eqn{(\mathrm{MnSq}^{1/3} - (1 - 2/(9\,\mathit{df})))/\sqrt{2/(9\,\mathit{df})}}
-#'   (recommended; the Winsteps/FACETS convention for `WHEXACT=Y`).
-#'   `TRUE` uses the simpler linear-normal standardisation
-#'   \eqn{(\mathrm{MnSq} - 1)\sqrt{\mathit{df}/2}}, which is kept for
-#'   backward compatibility with earlier mfrmr summaries and with
-#'   FACETS' `WHEXACT=N` mode.
+#' @param whexact ZSTD transformation. `FALSE` (default) uses
+#'   Wilson-Hilferty with the q/3 term (FACETS `WHEXACT=YES`);
+#'   `TRUE` omits that term (FACETS `WHEXACT=NO`), where
+#'   q = sqrt(2/df). The historical logical names are retained.
+#'   `"legacy_linear"` explicitly requests the former TRUE calculation,
+#'   (MnSq - 1) * sqrt(df/2), which is not FACETS WHEXACT=NO.
 #' @param fit_df_method Degrees-of-freedom convention used for fit ZSTD.
-#'   `"engine"` (default) keeps the package-native convention
+#'   `"facets"` (default) uses the Wright-Masters fourth-moment approximation
+#'   `df = 2 / q^2` and caps reported ZSTD at +/-9. `"engine"` retains
 #'   `DF_Infit = sum(Var * Weight)` and `DF_Outfit = sum(Weight)`.
-#'   `"facets"` uses the FACETS/Wright-Masters fourth-moment approximation
-#'   `df = 2 / q^2` as the primary `InfitZSTD` / `OutfitZSTD` basis and caps
-#'   reported ZSTD values at +/-9. `"both"` keeps the engine convention as the
-#'   primary columns and adds `*_FACETS` companion columns for comparison.
+#'   `"both"` uses engine primary columns and adds `*_FACETS` companions.
+#'   Engine transformations require df >= 1; the FACETS route admits df > 0.
 #' @param diagnostic_mode Diagnostic basis to compute: `"both"` (the
 #'   current default) computes both the residual/EAP-based stack and
 #'   the strict latent-integrated first-order marginal-fit companion;
@@ -4814,8 +5532,15 @@ make_anchor_table <- function(fit,
 #'   doubles to quintuples wall-clock time relative to `"legacy"`;
 #'   pass `"legacy"` explicitly when iterating on large designs and
 #'   only the residual stack is needed. Use `"both"` for RSM/PCM
-#'   reporting fits because it enables [plot_marginal_fit()] and
-#'   [plot_marginal_pairwise()] follow-up.
+#'   reporting fits because it enables [plot(x, type = "marginal_fit")][plot.mfrm_fit] and
+#'   [plot(x, type = "marginal_pairwise")][plot.mfrm_fit] follow-up.
+#' @section Saved diagnostic definitions:
+#' New diagnostics carry `calculation_version = 2L`. Recreate older diagnostics
+#' with `diagnose_mfrm(fit)` before using current reports; no refit is needed.
+#' For historical ZSTD use `fit_df_method = "engine"` and, if applicable,
+#' `whexact = "legacy_linear"`. PTMEA, displacement, eligible chi-square df,
+#' fair scores and unexpected-response defaults use the corrected definitions.
+#'
 #' @param residual_pca Residual PCA mode: `"none"`, `"overall"`, `"facet"`, or `"both"`.
 #' @param pca_max_factors Maximum number of PCA factors to retain per matrix.
 #'
@@ -4832,6 +5557,37 @@ make_anchor_table <- function(fit,
 #' latent-integrated first-order category counts. When `diagnostic_mode =
 #' "both"`, the output includes a `diagnostic_basis` guide so downstream
 #' tables and summaries can distinguish these targets.
+#'
+#' **Legacy response calculations.** Saved MML EAPs are matched to responses
+#' by Person identifier. JML retains optimizer-coordinate probabilities for
+#' compatibility diagnostics. In `obs`, `PersonMeasure` records the ability
+#' used, `PrimaryPersonMeasure` records the primary estimate (possibly
+#' infinite), and `PersonMeasureBasis` identifies the calculation. A finite
+#' JML optimizer value is not a finite primary estimate at a boundary.
+#' For supported ordinary fits, [fitted()][mfrm_fit_responses] instead uses
+#' primary JML limits. The posterior/corrected-JML targets have their own
+#' documented routes in [mfrm_response_diagnostics()].
+#'
+#' `obs$ConditionalVariance` retains the actual conditional variance.
+#' Legacy `Var`, `StdResidual` and `StdSq` are withheld when that variance is
+#' at or below `1e-10`. A positive value below this cutoff is a diagnostic
+#' screening convention, not a mathematically undefined Pearson residual;
+#' [residuals(fit, "pearson")][mfrm_fit_responses] retains representable positive
+#' variances within its supported scope. A zero variance makes the Pearson
+#' residual undefined. Expected ratings and raw residuals can remain available
+#' in either case. `PearsonAvailable`, `ResponseStatus` and `ResponseReason`
+#' explain each row, and are retained in score/residual file tables.
+#'
+#' Overall and element-level mean squares require every contributing row's
+#' standardized residual, variance and positive weight. If any is unavailable,
+#' the aggregate and its degrees of freedom remain `NA`; missing residuals
+#' are not counted as zero misfit or silently excluded. `FitResponseRows`,
+#' `FitAvailableRows` and `FitUnavailableRows` count rows (not weight totals),
+#' while `FitStatus` and `FitReason` explain availability. These fields accompany
+#' `overall_fit`, `fit` and `measures`. FACETS-style degrees of freedom also
+#' require complete fourth moments. Regenerate older diagnostics and exports
+#' from the saved fit to obtain these explanations; model refitting is not
+#' required.
 #'
 #' Marginal expected counts integrate over each Person's posterior conditioned
 #' on the same observed responses, holding fitted calibration fixed. They are
@@ -4879,17 +5635,17 @@ make_anchor_table <- function(fit,
 #' - **ZSTD**: Wilson-Hilferty cube-root transformation of MnSq to an
 #'   approximate standard normal deviate.
 #' - **PTMEA**: within-element point-measure correlation between observed
-#'   scores and fitted person measures. A positive value is directionally
+#'   scores and the oriented sum of model measures (`obs$MeasureSum`),
+#'   including Person rows. A positive value is directionally
 #'   consistent with the fitted orientation; it is not a confirmatory test.
 #'
 #' The MnSq values and the ZSTD values should be read separately. `mfrmr` keeps
-#' the package-native engine df convention by default because it is the basis
-#' used by the fitted observation-level diagnostics. FACETS reports closely related
-#' MnSq values but standardizes them with a Wright-Masters fourth-moment df
-#' approximation (`df = 2 / q^2`) and caps reported ZSTD values. Use
+#' the fourth-moment df convention by default. The former engine convention
+#' remains explicit. This changes some ZSTD screening decisions, not the
+#' underlying MnSq. MML residual diagnostics remain EAP plug-in quantities;
+#' this standardization does not make them posterior-integrated fit tests. Use
 #' `fit_df_method = "both"` to review these two standardization conventions
-#' side by side without changing the primary `InfitZSTD` / `OutfitZSTD`
-#' columns.
+#' side by side, using engine primary columns and FACETS companion columns.
 #'
 #' **Residual basis under MML.** For `method = "MML"` fits, residuals,
 #' MnSq, and ZSTD are computed at the EAP person measures from the
@@ -4901,6 +5657,13 @@ make_anchor_table <- function(fit,
 #' standardization difference. Refit with `method = "JML"` when an
 #' external FACETS fit comparison requires a JMLE-style residual basis
 #' (see [facets_fit_review()]).
+#' ConQuest MML parameter fit also has a different target: residuals are
+#' aggregated through the response design for each parameter, then averaged
+#' over posterior ability distributions. Its Infit averages a ratio, rather
+#' than dividing separately averaged residual sums and variances. Posterior
+#' integration of row residuals alone does not reproduce that statistic. Native
+#' marginal category-count diagnostics are another target. See the
+#' [ConQuest technical manual](https://conquestmanual.acer.org/s3-00.html).
 #'
 #' **Heuristic misfit-screening guidelines (Bond & Fox, 2015):**
 #' - MnSq < 0.5: overfit (too predictable; may inflate reliability)
@@ -4984,7 +5747,10 @@ make_anchor_table <- function(fit,
 #' If any finite estimate lacks a valid SE, reliability, separation, strata and
 #' error-adjusted spread are unavailable, rather than combining different sets
 #' of levels. Excluded levels or incomplete uncertainty prevent a facet summary
-#' from supporting formal reporting. For EAP Persons, this separation-based
+#' from supporting formal reporting. A facet containing fixed values also has
+#' no aggregate reliability, separation or strata: a fixed anchor's zero
+#' conditional variance is not evidence of perfect measurement. Fixing a group
+#' mean alone does not fix each group member. For EAP Persons, this separation-based
 #' index is distinct from posterior-variance EAP reliability. High rater
 #' separation means distinguishable rater measures, not high rater agreement.
 #'
@@ -5055,23 +5821,27 @@ make_anchor_table <- function(fit,
 #' @seealso [fit_mfrm()], [analyze_residual_pca()], [build_visual_summaries()],
 #'   [mfrmr_visual_diagnostics], [mfrmr_reporting_and_apa]
 #' @examples
-#' \donttest{
 #' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
+#' ratings <- load_mfrmr_data("example_operational")
 #'
 #' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = toy,
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
+#'   rating_min = 1, rating_max = 4, category_policy = "preserve",
 #'   method = "MML",
 #'   model = "RSM"
 #' )
 #'
 #' # Check model fit and the support for standard errors and intervals
 #' diagnostics <- diagnose_mfrm(fit)
+#' # Check each residual's basis and the coverage of aggregate fit statistics
+#' head(diagnostics$obs[, c("PersonMeasureBasis", "ConditionalVariance",
+#'   "PearsonAvailable", "ResponseReason")])
+#' diagnostics$overall_fit[, c("Infit", "Outfit", "FitUnavailableRows", "FitReason")]
 #' diagnostic_summary <- summary(diagnostics)
 #' diagnostic_summary$decision
 #'
@@ -5080,7 +5850,6 @@ make_anchor_table <- function(fit,
 #'
 #' # Distinguish residual-based checks from marginal model checks
 #' diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
-#' }
 #' @section References:
 #' - Wright, B. D., & Masters, G. N. (1982). *Rating scale analysis*.
 #'   MESA Press. (G/R/H separation, reliability, and strata
@@ -5108,7 +5877,7 @@ diagnose_mfrm <- function(fit,
                           interaction_pairs = NULL,
                           top_n_interactions = 20,
                           whexact = FALSE,
-                          fit_df_method = c("engine", "facets", "both"),
+                          fit_df_method = "facets",
                           diagnostic_mode = c("both", "legacy", "marginal_fit"),
                           residual_pca = c("none", "overall", "facet", "both"),
                           pca_max_factors = 10L) {
@@ -5137,6 +5906,7 @@ diagnose_mfrm <- function(fit,
     residual_pca = residual_pca,
     pca_max_factors = pca_max_factors
   )
+  out$parameter_uncertainty$source <- mfrm_native_location_identity(fit)
   class(out) <- c("mfrm_diagnostics", class(out))
   out
 }
@@ -5371,8 +6141,10 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
     basis = "fit_inference_readiness",
     review = if (ordinary_ready) "" else as.character(mfrm_fit_decision_summary(readiness)$Why[1])
   )
+  rasch_singleton <- isTRUE(allow_singleton) && fit$config$model %in% c("RSM", "PCM") &&
+    identical(as.character(readiness$CategoryState[1]), "weak_information")
   if ((!identical(fit$config$model, "GPCM") &&
-       !isTRUE(fit$config$population_spec$active)) ||
+       !isTRUE(fit$config$population_spec$active) && !rasch_singleton) ||
       !identical(fit$config$method, "MML")) return(out)
 
   out$eligible <- FALSE
@@ -5385,22 +6157,31 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
       !isTRUE(contract$ICSelectable[1])) {
     return(refuse("Current, consistent MML likelihood metadata and a sufficiently resolved quadrature grid are required."))
   }
+  identification <- mfrm_mml_inference_identification(fit)
+  if (isTRUE(identification$excluded)) return(refuse(identification$detail))
   category_ready <- identical(as.character(readiness$CategoryState[1]), "adequate")
   singleton_review <- FALSE
   if (!category_ready && isTRUE(allow_singleton) &&
-      identical(fit$config$model, "GPCM") &&
+      fit$config$model %in% c("RSM", "PCM", "GPCM") &&
       identical(as.character(readiness$CategoryState[1]), "weak_information")) {
-    # Bootstrap-only exception: verify the data, not just a saved readiness label.
+    # Count-based warnings do not replace a likelihood/information check.
+    # GPCM retains its bootstrap-only exception; Rasch locations admit Wald
+    # approximations after the separate full-information and quadrature review.
     audit <- tryCatch(audit_mfrm_category_support(fit$prep, fit$config,
       build_param_sizes(fit$config)), error = function(e) NULL)
     counts <- audit$category_table$WithinScopeCount
+    local <- audit$local_support
+    local_singleton <- rasch_singleton && is.data.frame(local) && nrow(local) > 0L &&
+      all(local$MissingCategories == "") && any(local$MinimumObservedCategoryCount == 1L)
     singleton_review <- isTRUE(audit$readiness$Complete) &&
       identical(audit$readiness$CategoryState, "weak_information") &&
       identical(audit$readiness$ReasonCodes, "weak_category_information") &&
       isTRUE(audit$readiness$UnsupportedStepCoordinates == 0L) &&
       isTRUE(audit$readiness$UnsupportedCategoryContrasts == 0L) &&
       length(counts) > 0L && all(is.finite(counts)) &&
-      all(counts > 0L) && any(counts == 1L)
+      all(counts > 0L) && (any(counts == 1L) || local_singleton)
+    if (rasch_singleton) singleton_review <- singleton_review &&
+      is.data.frame(local) && nrow(local) > 0L && all(local$MissingCategories == "")
   }
   if (!identical(as.character(readiness$InputState[1]), "pass") ||
       !(category_ready || singleton_review)) {
@@ -5421,16 +6202,18 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
   }
   evaluation <- information$evaluation_summary
   eigenvalues <- information$eigenvalue_summary
-  objective <- as.numeric(fit$opt$value[1])
-  reevaluated <- as.numeric(evaluation$ReevaluatedObjective[1])
-  gradient <- as.numeric(evaluation$GradientMaxAbs[1])
-  smallest <- as.numeric(eigenvalues$Smallest[1])
-  scale <- as.numeric(eigenvalues$AbsoluteScale[1])
+  objective <- fit$opt$value
+  reevaluated <- evaluation$ReevaluatedObjective
+  gradient <- evaluation$GradientMaxAbs
+  smallest <- eigenvalues$Smallest
+  scale <- eigenvalues$AbsoluteScale
   gradient_tolerance <- as.numeric(fit$opt$optimizer_diagnostics$GradientReviewTolerance)
   if (length(gradient_tolerance) != 1L || !is.finite(gradient_tolerance) ||
       gradient_tolerance <= 0 || gradient_tolerance > 1e-4) gradient_tolerance <- 1e-4
-  if (!all(is.finite(c(objective, reevaluated, gradient, smallest, scale))) ||
-      length(fit$opt$par) != information$free_dimension) {
+  scalars <- list(objective, reevaluated, gradient, smallest, scale, information$free_dimension)
+  if (!all(vapply(scalars, function(x) is.numeric(x) && !is.complex(x) &&
+      length(x) == 1L && is.finite(x), logical(1))) ||
+      length(fit$opt$par) != information$free_dimension || gradient < 0 || smallest > scale) {
     return(refuse("Finite, dimensionally consistent likelihood, gradient and information are required."))
   }
   if (abs(reevaluated - objective) > 1e-10 * max(1, abs(objective))) {
@@ -5462,9 +6245,11 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
   out$eligible <- TRUE
   if (refined) out$caution <- inverse_review$Detail
   if (singleton_review) out$caution <- trimws(paste(out$caution %||% "",
-    "Singleton score categories: the point estimate is retained for the basic bootstrap",
-    "after numerical and information checks. Sparse category support may affect accuracy;",
-    "this does not establish Wald-interval eligibility."))
+    if (rasch_singleton)
+      "Some score categories occur only once within a fitted or local scope. Model-information intervals remain asymptotic approximations; small samples can affect bias and coverage. The source fit retains its category-support review."
+    else paste("Singleton score categories: the point estimate is retained for the basic bootstrap",
+      "after numerical and information checks. Sparse category support may affect accuracy;",
+      "this does not establish Wald-interval eligibility.")))
   out$review <- paste(
     "The retained MML solution has matching likelihood, a small gradient and",
     "positive unregularized local information. Check starting-value and",
@@ -5495,6 +6280,10 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
 #' remain ineligible with a reason. A local check does not prove a global
 #' maximum or negligible integration error; examine starting-value and
 #' [mml_quadrature_sensitivity()] results when the decision is close.
+#' Known marginal response-dimension deficits and complete-pattern first-order
+#' rank failures also prevent inferential model comparison, even with a positive
+#' numerical Hessian. More Persons with the same response designs improve
+#' precision but cannot repair a structural dimension deficit.
 #' Positive but ill-conditioned information may pass with a caution after
 #' numerical refinement, unregularized inversion and curvature-scaled gradient
 #' checks. A warning is emitted and retained in `ICFitCaution`, `ICFitReview`
@@ -5687,9 +6476,10 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
 #' In addition to the canonical criteria, the function computes:
 #' - **Delta_AIC / Delta_BIC / Delta_SABIC**: difference from the minimum
 #'   value in the supplied candidate set.
-#'   A Delta < 2 is typically considered negligible; 4--7 suggests
-#'   moderate evidence; > 10 indicates strong evidence against the
-#'   higher-scoring model (Burnham & Anderson, 2002).
+#'   For AIC, the often-used Delta ranges below 2, 4--7, and above 10 are
+#'   rough descriptions of decreasing relative support (Burnham & Anderson,
+#'   2002), not significance thresholds, adequacy checks, or universal rules
+#'   for BIC and SABIC.
 #' - **AkaikeWeight / BICWeight / SABICWeight**: relative candidate-set
 #'   weights derived from `exp(-0.5 * Delta)` and normalized only across the
 #'   supplied models. They are not posterior probabilities, probabilities of
@@ -5698,6 +6488,11 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
 #'   relative support within this candidate set. A ratio of 5 means only that
 #'   one normalized Akaike weight is five times the other; it does not mean
 #'   that one model is five times more likely to be true.
+#'   Ratios are computed from AIC differences, so they remain available when
+#'   both normalized weights round to zero. `LogEvidenceRatio` retains the
+#'   natural log ratio; `RatioReason` explains `NA` ratios outside numeric range
+#'   (`"overflow"`, `"underflow"`, or `"nonfinite_difference"`, otherwise
+#'   `"available"`).
 #'
 #' AIC, BIC, and SABIC answer different approximation/penalty questions. SABIC
 #' is a sensitivity criterion, not a universal tie-breaker. At 22 or fewer
@@ -5798,7 +6593,8 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
 #' - `lrt`: data.frame with likelihood-ratio test result (only when two models
 #'   are supplied and `nested = TRUE`). Contains `ChiSq`, `df`, `p_value`.
 #' - `evidence_ratios`: data.frame of pairwise Akaike-weight ratios (Model1,
-#'   Model2, EvidenceRatio). `NULL` when weights cannot be computed.
+#'   Model2, EvidenceRatio, LogEvidenceRatio, RatioReason). `NULL` when
+#'   comparison is ineligible. Extremely small normalized weights can round to zero.
 #' - `preferred`: named list with the preferred model label by each criterion.
 #' - `comparison_basis`: list describing whether IC and LRT comparisons were
 #'   considered comparable. Includes a conservative `nesting_review` plus
@@ -5807,7 +6603,6 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
-#' \donttest{
 #' # Load one dataset for both models
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
@@ -5844,7 +6639,6 @@ mfrm_ic_fit_check <- function(fit, contract, information = NULL, allow_singleton
 #' # mml_quadrature_sensitivity() before choosing a model
 #' # For a PCM/GPCM equal-slope test, see the matched-population example in
 #' # vignette("mfrmr-gpcm-scope"); request compare_mfrm(..., nested = TRUE).
-#' }
 #' @section References:
 #' - Burnham, K. P., & Anderson, D. R. (2002). *Model selection and
 #'   multimodel inference: A practical information-theoretic
@@ -5927,7 +6721,7 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
   constraint_component_names <- c(
     "person", "facets", "score", "rating_min", "rating_max", "score_map",
     "noncenter_facet", "dummy_facets", "positive_facets", "anchors",
-    "group_anchors"
+    "group_anchors", "centering_scope"
   )
   constraint_components <- vapply(constraint_component_names, function(nm) {
     all(vapply(comparison_signatures[-1], function(sig) {
@@ -6299,17 +7093,19 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     er_rows <- list()
     for (i in 1:(nrow(tbl) - 1)) {
       for (j in (i + 1):nrow(tbl)) {
-        w_i <- tbl$AkaikeWeight[i]
-        w_j <- tbl$AkaikeWeight[j]
-        er <- if (is.finite(w_i) && is.finite(w_j) && w_j > 0) {
-          w_i / w_j
-        } else {
-          NA_real_
-        }
+        log_er <- (tbl$AIC[j] - tbl$AIC[i]) / 2
+        if (!is.finite(log_er)) log_er <- tbl$AIC[j] / 2 - tbl$AIC[i] / 2
+        er <- exp(log_er)
+        ratio_reason <- if (!is.finite(log_er)) "nonfinite_difference" else
+          if (!is.finite(er)) "overflow" else
+          if (er == 0) "underflow" else "available"
+        if (ratio_reason != "available") er <- NA_real_
         er_rows[[length(er_rows) + 1]] <- tibble(
           Model1        = tbl$Label[i],
           Model2        = tbl$Label[j],
-          EvidenceRatio = er
+          EvidenceRatio = er,
+          LogEvidenceRatio = log_er,
+          RatioReason = ratio_reason
         )
       }
     }
@@ -6469,7 +7265,10 @@ print.summary.mfrm_comparison <- function(x, ...) {
     er <- x$evidence_ratios
     for (k in seq_len(nrow(er))) {
       ratio_str <- if (is.finite(er$EvidenceRatio[k])) {
-        sprintf("%.2f", er$EvidenceRatio[k])
+        format(signif(er$EvidenceRatio[k], 3), trim = TRUE)
+      } else if (all(c("RatioReason", "LogEvidenceRatio") %in% names(er))) {
+        sprintf("NA (%s; log ratio = %s)", er$RatioReason[k],
+                format(signif(er$LogEvidenceRatio[k], 4), trim = TRUE))
       } else {
         "NA"
       }

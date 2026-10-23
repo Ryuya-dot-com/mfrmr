@@ -17,7 +17,9 @@ build_misfit_casebook(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.}
 
 \item{unexpected}{Optional output from \code{\link[=unexpected_response_table]{unexpected_response_table()}}.}
 
@@ -77,8 +79,15 @@ exploratory screening semantics from the underlying residual and strict
 marginal sources; it should not be read as a formal inferential case test.
 }
 
+\section{Saved-result reuse}{
+
+Supplied screening results must describe this fitted analysis. Results from
+another fit or older results without identity metadata are refused. See
+\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
+diagnostics without refitting the model.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 # A balanced slice retains every Rater and Criterion while running quickly.
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
@@ -89,9 +98,8 @@ casebook <- build_misfit_casebook(fit, diagnostics = diag, top_n = 10)
 summary(casebook)
 casebook$top_cases
 }
-}
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
-\code{\link[=displacement_table]{displacement_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_marginal_fit]{plot_marginal_fit()}}, \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}
+\code{\link[=displacement_table]{displacement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")}
 }

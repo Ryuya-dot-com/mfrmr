@@ -30,7 +30,7 @@ gmfrm_profile_controls_run <- function(out) {
       fit <- comparison$result$fits$q181
       stopifnot(!is.null(fit))
     }
-    result <- gmfrm_profile_capture(function() confint(fit,method="profile",slope=c(Task="t3"),
+    result <- gmfrm_profile_capture(function() confint(fit, parm = "slopes",method="profile",slope=c(Task="t3"),
       profile_control=if(name=="budget") list(maxit=1600L) else list()))
     # Save the full outcome before independent checks so a failing check is retained.
     z <- list(original=file.path(input,jobs[name]),case=old$case,fit=fit,

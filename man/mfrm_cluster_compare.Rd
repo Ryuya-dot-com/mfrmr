@@ -25,7 +25,10 @@ For imputed results, shared completed features must also match by
 imputation number. When feature selections differ, all results must retain
 the same \code{mids} object, including its data and settings; each retained
 completion is checked against it using the optional \code{mice} package.
-Reuse one fitted imputation model.}
+Reuse one fitted imputation model. Results saved in separate RDS files
+can be compared after reopening when their retained imputation data,
+settings and formula expressions are unchanged. Formula environments
+are not evaluated in this comparison; no completions are regenerated.}
 
 \item{x, object}{An object returned by \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}.}
 

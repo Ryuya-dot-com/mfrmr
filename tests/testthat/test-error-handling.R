@@ -139,10 +139,10 @@ test_that("estimate_bias rejects invalid diagnostics object", {
 })
 
 test_that("estimate_bias requires interaction facets specification", {
-  fake_fit <- structure(list(), class = c("mfrm_fit", "list"))
-  fake_diag <- list(obs = data.frame(x = 1))
+  fit <- make_toy_fit()
+  diagnostics <- make_toy_diagnostics(fit)
   expect_error(
-    estimate_bias(fake_fit, fake_diag),
+    estimate_bias(fit, diagnostics),
     "interaction_facets.*facet_a.*facet_b"
   )
 })

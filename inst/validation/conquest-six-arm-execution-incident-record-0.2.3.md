@@ -62,3 +62,11 @@ empty output paths. Candidate 002 results cannot be edited in place or pooled.
 | `R/api-export-bundles.R` | `26c7a329aaecef2e5023c344f08eddb2d7ae5d986379aadf5021e0acc471198b` |
 | `R/api-methods.R` | `6f3265b805dd0b751d9263fcad815799e71c0f2a959ef5bc01c2e7cc755152cc` |
 | `tests/testthat/test-export-bundles.R` | `2e34eb172293a47960cf64a01ee8441665b96da51760dbd2e5f7b9e7f43246f8` |
+
+## October 22, 2026 command-reset regression update
+
+The historical incident and source identities above remain unchanged. The
+current regression test now allows the generated command to begin with
+`reset;` before the datafile command, so prior session settings are cleared.
+The executable-input-only and historical disposition checks are retained.
+Current test SHA-256: `1e653e145a350d1ac56c168bd338be10a49322d1a83c2be76a4784baa57013e8`.

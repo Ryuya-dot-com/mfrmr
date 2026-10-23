@@ -23,22 +23,22 @@ test_that('verified weak-information cautions reach intervals, curves and report
   info$solution_information$inverse_review <- data.frame(Verified=TRUE,
     RelativeChange=1e-5,InverseResidual=1e-8,CurvatureScaledGradient=1e-6,Detail=caution)
   local_mocked_bindings(compute_mml_parameter_covariance=function(...) info,.package='mfrmr')
-  expect_warning(relative <- confint(f),'Ill-conditioned')
-  expect_warning(ci <- confint(f,scale='standardized'),'Ill-conditioned')
+  expect_warning(relative <- confint(f, parm = "slopes"),'Ill-conditioned')
+  expect_warning(ci <- confint(f, parm = "slopes",scale='standardized'),'Ill-conditioned')
   expect_true(all(attr(ci,'diagnostics')$CIEligible))
   expect_identical(attr(ci,'cautions'),caution)
   expect_identical(attr(relative,'cautions'),caution)
   expect_match(attr(relative,'diagnostics')$InferenceReview[1],'Ill-conditioned')
   expect_output(print(ci),'Caution: Ill-conditioned')
   expect_match(apa_table(ci)$table$InferenceReview[1],'Ill-conditioned')
-  expect_match(plot(ci,draw=FALSE)$labels$subtitle,'Ill-conditioned')
+  expect_match(paste(plot_data(plot(ci,draw=FALSE), "notes")$Text, collapse = "\n"),'Ill-conditioned')
   expect_null(plot(ci,draw=FALSE,subtitle=NULL)$labels$subtitle)
   grid <- data.frame(Theta=c(-1,0,1),Rater='R01',Criterion='C01')
   expect_warning(curves <- mfrm_curve_intervals(f,grid),'Ill-conditioned')
   expect_identical(curves$cautions,caution)
   expect_match(curves$table$InferenceReview[1],'Ill-conditioned')
   expect_output(print(curves),'Caution: Ill-conditioned')
-  expect_match(plot(curves,draw=FALSE)$labels$subtitle,'Ill-conditioned')
+  expect_match(paste(plot_data(plot(curves,draw=FALSE), "notes")$Text, collapse = "\n"),'Ill-conditioned')
   expect_null(plot(curves,draw=FALSE,subtitle=NULL)$labels$subtitle)
   saved <- mfrm_results(f,intervals=ci,include='fit',compute='never')
   expect_match(mfrm_report(saved)$tables$gpcm_inference_intervals$InferenceReview[1],'Ill-conditioned')
@@ -60,12 +60,16 @@ test_that('verified weak-information cautions reach intervals, curves and report
 test_that('slope transformations retain full covariance, scale uncertainty and multiplicity', {
   f <- gpcm_inference_fixture()$fit
   cv <- mfrmr:::compute_mml_parameter_covariance(f)
+  local_mocked_bindings(compute_mml_parameter_covariance = function(res, ...) {
+    stopifnot(identical(res, f))
+    cv
+  }, .package = 'mfrmr')
   at <- cv$param_slices$log_slopes; sigma <- cv$param_slices$log_sigma2
   # Independent explicit coordinate matrix, including the scale cross terms.
   j <- matrix(0,3,length(f$opt$par)); j[,at] <- rbind(c(1,0),c(0,1),c(-1,-1))
   j[,sigma] <- .5
   expected <- j %*% cv$cov %*% t(j)
-  ci <- confint(f,scale='standardized')
+  ci <- confint(f, parm = "slopes",scale='standardized')
   expect_true(all(attr(ci,'diagnostics')$CIEligible))
   expect_equal(unname(attr(ci,'covariance')),unname(expected),tolerance=1e-10)
   estimate <- f$slopes$Estimate * sqrt(f$population$sigma2)
@@ -73,20 +77,64 @@ test_that('slope transformations retain full covariance, scale uncertainty and m
   expect_equal(as.numeric(ci[,1]),estimate*exp(-qnorm(.975)*sqrt(diag(expected))),tolerance=1e-9)
   cmat <- rbind('A/B'=c(1,-1,0),'A/C'=c(1,0,-1))
   colnames(cmat) <- f$slopes$SlopeFacet
-  ratio <- confint(f,contrasts=cmat)
-  standardized <- confint(f,contrasts=cmat,scale='standardized')
+  ratio <- confint(f, parm = "slopes",contrasts=cmat)
+  standardized <- confint(f, parm = "slopes",contrasts=cmat,scale='standardized')
   expect_equal(as.vector(ratio),as.vector(standardized),tolerance=1e-10)
-  reordered <- confint(f,contrasts=cmat[,3:1,drop=FALSE])
+  reordered <- confint(f, parm = "slopes",contrasts=cmat[,3:1,drop=FALSE])
   expect_equal(ratio,reordered)
-  difference <- confint(f,contrasts=cmat,contrast_scale='difference')
+  difference <- confint(f, parm = "slopes",contrasts=cmat,contrast_scale='difference')
   expect_equal(attr(difference,'diagnostics')$Estimate,unname(drop(cmat %*% f$slopes$Estimate)))
-  simultaneous <- confint(f,contrasts=cmat,simultaneous='bonferroni')
+  simultaneous <- confint(f, parm = "slopes",contrasts=cmat,simultaneous='bonferroni')
   expect_true(all(simultaneous[,1] <= ratio[,1]))
   expect_true(all(simultaneous[,2] >= ratio[,2]))
   expect_equal(attr(simultaneous,'diagnostics')$PValue,pmin(1,2*attr(ratio,'diagnostics')$PValue))
   bad <- cmat; bad[1,1] <- 2
-  expect_error(confint(f,contrasts=bad),'summing to zero')
-  expect_error(confint(f,adjust=TRUE),'sandwich')
+  expect_error(confint(f, parm = "slopes",contrasts=bad),'summing to zero')
+  expect_error(confint(f, parm = "slopes",adjust=TRUE),'sandwich')
+})
+
+test_that('extreme valid confidence levels preserve slope and curve tail probabilities', {
+  f <- readRDS(test_path('fixtures', 'mfrm-conditional-scoring-gpcm.rds'))$fit
+  # Reuse fresh derivatives for this unchanged fit, retaining every target/tail check.
+  information <- compute_mml_parameter_covariance(f)
+  scores <- mfrm_mml_person_scores_numeric(f)
+  local_mocked_bindings(compute_mml_parameter_covariance = function(res, ...) {
+    stopifnot(identical(res, f))
+    information
+  }, mfrm_mml_person_scores_numeric = function(fit, relative_step = 1e-5) {
+    stopifnot(identical(fit, f), identical(relative_step, 1e-5))
+    scores
+  }, .package = 'mfrmr')
+  level <- 1 - .Machine$double.eps / 2
+  grid <- unique(f$prep$data[f$config$facet_names])[1:2, , drop = FALSE]
+  grid$Theta <- 0
+  # Independent inversion of the normal survival probability, including a
+  # Bonferroni tail too small to represent its complementary CDF below one.
+  critical <- function(n) uniroot(function(z)
+    pnorm(z, lower.tail = FALSE, log.p = TRUE) - log((1-level)/(2*n)),
+    c(0, 20), tol = 1e-12)$root
+  for (method in c('model', 'sandwich')) for (simultaneous in c('none', 'bonferroni')) {
+    for (scale in c('relative', 'standardized')) {
+      ci <- confint(f, parm = "slopes", level = level, scale = scale, method = method,
+        simultaneous = simultaneous)
+      tab <- attr(ci, 'diagnostics')
+      expect_true(all(tab$CIEligible))
+      z <- critical(if (simultaneous == 'none') 1 else nrow(tab))
+      expect_equal(log(as.numeric(ci[, 1])), log(tab$Estimate)-z*tab$LogSE, tolerance = 1e-10)
+      expect_equal(log(as.numeric(ci[, 2])), log(tab$Estimate)+z*tab$LogSE, tolerance = 1e-10)
+    }
+    for (type in c('probability', 'information')) {
+      ci <- mfrm_curve_intervals(f, grid, type = type, level = level,
+        method = method, simultaneous = simultaneous)
+      tab <- ci$table
+      expect_true(all(tab$CIEligible))
+      z <- critical(if (simultaneous == 'none') 1 else nrow(tab))
+      link <- if (type == 'probability') qlogis else log
+      link_se <- tab$SE / if (type == 'probability') tab$Estimate*(1-tab$Estimate) else tab$Estimate
+      expect_equal(link(tab$Lower), link(tab$Estimate)-z*link_se, tolerance = 1e-8)
+      expect_equal(link(tab$Upper), link(tab$Estimate)+z*link_se, tolerance = 1e-8)
+    }
+  }
 })
 
 test_that('GPCM sandwich aggregates Person vectors and preserves cluster failure reasons', {
@@ -97,12 +145,12 @@ test_that('GPCM sandwich aggregates Person vectors and preserves cluster failure
   expect_equal(inf$covariance,expected,tolerance=1e-10,ignore_attr=TRUE)
   ids <- rownames(inf$person_scores)
   clusters <- data.frame(Person=ids,Cluster=rep(c('school1','school2'),length.out=length(ids)))
-  limited <- confint(f,method='sandwich',clusters=clusters)
+  limited <- confint(f, parm = "slopes",method='sandwich',clusters=clusters)
   expect_true(all(is.na(limited)))
   expect_match(attr(limited,'diagnostics')$InferenceReview[1],'span the free parameters')
   adjusted <- mfrmr:::mfrm_gpcm_inference(f,method='sandwich',adjust=TRUE)
   expect_equal(adjusted$covariance,inf$covariance*length(ids)/(length(ids)-1),tolerance=1e-10)
-  expect_error(confint(f,method='sandwich',clusters=clusters[-1,]),'every fitted Person')
+  expect_error(confint(f, parm = "slopes",method='sandwich',clusters=clusters[-1,]),'every fitted Person')
   # Check the derivative-sum identity away from the optimum as well.
   shifted <- f; shifted$opt$par[1] <- shifted$opt$par[1] + .02
   scores <- mfrmr:::mfrm_mml_person_scores_numeric(shifted)
@@ -113,18 +161,18 @@ test_that('GPCM sandwich aggregates Person vectors and preserves cluster failure
 test_that('one shared information budget governs interval and IC qualification', {
   f <- gpcm_inference_fixture()$fit
   withr::local_options(mfrmr.max_information_bytes=1)
-  ci <- confint(f)
+  ci <- confint(f, parm = "slopes")
   expect_true(all(is.na(ci)))
   expect_match(attr(ci,'diagnostics')$InferenceReview[1],'workspace')
   check <- mfrmr:::mfrm_ic_fit_check(f,mfrmr:::mfrm_extract_fit_ic_contract(f))
   expect_false(check$eligible)
   expect_match(check$review,'workspace')
-  expect_match(attr(confint(f,scale='standardized'),'diagnostics')$InferenceReview[1],'workspace')
+  expect_match(attr(confint(f, parm = "slopes",scale='standardized'),'diagnostics')$InferenceReview[1],'workspace')
   curve <- mfrm_curve_intervals(f,data.frame(Theta=0,Rater='R01',Criterion='C01'))
   expect_false(any(curve$table$CIEligible))
   expect_match(curve$table$InferenceReview[1],'workspace')
   withr::local_options(mfrmr.max_information_bytes=1+1i)
-  expect_error(confint(f),'finite positive byte count')
+  expect_error(confint(f, parm = "slopes"),'finite positive byte count')
 })
 
 test_that('explicit population replay preserves covariates and rejects changed coding', {
@@ -285,6 +333,9 @@ test_that('returned but rejected bootstrap estimates remain diagnostic and never
 test_that('bootstrap comparison stages retain a returned alternative when the null refit fails', {
   f <- gpcm_inference_fixture()$fit
   null <- f; null$config$model <- 'PCM'
+  # The mock PCM generator retains population coordinates after removing slopes.
+  slope_indices <- build_param_slices(build_param_sizes(f$config))[["log_slopes"]]
+  null$opt$par <- f$opt$par[-slope_indices]
   comparison <- list(comparison_basis=list(lrt_status='computed'),lrt=data.frame(ChiSq=1))
   calls <- 0L
   local_mocked_bindings(compare_mfrm=function(...) comparison,
@@ -364,8 +415,8 @@ test_that('singleton bootstrap warnings survive intervals and reports without gr
   expect_error(bootstrap_mfrm_gpcm(weak,nsim=2,seed=9156,null_fit=null),'category support')
   skip_if_not_installed('ggplot2')
   p <- plot(ci,draw=FALSE)
-  expect_match(p$labels$subtitle,'Singleton')
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"),'Singleton')
   expect_null(plot(ci,subtitle=NULL,draw=FALSE)$labels$subtitle)
-  expect_identical(plot(ci,subtitle='Custom',draw=FALSE)$labels$subtitle,'Custom')
+  expect_identical(plot_data(plot(ci,subtitle='Custom',draw=FALSE), "subtitle"),'Custom')
   expect_no_error(ggplot2::ggplot_build(p))
 })

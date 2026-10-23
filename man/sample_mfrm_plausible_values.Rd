@@ -88,6 +88,8 @@ checks of the fitted calibration and numerical accuracy are unchanged.}
 An object of class \code{mfrm_plausible_values} with components:
 \itemize{
 \item \code{values}: one row per person per draw
+\item \code{fit_identity}: source calibration, fitted population coding and scoring
+status retained from \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}
 \item \code{estimates}: companion posterior EAP summaries
 \item \code{row_review}: row-preparation review
 \item \code{population_review}: optional person-level omission review for
@@ -171,6 +173,14 @@ of item parameters: Application of an EM algorithm}. Psychometrika, 46(4),
 \item Mislevy, R. J. (1991). \emph{Randomization-based inference about latent
 variables from complex samples}. Psychometrika, 56(2), 177-196.
 }
+}
+
+\section{Saved-result reuse}{
+
+Fit-level export and replay helpers check the source calibration and scoring
+status of supplied draws. Recreate older results from the saved fit and
+original scoring inputs/settings, including the seed. This repeats drawing
+values without refitting the calibration. See \link{mfrmr_compatibility_layer}.
 }
 
 \examples{

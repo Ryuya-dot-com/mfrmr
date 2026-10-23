@@ -39,7 +39,10 @@ test_that("extended reporting collects saved values without model computations",
   expect_identical(res$tables$person_scores, scores$table)
   expect_identical(res$tables$scoring_omitted_rows$InputRow, 5:6)
   expected <- fit$calibration_table; expected$Lower <- expected$Upper <- NA_real_
-  expect_identical(res$tables$calibration, expected)
+  expect_identical(res$tables$calibration[names(expected)], expected)
+  expect_true(all(res$tables$calibration$IntervalStatus == "not_requested"))
+  expect_false(any(res$tables$calibration$CIEligible))
+  expected <- res$tables$calibration
   expect_identical(res$tables$data_usage$Omitted, 1L)
   expect_true(all(res$status$Status[res$status$Section %in% c("diagnostics", "bias", "linking", "response_time", "apa")] == "not_available"))
   expect_match(summary(res)$decision$Interpretation, "model adequacy not assessed")
@@ -131,7 +134,10 @@ test_that("random-rater report retains every bootstrap trial and infinite endpoi
   expect_identical(plot_data(plot(res, type = "intervals", draw = FALSE))$table$Lower,
     res$tables$bootstrap_intervals$Lower)
   expected <- fit$raters; expected$Lower <- expected$Upper <- NA_real_
-  expect_identical(res$tables$raters, expected)
+  expect_identical(res$tables$raters[names(expected)], expected)
+  expect_true(all(res$tables$raters$IntervalStatus == "not_requested"))
+  expect_false(any(res$tables$raters$CIEligible))
+  expected <- res$tables$raters
   expect_identical(plot_data(plot(res, draw = FALSE))$table, expected)
   expect_match(res$tables$interval_basis$Interval[3], "No automatic")
   bad <- intervals; bad$source$raters$Estimate[1] <- 77
@@ -187,7 +193,12 @@ test_that("explicit calibration intervals agree across saved-fit output routes",
       expect_equal(as.numeric(ci), as.numeric(as.matrix(expected[1:3, c("Lower", "Upper")])))
       expect_identical(attr(ci, "level"), level)
       expect_match(attr(ci, "note"), "nominal coverage is not established")
-      expect_identical(summary(fit, calibration_intervals = "normal", level = level)$calibration, expected)
+      actual <- summary(fit, calibration_intervals = "normal", level = level)$calibration
+      expect_identical(actual[names(expected)], expected)
+      expect_identical(actual$IntervalStatus, c(rep("available", 3), "unsupported_target"))
+      expect_identical(actual$CIEligible, c(TRUE, TRUE, TRUE, FALSE))
+      expect_identical(attr(ci, "diagnostics"), actual[1:3, ])
+      expected <- actual
       res <- mfrm_results(fit, calibration_intervals = "normal", calibration_level = level)
       expect_identical(res$tables$calibration, expected)
       expect_identical(mfrm_report(res)$tables$calibration, expected)

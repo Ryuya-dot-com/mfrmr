@@ -278,13 +278,13 @@ mfrm_extended_results_plot <- function(x, type, ...) {
 mfrm_extended_report <- function(x, style) {
   tables <- x$tables
   numerical <- isTRUE(x$fit$checks$NumericalReady) && isTRUE(x$fit$checks$InformationPositive)
-  first_screen <- data.frame(Area = c("Overall", "Numerical checks", "Interval interpretation", "Model-fit diagnostics"),
-    Status = c(if (numerical) "caveat" else "review", if (numerical) "ok" else "review", "caveat", "unavailable"),
-    Readiness = c("Target-specific review", "Numerical only", "Conditional on stated assumptions", "Not assessed"),
+  first_screen <- data.frame(Area = c("Overall", "Numerical checks", "Interval interpretation", "Response residuals"),
+    Status = c(if (numerical) "caveat" else "review", if (numerical) "ok" else "review", "caveat", "not_computed"),
+    Readiness = c("Target-specific review", "Numerical only", "Conditional on stated assumptions", "Not supplied"),
     MainIssue = c(x$decision$Interpretation, "Numerical convergence does not establish model adequacy.",
-      "Read the target and uncertainty basis for each reported quantity.", "Ordinary residual diagnostics are not implemented for this class."),
+      "Read the target and uncertainty basis for each reported quantity.", "No saved response diagnostics were supplied. Ordinary residual diagnostics are not implemented for this model class."),
     NextAction = c(x$decision$NextAction, "Inspect all stored checks and boundary status.",
-      "Retain interval limitations, unavailable rows and omitted-score counts.", "Do not interpret convergence as evidence of good model fit."),
+      "Retain interval limitations, unavailable rows and omitted-score counts.", "If needed, review numerical readiness, then compute mfrm_response_diagnostics(fit) and attach it with mfrm_results(fit, response_diagnostics = diagnostics). These summaries are descriptive; ordinary-model cutoffs do not apply."),
     PrimaryRoute = c("report$tables$interpretation", "report$tables$numerical_checks",
       "report$tables$interval_basis", "report$tables$section_status"))
   if (!is.null(x$diagnostics)) {

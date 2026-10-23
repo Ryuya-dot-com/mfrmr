@@ -402,6 +402,13 @@ test_that("source readiness and optional lanes do not inherit core eligibility",
   )
   expect_identical(err$code, "SOURCE_READINESS_INELIGIBLE")
 
+  for (par in list(head(fit$opt$par, -1L), c(fit$opt$par, 0))) {
+    malformed <- fit; malformed$opt$par <- par
+    err <- capture_calibration_error(extract_mfrm_calibration(malformed))
+    expect_identical(err$code, "SOURCE_READINESS_INELIGIBLE")
+    expect_match(conditionMessage(err), "Parameter vector length")
+  }
+
   gpcm <- fit
   gpcm$config$model <- "unsupported"
   err <- capture_calibration_error(

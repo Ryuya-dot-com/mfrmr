@@ -86,7 +86,7 @@ if (profile == "baseline") {
   single$Rater <- ((single$Person - 1L) + (single$Task - 1L) %% 4L) %% n_rater + 1L
   single$Content <- sin(seq_len(nrow(single)))
   single_failure <- tryCatch({
-    mfrm_multivariate_gstudy(single, "Content", method = "minque0")
+    mfrm_g_study(single, "Content", method = "minque0")
     NA_character_
   }, error = function(e) conditionMessage(e))
   stopifnot(nrow(single) == 960L, grepl("Cannot separate covariance components", single_failure))
@@ -144,7 +144,7 @@ for (replicate in seq_len(repetitions)) {
     # Organization stays observed in these rows; omission must use one shared
     # multivariate sample. No support repair or replacement sampling is used.
     position <- (replicate - 1L) * length(cases) + match(case, cases)
-    g <- tryCatch(mfrm_multivariate_gstudy(data, scores, method = "minque0", missing = "omit"),
+    g <- tryCatch(mfrm_g_study(data, scores, method = "minque0", missing = "omit"),
       error = function(e) e)
     returned <- !inherits(g, "error")
     result <- data.frame(Replicate = replicate, Seed = seed_base + replicate, Case = case,
@@ -156,10 +156,10 @@ for (replicate in seq_len(repetitions)) {
       Error = if (returned) "" else conditionMessage(g))
     if (returned) {
       if (replicate == 1L && case == "Complete") {
-        anova <- mfrm_multivariate_gstudy(data, scores)
+        anova <- mfrm_g_study(data, scores)
         stopifnot(isTRUE(all.equal(g$components, anova$components, tolerance = 1e-10)))
       }
-      d <- mfrm_multivariate_d_study(g, design_grid, weights)$coefficients
+      d <- mfrm_d_study(g, design_grid, weights)$coefficients
       stopifnot(identical(d$Score, colnames(vectors)),
         g$data_usage$counts[["UsedRows"]] == result$UsedRows)
       result[c("Persons", "Raters", "Tasks")] <- as.list(unname(g$design$counts))

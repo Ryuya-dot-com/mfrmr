@@ -40,7 +40,11 @@ positions are used as score-file numbers.}
 
 \item{format}{File format. \code{"auto"} detects FACETS \code{score.N.txt} files from
 their name/header; \code{"delimited"} reads a CSV/TSV/semicolon table; and
-\code{"scorefile"} reads a FACETS score-file table.}
+\code{"scorefile"} reads a FACETS score-file table. Fixed-field input requires
+validated all-field headings with element number after the statistics;
+appended facet fields are separated from the element label. Headerless,
+element-first and selected-field fixed layouts are rejected. Use named
+delimited columns for those layouts.}
 
 \item{facet_col, level_col}{Optional explicit column names for delimited
 tables when automatic detection is not sufficient. For score files,

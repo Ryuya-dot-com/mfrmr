@@ -79,7 +79,7 @@ gmfrm_sparse_run <- function(out, first, last, cores=2L) {
           step_facet="Rater",noncenter_facet="Rater",gpcm_mml_identification="fixed_standard_normal",
           mml_engine="em",rating_min=0,rating_max=2,category_policy="preserve",
           quad_points=plan$quad_points,maxit=plan$maxit,em_score_tol=plan$em_score_tol)
-        ci <- confint(fit,level=plan$level)
+        ci <- confint(fit, parm = "slopes",level=plan$level)
       },error=function(e) error <<- conditionMessage(e)),warning=function(w) {
         warnings <<- c(warnings,conditionMessage(w)); invokeRestart("muffleWarning")
       }))["elapsed"]

@@ -62,4 +62,7 @@ probabilities would discard that dependence. This function does not score
 latent abilities from responses or impute missing assigned scores.
 Use \code{\link[=score_mfrm_random_rater]{score_mfrm_random_rater()}} for conditional Person scoring from a
 complete joint response roster.
+Supplying a score column in \code{newdata} does not update rater distributions
+or estimate abilities. Use the scoring function and its complete-roster
+rules when the input is a new batch of observed responses.
 }

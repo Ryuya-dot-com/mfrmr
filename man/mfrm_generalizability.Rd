@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-generalizability.R
 \name{mfrm_generalizability}
 \alias{mfrm_generalizability}
-\title{Generalizability-theory variance decomposition for an MFRM design}
+\title{Main-effects generalizability approximation for an MFRM design}
 \usage{
 mfrm_generalizability(
   fit,
@@ -26,9 +26,10 @@ and cannot be facet names.}
 \item{object_facet}{Facet that plays the role of the "object of
 measurement" -- typically \code{"Person"} (default).}
 
-\item{random_facets}{Character vector of non-person facets to
-treat as random conditions of measurement. Default uses every
-facet other than \code{object_facet}.}
+\item{random_facets}{Character vector of other facets to
+treat as random conditions of measurement. The default uses \code{Person}
+and the configured MFRM facets, excluding \code{object_facet}. For example,
+when raters are the objects, persons remain a random condition.}
 
 \item{reml}{Logical, passed to \code{\link[lme4:lmer]{lme4::lmer()}} (default \code{TRUE}).}
 
@@ -41,14 +42,20 @@ columns. Missingness in unselected columns does not exclude a row.}
 An object of class \code{mfrm_generalizability} with:
 \describe{
 \item{\code{variance_components}}{One row per random effect plus
-residual, with columns \code{Source}, \code{Variance}, and
-\code{ProportionVariance}.}
+residual, with columns \code{Source}, \code{Variance}, \code{ProportionVariance},
+and \code{Identified}. When \code{Identified} is false, the fitted allocation
+and its proportion are not uniquely determined by the source design.}
 \item{\code{coefficients}}{One-row data frame with \code{G}
 (generalizability coefficient, relative decision) and
 \code{Phi} (dependability coefficient, absolute decision), coefficient
 status labels, and the identification status of the fitted
-random-effects model.}
-\item{\code{design}}{Description of the crossed-random model.}
+random-effects model. \code{GReason} and \code{PhiReason} explain missing
+coefficients; an empty reason means the point is calculable.
+\code{ComponentIdentificationChecked} records the design check.}
+\item{\code{design}}{Description of the crossed-random model.
+\code{component_identification} retains the covariance-kernel Gram matrix,
+rank, scaled eigenvalues, null space and numerical tolerance.
+\code{fit_status} retains the separate lme4 boundary/convergence assessment.}
 \item{\code{data_usage}}{Input source, omission policy, named \code{counts}
 (\code{InputRows}, \code{UsedRows}, \code{ExcludedRows}), \code{excluded_rows}, and
 \code{missing_cells} (\code{InputRow}, \code{Column}). Row positions refer to the supplied
@@ -62,11 +69,11 @@ coefficient table and D-study projections, including tabular exports;
 Re-fits the rating data underlying an \code{mfrm_fit} as a crossed
 random-effects model
 \code{Score ~ 1 + (1 | Person) + (1 | Facet1) + ... + Residual}
-via \code{lme4::lmer}, and returns the canonical G-theory variance
-components plus G / Phi coefficients. Useful when reviewers ask
-for a generalizability-theory complement to the Rasch-style
-separation / reliability statistics that \code{diagnose_mfrm()}
-already emits.
+via \code{lme4::lmer}, and returns main-effect variance components,
+residual variance, and G / Phi coefficients under this simplified model.
+Interactions are not estimated separately. For a G-study including the
+supported interactions, use \code{\link[=mfrm_g_study]{mfrm_g_study()}} with one or two
+common random facets; it also accepts a single score column.
 }
 \details{
 The decomposition is on the observed numeric \code{Score} scale. It does not use
@@ -92,6 +99,34 @@ in a Gaussian linear mixed model; thresholding is not modeled.
 }
 }
 
+\section{Component identification and boundary estimates}{
+
+A zero variance estimate can be a valid constrained ML/REML solution.
+It is distinct from a design that cannot separate two variance components.
+For example, if every rater identifier always corresponds to the same
+task identifier, their main-effect covariance kernels coincide. Their
+sum may be identified while the individual allocations are not.
+\code{isSingular()} alone does not test this design property.
+
+The design check uses linear independence of the observation covariance
+kernels (after projecting out the intercept for REML). Only variance
+combinations orthogonal to the numerical null space enter coefficients.
+Thus an identified sum can still supply Phi, while a future plan assigning
+unequal weights to its confounded components cannot. Individual fitted
+allocations remain available with \code{Identified = FALSE} for diagnosis.
+A full numerical rank does not establish correct model assumptions,
+optimizer accuracy or finite-sample precision.
+This is a linear design check; fitted boundary zeros are not used to
+resolve otherwise confounded components.
+
+If object variance is zero and the relevant error variance is positive,
+G or Phi equals zero and is retained with boundary diagnostics. A zero
+total variance gives an undefined ratio and \code{zero_total_variance}.
+The historical \code{IdentificationStatus} field summarizes design and fit
+cautions; inspect \code{design$component_identification} and \code{design$fit_status}
+to distinguish them. This function does not supply coefficient intervals.
+}
+
 \section{Limitations}{
 
 This helper formulates the random-effects model with main effects
@@ -108,11 +143,15 @@ Because person-by-facet interaction terms are not estimated separately,
 D-study projections remain practical planning evidence rather than a
 replacement for a fully specified G-theory design. Counts held constant in
 a D-study do not turn a random facet into a fixed-facet universe. Variance
-estimation uncertainty is not propagated to G/Phi. Component values are
+estimation uncertainty is not propagated to G/Phi. Component values and G/Phi are
 stored at full precision; rounding is only for display. Recreate older
 G/D results from the existing MFRM fit before reuse.
 Boundary or singular \code{lme4} fits are retained as diagnostic evidence but are
 not treated as decision-ready G/D-study evidence.
+New results record component separation explicitly. Earlier saved G-studies
+without this record can still supply conditional D-study calculations,
+with \code{ComponentIdentificationChecked = FALSE}; recreate the G-study from
+the original ratings to obtain the check. This needs no MFRM refit.
 
 Omission does not correct missing-data bias or identify why ratings are
 absent. Entirely absent assignments are not reconstructed. Review the
@@ -124,18 +163,7 @@ calculation version is current, but unavailable row counts are not guessed;
 rerun the G-study with the original data to obtain row accounting.
 }
 
-\section{References}{
-
-\itemize{
-\item Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
-(1972). \emph{The dependability of behavioral measurements: Theory
-of generalizability for scores and profiles}. Wiley.
-\item Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
-}
-}
-
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -158,7 +186,22 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   # design-review evidence rather than decision-ready reliability.
 }
 }
+\references{
+Bates, D., Maechler, M., Bolker, B., & Walker, S. (2015). Fitting linear
+mixed-effects models using lme4. \emph{Journal of Statistical Software, 67}(1),
+1--48. \doi{10.18637/jss.v067.i01}. Gaussian ML/REML model and optimization.
+See also \url{https://lme4.github.io/lme4/reference/isSingular.html} for
+the meaning of a singular fitted covariance matrix.
+
+Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
+(1972). \emph{The dependability of behavioral measurements: Theory
+of generalizability for scores and profiles}. Wiley.
+
+Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
+\doi{10.1007/978-1-4757-3456-0}. General G/D framework; the main-effects
+restriction and residual-scaling choices here are package-specific limits.
 }
 \seealso{
-\code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
+\code{\link[=mfrm_g_study]{mfrm_g_study()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}},
+\code{\link[=compute_facet_icc]{compute_facet_icc()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}
 }

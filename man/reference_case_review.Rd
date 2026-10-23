@@ -67,13 +67,11 @@ pass rate.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 review <- reference_case_review(fit, diagnostics = diag)
 summary(review)
-}
 }
 \seealso{
 \code{\link[=facets_output_contract_review]{facets_output_contract_review()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}}

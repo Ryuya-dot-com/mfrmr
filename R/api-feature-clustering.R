@@ -176,9 +176,17 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   `medoids`, the reviewed `feature_data`, and `settings`. Silhouette values
 #'   describe within-sample separation, not membership probabilities or
 #'   resampling stability. `summary()` returns the cluster-size/silhouette table.
+#'   Numeric profiles report the mean, median and sample SD in the original
+#'   feature units. SD is `NA` for a one-entity group and zero for identical
+#'   values in a group with at least two entities. A singleton's silhouette is
+#'   zero by convention; it is not evidence of group separation.
 #' @details Numeric differences are divided by the feature range among included
-#'   entities; nominal features use match/mismatch, ordered factors use their
-#'   declared order, and logical features use symmetric binary differences.
+#'   entities; nominal features use match/mismatch and logical features use
+#'   symmetric binary differences. Ordered factors use equally spaced integer
+#'   codes in their declared level order, divided by the observed code range.
+#'   Unused intermediate levels retain their spacing. The Gower dissimilarity
+#'   is the weighted mean of these feature contributions, dividing by the sum
+#'   of the selected weights. Weights apply to features, not entities.
 #'   Numeric 0/1 features are treated as numeric, not asymmetric presence/absence.
 #'   Every selected feature must vary among included entities. Gower scaling,
 #'   feature types, weights, omission policy, and numeric ranges are retained.
@@ -320,9 +328,17 @@ cluster_feature_profiles <- function(values, labels) {
   for (g in seq_len(max(labels))) for (name in names(values)) {
     value <- values[[name]][labels == g]
     if (is.numeric(value)) {
+      spread <- stats::sd(value)
+      if (length(value) > 1L && any(value != value[1L]) &&
+          (!is.finite(spread) || spread < sqrt(.Machine$double.xmin))) {
+        # SD can be representable even when its squared intermediate is not.
+        shifted <- value - value[1L]
+        unit <- max(abs(shifted))
+        spread <- stats::sd(shifted / unit) * unit
+      }
       numeric_profiles[[length(numeric_profiles) + 1L]] <- data.frame(
         Cluster = g, Feature = name, N = length(value), Mean = mean(value),
-        Median = stats::median(value), SD = stats::sd(value))
+        Median = stats::median(value), SD = spread)
     } else {
       counts <- table(if (is.logical(value)) factor(value, levels = c(FALSE, TRUE)) else value)
       categorical_profiles[[length(categorical_profiles) + 1L]] <- data.frame(

@@ -18,7 +18,9 @@ facets_output_contract_review(
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. If omitted,
-diagnostics are computed internally with \code{residual_pca = "none"}.}
+diagnostics are computed internally with \code{residual_pca = "none"}.
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.}
 
 \item{bias_results}{Optional output from \code{\link[=estimate_bias]{estimate_bias()}}. If omitted and
 at least two facets exist, a 2-way bias run is computed internally.}
@@ -110,15 +112,21 @@ retain the scope limitation in the report.
 }
 }
 
+\section{Saved-result reuse}{
+
+Supplied screening results must describe this fitted analysis. Results from
+another fit or older results without identity metadata are refused. See
+\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
+diagnostics without refitting the model.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 contract_review <- facets_output_contract_review(fit, diagnostics = diag, branch = "facets")
 summary(contract_review)
 p <- plot(contract_review, draw = FALSE)
-}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_fixed_reports]{build_fixed_reports()}},

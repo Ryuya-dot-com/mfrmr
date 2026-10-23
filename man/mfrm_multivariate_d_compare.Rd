@@ -17,10 +17,10 @@ mfrm_multivariate_d_compare(
 
 \method{summary}{mfrm_multivariate_d_comparison}(object, ...)
 
-\method{print}{mfrm_multivariate_d_comparison}(x, ...)
+\method{print}{mfrm_multivariate_d_comparison}(x, digits = NULL, row.names = FALSE, ...)
 }
 \arguments{
-\item{x}{A result from \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} with at least two plans.}
+\item{x}{A result from \code{\link[=mfrm_d_study]{mfrm_d_study()}} with at least two plans.}
 
 \item{reference}{Row number of the reference plan in \code{x$design_grid}.}
 
@@ -38,7 +38,13 @@ This assumption is not tested by the function.}
 
 \item{object}{A result from \code{mfrm_multivariate_d_compare()}.}
 
-\item{...}{Reserved for method compatibility.}
+\item{...}{Further table-printing arguments for \code{print()}; unused arguments
+to \code{summary()} are rejected.}
+
+\item{digits}{Display precision passed to the printed tables; \code{NULL} uses
+R's current setting. Stored estimates are unchanged.}
+
+\item{row.names}{Logical; print table row names? Defaults to \code{FALSE}.}
 }
 \value{
 An \code{mfrm_multivariate_d_comparison} list with \code{comparisons} (one row
@@ -52,6 +58,7 @@ plans and includes composite weights. Save the full comparison with
 \code{saveRDS()}; a CSV of \code{summary()} alone does not retain this context or
 the confidence level and approximation assumptions. Earlier saved
 comparisons without source context remain readable and say it is absent.
+\code{print()} returns the same comparison invisibly without recomputation.
 \code{summary()} returns the comparison table. \code{Status} describes interval
 availability; point differences can remain available without an interval.
 }
@@ -77,6 +84,18 @@ One-facet, nested, fixed-facet, nonnormal-robust and informative-missingness
 intervals are not provided. Ordinal score labels alone do not justify normal
 effects. Incomplete source designs can have much weaker information than
 complete designs with the same numbers of observed levels.
+For G/Phi differences from a complete balanced one-facet ANOVA source, use
+\code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}} with \code{parm = "G"} or \code{"Phi"} and
+\code{reference}. Those methods map an F or generalized confidence set, respectively;
+Phi retains approximate coverage. Neither uses this delta approximation.
+The same generic supports one-facet \code{"RelativeSEM"} and \code{"AbsoluteSEM"}
+differences by mapping a common error-SD interval. Relative SEM retains
+exact positive-variance normal-model coverage; absolute SEM uses approximate MLS.
+For general balanced crossed/nested two-facet plans, that generic also
+accepts explicit \code{method = "mean_square_region"} with \code{reference} for
+conservative G/Phi/SEM difference enclosures from shared source uncertainty.
+These are not paired-delta intervals or tight joint difference images;
+they can be wide. The delta method in this function keeps its crossed scope.
 
 The method uses raw estimated components in the Gaussian covariance of
 quadratic-form estimates, then the delta method for paired differences and
@@ -106,21 +125,54 @@ analyzed data. For incomplete sources, covariance computation processes
 blocks of rows to avoid a full observation-by-observation matrix; its running
 time is still quadratic in the number of observed ratings.
 }
-\examples{
-# Fictional continuous ratings: two common random facets, two score components.
-set.seed(24)
-ratings <- expand.grid(Person = 1:40, Rater = 1:8, Task = 1:6)
-ratings$Content <- ratings$Organization <- 0
-sources <- list("Person", "Rater", "Task", c("Person", "Rater"),
-  c("Person", "Task"), c("Rater", "Task"), c("Person", "Rater", "Task"))
-for (source in sources) {
-  group <- interaction(ratings[source], drop = TRUE)
-  effects <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
-  ratings[c("Content", "Organization")] <-
-    ratings[c("Content", "Organization")] + effects[as.integer(group), ]
+\section{Calculation and source of the approximation}{
+
+For one selected score or fixed composite, write its observed values as
+the vector \eqn{z}. Its seven raw component estimates can be written as
+\eqn{\hat\theta_s = z' A_s z}{theta_hat_s = z' A_s z}, where each symmetric \eqn{A_s} is fixed by
+the observed design and removes the common mean: \eqn{A_s 1 = 0}.
+For MINQUE(0), let \eqn{K_s} indicate shared levels for component \eqn{s},
+\eqn{H = I - 11'/N}, \eqn{B_s = H K_s H}, and
+\eqn{S_{st} = \mathrm{tr}(B_s B_t)}{S_st = tr(B_s B_t)}. Then
+\eqn{A_s = \sum_t (S^{-1})_{st} B_t}. These are the moment equations
+described in \code{\link[=mfrm_g_study]{mfrm_g_study()}} and the MINQUE framework of Rao
+(1971).
+
+Under the stated Gaussian model with covariance
+\eqn{V = \sum_s \theta_s K_s}, the quadratic-form identity is
+\deqn{C_{st} = \mathrm{Cov}(\hat\theta_s,\hat\theta_t)
+             = 2\mathrm{tr}(A_s V A_t V).}{C_st = Cov(theta_hat_s, theta_hat_t) = 2 tr(A_s V A_t V).}
+This follows from the product moment in Magnus (1978, p. 209), subtracting
+the product of the expectations. The mean term vanishes because each
+\eqn{A_s} removes the intercept. The identity concerns the \strong{true} covariance;
+this function substitutes raw estimated components into \eqn{V}.
+
+For a metric \eqn{f} and plans \eqn{a} and \eqn{b}, define
+\eqn{h(\theta) = f_b(\theta) - f_a(\theta)} and
+\eqn{g = \nabla f_b - \nabla f_a}{g = grad(f_b) - grad(f_a)}, evaluated at the component estimates.
+The first-order delta approximation (Oehlert, 1992) gives
+\deqn{\widehat{\mathrm{SE}}(\hat h) = \sqrt{g'\hat C g}.}{SE_hat(h_hat) = sqrt(g' C_hat g).}
+The interval is \eqn{\hat h \pm z_{1-\alpha/2}\widehat{\mathrm{SE}}(\hat h)}{h_hat +/- z_(1-alpha/2) SE_hat(h_hat)},
+where \eqn{\alpha = 1 - \mathrm{level}}{alpha = 1 - level}. Stacking the difference gradients
+in \eqn{J} gives the returned joint covariance \eqn{J\hat C J'}{J C_hat J'}.
+
+Thus there are distinct steps: a Gaussian component-covariance identity,
+substitution of estimates, linearization of the nonlinear metric, and a
+normal reference interval. Only the first is an exact model identity.
+The current balanced implementation uses the plug-in \code{2 * MS^2 / df},
+not the alternative \code{df + 2} moment correction. The references support
+the G/D targets and these mathematical steps; none validates this entire
+package procedure for every supported design. This is not an implementation
+of all GENOVA-family interval methods.
 }
-g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"))
-d <- mfrm_multivariate_d_study(g,
+
+\examples{
+# Existing fictional ratings: one row per Person-Rater-Task, two scores.
+data("mfrmr_example_gtheory_crossed", package = "mfrmr")
+ratings <- mfrmr_example_gtheory_crossed
+head(ratings)
+g <- mfrm_g_study(ratings, c("Content", "Organization"))
+d <- mfrm_d_study(g,
   data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3)),
   weights = c(Content = .5, Organization = .5))
 comparison <- mfrm_multivariate_d_compare(d, reference = 1,
@@ -130,6 +182,23 @@ plot(comparison) # G/Phi for each plan, including the reference.
 plot(comparison, type = "sem")
 plot(comparison, view = "differences") # Paired difference intervals.
 }
+\references{
+Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
+\doi{10.1007/978-1-4757-3456-0}. G/D targets and sampling variability.
+
+Rao, C. R. (1971). Estimation of variance and covariance components--MINQUE
+theory. \emph{Journal of Multivariate Analysis, 1}, 257--275.
+\doi{10.1016/0047-259X(71)90001-7}. Component moment estimation.
+
+Magnus, J. R. (1978). The moments of products of quadratic forms in normal
+variables. \emph{Statistica Neerlandica, 32}(4), 201--210.
+\doi{10.1111/j.1467-9574.1978.tb01399.x}. Gaussian product moments;
+see p. 209. \href{https://www.janmagnus.nl/papers/JRM003.pdf}{Author's copy}.
+
+Oehlert, G. W. (1992). A note on the delta method.
+\emph{The American Statistician, 46}(1), 27--29.
+\doi{10.1080/00031305.1992.10475842}. Taylor/moment approximation framework.
+}
 \seealso{
-\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=plot.mfrm_multivariate_d_comparison]{plot.mfrm_multivariate_d_comparison()}}
+\code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=plot.mfrm_multivariate_d_comparison]{plot.mfrm_multivariate_d_comparison()}}
 }

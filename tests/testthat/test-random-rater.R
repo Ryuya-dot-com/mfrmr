@@ -82,6 +82,56 @@ test_that("shared likelihood, derivatives and variance-zero score have independe
   expect_equal(as.numeric(swapped$fn(fixed)), as.numeric(marginal$fn(fixed)), tolerance = 1e-9)
 })
 
+test_that("shared predictor cells retain unequal counts, focal abilities and replicates", {
+  skip_if_not_installed("RTMB", "2.0")
+  d <- expand.grid(Person = 1:4, Rater = 1:2,
+    Task = c("a:1", "a"), Criterion = c("b", "1:b"))
+  d$Score <- rep(1:4, length.out = nrow(d))
+  d <- rbind(d, d[c(1, 1, 5, 9, 13, 17), ])
+  d$Score[c(2, 11)] <- NA
+  input <- mfrm_random_rater_data(d, "Person", "Rater", c("Task", "Criterion"),
+    "Score", 1:4, "omit")
+  rule <- gauss_hermite_normal(21L)
+  # Direct row-wise probabilities deliberately do not aggregate design cells.
+  for (case in list(c(.7, 1.2, NA, NA), c(.7, 1.2, 1, 3), c(0, 0, 1, 1))) {
+    focal <- if (is.na(case[3])) NULL else case[3]
+    replicate <- if (is.na(case[4])) NULL else case[4]
+    direct <- function(par) {
+      beta <- par[1:2]; steps <- par[3:5]; z <- par[6:7]
+      sd <- par[8]; ps <- par[9]
+      focal_ability <- if (is.null(focal)) NULL else par[10]
+      extra <- if (is.null(replicate)) NULL else par[11:14]
+      logprob <- function(theta, i, score, step_weights) {
+        eta <- theta - sum(input$X[i, ] * beta) - sd * z[input$rater[i]]
+        lw <- (0:3) * eta - c(0, cumsum(steps))
+        peak <- max(lw)
+        score * eta - sum(step_weights * steps) - peak - log(sum(exp(lw - peak)))
+      }
+      likelihood <- vapply(1:4, function(p) {
+        at <- which(input$person == p)
+        prob <- function(theta) exp(sum(vapply(at, function(i)
+          logprob(theta, i, input$y[i], as.numeric(1:3 <= input$y[i])), numeric(1))) +
+          if (!is.null(replicate) && input$person[replicate] == p)
+            logprob(theta, replicate, extra[1], extra[-1]) else 0)
+        if (identical(as.numeric(p), focal)) prob(focal_ability) else
+          sum(rule$weights * vapply(ps * rule$nodes, prob, numeric(1)))
+      }, numeric(1))
+      -sum(log(likelihood)) - sum(dnorm(z, log = TRUE))
+    }
+    obj <- mfrm_random_rater_objective(input, 21L, fixed_sd = NULL,
+      fixed_person_sd = NULL, random = FALSE, focal_person = focal,
+      replicate_row = replicate)
+    par <- c(.2, -.3, -.8, .1, .7, .25, -.4, case[1:2],
+      if (!is.null(focal)) .35, if (!is.null(replicate)) c(2, 1, 1, 0))
+    expect_equal(as.numeric(obj$fn(par)), direct(par), tolerance = 1e-10)
+    gradient <- vapply(seq_along(par), function(i) {
+      h <- numeric(length(par)); h[i] <- 1e-5
+      (direct(par + h) - direct(par - h)) / 2e-5
+    }, numeric(1))
+    expect_equal(as.vector(obj$gr(par)), gradient, tolerance = 1e-7)
+  }
+})
+
 test_that("fitting, covariance and replacement-rater prediction keep their targets", {
   skip_if_not_installed("RTMB", "2.0")
   fit <- fit_mfrm_random_rater(shared_rater_example(), "Person", "Rater", "Score", "Criterion", 0:2, person_sd = 1)
@@ -137,7 +187,9 @@ test_that("fitting, covariance and replacement-rater prediction keep their targe
   before <- grDevices::dev.cur()
   plot <- plot(fit, draw = FALSE)
   expect_identical(grDevices::dev.cur(), before)
-  expect_equal(plot_data(plot)$table, fit$raters)
+  expect_equal(plot_data(plot)$table[names(fit$raters)], fit$raters)
+  expect_true(all(plot_data(plot)$table$IntervalStatus == "not_requested"))
+  expect_false(any(plot_data(plot)$table$CIEligible))
   grDevices::pdf(tempfile(fileext = ".pdf")); before <- graphics::par("mar")
   plot(fit); expect_equal(graphics::par("mar"), before); grDevices::dev.off()
   if (requireNamespace("ggplot2", quietly = TRUE)) expect_s3_class(as_ggplot(plot), "ggplot")
@@ -188,10 +240,17 @@ test_that("a false-convergence zero submodel receives a verified curvature resta
 
 test_that("a separated fixed facet cannot pass on a small gradient alone", {
   skip_if_not_installed("RTMB", "2.0")
+  # Reproduce the Windows failure mode: roundoff can leave a tiny positive
+  # information matrix even though the likelihood has no finite maximum.
+  local_mocked_bindings(optimHess = function(par, ...) diag(1e-11, length(par)),
+    .package = "stats")
   d <- expand.grid(Person = 1:24, Rater = 1:3, Criterion = 1:2)
   d$Score <- d$Criterion - 1
   expect_warning(fit <- fit_mfrm_random_rater(d, "Person", "Rater", "Score", "Criterion",
     0:1, rater_sd = .4, person_sd = 1), "information")
+  expect_true(all(eigen(fit$information, symmetric = TRUE)$values > 0))
+  expect_true(fit$checks$FixedFacetSeparation)
+  expect_false(fit$checks$NumericalReady)
   expect_false(fit$checks$InformationPositive)
   expect_true(all(is.na(fit$calibration_table$SE)))
   expect_error(predict(fit, data.frame(Rater = "New", Criterion = "1"), 0, rater = "new"), "information")

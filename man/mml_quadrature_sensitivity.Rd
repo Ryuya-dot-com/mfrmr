@@ -147,7 +147,6 @@ for a same-data example and its sampling limitations.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -160,7 +159,6 @@ sensitivity <- mml_quadrature_sensitivity(
 summary(sensitivity)
 # Preserve small numerical differences when preparing the sensitivity table.
 apa_table(sensitivity, digits = 5)
-}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=apa_table]{apa_table()}}

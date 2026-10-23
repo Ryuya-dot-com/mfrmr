@@ -112,6 +112,14 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
   if (mfrm_has_product_slopes(fit)) {
     if (mfrmr_adaptive_integration(fit$config)) {
       policy <- fit$config$estimation_control$gpcm_mml_start %||% "neutral"
+      if (identical(policy, "explicit")) {
+        record <- fit$opt$mml_initialization
+        starts <- lapply(record$attempts, `[[`, "start")
+        mfrmr_gqs_assert(identical(record$policy, "explicit") && length(starts) >= 2L &&
+          identical(names(starts), record$table$Start) && identical(replay$gpcm_mml_start, starts),
+          "The saved explicit initialization vectors and replay settings must agree.")
+        policy <- starts
+      }
       mfrmr_gqs_assert(is.null(replay$gpcm_mml_start) || identical(replay$gpcm_mml_start, policy),
         "The saved adaptive initialization and replay settings must agree.")
       replay$gpcm_mml_start <- policy
@@ -147,6 +155,7 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
     ),
     anchors = replay$anchors,
     group_anchors = replay$group_anchors,
+    centering_scope = config$centering_scope %||% "remainder",
     noncenter_facet = as.character(
       replay$noncenter_facet %||% "Person"
     ),
@@ -522,9 +531,9 @@ mfrmr_gqs_raw_information <- function(fit) {
     slopes$OptimizerEstimate %||% slopes$Estimate %||% numeric()
   )
   slope_se <- rep(NA_real_, length(slope_values))
-  slope_slice <- covariance$param_slices$log_slopes %||% integer()
+  slope_slice <- covariance$param_slices[["log_slopes"]] %||% integer()
   product <- mfrm_has_product_slopes(fit)
-  intervals <- if (product) stats::confint(fit) else NULL
+  intervals <- if (product) stats::confint(fit, parm = "slopes") else NULL
   if (product && identical(covariance$status, "ok") && is.matrix(covariance$cov)) {
     target <- mfrm_gpcm_product_slope_targets(fit$opt$par, fit$config)$components
     index <- mfrm_match_slope_table(target$metadata$Owner, target$metadata$Level, slopes)
@@ -546,7 +555,7 @@ mfrmr_gqs_raw_information <- function(fit) {
     1
   }
   population_sd_se <- NA_real_
-  sigma_slice <- covariance$param_slices$log_sigma2 %||% integer()
+  sigma_slice <- covariance$param_slices[["log_sigma2"]] %||% integer()
   if (covariance$status %in% c("ok", "regularized") &&
       is.matrix(covariance$cov) && length(sigma_slice) == 1L &&
       is.finite(population_sd)) {
@@ -834,7 +843,6 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [apa_table()]
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -847,7 +855,6 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' summary(sensitivity)
 #' # Preserve small numerical differences when preparing the sensitivity table.
 #' apa_table(sensitivity, digits = 5)
-#' }
 #' @export
 mml_quadrature_sensitivity <- function(
     fit,

@@ -107,7 +107,8 @@ build_anchor_recommendations <- function(facet_summary,
                                          min_obs_per_element = 30,
                                          min_obs_per_category = 10,
                                          noncenter_facet = "Person",
-                                         dummy_facets = character(0)) {
+                                         dummy_facets = character(0),
+                                         centering_scope = "remainder") {
   rec <- character(0)
 
   if (!is.null(issue_counts) && nrow(issue_counts) > 0) {
@@ -154,9 +155,9 @@ build_anchor_recommendations <- function(facet_summary,
       rec <- c(
         rec,
         paste0(
-          "Some facets are fully constrained (no free levels): ",
+          "All levels are covered by direct or group constraints in: ",
           paste(fixed_tbl$Facet, collapse = ", "),
-          ". Verify this is intentional."
+          ". Group members can still vary subject to their mean constraint; coverage is not a count of free parameters."
         )
       )
     }
@@ -188,8 +189,13 @@ build_anchor_recommendations <- function(facet_summary,
 
   rec <- c(
     rec,
-    "For linked analyses, keep Umean/Uscale from the source calibration so reporting origin and scaling stay consistent.",
-    paste0("Current noncenter facet is '", noncenter_facet, "'. Other facets are centered unless constrained by anchors/group anchors.")
+    "Supply anchors in internal logit coordinates, not Umean/Uscale display units. Use compatible score coding, orientation and reporting scales across linked analyses.",
+    paste0("Current noncenter facet is '", noncenter_facet, "'. ",
+      if (identical(centering_scope, "facet")) {
+        "Other facets sum to zero across all levels, including anchors and group totals. The ungrouped remainder balances those contributions; a single remaining level is fixed by that balance."
+      } else {
+        "Legacy remainder centering: in other facets, levels outside direct and group constraints sum to zero; a single remaining level is fixed at zero."
+      })
   )
 
   unique(rec)
@@ -202,7 +208,8 @@ audit_anchor_tables <- function(prep,
                                 min_obs_per_element = 30,
                                 min_obs_per_category = 10,
                                 noncenter_facet = "Person",
-                                dummy_facets = character(0)) {
+                                dummy_facets = character(0),
+                                centering_scope = "remainder") {
   all_facets <- c("Person", prep$facet_names)
   level_df <- collect_anchor_levels(prep)
   valid_keys <- safe_join_key(level_df$Facet, level_df$Level)
@@ -469,7 +476,8 @@ audit_anchor_tables <- function(prep,
     min_obs_per_element = min_obs_per_element,
     min_obs_per_category = min_obs_per_category,
     noncenter_facet = noncenter_facet,
-    dummy_facets = dummy_facets
+    dummy_facets = dummy_facets,
+    centering_scope = centering_scope
   )
 
   thresholds <- list(
@@ -481,6 +489,7 @@ audit_anchor_tables <- function(prep,
   list(
     anchors = anchors_clean,
     group_anchors = groups_clean,
+    centering_scope = centering_scope,
     facet_summary = facet_summary,
     design_checks = design_checks,
     thresholds = thresholds,

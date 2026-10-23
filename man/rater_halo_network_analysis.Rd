@@ -34,7 +34,8 @@ facet used to form rater-by-criterion nodes.}
 
 \item{context_facets}{Facets defining rows in the reshaped wide matrix.
 Defaults to the person facet plus any facets other than the rater and
-criterion facets.}
+criterion facets. Include \code{"Person"} for the independent-Person
+association screen; without it, correlations remain descriptive.}
 
 \item{method}{Correlation method used for rater-by-criterion node pairs.}
 
@@ -42,7 +43,8 @@ criterion facets.}
 relationship.}
 
 \item{alpha}{Adjusted p-value threshold for retaining edges. Set to \code{1} to
-retain all finite correlations after \code{min_abs_weight} filtering. This
+disable p-value filtering, including when inference is unavailable;
+shared-count, weight and sign filters still apply. This
 changes retained-edge counts, graph topology, and graph centrality, but
 not the full-pair halo/non-halo distribution summaries.}
 
@@ -81,7 +83,9 @@ A bundle of class \code{mfrm_halo_network} containing:
 graph-theoretic centrality.}
 \item{\code{edge_metrics}}{Retained graph edges.}
 \item{\code{pair_metrics}}{All estimated node-pair correlations with explicit
-retention flags for each graph filter.}
+retention flags for each graph filter, shared-context and Person counts,
+and p-value availability reasons. \code{RetainedByP} is \code{TRUE} for every
+pair when the p filter is disabled by \code{alpha = 1}.}
 \item{\code{halo_summary_by_rater}}{Per-rater summaries of same-rater
 criterion-pair edges, including \code{ReviewStatus} and \code{ReviewReason}.}
 \item{\code{caveats}}{Interpretation notes.}
@@ -126,12 +130,56 @@ cannot receive an unqualified no-flag assessment.
 The correlations share observations, raters and nodes; an independent-sample
 test of their difference is not supplied. Pairwise correlation tail areas
 screen association under their sampling assumptions, not halo itself.
+For each pair, these tail areas require \code{"Person"} in \code{context_facets}
+and no repeated Person among its shared contexts. Otherwise the correlation
+is retained but \code{PValue} and \code{PAdjusted} are unavailable. \code{N} counts shared
+contexts, \code{Persons} counts distinct Persons when traceable, and
+\code{PValueStatus} explains availability. Repeating a Person across tasks does
+not create independent observations. No clustered test is substituted.
+Distinct identifiers do not establish independence: sampling dependence,
+fixed rater effects, ties and small-sample approximations still require
+review. Adjustments use the family of available pairwise p-values; counts
+of available and unavailable p-values are separate from correlation counts.
+
+With \code{alpha < 1}, an unavailable p-value excludes that pair from the graph
+and prevents an unqualified \code{"ok"} review for an affected rater.
+\code{alpha = 1} explicitly requests a descriptive graph without the p filter;
+it does not make the missing p-values available or validate review flags.
 No retained graph edges is not evidence that halo is absent; retain the
 originally specified thresholds. Recreate older network results from the
 existing fit and matching diagnostics before summary, plotting or export.
+
+The node vectors contain observed scores, not model residuals. Repeated
+ratings within a context-by-node cell are averaged using observation weights;
+the selected correlation then compares available context means. Ability
+differences, related criteria and the assignment design can produce strong
+associations without a causal halo effect. Graph centrality here is distinct
+from middle-category use measured by \code{\link[=rater_centrality_table]{rater_centrality_table()}}.
+
+A horn effect refers to an unfavorable impression spreading to ratings on
+other criteria. It is not a negative criterion correlation or simply high
+rater severity: lowering several criteria together can still produce
+positive correlations. Neither the sign of a network edge nor Infit/Outfit
+classifies halo versus horn; this function provides no such classification.
+
+Direct halo models are a separate approach. Jin and Chiu (2022) introduce
+the MRFM-H mixture Rasch facets model; Jin and Eckes (2025) distinguish
+general-impression and inadequate-criterion-discrimination mechanisms in
+MRFM-H(GI) and MRFM-H(ID). These models are not implemented here. Network
+summaries do not estimate their latent classes or adjust measurements for
+those mechanisms. See \link{mfrmr_methods_reference} for choosing the target.
+
+Save the complete result with \code{\link[base:saveRDS]{base::saveRDS()}} before repeated plotting.
+\code{plot(out, type = "edge_distribution")} shows available absolute correlations
+before edge filters; \code{type = "halo_summary"} uses the selected \code{metric}.
+\code{type = "matrix"} shows signed retained correlations on a -1 to 1 scale,
+with grey unavailable/filtered entries. These views support \code{\link[=as_ggplot]{as_ggplot()}};
+the network view uses base graphics or custom graphics from \code{\link[=plot_data]{plot_data()}}.
+Plot payloads retain settings, caveats and denominators outside the figure.
+Export the result's data frames with \code{\link[utils:write.csv]{utils::write.csv()}}; this standalone
+bundle is not an automatically included section of \code{\link[=mfrm_report]{mfrm_report()}}.
 }
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -143,7 +191,6 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   plot(halo, type = "edge_distribution", draw = FALSE)
 }
 }
-}
 \references{
 Lai, E. R., Wolfe, E. W., & Vickers, D. (2015). Differentiation of
 illusory and true halo in writing scores. \emph{Educational and Psychological
@@ -152,6 +199,15 @@ Measurement, 75}(1), 102-125.
 Lamprianou, I. (2025). Network Analysis for the investigation of rater
 effects in language assessment: A comparison of ChatGPT vs human raters.
 \emph{Research Methods in Applied Linguistics, 4}, 100205.
+
+Jin, K.-Y., & Chiu, M. M. (2022). A mixture Rasch facets model for rater's
+illusory halo effects. \emph{Behavior Research Methods, 54}, 2750-2764.
+\doi{10.3758/s13428-021-01721-3}. Direct model, not implemented here.
+
+Jin, K.-Y., & Eckes, T. (2025). When raters generalize: Examining sources of
+halo effects with mixture Rasch facets models. \emph{Behavior Research Methods,
+57}, Article 149. \doi{10.3758/s13428-025-02667-6}.
+Direct models, not implemented here.
 }
 \seealso{
 \code{\link[=rater_network_analysis]{rater_network_analysis()}}, \code{\link[=interrater_agreement_table]{interrater_agreement_table()}},

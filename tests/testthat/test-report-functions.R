@@ -931,18 +931,19 @@ test_that("bias_pairwise_report produces valid output", {
     expect_true(all(c("ContrastBasis", "SEBasis", "StatisticLabel", "ProbabilityMetric", "DFBasis") %in% names(bp$table)))
     expect_true(all(bp$table$StatisticLabel == "Bias-contrast Welch screening t"))
 
-    tgt_se_sq <- bp$table$`Target S.E.`^2
-    bias1 <- bp$table$`Local Measure1` - bp$table$`Target Measure`
-    bias2 <- bp$table$`Local Measure2` - bp$table$`Target Measure`
-    bias_se1_sq <- pmax(bp$table$SE1^2 - tgt_se_sq, 0)
-    bias_se2_sq <- pmax(bp$table$SE2^2 - tgt_se_sq, 0)
-    expected_contrast <- bias1 - bias2
-    expected_se <- sqrt(bias_se1_sq + bias_se2_sq)
-    naive_se <- sqrt(bp$table$SE1^2 + bp$table$SE2^2)
+    # Cell uncertainty is conditional on the baseline calibration. Match the
+    # original cells instead of subtracting target calibration variance.
+    key <- paste(.bias$table$FacetA_Level, .bias$table$FacetB_Level)
+    first <- match(paste(bp$table$Target, bp$table$Context1), key)
+    second <- match(paste(bp$table$Target, bp$table$Context2), key)
+    expected_contrast <- (.bias$table$`Bias Size`[first] -
+      .bias$table$`Bias Size`[second]) / bp$table$TargetSign
+    expected_se <- sqrt(.bias$table$`S.E.`[first]^2 + .bias$table$`S.E.`[second]^2)
 
     expect_equal(bp$table$Contrast, expected_contrast, tolerance = 1e-8)
+    expect_equal(bp$table$SE1, .bias$table$`S.E.`[first])
+    expect_equal(bp$table$SE2, .bias$table$`S.E.`[second])
     expect_equal(bp$table$SE, expected_se, tolerance = 1e-8)
-    expect_true(all(bp$table$SE <= naive_se + 1e-10, na.rm = TRUE))
   }
   s <- summary(bp)
   expect_s3_class(s, "summary.mfrm_bundle")
@@ -970,7 +971,11 @@ test_that("estimate_bias surfaces optimization failures instead of using zero-bi
 
   expect_true(all(bias$table$OptimizationStatus == "failed"))
   expect_true(all(grepl("forced optimize failure", bias$table$OptimizationDetail, fixed = TRUE)))
-  expect_true(all(is.na(bias$table$`Obs-Exp Average`)))
+  # A failed shift does not invalidate expectations from the baseline fit.
+  expect_true(all(is.finite(bias$table$`Obs-Exp Average`)))
+  expect_equal(bias$table$`Obs-Exp Average`,
+    (bias$table$`Observd Score` - bias$table$`Expctd Score`) / bias$table$`Observd Count`)
+  expect_true(all(is.na(bias$table$AfterBiasObsExpAverage)))
   expect_true(all(is.na(bias$table$`S.E.`)))
   expect_true(is.data.frame(bias$optimization_failures))
   expect_true(nrow(bias$optimization_failures) > 0)

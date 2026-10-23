@@ -1,0 +1,13 @@
+#!/bin/sh
+# Relocated research R; manifests still decide whether a phase can resume.
+set -eu
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+runtime_dir=${MFRMR_VALIDATION_RUNTIME:-"$script_dir/../validation-results/runtime-20261009"}
+runtime_dir=$(CDPATH= cd -- "$runtime_dir" && pwd)
+export R_HOME="$runtime_dir/R-4.6.1/R-fw.pkg/Payload/R.framework/Versions/4.6/Resources"
+test -x "$R_HOME/bin/exec/R"
+test -d "$runtime_dir/library"
+export R_SHARE_DIR="$R_HOME/share" R_INCLUDE_DIR="$R_HOME/include" R_DOC_DIR="$R_HOME/doc"
+export R_LIBS_USER="$runtime_dir/library" R_LIBS_SITE="$runtime_dir/library" R_LIBS="$runtime_dir/library"
+export DYLD_LIBRARY_PATH="$R_HOME/lib"
+exec "$R_HOME/bin/exec/R" --vanilla "$@"
