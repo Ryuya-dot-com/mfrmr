@@ -261,8 +261,31 @@ measures. Strata describes hypothetical distinguishable levels, not discovered
 groups. See the [FACETS interpretation](https://www.winsteps.com/facetman64/reliability.htm)
 and the estimator-specific formulas in `help("diagnose_mfrm")`.
 
-The [FACETS G-theory menu](https://www.winsteps.com/facetman64/gtheory.htm)
-launches the external R package `gtheory`. mfrmr's own
+In FACETS 4.5.0, the [G-theory menu](https://www.winsteps.com/facetman64/gtheory.htm)
+generates an R program using the external package `gtheory`. The
+[version history](https://www.winsteps.com/facgood.htm) records replacement of
+that interface in 4.5.1; check the installed version separately from online
+help. The menu defaults to all facet main effects, no interactions, observed
+scores (`Obs`), and the first facet as the object of measurement. Select the
+relevant interactions explicitly before comparing a full G-theory design.
+This R route models numeric observed scores with Gaussian random effects;
+it does not analyze Rasch parameter uncertainty.
+
+The `gtheory` 0.1.2 calculation uses `lme4` REML with nonnegative variance
+components. This differs from unconstrained ANOVA and from simply truncating
+its negative estimates. The generated D-study passes the observed data and
+score column to calculate averaging denominators. Check that D-study's `n`
+column, rather than the G-study table's initial `n = 1`: for a complete
+four-rater, four-task design with one rating per Person-by-Rater-by-Task cell,
+Person-by-Rater and Person-by-Task use 4, and Rater-by-Task and the residual
+use 16. Changing a score variable, interaction or future count changes the
+question. Preserve boundary warnings and messages and the R environment
+with the results. A message that R was launched does not establish
+that its analysis completed; retain the generated script, its data and actual
+R output. The archived dependency and temporary input paths also need to be
+available when replaying an older FACETS program.
+
+mfrmr's own
 `mfrm_multivariate_gstudy()` / `mfrm_multivariate_d_study()` route handles
 supported univariate or multivariate observed-score designs, interactions,
 composites and future complete plans. Its component/covariance plots and
