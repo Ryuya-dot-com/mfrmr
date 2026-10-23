@@ -1667,7 +1667,8 @@ mfrmr_mml_evaluate_person_patterns <- function(
 mfrmr_mml_person_design_groups <- function(
     idx,
     config,
-    reuse_identical_designs = TRUE) {
+    reuse_identical_designs = TRUE,
+    include_responses = FALSE) {
   person_ids <- sort(unique(as.integer(idx$person)))
   person_ids <- person_ids[is.finite(person_ids)]
   person_rows <- split(seq_along(idx$person),
@@ -1693,6 +1694,11 @@ mfrmr_mml_person_design_groups <- function(
     for (interaction in names(idx$interactions %||% list())) {
       order_keys[[length(order_keys) + 1L]] <-
         as.integer(idx$interactions[[interaction]][rows])
+    }
+    if (isTRUE(include_responses)) {
+      order_keys[[length(order_keys) + 1L]] <- as.integer(idx$score_k[rows])
+      order_keys[[length(order_keys) + 1L]] <-
+        as.numeric((idx$weight %||% rep(1, length(idx$person)))[rows])
     }
     within_person_order <- if (length(order_keys) > 0L) {
       do.call(
@@ -1728,6 +1734,12 @@ mfrmr_mml_person_design_groups <- function(
       slope_idx = as.integer(person_idx$slope_idx %||% integer(0)),
       population_design_row = population_row
     )
+    # Observed-pattern reuse requires equal responses AND weights, whereas
+    # all-pattern enumeration deliberately groups by design alone.
+    if (isTRUE(include_responses)) {
+      components$score_k <- as.integer(person_idx$score_k)
+      components$weight <- as.numeric(person_idx$weight %||% rep(1, length(rows)))
+    }
     serialized <- serialize(components, connection = NULL, version = 2)
     signatures[person_position] <- paste(as.integer(serialized), collapse = ".")
     if (!isTRUE(reuse_identical_designs)) {

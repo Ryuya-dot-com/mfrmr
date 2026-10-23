@@ -54,9 +54,12 @@ Ordinary direct MML offers opt-in automatic integration checking and adaptive
 refitting. The checks include individual log marginal likelihoods, posterior
 moments and the marginal gradient; failures retain their numerical history.
 The final integration rule also governs information and scoring. This covers
-RSM, PCM and one-family GPCM with their existing model restrictions. Changing
-the default, improving repeated-design efficiency and extending latent-regression
-EM remain separate development decisions. Numerical checks do not establish
+RSM, PCM and one-family GPCM with their existing model restrictions. Adaptive
+likelihood and gradient evaluation now reuses identical response/design/weight/
+population-covariate patterns while retaining independent Person contributions.
+Changing the default, broader probability reuse across different response
+patterns and extending latent-regression EM remain separate development
+decisions. Numerical checks do not establish
 global optimality, formal identification or interval coverage.
 
 Small supported datasets now reach model-specific checks without a blanket

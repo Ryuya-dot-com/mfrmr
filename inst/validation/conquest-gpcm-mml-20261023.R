@@ -1,5 +1,11 @@
 # Current-source item-only GPCM comparison, with raw ConQuest outputs retained.
 # This script defines functions only; it never launches an external program.
+# From the development root, load the validated mfrmr installation and source
+# this file. Prepare an unused output directory, run its ConQuest commands in
+# their own directories, run native() and compare(), then replay() in a fresh
+# session. Retain settings and raw files; do not rerun successful fits merely
+# to regenerate summaries. These functions implement this fixture, not a public
+# general-purpose ConQuest importer.
 
 cq_gpcm_prepare_20261023 <- function(out) {
   stopifnot(!file.exists(file.path(out, "fixture.rds")))
@@ -105,4 +111,222 @@ cq_gpcm_native_20261023 <- function(out) {
     saveRDS(list(fit=fit,args=args,elapsed=elapsed,warnings=conditions,
       reference63=reference,information=information),file.path(path,"native.rds"))
   }
+}
+
+cq_gpcm_read_20261023 <- function(path, regression) {
+  read <- function(name) read.csv(file.path(path,paste0(name,".csv")),check.names=FALSE)
+  xsi <- read("parameters"); tau <- read("tau"); beta <- read("reg_coefficients")
+  latent <- read("covariance"); a <- read("amatrix"); c <- read("cmatrix")
+  v <- read("estimatecovariances"); history <- read("history")
+  labels <- trimws(c(xsi$Label,tau$Label,if(regression) "x"))
+  stopifnot(nrow(xsi)==18L,nrow(tau)==6L,all(tau$Estimate>0 & tau$Estimate<20),
+    beta$Estimate[1]==0,nrow(beta)==1L+regression,length(latent$Covariance)==1L,latent$Covariance==1,
+    !anyDuplicated(labels),identical(trimws(names(v)[-1L]),labels),nrow(v)==length(labels),
+    identical(a$GIN,rep(1:6,each=4)),identical(a$Category,rep(1:4,6)),
+    identical(a$GIN,c$GIN),identical(a$Category,c$Category),all(c$Dimension==1))
+  A <- as.matrix(a[,-(1:2)]); C <- as.matrix(c[,-(1:3)])
+  expected_C <- matrix(0,24,6)
+  for (i in 1:6) expected_C[(4*i-3):(4*i),i] <- 0:3
+  V <- as.matrix(v[,-1L])
+  stopifnot(qr(A)$rank==18L,identical(trimws(names(a)[-c(1,2)]),trimws(xsi$Label)),
+    max(abs(C-expected_C))==0,max(abs(V-t(V)))<1e-12,
+    min(eigen(V,symmetric=TRUE,only.values=TRUE)$values)>0)
+  item_scores <- read("itemscores")
+  stopifnot(all(item_scores$Category %in% 1:3),
+    max(abs(item_scores$Score-item_scores$Category*tau$Estimate[item_scores$GIN]))<2.1e-6)
+  report <- readLines(file.path(path,"report.txt"),warn=FALSE)
+  stopifnot(any(grepl("deviance convergence criteria was reached",report,fixed=TRUE)))
+  list(par=setNames(c(xsi$Estimate,tau$Estimate,if(regression) beta$Estimate[-1]),labels),
+    A=A,C=C,cov=V,history=history,deviance=tail(history$LogLikelihood,1),
+    regression=regression,path=path)
+}
+
+cq_gpcm_coordinates_20261023 <- function(fit, cq) {
+  sizes <- mfrmr:::build_param_sizes(fit$config)
+  expand <- function(par) mfrmr:::expand_params(par,sizes,fit$config)
+  forward <- function(par) {
+    p <- expand(par); sigma <- sqrt(p$population$sigma2)
+    beta <- p$population$coefficients; a <- p$slopes
+    logits <- a*(outer(p$facets$Item-beta[1],0:3)*(-1)-
+      t(apply(p$steps_mat,1,function(x) c(0,cumsum(x)))))
+    xi <- qr.solve(cq$A,as.vector(t(logits)))
+    stopifnot(max(abs(cq$A%*%xi-as.vector(t(logits))))<1e-10)
+    setNames(c(xi,sigma*a,if(cq$regression) beta[-1]/sigma),names(cq$par))
+  }
+  inverse <- function(par) {
+    p <- expand(fit$opt$par)
+    tau <- par[19:24]; sigma <- exp(mean(log(tau))); a <- tau/sigma
+    intercepts <- matrix(cq$A%*%par[1:18],6,4,byrow=TRUE)
+    adjacent <- -t(apply(intercepts,1,diff))/a
+    delta <- rowMeans(adjacent); beta0 <- -mean(delta)
+    p$facets$Item[] <- delta+beta0
+    p$steps_mat[,] <- adjacent-delta
+    p$slopes[] <- a; p$log_slopes[] <- log(a)
+    p$population$coefficients[] <- c(beta0,if(cq$regression) sigma*par[25])
+    p$population$sigma2 <- sigma^2; p$population$log_sigma2 <- log(sigma^2)
+    mfrmr:::collapse_expanded_params(p,fit$config)
+  }
+  probability <- function(par,z=seq(-4,4,length.out=161)) {
+    logits <- outer(as.vector(cq$C%*%par[19:24]),z)+as.vector(cq$A%*%par[1:18])
+    vapply(seq_len(ncol(logits)),function(k) {
+      m <- matrix(logits[,k],6,4,byrow=TRUE)
+      m <- exp(m-apply(m,1,max)); as.vector(t(m/rowSums(m)))
+    },numeric(24))
+  }
+  list(forward=forward,inverse=inverse,expand=expand,probability=probability)
+}
+
+cq_gpcm_compare_20261023 <- function(out) {
+  source("inst/validation/adaptive-quadrature-review-0.2.4.R",local=environment())
+  source("inst/validation/adaptive-optimization-probe-0.2.4.R",local=environment())
+  settings <- readRDS(file.path(out,"settings.rds"))
+  rows <- posteriors <- checks <- list()
+  jacobian <- function(fn,par,h) vapply(seq_along(par),function(i) {
+    plus <- minus <- par; plus[i] <- plus[i]+h; minus[i] <- minus[i]-h
+    (fn(plus)-fn(minus))/(2*h)
+  },numeric(length(par)))
+  for (case in settings$cases) {
+    cat("Compare",case,"\n"); flush.console()
+    path <- file.path(out,case); saved <- readRDS(file.path(path,"native.rds"))
+    fit <- saved$fit; context <- aqopt_context(fit,aq_continuous_reference)
+    evaluate <- mfrmr:::mfrmr_make_adaptive_mml_evaluator(context$idx,fit$config,context$sizes,63L)
+    grids <- lapply(settings$nodes,function(q) cq_gpcm_read_20261023(file.path(path,paste0("cq",q)),case!="unconditional"))
+    native <- fit$opt$par; reference <- context$reference(native)
+    map <- cq_gpcm_coordinates_20261023(fit,grids[[3]])
+    cq_native <- map$forward(native)
+    stopifnot(max(abs(map$inverse(cq_native)-native))<1e-11)
+    J <- jacobian(map$forward,native,1e-5)
+    Jhalf <- jacobian(map$forward,native,5e-6)
+    stopifnot(max(abs(J-Jhalf))<1e-7,qr(J)$rank==length(native),
+      saved$information$status=="ok",!saved$information$regularized)
+    V <- J%*%saved$information$cov%*%t(J)
+    H63 <- stats::optimHess(native,fn=function(p)evaluate(p)$value,gr=function(p)evaluate(p)$gradient)
+    stopifnot(min(eigen(H63,symmetric=TRUE,only.values=TRUE)$values)>0)
+    V63 <- J%*%solve(H63)%*%t(J)
+    scale <- sqrt(outer(diag(V63),diag(V63)))
+    pnative <- map$expand(native)
+    sigma <- sqrt(pnative$population$sigma2); beta0 <- pnative$population$coefficients[1]
+    table <- fit$facets$person[match(context$labels,fit$facets$person$Person),]
+    stopifnot(identical(table$Person,context$labels))
+    checks[[case]] <- data.frame(case=case,
+      native_nll=evaluate(native)$value,continuous_nll=-sum(reference[,"log_marginal"]),
+      native_gradient=max(abs(evaluate(native)$gradient)),
+      native_q63_refit_movement=max(abs(saved$reference63$par-native)),
+      native_eap_error=max(abs(table$Estimate-reference[,"eap"])),
+      native_sd_error=max(abs(table$PosteriorSD-reference[,"sd"])),
+      jacobian_halving=max(abs(J-Jhalf)),covariance_q63_difference=max(abs(V-V63)/scale),
+      native_inference_ready=fit$summary$InferenceReady,
+      continuous_relative_error=max(reference[,"relative_error"]),
+      continuous_log_relative_tail_bound=max(reference[,"log_relative_tail_bound"]))
+    comparison <- list()
+    for (i in seq_along(grids)) {
+      cq <- grids[[i]]; par <- map$inverse(cq$par); ev <- evaluate(par)
+      stopifnot(max(abs(map$forward(par)-cq$par))<1e-11)
+      prob_diff <- max(abs(map$probability(cq$par)-map$probability(cq_native)))
+      rows[[length(rows)+1L]] <- data.frame(case=case,nodes=settings$nodes[i],
+        cq_reported_deviance=cq$deviance,cq_continuous_deviance=2*ev$value,
+        native_deviance=2*evaluate(native)$value,
+        deviance_gap=2*(ev$value-evaluate(native)$value),
+        reported_deviance_error=cq$deviance-2*ev$value,
+        cq_gradient=max(abs(ev$gradient)),coordinate_difference=max(abs(cq$par-cq_native)),
+        probability_difference=prob_diff,
+        covariance_scaled_difference=max(abs(cq$cov-V63)/scale),
+        covariance_relative_spectral=norm(cq$cov-V63,"2")/norm(V63,"2"),
+        se_relative_difference=max(abs(sqrt(diag(cq$cov)/diag(V63))-1)),
+        min_tau=min(cq$par[19:24]),max_tau=max(cq$par[19:24]))
+      comparison[[i]] <- list(cq=cq,native_coordinates=par,evaluation=ev)
+    }
+    final_par <- comparison[[3]]$native_coordinates
+    cq_reference <- context$reference(final_par)
+    pcq <- map$expand(final_par); cq_sigma <- sqrt(pcq$population$sigma2)
+    cq_beta0 <- pcq$population$coefficients[1]
+    native_eap <- (reference[,"eap"]-beta0)/sigma
+    native_sd <- reference[,"sd"]/sigma
+    cq_eap <- (cq_reference[,"eap"]-cq_beta0)/cq_sigma
+    cq_sd <- cq_reference[,"sd"]/cq_sigma
+    posterior <- lapply(c(2,3),function(seed) {
+      d <- read.csv(file.path(grids[[3]]$path,paste0("eap_seed",seed,".csv")),check.names=FALSE)
+      d$PID <- trimws(d$PID)
+      stopifnot(!anyDuplicated(d$PID),setequal(d$PID,context$labels))
+      d <- d[match(context$labels,d$PID),]
+      stopifnot(all(is.finite(d$EAP_1)),all(is.finite(d$PosteriorSD_1)))
+      posteriors[[length(posteriors)+1L]] <<- data.frame(case=case,seed=seed,
+        calibration_eap_difference=max(abs(cq_eap-native_eap)),
+        calibration_sd_difference=max(abs(cq_sd-native_sd)),
+        reported_eap_max_error=max(abs(d$EAP_1-cq_eap)),
+        reported_eap_rmse=sqrt(mean((d$EAP_1-cq_eap)^2)),
+        reported_sd_max_error=max(abs(d$PosteriorSD_1-cq_sd)),
+        reported_sd_rmse=sqrt(mean((d$PosteriorSD_1-cq_sd)^2)))
+      d
+    })
+    checks[[case]]$cq_continuous_nll_error <- abs(-sum(cq_reference[,"log_marginal"])-evaluate(final_par)$value)
+    checks[[case]]$cq_seed_eap_difference <- max(abs(posterior[[1]]$EAP_1-posterior[[2]]$EAP_1))
+    checks[[case]]$cq_seed_sd_difference <- max(abs(posterior[[1]]$PosteriorSD_1-posterior[[2]]$PosteriorSD_1))
+    saveRDS(list(native_reference=reference,cq_reference=cq_reference,
+      comparisons=comparison,J=J,Jhalf=Jhalf,V=V,V63=V63,H63=H63,posterior=posterior),
+      file.path(path,"comparison.rds"))
+  }
+  write.csv(do.call(rbind,rows),file.path(out,"comparison.csv"),row.names=FALSE)
+  write.csv(do.call(rbind,checks),file.path(out,"checks.csv"),row.names=FALSE)
+  write.csv(do.call(rbind,posteriors),file.path(out,"posterior.csv"),row.names=FALSE)
+  invisible(rows)
+}
+
+# Run in a fresh R session. Uses retained results, without repeating fits or
+# continuous integration. A numerical pass does not grant inference readiness.
+cq_gpcm_replay_20261023 <- function(out) {
+  source("inst/validation/conquest-gpcm-overlap-contract-0.2.3.R",local=environment())
+  settings <- readRDS(file.path(out,"settings.rds"))
+  comparison <- read.csv(file.path(out,"comparison.csv"))
+  checks <- read.csv(file.path(out,"checks.csv"))
+  result <- list()
+  for (case in settings$cases) {
+    path <- file.path(out,case)
+    saved <- readRDS(file.path(path,"native.rds"))
+    detail <- readRDS(file.path(path,"comparison.rds"))
+    cq <- cq_gpcm_read_20261023(file.path(path,"cq121"),case!="unconditional")
+    for (q in settings$nodes) {
+      other <- cq_gpcm_read_20261023(file.path(path,paste0("cq",q)),case!="unconditional")
+      stopifnot(identical(other$A,cq$A),identical(other$C,cq$C),
+        identical(names(other$par),names(cq$par)))
+    }
+    map <- cq_gpcm_coordinates_20261023(saved$fit,cq)
+    native <- saved$fit$opt$par; p <- map$expand(native)
+    contract <- mfrmr_cq_gpcm_transform(p$population$coefficients[1],
+      p$population$coefficients[-1],p$population$sigma2,p$slopes,
+      p$facets$Item,p$steps_mat)
+    z <- seq(-4,4,length.out=161)
+    proof <- mfrmr_cq_gpcm_probability_audit(contract,
+      p$population$coefficients[1]+sqrt(p$population$sigma2)*z)
+    # Audit helper orders item, ability, category; the exported design orders
+    # item/category within each ability. Align explicitly, never by blind sort.
+    proof_prob <- array(proof$Detail$MfrmrProbability,c(4,length(z),6))
+    design_prob <- map$probability(map$forward(native),z)
+    aligned <- matrix(aperm(proof_prob,c(1,3,2)),24,length(z))
+    design_error <- max(abs(aligned-design_prob))
+    stopifnot(design_error<1e-12,proof$MaxAbsProbabilityDifference<1e-12,
+      max(abs(map$forward(map$inverse(cq$par))-cq$par))<1e-11,
+      identical(cq$par,detail$comparisons[[3]]$cq$par),
+      identical(unname(cq$cov),unname(detail$comparisons[[3]]$cq$cov)))
+    last <- comparison[comparison$case==case & comparison$nodes==121,]
+    check <- checks[checks$case==case,]
+    public_error <- abs(saved$fit$opt$value+sum(detail$native_reference[,"log_marginal"]))
+    checks$public_nll_continuous_error[match(case,checks$case)] <- public_error
+    criteria <- c(coordinate=last$coordinate_difference,probability=last$probability_difference,
+      deviance=abs(last$deviance_gap),gradient=last$cq_gradient,
+      relative_covariance=last$covariance_scaled_difference)
+    stopifnot(all(is.finite(criteria)),public_error<1e-7,
+      abs(check$native_nll-check$continuous_nll)<1e-7,
+      check$cq_continuous_nll_error<1e-7,check$native_eap_error<1e-6,
+      check$native_sd_error<1e-6,!check$native_inference_ready)
+    result[[case]] <- data.frame(case=case,criterion=names(criteria),value=unname(criteria),
+      threshold=unname(settings$thresholds[names(criteria)]),
+      passed=criteria<=settings$thresholds[names(criteria)],
+      design_probability_error=design_error)
+  }
+  result <- do.call(rbind,result)
+  write.csv(checks,file.path(out,"checks.csv"),row.names=FALSE)
+  write.csv(result,file.path(out,"criteria.csv"),row.names=FALSE)
+  print(result,row.names=FALSE)
+  invisible(result)
 }

@@ -270,7 +270,8 @@ mfrmr_adaptive_quadrature_overview <- function(review) {
 
 # The gradient differentiates the finite adaptive sum, including mode, scale
 # and Jacobian, in the optimizer's actual free coordinates.
-mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
+mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points,
+                                               reuse_identical_patterns = TRUE) {
   if (!identical(config$method, "MML")) {
     stop("Adaptive MML evaluation requires an MML configuration.", call. = FALSE)
   }
@@ -300,8 +301,11 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
     log_slope_design[, slices[["log_slopes"]]] <-
       gpcm_log_slope_design(config$gpcm_spec)[idx$slope_idx, , drop = FALSE]
   }
-  person_ids <- sort(unique(idx$person))
-  groups <- split(seq_len(n), factor(idx$person, levels = person_ids))
+  patterns <- mfrmr_mml_person_design_groups(idx, config,
+    reuse_identical_designs = reuse_identical_patterns, include_responses = TRUE)
+  person_ids <- patterns$person_ids[patterns$representative_positions]
+  groups <- patterns$canonical_rows[patterns$representative_positions]
+  multiplicity <- patterns$group_sizes
   # Keep category designs sparse. Only the current Person's probabilities are dense.
   designs <- lapply(groups, function(rows) {
     list(cumulative = cumulative[as.vector(outer(rows, (categories[-1L] - 1L) * n, `+`)),
@@ -385,7 +389,9 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
       normalizer <- logsumexp(joint)
       posterior <- exp(joint - max(joint))
       posterior <- posterior / sum(posterior)
-      value <- value - (offset + normalizer)
+      # Independent Persons multiply marginal likelihoods; their count belongs
+      # outside the integral, never in the observation weights.
+      value <- value - multiplicity[i] * (offset + normalizer)
       # Projection is linear: average category derivatives before multiplying
       # by the same sparse designs. Keep the slope's residual-times-logit
       # average separate; a product of averages would change the gradient.
@@ -410,9 +416,9 @@ mfrmr_make_adaptive_mml_evaluator <- function(idx, config, sizes, quad_points) {
       fixed_derivative <- fixed_derivative +
         sum(posterior * z) / sigma * mean_derivative +
         sum(posterior * (z^2 - 1)) / 2 * variance_derivative
-      gradient <- gradient - fixed_derivative -
-        sum(posterior * nodes$score) / sigma * mode_derivative -
-        sum(posterior * (scale * nodes$score * rule$nodes + 1)) * log_scale_derivative
+      gradient <- gradient - multiplicity[i] * (fixed_derivative +
+        sum(posterior * nodes$score) / sigma * mode_derivative +
+        sum(posterior * (scale * nodes$score * rule$nodes + 1)) * log_scale_derivative)
     }
     if (!is.finite(value) || any(!is.finite(gradient))) {
       stop(new_adaptive_quadrature_numeric_error("Non-finite adaptive MML objective or gradient."))

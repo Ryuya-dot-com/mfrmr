@@ -68,6 +68,13 @@ uncertainty, subgroup comparisons and design planning.
   population regressions; it does not change the default, certify integration
   error bounds or extend formal inference eligibility.
 
+* Adaptive MML reuses likelihood and gradient calculations for Persons with
+  identical responses, rating designs, observation weights and population
+  covariates. Independent Persons retain their separate contributions to the
+  marginal likelihood. This reduces repeated computation when patterns recur;
+  distinct covariates or observation patterns can leave little work to reuse.
+  Integration orders, derivatives and inference requirements are unchanged.
+
 * ConQuest comparison bundles now reject unsupported anchors, orientation,
   constraints, shrinkage, population-intercept and category settings before
   export. Generated commands reset prior analysis settings and explicitly set
