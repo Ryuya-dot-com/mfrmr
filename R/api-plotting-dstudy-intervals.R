@@ -45,6 +45,10 @@
 #'   REML profile and residual-contrast rows retain the original source points;
 #'   the separate `IntervalCenter` and method diagnostics are available in the source
 #'   interval object. A point can lie outside this separately calculated interval.
+#'   For GENOVA-adjusted results, points use the selected component treatment;
+#'   intervals retain their original-source population basis. `IntervalEstimate`
+#'   and `IntervalBasis` in the source table distinguish them. Drawing the two
+#'   together does not make the original sampling SE an adjusted-estimator SE.
 #'   Unresolved numerical candidates are retained in the source object but
 #'   are not drawn as accepted confidence bounds.
 #'   For score and MLS intervals, an empty confidence set is labeled

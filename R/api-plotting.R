@@ -809,6 +809,13 @@ stack_fair_raw_tables <- function(raw_by_facet) {
         as.character(obs[[facet]]) %in% names(extreme)[extreme]
       })
       names(extreme_flags) <- c("Person", fit$config$facet_names)
+      if (identical(fit$config$method, "JML") &&
+          length(fit$config$interaction_specs) == 0L) {
+        unanchored <- .mfrm_unanchored_extremes(fit, obs)
+        extreme_flags <- lapply(names(extreme_flags), function(facet)
+          as.character(obs[[facet]]) %in% unanchored[[facet]]) |>
+          stats::setNames(c("Person", fit$config$facet_names))
+      }
       extreme_count <- Reduce(`+`, extreme_flags)
     }
     owner <- match(as.character(obs[[fit$config$step_facet]]),
@@ -1846,6 +1853,9 @@ plot_unexpected <- function(x,
 #' PCM averages expectations over the administered rating scales using the
 #' same observation weights and `totalscore` selection as the fair-score table.
 #' Its conditional derivative averages the within-scale score variances.
+#' In ordinary additive RSM/PCM JML, finite direct anchors remain eligible in
+#' both the fair score and its conditional derivative when `totalscore = FALSE`,
+#' even if their observed responses are all minimum or all maximum.
 #' GPCM uses an element's own thresholds for the step facet and the mean
 #' threshold profile for other facets, with its own slope for the slope facet
 #' and slope 1 otherwise. Person and other-facet measures remain at the chosen
@@ -1856,7 +1866,11 @@ plot_unexpected <- function(x,
 #' view. Points reuse the table values, without fitting a trend across different
 #' reference profiles. This transformation is not independent validation of
 #' the fitted model. `umean`/`uscale` change Measure units, not score units;
-#' `xtreme` changes the reported Measure only and disables conditional intervals.
+#' Positive `xtreme` disables conditional fair-score intervals. With the default
+#' `xtreme_method = "display"`, it changes only the reported Measure.
+#' `xtreme_method = "facets"` also uses the extrapolated measure in that
+#' element's fair scores; its measure SE describes information at a corrected
+#' total, not uncertainty of the original infinite MLE. See [fair_average_table()].
 #'
 #' `"difference"` ranks absolute observed-minus-fair gaps; `"scatter"` compares
 #' observed averages against fair scores with an identity line. These gaps
@@ -1926,6 +1940,8 @@ plot_fair_average <- function(x,
                               show_title = FALSE,
                               show_notes = FALSE,
                               ...) {
+  if (identical(x$settings$estimator, "jeffreys_canonical_joint"))
+    stop("This result contains common-plan Jeffreys scores, not FairM/FairZ diagnostics. Plot its confint() result, or inspect reference_scores.", call. = FALSE)
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   metric <- match.arg(metric)
   metric <- switch(metric, AdjustedAverage = "FairM", StandardizedAdjustedAverage = "FairZ", metric)
@@ -2050,7 +2066,9 @@ plot_fair_average <- function(x,
   if (plot_type == "measure") score_note <- paste(score_note,
     "Points show a model-based transformation, not independent validation. Do not pool correlations across facets.")
   if ((bundle$settings$xtreme %||% 0) > 0) score_note <- paste(score_note,
-    "xtreme changes the displayed Measure only; fair scores are unchanged and conditional intervals unavailable.")
+    if (identical(bundle$settings$xtreme_method, "facets"))
+      "FACETS total-score extrapolation changes the extreme element's reported Measure and fair scores. Its measure SE is conditional on the adjusted total; fair-score intervals remain unavailable. Primary estimates and anchors are retained." else
+        "xtreme changes the displayed Measure only; fair scores are unchanged and conditional intervals unavailable.")
   if (mean_reference_unavailable) score_note <- paste(score_note,
     "Non-Person FairM rows are unavailable because the mean JML Person measure is unbounded; FairZ uses a zero reference.")
   interval_caption <- if (plot_type == "difference") {

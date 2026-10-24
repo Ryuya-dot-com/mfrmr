@@ -69,7 +69,8 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
                               weight_col = NULL, keep_original = FALSE,
                               missing_codes = NULL,
                               repeated_ratings = c("review", "independent"),
-                              allow_single_person = FALSE) {
+                              allow_single_person = FALSE,
+                              allow_constant_scores = FALSE) {
   repeated_ratings <- match.arg(repeated_ratings)
   if (!is.data.frame(data)) stop("`data` must be a data.frame.", call. = FALSE)
   # Model columns, not inherited dplyr grouping, define the analysis rows.
@@ -525,7 +526,7 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
 
   observed_score_values <- sort(unique(df$Score))
 
-  if (length(unique(df$Score)) < 2) {
+  if (length(unique(df$Score)) < 2 && !isTRUE(allow_constant_scores)) {
     stop("Only one score category found in the data (Score = ",
          unique(df$Score), "). ",
          "This calibration interface currently requires at least two distinct response categories.", call. = FALSE)

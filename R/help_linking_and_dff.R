@@ -34,8 +34,11 @@
 #' sum to zero across all levels, including direct anchors and group totals.
 #' A single ungrouped remainder therefore balances those totals. Use
 #' `centering_scope = "remainder"` to reproduce earlier fits that centered only
-#' the levels outside direct/group constraints. Neither convention disables
-#' centering automatically as FACETS can do. Read [fit_mfrm()] before linking
+#' the levels outside direct/group constraints. Ordinary additive RSM/PCM JML
+#' also offers `centering_scope = "anchor_origin"`: direct or group anchors replace
+#' their facet's centering, with an unanchored, active noncenter facet.
+#' Group targets are repeated arithmetic means, not per-element contributions.
+#' The default remains `"facet"`. Read [fit_mfrm()] before linking
 #' a cohort with new raters or tasks; population and `noncenter_facet` settings
 #' also determine the scale. Contradictory constraints stop before estimation.
 #'

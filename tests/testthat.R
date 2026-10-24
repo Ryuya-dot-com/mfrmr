@@ -25,6 +25,8 @@ cran_light_tests <- c(
   "bias-numerics",
   "facets-manual-consistency",
   "facets-manual-boundaries",
+  "facets-results",
+  "fair-delta",
   "category-owner-reporting",
   "rater-effect-plots",
   "fixed-measure-precision",

@@ -250,11 +250,21 @@ For adjusted-score comparisons, use \code{plot(fit, type = "fair_average", show_
 \code{metric = "FairZ"} uses a zero reference, not a z-score. PCM averages
 expectations over administered scales with the table's observation weights
 and \code{totalscore} selection. Its conditional delta-method intervals use the
+same retained observations as the table: finite direct anchors in ordinary
+additive RSM/PCM JML are retained even with all-minimum/all-maximum responses,
+including when \code{totalscore = FALSE}. The intervals use the
 derivative of that same average. RSM/PCM intervals hold thresholds, other
 effects and reference means fixed; they are diagnostic approximations,
 not full calibration-uncertainty intervals. Inspect the returned data and
 notes for the interval method and unavailable rows. See \code{\link[=fair_average_table]{fair_average_table()}}
 for reference definitions and \link{plot_fair_average} for view-specific controls.
+For ordinary additive RSM/PCM JML, \verb{xtreme = .3, xtreme_method = "facets"}
+requests conditional total-score extrapolation of extreme measures and
+their fair scores. Primary estimates and fixed anchors are retained.
+Group-mean anchors are unsupported. The measure SE describes the corrected
+total; fair-score intervals remain unavailable for positive \code{xtreme}.
+The default \code{xtreme_method = "display"} retains the old average-score
+display convention and leaves fair scores unchanged.
 
 This S3 plotting method provides the core fit-family visuals for
 \code{mfrmr}. When \code{type} is omitted, it returns the Wright map alone as

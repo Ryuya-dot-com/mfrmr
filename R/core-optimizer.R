@@ -228,6 +228,8 @@ mfrm_optimizer_stage_row <- function(stage, selected = FALSE) {
     SmallestCurvature = as.numeric(stage$curvature$smallest %||% NA_real_),
     CurvatureScale = as.numeric(stage$curvature$scale %||% NA_real_),
     CurvatureReviewError = as.character(stage$curvature$error %||% ""),
+    InformationSteps = as.integer(stage$opt$jml_information_polish$steps %||% NA_integer_),
+    InformationSolveResidual = as.numeric(stage$opt$jml_information_polish$residual %||% NA_real_),
     ElapsedSeconds = as.numeric(stage$elapsed %||% NA_real_),
     Selected = isTRUE(selected),
     Error = as.character(stage$error %||% ""),
@@ -600,7 +602,7 @@ run_mfrm_direct_optimization <- function(start,
 
   run_stage <- function(par, stage_method, stage_reltol, index, label,
                         fail_hard = FALSE, curvature_restart = FALSE,
-                        coordinate_scale = NULL) {
+                        coordinate_scale = NULL, jml_information = FALSE) {
     input_par <- par
     proposal_counts <- c("function" = 0L, "gradient" = 0L)
     # The finite penalty applies only to proposals from an evaluable starting point.
@@ -620,7 +622,31 @@ run_mfrm_direct_optimization <- function(start,
         if (is.null(proposal$par)) stop(proposal$error)
         par <- proposal$par
       }
-      if (is.null(coordinate_scale)) {
+      if (isTRUE(jml_information)) {
+        positive <- (idx$weight %||% rep(1, length(idx$score_k))) > 0
+        by_person <- split(idx$score_k[positive],
+          factor(idx$person[positive], levels = seq_len(config$n_person)))
+        extreme <- vapply(by_person, function(y) {
+          length(y) > 0L && (all(y == 0L) || all(y == config$n_cat - 1L))
+        }, TRUE)
+        fixed <- integer(0)
+        if (any(extreme) && sizes$theta > 0L) {
+          theta_map <- mfrmr_constraint_jacobian_sparse(config$theta_spec, "Person")$jacobian
+          fixed <- build_param_slices(sizes)[["theta"]][
+            Matrix::colSums(abs(theta_map[extreme, , drop = FALSE])) > 0]
+        }
+        # Preserve the existing extreme-Person optimizer coordinates exactly.
+        # Their primary estimates remain limits; they are not made finite here.
+        active <- setdiff(seq_along(par), fixed)
+        polished <- mfrm_jml_information_polish(par, evaluator$value, evaluator$gradient,
+          function(p) mfrm_jml_polish_information(p, idx, config, sizes),
+          gradient_tol = max(1e-4, 10 * stage_reltol), active = active)
+        if (!polished$steps && nzchar(polished$error)) stop(polished$error)
+        result <- list(par = polished$par, value = polished$value,
+          convergence = polished$convergence, counts = polished$counts,
+          message = if (nzchar(polished$error)) polished$error else "Bounded JML information polishing.",
+          jml_information_polish = polished[c("steps", "residual", "error", "fixed_coordinates")])
+      } else if (is.null(coordinate_scale)) {
         result <- optim(par = par, fn = fn, gr = gr, method = stage_method,
                         control = stage_control)
       } else {
@@ -762,6 +788,18 @@ run_mfrm_direct_optimization <- function(start,
         if (identical(selected$diagnostics$ConvergenceSeverity, "pass")) break
       }
     }
+  }
+
+  if (isTRUE(polish_triggered) &&
+      identical(selected$diagnostics$ConvergenceReason, "code_zero_large_gradient") &&
+      identical(method, "JML") && identical(config$method, "JML") &&
+      config$model %in% c("RSM", "PCM") && !length(config$interaction_specs) &&
+      identical(config$facet_shrinkage %||% "none", "none")) {
+    candidate <- run_stage(selected$opt$par, "Newton", selected$reltol,
+      length(stages) + 1L, "jml_information_polish", jml_information = TRUE)
+    stages[[length(stages) + 1L]] <- candidate
+    if (!nzchar(candidate$error) && mfrm_optimizer_stage_is_better(candidate, selected))
+      selected <- candidate
   }
 
   if (isTRUE(polish_triggered) &&

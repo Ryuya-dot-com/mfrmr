@@ -709,6 +709,7 @@ summarize_anchor_constraints <- function(config) {
   centering <- switch(mfrm_centering_scope(config),
     facet = " Centered facets sum to zero across all levels, including anchors and group totals.",
     remainder = " Legacy centering sets the ungrouped, unanchored remainder to sum to zero.",
+    anchor_origin = " Direct or group anchors set their facet's origin without zero-sum centering; other facets are centered except the declared unanchored noncenter facet.",
     " The centering convention was not recorded.")
   if (nrow(anchor_tbl) == 0) {
     dummy_txt <- if (length(dummy_facets) > 0) paste(dummy_facets, collapse = ", ") else "none"

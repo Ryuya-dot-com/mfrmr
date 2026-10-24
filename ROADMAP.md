@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Updated 2026-10-23. mfrmr `0.2.4` is a release candidate and has not been
+Updated 2026-10-24. mfrmr `0.2.4` is a release candidate and has not been
 released. Features described below refer to this candidate unless stated
 otherwise. Previously reviewed inference and user workflows retain their
 scoped evidence. The subsequent critical review has repaired saved-result
@@ -21,7 +21,26 @@ match an unequal-count example; the earlier classical reference remains
 selectable. General FACETS equivalence is not established. Native conventions and remaining limits are explained in
 the migration guide. GENOVA 3.1, mGENOVA 2.1 and urGENOVA 2.1 comparisons support
 the checked balanced G/D-study examples and distinguish negative-component
-options from calculation defects. These corrections do not by themselves close
+options from calculation defects. A matched-calibration FACETS Person-by-Rater
+comparison also supports retaining directly fixed finite anchors in bias cells
+despite extreme observed totals. The default unadjusted boundary results retain
+unavailable screening uncertainty. Extreme-cell reporting can reverse a sign
+relative to the observed departure and remains a conditional convention.
+These comparisons do not establish main-calibration or inferential equivalence.
+Imported FACETS anchor flags now retain the distinction between a source flag
+and proof of an individually fixed measure. Group membership and marginal SEs
+do not resolve direct versus group anchoring; the original specification or
+Table 7 is needed for that interpretation. Extreme group members can retain
+extreme status instead of the anchor flag; their reported locations are
+preserved and fit placeholders remain unavailable for plotting.
+Native semicolon Scorefiles are now read alongside comma/tab exports, retaining
+facet headings, element identity and reported precision. Text import requires
+an existing export with intact labels and the correct source encoding.
+Imported element plots also accept display names keyed by facet and exported
+ID, retaining source labels and numerical results. Japanese display names can
+be assigned in R with an appropriate graphics device and installed font;
+native Japanese input to FACETS is not a requirement for this workflow.
+These corrections do not by themselves close
 final package and environment qualification.
 Native MML residual MnSq
 uses EAP plug-in scores and is not equivalent to posterior-averaged TAM or
@@ -52,6 +71,75 @@ retain their original scope and source attribution. Final specification and
 source selection, supported-environment, execution-cost and hosted-site
 qualification remain open; local checks do not establish release completion.
 No release date is promised.
+Common-plan Person expected scores and paired contrasts now have experimental
+ordinary-JML refit and local delta interval routes. They preserve estimated-anchor
+calibration and shared response events through explicit maps. The delta route
+retains full selected-target covariance through the actual centering and
+estimation maps, with separate numerical availability and failure reasons. Pointwise numerical
+availability is separate from inferential qualification: calibrated coverage,
+small-sample bias, weak-link and misspecification performance remain open.
+Analytic derivatives have independent numerical checks, which do not qualify
+normal-reference coverage. Existing FairM/FairZ references
+and their conditional uncertainty limits retain their original meaning.
+The current delta generator requires finite primary estimates for every Person;
+an unselected extreme Person can therefore make uncertainty unavailable for
+otherwise finite targets. Those points and the reason remain in the result.
+Handling such boundaries and qualifying interval availability remain substantive
+method-development tasks. Bounded information-based finishing now improves
+ordinary additive JML numerical stationarity under the original likelihood;
+extreme-Person coordinates can now be held fixed while other coordinates are
+finished, with every observation and the complete gradient retained.
+It does not remove the boundary restriction or qualify coverage and bias.
+The existing corrected-JML GPCM route has a different
+equation and sampling target and is not a FACETS bias-correction option.
+An explicit bounded-response alternative now gives conservative pointwise
+confidence bounds for the same common-plan targets, using scoring observations
+directly. It handles extreme scores without a fitted generator, under independent
+bounded responses and a fixed exogenous design, plan and contrast. Missing plan
+cells retain their full score range, so sparse designs can produce broad or
+uninformative bounds. The original JML points remain separate from a complete-plan
+weighted-mean estimate. This method does not qualify fitted-model intervals,
+correct JML bias or establish fairness.
+The refit route also offers an explicit Jeffreys generating-model option. It
+retains ordinary-JML points and full estimated-anchor refits while estimating
+finite generating parameters with a canonical information penalty. This gives
+an experimental boundary procedure with saved numerical diagnostics, not a
+coverage or score-bias guarantee. It requires independent performance
+qualification and is separate from the corrected-GPCM estimator. The default
+generator and delta restrictions remain unchanged.
+A finite generator does not ensure finite ordinary calibration and scoring
+refits in small, sparse samples. An explicit Jeffreys estimator is now available
+through `fit_mfrm(jml_penalty = "jeffreys", method = "JML")`, with the same
+penalty in original and resampled calibration/anchor/scoring stages. It retains
+declared empty categories and refuses unidentified designs. Its separate fitted
+result supplies points and checks without ordinary SEs or FACETS diagnostic
+claims. Experimental common-plan delta intervals use analytic penalized
+score/anchor derivatives and shared-event covariance; they do not use inverse
+penalized curvature as sampling variance. Independent qualification of global optimization,
+score bias and coverage remains open; successful numerical checks do not
+complete the small-sample or weak-link research program.
+Exact enumeration already demonstrates substantial normal-interval undercoverage
+in a supported six-response binary special case: nominal 95% Jeffreys delta
+limits cover 78.125% at true probability 0.5. This limitation persists despite
+correct local covariance; the method remains experimental and ineligible for
+qualified inference. Increasing the total number of Persons does not itself
+increase the observations for a focal Person. Bounded local finishing repairs
+some penalized numerical stops without changing the estimator or its gradient
+criterion; it does not repair this statistical limitation.
+Exact basic-refit quantiles also fail in this special case, so more inner
+replications alone are not a solution. Further qualification must address
+interval construction and its scope, alongside point bias and numerical
+availability; conservative response-based bounds retain their separate basis.
+Refit endpoint diagnostics now separate Monte Carlo uncertainty from sampling
+coverage. They retain failed draws and show when tail precision is unbounded;
+finite enclosures alone do not qualify precision or inference. Required inner
+replication counts and the cost of independent coverage confirmation remain
+part of performance qualification.
+Both conservative bounds and the Jeffreys generator require rubric endpoints
+declared independently of the sample, with the full scoring rule retained.
+These options reject inferred ranges and internally collapsed categories;
+observing no response at an endpoint does not remove it
+from the known score support.
 See [NEWS](NEWS.md) for changes and [README](README.md)
 for analysis examples.
 
@@ -119,6 +207,98 @@ specification freeze. See the [completion milestones](#release-completion-milest
 for their dependencies and acceptance conditions.
 The package is intended for different assessment settings whose
 rating designs match the selected method's assumptions.
+
+### Open FACETS and GENOVA compatibility decisions
+
+The following work defines the compatibility decisions for 0.2.4; unchecked
+items remain unfinished. Documenting a
+difference does not complete its numerical explanation, a requested compatibility
+option, or the associated inference. Existing matched comparisons remain valid
+within their stated scope.
+
+Compatibility is assessed per quantity. Independently derived model calculations
+remain the statistical basis; verified ordinary-JML reporting conventions can
+match FACETS to support migration and comparison. Unexplained version-specific
+outputs are not reproduced by empirical corrections. Compatibility options must
+retain the estimand, primary estimates and inference qualifications; they do
+not imply that FACETS defines G-theory or all supported estimation methods.
+
+- [x] Select and implement the checked bias-cell df/probability convention.
+  Retain frequency count minus one and the continuous Student tail; the manual's
+  count-minus-two description is not adopted as the executable convention.
+  FACETS 4.5.0 fractional-count tails in the checked examples are reproduced by
+  extending an integer-df finite sum outside its valid domain. This differs from
+  the Student distribution and can change a 0.05 screen. mfrmr retains the
+  independently integrated Student reference, with `ProbabilityReference`,
+  `ProbabilityStatus`, `ProbabilityReason` and separate display df. Nonpositive
+  df withhold the probability without discarding a finite conditional estimate.
+  This scoped decision does not establish other versions' behavior or calibrated
+  finite-sample screening; uncertainty evaluation remains open below.
+- [x] Add the scoped ordinary-JML expected point-measure reference to
+  diagnostics and fair-average tables. `PTMEAExpected` uses the published
+  finite-count factor `(N-2)/N`, with frequency count `N`; the unadjusted
+  reference and unavailable states are retained separately. Fixed-calibration
+  PCM comparisons support this convention with missing assignments and unequal
+  weights. This is an approximate conditional reference, not an exact expected
+  sample correlation or inference with calibration uncertainty.
+- [ ] Resolve four remaining PCM Outfit-df discrepancies. Infit df agrees
+  in the retained comparison, but agreement of fair averages, MnSq, correlations
+  and additional small cases does not explain these Outfit-df differences.
+  Fixed-distribution reflection probes reveal small native deviations under
+  mathematically equivalent score reversal. mfrmr retains stable central moments,
+  checked against independent high-precision arithmetic and reversal invariance;
+  it does not introduce a numerical perturbation to copy unexplained output.
+- [x] Implement explicit conditional total-score extrapolation for ordinary
+  additive RSM/PCM JML: `fair_average_table(..., xtreme = .3,
+  xtreme_method = "facets")` and `estimate_bias(..., xtreme = .5)`. Retain
+  primary estimates, fixed anchors and the old average-score display default;
+  distinguish corrected-total SEs and downstream fair scores. Unit/replication
+  weights, a fixed-scale PCM kernel and public consumers have scoped checks.
+- [ ] Complete native extreme-score equivalence under broader anchoring and
+  exclusion designs. Interior partial-anchor differences are resolved by
+  matching the origin constraints, but this does not validate every extreme
+  calibration design. The implemented reporting calculation conditions on
+  the saved calibration.
+  Same-boundary Person anchors expose a substantive difference: FACETS can
+  report finite values where the ordinary likelihood has no finite maximum.
+  mfrmr detects this configuration before optimization and does not reproduce
+  it as ordinary JML. With additional interior-anchor support, conditional
+  fair scores and bias calculations have matched-calibration checks, and
+  finite direct anchors remain in fair-score filtering under both display
+  conventions. Main calibration differences and broader exclusion designs
+  remain unresolved; reporting agreement does not imply estimator equivalence.
+  Group-mean anchors and fitted interactions remain outside this route.
+- [x] Implement explicit `centering_scope = "anchor_origin"` for ordinary
+  additive RSM/PCM JML, with direct anchors replacing their facet's centering
+  and an unanchored noncenter facet. Sparse interior partial-anchor cases
+  agree with native FACETS under these constraints. Preserve existing defaults
+  and distinguish fixed anchors from estimated-calibration uncertainty.
+- [x] Cross-check ordinary RSM/PCM JML against TAM with matched category
+  support, identification and corrections, including sparse assignments and
+  supported partial Person anchors. Distinguish default coefficient shrinkage,
+  calibration-score adjustments, MLE/WLE, conditional information and weighted
+  fit definitions. This scoped agreement does not qualify broader extreme
+  anchor configurations or calibration-inclusive inference.
+- [ ] Specify and evaluate uncertainty for fair averages and bias comparisons
+  when calibration is estimated, including dependence between compared results
+  and fixed versus estimated anchors. Select an inference method appropriate
+  to the estimand and sampling design; enlarging an ordinary-JML covariance
+  alone does not solve incidental-parameter bias. Assess coverage, screening
+  errors and unavailable results under declared conditions. Existing conditional
+  intervals remain diagnostic-only; neither coverage nor a bias screen alone
+  establishes fairness of an assessment.
+- [x] Add an explicit D-study component-treatment choice that preserves raw
+  estimates and distinguishes GENOVA `ALGORITHM` zero substitution from `EMS`
+  recalculation. `negative_components` now supports `"raw"` (default),
+  `"genova_algorithm"` and `"genova_ems"` for complete balanced univariate ANOVA
+  sources with supported crossed or nested facets. Matched executable output
+  checks effective components, G/Phi and SEM. Saved results, summaries and
+  plots retain the choice and original components. `confint()` pairs adjusted
+  points with original-source population intervals and supported plan-difference
+  intervals, recording their separate bases without recentering bounds.
+  Sampling uncertainty of the adjusted estimator itself remains unqualified;
+  the separate delta-estimator comparison API requires raw components.
+  Multivariate and incomplete sources retain the raw-only route.
 
 ## Intended uses and evidence
 
@@ -287,6 +467,17 @@ and interpretation notes with saved results and exported tables.
 | G-theory planning | Supported crossed/nested G/D studies, identifiable incomplete-source estimation, composites/differences, complete future plans, plots including signed error-source contributions by plan, balanced ANOVA component SEs/intervals and SEM intervals, one-facet G/Phi intervals, approximate MLS individual-plan G/Phi intervals for balanced two-crossed-facet sources, and scoped paired plan-difference intervals. | Explicit delta coefficient SEs/normal-reference intervals; experimental approximate-F and mean-square-region coefficient intervals; target-REML variance/covariance component, G/Phi and SEM intervals for balanced/identifiable incomplete sources; signed balanced-source covariance intervals. Plots retain original points, numerical failures and method-specific qualifications. General small-sample calibration remains incomplete. | General bootstrap alternatives, robust/simultaneous inference and sparse or unequal future rating plans. |
 | Feedback and decisions | Supported individual reports, agreement/reference comparisons, criterion accuracy, centrality, DFF sensitivity checks, exploratory all-pair bias summaries and plots with explicit availability, conditional cut probabilities and fixed-plan classification/SEM. | GMFRM feedback and descriptive diagnostics; general screening accuracy and performance under estimated or shifted ability distributions are not established. Conditional bias screens do not supply collection-wide multiplicity control. | Calibration-inclusive decisions, broader diagnostic evaluation, additional-rating allocation and rank/winner uncertainty. |
 
+Standalone FACETS-result visualization uses `read_facets_results()` and `plot()`
+for reported element measures and fit statistics. Source IDs, labels, precision,
+status and unavailable rows remain available for inspection and export.
+Shared-axis Wright maps require compatible source coordinates to be declared.
+This descriptive import does not provide external frozen-calibration scoring,
+joint uncertainty or a validation of the source analysis. Optional Graphfile
+imports redraw reported category-probability and expected-score coordinates,
+preserving scale/category identity, precision and unavailable points. They do
+not align curves with element measures or reconstruct an external calibration.
+Broader external-calibration reuse remains a later extension.
+
 Anchors, linking/imports, feature analysis, assigned-score imputation and
 eligible pooling, and separate random-rater/testlet models remain included
 within their documented restrictions. Stan/brms code export supports its
@@ -298,7 +489,12 @@ Location anchors use internal coordinates and condition on their supplied
 values. Person direct/group anchors require JML; MML rejects them. New ordinary
 fits center each declared facet across all levels, including anchors and group
 totals. Use `centering_scope = "remainder"` to reproduce the earlier convention.
-Neither mode automatically disables centering as FACETS can do. Thresholds
+For ordinary additive RSM/PCM JML, `centering_scope = "anchor_origin"` instead
+lets direct or group anchors replace their facet's centering, as FACETS does.
+This needs an unanchored, active noncenter facet. Group targets are repeated
+means, not native per-element contributions. The ordinary constrained
+likelihood is retained: native multi-group numerical results and general
+extreme handling are not reproduced automatically. Thresholds
 and slopes are not carried by the location-anchor
 table. See the [linking tutorial](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-linking-and-dff.html)
 for a complete example and the distinction from fixed-calibration scoring.
@@ -306,8 +502,9 @@ for a complete example and the distinction from fixed-calibration scoring.
 ## Anchor alignment before 0.2.4: incomplete
 
 Ordinary fitting and anchor review now accept `centering_scope = "facet"`
-(default) and `"remainder"` (legacy reproduction). The new convention centers
-the whole declared facet, including fixed values. An anchor does
+(default), `"remainder"` (legacy reproduction), and `"anchor_origin"`
+(direct or group anchors replace centering in ordinary additive RSM/PCM JML).
+The default convention centers the whole declared facet, including fixed values. An anchor does
 not implicitly select the population mean, variance, threshold structure or
 uncentered facet. These choices must match before results can be compared with
 TAM or ConQuest. Ordinary fitting, saved refit settings and the scoped
@@ -1008,7 +1205,10 @@ misleading claims or broken supported workflows do require correction.
   The scoped FACETS ZSTD, displacement, chi-square, PTMEA/PCM fair-average,
   bias-table, anchor and extreme-display corrections are implemented and
   checked within their documented limits. Residual executable differences
-  remain explicit; general FACETS equivalence is not established. Settle the
+  remain explicit; general FACETS equivalence is not established. Complete the
+  [open FACETS and GENOVA decisions](#open-facets-and-genova-compatibility-decisions),
+  including the requested compatibility options and the scope of uncertainty.
+  Settle the
   remaining MML numerical-default, downstream-eligibility and diagnostic
   decisions, including what belongs in this release. Unaffected specification
   reviews retain their acceptance.

@@ -23,7 +23,7 @@ review_mfrm_anchors(
   dummy_facets = NULL,
   category_policy = NULL,
   repeated_ratings = c("review", "independent"),
-  centering_scope = c("facet", "remainder")
+  centering_scope = c("facet", "remainder", "anchor_origin")
 )
 }
 \arguments{
@@ -96,17 +96,24 @@ explicitly there. It is not supported by the two-family GPCM route.}
 \item{centering_scope}{\code{"facet"} (default) centers each declared facet across
 all its levels, including direct anchors and group totals. \code{"remainder"}
 reproduces the earlier convention that centers only levels outside direct
-and group constraints. It does not change \code{noncenter_facet}, the population
-model, or category steps. Unsupported specialized routes reject an explicit
-setting. See \strong{Anchors and scale constraints}.}
+and group constraints. For ordinary additive RSM/PCM JML,
+\code{"anchor_origin"} lets direct or group anchors replace centering on their facet;
+select an unanchored, active \code{noncenter_facet}. Other facets remain centered.
+This option excludes comparison-only fitting. None of
+these conventions changes the population model or category steps.
+Unsupported specialized routes reject an explicit setting.
+See \strong{Anchors and scale constraints}.}
 }
 \value{
 A list of class \code{mfrm_anchor_review} with:
 \itemize{
 \item \code{anchors}: cleaned direct constraints used by estimation
 \item \code{group_anchors}: cleaned group-mean constraints used by estimation
-\item \code{centering_scope}: the reviewed whole-facet or legacy remainder convention
-\item \code{facet_summary}: counts of levels inside/outside declared constraints
+\item \code{centering_scope}: the reviewed \code{"facet"}, \code{"remainder"} or
+\code{"anchor_origin"} convention
+\item \code{facet_summary}: counts of levels inside/outside declared constraints,
+\code{Centered} indicating the declared centering constraint, and \code{OriginBasis}
+describing how the facet's origin is set
 \item \code{design_checks}: observation-count checks by level/category
 \item \code{thresholds}: active threshold settings used for recommendations
 \item \code{issue_counts}: issue-type counts
@@ -147,6 +154,10 @@ target value, allowing individual elements to vary freely around
 that mean. The target requires an external justification such as a
 defensible equal-mean or known-scale assumption.
 The mean is unweighted over declared levels, not over rating rows.
+\code{GroupValue} repeats one target per group. It is not a FACETS per-element
+contribution: values 0.2 and 1.0 in a native two-member group translate
+to 0.6 for both rows. See \code{\link[=fit_mfrm]{fit_mfrm()}} for group-origin centering and
+FACETS group 0 / extreme-exclusion differences.
 \item When both types include the same element, both constraints are retained:
 the direct anchor fixes that element and the group constraint still fixes
 the declared group mean. Incompatible combinations are rejected by the

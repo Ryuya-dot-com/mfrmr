@@ -63,6 +63,15 @@ local({
       "effects; these do not guarantee exact coverage or simultaneous coverage across scores."))
 
   descriptions <- list(
+    plot.mfrm_facets_results = c(paste(
+      "Reported FACETS measures for six synthetic Persons. Downward and upward",
+      "triangles mark extreme-score adjustments, a square marks a direct/group",
+      "anchor flag whose subtype is not determined by the import,",
+      "and circles mark estimated measures. No confidence intervals are shown."),
+      paste("Four reported FACETS category-probability curves for Scale 1 of a",
+        "synthetic PCM analysis. The horizontal axis retains Graphfile measure",
+        "coordinates; the legend preserves categories 0, 1, 2 and 3.",
+        "Lines join exported points. No confidence intervals are shown.")),
     plot.mfrm_bias_collection = c(
       paste("Signed conditional bias shifts for all retained Rater by Criterion",
         "cells. The pair label reports screening availability and the range of",

@@ -80,6 +80,9 @@ not z-standardization. Both metrics use fitted internal score coding.
 PCM averages expectations over the administered rating scales using the
 same observation weights and \code{totalscore} selection as the fair-score table.
 Its conditional derivative averages the within-scale score variances.
+In ordinary additive RSM/PCM JML, finite direct anchors remain eligible in
+both the fair score and its conditional derivative when \code{totalscore = FALSE},
+even if their observed responses are all minimum or all maximum.
 GPCM uses an element's own thresholds for the step facet and the mean
 threshold profile for other facets, with its own slope for the slope facet
 and slope 1 otherwise. Person and other-facet measures remain at the chosen
@@ -90,7 +93,11 @@ to the reported fair score. Select \code{facet = "Person"} for an ability-to-sco
 view. Points reuse the table values, without fitting a trend across different
 reference profiles. This transformation is not independent validation of
 the fitted model. \code{umean}/\code{uscale} change Measure units, not score units;
-\code{xtreme} changes the reported Measure only and disables conditional intervals.
+Positive \code{xtreme} disables conditional fair-score intervals. With the default
+\code{xtreme_method = "display"}, it changes only the reported Measure.
+\code{xtreme_method = "facets"} also uses the extrapolated measure in that
+element's fair scores; its measure SE describes information at a corrected
+total, not uncertainty of the original infinite MLE. See \code{\link[=fair_average_table]{fair_average_table()}}.
 
 \code{"difference"} ranks absolute observed-minus-fair gaps; \code{"scatter"} compares
 observed averages against fair scores with an identity line. These gaps

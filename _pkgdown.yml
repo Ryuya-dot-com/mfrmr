@@ -29,6 +29,7 @@ reference:
       - mfrmr_agreement_data
       - describe_mfrm_data
       - fit_mfrm
+      - summary.mfrm_jeffreys_fit
       - mfrm_fit_extractors
       - mfrm_fit_responses
       - confint.mfrm_fit
@@ -258,6 +259,8 @@ reference:
       - facets_output_file_bundle
       - facets_output_contract_review
       - read_facets_fit_table
+      - read_facets_results
+      - plot.mfrm_facets_results
       - import_facets_fit_table
       - run_mfrm_facets
       - import_mirt_fit
@@ -298,6 +301,8 @@ reference:
       - facet_statistics_report
       - facets_chisq_table
       - fair_average_table
+      - confint.mfrm_fair_average
+      - plot.mfrm_fair_intervals
       - interaction_effect_table
       - mfrm_misfit_thresholds
       - mfrm_results_interactive

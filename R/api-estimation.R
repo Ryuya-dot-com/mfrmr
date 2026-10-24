@@ -53,6 +53,8 @@
 #'   unobserved internal category in a polytomous fitted ladder creates an
 #'   unsupported adjacent-step contrast and fitting stops before optimization
 #'   with a structured category-support error.
+#'   The explicit Jeffreys route below retains empty categories under a
+#'   different estimating equation; it does not certify ordinary finite MLEs.
 #' @param rating_min Optional minimum category value. Supply this with
 #'   `rating_max` when the intended score scale includes unobserved boundary
 #'   categories.
@@ -162,13 +164,17 @@
 #'   Use columns `Facet`, `Level`, `Group`, and `GroupValue`. Person group
 #'   constraints require JML.
 #' @param noncenter_facet One facet to leave non-centered (default `"Person"`).
-#'   Other facets use the zero-sum convention selected by `centering_scope`.
+#'   Other facets use the convention selected by `centering_scope`.
 #' @param centering_scope `"facet"` (default) centers each declared facet across
 #'   all its levels, including direct anchors and group totals. `"remainder"`
 #'   reproduces the earlier convention that centers only levels outside direct
-#'   and group constraints. It does not change `noncenter_facet`, the population
-#'   model, or category steps. Unsupported specialized routes reject an explicit
-#'   setting. See **Anchors and scale constraints**.
+#'   and group constraints. For ordinary additive RSM/PCM JML,
+#'   `"anchor_origin"` lets direct or group anchors replace centering on their facet;
+#'   select an unanchored, active `noncenter_facet`. Other facets remain centered.
+#'   This option excludes comparison-only fitting. None of
+#'   these conventions changes the population model or category steps.
+#'   Unsupported specialized routes reject an explicit setting.
+#'   See **Anchors and scale constraints**.
 #' @param fit_scope `"full"` (default) fits the ordinary model and retains its
 #'   identification guards. `"comparisons"` explicitly fits only the targets in
 #'   `comparison_review`; see **Comparison-only estimation**.
@@ -244,6 +250,15 @@
 #'   The best non-worsening stage under the recorded selection rule is
 #'   retained. Requested and selected-stage settings remain in `fit$summary`,
 #'   and the complete stage history remains in `fit$opt$optimizer_polish`.
+#'   Ordinary additive RSM/PCM JML without shrinkage can finish a remaining
+#'   stall with at most three sparse Newton steps from the exact likelihood
+#'   information. Each step must reduce the gradient without likelihood loss
+#'   beyond roundoff, pass its linear-solve check and move no coordinate by more
+#'   than one logit. Extreme Persons, nonpositive information and failed
+#'   proposals retain their diagnostic state. The final stage is labelled
+#'   `jml_information_polish`, with method `Newton`, `InformationSteps` and
+#'   `InformationSolveResidual`. This does not correct JML bias or qualify
+#'   interval coverage; the original terminal-gradient criterion still applies.
 #'   If ordinary polishing still stalls, fixed-grid RSM/PCM/GPCM MML fits
 #'   (including estimated population parameters) or adaptive GPCM MML fits
 #'   with a fixed population can use one local curvature step to restart the
@@ -456,6 +471,11 @@
 #'   `optim()` engine ignores it. Use this to make long MML EM
 #'   fits crash-resilient on shared compute environments.
 #'
+#' @param jml_penalty `"none"` (default) preserves the ordinary estimator.
+#'   Explicit `"jeffreys"` with additive RSM/PCM `method = "JML"` selects
+#'   canonical information-penalized joint estimation. It returns a separate
+#'   `mfrm_jeffreys_fit` with point estimates and numerical checks, without
+#'   ordinary SEs or FACETS diagnostics. See **Jeffreys-penalized JML**.
 #' @param jml_correction_order `NULL` (default) leaves the usual estimator
 #'   unchanged. A positive integer explicitly selects an experimental
 #'   profile-score adjustment for shared-owner `model = "GPCM", method = "JML"`.
@@ -953,6 +973,56 @@
 #' `"standard"` < 50, `"strong"` >= 50). These package screening bands are
 #' not guarantees of precision, interval coverage or sample adequacy.
 #'
+#' @section Jeffreys-penalized JML:
+#' `jml_penalty = "jeffreys"` minimizes
+#' \eqn{-\ell(\beta)-\tfrac12\log|I(\beta)|} in the actual affine free
+#' canonical coordinates, with anchor offsets retained. Here \eqn{I} is the
+#' full joint expected response information, including free Person parameters.
+#' The optimizer starts at the free-coordinate origin, uses BFGS with
+#' `reltol = min(reltol, 1e-14)` and the requested `maxit`, and requires maximum
+#' penalized gradient at most `1e-4`, positive information with checked solves,
+#' and numerically interior category probabilities. It uses no probability
+#' clipping, parameter box, ridge or ordinary extreme-score replacement.
+#' If BFGS stops on objective change before satisfying the gradient criterion,
+#' at most three local Newton steps use the analytic penalized Jacobian. Steps
+#' must be numerically identified, at most one in every free coordinate, not
+#' increase the same objective and reduce the full penalized gradient; backtracking is
+#' bounded. `checks$polish` records an attempted finish. The original gradient
+#' criterion and failure status remain in force if finishing fails.
+#'
+#' The supported scope is an identified additive RSM/PCM design, unit weights,
+#' explicitly declared `rating_min` and `rating_max`, and unchanged full score
+#' coding (`category_policy = "preserve"`). Direct finite anchors and ordinary
+#' centering conventions are supported; group anchors, interactions, GPCM,
+#' population models, shrinkage, corrected-JML arguments and attached ordinary
+#' diagnostics are not. `optimizer` must be `"auto"` or `"BFGS"`.
+#' Repeated cells require the explicit independent-occasion declaration when
+#' substantively justified. Missing categories and constant outcomes are
+#' retained on the declared rubric; rank deficiency is still refused.
+#'
+#' [summary.mfrm_jeffreys_fit()] describes Person, facet and step points,
+#' category probabilities and numerical diagnostics. For common-plan Person
+#' expected scores use [fair_average_table()] with `reference_plan`, followed
+#' by [confint.mfrm_fair_average()] for experimental refit or delta intervals. Calibration,
+#' scoring and generating fits must all select this estimator; every replicate
+#' re-estimates its calibration and anchors using the same equation. The ordinary
+#' delta derivative and inverse information SEs do not describe this estimator;
+#' its delta route uses analytic penalized score/anchor derivatives and shared
+#' categorical response covariance. It is not an inverse-curvature interval.
+#' Parameter covariance, Wald intervals, AIC, likelihood-ratio inference,
+#' ordinary FairM/FairZ diagnostics and FACETS export are not supplied.
+#'
+#' This is an opt-in alternative to ordinary FACETS-oriented JML, separate from
+#' both the generator-only Jeffreys option and corrected GPCM. Firth's (1993)
+#' fixed-dimensional canonical bias result does not establish unbiased nonlinear
+#' expected scores, coverage, or incidental-parameter consistency when the number
+#' of Person parameters grows. The binomial finiteness theorem of Kosmidis and
+#' Firth (2021) is not asserted as a general many-facet PCM theorem. A qualified
+#' local stationary point does not establish a global optimum. Small-sample,
+#' sparse and weak-link bias/coverage remain to be qualified independently.
+#' References: Firth (1993), \doi{10.1093/biomet/80.1.27}; Kosmidis and Firth
+#' (2021), \doi{10.1093/biomet/asaa052}.
+#'
 #' @section Estimator choice and the JML incidental-parameter caveat:
 #' Joint maximum likelihood (`method = "JML"` / `"JMLE"`) estimates
 #' both the structural parameters (facets, thresholds, slopes) and
@@ -1304,14 +1374,55 @@
 #' Use `centering_scope = "remainder"` to reproduce earlier partial anchoring:
 #' the ungrouped, unanchored levels sum to zero and a singleton is fixed at zero.
 #' Saved results retain their original constraints; reloading does not migrate
-#' estimates. Changing conventions requires refitting. Neither convention
-#' automatically disables centering as FACETS can do. Match `noncenter_facet`,
-#' the response design and population assumptions for TAM/ConQuest comparisons;
-#' the anchor value alone does not establish equivalence.
+#' estimates. Changing conventions requires refitting.
+#'
+#' For ordinary additive RSM/PCM JML, `centering_scope = "anchor_origin"`
+#' implements the FACETS convention that a directly or group-anchored facet is not
+#' additionally centered. With a Person anchor, choose an unanchored facet such
+#' as `noncenter_facet = "Rater"`; other unanchored facets remain centered.
+#' A Rater anchor can instead retain the default noncenter Person facet.
+#' The noncenter facet must be active and have neither direct nor group anchors.
+#' A single direct anchor or group mean supplies
+#' its facet's origin; multiple fixed values can impose additional substantive
+#' constraints. Without Person group constraints, if all retained responses of
+#' the directly anchored Persons are
+#' at the same declared minimum or maximum, fitting stops before optimization,
+#' without requiring `lpSolve`: free Person and noncenter-facet locations can
+#' diverge together while preserving every fixed value. FACETS 4.5.0 can report
+#' finite values for such inputs, but these are not an ordinary finite JML
+#' solution and are not reproduced by this route. An extreme anchor does not
+#' alone trigger this rule when another Person anchor supplies interior or
+#' opposite-boundary responses. Other detected joint additive recession
+#' directions affecting calibration also stop this route; passing the checks
+#' does not certify every boundary configuration. General extreme-score
+#' exclusion and every FACETS option are not equivalent. See the FACETS
+#' [centering specification](https://www.winsteps.com/facetman64/centerfacet.htm).
+#' Match category support, signs, the response design and population assumptions
+#' for TAM/ConQuest comparisons; an anchor value alone does not establish
+#' equivalence. All these routes condition on supplied anchor values and do not
+#' propagate error from an external estimated calibration.
 #'
 #' A group target is an unweighted arithmetic mean of its declared levels,
 #' including any directly anchored members. It is not weighted by rating
-#' counts. In MML, individual abilities are integrated out: Person direct and
+#' counts. FACETS `G` supplies per-element contributions to a group total;
+#' convert their arithmetic mean to one repeated `GroupValue`. For example,
+#' contributions 0.2 and 1.0 become `GroupValue = 0.6` for both members.
+#' Unequal `GroupValue` entries are conflicting targets, not contributions;
+#' use `anchor_policy = "error"` to stop on review issues. FACETS group 0
+#' denotes direct anchors and must be translated to `anchors`; mfrmr treats
+#' `Group = "0"` as an ordinary group identifier. The FACETS `X` convention
+#' that removes extreme members is not applied automatically. See
+#' [FACETS element specifications](https://www.winsteps.com/facetman64/elements.htm).
+#'
+#' Group-origin support retains constrained maximum likelihood, not every
+#' native FACETS update. Matched interior RSM/PCM examples agree when a single
+#' group only sets the origin. With additional restrictions, FACETS 4.5.0 can
+#' satisfy the group means while leaving a nonzero likelihood derivative along
+#' a constraint-preserving direction. mfrmr optimizes that likelihood rather
+#' than reproducing those numerical differences. Matching means alone does
+#' not establish parameter, SE or interval equivalence; group-anchor extreme
+#' extrapolation remains unsupported. In MML, individual abilities are
+#' integrated out: Person direct and
 #' group anchors are unsupported and rejected even with `anchor_policy =
 #' "silent"`. Sharing Persons across raters requires no fixed Person values.
 #'
@@ -1758,6 +1869,9 @@
 #' establish global MML identification or finite-sample inference here.
 #'
 #' @return
+#' With `method = "JML", jml_penalty = "jeffreys"`, a separate
+#' `mfrm_jeffreys_fit`; see [summary.mfrm_jeffreys_fit()] for its point tables,
+#' probabilities, numerical checks and unsupported inference.
 #' With `method = "CML", fit_scope = "full"`, an `mfrm_cml_fit` with structural estimates,
 #' joint `covariance` and `information` (missing where unavailable), `person_totals`, `checks`, preparation,
 #' configuration and optimizer controls; see "Conditional maximum likelihood".
@@ -1933,10 +2047,11 @@ fit_mfrm <- function(data,
                      jml_correction_sampling = c("fixed_rosters", "random_rosters"),
                      gpcm_mml_start = NULL,
                      repeated_ratings = c("review", "independent"),
-                     centering_scope = c("facet", "remainder"),
+                     centering_scope = c("facet", "remainder", "anchor_origin"),
                      fit_scope = c("full", "comparisons"),
                      comparison_review = NULL,
-                     mml_accuracy_control = NULL) {
+                     mml_accuracy_control = NULL,
+                     jml_penalty = c("none", "jeffreys")) {
   supplied_arguments <- names(as.list(match.call())[-1L])
   fit_scope <- match.arg(fit_scope)
   if (fit_scope == "full" && !is.null(comparison_review))
@@ -2027,6 +2142,12 @@ fit_mfrm <- function(data,
   model <- toupper(match.arg(model))
   method_input <- public_mfrm_method_label(toupper(match.arg(method)))
   method <- method_input
+  if (identical(centering_scope, "anchor_origin") &&
+      (!identical(method, "JML") || !model %in% c("RSM", "PCM") ||
+       length(facet_interactions) > 0L || fit_scope != "full")) {
+    stop("`centering_scope = 'anchor_origin'` requires ordinary additive RSM/PCM JML with fit_scope = 'full'.",
+         call. = FALSE)
+  }
   optimizer <- normalize_mfrm_optimizer(match.arg(optimizer))
   mml_engine <- tolower(match.arg(mml_engine))
   mml_integration <- match.arg(mml_integration)
@@ -2050,6 +2171,11 @@ fit_mfrm <- function(data,
   anchor_policy <- tolower(match.arg(anchor_policy))
   population_policy <- tolower(match.arg(population_policy))
   facet_shrinkage <- match.arg(facet_shrinkage)
+  jml_penalty <- match.arg(jml_penalty)
+  if (jml_penalty != "none") {
+    arguments <- mget(names(formals(fit_mfrm)), envir = environment(), inherits = FALSE)
+    return(mfrm_fit_jeffreys(arguments, supplied_arguments))
+  }
   if (!is.null(facet_prior_sd)) {
     if (!is.numeric(facet_prior_sd) || length(facet_prior_sd) != 1L ||
         !is.finite(facet_prior_sd) || facet_prior_sd < 0 ||
@@ -4956,6 +5082,10 @@ plot.mfrm_data_description <- function(x,
 #'   that mean. The target requires an external justification such as a
 #'   defensible equal-mean or known-scale assumption.
 #'   The mean is unweighted over declared levels, not over rating rows.
+#'   `GroupValue` repeats one target per group. It is not a FACETS per-element
+#'   contribution: values 0.2 and 1.0 in a native two-member group translate
+#'   to 0.6 for both rows. See [fit_mfrm()] for group-origin centering and
+#'   FACETS group 0 / extreme-exclusion differences.
 #' - When both types include the same element, both constraints are retained:
 #'   the direct anchor fixes that element and the group constraint still fixes
 #'   the declared group mean. Incompatible combinations are rejected by the
@@ -4983,8 +5113,11 @@ plot.mfrm_data_description <- function(x,
 #' @return A list of class `mfrm_anchor_review` with:
 #' - `anchors`: cleaned direct constraints used by estimation
 #' - `group_anchors`: cleaned group-mean constraints used by estimation
-#' - `centering_scope`: the reviewed whole-facet or legacy remainder convention
-#' - `facet_summary`: counts of levels inside/outside declared constraints
+#' - `centering_scope`: the reviewed `"facet"`, `"remainder"` or
+#'   `"anchor_origin"` convention
+#' - `facet_summary`: counts of levels inside/outside declared constraints,
+#'   `Centered` indicating the declared centering constraint, and `OriginBasis`
+#'   describing how the facet's origin is set
 #' - `design_checks`: observation-count checks by level/category
 #' - `thresholds`: active threshold settings used for recommendations
 #' - `issue_counts`: issue-type counts
@@ -5037,7 +5170,7 @@ review_mfrm_anchors <- function(data,
                                 dummy_facets = NULL,
                                 category_policy = NULL,
                                 repeated_ratings = c("review", "independent"),
-                                centering_scope = c("facet", "remainder")) {
+                                centering_scope = c("facet", "remainder", "anchor_origin")) {
   centering_scope <- match.arg(centering_scope)
   keep_original <- resolve_mfrm_category_policy(
     keep_original, category_policy, !missing(keep_original))

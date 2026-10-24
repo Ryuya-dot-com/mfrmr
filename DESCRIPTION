@@ -55,6 +55,7 @@ Imports:
     methods,
     parallel,
     stats,
+    tools,
     utils
 LinkingTo:
     cpp11

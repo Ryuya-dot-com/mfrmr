@@ -13,7 +13,8 @@ estimate_bias(
   max_abs = 10,
   omit_extreme = TRUE,
   max_iter = 4,
-  tol = 0.001
+  tol = 0.001,
+  xtreme = 0
 )
 }
 \arguments{
@@ -38,13 +39,20 @@ supplied explicitly; see the Person-screening boundary below.}
 
 \item{max_abs}{Bound for absolute bias size.}
 
-\item{omit_extreme}{Omit extreme-only elements.}
+\item{omit_extreme}{Omit extreme-only elements. In ordinary additive RSM/PCM
+JML, directly fixed finite anchors are retained even with all-low/all-high
+responses. Their cell bias may still have no finite unconstrained optimum.}
 
 \item{max_iter}{Maximum number of repeated cell-estimation passes recorded
 in \code{iteration}; the baseline calibration stays fixed throughout.}
 
 \item{tol}{Between-pass change tolerance for the iteration log. This does
 not control the tolerance of the bounded scalar likelihood optimizer.}
+
+\item{xtreme}{Default \code{0} retains bounded extreme-cell estimates with SEs
+withheld. A positive correction (usually \code{.5} for FACETS bias reporting)
+requests finite total-score extrapolation for ordinary additive RSM/PCM
+JML without group-mean anchors; it must be smaller than the score range.}
 }
 \value{
 An object of class \code{mfrm_bias} with:
@@ -116,6 +124,31 @@ Inspect \code{ScreenStatus} and \code{ScreenReason}: a bound can mean an insuffi
 search range or an all-low/all-high cell with no finite unconstrained
 optimum. Increasing the range does not resolve the latter.
 
+With \code{xtreme > 0}, an all-low/all-high cell's weighted total is moved inward
+by \code{xtreme} times its smallest positive weight. A root strictly inside
+\verb{[-max_abs, max_abs]} yields \code{BiasStatus = "extreme_adjusted"}, finite
+\verb{Bias Size} and conditional information SE; \code{PrimaryBias} retains the
+infinite cell MLE and \code{ExtremeAdjustment} records the total correction.
+Otherwise the boundary remains unavailable for screening. Observations
+involving any unanchored extreme main-effect element are excluded in this
+route even when \code{omit_extreme = FALSE}; finite fixed anchors remain usable.
+This prevents main-effect display replacements from becoming calibration.
+The default \code{xtreme = 0} also retains directly fixed finite anchors in ordinary
+additive RSM/PCM JML; extreme cells then keep bounded points with screening
+SEs and tail areas withheld. Group-mean constraints are not direct anchors.
+The native FACETS \verb{Xtreme = main,bias} has two separate corrections: this
+function's \code{xtreme} corresponds to the second value (normally \code{.5}), not
+the first (normally \code{.3}). Executed FACETS 4.5.0 Person-by-Rater examples
+retain fixed extreme Persons and agree with the conditional cell calculation
+on the same main calibration. This does not establish main-calibration parity.
+If a low cell's baseline expectation is already below the inward correction,
+its adjusted bias can be positive despite a negative observed-minus-expected
+score difference (and conversely at the upper endpoint). Inspect \code{PrimaryBias},
+\code{ExtremeAdjustment} and \verb{Obs-Exp Average} together; the adjusted sign describes
+the amended total, not a reversal of the observed departure.
+Extrapolated tail areas, summaries and pairwise contrasts are reporting
+conventions, not regular-MLE inference, coverage guarantees or fairness tests.
+
 \code{ConditionalInformation} uses every cell row, including small positive
 conditional variances; the residual-screening cutoff does not remove their
 information. Incomplete/nonpositive information withholds the SE and
@@ -173,6 +206,22 @@ before adding the cell shift. \code{AfterBiasExpectedScore} and
 Cell t reference df uses weighted count minus 1. This matches the executed
 FACETS 4.5.0 equal-count binary example; a manual count-minus-2 description
 is a distinct convention and does not establish version-wide equivalence.
+\code{DFUnrounded} retains count minus one, including nonpositive values.
+A nonpositive value withholds \code{d.f.}, \code{DFDisplay} and \code{Prob.}; a finite point
+and conditional information SE can remain available. For positive df,
+\code{DFDisplay} rounds to the nearest integer (halves upward) for RSM/PCM display
+comparison only. \code{d.f.} and \code{Prob.} use the continuous reference.
+\code{ProbabilityReference}, \code{ProbabilityStatus} and \code{ProbabilityReason} identify
+the reference distribution and distinguish available conditional or
+extreme-adjusted tails from unavailable df, statistics or numerical results.
+These fields describe \code{Prob.}, not the separate GPCM likelihood-ratio tail.
+
+Checked FACETS 4.5.0 fractional-count tails are reproduced by extending an
+integer-df finite-sum formula to fractional df. That extension is not the
+continuous-df Student distribution and can change a 0.05 screening flag.
+mfrmr retains the continuous Student tail, independently checked by density
+integration. This explains the checked output behavior without claiming
+access to the executable's implementation or general finite-sample validity.
 The all-zero \code{chi_sq} screen sums squared bias/SE ratios without centering;
 its df is the number of cells. It requires at least two cells and complete
 cell estimates and SEs. Otherwise its statistic, degrees of freedom and
@@ -285,6 +334,9 @@ s_bias$top_rows
 #   inspect cell counts, uncertainty and substantive consequences.
 p_bias <- plot(bias, type = "bias", draw = FALSE)
 p_bias$data$plot
+# Optional finite reporting for extreme cells; this does not refit calibration
+extreme_bias <- estimate_bias(fit, diag, "Rater", "Criterion", xtreme = .5)
+head(extreme_bias$table[, c("Bias Size", "PrimaryBias", "BiasStatus", "SEBasis")])
 
 }
 \seealso{

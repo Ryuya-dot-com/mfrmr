@@ -237,6 +237,32 @@ calibrated automatic default. Read the selected method's assumptions below.
 
 Each interval concerns a population coefficient or SEM of a future plan: uncertainty comes
 from the source G-study, not from collecting the proposed future ratings.
+GENOVA-adjusted D-studies can use the same population-parameter intervals.
+\code{Estimate} and \code{PointStatus} describe the adjusted point; \code{IntervalEstimate}
+and \code{IntervalPointStatus} retain the original source-study projection.
+\code{ComponentTreatment} and \code{IntervalBasis} distinguish their bases. The
+original source mean squares, data, bounds, diagnostics and unavailable
+states are preserved; adjusted components never replace the source inputs.
+The bounds are not recentered and need not contain the adjusted point.
+An existing method-specific \code{IntervalCenter} remains separate from both.
+Where a method supplies a coefficient sampling SE, it is named \code{IntervalSE}
+for adjusted results. \code{SamplingVariance}, error-variance columns and other
+diagnostics also retain their original method basis. None describes the
+sampling distribution of the zero-substituted or EMS-recalculated estimator.
+In the method descriptions below, references to the original \code{Estimate}
+mean \code{IntervalEstimate} when component treatment is adjusted.
+
+This distinction follows from the common population target: changing a
+reported point does not change the confidence-set event based on the source
+study. Exact procedures keep their stated normal-model qualifications;
+approximate or experimental methods do not become exact through adjustment.
+GENOVA's unchanged component SEs cannot be interpreted as an adjusted
+estimator's SE. Its truncation is nonsmooth at zero; an adjusted-estimator
+delta interval would require additional derivation and boundary validation.
+Saved intervals must match the D-study's treatment as well as its source.
+Use \code{confint(d, reference = ...)} for supported population plan differences;
+the separate \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} delta-estimator API still
+requires raw components.
 
 For a balanced two-crossed-facet source, start with
 \code{confint(d, parm = "Phi", assumption = "normal")} for absolute dependability,

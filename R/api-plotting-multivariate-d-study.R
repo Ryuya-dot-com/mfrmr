@@ -212,6 +212,13 @@
 #' an available G. Non-PSD component matrices are described in the returned
 #' notes; inspect `x$component_diagnostics` before using raw projections.
 #' Increasing planned counts does not repair those component estimates.
+#' The saved `negative_components` convention is preserved in curves and
+#' error-contribution plots. Notes identify raw, GENOVA ALGORITHM or GENOVA EMS
+#' projections; original G-study diagnostics remain available. GENOVA-adjusted
+#' results accept original-source population intervals calculated for that
+#' treatment by `confint(x)`. Bands retain their original bounds and may not
+#' contain adjusted points; notes and saved intervals retain the distinction.
+#' A saved interval with a different component treatment is rejected.
 #' Missing values are never plotted as zero. Previously saved D-study objects
 #' retain their recorded values and availability: rerun
 #' [mfrm_d_study()] on the saved G-study to apply current rules.
@@ -291,6 +298,7 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   rlang::check_dots_empty()
   type <- match.arg(type)
+  if (!identical(.mfrm_mvds_policy(x), "raw")) x <- .mfrm_mvds_replay(x)
   if (!isTRUE(intervals) && (!missing(assumption) || !missing(method) || !missing(level)))
     stop("`assumption`, `method` and `level` apply only when `intervals = TRUE`; saved intervals retain their own settings.", call. = FALSE)
   if (isFALSE(intervals)) intervals <- NULL
@@ -444,10 +452,12 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem", "e
   subtitle <- paste(design_label, "|", if (is.null(bands))
     "Estimated components held fixed | No confidence intervals" else
     "Saved coefficient intervals | Source-study uncertainty")
-  component_note <- if (any(!x$component_diagnostics$PositiveSemidefinite))
-    "Non-PSD covariance components: raw projections; review component diagnostics." else NULL
+  component_note <- c(if (!identical(.mfrm_mvds_policy(x), "raw")) .mfrm_mvds_component_note(x),
+    if (any(!x$component_diagnostics$PositiveSemidefinite))
+      "Non-PSD covariance components in the original G-study; review component diagnostics and the selected treatment.")
   out <- new_mfrm_plot_data("multivariate_d_study", list(table = tab, series = series,
     unavailable = unavailable, design_grid = x$design_grid, weights = selected_weights,
+    negative_components = .mfrm_mvds_policy(x),
     nesting = nesting, panel_by = panel_by,
     panels = if (faceted) panels else NULL, ncol = if (faceted) panel_columns else NULL,
     score = score, kind = kind, plot = type, x_var = x_var, x_label = x_label,

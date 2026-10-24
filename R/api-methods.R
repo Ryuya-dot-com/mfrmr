@@ -1586,6 +1586,15 @@ summarize_unexpected_bundle <- function(object, digits = 3, top_n = 10) {
 }
 
 summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
+  if (identical(object$settings$estimator, "jeffreys_canonical_joint")) {
+    out <- summarize_known_bundle(object, "mfrm_fair_average",
+      summary_candidates = character(), preview_candidates = "reference_scores",
+      settings_candidates = "settings", notes = object$notes, digits = digits, top_n = top_n)
+    out$reference_scores <- object$reference_scores
+    out$reference_plan <- object$reference_plan
+    out$point_estimator <- "jeffreys_canonical_joint"
+    return(out)
+  }
   validate_fair_measure_basis(object)
   top_n <- max(1L, as.integer(top_n))
   stacked <- bundle_component_table(object, "stacked")
@@ -1735,7 +1744,12 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     ))
   }
   if (isTRUE((object$settings$xtreme %||% 0) > 0)) {
-    notes <- c(notes, paste(
+    notes <- c(notes, if (identical(object$settings$xtreme_method, "facets")) paste(
+      "FACETS total-score extrapolation uses the minimum positive weight within each extreme element and its administered calibration.",
+      "PrimaryMeasure and fixed anchors are retained. Extrapolated locations are used in that element's fair scores.",
+      "Reported measure SEs are conditional information at the adjusted total, not original-MLE uncertainty or a coverage guarantee.",
+      "This does not reproduce unexplained re-centering in partially anchored FACETS runs or correct JML bias."
+    ) else paste(
       "Extreme-score adjustments change the displayed Measure only; PrimaryMeasure retains the fitted value.",
       "These replacements do not correct JML bias, change anchors or refit the model.",
       "Measure SEs are unavailable on replaced rows; fair-score calculations do not use the display replacement."
@@ -1765,6 +1779,14 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     summary_override = summary_tbl
   )
   out$fair_measure_basis_recorded <- TRUE
+  if (!is.null(object$reference_scores)) {
+    out$reference_scores <- object$reference_scores
+    out$reference_plan <- object$reference_plan
+    out$notes <- c(out$notes, paste(
+      "reference_scores contains Person expected averages on one common declared plan, in internal score units.",
+      "This target retains the plan's fitted facet locations and is distinct from FairM/FairZ.",
+      "Use confint(object, nsim = ..., seed = ...) for the experimental refit procedure."))
+  }
   if (nrow(preview_tbl) > 0L) {
     out$preview_name <- "stacked"
     out$preview <- preview_tbl
@@ -2672,6 +2694,13 @@ print.summary.mfrm_bundle <- function(x, ...) {
   }
 
   if (identical(x$summary_kind, "mfrm_fair_average")) {
+    if (identical(x$point_estimator, "jeffreys_canonical_joint")) {
+      cat("Common-plan Jeffreys expected scores (experimental)\n")
+      print_bundle_section("Person expected scores",
+        utils::head(x$reference_scores, x$top_n %||% 10L), digits = digits)
+      for (line in x$notes %||% character()) cat(line, "\n")
+      return(invisible(x))
+    }
     if (!isTRUE(x$fair_measure_basis_recorded)) {
       stop(paste(
         "This saved summary does not retain the fitted-measure and mean-reference basis.",
@@ -2694,6 +2723,9 @@ print.summary.mfrm_bundle <- function(x, ...) {
     names(preview) <- sub("AdjustedAverage", "FairM", names(preview), fixed = TRUE)
     names(preview) <- sub("ObservedAverage", "Observed", names(preview), fixed = TRUE)
     print_bundle_section("Facet scores", preview, digits = digits)
+    if (!is.null(x$reference_scores))
+      print_bundle_section("Common-plan Person expected scores",
+        utils::head(x$reference_scores, x$top_n %||% 10L), digits = digits)
     for (line in x$notes %||% character()) cat(line, "\n")
     return(invisible(x))
   }
@@ -8522,8 +8554,9 @@ summary.mfrm_bias <- function(object, digits = 3, top_n = 10, p_cut = 0.05, ...)
       "Profile CI Status"),
     names(bias_tbl)
   )
-  keep <- c(base_keep, likelihood_keep, intersect(c("BiasStatus", "ScreenStatus",
-    "ScreenReason", "FitStatus", "FitReason"), names(bias_tbl)))
+  keep <- c(base_keep, likelihood_keep, intersect(c("d.f.", "DFUnrounded",
+    "ProbabilityReference", "ProbabilityStatus", "ProbabilityReason",
+    "BiasStatus", "ScreenStatus", "ScreenReason", "FitStatus", "FitReason"), names(bias_tbl)))
   if (all(base_keep %in% names(bias_tbl))) {
     top_rows <- bias_tbl |>
       dplyr::mutate(AbsT = abs(.data$t)) |>
@@ -8544,7 +8577,12 @@ summary.mfrm_bias <- function(object, digits = 3, top_n = 10, p_cut = 0.05, ...)
   if (!all(c("BiasStatus", "ScreenStatus", "FitStatus") %in% names(bias_tbl)))
     notes <- c(notes, "This saved table predates the boundary and complete-cell information/fit checks. Recompute estimate_bias() from the saved fit and matching diagnostics; these values have not been recalculated.")
   if (screen_n < nrow(bias_tbl)) notes <- c(notes,
-    "Some cell screening tail areas are unavailable. Missing results are not negative screens; inspect ScreenStatus and ScreenReason.")
+    if (all(c("ProbabilityStatus", "ProbabilityReason") %in% names(bias_tbl)))
+      "Some cell screening tail areas are unavailable. Missing results are not negative screens; inspect ProbabilityStatus and ProbabilityReason."
+    else "Some cell screening tail areas are unavailable. Missing results are not negative screens; inspect ScreenStatus and ScreenReason.")
+  if ("BiasStatus" %in% names(bias_tbl) &&
+      any(bias_tbl$BiasStatus == "extreme_adjusted", na.rm = TRUE)) notes <- c(notes,
+    "Extreme cells use a corrected total for finite reporting values and conditional SEs. PrimaryBias retains the infinite cell MLE. These extrapolated tail areas, summaries and pairwise contrasts are not regular-MLE inference or fairness decisions.")
   notes <- c(notes, paste(
     "Conditional plug-in screening holds calibration and Person estimates fixed.",
     "Bonferroni/Holm summaries retain all reported cells in this pair's family;",
@@ -11268,6 +11306,7 @@ print.summary.mfrm_fit <- function(x, ...) {
       print_wrapped_line(switch(settings$CenteringScope[1],
         facet = "Centering: whole declared facet, including anchors and group totals.",
         remainder = "Centering: legacy ungrouped, unanchored remainder.",
+        anchor_origin = "Centering: direct or group anchors set their facet's origin; no additional zero sum is imposed on that facet.",
         "Centering convention: not recorded."))
     }
     if (identical(as.character(ov$Model %||% NA_character_), "GPCM") &&

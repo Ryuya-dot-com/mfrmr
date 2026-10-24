@@ -11,9 +11,7 @@
     stop("`ncol` must be a positive integer.", call. = FALSE)
   # Reuse the point-projection validation (including old count maps); no fit or
   # interval calculation. The displayed components must explain the saved result.
-  d <- mfrm_d_study(x$gstudy, x$design_grid, x$weights)
-  if (!isTRUE(all.equal(d$coefficients, x$coefficients, tolerance = 128*.Machine$double.eps)))
-    stop("D-study point estimates do not match the stored components, weights and plans; recreate the result.", call. = FALSE)
+  d <- .mfrm_mvds_replay(x)
   totals <- x$coefficients[x$coefficients$Kind == kind & x$coefficients$Score %in% score, , drop = FALSE]
   g <- d$gstudy
   scores <- g$design$scores
@@ -48,10 +46,10 @@
     w <- w/scale
     # Separate diagonal and cross-score terms without subtracting two nearly
     # equal quadratic forms. Scaling matches the D-study projection.
-    diagonal <- vapply(g$components, function(a) sum(w^2*diag(a)), numeric(1))*scale^2
-    cross <- vapply(g$components, function(a)
+    diagonal <- vapply(d$effective_components, function(a) sum(w^2*diag(a)), numeric(1))*scale^2
+    cross <- vapply(d$effective_components, function(a)
       2*sum((outer(w, w)*a)[upper.tri(a)]), numeric(1))*scale^2
-    projected <- vapply(g$components, function(a)
+    projected <- vapply(d$effective_components, function(a)
       as.numeric(crossprod(w, a %*% w)), numeric(1))*scale^2
     for (i in seq_along(plans)) {
       multiplier <- .mfrm_mvgt_profile_error(d, i,
@@ -87,6 +85,7 @@
   out <- new_mfrm_plot_data("multivariate_d_study", list(
     plot = "error_components", table = table, series = table, totals = totals,
     design_grid = d$design_grid, weights = weights, nesting = nesting,
+    negative_components = d$negative_components,
     component_diagnostics = d$component_diagnostics,
     score = score, kind = kind, metric = metrics, panels = panels, ncol = panel_columns,
     source_labels = source_labels[sources %in% table$Source],
@@ -94,7 +93,7 @@
     legend = new_plot_legend(plans, rep("plan", length(plans)), rep("color", length(plans)), cols),
     cautions = c("Signed point contributions to error variance (squared score units), not SEM or confidence intervals.",
       "Contributions sum to each saved error variance; covariance terms are included for composites. Weights are not normalized.",
-      "Negative estimates are retained, not truncated or interpreted as negative population variances. Inspect totals for SEM and coefficient availability.",
+      .mfrm_mvds_component_note(d),
       "Plans assume future complete common ratings; equal rating counts need not mean equal cost. This plot does not select optimal counts or weights."),
     title = "Error sources under planned measurement conditions",
     x_label = "Contribution to error variance (squared score units)"))

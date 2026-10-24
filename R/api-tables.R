@@ -583,7 +583,9 @@ validate_unexpected_coverage <- function(x) {
 #'   Matching saved diagnostics are reusable; recompute them after refitting.
 #' @param facets Optional subset of facets.
 #' @param totalscore Include all observations for score totals (`TRUE`) or apply
-#'   legacy extreme-row exclusion (`FALSE`).
+#'   extreme-row exclusion (`FALSE`). In ordinary additive RSM/PCM JML,
+#'   finite direct anchors remain eligible even with all-minimum/all-maximum
+#'   responses, under both `xtreme_method` conventions.
 #' @param umean Additive origin shift for Measure (not fair-score values).
 #' @param uscale Multiplicative scale for Measure and measure SEs (not fair scores).
 #' @param udecimals Rounding digits used in formatted output.
@@ -592,11 +594,14 @@ validate_unexpected_coverage <- function(x) {
 #' @param label_style Column-label style for formatted outputs:
 #'   `"both"` (default), `"native"`, or `"legacy"`.
 #' @param omit_unobserved If `TRUE`, remove unobserved levels.
-#' @param xtreme Display adjustment in score units for all-minimum/all-maximum
-#'   rows; default `0` leaves fitted measures unchanged. A positive value
-#'   replaces the displayed `Measure` by inversion of an expected score that
-#'   far from the endpoint. It does not adjust responses, refit the model or
-#'   correct JML bias.
+#' @param xtreme Nonnegative correction smaller than the score range for
+#'   all-minimum/all-maximum rows. Default `0` leaves measures unchanged.
+#'   Its units depend on `xtreme_method`; no responses or primary estimates
+#'   are changed, and this does not correct JML bias.
+#' @param xtreme_method `"display"` (default) retains the historical
+#'   average-score display adjustment. `"facets"` uses conditional total-score
+#'   extrapolation for ordinary additive RSM/PCM JML, without group-mean anchors.
+#'   Supply `xtreme = .3` explicitly to use the usual FACETS main correction.
 #' @param fair_se Logical. When `TRUE` and `fit` is an MML `GPCM`
 #'   fit, add structural delta-method standard errors and confidence limits
 #'   for `Fair(M)` / `AdjustedAverage` and `Fair(Z)` /
@@ -606,6 +611,21 @@ validate_unexpected_coverage <- function(x) {
 #'   unavailable.
 #' @param ci_level Confidence level used when `fair_se = TRUE`; default
 #'   `0.95`.
+#' @param reference_plan Optional data frame of non-Person facet columns,
+#'   using the fitted facet names, and an optional positive `Weight` column.
+#'   For ordinary additive RSM/PCM JML, adds `reference_scores`: each Person's
+#'   expected average on this same plan, using its fitted facet locations and
+#'   scale profiles. Weights are normalized to sum to one. This distinct target
+#'   does not replace FairM/FairZ or their administered PCM scale mixture.
+#'   Primary estimates are used, irrespective of display/extrapolation settings.
+#'   Scores use internal score units, unaffected by `umean` or `uscale`.
+#'   The result retains the fit for [confint.mfrm_fair_average()].
+#'   For an explicit `mfrm_jeffreys_fit`, this argument is required and the
+#'   result contains only common-plan `reference_scores`, the plan, fit and
+#'   estimator identity. Other arguments beyond `fit` and `reference_plan`
+#'   are refused: ordinary FairM/FairZ diagnostics do not apply. Inspect
+#'   `summary(result)`; use `plot(confint(result, ...))` for supported interval
+#'   plots. Direct FairM/FairZ plotting is unavailable for this result.
 #'
 #' @details
 #' This function wraps the package's adjusted-score calculations and returns
@@ -628,14 +648,44 @@ validate_unexpected_coverage <- function(x) {
 #'
 #' With `xtreme > 0`, `PrimaryMeasure` retains the fitted measure, including
 #' infinite JML estimates and fixed anchors, on the requested reporting scale.
-#' `MeasureBasis` identifies display-only replacements and `ExtremeAdjustment`
-#' records their amount in score units. The displayed `Measure` may differ
-#' from an unanchored extreme estimate. Fixed anchors retain their measure
-#' in both columns. Measure SEs are
-#' unavailable on replaced rows because the original SE does not describe the
-#' display adjustment. Fair-score calculations do not use the replacement.
+#' Fixed anchors retain their measure in both columns. With
+#' `xtreme_method = "display"`, an expected average that is `xtreme` from the
+#' endpoint is inverted. Measure SEs are unavailable on replaced rows and
+#' fair-score calculations do not use that replacement.
+#' For ordinary additive RSM/PCM JML, a directly anchored element is not
+#' classified as an unanchored extreme for row exclusion. Its observations
+#' remain eligible when `totalscore = FALSE`, unless another unanchored extreme
+#' element requires their exclusion. This rule also preserves the PCM scale
+#' mixture used in fair scores and does not depend on the display adjustment.
+#' Recreate older affected fair-score tables and plots from the saved fit and
+#' matching diagnostics; refitting the calibration is unnecessary.
+#'
+#' With `xtreme_method = "facets"`, the weighted total is moved inward by
+#' `xtreme` times the smallest positive weight among that element's eligible
+#' observations. Responses involving another unanchored extreme element are
+#' excluded. The resulting weighted score equation is solved using the actual
+#' administered calibration and PCM scales. Its reciprocal square-root
+#' conditional information supplies the reporting SE. The replacement enters
+#' that element's FairM/FairZ, while reference locations retain their original
+#' basis. `ExtremeAdjustment` records a weighted-total correction in this mode,
+#' versus an average-score correction in `"display"` mode. `MeasureBasis` and
+#' `MeasureSEBasis` identify the reported quantities. These are finite reporting
+#' values and conditional SEs at an adjusted total, not finite MLEs or SEs for
+#' the original extreme response pattern. Fair-score intervals remain
+#' unavailable when `xtreme > 0`.
+#'
+#' Binary unit/replication-weight examples and a fixed-scale PCM kernel were
+#' checked against FACETS 4.5.0. This is not whole-program equivalence: partial
+#' anchor examples can leave native score residuals and shifted final measures,
+#' which this conditional calculation does not reproduce. Group-mean anchors,
+#' fitted interactions, corrected JML, MML and GPCM are outside this route.
 #' Recompute older diagnostics and recreate saved tables from the existing
 #' fit before summarizing or plotting them; no model refit is needed.
+#' With an extreme fixed Person plus an informative interior Person anchor,
+#' matched RSM/PCM examples also agree for conditional fair scores at the
+#' reported native calibration. Main estimates can still differ and native
+#' iteration limits or nonzero free-element score residuals must not be
+#' interpreted as calibration agreement.
 #'
 #' `GPCM` fits are supported under a slope-aware
 #' element-conditional construction. For each slope-facet element
@@ -670,6 +720,10 @@ validate_unexpected_coverage <- function(x) {
 #'
 #' Observed-vs-fair gaps also reflect person mix and assignment. They are
 #' descriptive follow-up prompts, not standalone evidence of rater bias.
+#' Ordinary additive RSM/PCM JML tables also retain `PTMEAExpected` and its
+#' availability metadata when present in the matching diagnostics. This is a
+#' conditional reference for observed `PtMea Corr`, not an inferential cutoff;
+#' see [diagnose_mfrm()] for its finite-count correction and weighting basis.
 #'
 #' @section Typical workflow:
 #' 1. Run `fair_average_table(fit, ...)`.
@@ -691,6 +745,7 @@ validate_unexpected_coverage <- function(x) {
 #'   \item{Measure}{Displayed facet measure, transformed by `umean` and `uscale`; may be replaced when `xtreme > 0`.}
 #'   \item{PrimaryMeasure}{Original fitted measure on the same reporting scale, including infinite JML estimates.}
 #'   \item{MeasureBasis, ExtremeAdjustment}{Whether the displayed measure was replaced and the replacement amount in score units.}
+#'   \item{MeasureSEBasis}{In `raw_by_facet`, distinguishes conditional information at a corrected total from fitted-measure uncertainty.}
 #'   \item{FairMReference}{The mean reference used for FairM, or why that reference is unavailable.}
 #'   \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for `Model S.E.` and `Real S.E.`.}
 #'   \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
@@ -753,6 +808,13 @@ validate_unexpected_coverage <- function(x) {
 #' head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
 #' # FairM uses the mean reference for the other facets; it is in score units
 #' # It is a conditional model prediction, not a guarantee of fairness
+#'
+#' # For an ordinary JML fit, request total-score extrapolation explicitly
+#' jml <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML")
+#' extreme_report <- fair_average_table(jml, xtreme = .3, xtreme_method = "facets")
+#' head(extreme_report$raw_by_facet$Person[, c("Level", "PrimaryMeasure",
+#'      "Measure", "MeasureBasis", "ModelSE", "MeasureSEBasis")])
+#' # ModelSE describes the adjusted total when MeasureBasis says extrapolation
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
@@ -785,9 +847,22 @@ fair_average_table <- function(fit,
                                omit_unobserved = FALSE,
                                xtreme = 0,
                                fair_se = FALSE,
-                               ci_level = 0.95) {
+                               ci_level = 0.95,
+                               xtreme_method = c("display", "facets"),
+                               reference_plan = NULL) {
+  if (mfrm_is_jeffreys_fit(fit)) {
+    supplied <- names(as.list(match.call())[-1L])
+    if (any(!supplied %in% c("fit", "reference_plan")) || is.null(reference_plan))
+      stop("Jeffreys fits support fair_average_table(fit, reference_plan = ...); ordinary FairM/FairZ and diagnostic controls are unavailable.", call. = FALSE)
+    plan <- mfrm_fair_reference_plan(fit, reference_plan)
+    return(as_mfrm_bundle(list(reference_scores = mfrm_fair_reference_scores(fit, plan),
+      reference_plan = plan, reference_fit = fit, reference_identity = mfrm_fair_fit_identity(fit),
+      settings = list(reference_target = "common_plan_expected_average",
+        estimator = "jeffreys_canonical_joint"), notes = fit$notes), "mfrm_fair_average"))
+  }
   reference <- match.arg(reference)
   label_style <- match.arg(label_style)
+  xtreme_method <- match.arg(xtreme_method)
   if (!is.numeric(ci_level) || length(ci_level) != 1L ||
       !is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
     stop("`ci_level` must be a single number in (0, 1).", call. = FALSE)
@@ -796,6 +871,15 @@ fair_average_table <- function(fit,
     stop("`fit` must be an mfrm_fit object from fit_mfrm().")
   }
   fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
+  if (identical(xtreme_method, "facets") &&
+      (!identical(fit$config$method, "JML") || !fit_model %in% c("RSM", "PCM") ||
+       length(fit$config$interaction_specs)))
+    stop("FACETS total-score extrapolation requires ordinary additive RSM/PCM JML.", call. = FALSE)
+  if (identical(xtreme_method, "facets") && any(fit$config$anchor_summary$GroupAnchors > 0))
+    stop("FACETS total-score extrapolation does not support group-mean anchors.", call. = FALSE)
+  if (!is.numeric(xtreme) || length(xtreme) != 1L || !is.finite(xtreme) || xtreme < 0 ||
+      xtreme >= fit$prep$rating_max - fit$prep$rating_min)
+    stop("`xtreme` must be finite, nonnegative and less than the score range.", call. = FALSE)
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
@@ -817,6 +901,7 @@ fair_average_table <- function(fit,
     label_style = label_style,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme,
+    xtreme_method = xtreme_method,
     fair_se = fair_se,
     ci_level = ci_level
   )
@@ -830,6 +915,7 @@ fair_average_table <- function(fit,
     label_style = label_style,
     omit_unobserved = omit_unobserved,
     xtreme = xtreme,
+    xtreme_method = xtreme_method,
     fair_se = isTRUE(fair_se),
     ci_level = ci_level,
     rating_min = fit$prep$rating_min,
@@ -853,6 +939,14 @@ fair_average_table <- function(fit,
       "rows when the MML observed-information Hessian is available. ",
       "See `gpcm_capability_matrix()` for the current support contract."
     )
+  }
+  if (!is.null(reference_plan)) {
+    plan <- mfrm_fair_reference_plan(fit, reference_plan)
+    bundle$reference_scores <- mfrm_fair_reference_scores(fit, plan)
+    bundle$reference_plan <- plan
+    bundle$reference_fit <- fit
+    bundle$reference_identity <- prediction_fit_identity(fit)
+    bundle$settings$reference_target <- "common_plan_expected_average"
   }
   as_mfrm_bundle(bundle, "mfrm_fair_average")
 }
@@ -6957,11 +7051,17 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #'   restricted to the pairwise case. The canonical `"Person"` role may be
 #'   supplied explicitly; see the Person-screening boundary below.
 #' @param max_abs Bound for absolute bias size.
-#' @param omit_extreme Omit extreme-only elements.
+#' @param omit_extreme Omit extreme-only elements. In ordinary additive RSM/PCM
+#'   JML, directly fixed finite anchors are retained even with all-low/all-high
+#'   responses. Their cell bias may still have no finite unconstrained optimum.
 #' @param max_iter Maximum number of repeated cell-estimation passes recorded
 #'   in `iteration`; the baseline calibration stays fixed throughout.
 #' @param tol Between-pass change tolerance for the iteration log. This does
 #'   not control the tolerance of the bounded scalar likelihood optimizer.
+#' @param xtreme Default `0` retains bounded extreme-cell estimates with SEs
+#'   withheld. A positive correction (usually `.5` for FACETS bias reporting)
+#'   requests finite total-score extrapolation for ordinary additive RSM/PCM
+#'   JML without group-mean anchors; it must be smaller than the score range.
 #'
 #' @details
 #' **Bias (interaction) in MFRM** refers to a systematic departure from
@@ -7001,6 +7101,31 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' Inspect `ScreenStatus` and `ScreenReason`: a bound can mean an insufficient
 #' search range or an all-low/all-high cell with no finite unconstrained
 #' optimum. Increasing the range does not resolve the latter.
+#'
+#' With `xtreme > 0`, an all-low/all-high cell's weighted total is moved inward
+#' by `xtreme` times its smallest positive weight. A root strictly inside
+#' `[-max_abs, max_abs]` yields `BiasStatus = "extreme_adjusted"`, finite
+#' `Bias Size` and conditional information SE; `PrimaryBias` retains the
+#' infinite cell MLE and `ExtremeAdjustment` records the total correction.
+#' Otherwise the boundary remains unavailable for screening. Observations
+#' involving any unanchored extreme main-effect element are excluded in this
+#' route even when `omit_extreme = FALSE`; finite fixed anchors remain usable.
+#' This prevents main-effect display replacements from becoming calibration.
+#' The default `xtreme = 0` also retains directly fixed finite anchors in ordinary
+#' additive RSM/PCM JML; extreme cells then keep bounded points with screening
+#' SEs and tail areas withheld. Group-mean constraints are not direct anchors.
+#' The native FACETS `Xtreme = main,bias` has two separate corrections: this
+#' function's `xtreme` corresponds to the second value (normally `.5`), not
+#' the first (normally `.3`). Executed FACETS 4.5.0 Person-by-Rater examples
+#' retain fixed extreme Persons and agree with the conditional cell calculation
+#' on the same main calibration. This does not establish main-calibration parity.
+#' If a low cell's baseline expectation is already below the inward correction,
+#' its adjusted bias can be positive despite a negative observed-minus-expected
+#' score difference (and conversely at the upper endpoint). Inspect `PrimaryBias`,
+#' `ExtremeAdjustment` and `Obs-Exp Average` together; the adjusted sign describes
+#' the amended total, not a reversal of the observed departure.
+#' Extrapolated tail areas, summaries and pairwise contrasts are reporting
+#' conventions, not regular-MLE inference, coverage guarantees or fairness tests.
 #'
 #' `ConditionalInformation` uses every cell row, including small positive
 #' conditional variances; the residual-screening cutoff does not remove their
@@ -7049,6 +7174,22 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' Cell t reference df uses weighted count minus 1. This matches the executed
 #' FACETS 4.5.0 equal-count binary example; a manual count-minus-2 description
 #' is a distinct convention and does not establish version-wide equivalence.
+#' `DFUnrounded` retains count minus one, including nonpositive values.
+#' A nonpositive value withholds `d.f.`, `DFDisplay` and `Prob.`; a finite point
+#' and conditional information SE can remain available. For positive df,
+#' `DFDisplay` rounds to the nearest integer (halves upward) for RSM/PCM display
+#' comparison only. `d.f.` and `Prob.` use the continuous reference.
+#' `ProbabilityReference`, `ProbabilityStatus` and `ProbabilityReason` identify
+#' the reference distribution and distinguish available conditional or
+#' extreme-adjusted tails from unavailable df, statistics or numerical results.
+#' These fields describe `Prob.`, not the separate GPCM likelihood-ratio tail.
+#'
+#' Checked FACETS 4.5.0 fractional-count tails are reproduced by extending an
+#' integer-df finite-sum formula to fractional df. That extension is not the
+#' continuous-df Student distribution and can change a 0.05 screening flag.
+#' mfrmr retains the continuous Student tail, independently checked by density
+#' integration. This explains the checked output behavior without claiming
+#' access to the executable's implementation or general finite-sample validity.
 #' The all-zero `chi_sq` screen sums squared bias/SE ratios without centering;
 #' its df is the number of cells. It requires at least two cells and complete
 #' cell estimates and SEs. Otherwise its statistic, degrees of freedom and
@@ -7148,6 +7289,9 @@ warn_bias_person_screen <- function(fit, helper = "estimate_bias()") {
 #' #   inspect cell counts, uncertainty and substantive consequences.
 #' p_bias <- plot(bias, type = "bias", draw = FALSE)
 #' p_bias$data$plot
+#' # Optional finite reporting for extreme cells; this does not refit calibration
+#' extreme_bias <- estimate_bias(fit, diag, "Rater", "Criterion", xtreme = .5)
+#' head(extreme_bias$table[, c("Bias Size", "PrimaryBias", "BiasStatus", "SEBasis")])
 #'
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
@@ -7179,13 +7323,22 @@ estimate_bias <- function(fit,
                           max_abs = 10,
                           omit_extreme = TRUE,
                           max_iter = 4,
-                          tol = 1e-3) {
+                          tol = 1e-3,
+                          xtreme = 0) {
   stop_if_product_slopes(fit, "estimate_bias()")
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)
   }
   fit_model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
+  if (!is.numeric(xtreme) || length(xtreme) != 1L || !is.finite(xtreme) || xtreme < 0 ||
+      xtreme >= fit$prep$rating_max - fit$prep$rating_min)
+    stop("`xtreme` must be finite, nonnegative and less than the score range.", call. = FALSE)
+  if (xtreme > 0 && (!identical(fit$config$method, "JML") || !fit_model %in% c("RSM", "PCM") ||
+      length(fit$config$interaction_specs)))
+    stop("Extreme bias extrapolation requires ordinary additive RSM/PCM JML.", call. = FALSE)
+  if (xtreme > 0 && any(fit$config$anchor_summary$GroupAnchors > 0))
+    stop("Extreme bias extrapolation does not support group-mean anchors.", call. = FALSE)
   if (missing(diagnostics)) {
     stop("`diagnostics` is required. Call diagnose_mfrm(fit) first and ",
          "pass the result as the second argument: ",
@@ -7246,11 +7399,13 @@ estimate_bias <- function(fit,
     max_abs = max_abs,
     omit_extreme = omit_extreme,
     max_iter = max_iter,
-    tol = tol
+    tol = tol,
+    xtreme = xtreme
   )
   if (is.list(out) && length(out) > 0) {
     class(out) <- c("mfrm_bias", class(out))
     out$fit_identity <- mfrm_result_fit_identity(fit)
+    out$xtreme <- xtreme
     out$person_interaction <- person_interaction
     out$person_source_column <- as.character(
       fit$config$source_columns$person %||% "Person"

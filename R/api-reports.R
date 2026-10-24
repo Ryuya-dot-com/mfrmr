@@ -11690,7 +11690,9 @@ fit_review_prepare_facet_map <- function(facet_map = NULL) {
   if (is.null(facet_map)) {
     return(c("1" = "Person"))
   }
+  map_names <- names(facet_map)
   facet_map <- as.character(facet_map)
+  names(facet_map) <- map_names
   if (is.null(names(facet_map)) || any(!nzchar(names(facet_map)))) {
     names(facet_map) <- as.character(seq_along(facet_map))
   }
@@ -11725,28 +11727,35 @@ fit_review_resolve_scorefile_facet <- function(path, facet = NULL, facet_map = N
   )
 }
 
+fit_review_read_lines <- function(path, encoding = "UTF-8", n = -1L) {
+  # Convert explicitly to UTF-8, rather than through the session's native
+  # encoding (which can be ASCII even on Windows).
+  raw <- readLines(path, warn = FALSE, n = n, encoding = "unknown")
+  lines <- iconv(raw, from = encoding, to = "UTF-8", sub = NA_character_)
+  if (anyNA(lines)) stop("FACETS input cannot be decoded with encoding `", encoding, "`.", call. = FALSE)
+  if (length(lines)) lines[1] <- sub("^\ufeff", "", lines[1])
+  lines
+}
+
+fit_review_detect_delimiter <- function(header) {
+  # Quoted facet/column labels can themselves contain separator characters.
+  unquoted <- gsub('"([^"]|"")*"', "", header, perl = TRUE)
+  separators <- c(",", "\t", ";")
+  counts <- vapply(separators, function(separator) {
+    hit <- gregexpr(separator, unquoted, fixed = TRUE)[[1L]]
+    if (length(hit) == 1L && hit[1L] == -1L) 0L else length(hit)
+  }, integer(1))
+  separators[which.max(counts)]
+}
+
 fit_review_read_delimited_file <- function(path, delimiter = NULL, encoding = "UTF-8") {
-  lines <- readLines(path, warn = FALSE, encoding = encoding)
+  lines <- fit_review_read_lines(path, encoding)
   first <- lines[nzchar(trimws(lines))][1] %||% ""
-  if (is.null(delimiter)) {
-    count_delim <- function(pattern) {
-      hit <- gregexpr(pattern, first, fixed = TRUE)[[1]]
-      if (length(hit) == 1L && hit[1] == -1L) 0L else length(hit)
-    }
-    comma_n <- count_delim(",")
-    tab_n <- count_delim("\t")
-    semicolon_n <- count_delim(";")
-    delimiter <- if (tab_n > comma_n) {
-      "\t"
-    } else if (semicolon_n > comma_n) {
-      ";"
-    } else {
-      ","
-    }
-  }
+  if (is.null(delimiter)) delimiter <- fit_review_detect_delimiter(first)
   utils::read.table(
-    file = path,
+    text = paste(lines, collapse = "\n"),
     sep = delimiter,
+    encoding = "UTF-8",
     header = TRUE,
     quote = "\"",
     comment.char = "",
@@ -11770,9 +11779,11 @@ fit_review_repair_csv_lines <- function(lines) {
 
 fit_review_scorefile_fixed_data <- function(path, raw = NULL, encoding = "UTF-8") {
   if (is.null(raw)) {
-    raw <- readLines(path, warn = FALSE, encoding = encoding)
+    raw <- fit_review_read_lines(path, encoding)
   }
   raw <- raw[nzchar(trimws(raw))]
+  if (any(nchar(raw, type = "bytes") != nchar(raw, type = "chars")))
+    stop("Use named CSV/TSV for non-ASCII fixed-width FACETS files; character and byte widths can differ.", call. = FALSE)
   if (length(raw) == 0L) {
     stop("Could not find fixed-field FACETS score-file rows in `", path, "`.", call. = FALSE)
   }
@@ -11782,8 +11793,8 @@ fit_review_scorefile_fixed_data <- function(path, raw = NULL, encoding = "UTF-8"
     stop("Fixed-field FACETS import requires validated all-field headings. Use a named delimited score file for headerless or selected-field layouts.", call. = FALSE)
   }
   header <- raw[header_index]
-  positions <- c(1L, 11L, 41L, 51L, 61L, 71L, 81L, 91L, 191L, 221L)
-  labels <- c("T.Score", "T.Count", "Measure", "S.E.", "InfitMS", "InfitZ", "OutfitMS", "OutfitZ", "Infitdf", "Outfitdf")
+  positions <- c(1L, 11L, 41L, 51L, 61L, 71L, 81L, 91L, 141L, 151L, 161L, 171L, 191L, 221L)
+  labels <- c("T.Score", "T.Count", "Measure", "S.E.", "InfitMS", "InfitZ", "OutfitMS", "OutfitZ", "Status", "Group", "Weight", "Sign", "Infitdf", "Outfitdf")
   actual <- tolower(trimws(substring(header, positions, positions + 9L)))
   if (!identical(actual, tolower(labels))) {
     stop("Unsupported fixed-field FACETS layout: expected all fields with the element number after statistics. Use named delimited columns for element-first or selected-field output.", call. = FALSE)
@@ -11842,12 +11853,13 @@ fit_review_scorefile_fixed_data <- function(path, raw = NULL, encoding = "UTF-8"
   element_label[!nzchar(element_label)] <- element_number[!nzchar(element_label)]
   keep <- nzchar(element_label) & (
     is.finite(t_count) | is.finite(measure) | is.finite(infit) |
-      is.finite(infit_z) | is.finite(outfit) | is.finite(outfit_z)
+      is.finite(infit_z) | is.finite(outfit) | is.finite(outfit_z) |
+      grepl("^[0-9]+$", element_number)
   )
   if (!any(keep)) {
     stop("Could not find fixed-field FACETS score-file rows in `", path, "`.", call. = FALSE)
   }
-  data.frame(
+  out <- data.frame(
     Level = element_label[keep],
     T.Score = raw_score[keep],
     T.Count = t_count[keep],
@@ -11870,24 +11882,35 @@ fit_review_scorefile_fixed_data <- function(path, raw = NULL, encoding = "UTF-8"
     InfitDFRaw = infit_df_token[keep],
     OutfitDFRaw = outfit_df_token[keep],
     ElementNumber = element_number[keep],
+    ElementLabel = element_label[keep],
+    StatusRaw = field_chr(raw, 141, 150)[keep],
+    GroupRaw = field_chr(raw, 151, 160)[keep],
+    WeightRaw = field_chr(raw, 161, 170)[keep],
+    SignRaw = field_chr(raw, 171, 180)[keep],
     stringsAsFactors = FALSE,
     check.names = FALSE
   )
+  if (is.finite(label_end))
+    out$FNumber <- field_chr(raw, label_end + 1L, label_end + 10L)[keep]
+  out
 }
 
 fit_review_scorefile_data <- function(path, encoding = "UTF-8") {
-  raw <- readLines(path, warn = FALSE, encoding = encoding)
+  raw <- fit_review_read_lines(path, encoding)
   raw <- raw[nzchar(trimws(raw))]
-  header_idx <- which(grepl("Measure", raw, fixed = TRUE) & grepl(",", raw, fixed = TRUE))[1]
+  header_idx <- which(grepl("Measure", raw, fixed = TRUE) &
+    grepl("[,;\t]", raw))[1]
   if (is.na(header_idx)) {
     return(fit_review_scorefile_fixed_data(path, raw = raw, encoding = encoding))
   }
+  delimiter <- fit_review_detect_delimiter(raw[header_idx])
   csv_lines <- raw[seq.int(header_idx, length(raw))]
-  csv_lines <- csv_lines[grepl(",", csv_lines, fixed = TRUE)]
+  csv_lines <- csv_lines[grepl(delimiter, csv_lines, fixed = TRUE)]
   csv_lines <- fit_review_repair_csv_lines(csv_lines)
   utils::read.table(
     text = paste(csv_lines, collapse = "\n"),
-    sep = ",",
+    sep = delimiter,
+    encoding = "UTF-8",
     header = TRUE,
     quote = "\"",
     comment.char = "",
@@ -11905,8 +11928,11 @@ fit_review_standardize_frame <- function(df,
                                          level_col = NULL,
                                          source = "facets_fit_table",
                                          data_label = "FACETS fit table",
-                                         reported_tokens_retained = FALSE) {
+                                         reported_tokens_retained = FALSE,
+                                         preserve_rows = FALSE) {
   df <- as.data.frame(df, stringsAsFactors = FALSE)
+  if (isTRUE(preserve_rows) && anyDuplicated(names(df)))
+    stop("Duplicate FACETS source column names are ambiguous.", call. = FALSE)
   if (nrow(df) == 0L) {
     return(tibble::tibble(
       Facet = character(0), Level = character(0), Estimate = numeric(0),
@@ -11943,7 +11969,7 @@ fit_review_standardize_frame <- function(df,
     df,
     c(
       "Level", "Element", "ElementName", "Name", "Label", "Person", "Rater",
-      "Item", "Task", "Criterion", "Criteria"
+      "Item", "Task", "Criterion", "Criteria", "ElementLabel", "ElementID", "ElementNumber"
     ),
     explicit = level_col,
     required = is.na(person_col),
@@ -12052,7 +12078,15 @@ fit_review_standardize_frame <- function(df,
   token_retained <- !is.na(infit_z_raw) | !is.na(outfit_z_raw) |
     !is.na(estimate_raw) | !is.na(infit_raw) | !is.na(outfit_raw)
 
-  tibble::tibble(
+  raw_field <- function(candidates, trim = TRUE) {
+    col <- fit_review_find_col(df, candidates, required = FALSE)
+    if (is.na(col)) return(rep(NA_character_, nrow(df)))
+    value <- as.character(df[[col]])
+    if (trim) value <- trimws(value)
+    value[!is.na(value) & !nzchar(trimws(value))] <- NA_character_
+    value
+  }
+  out <- tibble::tibble(
     Facet = facet_values,
     Level = level_values,
     Estimate = fit_review_numeric_col(df, estimate_col),
@@ -12083,9 +12117,17 @@ fit_review_standardize_frame <- function(df,
     SourcePrecisionStatus = ifelse(
       token_retained, "reported_tokens_retained", "numeric_values_only"
     ),
-    Source = as.character(source[1])
-  ) |>
-    dplyr::filter(
+    Source = as.character(source[1]),
+    SourceRow = seq_len(nrow(df)),
+    ElementID = raw_field(c("ElementID", "ElementNumber", "ElementNo")),
+    ElementLabel = raw_field(c("ElementLabel", "ElementName", "Label", "Name"), trim = FALSE),
+    StatusRaw = raw_field(c("StatusRaw", "Status", "StatusCode")),
+    GroupRaw = raw_field(c("GroupRaw", "Group")),
+    WeightRaw = raw_field(c("WeightRaw", "Weight")),
+    SignRaw = raw_field(c("SignRaw", "Sign"))
+  )
+  if (isTRUE(preserve_rows)) return(out)
+  dplyr::filter(out,
       !is.na(.data$Facet), !is.na(.data$Level),
       nzchar(.data$Facet), nzchar(.data$Level)
     )
@@ -12095,21 +12137,35 @@ fit_review_read_score_file <- function(path,
                                        facet = NULL,
                                        facet_map = NULL,
                                        level_col = NULL,
-                                       encoding = "UTF-8") {
+                                       encoding = "UTF-8",
+                                       preserve_rows = FALSE) {
   df <- fit_review_scorefile_data(path, encoding = encoding)
   fnum_col <- fit_review_find_col(
     df, c("FNumber", "F-Number", "FacetNumber"),
     required = FALSE,
     data_label = "FACETS score file"
   )
-  if (is.null(level_col) && !is.na(fnum_col)) {
+  if (!is.na(fnum_col)) {
     idx <- match(fnum_col, names(df))
     if (is.finite(idx) && idx > 1L) {
-      level_col <- names(df)[idx - 1L]
+      if (is.null(level_col)) level_col <- if ("Level" %in% names(df)) "Level" else names(df)[idx - 1L]
+      # FACETS names the element-number column by the numeric facet number.
+      if (idx > 2L && grepl("^[0-9]+$", names(df)[idx - 2L]))
+        df$ElementNumber <- df[[idx - 2L]]
     }
   }
+  facet_number <- fit_review_scorefile_number(path)
+  if (!is.na(fnum_col)) {
+    supplied_number <- unique(trimws(as.character(df[[fnum_col]])))
+    if (length(supplied_number) != 1L || is.na(supplied_number) ||
+        !grepl("^[0-9]+$", supplied_number))
+      stop("A FACETS score file must identify one facet number.", call. = FALSE)
+    if (!is.na(facet_number) && facet_number != supplied_number)
+      stop("FACETS facet number disagrees with the score filename.", call. = FALSE)
+    facet_number <- supplied_number
+  }
   facet_name <- fit_review_resolve_scorefile_facet(
-    path,
+    if (is.na(facet_number)) path else paste0("score.", facet_number, ".txt"),
     facet = facet,
     facet_map = facet_map
   )
@@ -12119,10 +12175,11 @@ fit_review_read_score_file <- function(path,
     level_col = level_col,
     source = basename(path),
     data_label = "FACETS score file",
-    reported_tokens_retained = TRUE
+    reported_tokens_retained = TRUE,
+    preserve_rows = preserve_rows
   )
-  if (!is.na(fit_review_scorefile_number(path))) {
-    out$RawFacetNumber <- rep(fit_review_scorefile_number(path), nrow(out))
+  if (!is.na(facet_number)) {
+    out$RawFacetNumber <- rep(facet_number, nrow(out))
   }
   out
 }
@@ -12132,7 +12189,8 @@ fit_review_read_table_file <- function(path,
                                        facet_col = NULL,
                                        level_col = NULL,
                                        delimiter = NULL,
-                                       encoding = "UTF-8") {
+                                       encoding = "UTF-8",
+                                       preserve_rows = FALSE) {
   df <- fit_review_read_delimited_file(path, delimiter = delimiter, encoding = encoding)
   fit_review_standardize_frame(
     df,
@@ -12141,7 +12199,8 @@ fit_review_read_table_file <- function(path,
     level_col = level_col,
     source = basename(path),
     data_label = "FACETS fit table",
-    reported_tokens_retained = TRUE
+    reported_tokens_retained = TRUE,
+    preserve_rows = preserve_rows
   )
 }
 
@@ -12152,7 +12211,8 @@ fit_review_read_one_path <- function(path,
                                      facet_col = NULL,
                                      level_col = NULL,
                                      delimiter = NULL,
-                                     encoding = "UTF-8") {
+                                     encoding = "UTF-8",
+                                     preserve_rows = FALSE) {
   format <- match.arg(format)
   if (!file.exists(path)) {
     stop("FACETS fit table file was not found: `", path, "`.", call. = FALSE)
@@ -12169,20 +12229,21 @@ fit_review_read_one_path <- function(path,
       facet = NULL, facet_map = facet_map,
       format = "scorefile", facet_col = facet_col,
       level_col = level_col, delimiter = delimiter,
-      encoding = encoding
+      encoding = encoding, preserve_rows = preserve_rows
     )))
   }
 
   if (identical(format, "auto")) {
-    lines <- readLines(path, warn = FALSE, encoding = encoding, n = 50L)
+    lines <- fit_review_read_lines(path, encoding, n = 50L)
     has_score_header <- any(grepl("Measure", lines, fixed = TRUE) &
-      grepl(",", lines, fixed = TRUE) &
+      grepl("[,;\t]", lines) &
       grepl("F[- .]?Number|FNumber|FacetNumber", lines,
         ignore.case = TRUE
       ))
     is_score_name <- !is.na(fit_review_scorefile_number(path))
     has_fixed_header <- any(grepl("T.Score", lines, fixed = TRUE) &
-      grepl("T.Count", lines, fixed = TRUE) & grepl("InfitMS", lines, fixed = TRUE))
+      grepl("T.Count", lines, fixed = TRUE) & grepl("InfitMS", lines, fixed = TRUE) &
+      !grepl("[,;\t]", lines))
     format <- if (is_score_name || has_score_header || has_fixed_header) "scorefile" else "delimited"
   }
   if (identical(format, "scorefile")) {
@@ -12191,7 +12252,7 @@ fit_review_read_one_path <- function(path,
       facet = facet,
       facet_map = facet_map,
       level_col = level_col,
-      encoding = encoding
+      encoding = encoding, preserve_rows = preserve_rows
     )
   } else {
     fit_review_read_table_file(
@@ -12200,12 +12261,14 @@ fit_review_read_one_path <- function(path,
       facet_col = facet_col,
       level_col = level_col,
       delimiter = delimiter,
-      encoding = encoding
+      encoding = encoding, preserve_rows = preserve_rows
     )
   }
 }
 
 #' Read a FACETS fit table for fit review
+#'
+#' For standalone plots with source-state checks, use [read_facets_results()].
 #'
 #' @param file Path to a FACETS-derived fit table. A character vector of files is
 #'   accepted. A directory containing `score.N.txt` files is also accepted.
@@ -12216,17 +12279,18 @@ fit_review_read_one_path <- function(path,
 #'   positions are used as score-file numbers.
 #' @param format File format. `"auto"` detects FACETS `score.N.txt` files from
 #'   their name/header; `"delimited"` reads a CSV/TSV/semicolon table; and
-#'   `"scorefile"` reads a FACETS score-file table. Fixed-field input requires
+#'   `"scorefile"` reads a FACETS score-file table, including comma, tab or
+#'   semicolon exports with facet heading lines. Fixed-field input requires
 #'   validated all-field headings with element number after the statistics;
 #'   appended facet fields are separated from the element label. Headerless,
 #'   element-first and selected-field fixed layouts are rejected. Use named
-#'   delimited columns for those layouts.
+#'   delimited columns for those layouts and for non-ASCII labels.
 #' @param facet_col,level_col Optional explicit column names for delimited
 #'   tables when automatic detection is not sufficient. For score files,
 #'   `level_col` can override the column immediately before `F-Number`.
 #' @param delimiter Optional delimiter for delimited tables. If omitted, comma,
 #'   tab, and semicolon are detected from the header line.
-#' @param encoding File encoding passed to [readLines()].
+#' @param encoding Source file encoding, explicitly converted to UTF-8.
 #'
 #' @details
 #' This helper does not run FACETS. It reads FACETS output that already exists
@@ -12243,7 +12307,7 @@ fit_review_read_one_path <- function(path,
 #'
 #' Two common workflows are supported:
 #' - a FACETS score file such as `score.2.txt`, where the facet name is supplied
-#'   by `facet_map` or inferred as `Facet2`. Both comma-delimited score files
+#'   by `facet_map` or inferred as `Facet2`. Comma, tab and semicolon score files
 #'   with field names and fixed-field score files using the FACETS manual
 #'   column positions are supported;
 #' - a CSV/TSV table already exported from FACETS or a harmonization script,

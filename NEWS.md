@@ -1,5 +1,228 @@
 # mfrmr 0.2.4
 
+- Imported FACETS element plots accept a `label_map` keyed by facet and exported
+  element ID, allowing local display names while preserving source labels,
+  values and status. Unknown or duplicate keys are rejected. Help and the
+  migration guide explain Japanese PNG/PDF output with an appropriate device
+  and installed font; this does not require Japanese input to FACETS.
+
+- FACETS Scorefile import now recognizes semicolon-separated output, including
+  its facet heading line and `score.N.txt` filenames. Previously this layout
+  could be misread as fixed-width text or fail to identify its facet/element
+  columns. Separator detection ignores punctuation inside quoted headings.
+  Reported numeric tokens, element IDs and duplicate labels are preserved;
+  existing imported results need no refit.
+
+- FACETS result plots now label source `Status=1` as a direct/group anchor
+  flag, without implying that each flagged measure is individually fixed.
+  `SourceStatus = "anchored"`, raw group codes, numerical values and
+  availability are preserved. The summary count is now `AnchorFlagged`
+  (previously `Anchored`). Replot saved imports to refresh their legend and
+  interpretation notes; source files need not be reread. Scorefile group codes
+  and SEs do not identify the anchor subtype; consult the original
+  specification or Table 7. Extreme group members can instead carry Status
+  -2/-3 and are not included in `AnchorFlagged`. Their finite reported
+  locations do not identify an adjustment rule; their fit placeholders remain
+  unavailable for plotting.
+  Measure and category-curve plots also keep their legends separate from axis
+  labels when recorded figures are redrawn at pkgdown dimensions.
+
+- Ordinary additive RSM/PCM JML now accepts group means with explicit
+  `centering_scope = "anchor_origin"`. Direct or group anchors supply their
+  facet's origin; other facets retain the declared centering convention.
+  Default whole-facet and legacy remainder centering are unchanged. FACETS
+  per-element group contributions must first be converted to a repeated mean
+  target. The estimator retains constrained maximum likelihood; matching
+  FACETS group totals does not guarantee matching every numerical result,
+  extreme convention or uncertainty measure.
+
+- `estimate_bias()` now retains directly fixed finite main-effect anchors in
+  ordinary additive RSM/PCM JML when their observed scores are all minimum or
+  maximum, including with the default `xtreme = 0`. Previously, requesting
+  extreme-cell extrapolation could change whether a Person-by-facet cell was
+  present. Unadjusted boundary cells still have unavailable screening SEs and
+  tails. Recreate affected bias tables and collections from the saved fit and
+  matching diagnostics; no main calibration refit is required. Extreme-score
+  reporting now explains that the inward correction can reverse a bias sign
+  relative to the observed score departure.
+
+- Jeffreys JML now attempts bounded local finishing when BFGS stops before
+  satisfying the existing penalized score criterion. It retains the objective,
+  gradient tolerance, category support and anchor constraints, with finishing
+  diagnostics available in `checks$polish`.
+- Experimental Jeffreys delta intervals now document demonstrated small-sample
+  undercoverage. In a six-response binary case with true probability 0.5,
+  exact coverage of nominal 95% limits is 78.125%, despite correct local
+  covariance and an unbiased point at that probability. Numerical availability
+  does not qualify inference; `CIEligible` remains false. Exact basic-refit
+  quantiles also under-cover in this special case (45.2709% at true probability
+  0.1); increasing the number of refits cannot repair that interval limitation.
+
+- `fit_mfrm(..., method = "JML", jml_penalty = "jeffreys")` now offers
+  explicit canonical information-penalized estimation for identified additive
+  RSM/PCM models. It preserves declared rubric categories, including unobserved
+  categories and constant outcomes. A separate result exposes Person/facet/step
+  points and numerical checks without inheriting ordinary SEs or FACETS
+  diagnostics. Common-plan scores and experimental refit intervals use this
+  estimator throughout calibration, anchor extraction and scoring, preserving
+  shared response events. Experimental `method = "delta"` intervals use
+  analytic penalized score and anchor derivatives, retaining shared-event
+  covariance. Inverse penalized curvature is not treated as sampling variance;
+  failed derivatives or conditioning retain points with unavailable uncertainty.
+  Mixed-estimator pipelines are refused. Ordinary defaults and the generator-only option are
+  preserved. Finiteness and numerical stationarity do not establish score-bias
+  reduction, global optimality, incidental-parameter consistency or coverage.
+- Ordinary additive RSM/PCM JML can finish stalled numerical fits while holding
+  extreme-Person optimizer coordinates fixed. Sparse Newton updates retain
+  every observation, the original likelihood and the full-gradient check.
+  Primary extreme estimates remain infinite; this does not remove structural
+  nonidentification, correct statistical bias or qualify interval coverage.
+- Common-plan refit intervals now report Monte Carlo enclosures for both
+  interval endpoints, with a separate `mc_level`. Binomial order-statistic
+  bounds retain unresolved refits in the requested denominator and expose
+  infinite limits when simulation precision cannot be bounded. The original
+  empirical limits are unchanged. `MCFinite` describes finite enclosures,
+  not adequate precision, nominal coverage or bias correction; plotting and
+  saved results retain the diagnostic and its interpretation.
+- Common-plan refit intervals offer explicit `generator_method = "jeffreys"`.
+  This experimental option fits a canonical information-penalized generating
+  model while retaining the original ordinary-JML points and every ordinary
+  calibration/anchor/scoring refit. It can handle extreme generating Persons
+  and original limiting expected scores without substituting finite reporting
+  measures. Generating parameters, probabilities, targets and numerical checks
+  are saved. Declared rubric support and qualified source fits remain required;
+  failed generators and unresolved refits are not silently replaced. The default
+  ordinary generator and delta/bounded methods are unchanged. Finite generating
+  estimates do not establish score-bias reduction or interval coverage.
+- Common-plan expected-score intervals now offer explicit `method = "bounded"`.
+  This conservative alternative uses independent bounded scoring responses
+  directly and retains the entire score range for unobserved plan cells.
+  Extreme Persons do not require finite reporting replacements or a fitted
+  generating model. The finite-sample confidence statement requires fixed
+  exogenous assignments, plans and contrasts, and stable within-cell means.
+  Results preserve the original JML points, identify uninformative bounds and
+  show observed plan support. A separate `DesignEstimate` is available for
+  complete plans. These bounds can be wide, do not correct JML bias and do not
+  provide simultaneous coverage for data-selected comparisons. Refit remains
+  the default; its and delta's experimental qualifications are unchanged.
+  Both rubric endpoints must be explicitly declared when fitting, with unchanged
+  full category coding. Observed extrema, missing range provenance and
+  data-dependent category collapse are rejected; the known-support requirement
+  cannot be satisfied by labelling sample extrema as declared bounds.
+- Ordinary additive RSM/PCM JML can now finish a stalled optimizer with bounded
+  sparse Newton steps using the original likelihood and constraints. Each
+  accepted step improves stationarity without resolved likelihood loss;
+  the original gradient criterion still applies. The optimization history
+  records the steps, solve residual and failures. Extreme-person boundaries
+  remain distinct from numerical stopping, and this repair does not qualify
+  confidence intervals or correct estimator bias.
+- `read_facets_results()` imports supported FACETS score exports for standalone
+  measure, point-only Wright and fit plots through `plot()`. It retains element
+  IDs, labels, source precision, anchors/extremes, unavailable rows and file
+  identity. Shared-axis Wright maps require an explicit compatible-scale
+  declaration. Extreme fit placeholders are withheld from fit plots. Import
+  preserves source values and does not refit or supply new scoring/intervals.
+  Named CSV/TSV supports declared encodings including Japanese labels; validated
+  fixed-width imports require ASCII. A small synthetic FACETS export is included.
+  An optional `graph_file` reads named CSV/TSV or validated fixed-width
+  Graphfiles for category-probability (`type = "ccc"`) and expected-score
+  (`type = "expected"`) plots. Source scale/category codes, raw coordinates
+  and precision are retained; missing rows break lines and probability-sum
+  diagnostics respect printed precision. Graphfile axes are separate from
+  element measures, with no automatic category recoding or scale alignment.
+- Ordinary additive RSM/PCM JML fair-average results accept `reference_plan`
+  for Person expected scores under one common weighted rating/scale plan.
+  `confint()` adds an experimental fixed-Person refit procedure for these
+  scores and paired contrasts. Estimated anchors can be recalibrated in every
+  replication, with explicit response-event maps sharing observations across
+  calibration and scoring. Saved intervals retain unresolved trials,
+  numerical checks, anchor draws and the uncertainty basis through summary,
+  plotting and export. Existing FairM/FairZ targets are unchanged. The new
+  procedure is model based and does not yet qualify finite-sample coverage,
+  correct JML bias, predict future observed scores or establish fairness.
+  `method = "delta"` adds an experimental deterministic alternative through
+  the same estimation and centering maps. It retains target covariance,
+  calibration propagation and shared-event cross terms, using sparse solves
+  for the selected targets. It requires finite stage estimates and positive
+  information; failures preserve points with missing uncertainty and reasons.
+  Normal limits remain unqualified for coverage and are not clipped to the
+  score support. The default remains `method = "refit"`.
+  If an unselected Person has an extreme primary estimate in the generating
+  fit, delta results now preserve finite selected points with unavailable
+  uncertainty and a reason. Such Persons are not silently removed or assigned
+  finite reporting measures to obtain an interval.
+- Ordinary additive RSM/PCM JML now accepts
+  `centering_scope = "anchor_origin"`: direct anchors set their facet's origin
+  without an additional zero-sum constraint. Choose an unanchored, active
+  `noncenter_facet`; group anchors are not supported by this option. Sparse
+  interior RSM/PCM cases match FACETS 4.5.0 under these constraints. Anchor
+  review, saved settings and replay retain the convention. The default
+  whole-facet and legacy remainder conventions are unchanged; supplied anchor
+  values remain fixed rather than carrying external calibration uncertainty.
+  Detected joint additive recession directions affecting calibration stop this
+  route; an identified origin alone does not guarantee a finite maximum.
+  When every retained response of the Person anchors is at the same declared
+  minimum or maximum, this route now stops before optimization without an
+  optional LP dependency. FACETS' finite output for this case is not reproduced
+  as an ordinary JML estimate. Interior or opposite-boundary support from
+  additional Person anchors is not rejected by this specific rule.
+- Ordinary additive RSM/PCM JML fair-score tables now retain finite direct
+  anchors in extreme-row filtering under both display conventions. With
+  `totalscore = FALSE`, an all-minimum/all-maximum anchored element no longer
+  incorrectly removes its observations from other facet totals or PCM scale
+  mixtures. Fixed values and unanchored extreme-score adjustments are preserved.
+  Recreate affected tables and plots using the saved fit and matching diagnostics.
+- FACETS migration guidance now explains comparisons with TAM JML: explicit
+  category support, separate bias/extreme-score corrections, Person MLE versus
+  WLE, conditional SEs, diagnostic trimming and weight denominators. Matched
+  sparse and partially anchored RSM/PCM regressions preserve ordinary-JML
+  behavior; they do not add a TAM JML importer or certify general coverage.
+  Guidance also distinguishes a TAM 4.3-25 free-intercept anchoring path that
+  moves the supplied Person anchor or fails to converge from a correctly
+  translated unanchored reference solution.
+- Ordinary additive RSM/PCM JML diagnostics now report `PTMEAExpected`
+  beside observed `PTMEA`, with its unadjusted moment reference, frequency
+  count and availability reasons. The finite-count factor `(N-2)/N` follows
+  Linacre's published correction and matches scoped FACETS 4.5.0 PCM output,
+  including unequal replication weights. Fair-average tables retain these
+  columns when supplied by matching diagnostics. Below frequency count two,
+  or with unbounded calibration or invalid moments, the corrected reference
+  is unavailable. It is a conditional reporting approximation, not an exact
+  sample-correlation expectation or a test. Recreate diagnostics from the
+  saved fit to obtain the new columns.
+- Ordinary additive RSM/PCM JML reports now offer
+  `fair_average_table(..., xtreme = .3, xtreme_method = "facets")` and the
+  corresponding `plot(fit, type = "fair_average", ...)` options. This solves
+  a corrected weighted-total equation using the administered calibration,
+  retains primary estimates and fixed anchors, and labels conditional reporting
+  SEs separately. The default average-score display convention is unchanged.
+  `estimate_bias(..., xtreme = .5)` similarly supplies finite reporting values
+  for extreme cells when the corrected root is inside the search limits.
+  These routes exclude unanchored extreme calibration elements; group-mean
+  anchors and fitted interactions are unsupported. Extrapolation is not
+  original-MLE inference or a calibration-inclusive uncertainty method.
+  Broader extreme-score anchoring and exclusion equivalence remains unverified.
+- Bias tables retain continuous count-minus-one df for Student screening tails
+  and add `DFDisplay` for the nearest-integer display comparison. FACETS 4.5.0
+  fractional-count tails in checked examples match an invalid fractional
+  extension of an integer-df finite sum, which can change a 0.05 screen.
+  mfrmr retains the continuous Student distribution. New `ProbabilityReference`,
+  `ProbabilityStatus` and `ProbabilityReason` columns record its basis and
+  availability. Nonpositive count-minus-one values remain in `DFUnrounded`;
+  reference df, display df and tail area are unavailable, while a finite bias
+  estimate and conditional information SE can remain usable for description.
+- `mfrm_d_study()` now offers `negative_components = "genova_algorithm"`
+  or `"genova_ems"` for complete balanced univariate ANOVA sources with
+  supported crossed or nested facets. The default `"raw"` is unchanged.
+  Results retain original and effective components, and report the selected
+  convention in tables and plot notes. EMS recalculates components using the
+  source design before projecting future counts. `confint()` and interval-aware
+  summaries/plots pair adjusted points with original-source population intervals,
+  retaining `IntervalEstimate`, `IntervalBasis` and unchanged bounds. These are
+  not recentered adjusted-estimator intervals; sampling diagnostics retain their
+  original basis. Saved intervals must match the selected treatment. Supported
+  population plan differences use `confint(..., reference = ...)`; adjusted-
+  estimator delta comparisons remain unavailable.
 - PCM fair-average plot intervals now use the derivative of the same weighted
   administered-scale expectation as the reported fair average. They remain
   conditional delta-method intervals; uncertainty in other calibration

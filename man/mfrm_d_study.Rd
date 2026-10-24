@@ -13,7 +13,13 @@ mfrm_d_study(x, design_grid = NULL, ...)
 
 \method{mfrm_d_study}{default}(x, design_grid = NULL, ...)
 
-\method{mfrm_d_study}{mfrm_multivariate_gstudy}(x, design_grid = NULL, weights = NULL, ...)
+\method{mfrm_d_study}{mfrm_multivariate_gstudy}(
+  x,
+  design_grid = NULL,
+  weights = NULL,
+  negative_components = c("raw", "genova_algorithm", "genova_ems"),
+  ...
+)
 
 \method{print}{mfrm_multivariate_d_study}(x, digits = NULL, row.names = FALSE, ...)
 }
@@ -58,6 +64,15 @@ Otherwise, each scenario reports the original scores once, followed by
 each composite. A vector's composite is named \code{"Composite"}; a matrix
 preserves its column names and order.}
 
+\item{negative_components}{Component treatment for D-study point projections.
+\code{"raw"} (default) retains the original estimates. \code{"genova_algorithm"}
+replaces negative variance components with zero; \code{"genova_ems"} first
+recalculates components by source-design expected-mean-square equations,
+substituting zero as each negative component is encountered. The latter
+choices require a complete balanced univariate ANOVA G-study with one or
+two supported crossed or nested random facets. Original G-study estimates
+remain unchanged. These options do not supply adjusted-estimator intervals.}
+
 \item{digits}{Display precision passed to the printed tables; \code{NULL} uses
 R's current setting. Stored estimates are unchanged.}
 
@@ -65,13 +80,16 @@ R's current setting. Stored estimates are unchanged.}
 }
 \value{
 An \code{mfrm_multivariate_d_study} list containing \code{coefficients}
-(scenario, counts of included facets, score/composite identity, raw
-universe/relative/absolute variances, G/Phi, relative/absolute SEM, and
+(scenario, counts of included facets, score/composite identity,
+universe/relative/absolute variances under the selected treatment,
+G/Phi, relative/absolute SEM, \code{ComponentTreatment}, and
 row and metric-specific status, and \code{ComponentPSD}), \code{covariances}
 (three matrices per scenario), \code{design_grid},
 \code{weights} (the supplied vector or matrix, reordered to the G-study score
 order), \code{component_diagnostics},
-and \code{gstudy} (the source result). \code{summary()} returns \code{coefficients}.
+\code{negative_components}, \code{effective_components},
+\code{effective_component_diagnostics}, and \code{gstudy} (the unchanged source result).
+\code{summary()} returns \code{coefficients}.
 \code{print()} returns the same D-study invisibly without computing intervals.
 \code{\link[=summary.mfrm_multivariate_d_study]{summary.mfrm_multivariate_d_study()}} with \code{intervals = TRUE} explicitly
 calculates and collects supported intervals, methods and source context.
@@ -262,7 +280,7 @@ The same weights define the universe-score composite and its observed
 mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
 target and estimation weights, profile reliability, and accuracy at a
 cut score are not provided. Unlike mGENOVA's default D-study procedure,
-negative variance estimates are not replaced with zero. mGENOVA replaces
+negative variance estimates are not replaced with zero by default. mGENOVA replaces
 negative variance components with zero for the D-study unless its
 \code{NEGATIVE} option is selected (manual, pages 15 and 21). That rule concerns
 variances, not all negative covariances, and does not guarantee PSD
@@ -275,16 +293,38 @@ a raw G-study estimate therefore need not give matching default D-studies.
 A matched negative-interaction example gives Phi = 0.73096 with the raw
 components retained here, 0.72727 in GENOVA 3.1 \code{ALGORITHM}, and 0.73532
 with its default \code{EMS}. This is a component-treatment difference, not a
-coefficient-formula discrepancy. These conventions are not selectable
-estimation options in this function.
+coefficient-formula discrepancy. Select \code{negative_components} explicitly
+to reproduce either GENOVA D-study convention in supported univariate
+designs. EMS recalculation uses the source counts, before division by the
+future-plan counts. It is not REML or a positive-semidefinite matrix repair.
+Multivariate and MINQUE sources require \code{"raw"}; negative cross-score
+covariance is not a negative variance. GENOVA's \code{NEGATIVE} printing option
+is separate from this component-treatment choice.
 
-Raw covariance matrices and projected variances remain available. G
+\code{gstudy} retains raw estimates and diagnostics. \code{effective_components}
+contains the matrices actually used in projections; their diagnostics are
+in \code{effective_component_diagnostics}. \code{ComponentTreatment} identifies the
+choice in coefficient tables. \code{ComponentPSD} still describes the original
+G-study, so zero replacement does not erase evidence of problematic raw
+components. Save the complete result to preserve both sets.
+For GENOVA-adjusted results, \code{confint()} retains population-parameter
+intervals based on the original source study alongside adjusted points.
+\code{IntervalEstimate} records the original projection; bounds are not
+recentered on the adjusted \code{Estimate}. Any \code{IntervalSE} and other sampling
+diagnostics retain the original interval-method basis. Summary and plot
+methods accept intervals with the same recorded treatment. Supported
+population plan differences use \code{confint(d, reference = ...)}; the separate
+delta-estimator comparison API still requires raw components. These
+intervals do not characterize the adjusted estimator's sampling law.
+See \code{\link[=confint.mfrm_multivariate_d_study]{confint.mfrm_multivariate_d_study()}} for assumptions and distinctions.
+
+Original covariance matrices and the selected projected variances remain available. G
 requires nonnegative universe and relative-error variances and a positive
 sum; Phi uses absolute-error variance instead. Each SEM requires only its
 corresponding nonnegative error variance. A failed requirement makes
 only that metric \code{NA}. Zero universe variance yields a coefficient of
 zero when its error variance is positive; a zero total variance leaves
-the coefficient undefined. No estimates are clipped or replaced.
+the coefficient undefined. Under \code{"raw"}, no estimates are clipped or replaced.
 
 \code{Status} summarizes a row as \code{"Available"}, \code{"Partially available"}, or
 \code{"Unavailable"}; the four metric-specific status columns give the reasons.
@@ -320,6 +360,17 @@ plot(d, type = "sem")
 # Without weights, report the original scores without creating a composite.
 individual <- mfrm_d_study(g, data.frame(Tasks = c(6, 12)))
 plot(individual, score = "V")
+
+# Explicit GENOVA convention for a single observed score.
+g_one <- mfrm_g_study(tasks, "V", rater = NULL)
+d_ems <- mfrm_d_study(g_one, data.frame(Tasks = c(6, 12)),
+  negative_components = "genova_ems")
+summary(d_ems)
+ci_ems <- confint(d_ems, assumption = "normal")
+# Adjusted point and original-source population interval have separate bases.
+ci_ems[, c("Estimate", "IntervalEstimate", "Lower", "Upper", "IntervalBasis")]
+d_ems$effective_components # Compare with d_ems$gstudy$components.
+plot(d_ems, metric = "G", intervals = ci_ems) # Original-source population bounds.
 
 # Compare weight choices on the same task-count scenarios.
 weights <- cbind(Equal = c(V = 0.5, W = 0.5),
