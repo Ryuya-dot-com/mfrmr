@@ -33,6 +33,14 @@ local({
   stopifnot(identical(hash, tools::md5sum(file)))
   unlink(file)
 
+  file <- page("mfrm_d_study", 6L)
+  run_hook()
+  alt <- get_alt(file)
+  stopifnot(all(nzchar(alt)), grepl("GENOVA", alt[4]),
+    grepl("original-source", alt[4]), grepl("equally weighted", alt[5]),
+    grepl("SEM", alt[6]))
+  unlink(file)
+
   # ggplot2 is optional in these examples. Test both actual image sequences.
   for (n in c(7L, 9L)) {
     file <- page("plot.mfrm_multivariate_d_study", n)
