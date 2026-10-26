@@ -25,6 +25,11 @@ figures, tables and an editable report while keeping its assumptions visible.
   See [agreement](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-rating-agreement.html)
   and [networks and reporting](https://ryuya-dot-com.github.io/mfrmr/articles/mfrmr-networks-and-reporting.html).
 
+You can also continue a supported RSM/PCM or single-family GPCM analysis in
+Stan or brms, keeping fixed anchors and choosing explicit priors.
+`export_mfrm_model()` writes the code, data and parameter maps; two-family
+GPCM export supports Stan. See [model export](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_model.html).
+
 Other additions include automatic integration with a user-set maximum and
 fitting progress for supported MML routes, plus signed agreement networks,
 halo contrasts and optional ERGMs. Two-family GPCM retains experimental

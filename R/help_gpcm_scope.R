@@ -698,7 +698,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       paste(
         "mfrmr does not run native GPCM MCMC or posterior-predictive sampling.",
-        "export_mfrm_model() separately writes Stan code for eligible two-family MML sources, adding explicit structural priors; one-family GPCM code export is unavailable.",
+        "export_mfrm_model() writes Stan/brms code for eligible one-family MML sources and Stan code for two-family sources, adding explicit structural priors and retaining supported fixed constraints.",
         "Conditional posterior response diagnostics are a different, non-MCMC calculation."
       ),
       paste(
@@ -847,7 +847,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       ),
       paste(
         "Use MML and conditional posterior scoring for their stated targets.",
-        "For eligible two-family sources use export_mfrm_model(format = 'stan'), then run the external sampler and review priors, diagnostics and posterior fit; code export is not native Bayesian estimation."
+        "Use export_mfrm_model(format = 'stan' or 'brms') for eligible one-family sources, or format = 'stan' for two-family sources. Then review priors, sampler diagnostics and posterior fit; code export is not native Bayesian estimation."
       ),
       paste(
         "Use `estimate_all_bias()` for exploratory pairs or `estimate_bias()` for one specified pair; use `unexpected_after_bias_table()` only",

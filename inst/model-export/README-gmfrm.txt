@@ -71,8 +71,8 @@ Repeated ratings retain the source conditional-independence assumption.
 
 This format supports native, unanchored, unit-weight two-family GPCM MML
 sources with fixed N(0,1), second-owner steps, and no population regression,
-interactions, dummy facets or shrinkage. One-family GPCM and GPCM brms export
-remain unsupported. Retained ratings are exported, not omitted input rows or
+interactions, dummy facets or shrinkage. One-family GPCM uses a separate
+affine template in Stan or brms; two-family brms export remains unsupported. Retained ratings are exported, not omitted input rows or
 the original MML optimization. The bundle includes ratings and original labels;
 review it before sharing.
 

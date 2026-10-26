@@ -1,31 +1,33 @@
 #' Export a measurement model to Stan or brms
 #'
 #' Write a self-contained Bayesian model bundle without running an estimator.
-#' Supports ordinary RSM/PCM MML fits in both formats and two-slope-family
-#' GPCM MML fits in Stan. Sources must be unanchored and unit-weight, with
+#' Supports ordinary RSM/PCM and one-family GPCM MML fits in both formats,
+#' and two-family GPCM in Stan. Fixed facet/group and step anchors are retained.
+#' Sources must be unit-weight, with
 #' a fixed standard-normal Person population and no facet interactions or
 #' post-fit shrinkage. Unsupported specifications fail before files are written.
 #'
-#' @param fit A native RSM/PCM or two-family GPCM MML `mfrm_fit` returned by
+#' @param fit A native RSM/PCM or GPCM MML `mfrm_fit` returned by
 #'   [fit_mfrm()].
 #' @param output_dir Destination directory. The bundle includes observed ratings
 #'   and original level labels; review it before sharing.
 #' @param format Either `"stan"` (CmdStanR) or `"brms"` (custom family).
-#' @param location_prior_sd Positive marginal prior SD for each facet location.
-#' @param step_prior_sd Positive marginal prior SD for each step offset.
+#' @param location_prior_sd Positive marginal prior SD for each varying facet
+#'   location; fixed or uniquely determined locations have zero prior SD.
+#' @param step_prior_sd Positive marginal prior SD for each varying step offset.
 #' @param overwrite Replace bundle files that already exist? Defaults to `FALSE`.
 #' @param acknowledge_sensitive Suppress the reminder that ratings and original
 #'   identifiers are included. Defaults to `FALSE`.
 #' @param log_slope_prior_sd Positive marginal prior SD of each component log
-#'   slope for two-family GPCM Stan export. Defaults to 1; inspect prior
+#'   slope for GPCM export. Defaults to 1; inspect prior
 #'   sensitivity. Not used by RSM/PCM models.
 #'
 #' @details
 #' Both formats retain the category ladder, facet signs, facet centering and
 #' RSM/PCM step ownership of the source specification. RSM/PCM adjacent-category log odds
-#' are `theta + signed facet locations - step`. Steps sum to zero within their
-#' owner and are **not ordered**. A binary ladder has its single offset fixed at
-#' zero. Ability parameters have independent standard-normal priors; realized
+#' are `theta + signed facet locations - step`. Steps follow their declared
+#' within-owner sum targets (zero by default) and are **not ordered**. A binary
+#' ladder has its single offset fixed at its target. Ability parameters have independent standard-normal priors; realized
 #' abilities are not centered across the observed Persons.
 #'
 #' All supported exports preserve the native logistic metric (L-metric),
@@ -51,7 +53,24 @@
 #' `log_component_slopes` to their owners and levels. This preserves the source
 #' likelihood, not an MML interval or the exact priors/program of Uto and Ueno
 #' (2020). In particular, the extra 1.7 multiplier in their Appendix is absent.
-#' One-family GPCM export remains unsupported.
+#' One-family GPCM supports both formats. Its single owner's log slopes sum
+#' to zero (geometric mean one); its slope also multiplies the entire predictor.
+#' A singleton slope owner is fixed at one.
+#'
+#' Fixed non-Person facet anchors, group means and step anchors are exact affine
+#' constraints. The export preserves whole-facet versus remainder centering and
+#' each step owner's target. Priors on the remaining free contrasts are centered
+#' so each free level shares its block's remaining total equally. These priors
+#' are defined on the constrained subspace, not obtained by conditioning an
+#' earlier unanchored posterior. `levels.csv` and `steps.csv` in these bundles
+#' record the affine prior means, marginal SDs and fixed-coordinate indicators;
+#' `model-data.rds$constraints` retains the source constraints. One-family bundles
+#' use the same affine representation even without anchors. Anchors are fixed
+#' inputs: zero posterior spread does not establish certainty about their earlier
+#' calibration. Uncertain external calibration is not propagated. Retained step
+#' constraints are exported; this does not add a step-anchor fitting argument.
+#' Native two-family fitting retains its anchor exclusion. Person anchors
+#' require JML in native fitting and remain outside this MML exporter.
 #'
 #' `model-data.rds` records the design matrices, priors and mappings used by both
 #' formats. `levels.csv` maps original labels to generated parameters;
@@ -90,8 +109,14 @@
 #' 469-496. \doi{10.1007/s41237-020-00115-7}. Equation 9, Sections 6-7 and Appendix.
 #' @examples
 #' ratings <- load_mfrmr_data("example_core")
+#' # Illustrative fixed reference; applications need justified calibration values.
+#' anchor <- data.frame(Facet = "Rater",
+#'                      Level = as.character(ratings$Rater[1]), Anchor = 0)
 #' fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-#'                  model = "RSM", method = "MML")
+#'                  model = "GPCM", method = "MML", step_facet = "Criterion",
+#'                  slope_facet = "Criterion",
+#'                  gpcm_mml_identification = "fixed_standard_normal", anchors = anchor,
+#'                  anchor_policy = "silent")
 #' # Export runs without Stan or brms. The example data are synthetic.
 #' stan <- export_mfrm_model(fit, tempfile("mfrmr-stan-"), "stan",
 #'                            acknowledge_sensitive = TRUE)
@@ -125,14 +150,17 @@ export_mfrm_model <- function(fit, output_dir, format = c("stan", "brms"),
   bundle <- mfrm_model_export_data(fit, location_prior_sd, step_prior_sd, log_slope_prior_sd)
   template_dir <- system.file("model-export", package = "mfrmr")
   model_file <- if (format == "stan") "model.stan" else "model.R"
-  templates <- c(if (product) "model-gmfrm.stan" else model_file,
-                 paste0("run-", format, ".R"), if (product) "README-gmfrm.txt" else "README.txt")
+  templates <- c(if (isTRUE(bundle$affine)) paste0("model-affine.", if (format == "stan") "stan" else "R") else
+                   if (product) "model-gmfrm.stan" else model_file,
+                 paste0("run-", format, ".R"), if (isTRUE(bundle$affine)) "README-affine.txt" else
+                   if (product) "README-gmfrm.txt" else "README.txt")
   source_files <- file.path(template_dir, templates)
   if (!all(file.exists(source_files))) {
     stop("Model export templates are missing from this installation.", call. = FALSE)
   }
   filenames <- c("model-data.rds", "levels.csv", "categories.csv",
-                 model_file, "run.R", "README.txt", if (product) "slope-levels.csv")
+                 model_file, "run.R", "README.txt", if (!is.null(bundle$slope_levels)) "slope-levels.csv",
+                 if (isTRUE(bundle$affine)) "steps.csv")
   files <- stats::setNames(file.path(output_dir, filenames), filenames)
   if (any(dir.exists(files)) || (!overwrite && any(file.exists(files)))) {
     stop("Bundle files already exist; use a new directory or `overwrite = TRUE`.",
@@ -149,7 +177,9 @@ export_mfrm_model <- function(fit, output_dir, format = c("stan", "brms"),
   utils::write.csv(bundle$levels, files[["levels.csv"]], row.names = FALSE,
                    fileEncoding = "UTF-8")
   utils::write.csv(bundle$categories, files[["categories.csv"]], row.names = FALSE)
-  if (product) utils::write.csv(bundle$slope_levels, files[["slope-levels.csv"]],
+  if (!is.null(bundle$slope_levels)) utils::write.csv(bundle$slope_levels, files[["slope-levels.csv"]],
+    row.names = FALSE, fileEncoding = "UTF-8")
+  if (isTRUE(bundle$affine)) utils::write.csv(bundle$step_levels, files[["steps.csv"]],
     row.names = FALSE, fileEncoding = "UTF-8")
   if (!all(file.copy(source_files, files[c(4, 5, 6)], overwrite = overwrite))) {
     stop("Could not copy all model export templates.", call. = FALSE)
@@ -180,10 +210,18 @@ mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
   }
   cfg <- fit$config
   product <- identical(cfg$model, "GPCM") && mfrm_has_product_slopes(fit)
-  if ((!cfg$model %in% c("RSM", "PCM") && !product) || !identical(cfg$method, "MML") ||
+  if (!cfg$model %in% c("RSM", "PCM", "GPCM") || !identical(cfg$method, "MML") ||
       inherits(fit, "mfrm_imported_fit")) {
-    stop("Model export supports native ordinary RSM/PCM or two-family GPCM MML specifications only.",
+    stop("Model export supports native ordinary RSM/PCM/GPCM MML specifications only.",
          call. = FALSE)
+  }
+  single <- identical(cfg$model, "GPCM") && !product
+  if (single && (length(cfg$slope_facet) != 1L ||
+      !identical(cfg$gpcm_spec$levels, cfg$facet_levels[[cfg$slope_facet]]) ||
+      !identical(cfg$gpcm_spec$identification, "sum_to_zero_log_slopes") ||
+      !identical(cfg$gpcm_spec$scale_reference, "geometric_mean_one") ||
+      cfg$gpcm_spec$n_params != max(length(cfg$gpcm_spec$levels) - 1L, 0L))) {
+    stop("One-family slope levels or constraints disagree with the fitted specification.", call. = FALSE)
   }
   if (product) {
     mfrm_gpcm_slope_roles(cfg)
@@ -203,29 +241,33 @@ mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
     any(!is.na(s$anchors)) || any(!is.na(s$groups) & nzchar(s$groups))
   }, logical(1))
   step_specs <- mfrmr_step_specs(cfg)
-  if (any(anchored) || any(vapply(step_specs, function(s) {
-    any(!is.na(s$anchors)) || !isTRUE(s$target == 0)
-  }, logical(1)))) {
-    stop("Model export does not support fixed or group anchors.", call. = FALSE)
+  if (anchored[1L]) {
+    stop("MML model export does not support Person anchors.", call. = FALSE)
   }
+  affine <- single || any(anchored) || any(vapply(step_specs, function(s) {
+    any(!is.na(s$anchors)) || !isTRUE(s$target == 0)
+  }, logical(1)))
   d <- fit$prep$data
   if (!is.data.frame(d) || !nrow(d) || anyNA(d$Weight) ||
       any(d$Weight != 1)) {
     stop("Model export requires retained observations with unit weights.", call. = FALSE)
   }
   facets <- cfg$facet_names
-  basis <- lapply(facets, function(f) {
+  maps <- lapply(facets, function(f) {
     s <- cfg$facet_specs[[f]]
     if (!identical(as.character(s$levels), as.character(cfg$facet_levels[[f]]))) {
       stop("Facet levels and constraints disagree.", call. = FALSE)
     }
-    mfrm_export_basis(length(s$levels), isTRUE(s$centered))
+    mfrm_export_affine_map(s, location_prior_sd)
   })
+  basis <- lapply(maps, `[[`, "basis")
   nr <- vapply(basis, nrow, integer(1))
   nc <- vapply(basis, ncol, integer(1))
   B <- matrix(0, sum(nr), sum(nc))
   X <- matrix(0, nrow(d), sum(nc))
   location_sd <- numeric(sum(nc))
+  location_offset <- numeric(sum(nr))
+  eta_offset <- numeric(nrow(d))
   levels <- list(data.frame(Facet = "Person", Level = cfg$person_levels,
                             Index = seq_along(cfg$person_levels),
                             Parameter = paste0("theta[", seq_along(cfg$person_levels), "]"),
@@ -243,8 +285,9 @@ mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
     B[rows, cols] <- basis[[i]]
     X[, cols] <- sign * basis[[i]][index, , drop = FALSE]
     centered <- isTRUE(cfg$facet_specs[[f]]$centered)
-    location_sd[cols] <- location_prior_sd *
-      if (centered && nr[i] > 1L) sqrt(nr[i] / (nr[i] - 1L)) else 1
+    location_sd[cols] <- maps[[i]]$sd
+    location_offset[rows] <- maps[[i]]$offset
+    eta_offset <- eta_offset + sign * maps[[i]]$offset[index]
     levels[[length(levels) + 1L]] <- data.frame(
       Facet = f, Level = cfg$facet_levels[[f]], Index = rows,
       Parameter = paste0("locations[", rows, "]"), Sign = sign, Centered = centered)
@@ -304,5 +347,89 @@ mfrm_model_export_data <- function(fit, location_prior_sd, step_prior_sd,
       ScaleReference = rep(c("geometric_mean_one", "fixed_standard_normal"), n))
     out$priors$log_slope_marginal_sd <- log_slope_prior_sd
   }
+  if (single) {
+    f <- cfg$slope_facet
+    labels <- cfg$gpcm_spec$levels
+    n <- length(labels)
+    sb <- mfrm_export_basis(n)
+    index <- match(as.character(d[[f]]), labels)
+    if (anyNA(index)) stop("Invalid retained slope-owner indices.", call. = FALSE)
+    out$stan_data <- c(out$stan_data, list(S = ncol(sb), A = n,
+      slope_basis = sb, slope_X = sb[index, , drop = FALSE],
+      log_slope_sd = as.array(rep(log_slope_prior_sd * if (n > 1L) sqrt(n / (n - 1L)) else 1, ncol(sb)))))
+    out$slope_levels <- data.frame(Owner = f, Level = labels, Index = seq_len(n),
+      Parameter = paste0("component_slopes[", seq_len(n), "]"),
+      LogParameter = paste0("log_component_slopes[", seq_len(n), "]"),
+      ScaleReference = "geometric_mean_one")
+    out$priors$log_slope_marginal_sd <- log_slope_prior_sd
+  }
+  if (affine) {
+    sm <- lapply(step_specs, mfrm_export_affine_map, prior_sd = step_prior_sd, step = TRUE)
+    counts <- vapply(sm, function(x) ncol(x$basis), integer(1))
+    K <- C - 1L
+    step_basis <- matrix(0, length(sm) * K, sum(counts))
+    start <- 0L
+    for (g in seq_along(sm)) {
+      step_basis[(g - 1L) * K + seq_len(K), start + seq_len(counts[g])] <- sm[[g]]$basis
+      start <- start + counts[g]
+    }
+    out$affine <- TRUE
+    out$constraints <- list(facets = cfg$facet_specs, steps = step_specs)
+    out$stan_data$Q <- NULL
+    out$stan_data$T <- sum(counts)
+    out$stan_data$step_basis <- step_basis
+    out$stan_data$step_sd <- as.array(unlist(lapply(sm, `[[`, "sd"), use.names = FALSE))
+    out$stan_data$step_offset <- as.array(unlist(lapply(sm, `[[`, "offset"), use.names = FALSE))
+    out$stan_data$location_offset <- as.array(location_offset)
+    out$stan_data$eta_offset <- as.array(eta_offset)
+    if (is.null(out$stan_data$S)) out$stan_data <- c(out$stan_data, list(S = 0L, A = 0L,
+      slope_basis = matrix(0, 0, 0), slope_X = matrix(0, nrow(d), 0), log_slope_sd = array(numeric())))
+    out$levels$PriorMean <- c(rep(0, out$stan_data$J), location_offset)
+    out$levels$PriorSD <- c(rep(1, out$stan_data$J), sqrt(rowSums(sweep(B, 2L, location_sd, `*`)^2)))
+    out$levels$Fixed <- out$levels$PriorSD == 0
+    out$step_levels <- data.frame(Owner = rep(names(step_specs), each = K), Transition = rep(seq_len(K), length(sm)),
+      Parameter = unlist(lapply(seq_along(sm), function(g) paste0("steps[", g, ",", seq_len(K), "]"))),
+      PriorMean = as.vector(out$stan_data$step_offset),
+      PriorSD = sqrt(rowSums(sweep(step_basis, 2L, out$stan_data$step_sd, `*`)^2)))
+    out$step_levels$Fixed <- out$step_levels$PriorSD == 0
+    out$priors$anchor_basis <- "Conditional on fixed anchors and group means; normal free contrasts about the affine prior means."
+  }
   out
+}
+
+# Use the native affine constraints, but symmetric priors on free contrasts.
+mfrm_export_affine_map <- function(spec, prior_sd, step = FALSE) {
+  if (step) {
+    checked <- build_step_constraint(spec$n_steps, spec$anchors[!is.na(spec$anchors)], spec$target, spec$scope)
+    if (!isTRUE(all.equal(checked, spec))) stop("Inconsistent step constraints for export.", call. = FALSE)
+    offset <- expand_step_constraint(numeric(spec$n_params), spec)
+    blocks <- list(spec$free_index)
+    centered <- TRUE
+  } else {
+    checked <- build_facet_constraint(spec$levels, spec$anchors[!is.na(spec$anchors)],
+      spec$groups[!is.na(spec$groups)], spec$group_values, spec$centered, spec$centering_scope %||% "remainder")
+    if (!isTRUE(all.equal(checked, spec))) stop("Inconsistent facet constraints for export.", call. = FALSE)
+    offset <- as.numeric(expand_facet_with_constraints(numeric(spec$n_params), spec))
+    free <- which(is.na(spec$anchors))
+    ids <- unique(stats::na.omit(spec$groups[free]))
+    ids <- ids[nzchar(ids)]
+    blocks <- lapply(ids, function(g) which(is.na(spec$anchors) & !is.na(spec$groups) & spec$groups == g))
+    blocks <- c(blocks, list(free[is.na(spec$groups[free]) | !nzchar(spec$groups[free])]))
+    centered <- c(rep(TRUE, length(ids)), isTRUE(spec$centered))
+  }
+  B <- matrix(0, length(offset), spec$n_params)
+  sd <- numeric(spec$n_params)
+  used <- 0L
+  for (i in seq_along(blocks)) {
+    rows <- blocks[[i]]
+    if (!length(rows)) next
+    h <- mfrm_export_basis(length(rows), centered[i])
+    cols <- used + seq_len(ncol(h))
+    if (centered[i]) offset[rows] <- mean(offset[rows])
+    B[rows, cols] <- h
+    sd[cols] <- prior_sd * if (centered[i] && length(rows) > 1L) sqrt(length(rows) / (length(rows) - 1L)) else 1
+    used <- used + ncol(h)
+  }
+  stopifnot(used == spec$n_params, all(is.finite(offset)))
+  list(offset = offset, basis = B, sd = sd)
 }

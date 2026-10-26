@@ -392,8 +392,9 @@ Broader external-calibration reuse remains a later extension.
 Anchors, linking/imports, feature analysis, assigned-score imputation and
 eligible pooling, and separate random-rater/testlet models remain included
 within their documented restrictions. Stan/brms code export supports its
-implemented combinations: RSM/PCM in both formats, and two-family GPCM in
-Stan. Code export is not a native Bayesian estimator or a guarantee about
+implemented combinations: RSM/PCM and one-family GPCM in both formats,
+and two-family GPCM in Stan. Supported fixed facet/group and retained step
+constraints are preserved. Code export is not a native Bayesian estimator or a guarantee about
 prior choice or credible intervals.
 
 Location anchors use internal coordinates; ordinary fit uncertainty conditions
@@ -454,8 +455,10 @@ Completion requires more than matching a few estimates:
   These intervals condition on fixed anchors; their availability does not
   certify fitted-object scoring, which has separate integration checks.
   Profile-slope, native-location and portable GPCM routes retain their anchor
-  exclusions. Corrected JML, two-family GPCM, testlet/random-rater models and
-  Stan/brms export do not accept anchors.
+  exclusions. Corrected JML, native two-family GPCM and testlet/random-rater
+  fitting do not accept anchors. Stan/brms export retains supported fixed
+  facet/group anchors in RSM/PCM and one-family GPCM specifications; their
+  uncertainty is conditional on the supplied values.
 - [x] Provide beginner examples and migration instructions; preserve the
   original meaning of saved results and exported calibrations.
   Summaries, specification tables and reproducibility records expose the
@@ -1254,8 +1257,8 @@ adoption. Matching a model name is not sufficient.
 
 | Stage and tentative version range | Intended deliverable | Boundary for the first release of that capability |
 | --- | --- | --- |
-| Interoperability: first 0.2.5 candidates | Reusable model specifications, portable Stan bundles and a checked path from external draws to parameter summaries, figures and reports. Clarify supported TAM imports and ConQuest comparisons. | Reuse current exporters and mappings. Start with RSM/PCM; admit one-family GPCM separately. An imported table is not a native calibration or joint uncertainty estimate. |
-| Bayesian workflows: subsequent 0.2.5 candidates | Optional fitting and scoring through CmdStan/cmdstanr, with explicit priors and joint calibration uncertainty. | Build on the same export/result path. Add new-Person scoring, anchors and slope families as separately qualified increments; preserve current MML defaults. |
+| Interoperability: first 0.2.5 candidates | Reusable model specifications, portable Stan bundles and a checked path from external draws to parameter summaries, figures and reports. Clarify supported TAM imports and ConQuest comparisons. | Reuse current exporters and mappings. Start with RSM/PCM result return, then extend it to the existing one-family GPCM export. An imported table is not a native calibration or joint uncertainty estimate. |
+| Bayesian workflows: subsequent 0.2.5 candidates | Optional fitting and scoring through CmdStan/cmdstanr, with explicit priors and joint calibration uncertainty. | Build on the same export/result path. Add new-Person scoring, external calibration uncertainty and broader slope families as separately qualified increments; preserve current MML defaults. |
 | Rubric profiles: 0.3.x candidates | Prespecified multidimensional MFRM/GMFRM, joint Person-profile uncertainty and criterion/rater feedback. | Start with low-dimensional simple structure and unit slopes, then admit free-slope variants. Identification, numerical accuracy and usefulness of subscores need separate evidence. |
 | Rating processes: later 0.3.x / 0.4.x candidates | Direct centrality, restricted rater classes, and response-time/rating-time extensions chosen for specific assessment questions. | Qualify the branches separately. A combined model with every effect is not the initial goal. |
 | Diagnostic attributes: 0.4.x and later candidates | Explicit skill-Q specifications and a bounded rater-effects CDM workflow for mastery/profile feedback. | Begin with a small specified skill structure and a matched established reference. Broader response scales and automatic Q/class selection are separate extensions. |
@@ -1277,7 +1280,7 @@ meaning of its scores and uncertainty. These are different operations.
 | --- | --- | --- |
 | TAM | `import_tam_fit()` imports supported unidimensional MML results for summaries and point-only Wright maps. Multifacet conditions become `DesignCell` locations; separate facet effects and their joint covariance are not reconstructed. | Extend source-aware reporting first; recover separate facets or transformed uncertainty only with an identified parameter map and the required joint covariance. |
 | ConQuest | `build_conquest_overlap_bundle()` and `review_conquest_overlap()` support a narrow binary, single-facet latent-regression comparison. Broader research comparisons do not expand this public API. | Add matched polytomous additive RSM/PCM cases before more general GPCM exchange. Reuse `conquestr` where suitable for execution and reading, retaining original outputs and settings. |
-| Stan/brms | `export_mfrm_model()` writes code, data, parameter/category maps and a runner. RSM/PCM support both formats; two-family GPCM supports Stan. Stan runners save draws, diagnostics and posterior interval summaries. | Return those results to common reporting and plotting, support data/specification input without a preliminary MML fit, and close the one-family GPCM export gap. |
+| Stan/brms | `export_mfrm_model()` writes code, data, parameter/category maps and a runner. RSM/PCM and one-family GPCM support both formats, including supported fixed facet/group anchors; two-family GPCM supports Stan. Stan runners save draws, diagnostics and posterior interval summaries. | Return those results to common reporting and plotting, and support data/specification input without a preliminary MML fit. |
 
 [ConQuest](https://www.acer.org/au/conquest) already includes multidimensional,
 multifaceted and Bayesian estimation. [TAM](https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html)
@@ -1288,10 +1291,14 @@ references and optional connections. A larger model catalogue alone does not
 establish methodological novelty or practical superiority.
 
 Stan export currently requires a supported native MML fit, unit weights,
-no anchors/interactions/shrinkage and a fixed standard-normal Person population.
+no interactions/shrinkage and a fixed standard-normal Person population.
+Fixed anchors are exact constraints; uncertainty from an earlier calibration
+is not propagated. Person anchors and native two-family anchored fitting
+remain outside the source-model scope.
 It preserves the response likelihood and adds explicit structural priors;
 its posterior is not the original MML estimate or confidence interval.
-One-family GPCM export and an integrated Bayesian result object remain planned.
+An integrated Bayesian result object remains planned; code export alone does
+not connect posterior draws to every native reporting or scoring method.
 
 The first returned Bayesian results should connect to `summary()`, `plot()`,
 `confint()`, long plot tables and the shared report route, with posterior

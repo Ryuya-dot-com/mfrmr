@@ -84,7 +84,6 @@ test_that("unsupported models and priors fail before creating output", {
     function(f) { f$config$facet_specs$Rater$anchors[1] <- 0; f },
     function(f) { f$config$theta_spec$anchors[1] <- 0; f },
     function(f) { f$config$facet_specs$Rater$groups[1] <- "a"; f },
-    function(f) { f$config$step_specs$shared$target <- 1; f },
     function(f) { f$prep$data$Weight[1] <- 2; f },
     function(f) { class(f) <- c("mfrm_testlet", class(f)); f })
   for (modify in mutations) {

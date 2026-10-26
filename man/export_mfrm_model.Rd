@@ -16,7 +16,7 @@ export_mfrm_model(
 )
 }
 \arguments{
-\item{fit}{A native RSM/PCM or two-family GPCM MML \code{mfrm_fit} returned by
+\item{fit}{A native RSM/PCM or GPCM MML \code{mfrm_fit} returned by
 \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{output_dir}{Destination directory. The bundle includes observed ratings
@@ -24,9 +24,10 @@ and original level labels; review it before sharing.}
 
 \item{format}{Either \code{"stan"} (CmdStanR) or \code{"brms"} (custom family).}
 
-\item{location_prior_sd}{Positive marginal prior SD for each facet location.}
+\item{location_prior_sd}{Positive marginal prior SD for each varying facet
+location; fixed or uniquely determined locations have zero prior SD.}
 
-\item{step_prior_sd}{Positive marginal prior SD for each step offset.}
+\item{step_prior_sd}{Positive marginal prior SD for each varying step offset.}
 
 \item{overwrite}{Replace bundle files that already exist? Defaults to \code{FALSE}.}
 
@@ -34,7 +35,7 @@ and original level labels; review it before sharing.}
 identifiers are included. Defaults to \code{FALSE}.}
 
 \item{log_slope_prior_sd}{Positive marginal prior SD of each component log
-slope for two-family GPCM Stan export. Defaults to 1; inspect prior
+slope for GPCM export. Defaults to 1; inspect prior
 sensitivity. Not used by RSM/PCM models.}
 }
 \value{
@@ -43,17 +44,18 @@ Invisibly, a list with \code{format}, \code{model}, \code{output_dir} and named
 }
 \description{
 Write a self-contained Bayesian model bundle without running an estimator.
-Supports ordinary RSM/PCM MML fits in both formats and two-slope-family
-GPCM MML fits in Stan. Sources must be unanchored and unit-weight, with
+Supports ordinary RSM/PCM and one-family GPCM MML fits in both formats,
+and two-family GPCM in Stan. Fixed facet/group and step anchors are retained.
+Sources must be unit-weight, with
 a fixed standard-normal Person population and no facet interactions or
 post-fit shrinkage. Unsupported specifications fail before files are written.
 }
 \details{
 Both formats retain the category ladder, facet signs, facet centering and
 RSM/PCM step ownership of the source specification. RSM/PCM adjacent-category log odds
-are \verb{theta + signed facet locations - step}. Steps sum to zero within their
-owner and are \strong{not ordered}. A binary ladder has its single offset fixed at
-zero. Ability parameters have independent standard-normal priors; realized
+are \verb{theta + signed facet locations - step}. Steps follow their declared
+within-owner sum targets (zero by default) and are \strong{not ordered}. A binary
+ladder has its single offset fixed at its target. Ability parameters have independent standard-normal priors; realized
 abilities are not centered across the observed Persons.
 
 All supported exports preserve the native logistic metric (L-metric),
@@ -79,7 +81,24 @@ coordinates give each component the specified marginal log-slope SD.
 \code{log_component_slopes} to their owners and levels. This preserves the source
 likelihood, not an MML interval or the exact priors/program of Uto and Ueno
 (2020). In particular, the extra 1.7 multiplier in their Appendix is absent.
-One-family GPCM export remains unsupported.
+One-family GPCM supports both formats. Its single owner's log slopes sum
+to zero (geometric mean one); its slope also multiplies the entire predictor.
+A singleton slope owner is fixed at one.
+
+Fixed non-Person facet anchors, group means and step anchors are exact affine
+constraints. The export preserves whole-facet versus remainder centering and
+each step owner's target. Priors on the remaining free contrasts are centered
+so each free level shares its block's remaining total equally. These priors
+are defined on the constrained subspace, not obtained by conditioning an
+earlier unanchored posterior. \code{levels.csv} and \code{steps.csv} in these bundles
+record the affine prior means, marginal SDs and fixed-coordinate indicators;
+\code{model-data.rds$constraints} retains the source constraints. One-family bundles
+use the same affine representation even without anchors. Anchors are fixed
+inputs: zero posterior spread does not establish certainty about their earlier
+calibration. Uncertain external calibration is not propagated. Retained step
+constraints are exported; this does not add a step-anchor fitting argument.
+Native two-family fitting retains its anchor exclusion. Person anchors
+require JML in native fitting and remain outside this MML exporter.
 
 \code{model-data.rds} records the design matrices, priors and mappings used by both
 formats. \code{levels.csv} maps original labels to generated parameters;
@@ -111,8 +130,14 @@ retain the source conditional-independence assumption.
 }
 \examples{
 ratings <- load_mfrmr_data("example_core")
+# Illustrative fixed reference; applications need justified calibration values.
+anchor <- data.frame(Facet = "Rater",
+                     Level = as.character(ratings$Rater[1]), Anchor = 0)
 fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
-                 model = "RSM", method = "MML")
+                 model = "GPCM", method = "MML", step_facet = "Criterion",
+                 slope_facet = "Criterion",
+                 gpcm_mml_identification = "fixed_standard_normal", anchors = anchor,
+                 anchor_policy = "silent")
 # Export runs without Stan or brms. The example data are synthetic.
 stan <- export_mfrm_model(fit, tempfile("mfrmr-stan-"), "stan",
                            acknowledge_sensitive = TRUE)

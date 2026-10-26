@@ -1399,14 +1399,14 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
 
   model_export_row <- data.frame(
     Scope = "exports",
-    Question = "Estimate an RSM/PCM or two-family GMFRM specification externally",
+    Question = "Estimate an RSM/PCM or GPCM specification externally",
     OutputFamily = "export",
     MainFunction = "export_mfrm_model()",
     UseWhen = "You need editable model code for an external Bayesian analysis or prior sensitivity.",
-    TypicalInput = "Unanchored, unit-weight RSM/PCM MML (Stan or brms), or two-family GPCM MML (Stan only), with fixed N(0,1); no interactions or shrinkage.",
-    NextStep = "Review code, priors, levels.csv, categories.csv and, for GMFRM, slope-levels.csv; run run.R in the bundle directory, then inspect sampler diagnostics and posterior predictive fit.",
-    GPCMStatus = "two-family Stan export only; one-family GPCM and GPCM brms unsupported",
-    Notes = "Exports code and observed data without sampling or installing software. Proper structural priors define a Bayesian analysis; posterior credible intervals do not reproduce or qualify MML confidence intervals. Original labels are retained; review before sharing.",
+    TypicalInput = "Unit-weight RSM/PCM or one-family GPCM MML (Stan or brms), or two-family GPCM MML (Stan only), with fixed N(0,1). Supported fixed facet/group and retained step constraints are preserved; no interactions or shrinkage.",
+    NextStep = "Review code, priors, levels.csv, categories.csv, steps.csv where supplied and, for GPCM, slope-levels.csv; run run.R in the bundle directory, then inspect sampler diagnostics and posterior predictive fit.",
+    GPCMStatus = "one-family Stan/brms; two-family Stan only",
+    Notes = "Exports code and observed data without sampling or installing software. Proper structural priors define a Bayesian analysis; posterior credible intervals do not reproduce or qualify MML confidence intervals. Exact anchors carry no external calibration uncertainty. Original labels are retained; review before sharing.",
     stringsAsFactors = FALSE
   )
 

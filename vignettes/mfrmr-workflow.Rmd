@@ -792,8 +792,10 @@ from agreement, compare a score source with a reference, and audit missing
 pairs without fitting another model. It also explains why these coefficients
 answer a different question from rater severity or separation reliability.
 
-For prior sensitivity or an external Bayesian extension, export an ordinary
-unanchored, unit-weight RSM/PCM MML specification with `export_mfrm_model()`:
+For prior sensitivity or an external Bayesian extension, use
+`export_mfrm_model()` with a unit-weight RSM/PCM or one-family GPCM MML fit
+on the fixed N(0,1) ability scale. Both Stan and brms retain supported fixed
+facet anchors and group means. This example reuses the RSM fit above:
 
 ```{r model-export-example}
 # Reuse the fit above; no additional estimation or backend is needed to export.
@@ -823,13 +825,20 @@ Review its README and priors, then run the script from that directory with
 CmdStanR/CmdStan installed (and brms for the second format). Export itself
 needs neither backend. Both formats preserve adjacent-category probabilities,
 the fixed standard-normal ability scale, facet signs and constraints, and
-unordered sum-zero step offsets. Their explicit structural priors make this
+unordered step offsets with their original sum constraints. Their explicit structural priors make this
 a Bayesian analysis; it does not reproduce MML point estimates or qualify
 frequentist interval coverage. Two-family GMFRM also supports Stan export,
 with explicit component log-slope priors and a `slope-levels.csv` mapping; see
-the [two-family workflow](mfrmr-gpcm-scope.html). The scope excludes one-family
-GPCM, GPCM in brms, JML, anchors,
-nonunit weights, population regression, interactions and shrinkage. Inspect
+the [two-family workflow](mfrmr-gpcm-scope.html). One-family GPCM uses
+`log_slope_prior_sd` in both formats, with geometric-mean-one slopes. For that
+route, fit with `gpcm_mml_identification = "fixed_standard_normal"`.
+
+Anchor values are exact constraints. `levels.csv` and `steps.csv` in anchored
+or one-family bundles show the prior means, marginal SDs and fixed coordinates.
+A zero SD reflects a fixed value, not evidence that its earlier calibration
+was certain. The scope excludes JML/Person anchors, two-family brms,
+nonunit weights, population regression, interactions and shrinkage. Native
+two-family fitting still excludes anchors. Inspect
 sampler diagnostics and prior sensitivity before using the posterior. Exported
 ratings and original labels require the same sharing review as an analysis
 archive. See `?export_mfrm_model` for supported post-processing and prediction

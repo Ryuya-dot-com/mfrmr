@@ -276,7 +276,7 @@ test_that("GPCM availability separates portable scoring from unfinished estimati
   expect_identical(sampling$Status, "deferred")
   expect_true(is.na(sampling$Helpers))
   expect_match(sampling$RecommendedRoute, "export_mfrm_model", fixed = TRUE)
-  expect_match(sampling$Boundary, "one-family GPCM code export is unavailable", fixed = TRUE)
+  expect_match(sampling$Boundary, "Stan/brms code for eligible one-family MML sources", fixed = TRUE)
   portable <- tbl[tbl$Area == "Portable calibration and later-person scoring", ]
   expect_equal(nrow(portable), 1L)
   expect_identical(portable$Status, "supported_with_caveat")

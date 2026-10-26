@@ -124,8 +124,10 @@ test_that('unsupported extension anchors are rejected before optimization', {
   rsm <- readRDS(test_path('fixtures','anchored-facet-information.rds'))$RSM$fit
   for(format in c('stan','brms')) {
     destination <- tempfile()
-    expect_error(export_mfrm_model(rsm,destination,format=format),'does not support fixed or group anchors')
-    expect_false(dir.exists(destination))
+    on.exit(unlink(destination, recursive=TRUE), add=TRUE)
+    expect_silent(exported <- export_mfrm_model(rsm,destination,format=format,acknowledge_sensitive=TRUE))
+    bundle <- readRDS(exported$files[['model-data.rds']])
+    expect_identical(bundle$constraints$facets,rsm$config$facet_specs)
   }
 })
 

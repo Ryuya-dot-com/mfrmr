@@ -13,6 +13,7 @@ is_cran_check <- local({
 cran_light_tests <- c(
   "api-migration",
   "model-export",
+  "model-export-affine",
   "adaptive-fitting",
   "adaptive-quadrature-review",
   "calibration-public-api",

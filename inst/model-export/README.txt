@@ -62,8 +62,9 @@ condition on sampled abilities for existing Persons; these are not new-Person
 predictions or leave-one-Person-out validation. Repeated rows retain the
 source model's conditional-independence assumption.
 
-The exporter supports ordinary unanchored, unit-weight RSM/PCM MML sources
+This bundle represents ordinary unanchored, unit-weight RSM/PCM MML sources
 without population regression, interactions, dummy facets or shrinkage.
+Anchored and one-family GPCM models use a separate affine template.
 Two-family GPCM has a separate Stan-only export; this RSM/PCM bundle does not
 implement it. JML, testlet and random-rater export remain unsupported. Export does not
 certify source convergence or subsequent sampling. Only retained observations

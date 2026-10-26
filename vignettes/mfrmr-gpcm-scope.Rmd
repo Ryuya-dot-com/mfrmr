@@ -1079,9 +1079,12 @@ parameterization needs second-family slopes equal to the mfrmr slopes divided
 by 1.7 to preserve response probabilities. Dividing both families by 1.7
 would not preserve them. Bayesian equivalence additionally requires transforming
 the priors; retaining the same normal log-slope priors changes the model.
-One-family GPCM and GPCM brms export
-remain unsupported. The files contain ratings and original labels and need
-review before sharing.
+One-family GPCM exports to Stan or brms with its own geometric-mean-one
+slope constraint; two-family brms remains unsupported. Supported fixed facet
+anchors and group means are retained when exporting a one-family fit. These
+anchors carry no external calibration uncertainty. Native two-family fitting
+still excludes anchors. The files contain ratings and original labels and
+need review before sharing.
 
 ### Inspect observed ratings with posterior residuals
 

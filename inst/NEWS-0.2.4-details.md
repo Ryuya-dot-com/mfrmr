@@ -2124,7 +2124,7 @@ uncertainty, subgroup comparisons and design planning.
   `log_slope_prior_sd` sets explicit marginal log-slope priors;
   `slope-levels.csv` maps both families to Stan parameters. No fitting is done
   during export. Bayesian intervals do not qualify the existing MML intervals;
-  one-family GPCM and GPCM brms export remain unsupported.
+  two-family brms export remains unsupported.
 
 * Figures now omit titles, subtitles and explanatory footnotes by default.
   `plot_data(p, "notes")` returns descriptions and cautions for base plot
@@ -2147,10 +2147,16 @@ uncertainty, subgroup comparisons and design planning.
   log-Wald intervals; finite-sample coverage improvement is not established.
 
 * `export_mfrm_model()` writes self-contained Stan or brms model bundles for
-  ordinary unanchored, unit-weight RSM/PCM MML specifications. Both retain
+  unit-weight RSM/PCM and one-family GPCM MML specifications on the fixed
+  N(0,1) ability scale, including supported fixed facet/group anchors and
+  retained step constraints. Both retain
   the response likelihood, category mapping, facet signs, centering and step
   ownership, with explicit matching Bayesian priors. Bundles include data,
   level mappings, executable R scripts and conditional posterior predictions.
+  One-family slopes have geometric mean one. Affine bundles record prior means,
+  marginal SDs and fixed coordinates in `levels.csv` and `steps.csv`; anchors
+  are exact inputs and do not propagate external calibration uncertainty.
+  No new native step-anchor or two-family-anchor fitting route is added.
   Unsupported extensions are rejected before writing. Posterior credible
   intervals are distinct from MML confidence intervals; no estimator is run
   and no Stan dependency is installed by export. Executable help and workflow

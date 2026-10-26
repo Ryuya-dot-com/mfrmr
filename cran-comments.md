@@ -2,36 +2,47 @@
 
 ## Current artifact
 
-Candidate SHA256: `b720f2ee1c7fbf5344e722f73ab96a22ff866bf1359ff5d29498916e167b03be`.
+Candidate SHA256: `80dc20208abb7fd12ddcbec42900a585735f903d593b2a07de9303242992cdbe`.
 
-This candidate contains the integrated measurement, assessment-planning and
-reporting workflows, the ggplot2/Plotly gallery documentation, and a repaired
-CASMA reference link. The gallery is website-only; Plotly and htmlwidgets are
-website dependencies rather than package installation requirements.
+This candidate connects measurement, assessment planning and reporting. It
+also closes the single-family GPCM and fixed-anchor model-export gaps:
+RSM/PCM and single-family GPCM specifications on the fixed N(0,1) scale export
+to Stan/brms, retaining supported fixed facet/group and step constraints.
+Two-family GPCM remains Stan-only. Export adds explicit Bayesian priors; it
+does not introduce a native Bayesian estimator or qualify MML intervals.
+
+The optional ggplot2/Plotly gallery remains website-only, with no new package
+installation dependency. Internal roadmaps and retained research results are
+not distributed or tracked.
 
 ## Local checks and source attribution
 
-The preceding numerical check archive
-`089c7fa309ed021cfabcc005aaec21af90397f67034acb285c1d5b8b0f9e4b55`
-completed R 4.6.1 arm64 `--as-cran --timings` with zero errors/warnings and two
-NOTEs. All 14,241 ordinary expectations passed, with three established CRAN
-skips; examples, vignette rebuilding and PDF/HTML manuals passed.
+The artifact above completes macOS arm64/R 4.6.1 `R CMD check --as-cran
+--timings` with **0 errors, 0 warnings and 1 NOTE**. The NOTE is the macOS
+`xcrun_db` temporary-file residue. All **14,315** ordinary assertions pass,
+with three established CRAN-profile research skips. Examples, vignette
+rebuilding and PDF/HTML manuals pass. Remote incoming and system-clock checks
+were disabled; unavailable repository-index network requests are not online
+dependency qualification.
 
-One NOTE identified two code-usage issues. Spelling dotchart's `color` argument
-in full and qualifying `graphics::plot.window` resolved those findings. The
-repaired installation passed 808 expectations in eight affected files and the
-same code-usage checks. The remaining NOTE concerns macOS `xcrun_db` residue.
-Foreign-namespace test mocks were replaced with package-owned bindings.
+Check-only elapsed time is **567.239 seconds** (566.739–567.739 seconds under
+the logged installation-time rounding). The entire command, including
+installation, takes **604.239 seconds**. These are local measurements, not a
+Windows timing certificate. No package check timeout was added or extended.
 
-Subsequent changes are documentation/metadata only. Runtime R expressions,
-C++, data, tests and exports retain their qualified identity. The gallery
-candidate installs; all 19 vignette index entries, updated help links, saved
-plot reconstruction and long-table export have been checked. The present
-citation repair retains all other archive bytes except the Packaged field.
+Exporter validation also includes 881 focused passing assertions, independent
+response-law/constraint and prior-coordinate checks, compiled Stan/brms
+log-density and gradient comparisons, bounded sampling, and fresh-session
+moved-folder replay. Density-difference errors are below 4e-13 and gradient
+errors below 1.2e-13 in the checked configurations. Short sampler runs test
+execution and saved predictions, not posterior recovery or coverage. Fixed
+anchors do not propagate uncertainty from an earlier calibration.
 
-The recorded check-only elapsed time was 553.596 seconds on the earlier
-archive. This is not a new full check or timing certificate for the current
-archive. Remote incoming and clock checks were disabled during that local run.
+The installed anchored single-family help example exports both formats, and
+the corresponding pkgdown reference page builds with its example. The two
+changed articles were rebuilt; other article sources matched their retained
+outputs, with the complete vignette index preserved. The normal check then
+rebuilt the packaged vignettes. No complete NOT_CRAN research suite was rerun.
 
 ## Dependencies and URLs
 
@@ -42,7 +53,7 @@ supplied by R. Declared minimum versions are satisfied in the checked local
 environment and available package index. Non-CRAN consumers are outside this
 reverse-dependency check.
 
-URL review covered 532 occurrences / 247 distinct references, including 191
+The earlier same-day URL review covered 532 occurrences / 247 distinct references, including 191
 HTTP(S) URLs, with HTTP status exclusions disabled. Eighteen URLs were flagged:
 one CASMA 404 was repaired and the replacement passed; eleven links point to
 new repository/site content awaiting publication. Their local targets exist.
@@ -52,7 +63,7 @@ URL result; no blanket URL exclusions were added.
 
 ## Still required before submission
 
-Matching-source platform checks, remote incoming checks, hosted links and
-browser interaction/layout verification remain open. The local source has not
-been published or submitted to CRAN. Package installation and attributed
-checks do not establish CRAN acceptance or current-source Windows qualification.
+The changed source needs matching five-environment CI and pkgdown results on
+the existing draft PR. Remote incoming checks, hosted links and browser
+interaction/layout verification also remain open. No merge into main, site
+deployment or CRAN submission/acceptance is claimed by these local results.
