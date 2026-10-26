@@ -831,7 +831,10 @@ frequentist interval coverage. Two-family GMFRM also supports Stan export,
 with explicit component log-slope priors and a `slope-levels.csv` mapping; see
 the [two-family workflow](mfrmr-gpcm-scope.html). One-family GPCM uses
 `log_slope_prior_sd` in both formats, with geometric-mean-one slopes. For that
-route, fit with `gpcm_mml_identification = "fixed_standard_normal"`.
+route, the source must use `gpcm_mml_identification = "fixed_standard_normal"`.
+The default one-family GPCM estimates the population mean and variance and
+cannot currently be exported. Changing that setting changes the model; do not
+change it merely to enable export.
 
 Anchor values are exact constraints. `levels.csv` and `steps.csv` in anchored
 or one-family bundles show the prior means, marginal SDs and fixed coordinates.
@@ -843,6 +846,15 @@ sampler diagnostics and prior sensitivity before using the posterior. Exported
 ratings and original labels require the same sharing review as an analysis
 archive. See `?export_mfrm_model` for supported post-processing and prediction
 targets.
+
+After sampling, start with `summary-decision.csv`: it states the sampling
+review and next action before presenting estimates. `sampling-review.csv`
+lists the checks and criteria. `parameter-summary.csv` keeps original labels,
+the meaning of larger values, fixed/estimated status and interval status
+beside the numbers. Fixed values have no estimated interval; finite intervals
+for estimated values can still require sampling review. Both formats support
+`Rscript run.R --summarize` to rebuild these reports from saved draws without
+sampling again. A clean sampling screen does not establish model validity.
 
 | Question | Follow-up |
 | --- | --- |

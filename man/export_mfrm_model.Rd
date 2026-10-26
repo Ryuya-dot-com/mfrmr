@@ -52,8 +52,7 @@ post-fit shrinkage. Unsupported specifications fail before files are written.
 }
 \details{
 The default one-family GPCM estimates its population mean and variance and
-cannot currently be exported. Choosing \code{gpcm_mml_identification =
-"fixed_standard_normal"} changes the model; it is not a file-format
+cannot currently be exported. Choosing \code{gpcm_mml_identification = "fixed_standard_normal"} changes the model; it is not a file-format
 conversion. Keep the original fit when its estimated population is intended.
 
 Both formats retain the category ladder, facet signs, facet centering and
@@ -111,19 +110,30 @@ formats. \code{levels.csv} maps original labels to generated parameters;
 \code{run.R} fits the exported model and saves draws, diagnostics and replicated
 ratings. Run it from the bundle directory, after installing CmdStanR/CmdStan
 and, for the brms format, brms. Neither is required to export a bundle.
-For Stan bundles, \verb{Rscript run.R --summarize} regenerates reports from
-\code{fit.rds} without compiling or sampling. \code{parameter-summary.csv} contains
-equal-tailed 95\% posterior bounds, endpoint Monte Carlo SEs (MCSEs), R-hat
-and bulk/tail effective sample sizes for reported parameters and free
-coordinates. \code{sampler-diagnostics.csv} records chain diagnostics;
-\code{posterior-summary.rds} retains both tables and interpretation notes.
-Bounds remain visible when diagnostics warn. \code{interval_computed} indicates
-finite endpoints, not reliable sampling or calibrated coverage. The maximum
-endpoint MCSE divided by interval width measures simulation precision;
-no universal acceptable fraction or automatic qualification is assigned.
-Inspect all coordinates and chains, prior sensitivity and model fit.
-Constant draws have unavailable MCSE/R-hat diagnostics: verify whether the
-model fixes that component or sampling is stuck.
+Both formats support \verb{Rscript run.R --summarize} to regenerate summaries
+from \code{fit.rds} without compiling or sampling. Keep \code{model-data.rds},
+\code{summarize.R} and the brms \code{model.R} with the saved fit.
+Read \code{summary-decision.csv} first, then \code{sampling-review.csv} for the checks,
+criteria and next actions. \code{parameter-summary.csv} joins original labels to
+estimates, references and score-direction notes. \code{value_role} distinguishes
+estimated values, fixed anchors and constraint-determined values. Fixed
+values have no estimated SD or interval (\code{NA}); they do not establish zero
+external calibration uncertainty. Varying parameters retain equal-tailed
+95\% credible bounds, endpoint MCSE, R-hat and bulk/tail ESS, even during
+review, with \code{interval_status} beside the values. \code{interval_computed} means
+finite bounds for a varying parameter, not reliable sampling or coverage.
+\code{sampler-diagnostics.csv} contains per-chain diagnostics;
+\code{posterior-summary.rds} retains all four tables and interpretation notes.
+
+The screen checks at least four chains, R-hat below 1.01, bulk/tail ESS at
+least 100 per chain, zero divergences/tree-depth hits and E-BFMI at least
+0.3. Missing diagnostics require review; fixed coordinates are excluded
+using model constraints, not sample variance. Tree-depth hits flag efficiency
+separately from divergences. These checks follow the
+\href{https://mc-stan.org/learn-stan/diagnostics-warnings.html}{Stan diagnostic guidance}
+and are not a certificate of validity. Review all varying coordinates,
+model fit and priors. The larger endpoint MCSE divided by interval width
+measures simulation precision; no universal acceptable fraction is imposed.
 Generated brms callbacks support \code{log_lik()}, \code{posterior_predict()} and
 \code{posterior_epred()}; the last returns category probabilities.
 

@@ -2030,12 +2030,17 @@ uncertainty, subgroup comparisons and design planning.
   paths to the existing examples, data checks and result explanations.
   This changes documentation only, not calculations or supported inference.
 
-* Exported Stan bundles now save explicit 95% credible bounds, endpoint Monte
-  Carlo SEs, parameter/free-coordinate diagnostics and chain diagnostics as
-  CSV/RDS reports. `Rscript run.R --summarize` rebuilds reports from saved draws
-  without compiling or sampling. Bounds remain visible with diagnostic concerns;
-  finite endpoints do not certify sampling quality or frequentist coverage.
-  Priors, likelihoods and sampler settings are unchanged.
+* Exported Stan and brms bundles now put the sampling review and next action
+  before numerical summaries. Parameter tables combine original labels,
+  reference/direction notes, fixed/estimated status, 95% credible bounds and
+  diagnostics. Fixed values have no estimated SD or interval (`NA`);
+  `interval_computed` now refers to varying parameters only. Bounds for varying
+  parameters remain visible with diagnostic concerns and explicit interval
+  status. `Rscript run.R --summarize` rebuilds both formats' reports from saved
+  draws without compiling or sampling. Keep the matching bundle and new
+  `summarize.R` with the fit. Finite endpoints and a clean sampling screen do
+  not certify inference validity or frequentist coverage. Priors, likelihoods
+  and sampler settings are unchanged.
 
 * `mfrmr_interval_guide("gpcm")` now includes one-family location intervals,
   experimental two-family component intervals, slope profiles and corrected-JML

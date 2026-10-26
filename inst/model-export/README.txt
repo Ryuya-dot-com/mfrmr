@@ -6,24 +6,30 @@ Review and adjust the run script for your computing resources. The scripts
 request four chains and retain diagnostics. Inspect divergences, R-hat,
 effective sample sizes and posterior predictive fit before interpreting draws.
 
-For the Stan format, run.R saves fit.rds before reporting and writes
-parameter-summary.csv (equal-tailed 95% credible bounds, endpoint Monte Carlo
-SEs, R-hat and bulk/tail ESS) and sampler-diagnostics.csv (chain divergences,
-maximum-tree-depth hits and E-BFMI). posterior-summary.rds retains both tables,
-the interval level and interpretation notes. The parameter table distinguishes
-reported parameters from free sampling coordinates. Run Rscript run.R --summarize
-to replace these three reports using fit.rds without compiling or sampling;
-CmdStanR/posterior are needed, but a CmdStan toolchain is not. Draws are unchanged.
-This option is specific to the Stan run script, not the brms script.
+The summary screen and summary-decision.csv show the sampling review before
+numerical tables. sampling-review.csv records each check, its criterion and
+next action. parameter-summary.csv joins original labels to abilities, facet
+locations, step offsets and slopes, with reference/direction notes. Its
+value_role distinguishes estimated parameters, fixed anchors and values
+determined by constraints. Fixed values have no estimated SD or interval
+(NA); zero calibration uncertainty is not inferred. Internal coordinates
+remain available for diagnostic review. posterior-summary.rds retains all
+tables and interpretation notes.
 
-Computed bounds remain visible when diagnostics warn. interval_computed means
-finite bounds, not reliable sampling or calibrated coverage. Endpoint Monte
-Carlo SE measures simulation error, distinct from posterior uncertainty.
-endpoint_mcse_fraction divides the larger endpoint MCSE by interval width; no
-universal acceptable fraction is imposed. Good precision for one target cannot
-repair divergent transitions or poor exploration of other coordinates. Inspect
-all coordinates and chains. Constant draws have NA diagnostics and fraction:
-check whether a constraint fixes that component or sampling is stuck.
+The screen checks at least four chains, R-hat < 1.01, bulk/tail ESS >= 100
+per chain, zero divergences/tree-depth hits and E-BFMI >= 0.3. These are
+screening criteria, not a certificate of inference validity. Tree-depth hits
+flag efficiency separately from divergences. Missing diagnostics require
+review. Finite intervals remain visible when sampling needs review, with
+interval_status beside each row. No flag does not establish model fit, prior
+adequacy or calibrated coverage. Inspect endpoint MCSE for the intended use;
+no universal acceptable fraction of interval width is imposed.
+
+Both formats support Rscript run.R --summarize to regenerate the five report
+files from fit.rds without compiling or sampling. Run it from this directory;
+keep model-data.rds, summarize.R and (for brms) model.R with the saved fit.
+CmdStanR/posterior or brms are needed for the respective replay, but a CmdStan
+toolchain is not. brms also regenerates parameters.rds. Draws are unchanged.
 
 model-data.rds is a base-R list containing data, design matrices, mappings and
 prior settings. levels.csv contains original Person and facet labels. Category

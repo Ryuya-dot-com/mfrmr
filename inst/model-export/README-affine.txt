@@ -40,13 +40,30 @@ regression, non-unit weights, interactions, dummy facets, post-fit shrinkage,
 testlets and random-rater models are not supported. This export does not add
 a native step-anchor fitting argument or enable anchored two-family fitting.
 
-The Stan run script saves fit.rds, predictive-draws.rds and interval/diagnostic
-summaries. Rscript run.R --summarize rebuilds those summaries without sampling.
-Equal-tail credible bounds, endpoint MCSE, R-hat and bulk/tail ESS retain their
-separate meanings. Constant draws have unavailable sampling diagnostics;
-compare them with the fixed-coordinate maps. Inspect all free coordinates,
-chain diagnostics, prior sensitivity and posterior predictive fit. A finite
-interval is not evidence of convergence or calibrated coverage.
+The summary screen and summary-decision.csv show the sampling review before
+numerical tables. sampling-review.csv records each check, its criterion and
+next action. parameter-summary.csv joins original labels to abilities, facet
+locations, step offsets and slopes, with reference/direction notes. Its
+value_role distinguishes estimated parameters, fixed anchors and values
+determined by constraints. Fixed values have no estimated SD or interval
+(NA); zero calibration uncertainty is not inferred. Internal coordinates
+remain available for diagnostic review. posterior-summary.rds retains all
+tables and interpretation notes.
+
+The screen checks at least four chains, R-hat < 1.01, bulk/tail ESS >= 100
+per chain, zero divergences/tree-depth hits and E-BFMI >= 0.3. These are
+screening criteria, not a certificate of inference validity. Tree-depth hits
+flag efficiency separately from divergences. Missing diagnostics require
+review. Finite intervals remain visible when sampling needs review, with
+interval_status beside each row. No flag does not establish model fit, prior
+adequacy or calibrated coverage. Inspect endpoint MCSE for the intended use;
+no universal acceptable fraction of interval width is imposed.
+
+Both formats support Rscript run.R --summarize to regenerate the five report
+files from fit.rds without compiling or sampling. Run it from this directory;
+keep model-data.rds, summarize.R and (for brms) model.R with the saved fit.
+CmdStanR/posterior or brms are needed for the respective replay, but a CmdStan
+toolchain is not. brms also regenerates parameters.rds. Draws are unchanged.
 
 The brms script saves fit.rds, parameters.rds and predictive-draws.rds; its
 custom log_lik(), posterior_predict() and posterior_epred() callbacks survive

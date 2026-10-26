@@ -83,19 +83,30 @@
 #' `run.R` fits the exported model and saves draws, diagnostics and replicated
 #' ratings. Run it from the bundle directory, after installing CmdStanR/CmdStan
 #' and, for the brms format, brms. Neither is required to export a bundle.
-#' For Stan bundles, `Rscript run.R --summarize` regenerates reports from
-#' `fit.rds` without compiling or sampling. `parameter-summary.csv` contains
-#' equal-tailed 95% posterior bounds, endpoint Monte Carlo SEs (MCSEs), R-hat
-#' and bulk/tail effective sample sizes for reported parameters and free
-#' coordinates. `sampler-diagnostics.csv` records chain diagnostics;
-#' `posterior-summary.rds` retains both tables and interpretation notes.
-#' Bounds remain visible when diagnostics warn. `interval_computed` indicates
-#' finite endpoints, not reliable sampling or calibrated coverage. The maximum
-#' endpoint MCSE divided by interval width measures simulation precision;
-#' no universal acceptable fraction or automatic qualification is assigned.
-#' Inspect all coordinates and chains, prior sensitivity and model fit.
-#' Constant draws have unavailable MCSE/R-hat diagnostics: verify whether the
-#' model fixes that component or sampling is stuck.
+#' Both formats support `Rscript run.R --summarize` to regenerate summaries
+#' from `fit.rds` without compiling or sampling. Keep `model-data.rds`,
+#' `summarize.R` and the brms `model.R` with the saved fit.
+#' Read `summary-decision.csv` first, then `sampling-review.csv` for the checks,
+#' criteria and next actions. `parameter-summary.csv` joins original labels to
+#' estimates, references and score-direction notes. `value_role` distinguishes
+#' estimated values, fixed anchors and constraint-determined values. Fixed
+#' values have no estimated SD or interval (`NA`); they do not establish zero
+#' external calibration uncertainty. Varying parameters retain equal-tailed
+#' 95% credible bounds, endpoint MCSE, R-hat and bulk/tail ESS, even during
+#' review, with `interval_status` beside the values. `interval_computed` means
+#' finite bounds for a varying parameter, not reliable sampling or coverage.
+#' `sampler-diagnostics.csv` contains per-chain diagnostics;
+#' `posterior-summary.rds` retains all four tables and interpretation notes.
+#'
+#' The screen checks at least four chains, R-hat below 1.01, bulk/tail ESS at
+#' least 100 per chain, zero divergences/tree-depth hits and E-BFMI at least
+#' 0.3. Missing diagnostics require review; fixed coordinates are excluded
+#' using model constraints, not sample variance. Tree-depth hits flag efficiency
+#' separately from divergences. These checks follow the
+#' [Stan diagnostic guidance](https://mc-stan.org/learn-stan/diagnostics-warnings.html)
+#' and are not a certificate of validity. Review all varying coordinates,
+#' model fit and priors. The larger endpoint MCSE divided by interval width
+#' measures simulation precision; no universal acceptable fraction is imposed.
 #' Generated brms callbacks support `log_lik()`, `posterior_predict()` and
 #' `posterior_epred()`; the last returns category probabilities.
 #'
@@ -158,14 +169,14 @@ export_mfrm_model <- function(fit, output_dir, format = c("stan", "brms"),
   templates <- c(if (isTRUE(bundle$affine)) paste0("model-affine.", if (format == "stan") "stan" else "R") else
                    if (product) "model-gmfrm.stan" else model_file,
                  paste0("run-", format, ".R"), if (isTRUE(bundle$affine)) "README-affine.txt" else
-                   if (product) "README-gmfrm.txt" else "README.txt")
+                   if (product) "README-gmfrm.txt" else "README.txt", "summarize.R")
   source_files <- file.path(template_dir, templates)
   if (!all(file.exists(source_files))) {
     stop("Model export templates are missing from this installation.", call. = FALSE)
   }
   filenames <- c("model-data.rds", "levels.csv", "categories.csv",
                  model_file, "run.R", "README.txt", if (!is.null(bundle$slope_levels)) "slope-levels.csv",
-                 if (isTRUE(bundle$affine)) "steps.csv")
+                 if (isTRUE(bundle$affine)) "steps.csv", "summarize.R")
   files <- stats::setNames(file.path(output_dir, filenames), filenames)
   if (any(dir.exists(files)) || (!overwrite && any(file.exists(files)))) {
     stop("Bundle files already exist; use a new directory or `overwrite = TRUE`.",
@@ -186,7 +197,7 @@ export_mfrm_model <- function(fit, output_dir, format = c("stan", "brms"),
     row.names = FALSE, fileEncoding = "UTF-8")
   if (isTRUE(bundle$affine)) utils::write.csv(bundle$step_levels, files[["steps.csv"]],
     row.names = FALSE, fileEncoding = "UTF-8")
-  if (!all(file.copy(source_files, files[c(4, 5, 6)], overwrite = overwrite))) {
+  if (!all(file.copy(source_files, files[c(model_file, "run.R", "README.txt", "summarize.R")], overwrite = overwrite))) {
     stop("Could not copy all model export templates.", call. = FALSE)
   }
   invisible(list(format = format, model = bundle$model,

@@ -1052,12 +1052,18 @@ reporting. Its `parameter-summary.csv` contains explicit equal-tailed 95%
 credible bounds, endpoint Monte Carlo SEs, R-hat and bulk/tail ESS for both
 reported parameters and free sampling coordinates. `sampler-diagnostics.csv`
 records each chain's divergences, tree-depth hits and E-BFMI;
-`posterior-summary.rds` retains both tables and interpretation notes.
+`posterior-summary.rds` retains these tables and interpretation notes.
+Read `summary-decision.csv` first for the sampling review and next action;
+`sampling-review.csv` records the checks and criteria. The parameter table
+joins original labels and reference/direction notes, with `value_role` and
+`interval_status` beside the numbers. Fixed values have no estimated SD or
+interval; their uncertainty fields are `NA`, not evidence of perfect precision.
 
 From the exported directory, run `Rscript run.R --summarize` to rebuild these
 reports without compiling or sampling. It replaces the report files and
 preserves the saved draws. Bounds remain visible when diagnostics warn:
-`interval_computed` means finite endpoints, not qualified inference.
+`interval_computed` means finite endpoints for a varying parameter, not
+qualified inference.
 Endpoint MCSE measures simulation error in a reported bound, whereas posterior
 SD describes model-based uncertainty. `endpoint_mcse_fraction` is the larger
 endpoint MCSE divided by interval width; its acceptable size depends on the
