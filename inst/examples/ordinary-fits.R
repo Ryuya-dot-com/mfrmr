@@ -8,14 +8,12 @@
 # saved <- ordinary_fit_examples()
 # for (name in names(saved)) saveRDS(saved[[name]], paste0(name, ".rds"), compress = "xz")
 ordinary_fit_examples <- function() {
-  make_example <- function(dataset, method, preserve = FALSE) {
+  make_example <- function(dataset, method) {
     ratings <- mfrmr::load_mfrmr_data(dataset)
     args <- list(data = ratings, person = "Person",
       facets = c("Rater", "Criterion"), score = "Score", method = method,
       model = "RSM")
     if (method == "JML") args$maxit <- 300
-    if (preserve) args <- c(args, list(rating_min = 1, rating_max = 4,
-      category_policy = "preserve"))
     fit <- do.call(mfrmr::fit_mfrm, args)
     # Constant population formulas must not retain the generation session.
     for (field in c("formula", "terms")) {
@@ -30,7 +28,6 @@ ordinary_fit_examples <- function() {
   list(
     `core-jml` = make_example("example_core", "JML"),
     `bias-jml` = make_example("example_bias", "JML"),
-    `operational-mml` = make_example("example_operational", "MML"),
-    `operational-mml-preserve` = make_example("example_operational", "MML", TRUE)
+    `operational-mml` = make_example("example_operational", "MML")
   )
 }

@@ -102,8 +102,8 @@ cells.}
 }
 
 \examples{
-toy <- load_mfrmr_data("example_bias")
-# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+# Saved synthetic JML/RSM analysis of example_bias.
+# For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "bias-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 diag <- example_fit$diagnostics

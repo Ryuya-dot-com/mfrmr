@@ -137,11 +137,18 @@ the non-ZIP artifacts, including any plot-error CSV; the returned
 library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
 
-# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
-example_fit <- readRDS(system.file("examples", "operational-mml-preserve.rds", package = "mfrmr"))
-fit <- example_fit$fit
+# Fit these ratings; replace the data-loading line for your own analysis
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1, rating_max = 4, category_policy = "preserve",
+  method = "MML",
+  model = "RSM"
+)
 
-res <- mfrm_results(fit, diagnostics = example_fit$diagnostics)
+res <- mfrm_results(fit)
 
 # Create a new temporary folder for this example's files
 # For your own analysis, use a permanent folder you can write to

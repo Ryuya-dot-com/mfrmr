@@ -170,8 +170,8 @@
 #' @seealso [mfrm_cluster_kmeans()], [mfrm_cluster_hierarchical()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' ratings <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' net <- mfrm_residual_network(fit, facet = "Criterion", missing = "complete",

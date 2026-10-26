@@ -77,6 +77,14 @@ The normal build still applies its remaining exclusions and transformations.
 This avoids copying research artifacts; it does not skip required package
 checks, examples or vignette execution.
 
+Inspect build warnings even when the command exits successfully. Before using
+an archive, verify its expected file list and source contents, then install
+the archive in a fresh library. Missing-file warnings are a failed build, not
+a usable candidate. If using an external tar program via `R_BUILD_TAR`, follow
+the [R build documentation](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/PkgUtils.html)
+and verify extraction with R's default unpacker; platform-specific extended
+attributes can make an otherwise complete archive unreadable.
+
 ## Coding guidelines
 
 - Prefer readable, explicit code over compact but opaque code.
@@ -160,7 +168,13 @@ submission-review criterion, not an automatic ten-minute process timeout.
   `inst/examples/ordinary-fits.R` gives their complete regeneration recipe.
   Each example loads its own input, so `example()` works in a fresh session
   without a previously executed example or a hidden package-wide fit cache.
-  Keep the estimation and diagnostic entry-point examples live.
+  Label these as saved synthetic analyses; do not load an unused ratings table
+  that appears to drive the analysis. Derive any needed data or labels from
+  that same saved analysis. Keep estimation, diagnostics and the primary
+  results/report/export examples live so users can replace the input data.
+  The full `NOT_CRAN=true` suite regenerates the ordinary fitted inputs and
+  compares estimates and diagnostics; ordinary checks verify reuse without
+  refitting. Update the saved inputs when their calculations change.
 - Use `example_operational` for applied tutorials, `example_core` for
   idealized fast checks, and `example_bias` only when a planted non-null
   DFF/bias signal is needed.

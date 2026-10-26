@@ -7353,11 +7353,10 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #'   `print.summary.mfrm_diagnostics()`
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
@@ -8776,14 +8775,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   `NULL` for the lightweight `"fit"` profile
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
-#' # Load the package
 #' library(mfrmr)
 #'
-#' # Load example ratings and look at the first six rows
-#' toy <- load_mfrmr_data("example_operational")
-#' head(toy)
-#'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'

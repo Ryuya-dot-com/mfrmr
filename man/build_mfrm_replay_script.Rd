@@ -178,8 +178,8 @@ scenario; its source is recorded without asserting a match to the fit.
 
 \examples{
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
-# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")

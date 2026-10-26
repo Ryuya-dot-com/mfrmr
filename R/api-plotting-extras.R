@@ -202,15 +202,14 @@ plot_threshold_ladder <- function(fit,
 #'   [build_misfit_casebook()].
 #'
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # Compare each person's Infit and Outfit with the reference value of 1
@@ -612,15 +611,14 @@ plot_person_fit <- function(fit,
 #' @concept rater severity
 #'
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # Compare signed severity estimates and their intervals
@@ -1134,8 +1132,8 @@ plot_dif_summary <- function(x,
 #' @concept visual diagnostics
 #'
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "apa_summary", draw = FALSE)

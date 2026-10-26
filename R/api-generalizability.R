@@ -272,8 +272,8 @@ print_gtheory_data_usage <- function(usage) {
 #' @seealso [mfrm_g_study()], [mfrm_d_study()],
 #'   [compute_facet_icc()], [diagnose_mfrm()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' if (requireNamespace("lme4", quietly = TRUE)) {
@@ -623,8 +623,8 @@ mfrm_generalizability <- function(fit,
 #'   [mfrm_d_study()], [evaluate_mfrm_design()],
 #'   [recommend_mfrm_design()], [plot_data()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' if (requireNamespace("lme4", quietly = TRUE)) {

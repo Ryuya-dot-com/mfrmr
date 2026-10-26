@@ -405,11 +405,10 @@ plot_component_note <- function(name, role) {
 #'
 #' @return The full reusable plot-data list, or the selected component.
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
@@ -510,11 +509,10 @@ plot_data <- function(x, component = NULL, type = NULL, ...,
 #'
 #' @return A data frame with one row per reusable plot-data component.
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
@@ -1165,15 +1163,14 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #' @seealso [diagnose_mfrm()], [rating_scale_table()], [plot(x, type = "marginal_pairwise")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # Which score categories occur more or less often than the model expects?
@@ -1410,15 +1407,14 @@ plot_marginal_fit <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [diagnose_mfrm()], [plot(x, type = "marginal_fit")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # Which pairs show more or less exact agreement than the model expects?
@@ -1657,8 +1653,8 @@ plot_marginal_pairwise <- function(x,
 #' @seealso [unexpected_response_table()], [plot(x, type = "fair_average")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit],
 #'   [plot(x, type = "qc")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
@@ -1914,15 +1910,14 @@ plot_unexpected <- function(x,
 #' @concept visual diagnostics
 #' @concept fair averages
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # How do the observed and reference-adjusted person averages compare?
@@ -2209,8 +2204,8 @@ plot_fair_average <- function(x,
 #' @concept visual diagnostics
 #' @concept displacement
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "displacement", anchored_only = FALSE, draw = FALSE)
@@ -2467,11 +2462,10 @@ plot_displacement <- function(x,
 #' @seealso [interrater_agreement_table()], [plot(x, type = "facets_chisq")][plot.mfrm_fit],
 #'   [plot(x, type = "qc")][plot.mfrm_fit], [mfrmr_visual_diagnostics]
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
@@ -2719,8 +2713,8 @@ plot_interrater_agreement <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [facets_chisq_table()], [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "facets_chisq", draw = FALSE)
@@ -2950,15 +2944,14 @@ plot_facets_chisq <- function(x,
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "fair_average")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit], [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "facets_chisq")][plot.mfrm_fit], [build_visual_summaries()]
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # Read the interpretation status before reviewing the quality-control (QC) panels
@@ -3433,15 +3426,14 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #' @seealso \code{\link{diagnose_mfrm}}, \code{\link{plot_unexpected}},
 #'   \code{\link{plot_fair_average}}
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # Compare facet estimates (horizontal axis) with Infit (vertical axis)
@@ -3738,15 +3730,14 @@ plot_bubble <- function(x,
 #'   [export_mfrm_bundle()], [mfrmr_compatibility_layer]
 #' @aliases export_mfrm
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'
-#' # Compute diagnostics once for the following checks
+#' # Use the diagnostics saved with this fit
 #' diagnostics <- example_fit$diagnostics
 #'
 #' # Use a new temporary folder for this example; choose a permanent one for your work
@@ -3939,11 +3930,10 @@ export_mfrm_tables <- function(fit,
 #'   JML section of \code{\link{fit_mfrm}}.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm_tables}}
 #' @examples
-#' # Load the package and example ratings
 #' library(mfrmr)
-#' toy <- load_mfrmr_data("example_operational")
 #'
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic MML/RSM analysis of example_operational.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #'

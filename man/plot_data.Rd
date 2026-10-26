@@ -70,11 +70,10 @@ the study. A smooth density is usually inappropriate for a few ordinal bins.
 }
 
 \examples{
-# Load the package and example ratings
 library(mfrmr)
-toy <- load_mfrmr_data("example_operational")
 
-# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+# Saved synthetic MML/RSM analysis of example_operational.
+# For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "operational-mml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 

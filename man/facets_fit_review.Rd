@@ -97,8 +97,8 @@ sparse cell; such NA-vs-finite pairs are availability differences, not
 fit differences. Both notes are repeated in the returned \code{guidance} table.
 }
 \examples{
-toy <- load_mfrmr_data("example_core")
-# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 review <- facets_fit_review(fit)

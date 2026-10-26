@@ -57,8 +57,8 @@
 #' @seealso [plot(x, type = "marginal_pairwise")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "local_dependence", draw = FALSE)
@@ -176,8 +176,8 @@ plot_local_dependence_heatmap <- function(fit,
 #'   and model-summary notes are retained alongside each plotted value.
 #' @seealso [diagnose_mfrm()], [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "reliability", draw = FALSE)
@@ -317,8 +317,8 @@ plot_reliability_snapshot <- function(fit,
 #' @seealso [plot(x, type = "guttman")][plot.mfrm_fit], [plot(x, type = "unexpected")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' p <- plot(fit, type = "residual_matrix", top_n_persons = 12, draw = FALSE)
@@ -465,8 +465,8 @@ plot_residual_matrix <- function(fit,
 #' @seealso [apply_empirical_bayes_shrinkage()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' # Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+#' # Saved synthetic JML/RSM analysis of example_core.
+#' # For your own data, fit a model first; see ?fit_mfrm.
 #' example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 #' fit <- example_fit$fit
 #' fit_eb <- apply_empirical_bayes_shrinkage(fit)

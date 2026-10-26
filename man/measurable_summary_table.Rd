@@ -93,8 +93,8 @@ and low-count flag.}
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
-# Reuse a fitted RSM model on these ratings (recipe: examples/ordinary-fits.R).
+# Saved synthetic JML/RSM analysis of example_core.
+# For your own data, fit a model first; see ?fit_mfrm.
 example_fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
 fit <- example_fit$fit
 t5 <- measurable_summary_table(fit)

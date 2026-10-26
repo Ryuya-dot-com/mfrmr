@@ -2,7 +2,7 @@ test_that("ordinary saved inputs retain their data and replay matching diagnosti
   blocked <- function(...) stop("Unexpected statistical recomputation")
   local_mocked_bindings(fit_mfrm = blocked, diagnose_mfrm = blocked,
     .package = "mfrmr")
-  for (name in c("core-jml", "bias-jml", "operational-mml", "operational-mml-preserve")) {
+  for (name in c("core-jml", "bias-jml", "operational-mml")) {
     x <- readRDS(system.file("examples", paste0(name, ".rds"),
       package = "mfrmr", mustWork = TRUE))
     before <- unserialize(serialize(x, NULL))
@@ -33,6 +33,54 @@ test_that("ordinary saved inputs retain their data and replay matching diagnosti
   sys.source(system.file("examples", "ordinary-fits.R", package = "mfrmr",
     mustWork = TRUE), envir = recipe)
   expect_true(is.function(recipe$ordinary_fit_examples))
+})
+
+test_that("ordinary saved analyses agree with fresh estimation and diagnostics", {
+  skip_on_cran()
+  recipe <- new.env(parent = baseenv())
+  sys.source(system.file("examples", "ordinary-fits.R", package = "mfrmr",
+    mustWork = TRUE), envir = recipe)
+  fresh <- recipe$ordinary_fit_examples()
+  expect_identical(names(fresh), c("core-jml", "bias-jml", "operational-mml"))
+  controls <- c("maxit", "reltol", "quad_points", "mml_integration",
+    "optimizer_requested", "mml_engine_requested")
+  # Fair-score/displacement tables rank estimates. Floating-point ties can
+  # change their row order across R versions; compare every value by identity.
+  by_key <- function(table, keys) {
+    expect_identical(anyDuplicated(table[keys]), 0L)
+    table <- table[do.call(order, unname(table[keys])), , drop = FALSE]
+    rownames(table) <- NULL
+    table
+  }
+  align_tables <- function(diagnostics) {
+    diagnostics$fair_average$raw_by_facet <- lapply(
+      diagnostics$fair_average$raw_by_facet, by_key, keys = "Level")
+    diagnostics$fair_average$by_facet <- lapply(
+      diagnostics$fair_average$by_facet, by_key, keys = "Element")
+    diagnostics$fair_average$stacked <- by_key(
+      diagnostics$fair_average$stacked, c("Facet", "Element"))
+    diagnostics$displacement$table <- by_key(
+      diagnostics$displacement$table, c("Facet", "Level"))
+    diagnostics
+  }
+  for (name in names(fresh)) {
+    saved <- readRDS(system.file("examples", paste0(name, ".rds"),
+      package = "mfrmr", mustWork = TRUE))
+    actual <- fresh[[name]]
+    expect_identical(actual$fit$prep, saved$fit$prep)
+    expect_identical(actual$fit$config$estimation_control[controls],
+      saved$fit$config$estimation_control[controls])
+    # Numerical tolerance permits floating-point variation, far below reporting
+    # precision; data, controls and inference decisions must match exactly.
+    expect_equal(actual$fit$opt$par, saved$fit$opt$par, tolerance = 1e-8)
+    expect_equal(actual$fit$facets, saved$fit$facets, tolerance = 1e-8)
+    expect_equal(actual$fit$summary$LogLik, saved$fit$summary$LogLik, tolerance = 1e-8)
+    expect_identical(actual$fit$summary$InferenceReady, saved$fit$summary$InferenceReady)
+    expect_identical(actual$fit$summary$ConvergenceSeverity,
+      saved$fit$summary$ConvergenceSeverity)
+    expect_equal(align_tables(actual$diagnostics), align_tables(saved$diagnostics),
+      tolerance = 1e-8)
+  }
 })
 
 test_that("saved measurement fits retain controls and support consumers without refitting", {
