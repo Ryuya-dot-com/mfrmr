@@ -9,30 +9,28 @@ retired plotting helpers and corrections affecting saved analyses.
 
 ## Checks
 
-Windows Server 2022 (win-builder): the preceding candidate completed on
-R-oldrelease 4.5.3 and R-release 4.6.1, each with 0 errors, 0 warnings and
-2 NOTEs. Tests, vignette rebuilding and PDF/HTML manuals passed in both.
-Installation/check times were 240/3,669 seconds on R-oldrelease and
-169/2,761 seconds on R-release.
+Windows Server 2022, R-oldrelease 4.5.3 (win-builder): the preceding candidate
+completed with 1 ERROR and 1 NOTE. Incoming URL checks passed. Installation
+and check times were 254 and 3,840 seconds.
 
-- Incoming URL checks: publisher links with verified DOIs now use those
-  DOIs. Two references without a DOI listed in PubMed retain complete
-  citations and PMIDs. The README roadmap link now uses its repository URL.
-- Example timings: 21 examples exceeded 10 seconds on R-oldrelease and 10
-  on R-release (maximum 37.1 and 26.5 seconds, respectively). Four examples
-  now reuse packaged synthetic fits with regeneration code; their interval,
-  curve and export calculations remain executable with unchanged settings.
-  Their numerical outputs were checked against the preceding examples.
+- The ERROR was an immutability test comparing serialized bytes. R 4.5 can
+  materialize deferred character names while reading a fit, changing its
+  serialized representation without changing values or attributes. The test
+  now compares against an independent object snapshot with exact equality.
+  The affected test file passes on macOS with both R 4.5.2 and R 4.6.1.
+- The NOTE concerned 22 examples exceeding 10 seconds (maximum 25.34 seconds).
+  Four examples reuse synthetic fits with regeneration code. Further changes
+  reduce repeated grouping in fixed-quadrature MML gradients without changing
+  the likelihood, integration accuracy or convergence controls. Updated
+  Windows timings and R-devel results are not yet available.
 
-macOS arm64, R 4.6.1: the preceding candidate passed a full
-`R CMD check --as-cran --timings` with 0 errors, 0 warnings and 2 NOTEs
-(a 5.007-second example and macOS `xcrun_db` temporary-file detritus).
-The revised R sources, help and rebuilt articles passed a scoped check with
-0 errors, 0 warnings and the `xcrun_db` NOTE; affected tests and examples were
-checked separately. This was not another full test run. Remote incoming and
-system-clock checks were disabled locally after DNS failures.
-
-Updated Windows/R-devel results are not yet available.
+macOS arm64, R 4.6.1: the updated implementation passed a full
+`R CMD check --as-cran --timings` with 0 errors, 0 warnings and 1 NOTE for
+macOS `xcrun_db` temporary-file detritus. The command took 551 seconds,
+including installation. Examples, tests, vignette rebuilding and PDF/HTML
+manuals passed. The subsequent source change is limited to the portability
+test described above, checked separately on both R versions. Remote incoming
+and system-clock checks were disabled locally after DNS failures.
 
 ## Reverse dependencies
 

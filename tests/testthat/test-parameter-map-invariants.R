@@ -126,3 +126,21 @@ test_that("free-coordinate maps preserve constrained logits and their derivative
     expect_error(expand_params(par[-1L], sizes, cfg), "free-coordinate blocks")
   }
 })
+
+test_that("marginal score aggregation preserves weighted constrained derivatives", {
+  for (model in c("RSM", "PCM", "GPCM")) {
+    b <- .map_setup(model, "MML", constrained = TRUE, population = TRUE)
+    idx <- b$idx
+    idx$weight <- rep(c(0, .25, 1, 2.5), length.out = length(idx$score_k))
+    par <- .2 * sin(seq_len(sum(unlist(b$sizes))))
+    quad <- gauss_hermite_normal(21L)
+    objective <- function(x) mfrm_loglik_mml(x, idx, b$config, b$sizes, quad)
+    numerical <- vapply(seq_along(par), function(j) {
+      delta <- par * 0
+      delta[j] <- 1e-5
+      (objective(par + delta) - objective(par - delta)) / 2e-5
+    }, numeric(1))
+    analytic <- mfrm_grad_mml(par, idx, b$config, b$sizes, quad)
+    expect_equal(analytic, numerical, tolerance = 2e-7, info = model)
+  }
+})

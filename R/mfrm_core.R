@@ -2522,12 +2522,9 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
   }
   grad_facets_exp <- lapply(config$facet_names, function(f) numeric(length(params$facets[[f]])))
   names(grad_facets_exp) <- config$facet_names
-  grad_interaction_free <- rep(
-    0,
-    sum(vapply(config$interaction_specs %||% list(), function(spec) {
-      as.integer(spec$n_params %||% 0L)
-    }, integer(1)))
-  )
+  # Facet and interaction projections are linear and independent of the node.
+  # Accumulate observation scores first, then group/project them once.
+  marginal_residual <- numeric(n)
 
   if (config$model == "RSM") {
     k_cat <- ncol(logprob_bundle$prob_list[[1]])
@@ -2554,14 +2551,7 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
       obs_post_q <- obs_posterior[, q]
       w_residual <- residual_q * obs_post_q
 
-      for (facet in config$facet_names) {
-        sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
-        rs <- rowsum(matrix(sign_f * w_residual, ncol = 1), idx$facets[[facet]], reorder = FALSE)
-        f_ids <- as.integer(rownames(rs))
-        grad_facets_exp[[facet]][f_ids] <- grad_facets_exp[[facet]][f_ids] + as.vector(rs)
-      }
-      grad_interaction_free <- grad_interaction_free +
-        compute_interaction_gradient_free(w_residual, idx, config)
+      marginal_residual <- marginal_residual + w_residual
 
       P_geq <- compute_P_geq(probs_q)
       step_resid <- (P_geq - I_geq) * obs_post_q
@@ -2581,7 +2571,9 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
     slope_obs <- params$slopes[slope_idx_int]
     I_geq <- outer(score_k, seq_len(n_steps), ">=") * 1.0
     grad_step_mat <- matrix(0, n_criteria, n_steps)
+    marginal_step_residual <- matrix(0, n, n_steps)
     grad_log_slope_exp <- numeric(length(params$slopes))
+    marginal_slope_score <- numeric(n)
     obs_idx <- cbind(seq_len(n), score_k + 1L)
 
     for (q in seq_len(n_nodes)) {
@@ -2603,41 +2595,34 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
       obs_post_q <- obs_posterior[, q]
       w_residual <- residual_q * obs_post_q
 
-      for (facet in config$facet_names) {
-        sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
-        rs <- rowsum(matrix(sign_f * w_residual, ncol = 1), idx$facets[[facet]], reorder = FALSE)
-        f_ids <- as.integer(rownames(rs))
-        grad_facets_exp[[facet]][f_ids] <- grad_facets_exp[[facet]][f_ids] + as.vector(rs)
-      }
-      grad_interaction_free <- grad_interaction_free +
-        compute_interaction_gradient_free(w_residual, idx, config)
+      marginal_residual <- marginal_residual + w_residual
 
       p_geq_q <- if (is.null(logprob_bundle$p_geq_list)) compute_P_geq(probs_q) else
         logprob_bundle$p_geq_list[[q]]
       step_resid <- (p_geq_q - I_geq) * slope_obs * obs_post_q
       if (!is.null(weight)) step_resid <- step_resid * weight
-      rs_step <- rowsum(step_resid, idx$step_idx, reorder = FALSE)
-      rs_ids <- as.integer(rownames(rs_step))
-      grad_step_mat[rs_ids, ] <- grad_step_mat[rs_ids, ] + rs_step
+      marginal_step_residual <- marginal_step_residual + step_resid
 
       obs_linear <- linear_part_q[obs_idx]
       slope_score <- slope_obs * rowSums(probs_q * (obs_linear - linear_part_q)) * obs_post_q
       if (!is.null(weight)) slope_score <- slope_score * weight
-      rs_slope <- rowsum(matrix(slope_score, ncol = 1), slope_idx_int, reorder = FALSE)
-      slope_ids <- as.integer(rownames(rs_slope))
-      grad_log_slope_exp[slope_ids] <- grad_log_slope_exp[slope_ids] + as.vector(rs_slope)
+      marginal_slope_score <- marginal_slope_score + slope_score
     }
 
+    rs_step <- rowsum(marginal_step_residual, idx$step_idx, reorder = FALSE)
+    grad_step_mat[as.integer(rownames(rs_step)), ] <- rs_step
     grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
+    rs_slope <- rowsum(matrix(marginal_slope_score, ncol = 1), slope_idx_int, reorder = FALSE)
+    grad_log_slope_exp[as.integer(rownames(rs_slope))] <- as.vector(rs_slope)
     grad_log_slope_free <- project_gpcm_log_slope_gradient(grad_log_slope_exp, config$gpcm_spec)
   } else {
     k_cat <- ncol(logprob_bundle$prob_list[[1]])
     n_steps <- k_cat - 1
     n_criteria <- nrow(params$steps_mat)
     I_geq <- outer(score_k, seq_len(n_steps), ">=") * 1.0
-    step_idx_int <- idx$step_idx
     k_vals <- 0:(k_cat - 1)
     grad_step_mat <- matrix(0, n_criteria, n_steps)
+    marginal_step_residual <- matrix(0, n, n_steps)
 
     for (q in seq_len(n_nodes)) {
       probs_q <- logprob_bundle$prob_list[[q]]
@@ -2657,26 +2642,27 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
       obs_post_q <- obs_posterior[, q]
       w_residual <- residual_q * obs_post_q
 
-      for (facet in config$facet_names) {
-        sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
-        rs <- rowsum(matrix(sign_f * w_residual, ncol = 1), idx$facets[[facet]], reorder = FALSE)
-        f_ids <- as.integer(rownames(rs))
-        grad_facets_exp[[facet]][f_ids] <- grad_facets_exp[[facet]][f_ids] + as.vector(rs)
-      }
-      grad_interaction_free <- grad_interaction_free +
-        compute_interaction_gradient_free(w_residual, idx, config)
+      marginal_residual <- marginal_residual + w_residual
 
       P_geq <- compute_P_geq(probs_q)
       step_resid <- (P_geq - I_geq) * obs_post_q
       if (!is.null(weight)) step_resid <- step_resid * weight
-      rs_step <- rowsum(step_resid, step_idx_int, reorder = FALSE)
-      rs_ids <- as.integer(rownames(rs_step))
-      grad_step_mat[rs_ids, ] <- grad_step_mat[rs_ids, ] + rs_step
+      marginal_step_residual <- marginal_step_residual + step_resid
     }
 
+    rs_step <- rowsum(marginal_step_residual, idx$step_idx, reorder = FALSE)
+    grad_step_mat[as.integer(rownames(rs_step)), ] <- rs_step
     grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
     grad_log_slope_free <- numeric(0)
   }
+
+  for (facet in config$facet_names) {
+    sign_f <- if (!is.null(config$facet_signs[[facet]])) config$facet_signs[[facet]] else -1
+    rs <- rowsum(matrix(sign_f * marginal_residual, ncol = 1), idx$facets[[facet]], reorder = FALSE)
+    f_ids <- as.integer(rownames(rs))
+    grad_facets_exp[[facet]][f_ids] <- as.vector(rs)
+  }
+  grad_interaction_free <- compute_interaction_gradient_free(marginal_residual, idx, config)
 
   # Project facet gradients through constraints
   grad_facet_free <- unlist(lapply(config$facet_names, function(f) {

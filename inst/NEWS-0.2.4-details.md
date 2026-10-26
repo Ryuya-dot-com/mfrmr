@@ -4,6 +4,13 @@ This per-function record complements the concise release highlights in NEWS.
 For saved analyses, start with `help("mfrmr_workflow_methods")`; for reporting,
 use `vignette("mfrmr-reporting-and-apa")`.
 
+Fixed-quadrature MML fitting and observed-information calculations now aggregate
+observation scores before projecting them onto facet, interaction, step and
+slope parameters. This avoids repeated grouping at each integration point in
+RSM, PCM and single-family GPCM, with the same likelihood, quadrature and
+convergence settings. Floating-point summation order can differ; this does not
+extend the supported models or their inference guarantees.
+
 ## Updating saved analyses
 
 Keep the original objects and settings. Use the affected step below and the

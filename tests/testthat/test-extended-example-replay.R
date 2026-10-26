@@ -1,7 +1,9 @@
 test_that("saved measurement fits retain controls and support consumers without refitting", {
   x <- readRDS(system.file("examples", "measurement-fits.rds",
     package = "mfrmr", mustWork = TRUE))
-  before <- serialize(x, NULL)
+  # Independent snapshot: R 4.5 may materialize deferred character names while
+  # reading a fit. Byte serialization can change without any value/attribute change.
+  before <- unserialize(serialize(x, NULL))
   expect_equal(vapply(x, function(f) f$config$estimation_control$quad_points,
     numeric(1)), c(gpcm = 61, conquest = 31, conquest_quick = 7))
   expect_equal(x$gpcm$config$slope_facet, "Rater")
@@ -29,7 +31,7 @@ test_that("saved measurement fits retain controls and support consumers without 
   expect_equal(build_conquest_overlap_bundle(legacy)$summary$MfrmrQuadraturePoints, 31)
   legacy$config$quad_points <- NULL
   expect_error(build_conquest_overlap_bundle(legacy), "quadrature-point count is unavailable")
-  expect_identical(serialize(x, NULL), before)
+  expect_identical(x, before)
 })
 
 test_that("packaged extended examples are coherent and replay without recomputation", {
