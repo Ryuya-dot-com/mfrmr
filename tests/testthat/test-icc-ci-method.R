@@ -84,7 +84,7 @@ test_that("bootstrap matches independently calculated joint variance ratios", {
 }
 
 test_that("an unavailable draw withholds intervals and retains lme4 error messages", {
-  testthat::local_mocked_bindings(bootMer = function(...) {
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(...) {
     b <- .icc_boot_result(...)
     b$t[2, ] <- NA_real_
     attr(b, "bootFail") <- 1L
@@ -92,7 +92,7 @@ test_that("an unavailable draw withholds intervals and retains lme4 error messag
     attr(b, "boot.all.msgs") <- list(`factory-error` = table("refit failed"))
     warning("some bootstrap runs failed (1/5)")
     b
-  }, .package = "lme4")
+  }, .package = "mfrmr")
   x <- .icc_call(ci_method = "boot", ci_boot_reps = 5)
   expect_true(all(is.na(x$ICC_CI_Lower) & is.na(x$ICC_CI_Upper)))
   expect_true(all(x$ICC_CI_Status == "Incomplete bootstrap"))
@@ -109,11 +109,11 @@ test_that("an unavailable draw withholds intervals and retains lme4 error messag
 })
 
 test_that("nonconverged draws remain visible but withhold intervals", {
-  testthat::local_mocked_bindings(bootMer = function(...) {
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(...) {
     b <- .icc_boot_result(...)
     b$t[2, ncol(b$t) - 1L] <- 0
     b
-  }, .package = "lme4")
+  }, .package = "mfrmr")
   x <- .icc_call(ci_method = "boot", ci_boot_reps = 5)
   expect_true(all(x$ICC_CI_NReps == 4))
   expect_true(all(is.finite(attr(x, "icc_ci")$bootstrap$draws)))
@@ -121,14 +121,14 @@ test_that("nonconverged draws remain visible but withhold intervals", {
 })
 
 test_that("converged boundary draws enter percentile intervals", {
-  testthat::local_mocked_bindings(bootMer = function(x, FUN, nsim, ...) {
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(x, FUN, nsim, ...) {
     b <- .icc_boot_result(x, FUN, nsim)
     # Two full decompositions, with a zero component in the first draw.
     b$t[, 1:4] <- rbind(c(0, .2, .3, .5), c(.4, .1, .1, .4))
     b$t[, 5:6] <- cbind(c(1, 1), c(1, 0))
     attr(b, "boot.all.msgs") <- list(`factory-message` = table("boundary (singular) fit"))
     b
-  }, .package = "lme4")
+  }, .package = "mfrmr")
   x <- .icc_call(ci_method = "boot", ci_boot_reps = 2, ci_level = .8)
   expect_true(all(x$ICC_CI_Status == "Available"))
   expect_equal(x$ICC_CI_Lower, c(.04, .11, .12, .41))
@@ -137,11 +137,11 @@ test_that("converged boundary draws enter percentile intervals", {
 })
 
 test_that("warnings and aborted bootstraps remain visible without interval claims", {
-  testthat::local_mocked_bindings(bootMer = function(...) {
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(...) {
     b <- .icc_boot_result(...)
     attr(b, "boot.all.msgs") <- list(`factory-warning` = table("Hessian warning"))
     b
-  }, .package = "lme4")
+  }, .package = "mfrmr")
   x <- .icc_call(ci_method = "boot", ci_boot_reps = 5)
   expect_true(all(x$ICC_CI_Status == "Bootstrap warnings require review"))
   expect_true(all(x$ICC_CI_NReps == 5 & is.na(x$ICC_CI_Lower)))
@@ -150,8 +150,8 @@ test_that("warnings and aborted bootstraps remain visible without interval claim
 })
 
 test_that("an aborted bootstrap reports unknown replicate counts and its error", {
-  testthat::local_mocked_bindings(bootMer = function(...) stop("simulation failed"),
-                                .package = "lme4")
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(...) stop("simulation failed"),
+                                .package = "mfrmr")
   expect_message(x <- .icc_call(ci_method = "boot", ci_boot_reps = 5), "simulation failed")
   expect_true(all(x$ICC_CI_Status == "Bootstrap failed"))
   expect_true(all(x$ICC_CI_NRequested == 5))
@@ -162,11 +162,11 @@ test_that("an aborted bootstrap reports unknown replicate counts and its error",
 
 test_that("original convergence diagnostics stop interval computation", {
   original_lmer <- lme4::lmer
-  testthat::local_mocked_bindings(lmer = function(...) {
+  testthat::local_mocked_bindings(.mfrm_icc_lmer = function(...) {
     f <- original_lmer(...)
     f@optinfo$conv$lme4 <- list(code = -1L, messages = "gradient failure")
     f
-  }, bootMer = function(...) stop("must not run"), .package = "lme4")
+  }, .mfrm_boot_mer = function(...) stop("must not run"), .package = "mfrmr")
   x <- .icc_call(ci_method = "boot", ci_boot_reps = 5)
   expect_true(all(x$ICC_CI_Status == "Original fit requires review"))
   expect_true(all(x$ICC_CI_NReps == 0 & x$ICC_CI_NUnavailable == 5))
@@ -175,7 +175,7 @@ test_that("original convergence diagnostics stop interval computation", {
 })
 
 test_that("hierarchical wrapper retains CI results and saved intervals require rerunning", {
-  testthat::local_mocked_bindings(bootMer = .icc_boot_result, .package = "lme4")
+  testthat::local_mocked_bindings(.mfrm_boot_mer = .icc_boot_result, .package = "mfrmr")
   h <- analyze_hierarchical_structure(.icc_data, c("Rater", "Criterion"),
                                       ci_method = "boot", ci_boot_reps = 5,
                                       igraph_layout = FALSE)
@@ -187,15 +187,41 @@ test_that("hierarchical wrapper retains CI results and saved intervals require r
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_warning(plot(h, type = "icc"))
-  # Test the graphic's actual annotations without generating an extra artifact.
+  # Keep annotations out of the figure and available in the returned notes.
   title <- NULL
   testthat::local_mocked_bindings(barplot = function(height, main, ...) {
     title <<- main
     graphics::plot.new()
     seq_along(height)
-  }, arrows = function(...) NULL, .package = "graphics")
-  expect_no_error(plot(h, type = "icc"))
-  expect_match(title, "95% parametric bootstrap CI")
+  }, arrows = function(...) NULL, .package = "mfrmr")
+  before <- h
+  expect_no_error(p <- plot(h, type = "icc"))
+  expect_identical(title, "")
+  expect_identical(h, before)
+  expect_identical(p$icc, h$icc)
+  expect_match(plot_data(p, "notes")$Text, "95% parametric bootstrap CI")
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path), add = TRUE)
+  saveRDS(p, path)
+  expect_identical(plot_data(readRDS(path), "notes"), plot_data(p, "notes"))
+  if (requireNamespace("callr", quietly = TRUE)) {
+    # A source-loaded test must not reopen its result with an older installed release.
+    source_path <- getNamespaceInfo(asNamespace("mfrmr"), "path")
+    if (!file.exists(file.path(source_path, "R", "api-hierarchical-audit.R"))) source_path <- NULL
+    reopened <- callr::r(function(file, source_path) {
+      if (!is.null(source_path)) pkgload::load_all(source_path, quiet = TRUE)
+      mfrmr::plot_data(readRDS(file), "notes")
+    }, args = list(path, source_path), libpath = .libPaths())
+    expect_identical(reopened, plot_data(p, "notes"))
+  }
+  expect_no_error(crossed <- plot(p, type = "crosstab"))
+  expect_null(attr(crossed, "mfrmr_notes"))
+  partial <- h
+  partial$icc$ICC_CI_Lower[1] <- partial$icc$ICC_CI_Upper[1] <- NA_real_
+  partial$icc$ICC_CI_Status[1] <- "Incomplete bootstrap"
+  expect_no_error(p <- plot(partial, type = "icc"))
+  expect_match(plot_data(p, "notes")$Text, "95% parametric bootstrap CI")
+  expect_match(plot_data(p, "notes")$Text, "Intervals unavailable: Incomplete bootstrap")
   for (method in c("profile", "boot")) {
     old <- h$icc
     old$ICC_CI_Method <- method
@@ -210,16 +236,17 @@ test_that("hierarchical wrapper retains CI results and saved intervals require r
   h$icc <- .icc_call(ci_method = "boot", ci_boot_reps = 5)
   h$icc$ICC_CI_Lower <- h$icc$ICC_CI_Upper <- NA_real_
   h$icc$ICC_CI_Status <- "Incomplete bootstrap"
-  expect_no_error(plot(h, type = "icc"))
-  expect_match(title, "Intervals unavailable: Incomplete bootstrap")
+  expect_no_error(p <- plot(h, type = "icc"))
+  expect_identical(title, "")
+  expect_match(plot_data(p, "notes")$Text, "Intervals unavailable: Incomplete bootstrap")
 })
 
 test_that("constant-response bootstrap refits cannot contribute numerical variance residue", {
-  testthat::local_mocked_bindings(bootMer = function(x, FUN, nsim, ...) {
+  testthat::local_mocked_bindings(.mfrm_boot_mer = function(x, FUN, nsim, ...) {
     constant <- suppressMessages(suppressWarnings(lme4::refit(x, rep(5, stats::nobs(x)))))
     draw <- FUN(constant)
     list(t = matrix(rep(draw, each = nsim), nrow = nsim))
-  }, .package = "lme4")
+  }, .package = "mfrmr")
   x <- .icc_call(ci_method = "boot", ci_boot_reps = 2)
   expect_true(all(x$ICC_CI_Status == "Incomplete bootstrap"))
   expect_true(all(x$ICC_CI_NReps == 0 & x$ICC_CI_NUnavailable == 2))

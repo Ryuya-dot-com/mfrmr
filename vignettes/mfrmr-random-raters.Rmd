@@ -42,12 +42,29 @@ Install the optional `RTMB` package (version 2.0 or later) to fit this model and
 to score responses and compute profile intervals. Saved summaries, plots and point predictions do
 not require a live optimizer. The examples below run when RTMB is available.
 
-```{r fit}
+```{r data}
 ratings <- load_mfrmr_data("example_core")
+```
+
+The next call estimates the model. The rendered tutorial uses the packaged
+synthetic calibration, Person scores and bootstrap draws for these data and
+settings, so rebuilding the article does not repeat those long calculations.
+The estimation calls remain below for recomputation. A complete regeneration
+recipe is available at
+`system.file("examples", "extended-models.R", package = "mfrmr")`.
+Reading saved output is not a new estimation or bootstrap validation.
+
+```{r fit-recipe, eval=FALSE}
 random_fit <- fit_mfrm_random_rater(
   ratings, person = "Person", rater = "Rater", score = "Score",
   facets = "Criterion", score_levels = 1:4, quad_points = 121
 )
+```
+
+```{r fit}
+saved_example <- readRDS(system.file("examples", "extended-models.rds",
+                                      package = "mfrmr", mustWork = TRUE))$random_rater
+random_fit <- saved_example$fit
 random_fit$checks
 summary(random_fit)$data_usage
 ```
@@ -439,8 +456,22 @@ cutoff is conservative under the standard single-variance boundary conditions
 ([Self and Liang, 1987](https://doi.org/10.1080/01621459.1987.10478472)). Those
 conditions do not provide a finite-sample or arbitrary-design guarantee.
 Failed profile checks stop the calculation instead of manufacturing limits;
-the error's `profile` field retains the numerical evaluations when a numerical
-check fails.
+the error's `profile` field retains the numerical evaluations and reasons.
+The profile table includes `LR`, the twice-log-likelihood loss from the source,
+and `InformationPositive`. When ability SD is known, the nuisance curvature
+is checked at both integration orders; `Detail` explains a failed check.
+Every nonzero endpoint must attain the requested likelihood-ratio cutoff.
+A search that cannot resolve the cutoff numerically returns an error, not
+coincident bounds suggesting certainty. Such an error does not establish that
+the statistical interval is absent.
+
+These are local numerical checks, not a proof of a global optimum or a search
+for every disconnected likelihood-ratio region. More ratings from the same
+small panel can improve estimates of those raters but do not add independent
+rater-population draws. Even perfect knowledge of a fixed panel's effects
+would leave population-SD uncertainty. Neither a large Person count nor
+successful numerical checks establish the asymptotic reference distribution
+for this shared-rater design.
 
 `rater_sd = 0` has a different meaning: it **fixes a known zero variance** and
 fits that submodel. Do not choose it merely because the estimated variance is
@@ -468,11 +499,19 @@ mixed-model prediction research ([Chatterjee, Lahiri and Li, 2008](https://doi.o
 their Gaussian linear-model accuracy result does not establish accuracy for
 this ordinal crossed-rater model.
 
-```{r bootstrap-intervals}
+```{r bootstrap-recipe, eval=FALSE}
 # A small run checks the workflow; 19 draws cannot stabilize 2.5% tails.
 bootstrap_intervals <- mfrm_random_rater_intervals(
   random_fit, nsim = 19, seed = 923701
 )
+```
+
+The following summaries reuse all 19 saved draws, including their original
+failure accounting. Changing the confidence level reuses those draws.
+
+```{r bootstrap-intervals}
+bootstrap_intervals <- saved_example$intervals
+stopifnot(identical(bootstrap_intervals$source, random_fit))
 bootstrap_summary <- summary(bootstrap_intervals)
 bootstrap_summary$trials
 bootstrap_summary$availability
@@ -601,10 +640,20 @@ below also allows a different complete scoring table. Both estimate abilities
 from responses. `predict()` answers a different question: response probabilities
 at ability values you supply.
 
-```{r person-scoring}
+```{r person-selection}
 # Keep the complete source roster; request only these output rows.
 selected_persons <- as.character(unique(ratings$Person)[1:2])
+```
+
+```{r person-scoring-recipe, eval=FALSE}
 person_scores <- score_mfrm_random_rater(random_fit, persons = selected_persons)
+```
+
+For the displayed results, reuse the saved scores for these same two Persons:
+
+```{r person-scoring}
+person_scores <- saved_example$scores
+stopifnot(identical(person_scores$table$Person, selected_persons))
 person_scores$table
 summary(person_scores)$data_usage
 ```
@@ -642,6 +691,14 @@ normal populations; fixed-facet levels must be known. To update existing
 responses, replace them explicitly and include each intended rating event
 once. Restricting the roster to two Persons generally differs from requesting
 two outputs while retaining everybody's responses.
+
+An existing rater ID in `newdata` does **not** import that rater's saved
+conditional distribution. With a new-batch-only table, the rater information
+comes from that batch and the fitted population parameters. If earlier
+responses should also inform scoring, assemble the complete table explicitly,
+including each intended event once. This differs from
+`predict(random_fit, ..., rater = "observed")`, which uses the calibration
+responses' rater distribution at ability values you supply.
 
 Missing assigned scores require `missing = "omit"`. An entirely unobserved
 Person then retains a `prior_only` row with the population distribution, not a
@@ -688,6 +745,10 @@ population and assignment assumptions still need substantive justification.
 Specify abilities in logits on the fitted scale (mean zero, Rasch slope one).
 An ability of one is one logit, not one population SD. This API does not
 estimate abilities from new response data.
+
+A score column in the prediction table is not used to update the model or
+score abilities. Choose `score_mfrm_random_rater()` when the input is observed
+responses and the desired output is ability estimates.
 
 ```{r predictions}
 observed <- data.frame(

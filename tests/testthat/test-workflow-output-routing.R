@@ -34,8 +34,8 @@ test_that("D-study conversion keeps both panels and availability with explicit s
   d <- expand.grid(Person = paste0("P",1:8), Rater = paste0("R",1:3), Task = paste0("T",1:2))
   d$Score <- withr::with_seed(264, rnorm(8)[match(d$Person,unique(d$Person))] +
     rnorm(3)[match(d$Rater,unique(d$Rater))] + rnorm(nrow(d)))
-  g <- mfrm_multivariate_gstudy(d,"Score")
-  plans <- mfrm_multivariate_d_study(g,data.frame(Raters=c(1,2,3),Tasks=2))
+  g <- mfrm_g_study(d,"Score")
+  plans <- mfrm_d_study(g,data.frame(Raters=c(1,2,3),Tasks=2))
   for (type in c("coefficients", "sem")) {
     payload <- plot(plans,type=type,x_var="Raters",draw=FALSE)
     base <- as_ggplot(payload)
@@ -67,7 +67,7 @@ test_that("the output guide connects dedicated analysis families without claimin
   }
   expect_match(mfrmr_output_guide("features")$MainFunction,"mfrm_pca",fixed=TRUE)
   expect_match(mfrmr_output_guide("imputation")$MainFunction,"pool_mfrm_imputed",fixed=TRUE)
-  expect_match(mfrmr_output_guide("gtheory")$MainFunction,"mfrm_multivariate_d_study",fixed=TRUE)
+  expect_match(mfrmr_output_guide("gtheory")$MainFunction,"mfrm_d_study()",fixed=TRUE)
   expect_false(any(mfrmr_output_guide("gpcm")$Scope %in% c("features","gtheory")))
   expect_equal(nrow(mfrmr_output_guide("beginner")),6)
 })
@@ -87,26 +87,23 @@ test_that("PCA grouped scores and scree views retain non-colour distinctions", {
     expect_identical(payload$table$PC1,pca$scores$PC1)
     expect_identical(payload$table$PC2,pca$scores$PC2)
   }
-  # Observe registered S3 methods so earlier generic dispatch cannot bypass
-  # the spy. Omitted scree points must remain open and match the legend.
+  # Observe only mfrmr's graphics imports; preserve the standard S3 registry.
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(),add=TRUE)
   plots <- points <- legends <- list()
-  original_plot <- getS3method("plot", "default")
-  original_points <- getS3method("points", "default")
-  withr::defer(registerS3method("plot", "default", original_plot,
-    envir=asNamespace("base")))
-  withr::defer(registerS3method("points", "default", original_points,
-    envir=asNamespace("graphics")))
-  registerS3method("plot", "default", function(...) {
-    plots[[length(plots)+1L]] <<- list(...); original_plot(...)
-  }, envir=asNamespace("base"))
-  registerS3method("points", "default", function(...) {
-    points[[length(points)+1L]] <<- list(...); original_points(...)
-  }, envir=asNamespace("graphics"))
+  local_mocked_bindings(
+    plot = function(...) {
+      args <- list(...)
+      if (length(args) && is.numeric(args[[1]])) plots[[length(plots)+1L]] <<- args
+      graphics::plot(...)
+    },
+    points = function(...) {
+      points[[length(points)+1L]] <<- list(...)
+      graphics::points(...)
+    }, .package = "mfrmr")
   original_legend <- graphics::legend
   local_mocked_bindings(
     legend=function(...) {legends[[length(legends)+1L]] <<- list(...); original_legend(...)},
-    .package="graphics")
+    .package="mfrmr")
   drawn <- plot(pca,type="scores",groups=groups,preset="monochrome",labels=FALSE)
   expect_equal(plots[[1]]$pch,drawn$data$encoding$Shape[match(drawn$data$table$Cluster,drawn$data$encoding$Cluster)])
   expect_identical(legends[[1]]$pch,drawn$data$encoding$Shape)

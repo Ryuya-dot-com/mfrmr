@@ -28,7 +28,7 @@
 #' @export
 plot.mfrm_response_diagnostics <- function(x, facet = NULL, style = c("paired", "scatter"),
     draw = TRUE, palette = c("accessible", "mono"), title = NULL, caption = NULL,
-    show_title = TRUE, show_notes = TRUE, show_labels = TRUE, text_scale = 1,
+    show_title = FALSE, show_notes = FALSE, show_labels = TRUE, text_scale = 1,
     point_size = 2.5, ...) {
   rlang::check_dots_empty()
   style <- match.arg(style); palette <- match.arg(palette)
@@ -71,26 +71,26 @@ mfrm_draw_response_diagnostics <- function(payload) {
   main <- if (opt$show_title) payload$title else ""
   if (opt$style == "paired") {
     pos <- rev(seq_len(nrow(tab)))
-    graphics::plot(NA_real_, xlim = opt$limits, ylim = c(.5, nrow(tab) + .5),
+    plot(NA_real_, xlim = opt$limits, ylim = c(.5, nrow(tab) + .5),
       xlab = "Descriptive mean square", ylab = "", yaxt = "n", main = main)
-    if (opt$show_labels) graphics::axis(2, at = pos, labels = tab$Level, las = 1)
-    graphics::segments(tab$Infit, pos, tab$Outfit, pos, col = "grey65")
-    graphics::points(tab$Infit, pos, pch = 16, col = colour[1], cex = opt$point_size / 2.5)
-    graphics::points(tab$Outfit, pos, pch = 17, col = colour[2], cex = opt$point_size / 2.5)
-    graphics::legend("topright", c("Infit", "Outfit"), pch = c(16, 17), col = colour, bty = "n", cex = .8)
+    if (opt$show_labels) axis(2, at = pos, labels = tab$Level, las = 1)
+    segments(tab$Infit, pos, tab$Outfit, pos, col = "grey65")
+    points(tab$Infit, pos, pch = 16, col = colour[1], cex = opt$point_size / 2.5)
+    points(tab$Outfit, pos, pch = 17, col = colour[2], cex = opt$point_size / 2.5)
+    legend("topright", c("Infit", "Outfit"), pch = c(16, 17), col = colour, bty = "n", cex = .8)
   } else {
-    graphics::plot(tab$Infit, tab$Outfit, xlim = opt$limits, ylim = opt$limits,
+    plot(tab$Infit, tab$Outfit, xlim = opt$limits, ylim = opt$limits,
       xlab = "Descriptive Infit", ylab = "Descriptive Outfit", main = main,
       pch = 16, col = colour[1], cex = opt$point_size / 2.5)
-    if (opt$show_labels) graphics::text(tab$Infit, tab$Outfit, labels = tab$Level, pos = 3, cex = .8)
+    if (opt$show_labels) text(tab$Infit, tab$Outfit, labels = tab$Level, pos = 3, cex = .8)
   }
   shown <- if (opt$style=="paired") is.finite(tab$Infit) | is.finite(tab$Outfit) else
     is.finite(tab$Infit) & is.finite(tab$Outfit)
-  if (!any(shown)) graphics::text(mean(opt$limits),
+  if (!any(shown)) text(mean(opt$limits),
     if (opt$style == "paired") (nrow(tab) + 1) / 2 else mean(opt$limits), "No available summaries")
   if (opt$show_notes) {
     lines <- unlist(lapply(strsplit(payload$caption, "\n", fixed = TRUE)[[1L]], strwrap, width = 100))
-    for (i in seq_along(lines)) graphics::mtext(lines[i], side = 1, line = 4 + (i - 1) * .85, adj = 0, cex = .7)
+    for (i in seq_along(lines)) mtext(lines[i], side = 1, line = 4 + (i - 1) * .85, adj = 0, cex = .7)
   }
   invisible(payload)
 }

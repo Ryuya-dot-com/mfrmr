@@ -18,6 +18,7 @@
   main = NULL,
   palette = NULL,
   preset = c("standard", "publication", "compact", "monochrome"),
+  reference = NULL,
   ...
 )
 }
@@ -59,6 +60,10 @@ or add panels when they vary; they cannot be silently averaged or overlaid.}
 \item{preset}{Plot style: \code{"standard"}, \code{"publication"}, \code{"compact"}, or
 \code{"monochrome"}.}
 
+\item{reference}{Optional distinct finite numeric reference values for curves,
+between 0 and 1 for coefficients or nonnegative for error variance.
+\code{NULL} draws no guides. Not supported for surface plots.}
+
 \item{...}{Reserved for method compatibility.}
 }
 \value{
@@ -77,8 +82,10 @@ model and residual assumption, not proven pass/fail accuracy.
 Points represent requested scenarios; connecting lines and
 contours are visual guides. Missing estimates remain missing and break
 curves. If none are available, inspect the D-study table and source
-variance components. Coefficient curves show 0.70 and 0.80 reference
-lines; these are not universal acceptance criteria.
+variance components. No reference lines are drawn by default. Specify
+\code{reference = c(0.70, 0.80)} to reproduce the earlier coefficient guides.
+User-chosen guides are not universal acceptance criteria or confidence
+bounds; their values and interpretation remain in the returned plot data.
 Heatmaps include a numeric color key; exact values remain in the table.
 
 The main-effects G-study combines unmodeled interactions in its residual.
@@ -86,7 +93,7 @@ Different residual-scaling curves describe assumptions, not confidence
 bounds. All projections hold estimated components fixed. Check source
 fit warnings before interpreting even large coefficients. For supported
 designs with separately estimated interactions, including a single score,
-use \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} and \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}.
+use \code{\link[=mfrm_g_study]{mfrm_g_study()}} and \code{\link[=mfrm_d_study]{mfrm_d_study()}}.
 }
 \section{Session plot defaults}{
 

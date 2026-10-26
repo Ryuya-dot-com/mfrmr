@@ -61,7 +61,7 @@ test_that("D-study curves keep every condition fixed and surfaces refuse mixed c
     args <- list(...)
     if (length(args) >= 3L) labels <<- c(labels, as.character(args[[3L]]))
     original_text(...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   expect_no_warning(plot(partial, type = "contour", panel_by = "n_Occasion"))
   expect_true(any(grepl("Estimates unavailable", labels, fixed = TRUE)))
   expect_false(any(grepl("constant surface", labels, fixed = TRUE)))
@@ -71,8 +71,33 @@ test_that("D-study curves keep every condition fixed and surfaces refuse mixed c
   local_mocked_bindings(title = function(main = NULL, ...) {
     if (!is.null(main)) titles <<- c(titles, main)
     original_title(main = main, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
+  local_graphics_headings(function(main) titles <<- c(titles, main))
   expect_no_warning(plot(sensitive, panel_grid = c("Metric", "ResidualScaling")))
   expect_true(all(startsWith(titles[1:3], "G / ")))
   expect_true(all(startsWith(titles[4:6], "Phi / ")))
+})
+
+
+test_that("main-effects D-study guides are optional and never facet-count lines", {
+  gt <- structure(list(
+    variance_components = data.frame(Source = c("Person", "Rater", "Task", "Residual"),
+      Variance = c(1, .3, .2, .8)),
+    design = list(object_facet = "Person", random_facets = c("Rater", "Task"),
+      calculation_version = 2L, identification_status = "identified")
+  ), class = c("mfrm_generalizability", "list"))
+  d <- mfrm_d_study(gt, expand.grid(Rater = c(2, 4), Task = c(3, 6)))
+  expect_equal(nrow(plot_data(plot(d, draw = FALSE))$reference_lines), 0L)
+  p <- plot_data(plot(d, metric = "Phi", reference = c(.7, .8), draw = FALSE))
+  expect_equal(p$reference_lines$value, c(.7, .8))
+  expect_match(paste(p$notes$Text, collapse = " "), "not universal acceptance rules")
+  expect_error(plot(d, reference = Inf, draw = FALSE), "distinct finite numeric")
+  expect_error(plot(d, reference = 1.1, draw = FALSE), "between 0 and 1")
+  for (type in c("heatmap", "contour", "surface3d")) {
+    expect_error(plot(d, type = type, reference = .8, draw = FALSE), "not surface plots")
+  }
+  grDevices::pdf(NULL, width = 7, height = 5)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, metric = "Phi", reference = c(.7, .8)))
+  expect_no_warning(plot(d, type = "error_variance", reference = 2))
 })

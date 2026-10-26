@@ -153,6 +153,9 @@ test_that("the sentinel cannot inspect files, fit, or launch", {
 })
 
 test_that("record and roadmap expose the semantic sentinel", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_dependency_sentinel()
   record <- paste(readLines(file.path(
     ctx$validation,

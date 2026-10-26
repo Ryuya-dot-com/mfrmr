@@ -156,18 +156,9 @@ test_that("run_qc_pipeline surfaces incomplete bias collections as warn rather t
   ))
   diag <- suppressWarnings(diagnose_mfrm(fit, residual_pca = "none"))
   diag$interactions <- data.frame()
-  bias_collection <- structure(
-    list(
-      by_pair = list(),
-      errors = data.frame(
-        Interaction = "Rater x Criterion",
-        Facets = "Rater x Criterion",
-        Error = "forced pair failure",
-        stringsAsFactors = FALSE
-      )
-    ),
-    class = c("mfrm_bias_collection", "mfrm_bundle", "list")
-  )
+  bias_collection <- with_mocked_bindings(
+    estimate_all_bias(fit, diagnostics = diag, pairs = list(c("Rater", "Criterion"))),
+    estimate_bias = function(...) stop("forced pair failure"), .package = "mfrmr")
 
   qc <- run_qc_pipeline(fit, diagnostics = diag, bias_results = bias_collection)
 
@@ -281,11 +272,16 @@ test_that("QC checks step order within ladders in numeric step order", {
     Estimate = c(-1, 0, 1, -2, 0, 2)
   )
   fit$steps <- fit$steps[c(3, 2, 1, 6, 5, 4), ]
+  expect_error(run_qc_pipeline(fit, diag), "fit/diagnostics mismatch", fixed = TRUE)
+  # This synthetic screen fixture records each mocked step table, not a refit.
+  diag$parameter_uncertainty$source <- mfrm_native_location_identity(fit)
   qc <- run_qc_pipeline(fit, diag)
   expect_true(qc$details$category_structure$ordered)
   fit$steps$Estimate[1] <- -3
+  diag$parameter_uncertainty$source <- mfrm_native_location_identity(fit)
   expect_false(run_qc_pipeline(fit, diag)$details$category_structure$ordered)
   fit$steps$Estimate[1] <- NA_real_
+  diag$parameter_uncertainty$source <- mfrm_native_location_identity(fit)
   missing <- run_qc_pipeline(fit, diag)
   expect_true(is.na(missing$details$category_structure$ordered))
   expect_false(missing$verdicts$Verdict[7] == "Pass")

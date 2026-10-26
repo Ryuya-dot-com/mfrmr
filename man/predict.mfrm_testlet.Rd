@@ -25,7 +25,10 @@
 
 \item{newdata}{Long-format ratings with the fitted column names. \code{NULL}
 reuses the source assignment, including missing-score rows. New Person and
-testlet labels are allowed; every fixed-facet level must be known.}
+testlet labels are allowed; every fixed-facet level must be known.
+If the testlet column is also a fixed facet, its labels must therefore
+be known. For example, with \code{testlet = "Rater"} and \code{"Rater"} in \code{facets},
+this function cannot score a new rater whose fixed severity was not fitted.}
 
 \item{level}{Conditional equal-tail posterior interval probability; default
 0.95. These are not calibration-adjusted frequentist confidence intervals.}
@@ -49,6 +52,9 @@ Person, omitted-row accounting, block sizes, settings, calibration and
 prediction-source metadata for \code{\link[=mfrm_results]{mfrm_results()}}.
 \code{summary()} reports all statuses; \code{plot()} returns \code{\link[=plot_data]{plot_data()}} when
 \code{draw = FALSE}. Saved scoring results need no live optimizer.
+Keep \code{table$Status} and \code{table$Reason} with exported scores: \code{prior_only}
+describes the assumed population without observed responses for that Person;
+\code{unavailable} withholds the estimate, SD and bounds with a recorded cause.
 }
 \description{
 Recompute Person scores from all supplied rows, integrating local effects

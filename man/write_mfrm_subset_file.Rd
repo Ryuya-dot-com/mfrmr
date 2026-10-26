@@ -19,7 +19,9 @@ write_mfrm_subset_file(
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Supplying it
-avoids recomputing subset connectivity.}
+avoids recomputing subset connectivity.
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.}
 
 \item{path}{Output file path for the subset summary table.}
 
@@ -47,11 +49,12 @@ Write standalone subset-connectivity files
 \details{
 Subsets are connected components in the observation design graph. The graph
 links \code{Person} and all modeled facet levels that co-occur in an observation.
-Multiple subsets mean the scale is not fully connected unless external
+A single co-observation graph component does not prove common-scale
+identification; shared other facets can conceal confounded panels. Consult
+the fitted estimability audit. Multiple graph subsets require external
 anchoring or a deliberate separate-calibration design justifies it.
 }
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 300)
@@ -63,7 +66,6 @@ data.frame(
   File = basename(out$written_files$Path)
 )
 # Full paths remain in out$written_files$Path.
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=subset_connectivity_report]{subset_connectivity_report()}},

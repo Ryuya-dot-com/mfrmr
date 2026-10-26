@@ -23,6 +23,7 @@
 #'   `summary()` returns the size/silhouette table. `plot()` invisibly returns
 #'   `mfrm_plot_data`; dendrogram data include the tree, leaf order, memberships,
 #'   group count, and excluded IDs.
+#' @inheritSection mfrm_cluster Reading clustering metrics
 #' @details
 #' Uses [stats::hclust()] followed by [stats::cutree()] at the requested `k`.
 #' Feature types, scaling, weights, missingness handling, silhouette definition,
@@ -122,13 +123,14 @@ plot.mfrm_hierarchical_clusters <- function(x, type = c("dendrogram", "silhouett
   out <- new_mfrm_plot_data("cluster_dendrogram", list(tree = tree,
     leaf_order = leaf_order, table = x$membership[match(leaf_order, x$membership$ID), , drop = FALSE],
     k = x$settings$k, excluded_ids = excluded, labels = show_labels,
-    title = title, subtitle = subtitle, preset = style$name))
+    title = title, subtitle = subtitle, preset = style$name,
+    caption = sprintf("Boxes: %d groups | Heights do not measure branch support", x$settings$k)))
   if (!draw) return(invisible(out))
   apply_plot_preset(style)
   old <- graphics::par(mar = c(5, 5, 5, 2), xpd = FALSE)
   on.exit(graphics::par(old), add = TRUE)
   graphics::plot(tree, labels = if (show_labels) tree$labels else FALSE,
-    hang = -1, main = title, sub = "", xlab = "", ylab = "Gower dissimilarity", axes = FALSE,
+    hang = -1, main = "", sub = "", xlab = "", ylab = "Gower dissimilarity", axes = FALSE,
     cex = style$axis_cex)
   graphics::axis(2, at = pretty(c(0, tree$height)))
   # Keep outer boxes inside hclust's fixed plotting window, also for small trees.
@@ -139,9 +141,6 @@ plot.mfrm_hierarchical_clusters <- function(x, type = c("dendrogram", "silhouett
   graphics::rect(pmax(c(0, utils::head(ends, -1)) + 0.66, usr[1] + padding),
     usr[3] + 0.005 * diff(usr[3:4]), pmin(ends + 0.33, usr[2] - padding),
     cut_height, border = style$accent_primary)
-  graphics::mtext(subtitle, side = 3, line = 0.3, cex = 0.8)
-  graphics::mtext(sprintf("Boxes: %d groups | Heights do not measure branch support", x$settings$k),
-    side = 1, line = 3.5, cex = 0.8)
   invisible(out)
 }
 

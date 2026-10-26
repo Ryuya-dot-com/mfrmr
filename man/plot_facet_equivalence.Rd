@@ -68,15 +68,19 @@ probability. Read the pairwise TOST results for pair-specific conclusions.
 }
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 31, maxit = 150)
 eq <- analyze_facet_equivalence(fit, facet = "Rater")
-pdat <- plot_facet_equivalence(eq, type = "forest", draw = FALSE)
+pdat <- plot(eq, type = "facet_equivalence", view = "forest", draw = FALSE)
 c(pdat$facet, pdat$type)
-}
 }
 \seealso{
 \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}
@@ -84,3 +88,4 @@ c(pdat$facet, pdat$type)
 \concept{confidence intervals}
 \concept{facet equivalence}
 \concept{visual diagnostics}
+\keyword{internal}

@@ -418,6 +418,9 @@ test_that("G4H has no deletion, retry, hash, or top-level execution route", {
 })
 
 test_that("G4H record stays immutable while the roadmap advances through G4R", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_engine_mechanics_harness()
   record <- paste(readLines(file.path(
     ctx$validation,

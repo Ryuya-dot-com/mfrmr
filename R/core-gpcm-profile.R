@@ -49,7 +49,7 @@ mfrm_gpcm_profile_nuisance <- function(evaluator, reference, start, contrast,
     result <- tryCatch({
       # An invalid initial value is not a finite optimizer penalty.
       raw_fn(initial)
-      opt <- stats::optim(initial, fn, gr, method = "BFGS",
+      opt <- optim(initial, fn, gr, method = "BFGS",
         control = c(build_mfrm_optim_control("BFGS", maxit, tol),
           # Match the EM search scale without rescaling LR values or checks.
           list(fnscale = evaluator$optimization_scale %||% 1)))
@@ -73,7 +73,7 @@ mfrm_gpcm_profile_nuisance <- function(evaluator, reference, start, contrast,
       if (is.null(scale$transform)) stop(scale$error)
       center <- selected$par
       native <- function(z) center + drop(scale$transform %*% z)
-      opt <- stats::optim(rep(0, length(center)),
+      opt <- optim(rep(0, length(center)),
         function(z) fn(native(z)),
         function(z) drop(crossprod(scale$transform, gr(native(z)))), method = "BFGS",
         # The transform already accounts for the total-likelihood curvature.
@@ -109,6 +109,7 @@ mfrm_gpcm_profile_nuisance <- function(evaluator, reference, start, contrast,
   }
   row <- data.frame(NLL = NA_real_, MaxGradient = NA_real_, OptimizerCode = NA_integer_,
     NLLChange = NA_real_, GradientChange = NA_real_, ReferenceGradient = NA_real_,
+    NuisanceMinEigenvalue = NA_real_, ReferenceMinEigenvalue = NA_real_,
     Passed = FALSE, Detail = paste(vapply(stages, `[[`, "", "error"), collapse = " "))
   parameters <- NULL
   if (!is.null(selected)) {
@@ -123,6 +124,28 @@ mfrm_gpcm_profile_nuisance <- function(evaluator, reference, start, contrast,
     row[c("NLLChange", "GradientChange", "ReferenceGradient")] <- as.list(checked)
     row$Passed <- isTRUE(row$OptimizerCode == 0 && row$MaxGradient <= 1e-4 &&
       all(is.finite(checked)) && checked[1] <= 1e-5 && all(checked[-1] <= 1e-4))
+    if (row$Passed) {
+      # Two starts can coincide at a stationary nuisance maximum or saddle.
+      # Review the constrained NLL Hessian at both integration orders; do not
+      # floor eigenvalues or turn an unresolved solution into a profile point.
+      curvature <- tryCatch({
+        minimum <- function(objective) {
+          h <- stats::optimHess(selected$par,
+            function(z) objective$value(map$embed(z)),
+            function(z) drop(crossprod(map$basis, objective$gradient(map$embed(z)))))
+          min(eigen(h, symmetric = TRUE, only.values = TRUE)$values)
+        }
+        low <- minimum(evaluator)
+        c(low, if (identical(evaluator, reference)) low else minimum(reference))
+      }, error = function(e) {
+        row$Detail <<- paste("Constrained nuisance curvature could not be verified:", conditionMessage(e))
+        rep(NA_real_, 2L)
+      })
+      row[c("NuisanceMinEigenvalue", "ReferenceMinEigenvalue")] <- as.list(curvature)
+      row$Passed <- all(is.finite(curvature)) && all(curvature > 0)
+      if (!row$Passed && !nzchar(trimws(row$Detail))) row$Detail <-
+        "Constrained nuisance curvature is not positive definite at both integration orders."
+    }
     if (!row$Passed && !nzchar(trimws(row$Detail))) row$Detail <-
       "Constrained optimization or higher-order integration checks failed."
   }
@@ -215,10 +238,9 @@ mfrm_gpcm_profile_search <- function(evaluator, reference, start, contrast,
 
 mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
   product <- mfrm_has_product_slopes(fit)
+  adaptive <- mfrmr_adaptive_integration(fit$config)
   labels <- as.character(fit$config$gpcm_spec$levels)
   if (product) {
-    if (mfrmr_adaptive_integration(fit$config)) stop(
-      "Adaptive two-family profile intervals are unavailable; use method = 'model' for separately checked experimental log-Wald intervals.", call. = FALSE)
     owner <- names(slope)
     if (!is.character(slope) || length(slope) != 1L || is.na(slope) ||
         length(owner) != 1L || is.na(owner) || !owner %in% fit$config$slope_facet ||
@@ -255,6 +277,12 @@ mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
     direct <- make_mfrm_direct_evaluator("MML", make_param_cache(sizes, cfg, idx, is_mml = TRUE),
       idx, cfg, sizes, gauss_hermite_normal(q))
     if (!product) return(direct)
+    if (adaptive) {
+      # Keep moving nodes, scales and Jacobians in every constrained evaluation.
+      # Only the optimizer is scaled per Person; LR values stay on the total scale.
+      direct$optimization_scale <- length(fit$prep$levels$Person)
+      return(direct)
+    }
     specification <- fit$gmfrm$specification
     specification$quadrature <- gauss_hermite_normal(q)
     mfrm_gmfrm_profile_evaluator(do.call(mfrm_gmfrm_problem, specification), direct)
@@ -297,6 +325,7 @@ mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
     CIUse = if (eligible) "approximate_pointwise_profile" else "unavailable", InferenceReview = review)
   description <- paste("Relative GPCM slope:", fit$config$slope_facet, slope, "(geometric mean one)")
   if (product) {
+    tab$CoverageQualified <- FALSE
     tab$SlopeOwner <- owner; tab$SlopeLevel <- unname(slope)
     tab$ScaleReference <- target$metadata$ScaleReference[index]
     description <- paste("Two-family component slope:", owner, slope,
@@ -305,11 +334,13 @@ mfrm_gpcm_profile_interval <- function(fit, slope, level, control) {
   out <- mfrm_gpcm_interval_result(tab, level, "Profile likelihood; chi-square(1) approximation", description)
   attr(out, "profile") <- result
   attr(out, "wald") <- data.frame(SlopeFacet = label, Estimate = estimate,
-    Lower = exp(log(estimate) - stats::qnorm((1 + level)/2) * se),
-    Upper = exp(log(estimate) + stats::qnorm((1 + level)/2) * se))
+    Lower = exp(log(estimate) - stats::qnorm((1 - level) / 2, lower.tail = FALSE) * se),
+    Upper = exp(log(estimate) + stats::qnorm((1 - level) / 2, lower.tail = FALSE) * se))
   attr(out, "source") <- mfrm_gpcm_inference_source(fit)
   attr(out, "settings") <- c(list(scale = if (product) "standardized" else "relative", method = "profile", slope = slope,
-    quad_points = order, comparison_quad_points = higher), controls)
+    quad_points = order, comparison_quad_points = higher,
+    integration = if (adaptive) "adaptive" else "fixed",
+    engine = config$estimation_control$mml_engine_used), controls)
   if (product) {
     attr(out, "checks") <- info$checks
     attr(out, "numerical_checks") <- info$numerical_checks

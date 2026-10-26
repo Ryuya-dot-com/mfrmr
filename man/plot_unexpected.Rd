@@ -7,10 +7,10 @@
 plot_unexpected(
   x,
   diagnostics = NULL,
-  abs_z_min = 2,
+  abs_z_min = 3,
   prob_max = 0.3,
   top_n = 100,
-  rule = c("either", "both"),
+  rule = c("residual", "either", "both"),
   plot_type = c("scatter", "severity"),
   main = NULL,
   palette = NULL,
@@ -25,13 +25,13 @@ plot_unexpected(
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} when \code{x} is \code{mfrm_fit}.}
 
-\item{abs_z_min}{Absolute standardized-residual cutoff.}
+\item{abs_z_min}{Absolute standardized-residual cutoff (default 3).}
 
 \item{prob_max}{Maximum observed-category probability cutoff.}
 
 \item{top_n}{Maximum rows used from the unexpected table.}
 
-\item{rule}{Flagging rule (\code{"either"} or \code{"both"}).}
+\item{rule}{Flagging rule: \code{"residual"} (default), \code{"either"}, or \code{"both"}.}
 
 \item{plot_type}{\code{"scatter"} or \code{"severity"}.}
 
@@ -70,8 +70,11 @@ absolute standardised residual \eqn{|Z|} and the negative log
 probability \eqn{-\log_{10} P_{\mathrm{obs}}}.  Higher severity
 indicates responses that are more surprising under the fitted model.
 
+Saved table bundles retain their recorded rule and thresholds. A fully
+evaluated screen with no flags returns an empty display and its summary.
 The \code{rule} parameter controls flagging logic:
 \itemize{
+\item \code{"residual"}: flag by the absolute standardized residual alone.
 \item \code{"either"}: flag if \eqn{|Z| \ge} \code{abs_z_min} \strong{or}
 \eqn{P_{\mathrm{obs}} \le} \code{prob_max}.
 \item \code{"both"}: flag only if \strong{both} conditions hold simultaneously.
@@ -129,6 +132,12 @@ For a plot-selection guide and a longer walkthrough, see
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -161,26 +170,19 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
-p <- plot_unexpected(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
+p <- plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4, top_n = 10, draw = FALSE)
 if (interactive()) {
-  plot_unexpected(
-    fit,
-    abs_z_min = 1.5,
-    prob_max = 0.4,
-    top_n = 10,
-    plot_type = "severity",
-    preset = "publication",
+  plot(fit, type = "unexpected", abs_z_min = 1.5, prob_max = 0.4,
+    top_n = 10, view = "severity", preset = "publication",
     main = "Unexpected Response Severity (Customized)",
     palette = c(higher = "#d95f02", lower = "#1b9e77", bar = "#2b8cbe"),
-    label_angle = 45
-  )
-}
+    label_angle = 45)
 }
 }
 \seealso{
-\code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=unexpected_response_table]{unexpected_response_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},
+\link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

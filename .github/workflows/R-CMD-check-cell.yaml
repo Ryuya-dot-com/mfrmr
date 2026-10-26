@@ -74,6 +74,8 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # Keep installed dependencies even when a later package check fails.
+          cache: always
           # Invalidate compiled-package caches after the runner TBB ABI change.
           cache-version: "2"
           # Source builds avoid Zstandard macOS binaries unsupported by stable pak.
@@ -96,6 +98,7 @@ jobs:
           tlmgr install inconsolata times helvetic courier fancyvrb microtype makeindex
 
       - name: Exact source-tarball R CMD check (G4 confirmation held)
+        id: package-check
         if: ${{ !inputs.manual-only }}
         env:
           MFRMR_CHECK_ERROR_ON: warning
@@ -105,6 +108,24 @@ jobs:
             inst/validation/release-check-runner-0.2.4.R \
             . validation-results/release-check
         shell: bash
+
+      - name: Diagnose Windows numeric-feature process failure
+        if: ${{ failure() && runner.os == 'Windows' && steps.package-check.outcome == 'failure' }}
+        shell: Rscript {0}
+        run: |
+          check_root <- "validation-results/release-check/check/mfrmr.Rcheck"
+          failed <- file.path(check_root, "tests", "testthat.Rout.fail")
+          if (file.exists(failed) && any(grepl(
+              "subprocess exited in file 'test-numeric-feature-workflows.R'",
+              readLines(failed, warn = FALSE), fixed = TRUE))) {
+            .libPaths(c(normalizePath(check_root), .libPaths()))
+            # Diagnose the failed file only. TAP records completed assertions;
+            # this serial replay does not replace or waive the failed check.
+            Sys.setenv(TESTTHAT_PARALLEL = "false")
+            testthat::test_dir(file.path(check_root, "tests", "testthat"),
+              filter = "^numeric-feature-workflows$", package = "mfrmr",
+              load_package = "installed", reporter = "tap")
+          }
 
       - name: Diagnose indexed manuals without repeating the package check
         if: ${{ inputs.cran-timing && inputs.manual-only }}

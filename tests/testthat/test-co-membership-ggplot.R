@@ -38,7 +38,7 @@ test_that("co-membership conversion preserves fractions, order and unavailable c
   expect_identical(fill$map(NA_real_), key$value[key$role == "missing"])
   expect_identical(plot_data(g), p$data)
   expect_identical(plot_data(g)$imputations, 4L)
-  expect_match(g$labels$caption, "all supplied imputations", fixed = TRUE)
+  expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "all supplied imputations", fixed = TRUE)
   expect_silent(ggplot2::ggplotGrob(g))
   expect_equal(ggplot2::ggplot_build(as_ggplot(p))$data, b$data)
 })

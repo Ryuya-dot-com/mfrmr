@@ -75,6 +75,9 @@ With \code{compute_fit = TRUE}, source Infit / Outfit statistics are attached.
 Item difficulty is the mean of its absolute adjacent-category thresholds.
 Source identification and slopes are retained without rescaling. For mirt
 \code{gpcmIRT} and \code{rsm}, the category offset is included as \code{b - c / a}.
+Binary and polytomous items may be mixed; thresholds are read using each
+item's response model and category count. Inapplicable padding columns in
+the source coefficient table are not missing estimated thresholds.
 Person estimates are EAP; the \code{SE} column contains conditional posterior
 SDs, not sampling SEs. Person labels use retained source row names or
 P-prefixed row positions. Original identifiers discarded by mirt cannot be
@@ -108,14 +111,12 @@ one-way fitted-object import of the documented fields.
 }
 
 \examples{
-\donttest{
 if (requireNamespace("mirt", quietly = TRUE)) {
   response_matrix <- matrix(sample(0:1, 120, replace = TRUE), nrow = 40)
   colnames(response_matrix) <- paste0("Item", seq_len(ncol(response_matrix)))
   fit <- mirt::mirt(response_matrix, 1, itemtype = "Rasch", verbose = FALSE)
   imported <- import_mirt_fit(fit, model = "RSM")
   imported$summary
-}
 }
 }
 \seealso{

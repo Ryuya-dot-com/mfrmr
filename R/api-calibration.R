@@ -118,7 +118,8 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
   expected_names <- paste0("q", nodes)
   valid_shape <- length(nodes) >= 2L && !anyNA(nodes) &&
     identical(nodes, sort(unique(nodes))) &&
-    identical(names(fits), expected_names) &&
+    length(fits) == length(nodes) && !anyDuplicated(names(fits)) &&
+    setequal(names(fits), expected_names) &&
     nrow(runs) == length(nodes) &&
     all(c("Nodes", "EstimationConverged") %in% names(runs)) &&
     identical(as.integer(runs$Nodes), nodes) &&
@@ -129,6 +130,7 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
       "the review must retain one fitted model and run record for every evaluated quadrature order"
     )
   }
+  fits <- fits[expected_names]
   model <- toupper(as.character(fit$config$model %||% "")[1L])
   if (!identical(as.character(review$settings$model %||% ""), model)) {
     mfrmr_calibration_abort(
@@ -261,6 +263,29 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' use fitted-object routes; other structures follow their documented capabilities.
 #' See [mfrm_calibration_capabilities()].
 #'
+#' @section Anchors, centering and score uncertainty:
+#' New exports distinguish whole-facet centering, legacy remainder centering
+#' and uncentered facets in `constraints$identification`. Direct values and
+#' group means are retained in `constraints$anchors`; validation checks the
+#' explicit facet maps against the stored coordinates and free dimensions.
+#' For example, if four raters are centered as a whole and the first three
+#' have mean 0.10, the fourth is fixed at -0.30. Freezing retains all four
+#' calibrated values, including the estimates of the free group members.
+#'
+#' Scoring uses those expanded values without centering or estimating them
+#' again. A returned `SD` is a Person posterior SD conditional on the entire
+#' frozen calibration and scoring prior. It is not a rater SE and excludes
+#' uncertainty in both the estimated calibration and supplied anchors.
+#' Use [mfrm_facet_intervals()] for supported conditional facet intervals.
+#' With an anchored fitted model, [predict_mfrm_units()] accepts supplied
+#' response rows; the narrower [score_mfrm_persons()] entry excludes anchors.
+#'
+#' Loading an older artifact preserves its values and original constraint
+#' labels. Older generic labels do not fully identify the centering convention;
+#' consult the source fit or re-extract it to obtain explicit labels. Changing
+#' a label cannot convert a calibration to another scale.
+#'
+#' @details
 #' One-family GPCM MML extraction freshly evaluates the native fit's local likelihood,
 #' gradient, unregularized information and source-integration stability using
 #' the same conditional source checks as [predict_mfrm_units()]. A failed or
@@ -367,6 +392,33 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' its default output is not the same estimator as unadjusted JML. Do not
 #' infer agreement of estimators from agreement of fixed-calibration scores.
 #'
+#' @section Choose what to save:
+#' Save a fitted analysis or [mfrm_results()] with `saveRDS()` when you need
+#' to revisit its diagnostics and reports. A portable `mfrm_calibration` has a
+#' different purpose: scoring new response rows without the training fit or
+#' training responses. Use `save_mfrm_calibration()` and
+#' `load_mfrm_calibration()` for that artifact. Save an already computed
+#' `mfrm_calibration_score` with `saveRDS()` to reproduce its tables and figures
+#' without scoring the responses again. A CSV is a table, not a replacement
+#' for any of these complete objects.
+#'
+#' Validation checks the saved parameters, scoring settings and model checks;
+#' freezing marks that calibration as ready for scoring without changing it.
+#' These steps do not establish model fit, lack of bias or suitability for another
+#' population. New Persons may use known calibrated facet levels. An unknown
+#' rater, task or score category requires an appropriate calibration workflow;
+#' assigning an existing level's name is not a way to extend the calibration.
+#' Missing responses are not zero scores. With `missing_response = "omit"`,
+#' inspect row dispositions and Persons who could not be scored.
+#'
+#' Older saved objects are checked against their recorded format and evidence.
+#' Inspect `review_mfrm_calibration()` if a file has missing or inconsistent
+#' records. Do not change saved check results to force acceptance. If checks
+#' of the original fitted model are missing, re-extract from that saved model
+#' if it passes the current checks; when only the
+#' score records are incomplete, score again from a valid frozen artifact.
+#' Neither action means that model refitting is automatically necessary.
+#'
 #' @references
 #' Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability
 #' in a microcomputer environment. *Applied Psychological Measurement*,
@@ -435,7 +487,15 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   before using this option. The prior is common to all scored persons;
 #'   covariate-dependent overrides are not supported. Two-family GPCM format 6
 #'   requires `scoring_prior = NULL` and retains the fixed N(0,1) prior.
+#' @param cut_scores Optional named, strictly increasing finite ability cuts
+#'   for `score_mfrm_calibration()`. Ordinary RSM/PCM with unit weights and
+#'   continuous posterior intervals only. Returns a `decisions` table of
+#'   probabilities above cuts and in successive bands on the calibration scale.
+#'   Calibration, prior and cuts are held fixed; this excludes their estimation
+#'   uncertainty. Unscored Persons remain unavailable. Cut names do not establish
+#'   CEFR alignment. See [predict_mfrm_units()] for interpretation and reporting.
 #'
+#' @inheritSection predict_mfrm_units Conditional ability decisions
 #' @return `extract_mfrm_calibration()`, `validate_mfrm_calibration()`,
 #'   `freeze_mfrm_calibration()`, `supersede_mfrm_calibration()`,
 #'   `retire_mfrm_calibration()`, and `load_mfrm_calibration()` return an
@@ -444,12 +504,16 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   `save_mfrm_calibration()` invisibly returns the normalized path.
 #'   `score_mfrm_calibration()` returns an `mfrm_calibration_score` containing
 #'   estimates plus row and Person dispositions and scoring identities.
+#'   With `cut_scores`, it also retains `decisions`: conditional event
+#'   probabilities with boundaries, labels, actual priors and availability.
 #'   When requested and scored rows exist, `quadrature_review` contains the
 #'   fixed/adaptive comparison; `summary()` preserves it and adds a compact
 #'   `quadrature_overview`.
 #'
 #' @seealso [mml_quadrature_sensitivity()], [mfrm_calibration_score_methods]
-#'   for concise review and visualization of returned score batches.
+#'   for an executable scoring example, concise review and visualization of
+#'   returned score batches; [predict_mfrm_units()], [score_mfrm_persons()],
+#'   [apa_table()] and [export_summary_appendix()] for saved-score tables.
 #'
 #' @name mfrm_calibration_workflow
 NULL
@@ -537,7 +601,8 @@ score_mfrm_calibration <- function(calibration,
                                    missing_response = "error",
                                    event_id = NULL,
                                    adaptive_quad_points = NULL,
-                                   scoring_prior = NULL) {
+                                   scoring_prior = NULL,
+                                   cut_scores = NULL) {
   mfrmr_score_calibration(
     calibration = calibration,
     new_data = new_data,
@@ -549,6 +614,7 @@ score_mfrm_calibration <- function(calibration,
     missing_response = missing_response,
     event_id = event_id,
     adaptive_quad_points = adaptive_quad_points,
-    scoring_prior = scoring_prior
+    scoring_prior = scoring_prior,
+    cut_scores = cut_scores
   )
 }

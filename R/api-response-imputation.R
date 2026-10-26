@@ -50,6 +50,9 @@
 #'   and observed values must not change. Only selected scores may be filled;
 #'   missing auxiliary predictors may also be completed. For a `mids` input,
 #'   its original data and score `where` selection must agree with this review.
+#' Numeric identifiers must remain distinct when converted to text. Numeric
+#' observed predictors are compared exactly, without rounding to text, and
+#' must remain numeric in completions; integer/double storage may differ.
 #'
 #' A sparse assignment and a missing assigned score are different events.
 #' Neither absent roster rows nor explicit unassigned rows are imputed.
@@ -127,6 +130,15 @@ review_mfrm_imputations <- function(data, completed, person, facets, score,
       any(!nzchar(trimws(as.character(z)))), logical(1))) || anyDuplicated(ids)) {
     stop("Event IDs must be unique; event, person and facet IDs must be nonmissing and nonempty.", call. = FALSE)
   }
+  for (nm in id_columns) {
+    z <- data[[nm]]
+    if (!(is.numeric(z) || is.character(z) || is.factor(z)) || is.complex(z) ||
+        !is.null(dim(z)) || (is.numeric(z) && any(!is.finite(z))) ||
+        length(unique(z)) != length(unique(as.character(z)))) {
+      stop("Identifiers must be finite and retain distinct text labels: ", nm,
+        ". Supply unambiguous character IDs.", call. = FALSE)
+    }
+  }
   is_assigned <- if (is.null(assigned)) rep(TRUE, nrow(data)) else data[[assigned]]
   if (!is.logical(is_assigned) || anyNA(is_assigned)) {
     stop("The `assigned` column must be complete and logical.", call. = FALSE)
@@ -159,7 +171,12 @@ review_mfrm_imputations <- function(data, completed, person, facets, score,
     for (nm in setdiff(names(data), score)) {
       immutable <- nm %in% c(id_columns, assigned)
       rows <- if (immutable || original) rep(TRUE, nrow(data)) else !is.na(data[[nm]])
-      if (!identical(as.character(z[[nm]][rows]), as.character(data[[nm]][rows]))) {
+      before <- data[[nm]][rows]; after <- z[[nm]][rows]
+      same <- if (is.numeric(before) || is.numeric(after)) {
+        is.numeric(before) && is.numeric(after) &&
+          isTRUE(all.equal(before, after, tolerance = 0, check.attributes = FALSE))
+      } else identical(as.character(after), as.character(before))
+      if (!same) {
         stop("Identifiers, assignment and observed predictor values must remain unchanged: ", nm, ".", call. = FALSE)
       }
     }

@@ -13,6 +13,50 @@ test_that("continuous posterior bounds recover a normal prior, including small t
   }
 })
 
+test_that("posterior intervals and decision probabilities ignore constant likelihood offsets", {
+  offset <- 0
+  local_mocked_bindings(mfrmr_adaptive_person_kernel = function(...)
+    function(z, ...) list(log_likelihood = rep(offset, length(z)),
+      score = -z, information = rep(1, length(z))), .package = "mfrmr")
+  population <- list(active = TRUE, design_matrix = matrix(1, 1L, 1L),
+    coefficients = -.8, sigma2 = .16, person_lookup = 1L)
+  cuts <- -.8 + .4 * c(-1, 0, 1)
+  # An ability-independent likelihood leaves this normal prior unchanged.
+  expected <- c(Lower = -.8 + .4 * qnorm(.025), Upper = -.8 + .4 * qnorm(.975),
+    setNames(pnorm(c(-1, 0, 1), lower.tail = FALSE), paste0("Above", 1:3)),
+    setNames(diff(pnorm(c(-Inf, -1, 0, 1, Inf))), paste0("Band", 1:4)))
+  for (constant in c(0, -1e12, -1e16)) {
+    offset <- constant
+    actual <- mfrmr_person_posterior_intervals(
+      list(person = 1L, score_k = 0L, weight = 1),
+      list(model = "RSM", n_cat = 2L, n_person = 1L), list(steps = 0),
+      0, "P", population, cut_scores = cuts)
+    expect_equal(drop(actual), expected, tolerance = 1e-9)
+  }
+})
+
+test_that("new-Person summaries preserve the prior under negligible ability dependence", {
+  # Finite GPCM inputs give an almost ability-independent likelihood exp(-1e16).
+  # Its absolute size must not change prior weights, means or SDs.
+  idx <- list(person = c(2L, 1L), score_k = c(0L, 0L), weight = c(1, 1),
+    step_idx = c(1L, 1L), slope_idx = c(1L, 1L), facets = list(Item = c(1L, 1L)))
+  cfg <- list(model = "GPCM", n_cat = 2L, n_person = 2L, facet_names = "Item")
+  params <- list(facets = list(Item = -1e32), steps_mat = matrix(0, 1L, 1L), slopes = 1e-16)
+  pop <- list(active = TRUE, design_matrix = matrix(c(1, 2), 2L, 1L),
+    coefficients = .4, sigma2 = .81, person_lookup = 1:2)
+  for (integration in c("fixed", "adaptive")) {
+    cfg$estimation_control <- list(mml_integration = integration)
+    out <- compute_person_posterior_summary(idx, cfg, params, gauss_hermite_normal(7L),
+      c("A", "B"), pop, n_draws = 3L, seed = 421L)
+    expect_identical(out$estimates$Person, c("B", "A"))
+    expect_equal(unname(out$estimates$Estimate), c(.8, .4), tolerance = 1e-12)
+    expect_equal(unname(out$estimates$SD), c(.9, .9), tolerance = 1e-12)
+    expect_equal(out$estimates$Lower, c(.8, .4) + .9 * qnorm(.025), tolerance = 1e-9)
+    expect_equal(out$estimates$Upper, c(.8, .4) + .9 * qnorm(.975), tolerance = 1e-9)
+    expect_identical(out$draws$Person, rep(c("B", "A"), each = 3L))
+  }
+})
+
 test_that("posterior endpoints carry their stated mass for weighted ordinal likelihoods", {
   for (model in c("RSM","PCM","GPCM")) for (n in c(4L,40L)) {
     owner <- rep(1:2,length.out=n)
@@ -59,5 +103,38 @@ test_that("likelihood-only evaluation preserves weighted and shifted-prior kerne
       expect_equal(actual$log_likelihood,expected$log_likelihood,tolerance=1e-12)
       expect_identical(evaluate(z),expected)
     }
+  }
+})
+
+test_that("batched adaptive nodes preserve scalar probabilities and posterior derivatives", {
+  withr::local_options(mfrmr.use_cpp11_backend = FALSE)
+  for (model in c("RSM", "PCM", "GPCM")) for (n in c(1L, 4L)) {
+    idx <- list(person = rep(1L, n), score_k = (seq_len(n) - 1L) %% 4L,
+      weight = c(2, 0, .25, 1)[seq_len(n)], step_idx = c(2L, 1L, 2L, 1L)[seq_len(n)],
+      slope_idx = c(1L, 2L, 2L, 1L)[seq_len(n)])
+    config <- list(model = model, n_cat = 4L, n_person = 1L)
+    params <- list(steps = c(-.8, 0, .8),
+      steps_mat = rbind(c(-1.2, .3, .9), c(-.4, -.1, .5)), slopes = c(.6, 1.5))
+    evaluate <- mfrmr:::mfrmr_adaptive_person_kernel(
+      idx, config, params, c(-1, 0, 1, .3)[seq_len(n)], -.8, .4)
+    z <- c(25, -.3, -25, 0, 1.2)
+    batched <- evaluate(z, include_linear_part = TRUE)
+    scalar <- lapply(z, evaluate, include_linear_part = TRUE)
+    for (field in c("log_likelihood", "score", "information")) {
+      expect_identical(batched[[field]], vapply(scalar, `[[`, 0, field))
+    }
+    expect_identical(batched$prob_list, lapply(scalar, function(x) x$prob_list[[1L]]))
+    expect_identical(batched$linear_part_list, lapply(scalar, function(x) x$linear_part_list[[1L]]))
+    # Differentiate the log posterior, independently of the category-moment formulas.
+    log_posterior <- function(x) evaluate(x, include_moments = FALSE)$log_likelihood +
+      dnorm(x, log = TRUE)
+    h <- 1e-3
+    z <- c(-1.2, .3, 2)
+    score <- (log_posterior(z - 2*h) - 8*log_posterior(z - h) +
+      8*log_posterior(z + h) - log_posterior(z + 2*h)) / (12*h)
+    information <- (log_posterior(z + 2*h) - 16*log_posterior(z + h) +
+      30*log_posterior(z) - 16*log_posterior(z - h) + log_posterior(z - 2*h)) / (12*h^2)
+    expect_lt(max(abs(evaluate(z)$score - score)), 1e-8)
+    expect_lt(max(abs(evaluate(z)$information - information)), 1e-7)
   }
 })

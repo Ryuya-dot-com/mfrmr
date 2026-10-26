@@ -36,8 +36,9 @@ category_prob_rsm <- function(eta, step_cum) {
   eta_mat <- outer(eta, 0:(k_cat - 1))
   log_num <- eta_mat - matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
   row_max <- row_max_fast(log_num)
-  log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
-  exp(log_num - matrix(log_denom, nrow = n, ncol = k_cat))
+  # Normalize on the shifted scale; adding a large maximum back loses ties.
+  numerator <- exp(log_num - row_max)
+  numerator / rowSums(numerator)
 }
 
 # Category response probabilities under the Partial Credit Model
@@ -61,8 +62,8 @@ category_prob_pcm <- function(eta, step_cum_mat, criterion_idx,
     eta_mat <- outer(eta_c, 0:(k_cat - 1))
     log_num <- eta_mat - matrix(step_cum, nrow = length(rows), ncol = k_cat, byrow = TRUE)
     row_max <- row_max_fast(log_num)
-    log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
-    probs[rows, ] <- exp(log_num - matrix(log_denom, nrow = length(rows), ncol = k_cat))
+    numerator <- exp(log_num - row_max)
+    probs[rows, ] <- numerator / rowSums(numerator)
   }
   probs
 }

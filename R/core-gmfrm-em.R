@@ -55,7 +55,8 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
   contrast <- function(n) rbind(diag(n - 1L), rep(-1, n - 1L))
   ci <- contrast(ni)
   ct <- contrast(max_score)
-  cells <- unique(as.data.frame(ids[slope_facets], check.names = FALSE))
+  cells <- unique(as.data.frame(unname(ids[slope_facets]), check.names = FALSE))
+  names(cells) <- slope_facets
   cell <- match(paste(ids[[first]], ids[[second]]), paste(cells[[first]], cells[[second]]))
   common <- mfrm_gmfrm_common_setup(data, max_score, slope_facets, person, score)
   slope_cells <- common$config$gpcm_spec$cells
@@ -92,9 +93,13 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
   Dq <- lapply(D, function(d) d[expanded_cell, , drop = FALSE])
   score_index <- data[[score]] + 1L
   obs_node <- outer(cell, nc * (seq_len(nq) - 1L), "+")
+  quad_basis <- list(log_weights = matrix(log(weights), np, nq, byrow = TRUE))
 
+  cached_par <- NULL; cached_kernel <- NULL
   kernel <- function(par) {
     if (length(par) != length(start) || any(!is.finite(par))) stop("Invalid parameter vector.")
+    if (identical(par, cached_par)) return(cached_kernel)
+    cached_par <<- NULL; cached_kernel <<- NULL
     params <- tryCatch(expand_params(par, common$sizes, common$config),
       mfrmr_gpcm_slope_numeric_boundary_error = function(e) NULL)
     if (is.null(params)) return(NULL)
@@ -111,7 +116,11 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
     logits <- bundle$linear_part * slope
     if (any(!is.finite(logits))) return(NULL)
     if (any(!is.finite(bundle$log_probs))) return(NULL)
-    list(log_prob = bundle$log_probs, prob = bundle$probs, logits = logits, slope = slope)
+    cached_kernel <<- list(log_prob = bundle$log_probs, prob = bundle$probs,
+      logits = logits, slope = slope)
+    # Own the key: optim may reuse its callback parameter buffer.
+    cached_par <<- par + 0
+    cached_kernel
   }
   expected_counts <- function(posterior) {
     counts <- array(0, c(nc, nq, max_score + 1L))
@@ -132,18 +141,24 @@ mfrm_gmfrm_problem <- function(data, max_score, quadrature,
     residual <- rowSums(counts) * ker$prob - counts
     gb <- Reduce(`+`, lapply(seq_along(Dq), function(k)
       -drop(crossprod(Dq[[k]], ker$slope * residual[, k]))))
-    gg <- drop(crossprod(Zq, rowSums(residual * ker$logits)))
+    # A category-common offset has zero derivative contribution because the
+    # residuals sum to zero. Use normalized log probabilities so rounding in
+    # that sum is not multiplied by a large shared logit at a near tie.
+    gg <- drop(crossprod(Zq, rowSums(residual * ker$log_prob)))
     list(value = value, gradient = c(gb, gg) / np)
   }
   marginal <- function(par, derivatives = TRUE) {
     ker <- kernel(par)
     if (is.null(ker)) return(list(value = Inf, gradient = rep(NA_real_, length(par))))
     log_observed <- matrix(ker$log_prob[cbind(as.vector(obs_node), rep(score_index, nq))], nrow(data), nq)
-    joint <- rowsum(log_observed, ids[[person]])
-    joint <- sweep(joint, 2L, log(weights), "+")
-    high <- apply(joint, 1L, max)
-    log_marginal <- high + log(rowSums(exp(joint - high)))
-    posterior <- exp(joint - log_marginal)
+    # Center the Person likelihood before applying the quadrature weights, and
+    # normalize in those shifted coordinates. Subtracting a restored marginal
+    # log likelihood can otherwise erase the prior or inflate E-step counts.
+    person_bundle <- mfrm_mml_person_bundle(log_observed, ids[[person]],
+      quad_basis, include_posterior = TRUE)
+    log_marginal <- person_bundle$log_marginal
+    # The common helper keeps first-observed order; counts use sorted level IDs.
+    posterior <- person_bundle$posterior[order(person_bundle$person_ids), , drop = FALSE]
     dimnames(posterior) <- list(levels[[person]], paste0("node", seq_len(nq)))
     counts <- expected_counts(posterior)
     list(value = -sum(log_marginal) / np, logLik = sum(log_marginal),
@@ -202,6 +217,8 @@ mfrm_gmfrm_em <- function(problem, start = problem$start, maxit = 500L,
   reason <- "iteration_limit"
   for (iteration in seq_len(maxit)) {
     if (max(abs(state$gradient)) <= score_tol) { reason <- "score_tolerance"; break }
+    mfrmr_fit_progress(sprintf("Two-family EM: q=%d, iteration %d/%d",
+      length(problem$nodes), iteration, maxit))
     counts <- state$counts
     old_q <- problem$complete(par, counts, FALSE)$value
     mstep <- stats::optim(par,
@@ -264,7 +281,7 @@ mfrm_gmfrm_em <- function(problem, start = problem$start, maxit = 500L,
 }
 
 # Compare adaptive solutions, never fixed-grid and adaptive objective values.
-# The EM calculation supplies a starting vector only; inference keeps its own gates.
+# EM or supplied native vectors are starts only; inference keeps its own gates.
 mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
                                     optimizer, policy) {
   capture <- function(call) {
@@ -275,9 +292,21 @@ mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
       }))[["elapsed"]]
     list(value = value, error = error, warnings = unique(warnings), seconds = elapsed)
   }
-  starts <- list(neutral = problem$start)
+  supplied <- is.list(policy)
+  starts <- if (supplied) policy else list(neutral = problem$start)
+  if (supplied) {
+    if (is.object(starts) || length(starts) < 2L || is.null(names(starts)) ||
+        anyNA(names(starts)) || any(!nzchar(trimws(names(starts)))) || anyDuplicated(names(starts)))
+      stop("Supply a plain named list of at least two native starting vectors with distinct nonempty names.", call. = FALSE)
+    for (start in starts) if (!is.numeric(start) || is.complex(start) ||
+        !is.null(dim(start)) || length(start) != length(problem$start) || any(!is.finite(start)) ||
+        (!is.null(names(start)) && !identical(names(start), names(problem$start))))
+      stop("Each native start must be finite and match the model's free-parameter length and order; supplied parameter names must match exactly.", call. = FALSE)
+    policy <- "explicit"
+  }
   em <- NULL
   if (identical(policy, "neutral_em")) {
+    mfrmr_fit_progress(sprintf("Adaptive start preparation: EM, q=%d", quad_points))
     em <- capture(function() mfrm_gmfrm_em(problem, maxit = maxit, score_tol = 1e-6))
     starts["em"] <- list(em$value$par)
     if (!is.null(em$value)) em$value <- em$value[c("par", "trace", "controls",
@@ -286,6 +315,7 @@ mfrm_gmfrm_adaptive_fit <- function(problem, config, quad_points, maxit, reltol,
   common <- problem$common
   evaluate <- mfrmr_make_adaptive_mml_evaluator(common$idx, config, common$sizes, quad_points)
   attempts <- lapply(names(starts), function(name) {
+    mfrmr_fit_progress(sprintf("Adaptive start %s: q=%d", name, quad_points))
     start <- starts[[name]]; initial <- NA_real_
     trial <- capture(function() {
       if (is.null(start)) stop(paste("EM initialization unavailable:", em$error), call. = FALSE)
@@ -412,6 +442,7 @@ mfrm_gmfrm_assemble_fit <- function(problem, config, opt, controls, transformati
     estimability_audit = config$estimability_audit,
     category_support_audit = config$category_support_audit)
   params <- expand_params(opt$par, sizes, config)
+  mfrmr_fit_progress("Assembling two-family scores and diagnostics")
   person <- build_person_table("MML", common$idx, config, params, prep,
     quad_points = length(quad$nodes), quad = quad)
   config$boundary_audit <- audit_mfrm_person_boundary(person, config, prep)
@@ -508,9 +539,11 @@ mfrm_fit_product_slopes <- function(args, supplied) {
     config$estimation_control <- list(maxit = args$maxit, reltol = tol,
       quad_points = args$quad_points, quadrature = problem$specification$quadrature,
       mml_integration = "adaptive", mml_engine_requested = "direct", mml_engine_used = "direct",
+      gradient_review_per_person = 1e-6,
       optimizer_requested = args$optimizer)
-    policy <- match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))
-    config$estimation_control$gpcm_mml_start <- policy
+    policy <- if (is.list(args$gpcm_mml_start)) args$gpcm_mml_start else
+      match.arg(args$gpcm_mml_start %||% "neutral_em", c("neutral_em", "neutral"))
+    config$estimation_control$gpcm_mml_start <- if (is.list(policy)) "explicit" else policy
     opt <- mfrm_gmfrm_adaptive_fit(problem, config, args$quad_points, args$maxit,
       tol, args$optimizer, policy)
     config$estimation_control$optimizer_used <- opt$optimizer_plan$Used

@@ -30,8 +30,9 @@
 #'   without an interval is retained as an open circle; an asterisk marks rows
 #'   with unavailable intervals. Missing values are never replaced by zero.
 #'   Each difference panel has its own horizontal scale.
-#'   Original score units apply to SEM differences. The figure identifies the
-#'   score/composite, its weights and the reference counts. All plotted plans
+#'   Original score units apply to SEM differences. [plot_data()] identifies the
+#'   score/composite, its weights and the reference counts. Explanatory notes and
+#'   a suggested title are returned rather than drawn. All plotted plans
 #'   are future complete crossed plans, even when the source design is incomplete.
 #' @return Invisibly, an `mfrm_plot_data` object. [plot_data()] extracts the exact
 #'   comparison `table`, point-projection `series` (including the reference),
@@ -93,15 +94,12 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
   apply_plot_preset(style)
   old <- graphics::par()[c("mfrow", "mar", "oma", "cex", "mex")]
   on.exit(graphics::par(old), add = TRUE)
-  title_lines <- strwrap(title, 90)
-  subtitle_lines <- strsplit(subtitle, "\n", fixed = TRUE)[[1L]]
-  note_lines <- strwrap(note, 95)
   labels <- if (type == "coefficients") c("G: relative ordering", "Phi: absolute score levels") else
     c("Relative SEM: ordering", "Absolute SEM: score levels")
   # Keep margin line spacing compact so recorded panels also fit landscape devices.
   graphics::par(mfrow = c(2, 1), mex = .65,
     mar = if (view == "plans") c(6, 6, 2.5, 1) else c(5, 12, 2.5, 1),
-    oma = c(length(note_lines) + 1, 0, length(title_lines) + length(subtitle_lines) + 1.5, 0))
+    oma = c(.2, 0, .2, 0))
   for (j in seq_along(metrics)) {
     if (view == "plans") {
       tab <- series[series$Metric == metrics[j], , drop = FALSE]
@@ -111,16 +109,16 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
       axis_labels <- vapply(seq_len(nrow(x$design_grid)), function(i)
         paste(paste(names(x$design_grid), unlist(x$design_grid[i, ]), sep = " = "), collapse = "\n"), character(1))
       axis_labels[x$reference] <- paste0(axis_labels[x$reference], "\n(reference)")
-      graphics::plot(tab$Scenario, tab$Value, type = "n", ylim = limits, xaxt = "n", yaxt = "n",
+      plot(tab$Scenario, tab$Value, type = "n", ylim = limits, xaxt = "n", yaxt = "n",
         xlab = "", ylab = "", main = labels[j])
-      graphics::mtext(if (type == "coefficients") "Dependability" else "SEM (score units)",
+      mtext(if (type == "coefficients") "Dependability" else "SEM (score units)",
         side = 2, line = 4.2)
-      graphics::axis(1, at = tab$Scenario, labels = axis_labels, cex.axis = .75, padj = 1)
-      if (type == "coefficients") graphics::axis(2, at = seq(0, 1, .25), las = 1) else graphics::axis(2, las = 1)
+      axis(1, at = tab$Scenario, labels = axis_labels, cex.axis = .75, padj = 1)
+      if (type == "coefficients") axis(2, at = seq(0, 1, .25), las = 1) else axis(2, las = 1)
       graphics::grid(nx = NA, ny = NULL, col = style$grid)
-      graphics::lines(tab$Scenario, tab$Value, lwd = 2)
-      graphics::points(tab$Scenario, tab$Value, pch = ifelse(tab$IsReference, 18, 16), cex = 1.2)
-      if (!any(is.finite(tab$Value))) graphics::text(mean(tab$Scenario), mean(limits), "Point projections unavailable")
+      lines(tab$Scenario, tab$Value, lwd = 2)
+      points(tab$Scenario, tab$Value, pch = ifelse(tab$IsReference, 18, 16), cex = 1.2)
+      if (!any(is.finite(tab$Value))) text(mean(tab$Scenario), mean(limits), "Point projections unavailable")
       next
     }
     tab <- table[table$Metric == metrics[j], , drop = FALSE]
@@ -129,21 +127,16 @@ plot.mfrm_multivariate_d_comparison <- function(x, type = c("coefficients", "sem
     limits <- range(c(0, extent[is.finite(extent)]))
     if (diff(limits) == 0) limits <- limits + c(-.05, .05)
     direction <- if (type == "coefficients") "Higher favors comparison" else "Lower favors comparison"
-    graphics::plot(limits, c(.5, nrow(tab) + .5), type = "n", yaxt = "n", ylab = "",
+    plot(limits, c(.5, nrow(tab) + .5), type = "n", yaxt = "n", ylab = "",
       xlab = paste("Difference from reference |", direction), main = labels[j])
-    graphics::axis(2, at = position, labels = ifelse(tab$Status == "Available", tab$Plan,
+    axis(2, at = position, labels = ifelse(tab$Status == "Available", tab$Plan,
       paste0(tab$Plan, " *")), las = 1, cex.axis = .8)
-    graphics::abline(v = 0, lty = 2, col = "grey50")
+    abline(v = 0, lty = 2, col = "grey50")
     ok <- tab$Status == "Available"
-    graphics::segments(tab$Lower[ok], position[ok], tab$Upper[ok], position[ok], lwd = 2)
+    segments(tab$Lower[ok], position[ok], tab$Upper[ok], position[ok], lwd = 2)
     finite <- is.finite(tab$Difference)
-    graphics::points(tab$Difference[finite], position[finite], pch = ifelse(ok[finite], 16, 1))
-    if (!any(finite)) graphics::text(mean(limits), mean(position), "Point projections unavailable")
+    points(tab$Difference[finite], position[finite], pch = ifelse(ok[finite], 16, 1))
+    if (!any(finite)) text(mean(limits), mean(position), "Point projections unavailable")
   }
-  graphics::mtext(title_lines, side = 3, outer = TRUE,
-    line = rev(seq_along(title_lines)) + length(subtitle_lines) - .2, font = 2, cex = .85)
-  graphics::mtext(subtitle_lines, side = 3, outer = TRUE,
-    line = rev(seq_along(subtitle_lines)) - .6, cex = .75)
-  graphics::mtext(note_lines, side = 1, outer = TRUE, line = seq_along(note_lines) - .5, cex = .75)
   invisible(out)
 }

@@ -121,6 +121,9 @@ test_that("observation cannot read artifacts, compute metrics, or launch", {
 })
 
 test_that("record and roadmap retain the bounded same-author result", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_numerical_observation()
   record <- paste(readLines(file.path(
     ctx$validation,

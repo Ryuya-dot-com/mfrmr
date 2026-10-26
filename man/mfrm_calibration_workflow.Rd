@@ -47,7 +47,8 @@ score_mfrm_calibration(
   missing_response = "error",
   event_id = NULL,
   adaptive_quad_points = NULL,
-  scoring_prior = NULL
+  scoring_prior = NULL,
+  cut_scores = NULL
 )
 }
 \arguments{
@@ -123,6 +124,14 @@ Legacy artifacts with discrete grid-endpoint intervals require re-extraction
 before using this option. The prior is common to all scored persons;
 covariate-dependent overrides are not supported. Two-family GPCM format 6
 requires \code{scoring_prior = NULL} and retains the fixed N(0,1) prior.}
+
+\item{cut_scores}{Optional named, strictly increasing finite ability cuts
+for \code{score_mfrm_calibration()}. Ordinary RSM/PCM with unit weights and
+continuous posterior intervals only. Returns a \code{decisions} table of
+probabilities above cuts and in successive bands on the calibration scale.
+Calibration, prior and cuts are held fixed; this excludes their estimation
+uncertainty. Unscored Persons remain unavailable. Cut names do not establish
+CEFR alignment. See \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for interpretation and reporting.}
 }
 \value{
 \code{extract_mfrm_calibration()}, \code{validate_mfrm_calibration()},
@@ -133,6 +142,8 @@ structured refusals, with zero rows for an acceptable object.
 \code{save_mfrm_calibration()} invisibly returns the normalized path.
 \code{score_mfrm_calibration()} returns an \code{mfrm_calibration_score} containing
 estimates plus row and Person dispositions and scoring identities.
+With \code{cut_scores}, it also retains \code{decisions}: conditional event
+probabilities with boundaries, labels, actual priors and availability.
 When requested and scored rows exist, \code{quadrature_review} contains the
 fixed/adaptive comparison; \code{summary()} preserves it and adds a compact
 \code{quadrature_overview}.
@@ -277,6 +288,30 @@ intervals. EAP and SD retain the stored quadrature rule. Saved v1 artifacts
 preserve their discrete grid interval endpoints and carry a note that the
 continuous posterior mass can differ from the requested interval level.
 }
+\section{Anchors, centering and score uncertainty}{
+
+New exports distinguish whole-facet centering, legacy remainder centering
+and uncentered facets in \code{constraints$identification}. Direct values and
+group means are retained in \code{constraints$anchors}; validation checks the
+explicit facet maps against the stored coordinates and free dimensions.
+For example, if four raters are centered as a whole and the first three
+have mean 0.10, the fourth is fixed at -0.30. Freezing retains all four
+calibrated values, including the estimates of the free group members.
+
+Scoring uses those expanded values without centering or estimating them
+again. A returned \code{SD} is a Person posterior SD conditional on the entire
+frozen calibration and scoring prior. It is not a rater SE and excludes
+uncertainty in both the estimated calibration and supplied anchors.
+Use \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} for supported conditional facet intervals.
+With an anchored fitted model, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} accepts supplied
+response rows; the narrower \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} entry excludes anchors.
+
+Loading an older artifact preserves its values and original constraint
+labels. Older generic labels do not fully identify the centering convention;
+consult the source fit or re-extract it to obtain explicit labels. Changing
+a label cannot convert a calibration to another scale.
+}
+
 \section{Statistical basis and external comparisons}{
 
 Bock and Mislevy (1982, pp. 432-433) describe posterior-mean and
@@ -297,6 +332,93 @@ its default output is not the same estimator as unadjusted JML. Do not
 infer agreement of estimators from agreement of fixed-calibration scores.
 }
 
+\section{Choose what to save}{
+
+Save a fitted analysis or \code{\link[=mfrm_results]{mfrm_results()}} with \code{saveRDS()} when you need
+to revisit its diagnostics and reports. A portable \code{mfrm_calibration} has a
+different purpose: scoring new response rows without the training fit or
+training responses. Use \code{save_mfrm_calibration()} and
+\code{load_mfrm_calibration()} for that artifact. Save an already computed
+\code{mfrm_calibration_score} with \code{saveRDS()} to reproduce its tables and figures
+without scoring the responses again. A CSV is a table, not a replacement
+for any of these complete objects.
+
+Validation checks the saved parameters, scoring settings and model checks;
+freezing marks that calibration as ready for scoring without changing it.
+These steps do not establish model fit, lack of bias or suitability for another
+population. New Persons may use known calibrated facet levels. An unknown
+rater, task or score category requires an appropriate calibration workflow;
+assigning an existing level's name is not a way to extend the calibration.
+Missing responses are not zero scores. With \code{missing_response = "omit"},
+inspect row dispositions and Persons who could not be scored.
+
+Older saved objects are checked against their recorded format and evidence.
+Inspect \code{review_mfrm_calibration()} if a file has missing or inconsistent
+records. Do not change saved check results to force acceptance. If checks
+of the original fitted model are missing, re-extract from that saved model
+if it passes the current checks; when only the
+score records are incomplete, score again from a valid frozen artifact.
+Neither action means that model refitting is automatically necessary.
+}
+
+\section{Conditional ability decisions}{
+
+Supply \code{cut_scores} on the calibration's ability scale to obtain
+\code{decisions}, with one row per Person and requested event. \code{Type = "above_cut"}
+gives \eqn{P(\theta > c \mid y, \widehat\psi)}; \code{Type = "ability_band"}
+gives the probability between successive cuts, including the two outer
+bands. \verb{Lower < ability <= Upper} defines every row. \code{Label} uses the
+supplied cut names (or \code{Cut1}, ...) and \code{Band1}, ... in increasing order.
+These events overlap: only the ability-band probabilities sum to one.
+
+\code{PriorMean} and \code{PriorSD} record the actual Person-specific normal prior;
+\code{Status} and \code{Reason} retain scoring availability. \code{available_conditional}
+means the applicable numerical checks passed, not that the model or the
+cut's substantive meaning has been validated. \code{review_only} requires
+inspection before interpretation. Source-roster scoring may return
+\code{prior_only} for missing-only Persons; portable scoring instead retains
+them as \code{unavailable} with \code{NA} probabilities. Fitted-object scoring omits
+Persons with no retained rows; inspect its row and population reviews.
+A Person absent from the input is never invented.
+
+Probabilities integrate the continuous posterior, rather than counting
+\code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} draws or applying a normal approximation
+to EAP/SD. They condition on point calibration, population/prior parameters
+and supplied cuts, as recorded in \code{Uncertainty}. They do not propagate
+estimation error, compare two Persons or predict passing a future test.
+CEFR labels require externally justified cuts on this same scale.
+Very small tails have absolute, not relative, numerical accuracy; a
+returned zero or one is not a claim of impossibility or certainty.
+
+Review the scoring population as well as the calibration. An estimated
+normal prior is treated as known during scoring; its sampling uncertainty
+can matter especially with a small calibration cohort. A larger calibration
+cohort can improve parameter precision without correcting a prior that
+mismatches a new population's mean, spread or shape. Passing numerical checks
+does not establish that probabilities are accurate for that new population.
+A fixed reference prior is not a universal remedy: justify it for the target
+population on the calibration scale. If a prior override is supported,
+comparing externally justified alternatives is a sensitivity analysis, not
+evidence that the alternative giving the preferred classification is valid.
+Population-averaged accuracy also does not guarantee accuracy near each cut,
+within every subgroup or for each individual Person.
+
+Use \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} for eligible ordinary RSM MML source Persons,
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for ordinary RSM/PCM MML or JML fitted-object scoring, and
+\code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} for eligible continuous-posterior RSM/PCM
+artifacts. Each route retains its existing source and population
+restrictions. Unit weights are required; GPCM, shared-rater and testlet
+cut probabilities are not supported. JML uses a separate scoring prior,
+not a population estimated by JML. \code{NULL} leaves the existing output unchanged.
+
+\code{summary(x)$decisions} and \code{\link[=apa_table]{apa_table()}} with \code{which = "decisions"} reuse
+saved probabilities without rounding them. Fitted-object and portable
+score batches also support \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} and
+\code{\link[=export_summary_appendix]{export_summary_appendix()}}. Save the complete result with \code{\link[=saveRDS]{saveRDS()}}
+to retain cuts, priors and review states for later reporting. Existing
+score plots display EAPs and intervals, not these event probabilities.
+}
+
 \references{
 Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability
 in a microcomputer environment. \emph{Applied Psychological Measurement},
@@ -311,5 +433,7 @@ and \href{https://conquestmanual.acer.org/s4-00.html}{ACER ConQuest command refe
 }
 \seealso{
 \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}}, \link{mfrm_calibration_score_methods}
-for concise review and visualization of returned score batches.
+for an executable scoring example, concise review and visualization of
+returned score batches; \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=score_mfrm_persons]{score_mfrm_persons()}},
+\code{\link[=apa_table]{apa_table()}} and \code{\link[=export_summary_appendix]{export_summary_appendix()}} for saved-score tables.
 }

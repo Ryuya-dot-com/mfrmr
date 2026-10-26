@@ -91,6 +91,9 @@ test_that("the qualification contract fits, reads, and launches nothing", {
 })
 
 test_that("the frozen record stays pre-audit while the roadmap records outcome", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_log_centered_continuous_oracle()
   record_path <- file.path(
     ctx$validation,

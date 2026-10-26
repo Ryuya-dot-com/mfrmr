@@ -49,3 +49,38 @@ test_that("packaged extended examples are coherent and replay without recomputat
     mustWork = TRUE), envir = recipe)
   expect_true(is.function(recipe$extended_model_examples))
 })
+
+test_that("extended reports distinguish unsupplied response diagnostics from unavailable methods", {
+  x <- readRDS(system.file("examples", "extended-models.rds", package = "mfrmr", mustWork = TRUE))
+  blocked <- function(...) stop("Unexpected statistical recomputation")
+  local_mocked_bindings(fit_mfrm_testlet = blocked, fit_mfrm_random_rater = blocked,
+    diagnose_mfrm = blocked, mfrm_response_diagnostics = blocked, .package = "mfrmr")
+  for (model in x) {
+    res <- mfrm_results(model$fit, compute = "never")
+    before <- serialize(res, NULL)
+    report <- mfrm_report(res)
+    row <- report$first_screen[report$first_screen$Area == "Response residuals", ]
+    expect_equal(nrow(row), 1L)
+    expect_identical(row$Status, "not_computed")
+    expect_identical(row$Readiness, "Not supplied")
+    expect_match(row$NextAction, "mfrm_response_diagnostics(fit)", fixed = TRUE)
+    expect_match(row$MainIssue, "Ordinary residual diagnostics are not implemented", fixed = TRUE)
+    expect_identical(res$status$Status[res$status$Section == "response_diagnostics"], "not_computed")
+    expect_identical(res$status$Status[res$status$Section == "diagnostics"], "not_available")
+    expect_equal(summary(report)$overview$NotComputedAreas, 1L)
+    expect_identical(report$tables, res$tables)
+    expect_identical(serialize(res, NULL), before)
+
+    unresolved <- model$fit
+    unresolved$checks$NumericalReady <- FALSE
+    expect_identical(summary(mfrm_report(mfrm_results(unresolved, compute = "never")))$overview$OverallStatus,
+      "review")
+  }
+  res <- mfrm_results(x$testlet$fit, response_diagnostics = x$testlet$diagnostics,
+    compute = "never")
+  report <- mfrm_report(res)
+  row <- report$first_screen[report$first_screen$Area == "Response residuals", ]
+  expect_identical(row$Status, "caveat")
+  expect_identical(row$Readiness, "Descriptive only")
+  expect_identical(report$tables$response_overview, res$tables$response_overview)
+})

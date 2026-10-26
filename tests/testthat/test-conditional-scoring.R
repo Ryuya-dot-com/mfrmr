@@ -21,10 +21,10 @@ test_that("conditional population scoring carries checks through summaries, draw
   stale <- pred
   stale$settings$score_integration_review <- NULL
   expect_error(summary(stale),"inconsistent numerical review records")
-  expect_error(mfrmr:::export_validate_optional_object(stale,"mfrm_unit_prediction","prediction"),
+  expect_error(mfrmr:::export_validate_optional_object(stale,"mfrm_unit_prediction","prediction", fit = x$fit),
     "inconsistent numerical review records")
   expect_s3_class(build_summary_table_bundle(pred),"mfrm_summary_table_bundle")
-  expect_silent(mfrmr:::export_validate_optional_object(pred,"mfrm_unit_prediction","prediction"))
+  expect_silent(mfrmr:::export_validate_optional_object(pred,"mfrm_unit_prediction","prediction", fit = x$fit))
   expect_match(paste(capture.output(print(summary(pred))),collapse=" "),"local solution")
   pv <- sample_mfrm_plausible_values(x$fit,x$new,n_draws=3,seed=42)
   expect_identical(pv$settings$source_scoring_status,"conditional")

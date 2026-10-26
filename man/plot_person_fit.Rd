@@ -62,6 +62,12 @@ review (overfit / underfit) using
 \code{\link[=unexpected_response_table]{unexpected_response_table()}} for follow-up.
 }
 
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -94,7 +100,6 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -113,12 +118,12 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Compare each person's Infit and Outfit with the reference value of 1
-plot_person_fit(fit, diagnostics = diagnostics)
+plot(fit, type = "person_fit", diagnostics = diagnostics)
 # Values above 1 indicate more response variation than expected, below 1 less
 # The reference bands flag patterns for review, not automatic exclusion
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
 \code{\link[=build_misfit_casebook]{build_misfit_casebook()}}.
 }
+\keyword{internal}

@@ -18,7 +18,11 @@ Variance components and Person abilities are not included.}
 }
 \value{
 A matrix with \code{Lower} and \code{Upper}, one row per fixed-facet level or
-step, and attributes \code{level}, \code{method}, \code{target} and \code{note}.
+step, and attributes \code{level}, \code{method}, \code{target}, \code{note}, \code{checks} and
+\code{diagnostics}. \code{attr(ci, "diagnostics")} retains each estimate, SE,
+\code{IntervalStatus}, \code{CIEligible} and plain-language \code{InferenceReview}; \code{checks}
+retains the source checks without recomputing them. Save the whole object
+with \code{\link[=saveRDS]{saveRDS()}}; for CSV, export the diagnostics table to retain reasons.
 }
 \description{
 Explicit normal-approximation intervals for testlet calibration
@@ -38,6 +42,22 @@ approximation in those outputs; their level arguments retain its nominal
 interpretation. \code{\link[=predict.mfrm_testlet]{predict.mfrm_testlet()}} supplies the separate conditional
 Person-scoring intervals.
 }
+\section{Reading missing bounds}{
+
+\code{estimated_variance_boundary} means an estimated variance is at zero;
+regular normal inference is withheld even when a point is retained.
+\code{numerical_review_failed} means numerical readiness or positive information
+has not been established; \code{InferenceReview} retains all detected reasons,
+including any simultaneous boundary. Increasing iterations alone does not
+repair a variance-boundary restriction. Inspect \code{attr(ci, "checks")} first.
+\code{invalid_estimate_or_se} and \code{nonfinite_bounds} identify row-specific
+calculation failures. Missing bounds are neither zero uncertainty nor
+infinite endpoints. Retaining a point does not certify its reliability.
+Default calibration tables also distinguish \code{not_requested} from
+\code{unsupported_target} (population SDs/variances). \code{CIEligible} is true only
+for a returned normal interval; it is not a coverage guarantee.
+}
+
 \seealso{
 \code{\link[=confint.mfrm_random_rater]{confint.mfrm_random_rater()}}, \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}}
 }

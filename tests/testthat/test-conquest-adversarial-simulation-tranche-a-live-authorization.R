@@ -259,6 +259,9 @@ test_that("G4L is the exact P4 issuer but remains opt-in and uncalled", {
 })
 
 test_that("G4L record advances only the internal execution checklist", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_tranche_a_live_authorization()
   record <- paste(readLines(file.path(
     ctx$validation,

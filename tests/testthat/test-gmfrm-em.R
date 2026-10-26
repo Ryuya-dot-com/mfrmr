@@ -13,6 +13,31 @@ gmfrm_numeric_gradient <- function(f, x, h = 1e-5) {
   }, numeric(1))
 }
 
+test_that("two-family kernel reuse preserves changing E-step counts and invalid trials", {
+  evaluations <- 0L
+  original <- mfrm_jml_probability_bundle
+  local_mocked_bindings(mfrm_jml_probability_bundle = function(...) {
+    evaluations <<- evaluations + 1L
+    original(...)
+  }, .package = "mfrmr")
+  p <- gmfrm_test_problem()$problem
+  x <- p$start + seq(-.1, .1, length.out = length(p$start))
+  initial <- evaluations
+  state <- p$marginal(x)
+  expect_identical(evaluations - initial, 1L)
+  first <- p$complete(x, state$counts)
+  doubled <- p$complete(x, 2 * state$counts)
+  expect_identical(evaluations - initial, 1L)
+  expect_equal(doubled$value, 2 * first$value, tolerance = 0)
+  expect_equal(doubled$gradient, 2 * first$gradient, tolerance = 0)
+  changed <- x; changed[1] <- changed[1] + .2
+  expect_false(identical(p$kernel(changed), p$kernel(x)))
+  bad <- x; bad[grepl("^log_slope:Rater", names(bad))] <- 1000
+  expect_null(p$kernel(bad))
+  expect_identical(p$marginal(bad)$value, Inf)
+  expect_identical(p$marginal(x), state)
+})
+
 test_that("common product parameters retain owners and reject non-product crossings", {
   p <- gmfrm_test_problem()$problem
   setup <- p$common
@@ -53,6 +78,52 @@ test_that("common MML likelihood and scores agree with the EM marginal calculati
     expect_equal(collapse_expanded_params(expand_params(x, setup$sizes, setup$config),
       setup$config), x, tolerance = 1e-12)
     expect_equal(nrow(setup$config$gpcm_spec$cells), if (sparse) 8L else 9L)
+  }
+})
+
+test_that("two-family E-step counts retain prior weights at extreme finite likelihoods", {
+  d <- expand.grid(Person = c("b", "a", "c"), Task = c("t1", "t2"), Rater = c("r1", "r2"))
+  d$Score <- as.integer(d$Person == "a")
+  rule <- list(nodes = c(-1, 0, 1), weights = c(.2, .5, .3))
+  for (offset in c(1e12, 1e16)) {
+    p <- mfrm_gmfrm_problem(d, 1L, rule)
+    x <- p$start; x[grepl("location:Rater:", names(x))] <- -offset
+    actual <- p$marginal(x)
+    # All four ratings of b/c are category zero; a has category one. At
+    # 1e16 the node displacement rounds away, so the E step must equal the
+    # prior. At 1e12 the likelihood ratios still contribute exp(-4 * theta).
+    lower <- if (offset == 1e16) rule$weights else rule$weights * exp(-4 * rule$nodes)
+    lower <- lower / sum(lower)
+    expected <- rbind(rule$weights, lower, lower)
+    expect_equal(unname(actual$posterior), unname(expected), tolerance = 1e-14)
+    expect_identical(rownames(actual$posterior), c("a", "b", "c"))
+    expect_equal(unname(rowSums(actual$posterior)), rep(1, 3), tolerance = 1e-14)
+    expect_equal(sum(actual$counts), nrow(d), tolerance = 1e-14)
+    expect_equal(actual$counts,
+      cbind(rep(2 * lower, each = 4), rep(rule$weights, each = 4)), tolerance = 1e-14)
+    expect_equal(actual$gradient[2:3], rep(-4/3, 2), tolerance = 1e-14)
+    expect_equal(p$marginal(x, derivatives = FALSE)$posterior, actual$posterior)
+    reordered <- mfrm_gmfrm_problem(d[rev(seq_len(nrow(d))), ], 1L, rule)
+    expect_equal(reordered$marginal(x), actual, tolerance = 1e-14)
+  }
+})
+
+test_that("two-family M-step log-slope scores retain small contrasts at large logits", {
+  d <- expand.grid(Person = c("b", "a", "c"), Task = c("t1", "t2"), Rater = c("r1", "r2"))
+  d$Score <- rep(0:2, length.out = nrow(d))
+  rule <- list(nodes = c(-1, 0, 1), weights = c(.2, .5, .3))
+  p <- mfrm_gmfrm_problem(d, 2L, rule)
+  x <- p$start
+  x[grepl("location:Rater:", names(x))] <- -1e12
+  x[grepl("step:Rater:", names(x))] <- -1e12 + 2
+  # Category zero has negligible probability; the adjacent log odds between
+  # categories 1 and 2 are theta + 2, despite their logits being about 2e12.
+  for (category in 1:2) {
+    counts <- matrix(0, 12, 3); counts[, category + 1L] <- 1
+    odds <- rule$nodes + 2
+    row_score <- odds * if (category == 1) plogis(odds) else -plogis(-odds)
+    expected <- c(0, rep(2 * sum(row_score) / p$n_person, 2))
+    expect_equal(tail(p$complete(x, counts)$gradient, 3), expected, tolerance = 1e-14)
   }
 })
 

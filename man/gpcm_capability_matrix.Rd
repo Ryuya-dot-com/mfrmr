@@ -2,19 +2,29 @@
 % Please edit documentation in R/help_gpcm_scope.R
 \name{gpcm_capability_matrix}
 \alias{gpcm_capability_matrix}
-\title{GPCM Workflow Availability}
+\alias{gpcm_score_side_contract}
+\alias{gpcm_runtime_guard_coverage}
+\title{GPCM workflow and score availability}
 \usage{
 gpcm_capability_matrix(
-  status = c("all", "supported", "supported_with_caveat", "blocked", "deferred")
+  status = "all",
+  view = c("workflows", "scores", "unavailable")
 )
 }
 \arguments{
-\item{status}{Which rows to return: \code{"all"} (default), \code{"supported"},
-\code{"supported_with_caveat"}, \code{"blocked"}, or \code{"deferred"}.}
+\item{status}{Which rows to return. For \code{view = "workflows"} or
+\code{"unavailable"}, use \code{"all"} (default), \code{"supported"},
+\code{"supported_with_caveat"}, \code{"blocked"}, or \code{"deferred"}.
+For \code{view = "scores"}, use \code{"all"}, \code{"available_with_caveat"},
+\code{"supporting_route"}, or \code{"unavailable"}.}
+
+\item{view}{The table to read: \code{"workflows"} (default) gives the general
+map; \code{"scores"} describes package-native versus FACETS-style score
+quantities; \code{"unavailable"} lists blocked/deferred routes and alternatives.}
 }
 \value{
-A data.frame of class \code{mfrmr_gpcm_capabilities} with one row per
-workflow family and columns:
+For \code{view = "workflows"}, a data.frame of class
+\code{mfrmr_gpcm_capabilities} with one row per workflow family and columns:
 \itemize{
 \item \code{Area}
 \item \code{Helpers}
@@ -22,6 +32,10 @@ workflow family and columns:
 \item \code{Boundary}
 \item \code{RecommendedRoute}
 }
+
+For \code{view = "scores"}, an ordinary data.frame with \code{Capability}, \code{Status},
+\code{Limitation} and \code{Alternative}. For \code{view = "unavailable"}, an ordinary
+data.frame with \code{Area}, \code{Helper}, \code{Status}, \code{Boundary} and \code{RecommendedRoute}.
 }
 \description{
 Check which \code{GPCM} workflows can be used in \code{mfrmr}, the limits that
@@ -69,6 +83,21 @@ restricted as described in \code{Boundary};
 Read \code{Boundary} before interpreting a caveated result. For a blocked or
 deferred row, use \code{RecommendedRoute} to choose a supported analysis or a
 Rasch-family alternative.
+
+In the score view, \code{available_with_caveat} denotes an available quantity
+within its \code{Limitation}, \code{supporting_route} denotes related evidence or a
+reference model rather than a replacement for that quantity, and
+\code{unavailable} denotes a quantity not supplied. Package-native GPCM scores
+and uncertainty are not FACETS score-side equivalents. These statuses are
+kept separate from the general workflow statuses to preserve their meaning.
+
+In 0.2.4, this is the single public entry for all three tables. Replace
+\code{gpcm_score_side_contract(status)} with
+\code{gpcm_capability_matrix(status, view = "scores")}, and
+\code{gpcm_runtime_guard_coverage()} with
+\code{gpcm_capability_matrix(view = "unavailable")}. Each view retains its former
+column schema and status meanings. These tables describe supported routes;
+they do not inspect a particular fit or certify its inferential eligibility.
 }
 \section{Connected outputs and unavailable extensions}{
 
@@ -79,13 +108,17 @@ separately checked MML uncertainty. An interval result has its own \code{print()
 and \code{plot()} methods; attach selected results to \code{\link[=mfrm_results]{mfrm_results()}} for
 \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}. A plot of locations or fit
 statistics is not a plot of slope uncertainty.
-\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} separately supplies experimental native-scale
-model intervals for one-family MML locations and within-facet contrasts.
+\code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}} separately supplies native-scale model-information
+Wald intervals for one-family MML locations and within-facet contrasts.
 Direct fixed/adaptive MML, centered additive facets/steps and unit weights
 are required, with an estimated intercept-only normal population or the
 explicit fixed-N(0,1) restriction. Shared/separate slope and step owners are
 supported. Full-information and finer-grid checks preserve refusal reasons;
-sampling coverage and standardized-location intervals remain unqualified.
+regular asymptotic validity assumes a correctly specified, identified
+interior marginal model with nonsingular limiting information.
+Finite-sample coverage is not guaranteed. Explicit zero-sum contrasts can
+be standardized by the same fit's population SD using the full delta method;
+individual standardized-location intervals are not supplied.
 
 Portable calibration has its own row and \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}
 gives estimator-specific source restrictions. Two slope families are available
@@ -101,12 +134,14 @@ function name, this route returns fitted values with unavailable intervals.
 Attach them with \code{mfrm_results(fit, intervals = curves)} for reports and
 saved exports. Without attachments, \code{mfrm_results(fit)} collects the saved
 fit and its numerical status; neither call calculates new diagnostics.
-Separately use \code{ci <- confint(fit)} for experimental component log-Wald intervals
+Separately use \code{ci <- confint(fit, parm = "slopes")} for experimental component log-Wald intervals
 and attach \code{intervals = list(slopes = ci, curves = curves)}. Local numerical
 checks do not establish global identification or sampling coverage; failed
 checks retain missing bounds.
-For fixed-grid EM, an explicit \code{confint(fit, method = "profile", slope = c(Task = "t1"))}
+An explicit \code{confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t1"))}
 profiles one two-family component, using the actual owner/level names.
+It preserves the fitted fixed or adaptive integration method; adaptive nodes,
+scales and Jacobians are recomputed throughout the constrained searches.
 It retains nuisance reoptimization, numerical checks, unavailable endpoints
 and a same-target Wald comparison. Neither method has qualified coverage.
 Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare
@@ -114,8 +149,7 @@ refits with the same engine and integration method. Both routes retain
 each order's experimental log-Wald checks. Optional \code{adaptive_quad_points} also adds fixed-calibration
 integration checks for two families; the posterior moments in that review
 are numerical diagnostics, not a Person-scoring workflow. Person-score
-comparisons remain unavailable for two families. Adaptive two-family fitting
-does not yet supply profile intervals.
+comparisons remain unavailable for two families.
 For both engines, \code{\link[=mfrm_response_diagnostics]{mfrm_response_diagnostics()}} supplies same-data posterior
 predictive residuals with fixed calibration, including descriptive Infit/Outfit
 without reference cutoffs. It retains the fitted integration method and
@@ -157,8 +191,14 @@ integration (\code{population = NULL}). One-family GPCM EM/hybrid requests fall 
 and record the engine in \code{fit$summary}.
 
 The provisional two-slope-family GMFRM route uses fixed-standard-normal MML
-with numerical generalized EM. It requires an explicit EM request; direct
-and hybrid are not available for this route. EM is not a defining property
+with fixed-grid generalized EM (\code{mml_engine = "em"}) or adaptive direct
+optimization (\verb{mml_engine = "direct", mml_integration = "adaptive"}).
+\code{mml_integration = "auto"} preserves the selected engine and increases
+integration points up to \code{mml_accuracy_control = list(max_points = ...)},
+including reference rules, while retaining the numerical and information
+checks. Fixed integration remains the package default; two-family direct
+fitting requires explicit adaptive or automatic integration. Adaptive EM
+and two-family hybrid fitting are unavailable. EM is not a defining property
 of GMFRM. See the GPCM
 scope vignette for the distinction between the model, estimation method
 and algorithm, with links to Muraki, TAM and sirt.
@@ -283,7 +323,7 @@ not establish its structural assumptions.
 
 These decisions are separate, and do not follow from unidimensionality:
 \itemize{
-\item \strong{Slope intervals:} \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} uses the inverse joint observed
+\item \strong{Slope intervals:} \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} with \code{parm = "slopes"} uses the inverse joint observed
 information, including estimated population parameters, and the sum-zero
 log-slope transformation. It checks likelihood consistency, convergence,
 positive unregularized information, unit weights and a grid of at least
@@ -374,7 +414,7 @@ geometric-mean-one slopes: together they impose an additional restriction.
 Transformed intervals require the joint parameter covariance. Multiplying
 relative-slope interval endpoints by an estimated population SD omits its
 uncertainty and covariance with the slopes. Use \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}} with
-\code{scale = "standardized"} for the full transformation; with covariates the SD
+\verb{parm = "slopes", scale = "standardized"} for the full transformation; with covariates the SD
 is the residual population SD. TAM's documented \code{tam.se()} omits
 parameter covariances; ConQuest distinguishes the covariance of parameter
 estimates from the latent-population covariance. Neither marginal SEs nor
@@ -408,6 +448,9 @@ intervals. An unstable calibration also limits their interpretation.
 gpcm_capability_matrix()
 gpcm_capability_matrix("supported")
 gpcm_capability_matrix("blocked")
+gpcm_capability_matrix(view = "scores")
+gpcm_capability_matrix("unavailable", view = "scores")
+gpcm_capability_matrix(view = "unavailable")
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=compute_information]{compute_information()}},

@@ -128,6 +128,42 @@ test_that("numeric overflow and weight underflow cannot silently discard feature
   expect_error(mfrm_cluster(x, 2, weights = c(Wide = 1e-308, Group = 1e308)), "underflow")
 })
 
+test_that("original-unit profile SDs survive squared overflow and underflow", {
+  skip_if_not_installed("cluster")
+  values <- c(1, 2, 3, 11, 12, 13)
+  for (factor in c(1e200, 1e-200, 1e-160)) {
+    x <- mfrm_features(data.frame(ID = letters[1:6], X = values * factor), "ID", "X")
+    for (fun in list(mfrm_cluster_pam, mfrm_cluster_hierarchical)) {
+      out <- fun(x, 2)
+      expect_equal(out$profiles$numeric$SD / factor, c(1, 1), tolerance = 1e-12)
+      expect_equal(out$profiles$numeric$Mean / factor, c(2, 12), tolerance = 1e-12)
+      expect_equal(out$membership$Cluster, c(1L, 1L, 1L, 2L, 2L, 2L))
+    }
+  }
+  # Preserve a true zero and an undefined singleton SD, independently of scale.
+  profiles <- cluster_feature_profiles(data.frame(X = c(1, 1, 3) * 1e200), c(1, 1, 2))
+  expect_identical(profiles$numeric$SD, c(0, NA_real_))
+  # The shared helper also serves k-means; ordinary results remain exact.
+  x <- mfrm_features(data.frame(ID = letters[1:6], X = values), "ID", "X")
+  out <- mfrm_cluster_kmeans(x, 2, silhouette = FALSE)
+  expected <- vapply(seq_len(2), function(g) sd(values[out$membership$Cluster == g]), numeric(1))
+  expect_identical(out$profiles$numeric$SD, expected)
+})
+
+test_that("Gower ordinal gaps and singleton silhouettes retain their definitions", {
+  skip_if_not_installed("cluster")
+  ordinal <- ordered(c("b", "b", "d", "e"), levels = letters[1:6])
+  x <- mfrm_features(data.frame(ID = letters[1:4], Grade = ordinal), "ID", "Grade")
+  out <- mfrm_cluster_hierarchical(x, 3)
+  # Observed codes 2, 2, 4, 5 use range 3; unused middle level c is not dropped.
+  distance <- abs(outer(c(2, 2, 4, 5), c(2, 2, 4, 5), "-")) / 3
+  expected <- hclust(as.dist(distance), method = "average")
+  expect_equal(out$tree$height, expected$height, tolerance = 1e-14)
+  expect_identical(out$tree$merge, expected$merge)
+  expect_identical(out$membership$Silhouette, c(1, 1, 0, 0))
+  expect_identical(levels(out$feature_data$data$Grade), letters[1:6])
+})
+
 test_that("mice completions preserve observed mixed features and model diagnostics", {
   skip_if_not_installed("mice")
   skip_if_not_installed("cluster")

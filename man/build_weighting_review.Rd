@@ -109,7 +109,6 @@ validity adjudication.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 rasch_fit <- fit_mfrm(
   toy,
@@ -134,7 +133,6 @@ gpcm_fit <- fit_mfrm(
 review <- build_weighting_review(rasch_fit, gpcm_fit, theta_points = 41)
 summary(review)
 review$top_reweighted_levels
-}
 }
 \seealso{
 \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=compute_information]{compute_information()}}, \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}

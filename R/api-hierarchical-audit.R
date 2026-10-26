@@ -46,12 +46,15 @@
 
 #' @keywords internal
 #' @noRd
-.ha_entropy <- function(x) {
+.ha_entropy <- function(x, weights = rep(1, length(x))) {
   # Shannon entropy H(X) in nats using observed frequencies. NA-safe:
   # NA levels are dropped before counting.
-  x <- x[!is.na(x)]
+  keep <- !is.na(x) & weights > 0
+  x <- x[keep]
+  weights <- weights[keep]
   if (length(x) == 0L) return(0)
-  freq <- tabulate(match(x, unique(x)))
+  weights <- weights / max(weights)
+  freq <- as.numeric(rowsum(weights, match(x, unique(x)), reorder = FALSE))
   p <- freq / sum(freq)
   p <- p[p > 0]
   -sum(p * log(p))
@@ -59,14 +62,16 @@
 
 #' @keywords internal
 #' @noRd
-.ha_conditional_entropy <- function(y, x) {
+.ha_conditional_entropy <- function(y, x, weights = rep(1, length(x))) {
   # H(Y | X) = sum_x p(x) * H(Y | X = x)
-  keep <- !is.na(x) & !is.na(y)
+  keep <- !is.na(x) & !is.na(y) & weights > 0
   y <- y[keep]; x <- x[keep]
+  weights <- weights[keep]
   if (length(x) == 0L) return(0)
-  split_y <- split(y, x)
-  weights <- lengths(split_y) / length(x)
-  sum(weights * vapply(split_y, .ha_entropy, numeric(1)))
+  weights <- weights / max(weights)
+  groups <- split(seq_along(y), match(x, unique(x)))
+  sum(vapply(groups, function(i) sum(weights[i]) * .ha_entropy(y[i], weights[i]), numeric(1))) /
+    sum(weights)
 }
 
 #' @keywords internal
@@ -113,7 +118,7 @@
 
 #' Detect nesting structure between facets
 #'
-#' Classifies every ordered pair of facets (optionally including `Person`)
+#' Classifies both directions of each pair of facets (optionally including `Person`)
 #' as crossed, partially nested, near-perfectly nested, or fully nested,
 #' based on a conditional-entropy index:
 #' \deqn{\text{nesting\_index}(A \to B) = 1 - H(B \mid A) / H(B).}
@@ -128,8 +133,9 @@
 #' @param facets Character vector of facet column names.
 #' @param person Optional name of the person column (adds Person to the
 #'   nesting matrix if supplied).
-#' @param weight_col Optional name of a weight column; if supplied, rows
-#'   are replicated proportionally when counting element co-occurrences.
+#' @param weight_col Optional name of a numeric column of finite, nonnegative
+#'   weights. Zero-weight rows are excluded; at least one weight must be positive.
+#'   Weighted frequencies are used directly, without rounding or replicating rows.
 #'
 #' @section Classification bands:
 #' - `"Fully nested"`: nesting index >= 0.99.
@@ -139,6 +145,17 @@
 #'
 #' The direction column records which facet is nested in which, or
 #' `"crossed"` when neither direction is above 0.95.
+#'
+#' @section Missing values and weights:
+#' Each pair uses rows observed on both columns and having positive weight.
+#' Both marginal entropies and both conditional entropies use those same rows.
+#' `UsedRows` and `ExcludedRows` report this pair-specific scope; they count
+#' original rows, not the sum of weights. Different pairs may use different rows.
+#' Multiplying all weights by a positive constant leaves the indices unchanged.
+#' Weights are descriptive frequency weights, not a survey-variance correction.
+#' The index is undefined (`NA`) when its denominator entropy is zero, including
+#' pairs with no usable rows. Missing-value exclusion does not establish that
+#' the observed pattern represents the missing ratings.
 #'
 #' @section Interpreting output:
 #' A `Direction` value of `"Rater nested in Region"` means that every
@@ -160,12 +177,12 @@
 #'    numeric index and the `LevelsA`/`LevelsB` counts.
 #' 3. For downstream reporting, use [analyze_hierarchical_structure()]
 #'    to bundle this output with ICC and design-effect summaries, which
-#'    [build_mfrm_manifest()] then records for reproducibility.
+#'    [reporting_checklist()] can record as available report material.
 #'
 #' @return A list of class `mfrm_facet_nesting` with:
-#' - `pairwise_table`: one row per ordered facet pair with
+#' - `pairwise_table`: one row per facet pair, reporting both directions with
 #'   `NestingIndex_AinB`, `NestingIndex_BinA`, classification strings,
-#'   and `Direction`.
+#'   `Direction`, `UsedRows` and `ExcludedRows`.
 #' - `summary`: a one-line summary table with facet counts and whether
 #'   any non-crossed structure was detected.
 #' - `facets`: the facet vector that was reviewed.
@@ -176,6 +193,10 @@
 #'   assumption" in its details).
 #'
 #' @references
+#' Shannon, C. E. (1948). A mathematical theory of communication.
+#' *Bell System Technical Journal, 27*, 379-423, 623-656.
+#' <https://web.mit.edu/6.976/www/handout/shannon.pdf>
+#'
 #' McEwen, M. R. (2018). *The effects of incomplete rating designs on
 #' results from many-facets-Rasch model analyses* (Doctoral thesis,
 #' Brigham Young University). <https://scholarsarchive.byu.edu/etd/6689/>
@@ -210,7 +231,19 @@ detect_facet_nesting <- function(data, facets, person = NULL,
          paste(missing_cols, collapse = ", "), ".", call. = FALSE)
   }
 
-  all_cols <- c(if (!is.null(person)) person else NULL, facets)
+  all_cols <- unique(c(person, facets))
+  w <- rep(1, nrow(data))
+  if (!is.null(weight_col)) {
+    if (!is.character(weight_col) || length(weight_col) != 1L ||
+        is.na(weight_col) || !weight_col %in% names(data)) {
+      stop("`weight_col` must name a column in `data`.", call. = FALSE)
+    }
+    w <- data[[weight_col]]
+    if (!is.numeric(w) || is.complex(w) || !is.null(dim(w)) ||
+        any(!is.finite(w)) || any(w < 0) || !any(w > 0)) {
+      stop("Weights must be finite, nonnegative numeric values with at least one positive value.", call. = FALSE)
+    }
+  }
   n_cols <- length(all_cols)
   if (n_cols < 2L) {
     return(structure(
@@ -228,25 +261,20 @@ detect_facet_nesting <- function(data, facets, person = NULL,
     ))
   }
 
-  # Apply weight column by replicating rows when present (so entropy
-  # reflects weighted frequencies).
-  if (!is.null(weight_col) && weight_col %in% names(data)) {
-    w <- suppressWarnings(as.numeric(data[[weight_col]]))
-    w <- ifelse(is.finite(w) & w > 0, pmax(1L, round(w)), 1L)
-    data <- data[rep(seq_len(nrow(data)), times = w), , drop = FALSE]
-  }
-
   pairs <- list()
   idx <- 1L
   for (i in seq_len(n_cols - 1L)) {
     for (j in seq(i + 1L, n_cols)) {
       a <- all_cols[i]; b <- all_cols[j]
-      ha <- .ha_entropy(data[[a]])
-      hb <- .ha_entropy(data[[b]])
-      hb_given_a <- .ha_conditional_entropy(data[[b]], data[[a]])
-      ha_given_b <- .ha_conditional_entropy(data[[a]], data[[b]])
-      nesting_a_in_b <- if (hb > 0) 1 - hb_given_a / hb else NA_real_
-      nesting_b_in_a <- if (ha > 0) 1 - ha_given_b / ha else NA_real_
+      keep <- !is.na(data[[a]]) & !is.na(data[[b]]) & w > 0
+      av <- data[[a]][keep]; bv <- data[[b]][keep]; weights <- w[keep]
+      ha <- .ha_entropy(av, weights)
+      hb <- .ha_entropy(bv, weights)
+      hb_given_a <- .ha_conditional_entropy(bv, av, weights)
+      ha_given_b <- .ha_conditional_entropy(av, bv, weights)
+      # Clip only arithmetic roundoff: conditional entropy cannot exceed its marginal.
+      nesting_a_in_b <- if (hb > 0) max(0, min(1, 1 - hb_given_a / hb)) else NA_real_
+      nesting_b_in_a <- if (ha > 0) max(0, min(1, 1 - ha_given_b / ha)) else NA_real_
       cls_a_in_b <- .ha_nesting_classify(nesting_a_in_b)
       cls_b_in_a <- .ha_nesting_classify(nesting_b_in_a)
       direction <- if (is.na(nesting_a_in_b) || is.na(nesting_b_in_a)) {
@@ -263,8 +291,10 @@ detect_facet_nesting <- function(data, facets, person = NULL,
       pairs[[idx]] <- data.frame(
         FacetA = a,
         FacetB = b,
-        LevelsA = dplyr::n_distinct(data[[a]], na.rm = TRUE),
-        LevelsB = dplyr::n_distinct(data[[b]], na.rm = TRUE),
+        LevelsA = dplyr::n_distinct(av),
+        LevelsB = dplyr::n_distinct(bv),
+        UsedRows = sum(keep),
+        ExcludedRows = sum(!keep),
         NestingIndex_AinB = round(nesting_a_in_b, 4),
         NestingIndex_BinA = round(nesting_b_in_a, 4),
         ClassificationAinB = cls_a_in_b,
@@ -306,45 +336,47 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 
 # ---- 2. facet_small_sample_review ------------------------------------------
 
-#' Review per-facet-level sample adequacy
+#' Review rating counts for each facet level
 #'
 #' Reports per-level observation counts, SE, and fit statistics for every
 #' level of every facet in a fitted MFRM model, and classifies each level
-#' as `"sparse"`, `"marginal"`, `"standard"`, or `"strong"` against the
-#' Linacre sample-size bands.
+#' as `"sparse"`, `"marginal"`, `"standard"`, or `"strong"` using
+#' configurable count bands. These labels identify levels to inspect;
+#' they do not establish measurement precision or sample adequacy.
 #'
-#' In mfrmr every facet is a fixed effect (see `?fit_mfrm`, "Fixed
-#' effects assumption"), so a level with very few ratings contributes an
-#' estimate with wide SE but no shrinkage toward the facet mean. This
-#' helper surfaces those levels up front so users can decide whether to
-#' drop them, pool them, or move to a hierarchical model outside mfrmr.
+#' `N` counts retained rating rows for a level in `fit$prep$data`, without
+#' summing observation weights. For a rater it counts ratings, not distinct
+#' examinees; for a person it counts that person's ratings. Repeated or
+#' dependent ratings need not supply independent information. Review the
+#' counts alongside targeting, connectedness, category use, the estimation
+#' method, and available uncertainty estimates before drawing conclusions.
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
-#' @param diagnostics Optional [diagnose_mfrm()] output. When supplied,
-#'   per-level `Infit`, `Outfit`, and `ModelSE` are added to the report.
+#' @param diagnostics Optional [diagnose_mfrm()] output from the same `fit`.
+#'   When supplied, per-level `Infit` and `Outfit` are added. `Estimate` and
+#'   `SE` come from the fitted facet tables; unavailable SEs remain missing.
 #' @param thresholds Named numeric vector of count bands. Defaults are
-#'   `c(sparse = 10, marginal = 30, standard = 50)`. These are adapted
-#'   from Linacre (1994): the 30-level band preserves Linacre's
-#'   approximately `+-1.0 logit at 95% CI` line, while the `sparse < 10`
-#'   floor and the `standard = 50` watermark are mfrmr-specific screening
-#'   choices below Linacre's 30-examinee minimum and between Linacre's
-#'   30 and 100 thresholds.
+#'   `c(sparse = 10, marginal = 30, standard = 50)`. Supply exactly these
+#'   three names with finite, positive values satisfying
+#'   `sparse < marginal < standard`; their order in the vector is immaterial.
+#'   The defaults are package screening choices, not precision thresholds.
 #'
 #' @section Interpreting output:
-#' - `"sparse"` (n < 10): level-level estimate is unstable; SE will be
-#'   wide; consider combining with adjacent levels or treating as
-#'   exploratory only.
-#' - `"marginal"` (10 <= n < 30): below Linacre (1994) 95% CI
-#'   +-1.0 logit threshold; usable as screening only.
-#' - `"standard"` (30 <= n < 50): meets baseline stability; reasonable
-#'   for publication if fit statistics are acceptable.
-#' - `"strong"` (n >= 50): well-targeted; facet estimate is robust.
+#' With the default thresholds, the four labels mean only `N < 10`,
+#' `10 <= N < 30`, `30 <= N < 50`, and `N >= 50`, respectively.
+#' `WorstCategory` is the lowest count band represented within a facet.
+#' Neither `"standard"` nor `"strong"` guarantees narrow intervals, correct
+#' coverage, good targeting, or suitability for publication. Do not pool or
+#' discard levels solely because of a count label.
 #'
-#' Because mfrmr has no shrinkage by default, sparse and marginal levels
-#' do not "borrow strength" from other levels. Jones and Wind (2018)
-#' report that rater estimates are particularly sensitive to thin
-#' linking; the `Facet = "Person"` row is usually less of a concern
-#' because the person prior integrates out the uncertainty.
+#' Linacre (1994) relates Rasch item/person precision to sample size under
+#' targeting and model assumptions. Those guidelines do not establish a
+#' precision guarantee for these raw many-facet rating counts. Jones and
+#' Wind (2018) study repeated ratings in incomplete designs and highlight
+#' examinee precision. Integrating over a population distribution in MML
+#' does not remove uncertainty in individual person scores. Interpret `SE`
+#' according to the fitted estimator; this count review adds no interval
+#' qualification or hierarchical model.
 #'
 #' @section Typical workflow:
 #' 1. Fit with `fit_mfrm()`; optionally also produce `diagnostics`
@@ -360,23 +392,24 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #' - `table`: one row per `(Facet, Level)` with `N`, `Estimate`, `SE`,
 #'   `Infit`, `Outfit`, and `SampleCategory`.
 #' - `summary`: counts of levels in each sample-size category, by facet.
-#' - `facet_summary`: smallest observed level count per facet.
+#' - `facet_summary`: count range and lowest count band per facet.
 #' - `thresholds`: the applied count bands.
+#' - `notes`: count definition and interpretation limits, also shown by
+#'   `print()` and `summary()`.
 #'
 #' @seealso [detect_facet_nesting()], [analyze_hierarchical_structure()],
 #'   [compute_facet_icc()], [compute_facet_design_effect()],
 #'   [reporting_checklist()].
 #'
 #' @references
-#' Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
-#' Winsteps.com.
-#'
 #' Linacre, J. M. (1994). Sample size and item calibration stability.
 #' *Rasch Measurement Transactions, 7*(4), 328.
+#' \url{https://rasch.org/rmt/rmt74m.htm}
 #'
 #' Jones, E., & Wind, S. A. (2018). Using repeated ratings to improve
 #' measurement precision in incomplete rating designs. *Journal of
 #' Applied Measurement, 19*(2), 148-161.
+#' \url{https://pubmed.ncbi.nlm.nih.gov/29894984/}
 #'
 #' @examples
 #' toy <- load_mfrmr_data("example_operational")
@@ -400,11 +433,18 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
-  if (is.null(names(thresholds)) ||
-      !all(c("sparse", "marginal", "standard") %in% names(thresholds))) {
-    stop("`thresholds` must be a named numeric vector containing ",
-         "`sparse`, `marginal`, and `standard`.", call. = FALSE)
+  if (!is.null(diagnostics)) {
+    mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "facet_small_sample_review()")
   }
+  bands <- c("sparse", "marginal", "standard")
+  if (!is.numeric(thresholds) || is.complex(thresholds) ||
+      !is.null(dim(thresholds)) || length(thresholds) != 3L ||
+      !setequal(names(thresholds), bands) || any(!is.finite(thresholds)) ||
+      any(thresholds <= 0) || any(diff(thresholds[bands]) <= 0)) {
+    stop("`thresholds` must contain exactly the finite, positive numeric values ",
+         "`sparse < marginal < standard`, named accordingly.", call. = FALSE)
+  }
+  thresholds <- thresholds[bands]
 
   prep <- fit$prep
   data <- prep$data
@@ -498,7 +538,7 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
       MedianN = stats::median(N, na.rm = TRUE),
       MaxN = max(N, na.rm = TRUE),
       WorstCategory = category_order[
-        max(match(SampleCategory, category_order), na.rm = TRUE)
+        min(match(SampleCategory, category_order), na.rm = TRUE)
       ],
       .groups = "drop"
     )
@@ -508,7 +548,11 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
       table = as.data.frame(audit_tbl, stringsAsFactors = FALSE),
       summary = as.data.frame(level_count_by_facet, stringsAsFactors = FALSE),
       facet_summary = as.data.frame(facet_summary, stringsAsFactors = FALSE),
-      thresholds = as.list(thresholds)
+      thresholds = as.list(thresholds),
+      notes = c(
+        "N counts retained rating rows per level, not distinct persons, weight sums, or effective sample sizes.",
+        "Count bands are screening labels; they do not establish precision, interval coverage, or targeting."
+      )
     ),
     class = "mfrm_facet_sample_review"
   )
@@ -603,6 +647,9 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 #' Rasch-metric version in `diagnostics$reliability` and this
 #' variance-share view here.
+#' For agreement or consistency between specific pairs on common units, use
+#' [pairwise_icc_table()] instead. A small rater variance share here does not
+#' establish pairwise agreement; residual disagreement can still be large.
 #'
 #' Set `ci_method = "boot"` to request intervals alongside the point
 #' estimates. The `Interpretation` column still uses point estimates.
@@ -662,7 +709,7 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' entry contains every draw, per-refit convergence and singularity indicators,
 #' the number of refit errors, and lme4's message/warning/error tables.
 #'
-#' @seealso [compute_facet_design_effect()],
+#' @seealso [compute_facet_design_effect()], [pairwise_icc_table()],
 #'   [analyze_hierarchical_structure()], [detect_facet_nesting()],
 #'   [facet_small_sample_review()].
 #'
@@ -680,7 +727,6 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' Software, 67*(1), 1-48.
 #'
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' if (requireNamespace("lme4", quietly = TRUE)) {
 #'   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -690,11 +736,10 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #'   # - Person ICC reads as Koo & Li (2016) reliability: < 0.5 poor,
 #'   #   0.5-0.75 moderate, 0.75-0.9 good, > 0.9 excellent.
 #'   # - Rater / Criterion ICC reads as variance share, NOT reliability;
-#'   #   here SMALL values are desirable (raters / items agree), and
+#'   #   small values indicate limited systematic facet differences, and
 #'   #   shares > 0.10 hint at meaningful systematic facet differences.
 #'   # - `Interpretation` summarises the variance-share band the helper
 #'   #   has assigned to each row.
-#' }
 #' }
 #' @export
 compute_facet_icc <- function(data, facets, score,
@@ -814,7 +859,7 @@ compute_facet_icc <- function(data, facets, score,
   lmer_warnings <- character(0)
   fit <- tryCatch(
     withCallingHandlers(
-      lme4::lmer(formula, data = data, REML = reml, na.action = stats::na.fail),
+      .mfrm_icc_lmer(formula, data = data, REML = reml, na.action = stats::na.fail),
       warning = function(w) {
         lmer_warnings <<- c(lmer_warnings, conditionMessage(w))
         invokeRestart("muffleWarning")
@@ -986,7 +1031,7 @@ compute_facet_icc <- function(data, facets, score,
     parallel::clusterEvalQ(cl, loadNamespace("lme4"))
   }
   b <- withCallingHandlers(
-    lme4::bootMer(fit, FUN = icc_of, nsim = boot_reps, seed = boot_seed,
+    .mfrm_boot_mer(fit, FUN = icc_of, nsim = boot_reps, seed = boot_seed,
                   type = "parametric", use.u = FALSE,
                   parallel = boot_parallel, ncpus = boot_ncpus, cl = cl,
                   .progress = if (interactive() && boot_parallel == "no") "txt" else "none"),
@@ -1104,7 +1149,6 @@ compute_facet_icc <- function(data, facets, score,
 #' 183-193. \url{https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf}
 #'
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' if (requireNamespace("lme4", quietly = TRUE)) {
 #'   icc <- compute_facet_icc(toy, facets = c("Rater", "Criterion"),
@@ -1114,7 +1158,6 @@ compute_facet_icc <- function(data, facets, score,
 #'                                       icc_table = icc)
 #'   print(deff)
 #'   # Review clustering influence; EffectiveN is a descriptive row count.
-#' }
 #' }
 #' @export
 compute_facet_design_effect <- function(data, facets, icc_table = NULL,
@@ -1167,13 +1210,66 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 
 # ---- 4. analyze_hierarchical_structure ------------------------------------
 
+# Only reviewed columns matter; row order and unused factor levels do not.
+.ha_data_identity <- function(data, facets, person, score = NULL) {
+  columns <- unique(c(person, facets, score))
+  values <- lapply(data[columns], function(x) {
+    labels <- as.character(x)
+    labels[is.na(x)] <- NA_character_
+    labels
+  })
+  if (!is.null(score)) {
+    value <- data[[score]]
+    values[[score]] <- as.numeric(if (is.factor(value)) as.character(value) else value)
+  }
+  rows <- do.call(order, c(unname(values), list(na.last = TRUE, method = "radix")))
+  values <- lapply(values, function(x) unname(x[rows]))
+  list(version = 1L, facets = facets, person = person, score = score,
+       rows = nrow(data), fingerprint = mfrm_checkpoint_fingerprint(values, canonical = TRUE))
+}
+
+.ha_validate_data_identity <- function(fit, review) {
+  if (is.null(review)) return(invisible(TRUE))
+  if (!inherits(review, "mfrm_hierarchical_structure")) {
+    stop("`hierarchical_structure` must come from analyze_hierarchical_structure().", call. = FALSE)
+  }
+  source <- review$data_identity
+  if (!is.list(source) || !identical(source$version, 1L) || is.null(source$fingerprint)) {
+    stop("`hierarchical_structure` lacks its reviewed-data identity. Recreate it with ",
+         "analyze_hierarchical_structure() from the saved fit or matching retained rows ",
+         "and original review settings; no MFRM refit is needed.", call. = FALSE)
+  }
+  original <- fit$config$source_columns %||% fit$prep$source_columns %||% list()
+  person_names <- unique(c("Person", original$person))
+  score_names <- unique(c("Score", original$score))
+  mapping <- stats::setNames(fit$prep$facet_names, fit$prep$facet_names)
+  mapping[person_names] <- "Person"
+  scope_matches <- identical(source$facets, review$facets) &&
+    is.character(source$facets) && length(source$facets) >= 2L &&
+    all(source$facets %in% names(mapping)) &&
+    (is.null(source$person) || (length(source$person) == 1L && source$person %in% person_names)) &&
+    (is.null(source$score) || (length(source$score) == 1L && source$score %in% score_names))
+  mapping[score_names] <- "Score"
+  columns <- unique(c(source$person, source$facets, source$score))
+  matches <- FALSE
+  if (isTRUE(scope_matches) && all(unname(mapping[columns]) %in% names(fit$prep$data))) {
+    data <- as.data.frame(fit$prep$data[unname(mapping[columns])])
+    names(data) <- columns
+    matches <- identical(source, .ha_data_identity(data, source$facets, source$person, source$score))
+  }
+  if (!matches) {
+    stop("fit/hierarchical_structure mismatch: the reviewed columns or rating rows ",
+         "do not match this fit's retained data. Recreate the review from this fit ",
+         "or matching retained rows. Reviews of other data remain usable on their own.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' Analyze the hierarchical structure of a rating design
 #'
 #' One-stop review that combines the nesting, cross-tabulation, ICC, and
-#' design-effect reports into a single object. Designed to be reused by
-#' the publication-workflow surface: its summary feeds into
-#' `reporting_checklist()`, and its tables are picked up by
-#' `build_mfrm_manifest()` for reproducibility bundles.
+#' design-effect reports into a single object. Its summary feeds into
+#' [reporting_checklist()] after checking the reviewed data against the fit.
 #'
 #' @param data Data frame in long format, or an `mfrm_fit` (its
 #'   `prep$data` is used).
@@ -1231,10 +1327,26 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' 1. Optional: fit the MFRM with `fit_mfrm()`.
 #' 2. Call `analyze_hierarchical_structure(fit)` (or on the raw data).
 #' 3. Read `summary(x)` for the condensed view.
-#' 4. Feed the object to [reporting_checklist()] and
-#'    [build_mfrm_manifest()] to record the review in publication
-#'    bundles. `build_apa_outputs()` uses the fit-level
-#'    `FacetSampleSizeFlag` to add a Methods sentence automatically.
+#' 4. Pass it as `hierarchical_structure` to [reporting_checklist()] and
+#'    save the review with `saveRDS()` when its full tables are needed later.
+#'    [build_mfrm_manifest()] records a separate fit-level rating-count
+#'    review; it does not accept or archive this structural-review object.
+#'
+#' @section Saved-result reuse:
+#' A reporting checklist checks the reviewed column roles and retained rating
+#' rows, including scores when an ICC table was computed. It accepts a subset
+#' of fitted facets and reports that scope explicitly. Reviews from raw data
+#' also work when the selected columns and rows match, using either canonical
+#' `Person`/`Score` names or the fit's original source-column names.
+#' Row order, unused factor levels, unused columns and MFRM estimates do not
+#' affect this match. Nesting and row counts are unweighted; when ICC is absent,
+#' the match does not depend on scores. These rules do not establish that a
+#' partial review covers all facets or that the design supports valid inference.
+#' A review of additional rows, other strata or columns absent from the fit
+#' remains usable on its own, but cannot mark this fit's checklist item as
+#' available. Recreate older reviews without `data_identity` from the saved
+#' fit or matching retained rows and original options; no MFRM refit is needed.
+#' See [mfrmr_compatibility_layer].
 #'
 #' @return A list of class `mfrm_hierarchical_structure` with:
 #' - `nesting`: output of [detect_facet_nesting()].
@@ -1249,6 +1361,15 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' - `facets`: character vector of facet names that were reviewed
 #'   (echoed for downstream reporting helpers that need to label rows
 #'   by review scope).
+#' - `data_identity`: reviewed column roles, input row count and a compact
+#'   fingerprint for reuse checks. The optional person column also contributes
+#'   to nesting pair counts; `summary$NFacets` counts the requested `facets`.
+#'
+#' `plot(x, type = "icc")` draws variance shares and any available intervals
+#' without an embedded title or footnote. Save its returned object as `p` and
+#' use `plot_data(p, "notes")` to read the interval method or the reason bounds
+#' are unavailable. These notes survive `saveRDS()`/`readRDS()`; they do not
+#' change the underlying ICC estimates.
 #'
 #' @seealso [detect_facet_nesting()], [facet_small_sample_review()],
 #'   [compute_facet_icc()], [compute_facet_design_effect()],
@@ -1280,7 +1401,6 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'                                      igraph_layout = FALSE)
 #' summary(hs)
 #'
-#' \donttest{
 #' # Full review when lme4 and igraph are available.
 #' if (requireNamespace("lme4", quietly = TRUE) &&
 #'     requireNamespace("igraph", quietly = TRUE)) {
@@ -1288,7 +1408,6 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'                                             facets = c("Rater", "Criterion"))
 #'   summary(hs_full)
 #'   plot(hs_full, type = "icc")
-#' }
 #' }
 #' @export
 analyze_hierarchical_structure <- function(data,
@@ -1448,7 +1567,9 @@ analyze_hierarchical_structure <- function(data,
       design_effect = deff_tbl,
       connectivity = connectivity,
       summary = summary_tbl,
-      facets = facets
+      facets = facets,
+      data_identity = .ha_data_identity(data, facets, person,
+                                       score = if (icc_available) score else NULL)
     ),
     class = "mfrm_hierarchical_structure"
   )
@@ -1489,17 +1610,19 @@ summary.mfrm_facet_nesting <- function(object, ...) {
 #' Plot a facet sample-size review
 #'
 #' Per-level observation counts rendered as a horizontal bar chart
-#' coloured by the Linacre sample-size band assigned in
+#' coloured by the count band assigned in
 #' [facet_small_sample_review()]. Vertical dashed lines mark the
 #' sparse / marginal / standard thresholds so reviewers see where
-#' every facet level sits relative to the Linacre (1994) guidance.
+#' every facet level sits relative to the selected screening thresholds.
+#' Counts and colours do not establish measurement precision.
 #'
 #' @param x An `mfrm_facet_sample_review` object.
 #' @param top_n Optional integer; trim the y-axis to the `top_n`
 #'   smallest level counts per facet. `NULL` (default) keeps all.
 #' @param preset One of `"standard"`, `"publication"`, `"compact"`, `"monochrome"`.
 #' @param ... Reserved.
-#' @return Invisibly, the data.frame used for the plot.
+#' @return Invisibly, the data.frame used for the plot, with the review's
+#'   interpretation limits in its `notes` attribute.
 #' @seealso [facet_small_sample_review()].
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
 #' @export
@@ -1512,10 +1635,10 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   style <- resolve_plot_preset(preset)
   tbl <- as.data.frame(x$table, stringsAsFactors = FALSE)
+  attr(tbl, "notes") <- x$notes
   if (is.null(tbl) || nrow(tbl) == 0L) {
-    graphics::plot.new()
-    graphics::title(main = "Facet sample-size review")
-    graphics::text(0.5, 0.5, "Review table empty.")
+    plot.new()
+    text(0.5, 0.5, "Review table empty.")
     return(invisible(tbl))
   }
   band_colors <- c(
@@ -1543,7 +1666,7 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
   old_par <- graphics::par()["mar"]
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(mar = c(4, max(8, min(18, max(nchar(labels)) * 0.55)), 3, 1))
-  graphics::barplot(
+  barplot(
     height = tbl$N,
     names.arg = labels,
     horiz = TRUE,
@@ -1551,17 +1674,17 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
     xlim = c(0, xmax),
     col = tbl$BarColor,
     border = NA,
-    xlab = "Observations per level",
-    main = "Facet sample-size review (Linacre bands)",
+    xlab = "Retained rating rows per level",
+    main = "",
     cex.names = 0.8
   )
-  graphics::abline(
+  abline(
     v = c(as.numeric(thr$sparse),
           as.numeric(thr$marginal),
           as.numeric(thr$standard)),
     lty = 2, col = style$neutral
   )
-  graphics::legend(
+  legend(
     "bottomright", bty = "n", cex = 0.8,
     legend = c(sprintf("< %s sparse", thr$sparse),
                sprintf("< %s marginal", thr$marginal),
@@ -1569,6 +1692,7 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
                "strong"),
     fill = unname(band_colors)
   )
+  attr(tbl, "notes") <- x$notes
   invisible(tbl)
 }
 
@@ -1597,9 +1721,8 @@ plot.mfrm_facet_nesting <- function(x,
   style <- resolve_plot_preset(preset)
   pair <- as.data.frame(x$pairwise_table, stringsAsFactors = FALSE)
   if (is.null(pair) || nrow(pair) == 0L) {
-    graphics::plot.new()
-    graphics::title(main = "Facet nesting (pairwise)")
-    graphics::text(0.5, 0.5, "At least two facets required.")
+    plot.new()
+    text(0.5, 0.5, "At least two facets required.")
     return(invisible(NULL))
   }
   facets <- x$facets
@@ -1618,7 +1741,7 @@ plot.mfrm_facet_nesting <- function(x,
   old_par <- graphics::par()["mar"]
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(mar = c(5, 5, 3, 2))
-  graphics::image(
+  image(
     x = seq_len(n), y = seq_len(n),
     z = m,
     col = cols,
@@ -1626,13 +1749,13 @@ plot.mfrm_facet_nesting <- function(x,
     xaxt = "n", yaxt = "n",
     xlab = "Nested in (column facet)",
     ylab = "Nested facet (row)",
-    main = "Pairwise nesting index"
+    main = ""
   )
-  graphics::axis(1, at = seq_len(n), labels = facets, las = 2, cex.axis = 0.8)
-  graphics::axis(2, at = seq_len(n), labels = facets, las = 1, cex.axis = 0.8)
+  axis(1, at = seq_len(n), labels = facets, las = 2, cex.axis = 0.8)
+  axis(2, at = seq_len(n), labels = facets, las = 1, cex.axis = 0.8)
   for (i in seq_len(n)) for (j in seq_len(n)) {
     if (is.finite(m[i, j])) {
-      graphics::text(j, i, sprintf("%.2f", m[i, j]), cex = 0.75,
+      text(j, i, sprintf("%.2f", m[i, j]), cex = 0.75,
                      col = if (m[i, j] > 0.6) "white" else "black")
     }
   }
@@ -1642,6 +1765,7 @@ plot.mfrm_facet_nesting <- function(x,
 #' @export
 print.mfrm_facet_sample_review <- function(x, ...) {
   cat("mfrm_facet_sample_review\n")
+  if (length(x$notes)) cat(paste(x$notes, collapse = "\n"), "\n")
   cat("  Thresholds (sparse / marginal / standard):",
       paste(unlist(x$thresholds), collapse = " / "), "\n")
   cat("  Facets:", nrow(x$facet_summary), "\n")
@@ -1654,6 +1778,7 @@ print.mfrm_facet_sample_review <- function(x, ...) {
 #' @export
 summary.mfrm_facet_sample_review <- function(object, ...) {
   cat("mfrm_facet_sample_review\n\n")
+  if (length(object$notes)) cat(paste(object$notes, collapse = "\n"), "\n\n")
   cat("Per-facet summary:\n")
   print(object$facet_summary, row.names = FALSE)
   cat("\nSample-size category counts by facet:\n")
@@ -1809,6 +1934,8 @@ summary.mfrm_hierarchical_structure <- function(object, ...) {
 plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
                                              pair = NULL, ...) {
   type <- match.arg(type)
+  # A saved return value can be plotted again with a different view.
+  attr(x, "mfrmr_notes") <- NULL
   if (type == "crosstab") {
     if (length(x$crosstabs) == 0L) {
       stop("No cross-tabulations available.", call. = FALSE)
@@ -1830,19 +1957,19 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
     rnames <- as.character(mat$LevelA)
     mat_num <- as.matrix(mat[, -1L, drop = FALSE])
     rownames(mat_num) <- rnames
-    graphics::image(
+    image(
       x = seq_len(nrow(mat_num)),
       y = seq_len(ncol(mat_num)),
       z = mat_num,
       xaxt = "n", yaxt = "n",
       xlab = tbl$FacetA[1L],
       ylab = tbl$FacetB[1L],
-      main = paste0("Cross-tabulation: ", pair_name),
+      main = "",
       col = grDevices::hcl.colors(20, palette = "YlGnBu", rev = TRUE)
     )
-    graphics::axis(1L, at = seq_len(nrow(mat_num)),
+    axis(1L, at = seq_len(nrow(mat_num)),
                    labels = rownames(mat_num), las = 2L, cex.axis = 0.7)
-    graphics::axis(2L, at = seq_len(ncol(mat_num)),
+    axis(2L, at = seq_len(ncol(mat_num)),
                    labels = colnames(mat_num), las = 2L, cex.axis = 0.7)
   } else if (type == "icc") {
     if (is.null(x$icc) || nrow(x$icc) == 0L) {
@@ -1864,14 +1991,18 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
     if (has_ci && is.finite(ci_level)) {
       main_txt <- sprintf("%s\n%g%% parametric bootstrap CI",
                           main_txt, 100 * ci_level)
-    } else if (any(icc_tbl$ICC_CI_Method == "boot", na.rm = TRUE)) {
-      main_txt <- paste0(main_txt, "\nIntervals unavailable: ",
-                         paste(unique(icc_tbl$ICC_CI_Status), collapse = "; "))
     }
-    mids <- graphics::barplot(
+    missing_ci <- !is.finite(icc_tbl$ICC_CI_Lower) | !is.finite(icc_tbl$ICC_CI_Upper)
+    if (any(missing_ci & icc_tbl$ICC_CI_Method == "boot", na.rm = TRUE)) {
+      main_txt <- paste0(main_txt, "\nIntervals unavailable: ",
+                         paste(unique(icc_tbl$ICC_CI_Status[missing_ci]), collapse = "; "))
+    }
+    attr(x, "mfrmr_notes") <- data.frame(
+      Type = "description", Text = main_txt, stringsAsFactors = FALSE)
+    mids <- barplot(
       height = icc_tbl$ICC,
       names.arg = icc_tbl$Facet,
-      main = main_txt,
+      main = "",
       ylab = "ICC",
       ylim = c(0, y_max)
     )
@@ -1879,7 +2010,7 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
       valid <- is.finite(icc_tbl$ICC_CI_Lower) & is.finite(icc_tbl$ICC_CI_Upper)
       nonzero <- valid & icc_tbl$ICC_CI_Upper > icc_tbl$ICC_CI_Lower
       if (any(nonzero)) {
-        graphics::arrows(
+        arrows(
           x0 = mids[nonzero], y0 = icc_tbl$ICC_CI_Lower[nonzero],
           x1 = mids[nonzero], y1 = icc_tbl$ICC_CI_Upper[nonzero],
           angle = 90, code = 3, length = 0.05, col = "black", lwd = 1.5
@@ -1887,7 +2018,7 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
       }
       flat <- valid & icc_tbl$ICC_CI_Upper == icc_tbl$ICC_CI_Lower
       if (any(flat)) {
-        graphics::segments(mids[flat] - 0.05, icc_tbl$ICC_CI_Lower[flat],
+        segments(mids[flat] - 0.05, icc_tbl$ICC_CI_Lower[flat],
                            mids[flat] + 0.05, icc_tbl$ICC_CI_Upper[flat], lwd = 1.5)
       }
     }

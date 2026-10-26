@@ -50,7 +50,7 @@ run_profile_comparison <- function(output_dir) {
     results <- lapply(c('model','profile'),function(method) {
       warnings <- character(); error <- ''; result <- NULL; started <- proc.time()
       tryCatch(withCallingHandlers({
-        result <- if(method=='profile') confint(fit,method=method,slope='R01') else confint(fit,method=method)
+        result <- if(method=='profile') confint(fit, parm = "slopes",method=method,slope='R01') else confint(fit, parm = "slopes",method=method)
       },warning=function(w) { warnings <<- c(warnings,conditionMessage(w));invokeRestart('muffleWarning') }),
       error=function(e) error <<- conditionMessage(e))
       elapsed <- proc.time()-started

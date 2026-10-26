@@ -17,8 +17,8 @@ test_that("as_ggplot converts the core fitted-result plots", {
   for (p in plots) expect_no_error(ggplot2::ggplot_build(p))
   for (p in plots) expect_null(p$labels$caption)
   for (i in c(2L, 4L)) {
-    subtitle <- plots[[i]]$labels$subtitle
-    expect_true(all(nchar(strsplit(subtitle, "\n", fixed = TRUE)[[1L]]) <= 72L))
+    subtitle <- plot_data(plots[[i]], "subtitle")
+    expect_null(plots[[i]]$labels$subtitle)
     expect_match(gsub("\n", " ", subtitle),
       "reference profile fixes additive facet effects and fitted interactions at zero", fixed = TRUE)
   }
@@ -36,7 +36,7 @@ test_that("fit curves share colour and line encodings across renderers", {
     args <- list(...)
     if (!is.null(args$lty)) drawn[[length(drawn) + 1L]] <<- args
     original_lines(...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   for (type in c("ccc", "pathway")) {
     original <- .mfrmr_muffle_expected_warnings(
       plot(fit, type = type, draw = FALSE), "^Review-only display:")
@@ -157,4 +157,13 @@ test_that("as_ggplot converts simulation handoff lists", {
   signal$display_metric <- "Bias screening hit rate"
   class(signal) <- "mfrm_signal_detection_plot_data"
   expect_no_error(ggplot2::ggplot_build(as_ggplot(signal)))
+})
+
+
+test_that("residual Q-Q payloads cannot become generic bar charts", {
+  p <- new_mfrm_plot_data("residual_qq", list(
+    table = data.frame(Person = c("A", "B"), Theoretical = c(-1, 1), Observed = c(-.5, 2))))
+  expect_error(as_ggplot(p), "both quantile axes")
+  expect_error(as_ggplot(p, component = "table"), "both quantile axes")
+  expect_identical(plot_data(p, "table")$Observed, c(-.5, 2))
 })

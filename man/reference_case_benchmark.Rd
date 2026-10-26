@@ -105,12 +105,10 @@ model reference data.
 }
 
 \examples{
-\donttest{
 bench <- reference_case_benchmark(
   cases = "synthetic_truth",
   method = "JML",
   maxit = 30
 )
 summary(bench)
-}
 }

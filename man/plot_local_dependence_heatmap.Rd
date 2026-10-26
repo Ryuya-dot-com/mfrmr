@@ -34,7 +34,9 @@ in the matrix.}
 \value{
 An \code{mfrm_plot_data} whose \code{data} slot bundles the symmetric
 residual \code{matrix}, one row per unordered pair in \code{pairs}, and the
-threshold used.
+minimum overlap \code{min_pairs}. Interpretation notes are available through
+\code{plot_data(p, "notes")}. Save the complete payload with \code{\link[base:saveRDS]{base::saveRDS()}};
+\code{\link[=as_ggplot]{as_ggplot()}} converts its saved matrix without recalculating residuals.
 }
 \description{
 Builds an N x N heatmap of pairwise standardized residuals between
@@ -47,11 +49,17 @@ from raw-residual Yen Q3; no fixed correlation cutoff establishes local
 independence for this standardized, aggregated index.
 }
 \details{
-This helper complements \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}: the marginal
+This helper complements \link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")}: the marginal
 version uses posterior-integrated agreement residuals on a
 top-N pair list, while this view shows every pair on a shared color
 scale so an analyst can scan for diagonal blocks or hotspots.
 }
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
+}
+
 \section{Session plot defaults}{
 
 Set \code{options(mfrmr.plot_preset = "publication")} to choose a session default
@@ -84,17 +92,16 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 300)
-p <- plot_local_dependence_heatmap(fit, draw = FALSE)
+p <- plot(fit, type = "local_dependence", draw = FALSE)
 dim(p$data$matrix)
 # Inspect large absolute correlations alongside shared-person counts.
 # Unavailable pairs are not evidence of local independence.
 }
-}
 \seealso{
-\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}},
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")}, \link[=plot.mfrm_fit]{plot(x, type = "qc")},
 \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

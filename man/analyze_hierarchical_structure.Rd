@@ -84,14 +84,21 @@ when \code{igraph} is available.
 \item \code{facets}: character vector of facet names that were reviewed
 (echoed for downstream reporting helpers that need to label rows
 by review scope).
+\item \code{data_identity}: reviewed column roles, input row count and a compact
+fingerprint for reuse checks. The optional person column also contributes
+to nesting pair counts; \code{summary$NFacets} counts the requested \code{facets}.
 }
+
+\code{plot(x, type = "icc")} draws variance shares and any available intervals
+without an embedded title or footnote. Save its returned object as \code{p} and
+use \code{plot_data(p, "notes")} to read the interval method or the reason bounds
+are unavailable. These notes survive \code{saveRDS()}/\code{readRDS()}; they do not
+change the underlying ICC estimates.
 }
 \description{
 One-stop review that combines the nesting, cross-tabulation, ICC, and
-design-effect reports into a single object. Designed to be reused by
-the publication-workflow surface: its summary feeds into
-\code{reporting_checklist()}, and its tables are picked up by
-\code{build_mfrm_manifest()} for reproducibility bundles.
+design-effect reports into a single object. Its summary feeds into
+\code{\link[=reporting_checklist]{reporting_checklist()}} after checking the reviewed data against the fit.
 }
 \section{Interpreting output}{
 
@@ -118,11 +125,29 @@ disconnected design.
 \item Optional: fit the MFRM with \code{fit_mfrm()}.
 \item Call \code{analyze_hierarchical_structure(fit)} (or on the raw data).
 \item Read \code{summary(x)} for the condensed view.
-\item Feed the object to \code{\link[=reporting_checklist]{reporting_checklist()}} and
-\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}} to record the review in publication
-bundles. \code{build_apa_outputs()} uses the fit-level
-\code{FacetSampleSizeFlag} to add a Methods sentence automatically.
+\item Pass it as \code{hierarchical_structure} to \code{\link[=reporting_checklist]{reporting_checklist()}} and
+save the review with \code{saveRDS()} when its full tables are needed later.
+\code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}} records a separate fit-level rating-count
+review; it does not accept or archive this structural-review object.
 }
+}
+
+\section{Saved-result reuse}{
+
+A reporting checklist checks the reviewed column roles and retained rating
+rows, including scores when an ICC table was computed. It accepts a subset
+of fitted facets and reports that scope explicitly. Reviews from raw data
+also work when the selected columns and rows match, using either canonical
+\code{Person}/\code{Score} names or the fit's original source-column names.
+Row order, unused factor levels, unused columns and MFRM estimates do not
+affect this match. Nesting and row counts are unweighted; when ICC is absent,
+the match does not depend on scores. These rules do not establish that a
+partial review covers all facets or that the design supports valid inference.
+A review of additional rows, other strata or columns absent from the fit
+remains usable on its own, but cannot mark this fit's checklist item as
+available. Recreate older reviews without \code{data_identity} from the saved
+fit or matching retained rows and original options; no MFRM refit is needed.
+See \link{mfrmr_compatibility_layer}.
 }
 
 \examples{
@@ -133,7 +158,6 @@ hs <- analyze_hierarchical_structure(toy,
                                      igraph_layout = FALSE)
 summary(hs)
 
-\donttest{
 # Full review when lme4 and igraph are available.
 if (requireNamespace("lme4", quietly = TRUE) &&
     requireNamespace("igraph", quietly = TRUE)) {
@@ -141,7 +165,6 @@ if (requireNamespace("lme4", quietly = TRUE) &&
                                             facets = c("Rater", "Criterion"))
   summary(hs_full)
   plot(hs_full, type = "icc")
-}
 }
 }
 \references{

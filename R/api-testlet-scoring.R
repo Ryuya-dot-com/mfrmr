@@ -6,6 +6,9 @@
 #' @param newdata Long-format ratings with the fitted column names. `NULL`
 #'   reuses the source assignment, including missing-score rows. New Person and
 #'   testlet labels are allowed; every fixed-facet level must be known.
+#'   If the testlet column is also a fixed facet, its labels must therefore
+#'   be known. For example, with `testlet = "Rater"` and `"Rater"` in `facets`,
+#'   this function cannot score a new rater whose fixed severity was not fitted.
 #' @param level Conditional equal-tail posterior interval probability; default
 #'   0.95. These are not calibration-adjusted frequentist confidence intervals.
 #' @param quad_points Local-effect quadrature order, 7 to 121. Default uses the
@@ -60,6 +63,9 @@
 #'   prediction-source metadata for [mfrm_results()].
 #'   `summary()` reports all statuses; `plot()` returns [plot_data()] when
 #'   `draw = FALSE`. Saved scoring results need no live optimizer.
+#'   Keep `table$Status` and `table$Reason` with exported scores: `prior_only`
+#'   describes the assumed population without observed responses for that Person;
+#'   `unavailable` withholds the estimate, SD and bounds with a recorded cause.
 #' @param x A scoring result.
 #' @param persons Distinct Person IDs to return, or `NULL` for all. This
 #'   selects outputs while retaining the complete supplied scoring roster.
@@ -107,6 +113,7 @@ predict.mfrm_testlet <- function(object, newdata = NULL, level = .95,
       value <- c(Estimate = 0, ConditionalSD = person_sd, Lower = person_sd * stats::qnorm(alpha),
         Upper = person_sd * stats::qnorm(alpha, lower.tail = FALSE))
       status <- "prior_only"; difference <- 0
+      reason <- "No observed responses for this Person; the estimate, SD and interval describe only the assumed population, not measured individual ability."
     } else {
       value <- tryCatch(withCallingHandlers({
         low <- mfrm_testlet_person_interval(input, object$parameters, p, rules[[1]], level)
@@ -143,16 +150,35 @@ mfrm_testlet_person_interval <- function(input, par, person, rule, level) {
   person_sd <- sqrt(mfrm_testlet_person_variance(input, par))
   if (person_sd == 0) stop("Individual scoring requires a positive ability variance.")
   # Integrate in standard-normal coordinates for both narrow and broad priors.
-  logdensity <- function(z) as.vector(mfrm_testlet_kernel(input, par, person_sd * z, rule,
-    persons = person)$loglik) + stats::dnorm(z, log = TRUE)
-  mfrm_person_posterior_interval(logdensity, person_sd, level)
+  # Moments and CDF inversion revisit identical points; reuse only exact values
+  # within this Person/calibration/rule, without interpolating or rounding nodes.
+  cache <- new.env(parent = emptyenv())
+  loglikelihood <- function(z) {
+    keys <- sprintf("%a", z)
+    fresh <- !vapply(keys, exists, logical(1), envir = cache, inherits = FALSE) & !duplicated(keys)
+    if (any(fresh)) {
+      values <- as.vector(mfrm_testlet_kernel(input, par, person_sd * z[fresh], rule,
+        persons = person)$loglik)
+      new_keys <- keys[fresh]
+      for (i in seq_along(values)) assign(new_keys[i], values[i], envir = cache)
+    }
+    vapply(keys, get, numeric(1), envir = cache, inherits = FALSE, USE.NAMES = FALSE)
+  }
+  mfrm_person_posterior_interval(loglikelihood, person_sd, level)
 }
 
-mfrm_person_posterior_interval <- function(logdensity, person_sd, level) {
+mfrm_person_posterior_interval <- function(loglikelihood, person_sd, level, cut_points = NULL) {
+  # Center the likelihood before adding the standard-normal prior, including
+  # during mode finding; a common likelihood constant must not quantize it.
+  offset <- loglikelihood(0)
+  if (length(offset) != 1L || !is.finite(offset)) stop("Conditional log likelihood is nonfinite.")
+  logdensity <- function(z) (loglikelihood(z) - offset) + stats::dnorm(z, log = TRUE)
   mode <- stats::optimize(function(x) -logdensity(x), c(-20, 20), tol = 1e-8)$minimum
   if (abs(mode) > 19.9) stop("The conditional posterior mode is outside the scoring search range.")
-  peak <- logdensity(mode)
-  density <- function(theta) exp(logdensity(theta) - peak)
+  peak_likelihood <- loglikelihood(mode)
+  peak_prior <- stats::dnorm(mode, log = TRUE)
+  density <- function(theta) exp((loglikelihood(theta) - peak_likelihood) +
+    (stats::dnorm(theta, log = TRUE) - peak_prior))
   integral <- function(f, lower, upper) {
     z <- stats::integrate(f, lower, upper, rel.tol = 1e-9, abs.tol = 1e-12, subdivisions = 500L)
     if (!is.finite(z$value) || z$message != "OK") stop("Continuous posterior integration failed.")
@@ -188,9 +214,12 @@ mfrm_person_posterior_interval <- function(logdensity, person_sd, level) {
   lower <- stats::uniroot(function(x) lower_tail(x) - alpha, bounds, tol = 1e-8, check.conv = TRUE)$root
   upper <- stats::uniroot(function(x) upper_tail(x) - alpha, bounds, tol = 1e-8, check.conv = TRUE)$root
   if (max(abs(c(lower_tail(lower), upper_tail(upper)) - alpha)) > min(1e-7, alpha * 1e-4)) stop("Continuous posterior tail accuracy is unresolved.")
-  c(Estimate = person_sd * (mode + mean_shift), ConditionalSD = person_sd * sqrt(variance),
+  answer <- c(Estimate = person_sd * (mode + mean_shift), ConditionalSD = person_sd * sqrt(variance),
     Lower = person_sd * lower, Upper = person_sd * upper,
-    LogNormalizer = log(mass) + peak)
+    LogNormalizer = peak_likelihood + (log(mass) + peak_prior))
+  if (!is.null(cut_points)) answer <- c(answer,
+    mfrm_cut_probabilities(function(a,b) integral(density,a,b), cut_points, mass, mode=mode))
+  answer
 }
 
 #' @rdname predict.mfrm_testlet
@@ -233,7 +262,7 @@ print.mfrm_testlet_scores <- function(x, ...) {
 plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
     style = c("interval", "precision", "distribution"),
     sort = c("input", "estimate", "uncertainty"), palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, reference = 0, text_scale = 1, point_size = 2.5,
     intervals = c("none", "normal"), level = .95, ...) {
   rlang::check_dots_empty()
@@ -309,7 +338,7 @@ plot.mfrm_testlet <- function(x, facet = x$input$columns$facets[1], draw = TRUE,
 plot.mfrm_testlet_scores <- function(x, draw = TRUE,
     style = c("interval", "precision", "distribution"),
     sort = c("input", "estimate", "uncertainty"), palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, reference = 0, text_scale = 1, point_size = 2.5, ...) {
   rlang::check_dots_empty()
   mfrm_extended_estimate_plot(x$table, x$table$Person, "testlet_scores", "Conditional Person scores",

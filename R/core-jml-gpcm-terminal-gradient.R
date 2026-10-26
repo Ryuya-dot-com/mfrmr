@@ -54,7 +54,7 @@ mfrmr_jml_gpcm_terminal_gradient_probe_indices <- function(gradient,
   slices <- build_param_slices(sizes)
   selected <- integer(0)
 
-  slope_indices <- as.integer(slices$log_slopes %||% integer(0))
+  slope_indices <- as.integer(slices[["log_slopes"]] %||% integer(0))
   if (length(slope_indices) > 0L) {
     selected <- c(selected, slope_indices[seq_len(min(
       length(slope_indices), max_probes

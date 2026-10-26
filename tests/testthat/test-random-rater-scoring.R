@@ -53,7 +53,7 @@ test_that("focal ability likelihood keeps the joint shared-rater integral", {
   # Interpolation must agree with integration of the actual conditional Laplace
   # density, rather than validating itself with the same interpolated values.
   raw <- function(z) vapply(z, function(a)
-    -as.numeric(obj$fn(c(-.6, .6, 1.2 * a))) + dnorm(a, log = TRUE), numeric(1))
+    -as.numeric(obj$fn(c(-.6, .6, 1.2 * a))), numeric(1))
   reference <- mfrm_person_posterior_interval(raw, 1.2, .95)
   scored <- mfrm_random_rater_person_interval(input, f$calibration, 1, 61, .95)
   expect_equal(scored$value, reference, tolerance = 1e-6)

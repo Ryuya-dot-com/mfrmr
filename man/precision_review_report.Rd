@@ -87,7 +87,6 @@ the existing fit can be reused without refitting.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -107,7 +106,6 @@ diagnostics <- diagnose_mfrm(fit)
 precision <- precision_review_report(fit, diagnostics = diagnostics)
 review <- summary(precision)
 review$checks # Check statuses and reasons before making precision claims
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=facet_statistics_report]{facet_statistics_report()}}, \code{\link[=reporting_checklist]{reporting_checklist()}}

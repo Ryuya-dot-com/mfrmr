@@ -57,6 +57,11 @@ facet results have no performance-summary rows and cannot be recommended.
 To update an older saved summary, call \code{summary()} again on the original
 evaluation object; no simulation or refitting is needed. Rebuilding also
 restores full precision when an older summary stored rounded metrics.
+It also withholds legacy PCM/GPCM recovery metrics whose step-location truth
+coordinates were not verified; those require a new evaluation for corrected
+recovery, while other diagnostic metrics remain. \code{RecoveryAvailableReps}
+reports the number of finite trial RMSEs. Mean-aligned bias is zero by
+construction; see \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} for the comparison target.
 
 \code{MaxRatings} and \code{MaxRatingsPerRater} are the largest total rating count
 and individual rater workload across all recorded replications, including
@@ -72,20 +77,15 @@ not establish connectedness when records are missing. Sparse-design
 summaries also use all run records, including failures.
 }
 \examples{
-\donttest{
-sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  n_person = c(8, 12),
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 2,
-  reps = 1,
-  maxit = 30,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sim_eval <- saved$design
 s <- summary(sim_eval)
 s$overview
 head(s$design_summary)
-}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \link{plot.mfrm_design_evaluation}

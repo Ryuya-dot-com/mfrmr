@@ -17,7 +17,10 @@
 #'   imputation number. When feature selections differ, all results must retain
 #'   the same `mids` object, including its data and settings; each retained
 #'   completion is checked against it using the optional `mice` package.
-#'   Reuse one fitted imputation model.
+#'   Reuse one fitted imputation model. Results saved in separate RDS files
+#'   can be compared after reopening when their retained imputation data,
+#'   settings and formula expressions are unchanged. Formula environments
+#'   are not evaluated in this comparison; no completions are regenerated.
 #' @return An `mfrm_cluster_comparison` object containing:
 #'   \itemize{
 #'   \item `analysis_summary`: method, distance, fitted space, scaling, retained
@@ -114,9 +117,21 @@ mfrm_cluster_compare <- function(analyses) {
   ids <- original$row_summary$ID
   feature_sets <- lapply(analyses, function(a) a$feature_data$features)
   different_features <- any(!vapply(feature_sets, setequal, logical(1), feature_sets[[1L]]))
-  if (imputed && different_features && any(!vapply(analyses, function(a)
-      identical(a$imputation_model, analyses[[1L]]$imputation_model), logical(1)))) {
-    stop("Different feature selections must reuse the same fitted mids object.", call. = FALSE)
+  if (imputed && different_features) {
+    model_record <- function(a) {
+      model <- a$imputation_model
+      # Comparison uses retained completions, never formula evaluation environments.
+      for (i in seq_along(model$formulas)) {
+        if (inherits(model$formulas[[i]], "formula"))
+          environment(model$formulas[[i]]) <- emptyenv()
+      }
+      model
+    }
+    reference_model <- model_record(analyses[[1L]])
+    if (any(!vapply(analyses, function(a)
+        identical(model_record(a), reference_model), logical(1)))) {
+      stop("Different feature selections must reuse the same fitted mids object.", call. = FALSE)
+    }
   }
   if (imputed && different_features && !requireNamespace("mice", quietly = TRUE)) {
     stop("Install the optional 'mice' package to compare imputed feature selections.", call. = FALSE)

@@ -30,7 +30,7 @@ test_that("testlet ggplots preserve intervals, unavailable rows and prior-only s
   expect_equal(p$layers[[2]]$data$Lower, scores$table$Lower[1:2])
   expect_equal(p$layers[[2]]$data$Upper, scores$table$Upper[1:2])
   expect_equal(p$layers[[3]]$data$.Shape, c(16, 1))
-  expect_match(p$labels$caption, "calibration fixed")
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "calibration fixed")
   expect_match(attr(p, "mfrmr_notes")$Text, "prior only")
   b <- ggplot2::ggplot_build(p)
   expect_identical(b$layout$panel_params[[1]]$y$get_labels(), scores$table$Person)
@@ -56,7 +56,11 @@ test_that("fixed-facet testlet plots and unsupported ordinary-model routes stay 
   fit <- structure(list(calibration_table = tab,
     input = list(columns = list(facets = "Rater")), checks = list(EstimatedVarianceBoundary = TRUE)),
     class = "mfrm_testlet")
-  expect_identical(plot_data(fit, "table", facet = "Rater"), tab)
+  displayed <- plot_data(fit, "table", facet = "Rater")
+  expect_identical(displayed[names(tab)], tab)
+  expect_true(all(displayed$IntervalStatus == "numerical_review_failed"))
+  expect_false(any(displayed$CIEligible))
+  expect_true(all(nzchar(displayed$InferenceReview)))
   for (object in list(fit, structure(list(), class = "mfrm_random_rater"))) {
     expect_error(diagnose_mfrm(object), "numerical checks are not model-fit diagnostics", fixed = TRUE)
   }
@@ -67,7 +71,7 @@ test_that("fixed-facet testlet plots and unsupported ordinary-model routes stay 
     p <- as_ggplot(fit, facet = "Rater")
     expect_equal(nrow(p$layers[[2]]$data), 0)
     expect_equal(nrow(p$layers[[3]]$data), 2)
-    expect_match(p$labels$caption, "bounds not requested")
+    expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "bounds not requested")
     expect_silent(ggplot2::ggplotGrob(p))
   }
 })

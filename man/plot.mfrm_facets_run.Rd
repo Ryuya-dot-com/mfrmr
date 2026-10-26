@@ -12,7 +12,7 @@
 \item{y}{Unused.}
 
 \item{type}{Plot route: \code{"fit"} delegates to \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} and \code{"qc"}
-delegates to \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}.}
+delegates to \link[=plot.mfrm_fit]{plot(x, type = "qc")}.}
 
 \item{...}{Additional arguments passed to the selected plot function.}
 }
@@ -33,7 +33,7 @@ result:
 \section{Interpreting output}{
 
 Returns the plotting object produced by the delegated route:
-\code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} for \code{"fit"} and \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{"qc"}.
+\code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} for \code{"fit"} and \link[=plot.mfrm_fit]{plot(x, type = "qc")} for \code{"qc"}.
 }
 
 \section{Typical workflow}{
@@ -46,7 +46,6 @@ Returns the plotting object produced by the delegated route:
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 out <- run_mfrm_facets(
@@ -60,10 +59,9 @@ p_fit <- plot(out, type = "fit", draw = FALSE)
 p_fit$wright_map$data$plot
 p_qc <- plot(out, type = "qc", draw = FALSE)
 p_qc$data$plot
-}
 
 }
 \seealso{
-\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}},
+\code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \link[=plot.mfrm_fit]{plot(x, type = "qc")},
 \link{mfrmr_visual_diagnostics}, \link{mfrmr_workflow_methods}
 }

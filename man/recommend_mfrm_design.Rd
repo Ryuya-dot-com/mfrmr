@@ -100,6 +100,10 @@ Threshold checks use unrounded metrics. Summaries saved by earlier
 versions may contain only rounded values; rebuild them with
 \code{summary(original_evaluation)} before requesting a recommendation.
 The original evaluation can be reused without generating or fitting new data.
+Summaries also need the current recovery-coordinate review. Rebuilding an
+old PCM/GPCM summary can leave its recovery fields unavailable, preventing a
+recommendation; a new evaluation is needed for corrected severity recovery.
+An unavailable group minimum/maximum is \code{NA}, not infinite apparent success.
 
 The connectivity screen uses generated assignments, including failed fits
 and diagnostic runs. \code{ConnectivityStatus} is \code{"disconnected"} if any
@@ -147,21 +151,16 @@ cost or scoring time. Ranking among passing designs still follows \code{prefer}.
 }
 
 \examples{
-\donttest{
-sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  n_person = c(8, 12),
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 2,
-  reps = 1,
-  maxit = 30,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sim_eval <- saved$design
 rec <- recommend_mfrm_design(
   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
 )
 rec$recommended
-}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \link{summary.mfrm_design_evaluation}, \link{plot.mfrm_design_evaluation}

@@ -65,7 +65,8 @@ fields, convergence fields,
 \item \code{lrt}: data.frame with likelihood-ratio test result (only when two models
 are supplied and \code{nested = TRUE}). Contains \code{ChiSq}, \code{df}, \code{p_value}.
 \item \code{evidence_ratios}: data.frame of pairwise Akaike-weight ratios (Model1,
-Model2, EvidenceRatio). \code{NULL} when weights cannot be computed.
+Model2, EvidenceRatio, LogEvidenceRatio, RatioReason). \code{NULL} when
+comparison is ineligible. Extremely small normalized weights can round to zero.
 \item \code{preferred}: named list with the preferred model label by each criterion.
 \item \code{comparison_basis}: list describing whether IC and LRT comparisons were
 considered comparable. Includes a conservative \code{nesting_review} plus
@@ -94,6 +95,10 @@ calculation and workspace budget with \code{\link[=confint.mfrm_fit]{confint.mfr
 remain ineligible with a reason. A local check does not prove a global
 maximum or negligible integration error; examine starting-value and
 \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} results when the decision is close.
+Known marginal response-dimension deficits and complete-pattern first-order
+rank failures also prevent inferential model comparison, even with a positive
+numerical Hessian. More Persons with the same response designs improve
+precision but cannot repair a structural dimension deficit.
 Positive but ill-conditioned information may pass with a caution after
 numerical refinement, unregularized inversion and curvature-scaled gradient
 checks. A warning is emitted and retained in \code{ICFitCaution}, \code{ICFitReview}
@@ -143,7 +148,9 @@ intentionally conservative. It currently supports the following
 restrictions under shared data and shared constraints:
 \itemize{
 \item \code{RSM} nested inside \code{PCM} when the \code{PCM} fit has an explicit
-\code{step_facet};
+\code{step_facet} and retains every \code{facet_interactions} term in the RSM.
+The PCM may add interaction terms; omitting an RSM interaction is not
+repaired by freeing category steps;
 \item \code{PCM} nested inside \code{GPCM} with the same step facet, population
 design, other facet/step constraints and interactions. The only additional
 parameters must be G-1 relative log-slope contrasts for G slope levels.
@@ -267,9 +274,10 @@ In addition to the canonical criteria, the function computes:
 \itemize{
 \item \strong{Delta_AIC / Delta_BIC / Delta_SABIC}: difference from the minimum
 value in the supplied candidate set.
-A Delta < 2 is typically considered negligible; 4--7 suggests
-moderate evidence; > 10 indicates strong evidence against the
-higher-scoring model (Burnham & Anderson, 2002).
+For AIC, the often-used Delta ranges below 2, 4--7, and above 10 are
+rough descriptions of decreasing relative support (Burnham & Anderson,
+2002), not significance thresholds, adequacy checks, or universal rules
+for BIC and SABIC.
 \item \strong{AkaikeWeight / BICWeight / SABICWeight}: relative candidate-set
 weights derived from \code{exp(-0.5 * Delta)} and normalized only across the
 supplied models. They are not posterior probabilities, probabilities of
@@ -278,6 +286,11 @@ model truth, or guarantees that the candidate set is adequate.
 relative support within this candidate set. A ratio of 5 means only that
 one normalized Akaike weight is five times the other; it does not mean
 that one model is five times more likely to be true.
+Ratios are computed from AIC differences, so they remain available when
+both normalized weights round to zero. \code{LogEvidenceRatio} retains the
+natural log ratio; \code{RatioReason} explains \code{NA} ratios outside numeric range
+(\code{"overflow"}, \code{"underflow"}, or \code{"nonfinite_difference"}, otherwise
+\code{"available"}).
 }
 
 AIC, BIC, and SABIC answer different approximation/penalty questions. SABIC
@@ -403,7 +416,6 @@ problems in multivariate analysis. \emph{Psychometrika, 52}(3), 333-343.
 }
 
 \examples{
-\donttest{
 # Load one dataset for both models
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -440,7 +452,6 @@ comparison$table[, c("Label", "AIC", "Delta_AIC", "BIC", "Delta_BIC")]
 # mml_quadrature_sensitivity() before choosing a model
 # For a PCM/GPCM equal-slope test, see the matched-population example in
 # vignette("mfrmr-gpcm-scope"); request compare_mfrm(..., nested = TRUE).
-}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

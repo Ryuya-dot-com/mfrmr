@@ -39,7 +39,142 @@ native_location_result <- local({
   }
 })
 
+test_that("population-SD contrasts propagate the full derivative and cross-covariance", {
+  bases <- lapply(c("separate", "paired", "shared", "pcm", "fixed"), native_location_result)
+  for (base in bases) {
+    fit <- base$fit
+    n <- nrow(base$table)
+    C <- rbind(Difference = c(1, -1, rep(0, n - 2)),
+      Reverse = c(-1, 1, rep(0, n - 2)), Double = c(2, -2, rep(0, n - 2)))
+    colnames(C) <- base$table$Target
+    V <- base$parameter_covariance
+    local_mocked_bindings(mfrm_native_location_inference = function(...) list(
+      covariance = V, information = list(status = "ok"), checks = base$checks,
+      numerical_checks = base$numerical_checks,
+      check = list(eligible = TRUE, review = "Retained native qualification")), .package = "mfrmr")
+    ci <- suppressWarnings(mfrm_facet_intervals(fit, "Rater", C[, n:1],
+      scale = "standardized", level = .9))
+    sizes <- build_param_sizes(fit$config)
+    # Independently differentiate the nonlinear expanded-parameter target.
+    value <- function(p) {
+      par <- expand_params(p, sizes, fit$config)
+      drop(C %*% par$facets$Rater) / sqrt(par$population$sigma2 %||% 1)
+    }
+    h <- 1e-5
+    J <- vapply(seq_along(fit$opt$par), function(j) {
+      delta <- numeric(length(fit$opt$par)); delta[j] <- h
+      (value(fit$opt$par + delta) - value(fit$opt$par - delta)) / (2 * h)
+    }, numeric(nrow(C)))
+    expect_equal(unname(ci$target_jacobian), unname(J), tolerance = 1e-8)
+    expect_equal(ci$covariance, J %*% V %*% t(J), ignore_attr = TRUE, tolerance = 1e-8)
+    expect_equal(ci$table$Estimate, unname(value(fit$opt$par)))
+    expect_equal(ci$table$NativeEstimate, drop(C %*% base$table$Estimate), ignore_attr = TRUE)
+    expect_equal(ci$table$Lower[1], -ci$table$Upper[2])
+    expect_equal(ci$table$SE[3], 2 * ci$table$SE[1])
+    expect_true(all(ci$table$CIEligible))
+    expect_false(any(ci$table$CoverageQualified))
+    expect_true(all(grepl("Population-SD-standardized", ci$table$InferenceReview)))
+    expect_false(any(grepl("not standardized", ci$cautions)))
+    expect_identical(ci$fit, fit)
+    if (fit$config$model %in% c("RSM", "PCM")) {
+      pop_native <- suppressWarnings(mfrm_population_intervals(base))
+      pop_std <- suppressWarnings(mfrm_population_intervals(ci))
+      expect_equal(pop_std$table, pop_native$table)
+      expect_false(any(grepl("Population-SD-standardized contrasts", pop_std$cautions)))
+    }
+    var_d <- drop(C[1, , drop = FALSE] %*% base$covariance %*% C[1, ])
+    sd <- ci$settings$population_sd
+    d <- ci$table$NativeEstimate[1]
+    if (isTRUE(fit$config$population_spec$active)) {
+      at <- build_param_slices(sizes)$log_sigma2
+      cov_d_lambda <- drop(C[1, , drop = FALSE] %*% base$target_jacobian %*% V[, at])
+      expected <- (var_d + d^2 * V[at, at] / 4 - d * cov_d_lambda) / sd^2
+      expect_equal(ci$table$SE[1]^2, expected, ignore_attr = TRUE)
+      expect_gt(abs(expected - var_d / sd^2), 1e-7)
+      expect_gt(abs(d * cov_d_lambda), 1e-7)
+    } else {
+      expect_identical(sd, 1)
+      expect_equal(ci$table$SE[1]^2, unname(var_d))
+    }
+  }
+})
+
+test_that("zero estimated contrasts remain uncertain and overflow retains only points", {
+  base <- native_location_result("separate"); b <- base$table$Estimate
+  C <- rbind(ZeroEstimate = c(b[2] - b[3], b[3] - b[1], b[1] - b[2]),
+    Overflow = c(1e200, -1e200, 0))
+  colnames(C) <- base$table$Target
+  local_mocked_bindings(mfrm_native_location_inference = function(...) list(
+    covariance = base$parameter_covariance, information = list(status = "ok"),
+    check = list(eligible = TRUE, review = "Retained native qualification")), .package = "mfrmr")
+  ci <- suppressWarnings(mfrm_facet_intervals(base$fit, "Rater", C, scale = "standardized"))
+  expect_equal(ci$table$Estimate[1], 0, tolerance = 1e-12)
+  expect_gt(ci$table$SE[1], 0)
+  expect_true(ci$table$CIEligible[1])
+  expect_false(ci$table$CIEligible[2])
+  expect_true(is.finite(ci$table$Estimate[2]))
+  expect_true(all(is.na(ci$table[2, c("SE", "Lower", "Upper", "ModelSE", "ModelLower", "ModelUpper")])))
+})
+
+test_that("standardization rejects ambiguous targets and preserves numerical refusal", {
+  fit <- native_location_fixture()
+  C <- matrix(c(1, -1, 0), 1, dimnames = list("Difference", fit$config$facet_levels$Rater))
+  local_mocked_bindings(compute_mml_parameter_covariance = function(...) stop("Unexpected information"),
+    mfrm_native_location_inference = function(...) list(covariance = NULL,
+      information = list(status = "unavailable"), check = list(eligible = FALSE,
+        review = "Retained numerical refusal")), .package = "mfrmr")
+  expect_error(mfrm_facet_intervals(fit, "Rater", scale = "standardized"), "explicit zero-sum")
+  expect_error(mfrm_facet_intervals(fit, "Rater", C, scale = "standardized", method = "sandwich"), "method")
+  expect_error(mfrm_facet_intervals(fit, "Rater", C + 1, scale = "standardized"), "zero-sum")
+  expect_error(mfrm_facet_intervals(native_location_fixture("regression"), "Rater", C,
+    scale = "standardized"), "residual SD")
+  failed <- suppressWarnings(mfrm_facet_intervals(fit, "Rater", C, scale = "standardized"))
+  expect_true(is.finite(failed$table$Estimate))
+  expect_false(failed$table$CIEligible)
+  expect_identical(failed$table$Status, "numerical_review_failed")
+  expect_true(all(is.na(failed$table[c("SE", "Lower", "Upper", "ModelSE", "ModelLower", "ModelUpper")])))
+  expect_match(failed$table$InferenceReview, "numerical refusal")
+})
+
+test_that("standardized intervals survive public calculation, saved reports and exports", {
+  fit <- native_location_fixture()
+  C <- matrix(c(1, -1, 0), 1, dimnames = list("Difference", fit$config$facet_levels$Rater))
+  # One end-to-end call retains the real numerical admission checks.
+  ci <- suppressWarnings(mfrm_facet_intervals(fit, "Rater", C, scale = "standardized"))
+  expect_true(ci$table$CIEligible)
+  local_mocked_bindings(fit_mfrm = function(...) stop("No refitting"),
+    compute_mml_parameter_covariance = function(...) stop("No information during replay"), .package = "mfrmr")
+  folder <- tempfile("standardized-contrast-"); dir.create(folder)
+  on.exit(unlink(folder, recursive = TRUE), add = TRUE)
+  saveRDS(ci, file.path(folder, "ci.rds")); saved <- readRDS(file.path(folder, "ci.rds"))
+  res <- mfrm_results(fit, intervals = list(standardized = saved), include = c("fit", "plots"), compute = "never")
+  key <- "gpcm_standardized_intervals"
+  expect_identical(res$tables[[key]]$Estimate, ci$table$Estimate)
+  expect_identical(mfrm_report(res)$tables[[key]], res$tables[[key]])
+  p <- plot_data(plot(saved, draw = FALSE))
+  expect_identical(p$xlab, "Contrast (population SD units)")
+  expect_match(p$subtitle, "estimated population SD uncertainty")
+  expect_false(grepl("not divided", p$subtitle))
+  expect_identical(p$table, ci$table)
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(saved)
+    expect_null(gg$labels$title); expect_null(gg$labels$subtitle); expect_null(gg$labels$caption)
+    expect_identical(plot_data(gg)$table, ci$table)
+  }
+  suppressWarnings(export_mfrm_results(res, output_dir = file.path(folder, "export"),
+    include = c("tables", "report", "replay"), preset = "starter", acknowledge_sensitive = TRUE))
+  files <- list.files(file.path(folder, "export"), recursive = TRUE, full.names = TRUE)
+  replay <- readRDS(files[grepl("\\.rds$", files)][1])
+  expect_identical(replay$gpcm_inference$standardized$table, ci$table)
+  expect_identical(replay$gpcm_inference$standardized$target_jacobian, ci$target_jacobian)
+  fit$population$sigma2 <- 9
+  expect_error(mfrm_results(fit, intervals = ci, compute = "never"), "must match")
+})
+
 test_that("native locations retain full nuisance covariance at fixed fitted points", {
+  skip_if_private_validation_missing(c(
+    "population-full-information-evidence-0.2.4.rds"
+  ))
   local_mocked_bindings(fit_mfrm = function(...) stop("No refitting"),
     simulate_mfrm_data = function(...) stop("No simulation"),
     mfrm_mml_person_scores_numeric = function(...) stop("No empirical Person-score rank gate"),
@@ -118,7 +253,7 @@ test_that("scope and altered metadata fail before information evaluation", {
   local_mocked_bindings(compute_mml_parameter_covariance = function(...) stop("Unexpected information evaluation"),
     .package = "mfrmr")
   expect_error(mfrm_facet_intervals(fit, "Rater", method = "sandwich"), "sandwich intervals are unavailable")
-  expect_error(mfrm_facet_intervals(native_location_fixture("regression"), "Rater"), "intercept-only")
+  expect_silent(mfrm_native_location_source(native_location_fixture("regression")))
   changes <- list(
     locations = function(f) { f$facets$others$Estimate[1] <- 999; f },
     steps = function(f) { f$steps$Estimate[1] <- 999; f },
@@ -211,7 +346,7 @@ test_that("native interval reports and exports replay without covariance calcula
     expect_identical(res$tables[[table_key]]$Lower, ci$table$Lower)
     p <- plot_data(plot(res, type = key, draw = FALSE))
     expect_identical(p$table, ci$table)
-    expect_match(p$subtitle, "Experimental native locations")
+    expect_match(p$subtitle, "Native locations: asymptotic Wald intervals")
     expect_match(p$xlab, "native ability units")
     expect_identical(mfrm_report(res)$tables[[table_key]], res$tables[[table_key]])
     for (change in list(

@@ -93,6 +93,42 @@ test_that("GPCM IC solution checks do not grant interval or LRT readiness", {
   expect_identical(calls, previous_calls)
 })
 
+test_that("incomplete or impossible solution summaries remain ineligible", {
+  fit <- list(config = list(model = "GPCM", method = "MML"),
+    opt = list(par = c(0, 0), value = 100, optimizer_diagnostics = list(ConvergenceSeverity = "pass")))
+  contract <- data.frame(StoredICConsistent = TRUE, ICSelectable = TRUE)
+  local_mocked_bindings(
+    mfrmr_get_readiness_record = function(...) list(fit = data.frame(InputState = "pass", CategoryState = "adequate", NumericalState = "ready")),
+    mfrm_inference_ready = function(...) FALSE,
+    mfrm_fit_decision_summary = function(...) data.frame(Why = "review"), .package = "mfrmr")
+  information <- list(status = "evaluated_diagnostic_only", free_dimension = 2L,
+    evaluation_summary = data.frame(ReevaluatedObjective = 100, GradientMaxAbs = 0),
+    eigenvalue_summary = data.frame(Smallest = 1, AbsoluteScale = 2))
+  expect_true(mfrm_ic_fit_check(fit, contract, information)$eligible)
+  for (group in c("evaluation_summary", "eigenvalue_summary")) {
+    for (field in names(information[[group]])) {
+      for (value in list(NULL, numeric(), c(1, 2), NA_real_, Inf, "1", 1i)) {
+        bad <- information; bad[[group]] <- as.list(bad[[group]]); bad[[group]][[field]] <- value
+        out <- mfrm_ic_fit_check(fit, contract, bad)
+        expect_false(out$eligible)
+        expect_match(out$review, "Finite, dimensionally consistent")
+      }
+    }
+  }
+  for (value in list(NULL, NA_real_, Inf, c(2, 2), 1, 2.5)) {
+    bad <- information; bad$free_dimension <- value
+    expect_false(mfrm_ic_fit_check(fit, contract, bad)$eligible)
+  }
+  for (value in list(NULL, NA_real_, Inf, c(100, 100))) {
+    bad_fit <- fit; bad_fit$opt$value <- value
+    expect_false(mfrm_ic_fit_check(bad_fit, contract, information)$eligible)
+  }
+  bad <- information; bad$evaluation_summary$GradientMaxAbs <- -1
+  expect_false(mfrm_ic_fit_check(fit, contract, bad)$eligible)
+  bad <- information; bad$eigenvalue_summary$Smallest <- 3
+  expect_false(mfrm_ic_fit_check(fit, contract, bad)$eligible)
+})
+
 test_that('bootstrap singleton exception checks fresh support without relaxing numerical guards', {
   fit <- list(config=list(model='GPCM',method='MML'),
     opt=list(par=c(0,0),value=100,

@@ -410,6 +410,9 @@ test_that("G4N cannot read numeric outputs or launch an engine", {
 })
 
 test_that("G4N record and internal roadmap require a separate G4A gate", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_diagnostic_numeric_eligibility()
   record <- paste(readLines(file.path(
     ctx$validation,

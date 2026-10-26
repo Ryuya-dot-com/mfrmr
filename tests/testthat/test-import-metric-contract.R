@@ -44,6 +44,37 @@ test_that("TAM coordinates follow category logits rather than coefficient names"
   expect_error(mfrmr:::.tam_extract_single(invalid, "Item"), "constant adjacent-category slope")
 })
 
+test_that("TAM response flags use fitted support and retain Person alignment", {
+  source <- list(
+    pid = c("low", "high", "mixed", "missing", "partial", "unused", "masked"),
+    item = data.frame(item = c("binary", "polytomous")),
+    AXsi = rbind(c(0, -.2, NA), c(0, -.3, -.8)),
+    resp = rbind(c(0, 0), c(1, 2), c(1, 0), c(NA, NA),
+      c(NA, 2), c(1, 1), c(1, 0)))
+  colnames(source$resp) <- source$item$item
+  source$resp.ind <- !is.na(source$resp)
+  source$resp.ind[7, 2] <- FALSE
+  ids <- rev(source$pid)
+  status <- mfrmr:::.tam_person_response_status(source, ids)
+  expect_identical(status$Extreme, rev(c("low", "high", "none", NA,
+    "high", "none", "high")))
+  expect_identical(status$NObserved, rev(c(2L, 2L, 2L, 0L, 1L, 2L, 1L)))
+  expect_equal(status$ResponseStatus[4], "no_observed_responses")
+  # An observed ceiling of one cannot remove the fitted category two.
+  source$resp[source$resp == 2 & !is.na(source$resp)] <- 1
+  source$resp <- source$resp[, 2:1]
+  source$resp.ind <- source$resp.ind[, 2:1]
+  updated <- mfrmr:::.tam_person_response_status(source, source$pid)
+  expect_equal(updated$Extreme[2], "none")
+  expect_equal(updated$Extreme[5], "none")
+  expect_equal(updated$Extreme[7], "high")
+  source$resp[1, 1] <- 3
+  expect_equal(mfrmr:::.tam_person_response_status(source, source$pid)$ResponseStatus[1], "unavailable")
+  source$pid[1] <- source$pid[2]
+  expect_true(all(is.na(mfrmr:::.tam_person_response_status(source, ids)$Extreme)))
+  expect_true(all(is.na(mfrmr:::.tam_person_response_status(list(), ids)$Extreme)))
+})
+
 test_that("eRm locations and thresholds retain their difficulty meaning", {
   skip_if_not_installed("eRm")
   set.seed(47L)
@@ -105,15 +136,74 @@ test_that("mirt rating-scale offsets are included in absolute thresholds", {
   expect_error(import_mirt_fit(incompatible), "not interchangeable")
 })
 
+test_that("mixed mirt item types retain every item's thresholds and probabilities", {
+  skip_if_not_installed("mirt")
+  types <- c("Rasch", "2PL", "gpcm", "gpcmIRT", "gpcm", "Rasch")
+  counts <- c(2L, 2L, 3L, 4L, 2L, 3L)
+  y <- vapply(counts, function(k) rep(seq_len(k) - 1L, length.out = 60L), integer(60))
+  colnames(y) <- paste0("Item", seq_along(types))
+  # Fixed source parameters isolate the import mapping from estimation quality.
+  pars <- mirt::mirt(y, 1, itemtype = types, pars = "values", verbose = FALSE)
+  pars$value[pars$name == "a1"] <- c(1, 1.3, .8, 1.2, .9, 1)
+  pars$value[pars$name == "c"] <- .35
+  pars$est <- FALSE
+  fit <- mirt::mirt(y, 1, itemtype = types, pars = pars, verbose = FALSE)
+  imported <- import_mirt_fit(fit, model = "GPCM")
+  theta <- matrix(c(-2, -.3, 0, 1.7), ncol = 1L)
+  expect_equal(nrow(imported$steps), sum(counts - 1L))
+  expect_identical(imported$source$item_types, types)
+  for (i in seq_along(types)) {
+    rows <- imported$steps[imported$steps$Level == colnames(y)[i], ]
+    expect_identical(rows$Step, seq_len(counts[i] - 1L))
+    expect_true(all(is.finite(rows$Estimate)))
+    a <- imported$facets$others$Slope[i]
+    expected <- t(vapply(theta[, 1L], function(t) {
+      logits <- c(0, cumsum(a * (t - rows$Estimate)))
+      p <- exp(logits - max(logits)); p / sum(p)
+    }, numeric(counts[i])))
+    native <- mirt::probtrace(mirt::extract.item(fit, i), theta)
+    expect_equal(unname(expected), unname(native), tolerance = 1e-12)
+    expect_equal(imported$facets$others$Estimate[i], mean(rows$Estimate))
+  }
+  expect_error(import_mirt_fit(fit, model = "PCM"), "Non-unit source item slopes")
+  source <- mirt::coef(fit, simplify = TRUE, IRTpars = TRUE)$items
+  actual <- source
+  # An inapplicable NA must be ignored, but a missing actual threshold must fail.
+  actual[3L, "b1"] <- NA_real_
+  local_mocked_bindings(.mfrm_mirt_coef = function(...) list(items = actual), .package = "mfrmr")
+  expect_error(import_mirt_fit(fit, model = "GPCM"), "finite source adjacent-category")
+  actual <- source
+  actual[4L, "a1"] <- NA_real_
+  expect_error(import_mirt_fit(fit, model = "GPCM"), "finite positive source slope")
+  actual <- source
+  actual[4L, "c"] <- NA_real_
+  expect_error(import_mirt_fit(fit, model = "GPCM"), "rating-scale offsets are unavailable")
+})
+
 test_that("imported summaries and plots do not invent native model assumptions", {
   skip_if_not_installed("TAM")
   set.seed(44L)
   y <- matrix(stats::rbinom(80L * 6L, 1, .5), nrow = 80L)
   colnames(y) <- paste0("I", seq_len(ncol(y)))
+  y[1, ] <- 0
+  y[2, ] <- 1
   y[1, 1] <- NA
   fit <- TAM::tam.mml(y, verbose = FALSE)
   imported <- import_tam_fit(fit, "RSM", compute_fit = TRUE)
   expect_equal(imported$diagnostics$n_obs, sum(!is.na(y)))
+  expect_identical(imported$facets$person$Extreme[1:2], c("low", "high"))
+  expect_identical(imported$facets$person$NObserved[1:2], c(5L, 6L))
+  expect_identical(imported$facets$person$Estimate, fit$person$EAP)
+  expect_identical(imported$facets$person$SE, fit$person$SD.EAP)
+  masked <- fit
+  masked$resp[is.na(masked$resp)] <- 0
+  masked_import <- import_tam_fit(masked, "RSM", compute_fit = TRUE)
+  expect_equal(masked_import$diagnostics$n_obs, sum(!is.na(y)))
+  expect_identical(masked_import$facets$person, imported$facets$person)
+  saved <- tempfile(fileext = ".rds")
+  on.exit(unlink(saved), add = TRUE)
+  saveRDS(imported, saved)
+  expect_identical(readRDS(saved), imported)
   person_rel <- imported$diagnostics$reliability
   expect_true(is.na(person_rel$Reliability[person_rel$Facet == "Person"]))
   expect_match(person_rel$SummaryNote[person_rel$Facet == "Person"], "Posterior SD")

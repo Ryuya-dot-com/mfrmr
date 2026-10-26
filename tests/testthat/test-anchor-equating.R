@@ -19,6 +19,52 @@ audit1 <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 # anchor_to_baseline
 # ================================================================
 
+test_that("MML refuses Person constraints rather than silently ignoring them", {
+  ratings <- load_mfrmr_data("example_core")
+  person_id <- unique(ratings$Person)[1]
+  for (model in c("RSM", "PCM", "GPCM")) {
+    args <- list(data = ratings, person = "Person", facets = c("Rater", "Criterion"),
+                 score = "Score", model = model, method = "MML", anchor_policy = "silent")
+    if (model != "RSM") args$step_facet <- "Criterion"
+    if (model == "GPCM") args$slope_facet <- "Rater"
+    # Use aliases accepted by the normalizer as well as the canonical schema.
+    direct <- data.frame(facet = "Person", element = person_id, value = 10)
+    grouped <- data.frame(Facet = "Person", Level = unique(ratings$Person),
+                          Group = "cohort", GroupValue = 10)
+    expect_error(do.call(fit_mfrm, c(args, list(anchors = direct))),
+                 "Person anchors and Person group anchors are not supported with MML")
+    expect_error(do.call(fit_mfrm, c(args, list(group_anchors = grouped))),
+                 "Person anchors and Person group anchors are not supported with MML")
+  }
+})
+
+test_that("JML still enforces direct and group Person constraints", {
+  ratings <- load_mfrmr_data("example_core")
+  people <- unique(ratings$Person)[1:3]
+  fit <- suppressWarnings(fit_mfrm(
+    ratings, "Person", c("Rater", "Criterion"), "Score", method = "JML",
+    anchors = data.frame(Facet = "Person", Level = people[1], Anchor = 0.4),
+    group_anchors = data.frame(Facet = "Person", Level = people[2:3],
+                              Group = "pair", GroupValue = 0.2)
+  ))
+  estimates <- setNames(fit$facets$person$Estimate, fit$facets$person$Person)
+  expect_equal(unname(estimates[people[1]]), 0.4, tolerance = 1e-12)
+  expect_equal(mean(estimates[people[2:3]]), 0.2, tolerance = 1e-12)
+})
+
+test_that("MML location anchors contribute to the whole-facet zero sum", {
+  ratings <- load_mfrmr_data("example_core")
+  fixed_rater <- unique(ratings$Rater)[1]
+  fit <- suppressWarnings(fit_mfrm(
+    ratings, "Person", c("Rater", "Criterion"), "Score", method = "MML",
+    anchors = data.frame(Facet = "Rater", Level = fixed_rater, Anchor = 0.7)
+  ))
+  raters <- subset(fit$facets$others, Facet == "Rater")
+  expect_equal(unname(raters$Estimate[raters$Level == fixed_rater]), 0.7,
+               tolerance = 1e-12)
+  expect_equal(sum(raters$Estimate[raters$Level != fixed_rater]), -0.7, tolerance = 1e-12)
+})
+
 test_that("anchor_to_baseline returns correct class and structure", {
   res <- suppressWarnings(
     anchor_to_baseline(d2, fit2, person = "Person",
@@ -87,47 +133,12 @@ test_that("anchor_to_baseline refuses a nonready baseline fit", {
 
 test_that("fit_mfrm surfaces malformed anchor schemas instead of silently dropping them", {
   toy <- load_mfrmr_data("example_core")
-  bad_anchors <- data.frame(
-    WrongFacet = "Rater",
-    WrongLevel = "R1",
-    WrongValue = 0,
-    stringsAsFactors = FALSE
-  )
-
-  expect_warning(
-    withCallingHandlers(
-      fit_mfrm(
-        toy,
-        person = "Person",
-        facets = c("Rater", "Criterion"),
-        score = "Score",
-        method = "JML",
-        maxit = 15,
-        anchors = bad_anchors,
-        anchor_policy = "warn"
-      ),
-      warning = function(w) {
-        if (grepl("Optimization convergence review did not produce", conditionMessage(w), fixed = TRUE)) {
-          invokeRestart("muffleWarning")
-        }
-      }
-    ),
-    "anchor_schema_mismatch"
-  )
-
-  expect_error(
-    fit_mfrm(
-      toy,
-      person = "Person",
-      facets = c("Rater", "Criterion"),
-      score = "Score",
-      method = "JML",
-      maxit = 15,
-      anchors = bad_anchors,
-      anchor_policy = "error"
-    ),
-    "anchor_schema_mismatch"
-  )
+  bad_anchors <- data.frame(WrongFacet = "Rater", WrongLevel = "R1", WrongValue = 0)
+  for (policy in c("warn", "error", "silent")) {
+    expect_error(fit_mfrm(toy, person = "Person", facets = c("Rater", "Criterion"),
+      score = "Score", method = "JML", maxit = 15, anchors = bad_anchors,
+      anchor_policy = policy), "Malformed anchor schema")
+  }
 })
 
 test_that("anchor_to_baseline S3 methods produce output", {
@@ -147,6 +158,7 @@ test_that("anchor_to_baseline S3 methods produce output", {
   # print methods produce output without error
   expect_output(print(res), "Anchored Fit Summary")
   expect_output(print(s), "Anchored Fit Summary")
+  expect_output(print(s), "check constraints, not stability")
 })
 
 # ================================================================

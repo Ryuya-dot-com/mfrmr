@@ -100,7 +100,7 @@ test_that("both plotting routes retain selected and unavailable outcomes with op
   expect_no_error(ggplot2::ggplot_build(p))
   expect_error(as_ggplot(missing, component = "table"), "plot_data")
   expect_error(as_ggplot(plot(missing, draw = FALSE), component = "table"), "plot_data")
-  expect_match(as_ggplot(x$ci)$labels$subtitle, "99.5%", fixed = TRUE)
+  expect_match(paste(plot_data(as_ggplot(x$ci), "notes")$Text, collapse = "\n"), "99.5%", fixed = TRUE)
   expect_false(plot_data(as_ggplot(x$ci, comparison = FALSE), "comparison"))
   expect_error(plot(x$ci, reference = Inf, draw = FALSE), "finite")
   expect_error(plot(x$ci, title = NA_character_, draw = FALSE), "Plot text")

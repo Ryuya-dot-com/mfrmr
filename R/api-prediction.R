@@ -49,6 +49,10 @@
 #' requested future design under that explicit data-generating mechanism. This
 #' should be interpreted as a fit-based forecast under modeling assumptions, not
 #' as a guaranteed out-of-sample prediction.
+#' Generating parameters are held fixed at the values in that specification.
+#' Monte Carlo SEs describe simulation precision conditional on these values;
+#' they do not include source-fit uncertainty or uncertainty about whether the
+#' generating assumptions describe a future administration.
 #'
 #' When that fit-derived or manually built simulation specification stores an
 #' active latent-regression population generator, the helper still operates at
@@ -106,6 +110,8 @@
 #' - `forecast`: facet-level forecast table
 #' - `overview`: run-level overview
 #' - `simulation`: underlying [evaluate_mfrm_design()] result
+#' - `fit_identity`: source-fit metadata for fit-derived forecasts; `NULL` for
+#'   an explicitly supplied simulation specification
 #' - `sim_spec`: simulation specification used for the forecast
 #' - `facet_names`: public non-person facet names carried by the simulation
 #'   specification
@@ -126,7 +132,6 @@
 #' @seealso [build_mfrm_sim_spec()], [extract_mfrm_sim_spec()],
 #'   [evaluate_mfrm_design()], [summary.mfrm_population_prediction]
 #' @examples
-#' \donttest{
 #' spec <- build_mfrm_sim_spec(
 #'   n_person = 16,
 #'   n_rater = 3,
@@ -143,7 +148,15 @@
 #' )
 #' s_pred <- summary(pred)
 #' s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
-#' }
+#' @section Saved-result reuse:
+#' Fit-derived forecasts must match the source fit when supplied to archive or
+#' replay helpers. Explicit `sim_spec` forecasts remain separate scenarios;
+#' attaching them does not establish that their assumptions match the fit.
+#' Fit-derived forecasts with a fixed `population_sd` are unavailable: the
+#' design-simulation refits do not preserve that variance constraint or an
+#' anchor-defined origin. An explicit `sim_spec` can describe a separate
+#' forecasting scenario, but does not reproduce those source-fit constraints.
+#' See [mfrmr_compatibility_layer] for migration and replay behavior.
 #' @export
 predict_mfrm_population <- function(fit = NULL,
                                     sim_spec = NULL,
@@ -169,6 +182,9 @@ predict_mfrm_population <- function(fit = NULL,
   if (has_fit) {
     if (!inherits(fit, "mfrm_fit")) {
       stop("`fit` must be output from fit_mfrm().", call. = FALSE)
+    }
+    if (!is.null(fit$population$fixed_sd %||% fit$config$population_spec$fixed_sd)) {
+      stop("Fit-derived population forecasts do not yet preserve fixed `population_sd` or an anchor-defined origin during simulation refits. Supply an explicit `sim_spec` only for a separately declared forecasting scenario; it does not reproduce those source-fit constraints.", call. = FALSE)
     }
     default_fit_method <- as.character(fit$summary$Method[1])
     if (!is.character(default_fit_method) || !nzchar(default_fit_method)) {
@@ -247,8 +263,10 @@ predict_mfrm_population <- function(fit = NULL,
   facet_names <- simulation_spec_output_facet_names(forecast_spec)
   design_public <- simulation_append_design_alias_columns(design, design_variable_aliases)
   notes <- c(
-    "This forecast summarizes expected design-level behavior under the supplied or fit-derived simulation specification.",
+    if (has_fit) "This forecast uses a simulation specification derived from the recorded source fit." else
+      "This forecast uses an explicitly supplied simulation specification; it is not asserted to derive from a fit stored alongside it.",
     "MCSE columns quantify Monte Carlo uncertainty from using a finite number of replications.",
+    "Generating parameters are held fixed; MCSEs do not include source-fit uncertainty or uncertainty about the generating assumptions.",
     "Do not interpret this output as deterministic future person/rater true values."
   )
   notes <- unique(c(notes, sim_eval$notes %||% character(0)))
@@ -271,6 +289,7 @@ predict_mfrm_population <- function(fit = NULL,
       forecast = tibble::as_tibble(sim_summary$design_summary),
       overview = tibble::as_tibble(sim_summary$overview),
       simulation = sim_eval,
+      fit_identity = if (has_fit) prediction_fit_identity(fit) else NULL,
       sim_spec = forecast_spec,
       facet_names = facet_names,
       design_variable_aliases = design_variable_aliases,
@@ -332,25 +351,15 @@ predict_mfrm_population <- function(fit = NULL,
 #' - `notes`: interpretation notes
 #' @seealso [predict_mfrm_population()]
 #' @examples
-#' \donttest{
-#' spec <- build_mfrm_sim_spec(
-#'   n_person = 16,
-#'   n_rater = 3,
-#'   n_criterion = 2,
-#'   raters_per_person = 2,
-#'   assignment = "rotating"
-#' )
-#' pred <- predict_mfrm_population(
-#'   sim_spec = spec,
-#'   design = list(person = 18),
-#'   reps = 1,
-#'   maxit = 30,
-#'   seed = 123
-#' )
+#' # One saved replication illustrates output structure, not precise rates.
+#' # Regeneration recipe: examples/simulation-results.R in the package.
+#' saved <- readRDS(system.file("examples", "simulation-results.rds",
+#'   package = "mfrmr", mustWork = TRUE))
+#' # Inspect saved$generation_warnings and the result's run/status tables.
+#' pred <- saved$population
 #' s <- summary(pred)
 #' s$overview
 #' s$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
-#' }
 #' @method summary mfrm_population_prediction
 #' @export
 summary.mfrm_population_prediction <- function(object, digits = 3, ...) {
@@ -730,6 +739,31 @@ filter_mfrm_prediction_persons <- function(prepared, keep_persons) {
   prepared
 }
 
+# Scoring also depends on future-population coding and source admission states.
+prediction_fit_identity <- function(fit) {
+  pop <- fit$population %||% list()
+  spec <- fit$config$population_spec %||% list()
+  active <- isTRUE(pop$active) || identical(fit$config$posterior_basis, "population_model")
+  terms <- if (active) prediction_population_terms(fit) else NULL
+  # The fitted transformation basis belongs to the identity, its workspace does not.
+  if (!is.null(terms)) attr(terms, ".Environment") <- NULL
+  list(calibration = mfrm_result_fit_identity(fit), scoring = mfrm_checkpoint_fingerprint(list(
+    posterior_basis = fit$config$posterior_basis,
+    terms = terms, xlevels = pop$xlevels %||% spec$xlevels,
+    contrasts = pop$contrasts %||% spec$contrasts,
+    design_columns = pop$design_columns %||% names(pop$coefficients),
+    source_columns = fit$config$source_columns,
+    readiness = mfrmr_get_readiness_record(fit),
+    numerical = fit$opt$optimizer_diagnostics,
+    repeated_ratings = fit$config$repeated_ratings,
+    preparation_notes = fit$prep$preparation_notes %||% fit$data_review$preparation_notes,
+    estimability = fit$config$estimability_audit,
+    data_estimability = fit$data_review$estimability,
+    boundary = fit$config$boundary_audit,
+    adjustment = fit$jml_adjustment[c("estimator", "point", "policy")]
+  ), canonical = TRUE))
+}
+
 prediction_population_terms <- function(fit) {
   pop <- fit$population %||% list()
   spec <- fit$config$population_spec %||% list()
@@ -842,6 +876,8 @@ prepare_mfrm_prediction_population <- function(fit,
 
   scaffold$coefficients <- fit_population$coefficients
   scaffold$sigma2 <- fit_population$sigma2
+  fixed_sd <- fit_population$fixed_sd %||% fit$config$population_spec$fixed_sd
+  if (!is.null(fixed_sd)) scaffold$fixed_sd <- fixed_sd
   scaffold$converged <- isTRUE(fit_population$converged)
   scaffold$posterior_basis <- "population_model"
 
@@ -883,7 +919,7 @@ compute_person_posterior_summary <- function(idx,
                                              population_spec = NULL,
                                              interval_level = 0.95,
                                              n_draws = 0,
-                                             seed = NULL) {
+                                             seed = NULL, cut_scores = NULL) {
   n <- length(idx$score_k)
   if (n == 0) {
     empty_tbl <- tibble::tibble(
@@ -895,98 +931,34 @@ compute_person_posterior_summary <- function(idx,
       Observations = integer(0),
       WeightedN = numeric(0)
     )
-    return(list(estimates = empty_tbl, draws = tibble::tibble()))
+    out <- list(estimates = empty_tbl, draws = tibble::tibble())
+    if (!is.null(cut_scores)) out$decision_probabilities <- matrix(numeric(),0L,2L*length(cut_scores)+1L)
+    return(out)
   }
 
   base_eta <- compute_base_eta(idx, params, config)
   person_int <- idx$person
-  n_nodes <- length(quad$nodes)
-  score_k <- idx$score_k
   quad_basis <- if (mfrmr_adaptive_integration(config)) {
     mfrmr_adaptive_quadrature_basis(idx, config, params, quad, base_eta,
       population_spec = population_spec, person_count = length(person_labels))
   } else resolve_person_quadrature_basis(
     quad = quad, population_spec = population_spec, person_count = length(person_labels)
   )
-  person_nodes <- quad_basis$nodes
-
-  if (config$model == "RSM") {
-    step_cum <- c(0, cumsum(params$steps))
-    k_cat <- length(step_cum)
-    step_cum_row <- matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
-    obs_idx <- cbind(seq_len(n), score_k + 1L)
-
-    log_prob_mat <- matrix(0, n, n_nodes)
-    for (q in seq_len(n_nodes)) {
-      eta_q <- base_eta + person_nodes[person_int, q]
-      eta_mat <- outer(eta_q, 0:(k_cat - 1))
-      log_num <- eta_mat - step_cum_row
-      row_max <- log_num[cbind(
-        seq_len(n), max.col(log_num, ties.method = "first")
-      )]
-      log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
-      lp <- log_num[obs_idx] - log_denom
-      if (!is.null(idx$weight)) lp <- lp * idx$weight
-      log_prob_mat[, q] <- lp
-    }
-  } else if (identical(config$model, "GPCM")) {
-    step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    k_cat <- ncol(step_cum_mat)
-    obs_idx <- cbind(seq_len(n), score_k + 1L)
-    step_cum_obs <- step_cum_mat[idx$step_idx, , drop = FALSE]
-    slope_obs <- matrix(params$slopes[idx$slope_idx], nrow = n, ncol = k_cat)
-    k_vals <- 0:(k_cat - 1)
-
-    log_prob_mat <- matrix(0, n, n_nodes)
-    for (q in seq_len(n_nodes)) {
-      eta_q <- base_eta + person_nodes[person_int, q]
-      linear_part <- outer(eta_q, k_vals) - step_cum_obs
-      log_num <- linear_part * slope_obs
-      row_max <- log_num[cbind(
-        seq_len(n), max.col(log_num, ties.method = "first")
-      )]
-      log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
-      lp <- log_num[obs_idx] - log_denom
-      if (!is.null(idx$weight)) lp <- lp * idx$weight
-      log_prob_mat[, q] <- lp
-    }
-  } else {
-    step_cum_mat <- t(apply(params$steps_mat, 1, function(x) c(0, cumsum(x))))
-    k_cat <- ncol(step_cum_mat)
-    obs_idx <- cbind(seq_len(n), score_k + 1L)
-    step_cum_obs <- step_cum_mat[idx$step_idx, , drop = FALSE]
-    k_vals <- 0:(k_cat - 1)
-
-    log_prob_mat <- matrix(0, n, n_nodes)
-    for (q in seq_len(n_nodes)) {
-      eta_q <- base_eta + person_nodes[person_int, q]
-      log_num <- outer(eta_q, k_vals) - step_cum_obs
-      row_max <- log_num[cbind(
-        seq_len(n), max.col(log_num, ties.method = "first")
-      )]
-      log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
-      lp <- log_num[obs_idx] - log_denom
-      if (!is.null(idx$weight)) lp <- lp * idx$weight
-      log_prob_mat[, q] <- lp
-    }
-  }
-
-  ll_by_person <- rowsum(log_prob_mat, person_int, reorder = FALSE)
-  person_ids <- as.integer(rownames(ll_by_person))
-  n_persons <- nrow(ll_by_person)
+  # Use the fitted-model kernels with this scoring prior/person grid.
+  quad$person_basis <- quad_basis
+  logprob <- mfrm_mml_logprob_bundle_r(idx, config, quad, params, base_eta)
+  posterior <- mfrm_mml_person_bundle(logprob$log_prob_mat, person_int,
+    quad_basis, include_posterior = TRUE)
+  person_ids <- posterior$person_ids
+  n_persons <- length(person_ids)
   aligned_person_labels <- as.character(person_labels[person_ids])
-  log_post <- quad_basis$log_weights[person_ids, , drop = FALSE] + ll_by_person
-  row_max <- log_post[cbind(
-    seq_len(n_persons), max.col(log_post, ties.method = "first")
-  )]
-  log_norm <- row_max + log(rowSums(exp(log_post - row_max)))
-  post_w <- exp(log_post - log_norm)
+  post_w <- posterior$posterior
 
   nodes_mat <- quad_basis$nodes[person_ids, , drop = FALSE]
   eap <- rowSums(nodes_mat * post_w)
   sd_eap <- sqrt(rowSums((nodes_mat - eap)^2 * post_w))
   intervals <- mfrmr_person_posterior_intervals(idx, config, params, base_eta,
-    person_labels, population_spec, interval_level)
+    person_labels, population_spec, interval_level, cut_scores)
 
   obs_n <- as.integer(rowsum(rep(1L, n), person_int, reorder = FALSE)[, 1])
   weight_n <- as.numeric(rowsum(if (is.null(idx$weight)) rep(1, n) else idx$weight,
@@ -1020,7 +992,9 @@ compute_person_posterior_summary <- function(idx,
     })
   }
 
-  list(estimates = estimates, draws = draws_tbl)
+  out <- list(estimates = estimates, draws = draws_tbl)
+  if (!is.null(cut_scores)) out$decision_probabilities <- intervals[, -(1:2), drop=FALSE]
+  out
 }
 
 prediction_resolve_fit_method <- function(fit) {
@@ -1058,11 +1032,19 @@ prediction_score_integration_review <- function(estimates, review) {
 }
 
 # Output-specific local calibration checks; never changes global readiness.
-prediction_local_calibration_review <- function(fit) {
+prediction_local_calibration_review <- function(fit, covariance = NULL) {
   out <- list(eligible = FALSE, basis = "local_mml_and_integration_v1",
     review = "Local calibration checks were not completed.")
   tryCatch({
-    check <- mfrm_ic_fit_check(fit, mfrm_extract_fit_ic_contract(fit))
+    if (isTRUE(fit$config$population_spec$active) &&
+        !identical(fit$config$population_spec$design_columns, "(Intercept)"))
+      mfrm_native_location_source(fit)
+    # The promise is evaluated only after the existing local-source guards.
+    check <- mfrm_ic_fit_check(fit, mfrm_extract_fit_ic_contract(fit),
+      information = if (is.null(covariance)) NULL else tryCatch({
+        info <- covariance(fit)
+        info$solution_information %||% list(status = "unavailable", detail = info$detail)
+      }, error = function(e) list(status = "unavailable", detail = conditionMessage(e))))
     out$review <- check$review
     out$caution <- check$caution %||% character(0)
     if (!isTRUE(check$eligible)) return(out)
@@ -1137,7 +1119,7 @@ prediction_jml_calibration_review <- function(fit) {
         max(abs(gradient)) > 1e-4)
       stop("The joint objective must agree within 1e-6 and its maximum absolute gradient must be <= 1e-4.")
     # Includes all free Person and structural parameters; no regularization or inversion.
-    information <- stats::optimHess(par, evaluator$value, evaluator$gradient)
+    information <- optimHess(par, evaluator$value, evaluator$gradient)
     if (!identical(dim(information), rep(length(par), 2L)) || any(!is.finite(information)))
       stop("Joint JML curvature is unavailable.")
     chol(information)
@@ -1161,15 +1143,16 @@ prediction_jml_calibration_review <- function(fit) {
 # Fixed-calibration scoring needs the saved point solution, not a covariance
 # certificate. Reuse its identity check, then compare the fitted integration
 # with a finer rule without fitting or changing the source readiness record.
-prediction_gmfrm_source_identity <- function(fit) {
+prediction_gmfrm_source_identity <- function(fit, legacy = FALSE) {
   # An exact saved-source match, not a new numerical check or authenticity claim.
-  paste0("gmfrm_scoring_source_v1:", mfrm_checkpoint_fingerprint(list(
+  paste0(if (legacy) "gmfrm_scoring_source_v1:" else "gmfrm_scoring_source_v2:",
+    mfrm_checkpoint_fingerprint(list(
     source = mfrm_gpcm_inference_source(fit), config = fit$config,
     specification = fit$gmfrm, score_map = fit$prep$score_map,
     source_columns = fit$prep$source_columns,
     locations = fit$facets$others, steps = fit$steps, slopes = fit$slopes,
     converged = fit$summary$Converged, numerical = fit$opt$optimizer_diagnostics,
-    readiness = mfrmr_get_readiness_record(fit))))
+    readiness = mfrmr_get_readiness_record(fit)), canonical = !legacy))
 }
 
 prediction_gmfrm_calibration <- function(fit, params) {
@@ -1237,7 +1220,7 @@ prediction_gmfrm_scoring_readiness <- function(fit) {
     readiness_contract_version = field("ReadinessContractVersion"))
 }
 
-prediction_source_scoring_readiness <- function(fit) {
+prediction_source_scoring_readiness <- function(fit, covariance = NULL) {
   if (mfrm_has_product_slopes(fit)) return(prediction_gmfrm_scoring_readiness(fit))
   state <- mfrm_convergence_state(fit)
   record <- mfrmr_get_readiness_record(fit)
@@ -1313,6 +1296,7 @@ prediction_source_scoring_readiness <- function(fit) {
   if (population_active) parameter_ready <- parameter_ready &&
     isTRUE(pop$active) && length(pop$sigma2) == 1L && is.finite(pop$sigma2) &&
     pop$sigma2 > 0 && length(pop$coefficients) > 0L && all(is.finite(pop$coefficients)) &&
+    identical(fit$population$fixed_sd, pop$fixed_sd) &&
     isTRUE(all.equal(fit$population$sigma2, pop$sigma2, tolerance = 1e-10)) &&
     isTRUE(all.equal(as.numeric(fit$population$coefficients), as.numeric(pop$coefficients), tolerance = 1e-10)) &&
     identical(as.character(fit$population$design_columns), names(pop$coefficients))
@@ -1325,13 +1309,15 @@ prediction_source_scoring_readiness <- function(fit) {
   normal_intercept <- !population_active || (is.matrix(pop$design_matrix) &&
     ncol(pop$design_matrix) == 1L && all(is.finite(pop$design_matrix)) &&
     all(pop$design_matrix == 1))
+  normal_scoring <- normal_intercept || (population_active &&
+    fit$config$model %in% c("RSM", "PCM"))
   if (!isTRUE(ready) && identical(fit$config$method, "MML") &&
       (population_active || identical(fit$config$model, "GPCM")) &&
       contract_ready && input_ready && category_ready && numerical_ready && parameter_ready &&
-      !rank_deficient && normal_intercept &&
+      !rank_deficient && normal_scoring &&
       estimability_state %in% c("identified", "population_assumption_linked", "not_evaluated") &&
       boundary_state %in% c("finite", "not_applicable", "not_evaluated")) {
-    local <- prediction_local_calibration_review(fit)
+    local <- prediction_local_calibration_review(fit, covariance = covariance)
     ready <- isTRUE(local$eligible)
   }
   if (!isTRUE(ready) && identical(fit$config$method, "JML") &&
@@ -1346,7 +1332,7 @@ prediction_source_scoring_readiness <- function(fit) {
   reason_codes <- character(0)
   if (population_active) {
     if (!isTRUE(local$eligible)) reason_codes <- c(reason_codes,
-      if (normal_intercept) "population_calibration_requires_review" else "population_scoring_scope_requires_review")
+      if (normal_scoring) "population_calibration_requires_review" else "population_scoring_scope_requires_review")
   }
   if (!contract_ready) {
     reason_codes <- c(reason_codes, "readiness_contract_not_current")
@@ -1448,7 +1434,7 @@ prediction_validate_interval_record <- function(x) {
     identical(unname(x$estimates$IntervalLevel), rep(unname(level), nrow(x$estimates))) &&
     identical(unname(x$estimates$ScoringAlgorithm), rep(unname(algorithm), nrow(x$estimates)))
   if (!isTRUE(valid))
-    stop("Two-family scoring output has inconsistent interval records. Re-score to change the interval level or algorithm; saved bounds cannot be relabelled.", call. = FALSE)
+    stop("Scoring output has inconsistent interval records. Re-score to change the interval level or algorithm; saved bounds cannot be relabelled.", call. = FALSE)
   invisible(x)
 }
 
@@ -1566,6 +1552,12 @@ prediction_print_summary <- function(x, plausible = FALSE) {
   shown <- prediction_display_estimates(estimates)
   shown <- shown[setdiff(names(shown), c("IntervalLevel", "PriorMean", "PriorSD"))]
   print(utils::head(shown, 10L), row.names = FALSE)
+  if (!is.null(x$decisions)) {
+    mfrm_validate_decisions(x)
+    cat("\nConditional decision probabilities (first 10)\n")
+    print(utils::head(x$decisions,10L), row.names=FALSE)
+    print_wrapped_line(mfrm_decision_note())
+  }
   if (nrow(x$row_review %||% data.frame())) {
     cat("\nResponse rows\n"); print(as.data.frame(x$row_review), row.names = FALSE)
   }
@@ -1747,9 +1739,9 @@ prediction_validate_population_output <- function(x) {
 #'   handled. `"error"` (default) refuses scoring. `"review"` permits an
 #'   explicitly review-only fitted-object calculation and labels the returned
 #'   estimates and settings accordingly; it does not make the source fit ready.
-#'   GPCM MML and intercept-only normal population models may pass the
+#'   GPCM MML and RSM/PCM normal population models may pass the
 #'   conditional-scoring checks described below even when their global inference
-#'   audit remains incomplete. Population models with background covariates
+#'   audit remains incomplete. GPCM population models with background covariates
 #'   still require explicit review. Invalid calibration parameters or inconsistent
 #'   stored prior parameters are refused under either policy. Older population
 #'   results without the new check records retain their review-only restriction.
@@ -1774,6 +1766,15 @@ prediction_validate_population_output <- function(x) {
 #'   population models with background covariates are not supported. A supplied
 #'   prior does not refit the calibration, estimate a new population, or bypass
 #'   source checks. Numerical scoring checks run under the supplied prior.
+#' @param cut_scores Optional finite, strictly increasing ability cuts with
+#'   optional distinct names. Requires ordinary RSM/PCM and unit weights.
+#'   A `decisions` table returns continuous probabilities above cuts and within
+#'   bands (`Lower < ability <= Upper`), conditional on the point calibration
+#'   and actual scoring prior. Calibration/population and cut-score estimation
+#'   uncertainty are excluded. This is not a Person-difference test or a
+#'   probability of passing a future administration. Cut labels alone do not
+#'   establish CEFR alignment. Tiny tails have absolute, not relative, numerical
+#'   accuracy. Use `apa_table(x, which = "decisions")` or export the saved table.
 #'
 #' @details
 #' `predict_mfrm_units()` is the **individual-unit companion** to
@@ -1869,10 +1870,14 @@ prediction_validate_population_output <- function(x) {
 #' @section Conditional scoring and source checks:
 #' A finite calibration can define a person's posterior score without proving
 #' that the calibration is the unique global optimum. For one-family GPCM MML and models
-#' with an estimated intercept-only normal population, this function checks the
+#' with an estimated RSM/PCM normal population, this function checks the
 #' current likelihood, gradient and unregularized joint information using the
 #' same local-solution machinery as [compare_mfrm()]. Detected identification
 #' deficiencies, inadequate categories and failed convergence do not pass.
+#' RSM/PCM regressions additionally require the consistent full-rank source,
+#' unit weights, direct MML and centered unanchored facets/steps used by
+#' [mfrm_population_intervals()]. Scoring reuses the fitted predictor coding
+#' and conditional residual variance; no population uncertainty is propagated.
 #' Boundary and identification audits labelled "not evaluated" remain so;
 #' they are not relabelled as completed by these local checks.
 #'
@@ -2047,9 +2052,69 @@ prediction_validate_population_output <- function(x) {
 #' order and estimator remain recorded in the score table and saved settings.
 #' [extract_mfrm_calibration()] provides the corresponding portable route.
 #'
+#' @section Conditional ability decisions:
+#' Supply `cut_scores` on the calibration's ability scale to obtain
+#' `decisions`, with one row per Person and requested event. `Type = "above_cut"`
+#' gives \eqn{P(\theta > c \mid y, \widehat\psi)}; `Type = "ability_band"`
+#' gives the probability between successive cuts, including the two outer
+#' bands. `Lower < ability <= Upper` defines every row. `Label` uses the
+#' supplied cut names (or `Cut1`, ...) and `Band1`, ... in increasing order.
+#' These events overlap: only the ability-band probabilities sum to one.
+#'
+#' `PriorMean` and `PriorSD` record the actual Person-specific normal prior;
+#' `Status` and `Reason` retain scoring availability. `available_conditional`
+#' means the applicable numerical checks passed, not that the model or the
+#' cut's substantive meaning has been validated. `review_only` requires
+#' inspection before interpretation. Source-roster scoring may return
+#' `prior_only` for missing-only Persons; portable scoring instead retains
+#' them as `unavailable` with `NA` probabilities. Fitted-object scoring omits
+#' Persons with no retained rows; inspect its row and population reviews.
+#' A Person absent from the input is never invented.
+#'
+#' Probabilities integrate the continuous posterior, rather than counting
+#' [sample_mfrm_plausible_values()] draws or applying a normal approximation
+#' to EAP/SD. They condition on point calibration, population/prior parameters
+#' and supplied cuts, as recorded in `Uncertainty`. They do not propagate
+#' estimation error, compare two Persons or predict passing a future test.
+#' CEFR labels require externally justified cuts on this same scale.
+#' Very small tails have absolute, not relative, numerical accuracy; a
+#' returned zero or one is not a claim of impossibility or certainty.
+#'
+#' Review the scoring population as well as the calibration. An estimated
+#' normal prior is treated as known during scoring; its sampling uncertainty
+#' can matter especially with a small calibration cohort. A larger calibration
+#' cohort can improve parameter precision without correcting a prior that
+#' mismatches a new population's mean, spread or shape. Passing numerical checks
+#' does not establish that probabilities are accurate for that new population.
+#' A fixed reference prior is not a universal remedy: justify it for the target
+#' population on the calibration scale. If a prior override is supported,
+#' comparing externally justified alternatives is a sensitivity analysis, not
+#' evidence that the alternative giving the preferred classification is valid.
+#' Population-averaged accuracy also does not guarantee accuracy near each cut,
+#' within every subgroup or for each individual Person.
+#'
+#' Use [score_mfrm_persons()] for eligible ordinary RSM MML source Persons,
+#' [predict_mfrm_units()] for ordinary RSM/PCM MML or JML fitted-object scoring, and
+#' [score_mfrm_calibration()] for eligible continuous-posterior RSM/PCM
+#' artifacts. Each route retains its existing source and population
+#' restrictions. Unit weights are required; GPCM, shared-rater and testlet
+#' cut probabilities are not supported. JML uses a separate scoring prior,
+#' not a population estimated by JML. `NULL` leaves the existing output unchanged.
+#'
+#' `summary(x)$decisions` and [apa_table()] with `which = "decisions"` reuse
+#' saved probabilities without rounding them. Fitted-object and portable
+#' score batches also support [build_summary_table_bundle()] and
+#' [export_summary_appendix()]. Save the complete result with [saveRDS()]
+#' to retain cuts, priors and review states for later reporting. Existing
+#' score plots display EAPs and intervals, not these event probabilities.
+#'
 #' @return An object of class `mfrm_unit_prediction` with components:
 #' - `estimates`: posterior summaries by person
+#' - `decisions`: optional cut-score and ability-band probabilities, with
+#'   boundaries, labels, priors, availability and uncertainty basis
 #' - `draws`: optional quadrature-grid posterior draws
+#' - `fit_identity`: source calibration, fitted population coding and scoring
+#'   status used to check reuse with fit-level exports
 #' - `row_review`: row-level preparation review for `new_data`
 #' - `population_review`: optional person-level omission review for
 #'   latent-regression scoring
@@ -2060,8 +2125,8 @@ prediction_validate_population_output <- function(x) {
 #'   latent-regression scoring; `NULL` otherwise
 #' - `settings`: scoring settings
 #' - `notes`: interpretation notes
-#' @seealso [predict_mfrm_population()], [fit_mfrm()],
-#'   [summary.mfrm_unit_prediction]
+#' @seealso [score_mfrm_persons()], [score_mfrm_calibration()], [classification_table()], [apa_table()],
+#'   [predict_mfrm_population()], [fit_mfrm()], [summary.mfrm_unit_prediction]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #' keep_people <- unique(toy$Person)[1:18]
@@ -2069,8 +2134,7 @@ prediction_validate_population_output <- function(x) {
 #'   toy[toy$Person %in% keep_people, , drop = FALSE],
 #'   "Person", c("Rater", "Criterion"), "Score",
 #'   method = "MML",
-#'   quad_points = 5,
-#'   maxit = 30
+#'   quad_points = 61
 #' )
 #' raters <- unique(toy$Rater)[1:2]
 #' criteria <- unique(toy$Criterion)[1:2]
@@ -2080,21 +2144,39 @@ prediction_validate_population_output <- function(x) {
 #'   Criterion = c(criteria[1], criteria[2], criteria[1], criteria[2]),
 #'   Score = c(2, 3, 2, 4)
 #' )
-#' pred_units <- predict_mfrm_units(toy_fit, new_units, n_draws = 0)
+#' # Illustrative boundaries only: these labels do not establish CEFR levels.
+#' cuts <- c(Basic = -0.5, Advanced = 0.8)
+#' pred_units <- predict_mfrm_units(toy_fit, new_units,
+#'   scoring_quad_points = 121, cut_scores = cuts)
 #' summary(pred_units)$estimates[, c("Person", "Estimate", "Lower", "Upper")]
+#' pred_units$decisions
+#' apa_table(pred_units, which = "decisions")
 #' # Compare assumptions on the same response rows, without refitting.
 #' alternative <- predict_mfrm_units(
-#'   toy_fit, new_units, scoring_prior = list(mean = 0.5, sd = 1.5)
+#'   toy_fit, new_units, scoring_prior = list(mean = 0.5, sd = 1.5),
+#'   scoring_quad_points = 121, cut_scores = cuts
 #' )
 #' comparison <- dplyr::bind_rows(
 #'   "Retained prior" = pred_units$estimates,
 #'   "Alternative prior" = alternative$estimates, .id = "Scenario"
 #' )
-#' ggplot2::ggplot(comparison, ggplot2::aes(Scenario, Estimate)) +
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   ggplot2::ggplot(comparison, ggplot2::aes(Scenario, Estimate)) +
 #'   ggplot2::geom_pointrange(ggplot2::aes(ymin = Lower, ymax = Upper)) +
 #'   ggplot2::facet_wrap(~ Person) + ggplot2::theme_minimal() +
 #'   ggplot2::labs(x = NULL, y = "Posterior EAP",
 #'     caption = "95% posterior intervals conditional on calibration and each prior")
+#' }
+#' # Retain the complete result; summaries and tables do not score again.
+#' saved <- tempfile(fileext = ".rds")
+#' saveRDS(pred_units, saved)
+#' apa_table(readRDS(saved), which = "decisions")
+#' unlink(saved)
+#' @section Saved-result reuse:
+#' Fit-level export and replay helpers check that supplied scores describe the
+#' same calibration, fitted population coding and scoring status. Recreate
+#' older scores from the saved fit and original scoring inputs/settings; the
+#' calibration does not need refitting. See [mfrmr_compatibility_layer].
 #' @export
 predict_mfrm_units <- function(fit,
                                new_data,
@@ -2111,7 +2193,14 @@ predict_mfrm_units <- function(fit,
                                n_draws = 0,
                                seed = NULL,
                                adaptive_quad_points = NULL,
-                               scoring_prior = NULL) {
+                               scoring_prior = NULL,
+                               cut_scores = NULL) {
+  if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit")) {
+    stop("`fit` must be a native fit_mfrm() result; use the source package to score an imported model.", call. = FALSE)
+  }
+  # Retain the caller's calibration before temporary corrected-JML expansion.
+  fit_identity <- prediction_fit_identity(fit)
+  cut_scores <- mfrm_validate_cut_scores(cut_scores)
   adjusted <- if (mfrm_has_jml_adjustment(fit)) mfrm_jml_scoring_components(fit) else NULL
   if (!is.null(adjusted)) fit$config <- adjusted$config
   product <- mfrm_has_product_slopes(fit)
@@ -2120,9 +2209,8 @@ predict_mfrm_units <- function(fit,
   }
   scoring_prior <- prediction_validate_scoring_prior(scoring_prior)
   adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
-  if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit")) {
-    stop("`fit` must be a native fit_mfrm() result; use the source package to score an imported model.", call. = FALSE)
-  }
+  if (!is.null(cut_scores) && (!fit$config$model %in% c("RSM","PCM") || mfrm_has_jml_adjustment(fit)))
+    stop("Cut-score probabilities currently require ordinary RSM/PCM scoring.", call. = FALSE)
   if (!is.null(scoring_prior) && length(setdiff(
       fit$population$design_columns %||% names(fit$population$coefficients), "(Intercept)"))) {
     stop("`scoring_prior` cannot override a population model with background covariates; use the fitted person_data contract without a prior override.", call. = FALSE)
@@ -2240,6 +2328,8 @@ predict_mfrm_units <- function(fit,
   quad_points <- as.integer(scoring_quad_points)
   quad <- gauss_hermite_normal(quad_points)
 
+  if (!is.null(cut_scores) && any((idx$weight %||% 1) != 1))
+    stop("Cut-score probabilities require unit observation weights.", call. = FALSE)
   scored <- compute_person_posterior_summary(
     idx = idx,
     config = fit$config,
@@ -2249,7 +2339,8 @@ predict_mfrm_units <- function(fit,
     population_spec = scoring_population,
     interval_level = interval_level,
     n_draws = n_draws,
-    seed = seed
+    seed = seed,
+    cut_scores = cut_scores
   )
   values <- as.matrix(scored$estimates[c("Estimate", "SD", "Lower", "Upper", "PriorMean", "PriorSD")])
   if (any(!is.finite(values)) || any(scored$estimates$SD < 0) ||
@@ -2331,6 +2422,7 @@ predict_mfrm_units <- function(fit,
   out <- structure(
     list(
       estimates = scored$estimates,
+      fit_identity = fit_identity,
       draws = scored$draws,
       row_review = prepared$row_review,
       population_review = population_ready$population_review,
@@ -2350,6 +2442,7 @@ predict_mfrm_units <- function(fit,
         } else "quadrature_eap_v2",
         readiness_policy = readiness_policy,
         source_scoring_ready = isTRUE(source_readiness$ready),
+        source_repeated_ratings = fit$config$repeated_ratings %||% "review",
         source_scoring_status = source_readiness$status,
         source_scoring_policy_basis = source_readiness$policy_basis,
         local_calibration_review = source_readiness$local_calibration_review,
@@ -2394,6 +2487,8 @@ predict_mfrm_units <- function(fit,
     adaptive_quad_points, population_spec = scoring_population
   )
   out$settings$adaptive_quad_points <- adaptive_quad_points
+  if (is.null(scoring_prior) && !is.null(population_ready$spec$fixed_sd))
+    out$settings$population_fixed_sd <- population_ready$spec$fixed_sd
   out$notes <- c(out$notes,
     "Scoring integration compares the reported EAP and SD with adaptive reference orders under the same calibration and prior. Passing does not validate the scoring prior for another population.")
   out$settings$score_integration_review <- prediction_score_integration_review(
@@ -2418,44 +2513,40 @@ predict_mfrm_units <- function(fit,
   out$estimates <- prediction_estimate_table(out)
   out$draws <- prediction_draw_table(out$draws, out$estimates)
   out$notes <- prediction_output_notes(out)
+  if (!is.null(cut_scores)) {
+    out$settings$cut_scores <- cut_scores
+    out$decisions <- mfrm_decision_table(scored$decision_probabilities,
+      out$estimates$Person, cut_scores, out$estimates$PriorMean, out$estimates$PriorSD,
+      ifelse(out$estimates$SourceScoringReady & out$estimates$ScoreIntegrationReady,
+        "available_conditional", "review_only"),
+      ifelse(out$estimates$SourceScoringReady & out$estimates$ScoreIntegrationReady,
+        "", out$estimates$EstimateUse))
+    out$notes <- c(out$notes, mfrm_decision_note())
+  }
   out
 }
 
 #' Summarize posterior unit scoring output
 #'
 #' @param object Output from [predict_mfrm_units()].
-#' @param digits Number of digits used in numeric summaries.
+#' @param digits Number of digits used in numeric summaries. Decision
+#'   probabilities, cut boundaries and scoring priors are not rounded.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @return An object of class `summary.mfrm_unit_prediction` with:
 #' - `estimates`: posterior summaries by person
+#' - `decisions`: unrounded conditional probabilities, when requested
 #' - `row_review`: row-preparation review
 #' - `population_review`: optional person-level omission review for
 #'   latent-regression scoring
 #' - `settings`: scoring settings
 #' - `notes`: interpretation notes
-#' @seealso [predict_mfrm_units()]
-#' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' keep_people <- unique(toy$Person)[1:18]
-#' toy_fit <- fit_mfrm(
-#'   toy[toy$Person %in% keep_people, , drop = FALSE],
-#'   "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML",
-#'   quad_points = 5,
-#'   maxit = 30
-#' )
-#' new_units <- data.frame(
-#'   Person = c("NEW01", "NEW01"),
-#'   Rater = unique(toy$Rater)[1],
-#'   Criterion = unique(toy$Criterion)[1:2],
-#'   Score = c(2, 3)
-#' )
-#' pred_units <- predict_mfrm_units(toy_fit, new_units)
-#' summary(pred_units)
+#' @seealso [predict_mfrm_units()] for an executable scoring and reporting
+#'   example; [apa_table()], [export_summary_appendix()]
 #' @method summary mfrm_unit_prediction
 #' @export
 summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
+  mfrm_validate_decisions(object)
   if (!inherits(object, "mfrm_unit_prediction")) {
     stop("`object` must be output from predict_mfrm_units().", call. = FALSE)
   }
@@ -2482,6 +2573,7 @@ summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
     out$quadrature_overview <- mfrmr_adaptive_quadrature_overview(object$quadrature_review)
   }
   class(out) <- "summary.mfrm_unit_prediction"
+  if (!is.null(object$decisions)) out$decisions <- object$decisions
   out
 }
 
@@ -2603,6 +2695,8 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #'
 #' @return An object of class `mfrm_plausible_values` with components:
 #' - `values`: one row per person per draw
+#' - `fit_identity`: source calibration, fitted population coding and scoring
+#'   status retained from [predict_mfrm_units()]
 #' - `estimates`: companion posterior EAP summaries
 #' - `row_review`: row-preparation review
 #' - `population_review`: optional person-level omission review for
@@ -2631,6 +2725,11 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' )
 #' pv <- sample_mfrm_plausible_values(toy_fit, new_units, n_draws = 3, seed = 1)
 #' summary(pv)$draw_summary
+#' @section Saved-result reuse:
+#' Fit-level export and replay helpers check the source calibration and scoring
+#' status of supplied draws. Recreate older results from the saved fit and
+#' original scoring inputs/settings, including the seed. This repeats drawing
+#' values without refitting the calibration. See [mfrmr_compatibility_layer].
 #' @export
 sample_mfrm_plausible_values <- function(fit,
                                          new_data,
@@ -2688,6 +2787,7 @@ sample_mfrm_plausible_values <- function(fit,
   structure(
     list(
       values = pred$draws,
+      fit_identity = pred$fit_identity,
       estimates = pred$estimates,
       row_review = pred$row_review,
       population_review = pred$population_review,

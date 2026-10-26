@@ -96,6 +96,9 @@ test_that("the live binding records evidence but cannot execute an engine", {
 })
 
 test_that("the live record preserves downstream review gates", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_minimum_diagnostic_live_authorization()
   record_path <- file.path(
     ctx$validation,

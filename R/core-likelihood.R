@@ -30,7 +30,8 @@ loglik_rsm <- function(eta, score_k, step_cum, weight = NULL) {
   eta_mat <- outer(eta, 0:(k_cat - 1))
   log_num <- eta_mat - matrix(step_cum, nrow = n, ncol = k_cat, byrow = TRUE)
   row_max <- row_max_fast(log_num)
-  log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
+  log_num <- log_num - row_max
+  log_denom <- log(rowSums(exp(log_num)))
   log_num_obs <- log_num[cbind(seq_len(n), score_k + 1)]
   diff <- log_num_obs - log_denom
   if (is.null(weight)) {
@@ -68,7 +69,8 @@ loglik_pcm <- function(eta, score_k, step_cum_mat, criterion_idx, weight = NULL,
     row_max <- log_num[cbind(
       seq_len(nr), max.col(log_num, ties.method = "first")
     )]
-    log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
+    log_num <- log_num - row_max
+    log_denom <- log(rowSums(exp(log_num)))
     log_num_obs <- log_num[cbind(seq_len(nr), score_k[rows] + 1)]
     diff <- log_num_obs - log_denom
     if (is.null(weight)) {
@@ -122,7 +124,8 @@ loglik_gpcm <- function(eta, score_k, step_cum_mat, criterion_idx, slopes,
   linear_part <- outer(eta, 0:(k_cat - 1)) - step_cum_obs
   log_num <- linear_part * matrix(slope_obs, nrow = n, ncol = k_cat)
   row_max <- row_max_fast(log_num)
-  log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
+  log_num <- log_num - row_max
+  log_denom <- log(rowSums(exp(log_num)))
   log_num_obs <- log_num[cbind(seq_len(n), score_k + 1)]
   diff <- log_num_obs - log_denom
   if (is.null(weight)) {
@@ -184,6 +187,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
       probs = matrix(0, nrow = 0L, ncol = max(config$n_cat %||% 0L, 0L)),
       expected_k = numeric(0),
       var_k = numeric(0),
+      conditional_var_k = numeric(0),
       fourth_central_moment = numeric(0),
       score_information = numeric(0),
       slope_obs = numeric(0)
@@ -229,6 +233,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
     FUN = "-"
   )
   fourth_central_moment <- as.vector(rowSums(probs * diff_k^4))
+  conditional_var_k <- var_k
   var_k <- ifelse(var_k <= 1e-10, NA_real_, var_k)
   # For GPCM, the score information with respect to eta is
   # a^2 Var(X | eta); PCM/RSM are the a = 1 special case.
@@ -242,6 +247,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
     probs = probs,
     expected_k = expected_k,
     var_k = var_k,
+    conditional_var_k = conditional_var_k,
     fourth_central_moment = fourth_central_moment,
     score_information = score_information,
     slope_obs = slope_obs
@@ -251,8 +257,14 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
 # Convert mean-square fit statistic to a standardized z-score (ZSTD).
 # Default uses the Wilson-Hilferty (1931) cube-root approximation:
 #   ZSTD = (MnSq^(1/3) - (1 - 2/(9*df))) / sqrt(2/(9*df))
-# When whexact = TRUE, uses the simpler linear approximation:
-#   ZSTD = (MnSq - 1) * sqrt(df / 2)
+# whexact = TRUE omits q/3 (FACETS WHEXACT=NO); FALSE includes it (YES).
+# The former linear TRUE calculation is available as "legacy_linear".
+mfrm_zstd_method <- function(whexact) {
+  if (identical(whexact, FALSE)) return("facets_yes")
+  if (identical(whexact, TRUE)) return("facets_no")
+  if (identical(whexact, "legacy_linear")) return("legacy_linear")
+  stop("`whexact` must be FALSE, TRUE, or 'legacy_linear'.", call. = FALSE)
+}
 # Values near 0 indicate expected fit; mfrmr uses |ZSTD| >= 2 as its review flag.
 zstd_from_mnsq <- function(mnsq, df, whexact = FALSE) {
   mnsq <- as.numeric(mnsq)
@@ -276,10 +288,13 @@ zstd_from_mnsq <- function(mnsq, df, whexact = FALSE) {
   # Guard with d >= 1 and fall back to NA for ill-conditioned cells.
   ok <- is.finite(m) & is.finite(d) & (d >= 1)
 
-  if (isTRUE(whexact)) {
+  method <- mfrm_zstd_method(whexact)
+  if (method == "legacy_linear") {
     out[ok] <- (m[ok] - 1) * sqrt(d[ok] / 2)
   } else {
-    out[ok] <- (m[ok]^(1 / 3) - (1 - 2 / (9 * d[ok]))) / sqrt(2 / (9 * d[ok]))
+    q <- sqrt(2 / d[ok])
+    out[ok] <- 3 * (m[ok]^(1 / 3) - 1) / q +
+      if (method == "facets_yes") q / 3 else 0
   }
   out
 }
@@ -302,12 +317,15 @@ zstd_from_mnsq_facets <- function(mnsq, df, whexact = FALSE, cap = 9) {
   out <- rep(NA_real_, n)
   m <- mnsq[seq_len(n)]
   d <- df[seq_len(n)]
-  ok <- is.finite(m) & is.finite(d) & (m > 0) & (d > 0)
+  ok <- is.finite(m) & is.finite(d) & (m >= 0) & (d > 0)
 
-  if (isTRUE(whexact)) {
+  method <- mfrm_zstd_method(whexact)
+  if (method == "legacy_linear") {
     out[ok] <- (m[ok] - 1) * sqrt(d[ok] / 2)
   } else {
-    out[ok] <- (m[ok]^(1 / 3) - (1 - 2 / (9 * d[ok]))) / sqrt(2 / (9 * d[ok]))
+    q <- sqrt(2 / d[ok])
+    out[ok] <- 3 * (m[ok]^(1 / 3) - 1) / q +
+      if (method == "facets_yes") q / 3 else 0
   }
 
   cap <- suppressWarnings(as.numeric(cap[1] %||% NA_real_))

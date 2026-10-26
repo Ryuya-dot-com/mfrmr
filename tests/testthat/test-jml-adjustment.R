@@ -135,6 +135,23 @@ test_that("sample covariance retains the full equation derivative and actual Per
   expect_equal(native[finite],raw$q[finite],tolerance=1e-10)
 })
 
+test_that("transition reuse respects coordinate changes and a small workspace", {
+  x <- readRDS(test_path("fixtures","jml-adjustment-general.rds"))
+  p <- do.call(mfrm_jml_adjustment_problem,x[c("data","person","facets","score","owner","rating_max")])
+  beta <- x$results[["4"]]$beta
+  shifted <- beta+seq_along(beta)*1e-3
+  withr::local_options(mfrmr.max_information_bytes=256*1024^2)
+  original <- p$evaluate(beta,4L)
+  changed <- p$evaluate(shifted,4L)
+  expect_gt(max(abs(original$value-changed$value)),1e-5)
+  expect_identical(p$evaluate(beta,4L),original)
+  # The existing problem is already constructed. A smaller allowance must
+  # disable the optional transition cache without changing its calculation.
+  withr::local_options(mfrmr.max_information_bytes=1)
+  expect_identical(p$evaluate(beta,4L),original)
+  expect_identical(p$evaluate(shifted,4L),changed)
+})
+
 test_that("binary categories and absent owners retain singleton roster dimensions", {
   # Three additive facets; each roster omits one owner level. This design is
   # deliberately confounded, but its profile equations still have exact limits.
@@ -154,8 +171,12 @@ test_that("binary categories and absent owners retain singleton roster dimension
   singleton <- do.call(mfrm_jml_adjustment_problem,one)
   expect_equal(singleton$evaluate(rep(0,4L),4L)$value,
     p$evaluate(rep(0,4L),4L)$value[c(2L,6L),,drop=FALSE])
+  local_mocked_bindings(mfrmr_numeric_transformation_jacobian = function(...)
+    stop("Numerical derivative requested."), .package = "mfrmr")
   expect_error(mfrm_jml_adjustment_covariance(singleton,rep(0,4L),4L),
     "at least two Persons")
+  expect_error(mfrm_jml_adjustment_covariance(singleton,rep(0,4L),4L,
+    sampling="random_rosters"), "Numerical derivative requested")
 })
 
 test_that("unsupported or uninformative calculations retain explicit failures", {

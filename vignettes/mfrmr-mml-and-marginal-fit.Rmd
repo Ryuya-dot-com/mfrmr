@@ -16,8 +16,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette explains how `mfrmr` fits `MML` models and how to interpret the
-newer strict marginal diagnostics.
+This vignette explains how `mfrmr` fits ordinary RSM/PCM and one-family GPCM
+models by `MML`, and how to interpret their marginal diagnostic screens.
+The two-family GPCM route has separate engines and response diagnostics, noted
+below and in `vignette("mfrmr-gpcm-scope", package = "mfrmr")`.
 
 ## Why the MML calculations are shared
 
@@ -76,19 +78,21 @@ strict marginal expected values.
 
 ## Current MML scope
 
-For the `RSM` / `PCM` MML branch:
+All these routes integrate a declared ability distribution and compute Person
+summaries from the fitted posterior, but their engine support differs:
 
-- the person distribution is integrated with Gauss-Hermite quadrature
-- `mml_engine = "direct"` uses gradient-based direct optimization of the
-  marginal log-likelihood
-- `mml_engine = "em"` and `mml_engine = "hybrid"` are available for supported
-  `RSM` / `PCM` configurations with fixed integration; `GPCM` uses the direct
-  engine
-- adaptive integration requires the direct engine without checkpoints;
-  nonlinear identification and GPCM boundary evidence remain incomplete
-- person summaries are reported post-hoc from the integrated posterior
+| Response model | Numerical route | Important boundary |
+| --- | --- | --- |
+| Ordinary RSM/PCM | Direct optimization with fixed or adaptive quadrature; EM/hybrid for the supported fixed-integration, fixed-population additive models | Adaptive integration uses direct optimization without checkpoints |
+| One-family GPCM | Direct optimization with fixed or adaptive quadrature | EM/hybrid requests fall back to direct; inspect the recorded engine |
+| Experimental two-family GPCM | Explicit `mml_engine = "em"`, with fixed or adaptive integration and fixed N(0,1) | Direct/hybrid are unavailable; there are exactly two non-Person facets |
 
-This is the implemented MML-engine scope.
+The model, marginal-likelihood estimand and numerical algorithm are separate
+choices. Numerical convergence does not qualify interval coverage or resolve
+all nonlinear identification/boundary questions. Consult
+`gpcm_capability_matrix()` for output-specific restrictions. The ordinary
+`diagnose_mfrm()` screens below do not apply to two-family GPCM; use its
+`mfrm_response_diagnostics()` route, which has no calibrated fit cutoffs.
 
 ## When estimates change with quadrature order
 
@@ -122,6 +126,42 @@ Scoring can have separate numerical controls. For example, ConQuest uses
 its estimation `nodes` setting does not control that calculation. Record
 `p_nodes` and the random seed when comparing these scores, and examine
 sensitivity to both. See the [ConQuest command reference (`set` and `show`)](https://conquestmanual.acer.org/s4-00.html).
+
+`build_conquest_overlap_bundle()` gives ConQuest independent controls through
+`conquest_control`, with calibration defaults of 31 nodes over -6 to 6 and
+posterior defaults `p_nodes=2000`, `seed=2`. Native `quad_points` does not select
+ConQuest nodes. Check calibration refinement and range sensitivity separately
+from posterior accuracy; these defaults do not certify precision.
+The command resets earlier analysis
+settings, so run it in a fresh ConQuest session. Its narrow binary item-only
+comparison requires unanchored, centered difficulty parameters, unit weights
+and an intercept plus one numeric population covariate. Unsupported settings
+are rejected rather than silently fitted as a different model.
+
+The wide input uses safe person and covariate aliases. Retain `person_map`,
+`covariate_map` and the bundle so `normalize_conquest_overlap_exports()` can
+restore original person IDs. The maps and original tables mean the bundle is
+not deidentified. IDs are read as text, preserving leading zeros and long
+numeric identifiers. Generic table import no longer guesses that a column
+named `Facility` contains difficulty logits.
+
+Pass the generated `parameters_review.txt` as `report_file` when normalizing
+the CSVs. It supplies external stopping status and checks the model and common
+ITEMS constraint. Without a report, stopping status remains unknown. For other
+extracted tables, supply `conquest_location_shift` only when the external-minus-
+native location offset is known (zero for a confirmed common origin).
+Unknown origins withhold aligned EAP/intercept comparisons; raw differences
+remain available. Surplus external rows and failed stopping are flagged.
+Recreate saved reviews to apply these rules. Neither a met stopping criterion
+nor matching labels establishes that inputs were identical or precision adequate.
+
+The overlap review compares points and EAPs, not diagnostic equivalence.
+Native MML row residual MnSq at EAP differs from ConQuest's design-based
+parameter residuals averaged over posterior distributions. Marginal category
+counts are also a separate diagnostic. ConQuest Thurstonian thresholds are
+cumulative probability crossings, not adjacent step parameters. Neither a
+shared label nor agreement in calibration estimates makes these quantities
+interchangeable; see the [technical manual](https://conquestmanual.acer.org/s3-00.html).
 
 In a paper, report the integration mode and order, population assumptions,
 optimizer settings and termination evidence, and the sensitivity analysis.
@@ -260,23 +300,31 @@ That design choice follows the broader review logic in Sinharay and Monroe
 (2025): use several complementary diagnostics, match them to the intended use
 of the scores, and examine practical significance before making strong claims.
 
-### Assumption: independent-Bernoulli variance for grouped counts
+### Grouped-count variance is a screening approximation
 
-The `marginal_fit` grid sums per-observation posterior-integrated
-variances as `VarianceCount = sum_i w_i^2 * p_i * (1 - p_i)`, which
-treats observations within a cell as independent Bernoulli draws
-given the fitted parameters. This is the same independence assumption
-that underlies conditional independence in the MFRM specification
-(Linacre, 1989). When the rating design violates it - e.g. multiple
-ratings by the same rater on the same person-criterion combination -
-cell-level posterior variances can be underestimated, which in turn
-makes the reported standard errors and screening t-statistics
-slightly optimistic. The documented follow-up is
-`diagnose_mfrm(..., diagnostic_mode = "both")` combined with
-`strict_pairwise_local_dependence`, which surfaces evidence of
-dependence at the pair level. See Haberman and Sinharay (2013) for a
-generalized-residual framework that models such dependence
-explicitly; that path is not included in the documented diagnostic scope.
+The `marginal_fit` grid uses
+`VarianceCount = sum_i w_i^2 * p_i * (1 - p_i)`, where `p_i` is the
+posterior-averaged probability of the selected category. Its standardized
+residual divides the observed-minus-expected count by the square root of
+this quantity. This is a diagonal Bernoulli variance approximation, not the
+full repeated-sample variance of the fitted residual.
+
+Conditional independence **given ability** does not imply independence after
+integrating over a shared uncertain ability. Even for conditionally independent
+replicate ratings from one Person, their category indicators can have covariance
+`Cov_theta(p_i(theta), p_j(theta))`. A joint count variance would include these
+cross-observation terms. The implemented approximation also omits the effects
+of estimating calibration and conditioning probabilities on the observed
+responses. Extra local dependence or repeated rating events require further
+care; neither the direction nor size of the variance discrepancy is guaranteed.
+
+Use `diagnose_mfrm(..., diagnostic_mode = "both")` and inspect
+`strict_pairwise_local_dependence` as complementary screening evidence. That
+screen does not correct `VarianceCount` or calibrate its residual as a normal
+test statistic. Haberman and Sinharay (2013) provide a related generalized-
+residual model-checking framework; citing it does not make this approximation
+an implementation of their formal test. The package reports these quantities
+for exploratory review, not as structural-parameter SEs or a dependence model.
 
 For many-facet reporting, one additional boundary matters. Facet-level
 separation/reliability and inter-rater agreement answer different questions.
@@ -294,8 +342,8 @@ The package's documented simulation checks cover:
 - latent distribution misspecification
 - step-structure misspecification
 
-These checks target `RSM` and `PCM`. `GPCM` is now supported only within a
-bounded core route: fitting, slope summaries, posterior scoring, information
+These checks target `RSM` and `PCM`. The **ordinary one-family GPCM** route
+has a separate, limited scope: fitting, slope summaries, posterior scoring, information
 curves, direct curve/category reports, exploratory residual-based follow-up,
 direct recovery checks, and the slope-aware element-conditional
 `fair_average_table()` and `estimate_bias()`. Historical fair-average SE
@@ -313,16 +361,21 @@ diagnostic/signal-detection design screening are available only as caveated
 score-side contract review, posterior predictive checks, and MCMC estimation
 are not available for `GPCM`. See
 `gpcm_capability_matrix()` for the status and recommended alternative for each
-helper group.
+helper group. These permissions do not extend to the experimental two-family
+route described above.
 
 ## GPCM model and inference limits
 
-One selected facet supplies positive relative discriminations. With MML,
+For **one-family GPCM**, one selected facet supplies positive relative
+discriminations. With MML,
 another facet may supply category steps: for example,
 `slope_facet = "Criterion", step_facet = "Rater"` combines criterion
 discrimination with rater-specific category use. JML still requires
-`slope_facet == step_facet`. Neither route jointly estimates task and rater
-discriminations. Separate-owner weighting reviews and general simulation/design
+`slope_facet == step_facet`. These one-family routes do not jointly estimate
+task and rater discriminations. The separate experimental two-family MML
+route estimates their product structure; it does not inherit the ordinary
+diagnostics or the one-family comparison and interval qualifications.
+Separate-owner weighting reviews and general simulation/design
 workflows remain unavailable; same-design `bootstrap_mfrm_gpcm()` preserves
 both owners.
 
@@ -429,6 +482,7 @@ A defensible interpretation sequence is:
 - Haberman, S. J., & Sinharay, S. (2013). *Generalized residuals for general
   models for contingency tables with application to item response theory*.
   Journal of the American Statistical Association, 108, 1435-1444.
+  <https://doi.org/10.1080/01621459.2013.835660>.
 - Eckes, T. (2005). *Examining rater effects in TestDaF writing and speaking
   performance assessments: A many-facet Rasch analysis*. Language Assessment
   Quarterly, 2, 197-221.

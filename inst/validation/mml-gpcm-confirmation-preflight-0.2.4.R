@@ -207,7 +207,7 @@ confirmation_run <- function(arm,cell) {
         obj <- capture(label,{
           if(kind %in% c('probability','information')) mfrmr::mfrm_curve_intervals(fit,target$grid,
             type=kind,method=method,simultaneous=adjustment) else {
-            opt <- list(object=fit,scale=if(kind %in% c('relative','ratio'))'relative' else 'standardized',
+            opt <- list(object=fit,parm='slopes',scale=if(kind %in% c('relative','ratio'))'relative' else 'standardized',
               method=method,simultaneous=adjustment)
             if(kind %in% c('ratio','difference')) {opt$contrasts <- target$contrasts; opt$contrast_scale <- kind}
             do.call(stats::confint,opt)

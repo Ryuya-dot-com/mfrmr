@@ -21,14 +21,17 @@ apa_table(
 \item{x}{A data.frame, \code{mfrm_fit}, \code{summary()} output supported by
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, an \code{mfrm_summary_table_bundle}, diagnostics
 list, bias-result list, saved RSM/PCM fixed-facet intervals, or saved
-GPCM slope/curve/bootstrap inference.}
+GPCM slope/curve/bootstrap inference. Ordinary Person-score results also
+support \code{which = "decisions"} when cut scores were requested.}
 
 \item{which}{Optional table selector when \code{x} has multiple tables.}
 
 \item{diagnostics}{Optional diagnostics from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} (used when
 \code{x} is \code{mfrm_fit} and \code{which} targets diagnostics tables).}
 
-\item{digits}{Uniform number of rounding digits for numeric columns.}
+\item{digits}{Uniform number of rounding digits for numeric columns,
+except saved decision probabilities, boundaries and priors, which are
+retained at full precision in \code{table}.}
 
 \item{caption}{Optional caption text.}
 
@@ -62,8 +65,8 @@ Build an APA-oriented table handoff using base R structures
 \details{
 This helper avoids styling dependencies and returns a reproducible base
 \code{data.frame} plus manuscript-oriented metadata. It does not claim complete
-APA 7 or JARS compliance: \code{digits} applies the same rounding rule to every
-numeric column, so statistic-specific formatting (for example, exact
+APA 7 or JARS compliance: outside the saved \code{decisions} table, \code{digits}
+applies the same rounding rule to every numeric column, so statistic-specific formatting (for example, exact
 \emph{p}-value, confidence-interval, and effect-size conventions) and the target
 journal's final typography still require human review.
 
@@ -76,6 +79,9 @@ names listed in \code{build_summary_table_bundle(x)$table_index}
 \code{"reliability"}, \code{"facets_chisq"}, \code{"bias"}, \code{"interactions"},
 \code{"interrater_summary"}, \code{"interrater_pairs"}, \code{"obs"}
 \item For bias-result list: \code{"table"}, \code{"summary"}, \code{"chi_sq"}
+\item For ordinary \code{\link[=score_mfrm_persons]{score_mfrm_persons()}} output: \code{"decisions"}.
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} results and their
+summaries also accept this selector. Cuts must have been requested.
 \item For RSM/PCM fixed-facet intervals: \code{"intervals"} (default), \code{"settings"},
 \code{"contrasts"}, and \code{"clusters"} when present. Method, confidence level and
 unavailable reasons remain with the selected estimates and bounds.
@@ -90,6 +96,11 @@ Target and method columns are preserved.
 }
 \section{Interpreting output}{
 
+Saved ordinary Person-score, unit-prediction and portable-score results
+with cut probabilities support \code{which = "decisions"}. Numeric probabilities,
+cut boundaries and priors are retained without decimal rounding in the table.
+They condition on calibration and the scoring prior; the cut labels do not
+establish CEFR alignment or a decision rule.
 \itemize{
 \item \code{table}: plain data.frame ready for export or further formatting.
 \item \code{which}: source component that produced the table.
@@ -107,7 +118,6 @@ Target and method columns are preserved.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -132,8 +142,7 @@ tbl # Prints the table, caption, and note
 tbl$table
 # This table summarizes facets; use as.data.frame(fit) for individual estimates
 }
-}
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},
-\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}
+\code{\link[=reporting_checklist]{reporting_checklist()}}, \link{mfrmr_reporting_and_apa}, \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}
 }

@@ -75,6 +75,8 @@ An object of class \code{mfrm_population_prediction} with components:
 \item \code{forecast}: facet-level forecast table
 \item \code{overview}: run-level overview
 \item \code{simulation}: underlying \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} result
+\item \code{fit_identity}: source-fit metadata for fit-derived forecasts; \code{NULL} for
+an explicitly supplied simulation specification
 \item \code{sim_spec}: simulation specification used for the forecast
 \item \code{facet_names}: public non-person facet names carried by the simulation
 specification
@@ -115,6 +117,10 @@ starting point with \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}
 requested future design under that explicit data-generating mechanism. This
 should be interpreted as a fit-based forecast under modeling assumptions, not
 as a guaranteed out-of-sample prediction.
+Generating parameters are held fixed at the values in that specification.
+Monte Carlo SEs describe simulation precision conditional on these values;
+they do not include source-fit uncertainty or uncertainty about whether the
+generating assumptions describe a future administration.
 
 When that fit-derived or manually built simulation specification stores an
 active latent-regression population generator, the helper still operates at
@@ -176,8 +182,19 @@ reporting}. Psychological Methods.
 }
 }
 
+\section{Saved-result reuse}{
+
+Fit-derived forecasts must match the source fit when supplied to archive or
+replay helpers. Explicit \code{sim_spec} forecasts remain separate scenarios;
+attaching them does not establish that their assumptions match the fit.
+Fit-derived forecasts with a fixed \code{population_sd} are unavailable: the
+design-simulation refits do not preserve that variance constraint or an
+anchor-defined origin. An explicit \code{sim_spec} can describe a separate
+forecasting scenario, but does not reproduce those source-fit constraints.
+See \link{mfrmr_compatibility_layer} for migration and replay behavior.
+}
+
 \examples{
-\donttest{
 spec <- build_mfrm_sim_spec(
   n_person = 16,
   n_rater = 3,
@@ -194,7 +211,6 @@ pred <- predict_mfrm_population(
 )
 s_pred <- summary(pred)
 s_pred$forecast[, c("Facet", "MeanSeparation", "McseSeparation")]
-}
 }
 \seealso{
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}}, \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}},

@@ -22,7 +22,7 @@ done <- parallel::mclapply(files,function(path) {
   z$original_warnings <- z$warnings; z$original_seconds <- z$seconds
   z$ci <- NULL; z$error <- NULL; z$warnings <- character()
   z$seconds <- unname(system.time(withCallingHandlers(tryCatch({
-    if(!is.null(z$fit)) z$ci <- confint(z$fit,level=manifest$plan$level)
+    if(!is.null(z$fit)) z$ci <- confint(z$fit, parm = "slopes",level=manifest$plan$level)
     else z$error <- z$original_error
   },error=function(e) z$error <<- conditionMessage(e)),warning=function(w) {
     z$warnings <<- c(z$warnings,conditionMessage(w)); invokeRestart("muffleWarning")

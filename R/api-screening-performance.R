@@ -221,13 +221,15 @@ plot.mfrm_screening_performance <- function(x, scope = c("family", "target"),
   labels <- if (scope == "family") tab$Condition else paste(tab$Condition, tab$Target, sep = " / ")
   title <- if (scope == "family") label else if (metric == "false_flags") "False flags by target" else "Detection by target"
   out <- new_mfrm_plot_data("screening_performance", list(table = tab, labels = labels,
-    title = title, scope = scope, metric = metric, settings = x$settings))
+    title = title, scope = scope, metric = metric, settings = x$settings,
+    subtitle = sprintf("Conditional rates and %.0f%% Monte Carlo intervals", 100 * x$settings$level),
+    caption = "Gray segments: bounds from unresolved outcomes (not confidence intervals)"))
   if (!draw) return(invisible(out))
   old <- graphics::par(mar = c(7, 12, 5, 5))
   on.exit(graphics::par(old), add = TRUE)
   y <- rev(seq_len(nrow(tab)))
   graphics::plot(NA_real_, NA_real_, xlim = c(0, 1), ylim = c(.5, nrow(tab) + .5),
-    xlab = "Proportion", ylab = "", yaxt = "n", main = title)
+    xlab = "Proportion", ylab = "", yaxt = "n", main = "")
   graphics::segments(tab$AllTrialsLower, y, tab$AllTrialsUpper, y, col = "grey75", lwd = 6)
   graphics::segments(tab$MCLower, y, tab$MCUpper, y, col = "#2274A5", lwd = 2)
   graphics::points(tab$Rate, y, pch = 16, col = "#2274A5")
@@ -235,9 +237,5 @@ plot.mfrm_screening_performance <- function(x, scope = c("family", "target"),
   graphics::axis(2, at = y, labels = axis_labels, las = 1, cex.axis = .8)
   graphics::axis(4, at = y, labels = paste0(tab$Available, "/", tab$Planned), las = 1, tick = FALSE, cex.axis = .8)
   graphics::text(1.08, nrow(tab) + .8, "Known /\nplanned", xpd = NA, cex = .7)
-  graphics::mtext(sprintf("Conditional rates and %.0f%% Monte Carlo intervals", 100 * x$settings$level),
-    side = 3, line = .3, cex = .8)
-  graphics::mtext("Gray segments: bounds from unresolved outcomes (not confidence intervals)",
-    side = 1, line = 5, cex = .7)
   invisible(out)
 }

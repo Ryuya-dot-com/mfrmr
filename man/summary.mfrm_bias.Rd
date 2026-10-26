@@ -56,19 +56,17 @@ summaries also retain the profile-likelihood review columns when present.
 \enumerate{
 \item Estimate interactions with \code{\link[=estimate_bias]{estimate_bias()}}.
 \item Check \code{summary(bias)} for screen-positive and unstable cells.
-\item Use \code{\link[=bias_interaction_report]{bias_interaction_report()}} or \code{\link[=plot_bias_interaction]{plot_bias_interaction()}} for details.
+\item Use \code{\link[=bias_interaction_report]{bias_interaction_report()}} or \link[=plot.mfrm_fit]{plot(x, type = "bias")} for details.
 }
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_bias")
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:8], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 bias <- estimate_bias(fit, diag, facet_a = "Rater", facet_b = "Criterion", max_iter = 1)
 summary(bias)
-}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=bias_interaction_report]{bias_interaction_report()}}

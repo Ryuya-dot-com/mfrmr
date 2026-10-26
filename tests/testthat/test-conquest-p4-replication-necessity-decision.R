@@ -93,6 +93,9 @@ test_that("the decision cannot fit, generate data, or launch", {
 })
 
 test_that("record and roadmap close only the selected P4 path", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p4_replication_necessity_decision()
   record <- paste(readLines(file.path(
     ctx$validation, "conquest-p4-replication-necessity-decision-record-0.2.3.md"

@@ -104,7 +104,7 @@ mfrm_model_locations <- function(fit, scores = NULL) {
 
 mfrm_model_map <- function(x, type, facet=NULL, persons=NULL, fit_stat=c("Infit","Outfit"),
     show_steps=TRUE, show_intervals=TRUE, draw=TRUE, palette=c("accessible","mono"),
-    title=NULL, caption=NULL, show_title=TRUE, show_notes=TRUE, show_labels=type=="fit_pathway",
+    title=NULL, caption=NULL, show_title=FALSE, show_notes=FALSE, show_labels=type=="fit_pathway",
     text_scale=1, point_size=2.5, ...) {
   rlang::check_dots_empty();metric<-tolower(match.arg(fit_stat));palette<-match.arg(palette)
   for(key in c("show_steps","show_intervals","draw","show_title","show_notes","show_labels")) if(!is.logical(get(key)) || length(get(key))!=1L || is.na(get(key))) stop("Display switches must be TRUE or FALSE.",call.=FALSE)

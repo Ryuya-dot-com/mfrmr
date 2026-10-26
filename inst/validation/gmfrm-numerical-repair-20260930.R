@@ -69,9 +69,9 @@ gmfrm_repair_run <- function(out, cores=2L) {
     fit <- fitted$result
     missing <- list(result=NULL,error=paste("Source unavailable:",fitted$error),seconds=0,cpu=0)
     wald <- if(is.null(fit)) missing else gmfrm_profile_capture(function()
-      confint(fit,method="model",level=plan$level))
+      confint(fit, parm = "slopes",method="model",level=plan$level))
     profiles <- lapply(targets,function(j) if(is.null(fit)) missing else
-      gmfrm_profile_capture(function() confint(fit,method="profile",slope=plan$targets[[j]],
+      gmfrm_profile_capture(function() confint(fit, parm = "slopes",method="profile",slope=plan$targets[[j]],
         level=plan$level,profile_control=plan$profile_control)))
     baseline <- if(is.null(fit)) NA_real_ else gmfrm_repair_literal_nll(fit$opt$par,case$data)
     identities <- list()

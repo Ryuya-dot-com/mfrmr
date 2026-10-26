@@ -10,16 +10,19 @@ test_that("unexpected-response prevalence is independent of the display limit", 
                   method = "MML", model = "RSM")
   diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
 
-  full <- unexpected_response_table(fit, diagnostics, top_n = nrow(toy))
-  preview <- unexpected_response_table(fit, diagnostics, top_n = 1)
+  full <- unexpected_response_table(fit, diagnostics, top_n = nrow(toy),
+                                    abs_z_min = 2, rule = "either")
+  preview <- unexpected_response_table(fit, diagnostics, top_n = 1,
+                                       abs_z_min = 2, rule = "either")
   expect_gt(full$summary$UnexpectedN, 100L)
   expect_equal(nrow(preview$table), 1L)
   expect_equal(preview$table, head(full$table, 1))
   expect_equal(preview$summary, full$summary)
   expect_equal(full$summary$UnexpectedN, nrow(full$table))
   expect_equal(full$summary$UnexpectedPercent, 100 * nrow(full$table) / nrow(toy))
-  expect_equal(nrow(diagnostics$unexpected$table), 100L)
-  expect_equal(diagnostics$unexpected$summary, full$summary)
+  default_full <- unexpected_response_table(fit, diagnostics, top_n = nrow(toy))
+  expect_equal(nrow(diagnostics$unexpected$table), min(100L, nrow(default_full$table)))
+  expect_equal(diagnostics$unexpected$summary, default_full$summary)
 
   for (rule in c("either", "both")) {
     all_rows <- unexpected_response_table(
@@ -39,7 +42,8 @@ test_that("unexpected-response prevalence is independent of the display limit", 
                         max_iter = 2)
   # With zero adjustment the before/after count must agree, even for top_n = 1.
   bias$table[["Bias Size"]] <- 0
-  adjusted <- unexpected_after_bias_table(fit, bias, diagnostics, top_n = 1)
+  adjusted <- unexpected_after_bias_table(fit, bias, diagnostics, top_n = 1,
+                                          abs_z_min = 2, rule = "either")
   expect_equal(nrow(adjusted$table), 1L)
   expect_equal(adjusted$summary$BaselineUnexpectedN, full$summary$UnexpectedN)
   expect_equal(adjusted$summary$AfterBiasUnexpectedN, full$summary$UnexpectedN)

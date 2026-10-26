@@ -62,7 +62,6 @@
 #'   the native draw-free payloads and their exclusions/interpretation metadata.
 #' @seealso [plot.mfrm_fit()], [as_ggplot()], [compare_mfrm()]
 #' @examples
-#' \donttest{
 #' # Load one dataset for both models
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
@@ -91,33 +90,31 @@
 #' # Compare fitted locations; drawing requires the optional ggplot2 package
 #' # If needed, install it once with install.packages("ggplot2")
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
-#'   plot_compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
+#'   plot(fit_rsm, comparison = fit_pcm, labels = c("RSM", "PCM"))
 #'
 #'   # Run separately: compare score-category probabilities for one criterion
-#'   plot_compare_mfrm(
-#'     fit_rsm, fit_pcm,
-#'     type = "ccc",
-#'     curve_groups = "Content",
-#'     labels = c("RSM", "PCM")
-#'   )
+#'   plot(fit_rsm, comparison = fit_pcm, type = "ccc",
+#'     curve_groups = "Content", labels = c("RSM", "PCM"))
 #' }
 #'
 #' # Plot data are available even without ggplot2
-#' paired <- plot_compare_mfrm(fit_rsm, fit_pcm, draw = FALSE)
+#' paired <- plot(fit_rsm, comparison = fit_pcm, draw = FALSE)
 #' head(paired$data$differences)
 #' # Differences are PCM minus RSM; no difference SE or significance test is computed
-#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
                               view = c("comparison", "difference"),
                               labels = c("Reference", "Comparison"),
                               curve_groups = NULL, panel = c("auto", "category", "group"),
                               theta_range = c(-6, 6), theta_points = 241L,
                               preset = c("standard", "publication", "compact", "monochrome"),
-                              show_title = TRUE, show_notes = TRUE, draw = TRUE) {
-  stop_if_product_slopes(reference, "plot_compare_mfrm()")
-  stop_if_product_slopes(comparison, "plot_compare_mfrm()")
+                              show_title = FALSE, show_notes = FALSE, draw = TRUE) {
+  stop_if_product_slopes(reference, "plot(reference, comparison = comparison)")
+  stop_if_product_slopes(comparison, "plot(reference, comparison = comparison)")
 
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
   type <- match.arg(type); view <- match.arg(view); panel <- match.arg(panel)

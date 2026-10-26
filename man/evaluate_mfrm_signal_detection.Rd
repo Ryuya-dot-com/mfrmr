@@ -67,7 +67,8 @@ variable through both \code{design} and the scalar design-grid arguments.}
 \item{reps}{Number of replications per design condition.}
 
 \item{group_levels}{Group labels used for DIF simulation. The first two levels
-define the default reference and focal groups.}
+define the default reference and focal groups. If omitted, inherits the
+groups stored in \code{sim_spec}, when present.}
 
 \item{reference_group}{Optional reference group label used when extracting the
 target DIF contrast.}
@@ -80,7 +81,8 @@ integer index or a criterion label such as \code{"C04"}. Defaults to the last
 criterion level in each design.}
 
 \item{dif_effect}{True DIF effect size added to the focal group on the target
-criterion.}
+criterion's linear predictor. For GPCM, discrimination multiplies this
+shift in the adjacent-category log odds.}
 
 \item{bias_rater}{Target rater level for the true interaction-bias effect.
 Can be an integer index or a label such as \code{"R04"}. Defaults to the last
@@ -91,7 +93,7 @@ effect. Can be an integer index or a criterion label. Defaults to the last
 criterion level in each design.}
 
 \item{bias_effect}{True interaction-bias effect added to the target
-\verb{Rater x Criterion} cell.}
+\verb{Rater x Criterion} cell's linear predictor, with the same GPCM scaling.}
 
 \item{score_levels}{Number of ordered score categories.}
 
@@ -142,7 +144,9 @@ latent-regression population generator, this helper currently requires
 
 \item{dif_min_obs}{Minimum observations per group cell for \code{\link[=analyze_dff]{analyze_dff()}}.}
 
-\item{dif_p_adjust}{P-value adjustment method passed to \code{\link[=analyze_dff]{analyze_dff()}}.}
+\item{dif_p_adjust}{P-value adjustment method passed to \code{\link[=analyze_dff]{analyze_dff()}}.
+Target and non-target screens use the returned adjusted tail areas; an
+unavailable adjusted value never falls back to an unadjusted one.}
 
 \item{dif_p_cut}{P-value cutoff for counting a target DIF detection.}
 
@@ -157,7 +161,9 @@ target DIF detection. When omitted, the effective default is \code{0.43} for
 
 \item{bias_abs_t}{Absolute t cutoff for counting a target bias screen-positive result.}
 
-\item{seed}{Optional seed for reproducible replications.}
+\item{seed}{Optional seed for reproducible replications. Trial seeds are
+allocated before execution and cover generation, fitting and diagnostics.
+A supplied seed preserves the caller's RNG state.}
 }
 \value{
 An object of class \code{mfrm_signal_detection} with:
@@ -166,9 +172,12 @@ An object of class \code{mfrm_signal_detection} with:
 public facet names, matching design-variable alias columns are included
 alongside the standard result columns.
 \item \code{results}: replicate-level detection results, with the same
-design-variable alias columns when applicable.
+design-variable alias columns when applicable. \code{Seed} identifies the trial;
+\code{DIFReferenceGroup}, \code{DIFFocalGroup}, \code{DIFContrastDirection} and
+\code{DIFContrastScale} identify its contrast. \code{DIFScreenReason} and
+\code{BiasScreenReason} retain target-level unavailability explanations.
 \item \code{rep_overview}: run-level status and timing, with the same design-variable
-alias columns when applicable.
+alias columns when applicable, including failed attempts and their stage.
 \item \code{design_descriptor}: role-based design-variable metadata used by planning
 summaries and plots
 \item \code{planning_scope}: explicit record of the current planning contract
@@ -196,9 +205,9 @@ For each design condition (combination of \code{n_person}, \code{n_rater},
 \enumerate{
 \item Generates synthetic data with \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}
 \item Injects one known Group \eqn{\times} Criterion DIF effect
-(\code{dif_effect} logits added to the focal group on the target criterion)
+(\code{dif_effect} added to the focal group's linear predictor on the target criterion)
 \item Injects one known Rater \eqn{\times} Criterion interaction-bias
-effect (\code{bias_effect} logits)
+effect (\code{bias_effect} added to the linear predictor)
 \item Fits and diagnoses the MFRM
 \item Runs \code{\link[=analyze_dff]{analyze_dff()}} and \code{\link[=estimate_bias]{estimate_bias()}}
 \item Records whether the injected signals were detected or screen-positive
@@ -252,18 +261,44 @@ condition on available outcomes; unresolved-outcome bounds are not confidence
 intervals. These uncertainty calculations describe independent simulation
 replications, not uncertainty about the quality of a real rater.
 
+\strong{Direction and scale}: \code{DIFContrast} is always reference minus focal,
+regardless of the order returned by \code{\link[=analyze_dff]{analyze_dff()}}. For \code{"residual"}, this
+is a difference in mean observed-minus-expected scores. For \code{"refit"}, it is
+a difference in facet locations; means and absolute means require documented
+common-scale comparability. Raw differences with unavailable linking remain
+in \code{results} with \code{DIFContrastComparable = FALSE} and \code{DIFScaleLinkStatus}.
+Neither contrast is automatically an estimate of the injected \code{dif_effect}:
+the residual contrast uses score units, and refit locations use difficulty/
+severity orientation and estimated linking anchors. \code{BiasSize} is a fitted
+additive shift relative to the estimated baseline, not recovery against a
+known unchanged baseline. See \code{\link[=analyze_dff]{analyze_dff()}} and \code{\link[=estimate_bias]{estimate_bias()}} for the
+conditioning assumptions.
+
+\strong{Failures and replay}: failures of generation, fitting or diagnostics keep
+their planned trial rows, with \code{Seed}, \code{ErrorStage} and \code{Error} in
+\code{rep_overview}. Missing outcomes do not count as negative screens. Generation
+failure gives unavailable observation/category counts, not zero observations.
+\code{ElapsedSec} includes generation and all analysis stages. Each later trial
+keeps its own seed even if an earlier trial fails. Save the returned object
+with \code{saveRDS()} and preserve the call and software environment; this helper
+does not provide the file/checkpoint arguments of \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}.
+Seeds alone do not guarantee identical results across software/platforms.
+
 Rebuild older saved summaries and plots from the original evaluation to
 correct unavailable target outcomes and retain full-precision summaries.
 Older runs lack non-target availability counts, so their non-target rates
 are withheld: recovering those cell rates requires rerunning the simulation.
+Runs lacking contrast-direction metadata cannot supply signed means; old
+refit runs lacking comparability metadata cannot supply absolute means either.
+Original stored results and otherwise available screening outcomes remain.
 This function evaluates Group-by-Criterion DIF and Rater-by-Criterion bias;
 it does not evaluate general Rater-by-Group differential rater functioning.
 
-\strong{Default effect sizes}: \code{dif_effect = 0.6} logits corresponds to a
-moderate criterion-linked differential-functioning effect; \code{bias_effect = -0.8}
-logits represents a substantial rater-criterion interaction.  Adjust
-these to match the smallest effect size of practical concern for your
-application.
+\strong{Default effect sizes}: \code{dif_effect = 0.6} and \code{bias_effect = -0.8} are
+example shifts of the latent linear predictor, not validated small/moderate/
+large effect thresholds. Choose values of practical concern for the intended
+assessment. GPCM slopes multiply these shifts on the adjacent-logit scale;
+response-probability changes also depend on ability and category thresholds.
 
 This is again a \strong{parametric simulation study}. The function does not
 estimate a new design directly from one observed dataset. Instead, it
@@ -308,7 +343,6 @@ reporting}. Psychological Methods.
 }
 
 \examples{
-\donttest{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
   design = list(person = 8, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
@@ -318,7 +352,6 @@ sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
 ))
 s_sig <- summary(sig_eval)
 s_sig$overview
-}
 }
 \seealso{
 \code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}, \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=estimate_bias]{estimate_bias()}}

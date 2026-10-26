@@ -42,7 +42,7 @@ local({
       expect_null(plot_data(ci, subtitle = NULL)$subtitle)
       expect_identical(plot_data(ci, subtitle = NULL)$cautions, review$Detail)
       if (requireNamespace("ggplot2", quietly = TRUE)) {
-        expect_match(as_ggplot(ci)$labels$subtitle, "Weak information")
+        expect_match(paste(plot_data(as_ggplot(ci), "notes")$Text, collapse = "\n"), "Weak information")
       }
       file <- tempfile(fileext = ".rds"); on.exit(unlink(file), add = TRUE)
       saveRDS(res, file)
@@ -72,7 +72,10 @@ local({
       info
     })
     for (f in fits) {
-      expect_error(mfrm_facet_intervals(f, "Rater"), "Unregularized")
+      expect_warning(ci <- mfrm_facet_intervals(f, "Rater"), "Unregularized")
+      expect_true(all(ci$table$Status == "information_unavailable"))
+      expect_true(all(is.finite(ci$table$Estimate)))
+      expect_true(all(is.na(ci$table$ModelSE)))
       expect_error(analyze_facet_equivalence(f, facet = "Rater"), "unregularized")
       expect_length(mfrm_mml_information_caution(compute_mml_parameter_covariance(f)), 0L)
     }

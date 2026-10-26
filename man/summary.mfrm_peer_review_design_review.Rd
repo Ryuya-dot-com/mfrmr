@@ -7,7 +7,7 @@
 \method{summary}{mfrm_peer_review_design_review}(object, digits = 3, top_n = 10, ...)
 }
 \arguments{
-\item{object}{Output from \code{\link[=build_peer_review_design_review]{build_peer_review_design_review()}}.}
+\item{object}{Output from \code{\link[=review_peer_design]{review_peer_design()}}.}
 
 \item{digits}{Number of digits for printed numeric values.}
 
@@ -22,5 +22,5 @@ An object of class \code{summary.mfrm_peer_review_design_review}.
 Summarize a peer-review design review
 }
 \seealso{
-\code{\link[=build_peer_review_design_review]{build_peer_review_design_review()}}
+\code{\link[=review_peer_design]{review_peer_design()}}
 }

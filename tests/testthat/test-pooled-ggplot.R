@@ -30,9 +30,9 @@ test_that("pooled conversion preserves saved t intervals, fixed targets and inte
     match(3:1, b$layout$panel_params[[1]]$y$get_breaks())], x$table$Target)
   expect_identical(plot_data(g), p$data)
   expect_identical(plot_data(g)$table$DF, c(3, NA, Inf))
-  expect_match(g$labels$subtitle, "90% pointwise MI", fixed = TRUE)
-  expect_match(g$labels$subtitle, "Weak information", fixed = TRUE)
-  expect_match(g$labels$caption, "fixed targets", fixed = TRUE)
+  expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "90% pointwise MI", fixed = TRUE)
+  expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "Weak information", fixed = TRUE)
+  expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "fixed targets", fixed = TRUE)
   expect_silent(ggplot2::ggplotGrob(g))
 })
 
@@ -53,7 +53,7 @@ test_that("unbounded and missing intervals stay distinct and do not become finit
   expect_false(is.null(g$layers[[4]]$geom_params$arrow))
   expect_identical(plot_data(g)$table, x$table)
   expect_identical(plot_data(g)$table$Lower[1], -Inf)
-  expect_match(g$labels$caption, "infinite endpoints", fixed = TRUE)
+  expect_match(paste(plot_data(g, "notes")$Text, collapse = "\n"), "infinite endpoints", fixed = TRUE)
   expect_silent(ggplot2::ggplotGrob(g))
   fixed <- x; fixed$table <- x$table[2, , drop = FALSE]
   expect_silent(ggplot2::ggplotGrob(as_ggplot(fixed)))
@@ -69,7 +69,7 @@ test_that("pooled replay and display controls do not refit, repool or recalculat
   local_mocked_bindings(pool_mfrm_imputed = function(...) stop("Unexpected pooling"),
     fit_mfrm_imputed = function(...) stop("Unexpected fitting"),
     compute_mml_parameter_covariance = function(...) stop("Unexpected covariance"))
-  local_mocked_bindings(qt = function(...) stop("Unexpected interval calculation"), .package = "stats")
+  local_mocked_bindings(qt = function(...) stop("Unexpected interval calculation"), .package = "mfrmr")
   withr::local_options(mfrmr.plot_preset = "invalid")
   file <- tempfile(fileext = ".rds"); on.exit(unlink(file), add = TRUE)
   saveRDS(p, file)

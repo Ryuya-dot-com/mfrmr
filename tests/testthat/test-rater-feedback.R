@@ -6,6 +6,22 @@ local({
                       compute = "never", include = "standard")
   sheet <- function(x = res, ...) mfrm_report(x, style = "rater", facet = "Rater", rater = "R01", ...)
 
+  test_that("explicit rubric context accompanies feedback and ordinary reports", {
+    context <- c(score_direction = "Higher means easier to understand", transformation = "None")
+    plain <- sheet()
+    s <- sheet(study_context = context)
+    expect_identical(s$tables$severity, plain$tables$severity)
+    expect_identical(s$tables$uncertainty, plain$tables$uncertainty)
+    expect_identical(s$tables$study_context$Value, unname(context))
+    expect_match(s$markdown, context[1], fixed = TRUE)
+    h <- sheet(output = "html", study_context = context)
+    expect_match(h$html, context[1], fixed = TRUE)
+    expect_false(grepl("<h2>NA</h2>", h$html, fixed = TRUE))
+    r <- mfrm_report(res, study_context = context)
+    expect_identical(build_summary_table_bundle(r)$tables$study_context, r$study_context)
+    expect_identical(r$fit_readiness, mfrm_report(res)$fit_readiness)
+  })
+
   test_that("individual sheets reuse saved estimates without invoking estimation", {
     local_mocked_bindings(fit_mfrm = function(...) stop("Unexpected refit"),
       diagnose_mfrm = function(...) stop("Unexpected diagnostics"),
@@ -24,7 +40,8 @@ local({
     expect_equal(s$tables$exposure$RatingRows, nrow(obs))
     expect_identical(sheet(output = "tables"), s$tables)
     expect_identical(sheet(output = "markdown"), s$markdown)
-    expect_identical(sheet(audience = "researcher")$tables, s$tables)
+    numeric_tables <- setdiff(names(s$tables), "interpretation_notes")
+    expect_identical(sheet(audience = "researcher")$tables[numeric_tables], s$tables[numeric_tables])
     expect_match(sheet(audience = "researcher")$guidance, "plug-in")
     expect_output(print(s), "Rater feedback")
   })
@@ -38,6 +55,9 @@ local({
     attr(x$fit$facets$others$Estimate, "private") <- "SECRET_ATTRIBUTE_PRIVATE"
     x$fit$facets$others <- as.data.frame(x$fit$facets$others)
     rownames(x$fit$facets$others) <- paste0("SECRET_ROW_PRIVATE", seq_len(nrow(x$fit$facets$others)))
+    # Capture the annotated fit in the diagnostics' current source contract.
+    x$diagnostics <- make_toy_diagnostics(x$fit)
+    x$diagnostics$approximation_notes <- "SECRET_OTHER_RATER_PRIVATE"
     h <- sheet(x, output = "html", label = "<script>alert(1)</script>")
     on.exit(unlink(h$path))
     text <- paste(capture.output(dput(h)), collapse = "\n")
@@ -90,6 +110,42 @@ local({
     expect_match(sheet(x)$review, "source fit needs review")
     x <- res; x$diagnostics$obs$Score[1] <- 99
     expect_error(sheet(x), "mismatch")
+  })
+
+  test_that("withheld intervals retain recipient-safe reasons and no apparent bounds", {
+    groups <- data.frame(Person = fit$prep$levels$Person,
+      Cluster = rep(c("a", "b"), length.out = length(fit$prep$levels$Person)))
+    clustered <- mfrm_facet_intervals(fit, "Rater", method = "sandwich", clusters = groups)
+    x <- res; x$facet_intervals$raters <- clustered
+    s <- sheet(x)
+    expect_identical(clustered$table$Status[1], "insufficient_cluster_rank")
+    expect_false(s$tables$uncertainty$Available)
+    expect_match(s$tables$uncertainty$Reason, "independent-group")
+    expect_match(s$tables$uncertainty$Reason, "not substituted")
+    expect_match(s$markdown, "independent-group")
+    expect_output(print(s), "independent-group")
+    expect_true(all(is.na(s$tables$uncertainty[c("Lower", "Upper")])))
+    expect_true(all(is.finite(unlist(clustered$table[1, c("ModelLower", "ModelUpper")]))))
+
+    # Presentation states only: injected flags do not simulate boundary fits.
+    for (status in c("fixed", "nonpositive_variance", "numerical_review_failed", "private_unknown")) {
+      x <- res; x$facet_intervals$raters$table$Status[1] <- status
+      x$facet_intervals$raters$table$InferenceReview[1] <- "PRIVATE_SOURCE_REASON"
+      original <- serialize(x, NULL)
+      s <- sheet(x)
+      expect_false(s$tables$uncertainty$Available)
+      expect_true(all(is.na(s$tables$uncertainty[c("Lower", "Upper")])))
+      expect_identical(s$tables$severity, sheet()$tables$severity)
+      expect_false(grepl("PRIVATE_|private_unknown", paste(capture.output(dput(s)), collapse = "\n")))
+      expect_identical(serialize(x, NULL), original)
+      if (status == "fixed") expect_match(s$tables$uncertainty$Reason, "model constraint")
+    }
+    x <- res; x$facet_intervals$raters$table$CIEligible[1] <- FALSE
+    expect_false(sheet(x)$tables$uncertainty$Available)
+    x <- res; x$facet_intervals$raters$table$Lower[1] <- Inf
+    expect_match(sheet(x)$tables$uncertainty$Reason, "nonfinite or invalid")
+    x <- res; x$facet_intervals$raters$table$CIEligible <- NULL
+    expect_true(sheet(x)$tables$uncertainty$Available)
   })
 
   test_that("PCM and JML have descriptive sheets without implicit interval calculations", {

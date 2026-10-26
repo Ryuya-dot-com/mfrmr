@@ -42,6 +42,13 @@ test_that("bootstrap plots keep unbounded endpoints and source labels", {
   if (requireNamespace("ggplot2", quietly = TRUE)) expect_s3_class(as_ggplot(p), "ggplot")
   expect_identical(tab$Rater, c("B", "A"))
   expect_identical(tab$Lower[1], -Inf); expect_identical(tab$Upper[1], Inf)
+  level <- 1 - .Machine$double.eps / 2
+  high <- plot_data(plot(x, level = level, draw = FALSE))$table
+  z <- sqrt(qchisq(level, 1))
+  expect_equal(high$OrdinaryLower, x$source$raters$Estimate-z*x$source$raters$PredictionSE)
+  expect_equal(high$OrdinaryUpper, x$source$raters$Estimate+z*x$source$raters$PredictionSE)
+  expect_identical(high$Lower[1], -Inf)
+  expect_identical(high$Upper[1], Inf)
   grDevices::pdf(tempfile(fileext = ".pdf")); old <- graphics::par("mar")
   expect_silent(plot(x)); expect_identical(graphics::par("mar"), old); grDevices::dev.off()
   path <- tempfile(); saveRDS(x, path)

@@ -6,10 +6,14 @@ test_that("plot guide calls resolve without changing the route catalogue", {
   expect_false(anyNA(guide[setdiff(names(guide), "GGPlotCall")]))
   expect_identical(is.na(guide$GGPlotCall), guide$GGPlot == "unavailable")
   expect_setequal(guide$GGPlot, c("dedicated", "native", "generic", "unavailable"))
+  # These result classes inherit the registered plot.mfrm_bundle() method.
+  bundle_classes <- c("mfrm_rating_scale", "mfrm_category_curves",
+    "mfrm_bias_interaction", "mfrm_halo_network", "mfrm_rater_network")
   for (i in seq_len(nrow(guide))) {
     call <- str2lang(guide$PlotCall[i])
     fun <- if (identical(call[[1]], as.name("plot"))) {
-      getS3method("plot", guide$InputClass[i])
+      getS3method("plot", if (guide$InputClass[i] %in% bundle_classes)
+        "mfrm_bundle" else guide$InputClass[i])
     } else get(as.character(call[[1]]), mode = "function")
     expect_true(is.function(fun))
     expect_true(is.function(get(guide$ResultFunction[i], envir = asNamespace("mfrmr"))))
@@ -19,6 +23,10 @@ test_that("plot guide calls resolve without changing the route catalogue", {
   }
   expect_identical(mfrmr_output_guide("beginner"), mfrmr_output_guide("public"))
   expect_identical(names(mfrmr_output_guide()), names(mfrmr_output_guide("feedback")))
+  locations <- subset(mfrmr_interval_guide("gpcm"), Route == "Fixed-facet model/sandwich intervals")
+  expect_match(locations$GPCMStatus, "supported_with_caveat one-family")
+  expect_match(locations$GPCMStatus, "experimental two-family")
+  expect_match(locations$InterpretationBoundary, "regular MML assumptions")
 })
 
 # Exercise the calls printed in the guide, including extraction and conversion.
@@ -33,10 +41,59 @@ check_plot_guide_route <- function(row, x) {
     g <- eval(str2lang(row$GGPlotCall))
     expect_s3_class(g, "ggplot")
     expect_no_error(ggplot2::ggplot_build(g))
-  } else expect_error(as_ggplot(p), "conversion is not available")
+  } else expect_error(as_ggplot(p), "conversion.*(unavailable|not available)")
   expect_identical(grDevices::dev.cur(), device)
   invisible(p)
 }
+
+test_that("interval guide calls reuse CML and full MML comparisons on their declared scales", {
+  skip_if_not_installed("ggplot2", minimum_version = "3.4.0")
+  guide <- mfrmr_interval_guide("fit")
+  routes <- c("CML conditional-information intervals", "MML interaction-contrast intervals")
+  rows <- guide[match(routes, guide$Route), ]
+  expect_false(anyNA(rows))
+  expect_false(any(routes %in% mfrmr_interval_guide("gpcm")$Route))
+  plot_row <- subset(mfrmr_output_guide("plots"), InputClass == "mfrm_facet_intervals")
+  local_mocked_bindings(fit_mfrm = function(...) stop("Unexpected refit"),
+    mfrmr_cml_evaluate = function(...) stop("Unexpected conditional information"))
+
+  fit <- readRDS(test_path("fixtures", "cml-comparison.rds"))
+  x <- eval(str2lang(rows$PrimaryHelper[1]))
+  expect_identical(x$covariance, fit$covariance)
+  for (column in c("Estimate", "SE", "Lower", "Upper"))
+    expect_identical(x$table[[column]], fit$comparisons[[column]])
+  expect_identical(x$table$CIEligible, c(FALSE, TRUE))
+  p <- check_plot_guide_route(plot_row, x)
+  expect_identical(plot_data(p, "table"), summary(x))
+  expect_identical(apa_table(x)$table$CIEligible, x$table$CIEligible)
+  saved <- tempfile(fileext = ".rds")
+  withr::defer(unlink(saved))
+  saveRDS(x, saved)
+  expect_identical(readRDS(saved), x)
+
+  source <- readRDS(test_path("fixtures", "mml-comparison-intervals.rds"))$RSM
+  fit <- source$fit
+  review <- source$review
+  info <- source$intervals
+  local_mocked_bindings(mfrm_native_location_inference = function(...) list(
+    covariance = info$parameter_covariance, information = list(status = "ok"),
+    checks = info$checks, numerical_checks = info$numerical_checks,
+    check = list(eligible = TRUE, review = "Saved joint information qualification")))
+  x <- suppressWarnings(eval(str2lang(rows$PrimaryHelper[2])))
+  expect_identical(x$settings$scale, "standardized_population_sd")
+  expect_equal(x$settings$population_sd, sqrt(fit$population$sigma2))
+  for (column in c("Estimate", "SE", "Lower", "Upper"))
+    expect_identical(x$table[[column]], info$table[[column]])
+  p <- check_plot_guide_route(plot_row, x)
+  expect_identical(plot_data(p, "table")$IdentificationBasis, x$table$IdentificationBasis)
+  result <- x
+  # The reporting call and named plot type are the ones printed in DisplayRoute.
+  bundle <- mfrm_results(fit, intervals = list(comparisons = result), compute = "never")
+  expect_identical(plot_data(bundle, type = "facet_comparisons", component = "table"), x$table)
+  reported <- mfrm_report(bundle)$tables$facet_comparisons_intervals
+  expect_identical(reported[names(x$table)], x$table)
+  expect_identical(reported$ConfidenceLevel, rep("95%", nrow(x$table)))
+})
 
 test_that("core plot guide routes produce the advertised payloads", {
   skip_if_not_installed("ggplot2", minimum_version = "3.4.0")
@@ -86,8 +143,8 @@ test_that("selected extended-model and D-study routes use saved results", {
   local_mocked_bindings(fit_mfrm = function(...) stop("Unexpected refit"))
   check_plot_guide_route(subset(guide, InputClass == "mfrm_random_rater_scores"), x)
   tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
-  g <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
-  x <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 6, 12)), c(V = -1, W = 1))
+  g <- mfrm_g_study(tasks, c("V", "W"), rater = NULL)
+  x <- mfrm_d_study(g, data.frame(Tasks = c(3, 6, 12)), c(V = -1, W = 1))
   rows <- subset(guide, InputClass == "mfrm_multivariate_d_study")
   for (i in seq_len(nrow(rows))) {
     p <- check_plot_guide_route(rows[i, ], x)
@@ -99,12 +156,16 @@ test_that("every unavailable guide route refuses even a convertible component", 
   rows <- subset(mfrmr_output_guide("plots"), GGPlot == "unavailable")
   # Valid generic-converter shapes must not bypass a plot-specific refusal.
   for (i in seq_len(nrow(rows))) {
+    call <- str2lang(rows$PlotCall[i])
     p <- mfrmr:::new_mfrm_plot_data(rows$PlotName[i], list(
+      plot = call$type %||% NULL, metric = call$metric %||% NULL,
       table = data.frame(Label = c("A", "B"), Value = c(1, 2)),
       matrix = matrix(1:4, 2)))
-    expect_error(as_ggplot(p), "conversion is not available")
-    expect_error(as_ggplot(p, component = "table"), "conversion is not available")
-    expect_error(as_ggplot(p, component = "matrix"), "conversion is not available")
+    message <- if (rows$InputClass[i] == "mfrm_residual_network")
+      "supports its type = 'matrix' view only" else "conversion.*(unavailable|not available)"
+    expect_error(as_ggplot(p), message)
+    expect_error(as_ggplot(p, component = "table"), message)
+    expect_error(as_ggplot(p, component = "matrix"), message)
   }
 })
 
@@ -175,4 +236,15 @@ test_that("pooled interval guide preserves source intervals through dedicated co
   row <- subset(mfrmr_output_guide("plots"), PlotName == "pooled_facet_intervals")
   expect_identical(row$GGPlot, "dedicated")
   check_plot_guide_route(row, x)
+})
+
+
+test_that("network intervals enter the interval guide without changing visual templates", {
+  guide <- mfrmr_interval_guide()
+  row <- guide[guide$Route == "Binary rater-network coefficient intervals", ]
+  expect_equal(nrow(row), 1L)
+  expect_match(row$PrimaryHelper, "confint(model", fixed = TRUE)
+  expect_match(row$InterpretationBoundary, "estimated-edge uncertainty", fixed = TRUE)
+  expect_no_error(template <- visual_reporting_template())
+  expect_false("Binary rater-network coefficient intervals" %in% unlist(template))
 })

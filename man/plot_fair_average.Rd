@@ -15,8 +15,8 @@ plot_fair_average(
   ci_level = 0.95,
   draw = TRUE,
   preset = c("standard", "publication", "compact", "monochrome"),
-  show_title = TRUE,
-  show_notes = TRUE,
+  show_title = FALSE,
+  show_notes = FALSE,
   ...
 )
 }
@@ -77,17 +77,27 @@ non-person rows it also uses the mean estimated person measure. FairZ uses
 zero reference measures instead. \strong{FairZ is not a z-score.} The historical
 alias \code{StandardizedAdjustedAverage} refers to the reference environment,
 not z-standardization. Both metrics use fitted internal score coding.
-PCM/GPCM use an element's own thresholds for the step facet and the mean
-threshold profile for other facets. GPCM uses an element's own slope for
-the slope facet and slope 1 otherwise. These are reporting conventions,
-not averages of predictions over the observed person/assignment distribution.
+PCM averages expectations over the administered rating scales using the
+same observation weights and \code{totalscore} selection as the fair-score table.
+Its conditional derivative averages the within-scale score variances.
+In ordinary additive RSM/PCM JML, finite direct anchors remain eligible in
+both the fair score and its conditional derivative when \code{totalscore = FALSE},
+even if their observed responses are all minimum or all maximum.
+GPCM uses an element's own thresholds for the step facet and the mean
+threshold profile for other facets, with its own slope for the slope facet
+and slope 1 otherwise. Person and other-facet measures remain at the chosen
+reference; these scores do not average over the observed person distribution.
 
 \code{plot_type = "measure"} connects measures (person ability or facet effects)
 to the reported fair score. Select \code{facet = "Person"} for an ability-to-score
 view. Points reuse the table values, without fitting a trend across different
 reference profiles. This transformation is not independent validation of
 the fitted model. \code{umean}/\code{uscale} change Measure units, not score units;
-\code{xtreme} changes the reported Measure only and disables conditional intervals.
+Positive \code{xtreme} disables conditional fair-score intervals. With the default
+\code{xtreme_method = "display"}, it changes only the reported Measure.
+\code{xtreme_method = "facets"} also uses the extrapolated measure in that
+element's fair scores; its measure SE describes information at a corrected
+total, not uncertainty of the original infinite MLE. See \code{\link[=fair_average_table]{fair_average_table()}}.
 
 \code{"difference"} ranks absolute observed-minus-fair gaps; \code{"scatter"} compares
 observed averages against fair scores with an identity line. These gaps
@@ -103,6 +113,12 @@ can only reuse intervals at their recorded confidence level.
 For a plot-selection guide and a longer walkthrough, see
 \link{mfrmr_visual_diagnostics} and
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -137,7 +153,6 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -156,19 +171,19 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # How do the observed and reference-adjusted person averages compare?
-plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
-                  metric = "FairM", plot_type = "scatter")
+plot(fit, type = "fair_average", diagnostics = diagnostics,
+  facet = "Person", metric = "FairM", view = "scatter")
 
 # Optional: inspect the gap (observed average minus FairM)
-plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
-                  metric = "FairM", plot_type = "difference")
+plot(fit, type = "fair_average", diagnostics = diagnostics,
+  facet = "Person", metric = "FairM", view = "difference")
 # A positive gap means the observed average is higher than the model-based FairM
 }
-}
 \seealso{
-\code{\link[=fair_average_table]{fair_average_table()}}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_displacement]{plot_displacement()}},
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=fair_average_table]{fair_average_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")},
+\link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link{mfrmr_visual_diagnostics}
 }
 \concept{confidence intervals}
 \concept{fair averages}
 \concept{visual diagnostics}
+\keyword{internal}

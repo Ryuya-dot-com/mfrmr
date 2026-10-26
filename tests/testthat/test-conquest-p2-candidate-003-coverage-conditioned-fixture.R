@@ -123,6 +123,9 @@ test_that("candidate 003 cannot fit, launch, delete, or substitute hashes", {
 })
 
 test_that("the internal record fixes the narrow claim and next gate", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_003_fixture()
   record_path <- file.path(
     ctx$validation,

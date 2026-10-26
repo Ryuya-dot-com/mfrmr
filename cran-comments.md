@@ -1,160 +1,95 @@
-# Development branch — not for submission
+# Unreleased 0.2.4 candidate — not for submission
 
-This branch is now 0.2.4.9000. Historical checks below identify the frozen
-0.2.4 rc.6 archive; they do not qualify the new development changes.
-September 30 development measurements are reported separately under check time.
-Reviewed September 30, 2026: check time is an unresolved submission blocker.
-The earlier zero-error/zero-warning results do not establish submission readiness.
-Mathematical and statistical scope decisions currently precede further runtime
-optimization; example selection will be reviewed after those decisions.
+## Current source and earlier checked artifact
 
-# mfrmr 0.2.4 — submission preparation
+The current source additionally labels exported Bayesian summaries, retains
+sampling-review decisions, and connects saved summaries to plots, credible
+intervals and shared reports. Its final source-tarball qualification is pending.
+The complete local check below applies to the earlier export-repair artifact,
+not to these later reporting changes.
 
-Preparation draft, updated September 26, 2026. This source has not been
-submitted to CRAN. Both rc.6 Win-builder results have been retrieved and
-reviewed: zero errors, zero warnings and one explained NOTE in each environment.
+Earlier artifact SHA256: `80dc20208abb7fd12ddcbec42900a585735f903d593b2a07de9303242992cdbe`.
 
-## Changes
+This candidate connects measurement, assessment planning and reporting. It
+also closes the single-family GPCM and fixed-anchor model-export gaps:
+RSM/PCM and single-family GPCM specifications on the fixed N(0,1) scale export
+to Stan/brms, retaining supported fixed facet/group and step constraints.
+Two-family GPCM remains Stan-only. Export adds explicit Bayesian priors; it
+does not introduce a native Bayesian estimator or qualify MML intervals.
 
-This update consolidates reusable calibration and scoring, external-feature
-PCA/clustering, assigned-score multiple imputation, fixed-facet uncertainty,
-rater-feedback tools, multivariate observed-score G/D studies, shared-rater
-and Person-specific testlet RSMs, and GPCM MML inference/reporting improvements.
-Existing API names and defaults remain compatible where documented in NEWS.
+The optional ggplot2/Plotly gallery remains website-only, with no new package
+installation dependency. Internal roadmaps and retained research results are
+not distributed or tracked.
 
-Approximate inference is explicitly distinguished from general coverage
-assurances. Known probability-interval undercoverage and unqualified bootstrap
-repeated-sample accuracy are documented. Proprietary external software is not
-required; RTMB is optional. Examples provide executable saved synthetic results
-where full estimation would be costly, with recalculation instructions available.
+## Local checks and source attribution
 
-## Candidate identity
+The earlier artifact above completes macOS arm64/R 4.6.1 `R CMD check --as-cran
+--timings` with **0 errors, 0 warnings and 1 NOTE**. The NOTE is the macOS
+`xcrun_db` temporary-file residue. All **14,315** ordinary assertions pass,
+with three established CRAN-profile research skips. Examples, vignette
+rebuilding and PDF/HTML manuals pass. Remote incoming and system-clock checks
+were disabled; unavailable repository-index network requests are not online
+dependency qualification.
 
-The public [rc.6 candidate](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.6)
-contains the frozen local `mfrmr_0.2.4.tar.gz`, SHA256:
-`0f1f21c042512318a3b3c8ffbce246bcdab21db1d3dc2dce2cf5e091c58155e1`.
-The archive and checksum were verified after publication by downloading both.
-All checks below are identified by source/archive; earlier Windows uploads
-are not attributed to this candidate.
+Check-only elapsed time is **567.239 seconds** (566.739–567.739 seconds under
+the logged installation-time rounding). The entire command, including
+installation, takes **604.239 seconds**. These are local measurements, not a
+Windows timing certificate. No package check timeout was added or extended.
 
-## Check results
+Exporter validation also includes 881 focused passing assertions, independent
+response-law/constraint and prior-coordinate checks, compiled Stan/brms
+log-density and gradient comparisons, bounded sampling, and fresh-session
+moved-folder replay. Density-difference errors are below 4e-13 and gradient
+errors below 1.2e-13 in the checked configurations. Short sampler runs test
+execution and saved predictions, not posterior recovery or coverage. Fixed
+anchors do not propagate uncertainty from an earlier calibration.
 
-- Five-platform [GitHub CI](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/36155335441)
-  passes at implementation commit `6f541bfa`: macOS arm64/R 4.6.1,
-  Windows/R 4.6.1 UCRT, Ubuntu/R 4.6.1, R 4.5.3 and R-devel
-  (2026-09-23 r90586). Each independently built package reports **0 errors,
-  0 warnings and 0 notes**. These ordinary checks use `--no-manual` and
-  `NOT_CRAN=false`; they are not five exhaustive or `--as-cran` checks.
-- The exact attached archive passes the local arm64 macOS/R 4.6.1
-  `--as-cran --no-examples --no-tests --no-manual` check with **0 errors,
-  0 warnings and 1 NOTE**. All 15 vignettes rebuild. Its examples/manuals
-  and exhaustive tests were checked before the final limited repairs:
-  three failures were corrected and affected paths passed 516 focused
-  expectations. Documentation and fresh-session checks passed separately.
-  Unchanged evidence was reused; no second exhaustive pass is claimed.
-- Win-builder [R-release](https://win-builder.r-project.org/58oV2XD8gB7Q/00check.log)
-  (R 4.6.1 UCRT) and [R-devel](https://win-builder.r-project.org/jNhW5RFMe5gs/00check.log)
-  (2026-09-21 r90579 UCRT) each report **0 errors, 0 warnings and 1 NOTE**.
-  Installation, examples, tests, vignette rebuilding and PDF/HTML manuals pass.
-  Each selected CRAN test suite completes without failures or warnings, with
-  five skips: one fresh-process case, three deliberate CRAN skips and one
-  compiled-source case. This is not the exhaustive local suite. The logs and
-  Windows binaries are archived locally before the temporary links expire.
-  Binary metadata, namespace, NEWS, 15 article sources and the test driver
-  agree with the submitted candidate; the service does not publish its source
-  archive hash, so attribution also uses the recorded upload and user notification.
-- URL review of the archive finds no problems in 152 occurrences / 76 distinct
-  references, with HTTP-status exclusions disabled.
-- The current CRAN source index (25,196 packages) lists no reverse Depends,
-  Imports, LinkingTo, Suggests or Enhances. Non-CRAN consumers are outside
-  this index check.
+The installed anchored single-family help example exports both formats, and
+the corresponding pkgdown reference page builds with its example. The two
+changed articles were rebuilt; other article sources matched their retained
+outputs, with the complete vignette index preserved. The normal check then
+rebuilt the packaged vignettes. No complete NOT_CRAN research suite was rerun.
 
-## Check time and optional-dependency coverage
+The later reporting changes pass focused regression tests, installed help
+examples, saved Stan/brms summary replay, and a fresh-session portable-result
+replay without loading either sampling backend. Both base and ggplot figures
+were inspected. Likelihoods, priors and sampler settings are unchanged; the
+earlier density/gradient checks remain applicable to those unchanged models.
 
-The rc.6 Win-builder notifications reported installation/check times of
-128/1,538 seconds on R-release and 133/1,587 seconds on R-devel. Their logs
-show the following rounded phase times:
+## Dependencies and URLs
 
-| Phase | R-release | R-devel |
-| --- | ---: | ---: |
-| R code for possible problems | 309 s | 356 s |
-| Examples | 82 s | 81 s |
-| Tests | 13 min | 13 min |
-| Vignette rebuilding | 27 s | 26 s |
-| PDF manual | 68 s | 68 s |
-| HTML manual | 127 s | 51 s |
+The October 26 CRAN source index contains 25,559 packages and lists no reverse
+Depends, Imports, LinkingTo, Suggests or Enhances for mfrmr. All 43 distinct
+external package dependencies are available; seven further dependencies are
+supplied by R. Declared minimum versions are satisfied in the checked local
+environment and available package index. Non-CRAN consumers are outside this
+reverse-dependency check.
 
-These timings exceed the 10-minute check-time threshold previously applied
-by CRAN incoming checks to mfrmr 0.2.3.1 on August 25, 2026. Installation is
-separate. We have not yet demonstrated an optimized current-source Windows
-check below 600 seconds. Test execution is the largest recorded phase; additional
-static-analysis and manual costs also need measurement and reduction. Source
-line count alone does not establish proportional check time.
+The earlier same-day URL review covered 532 occurrences / 247 distinct references, including 191
+HTTP(S) URLs, with HTTP status exclusions disabled. Eighteen URLs were flagged:
+one CASMA 404 was repaired and the replacement passed; eleven links point to
+new repository/site content awaiting publication. Their local targets exist.
+The remaining six findings are two PubMed browser checks (203), two access
+refusals (403), and two connection timeouts. These are not a clean automated
+URL result; no blanket URL exclusions were added.
 
-Before submission, record source-matched full check phase timings with normal
-examples, tests, vignette and manual checks enabled, and verify the final
-Windows check time below 600 seconds. The local working target is 480 seconds
-to allow headroom; it is not a guarantee of Windows performance. Preserve
-small checks of every admitted feature and keep longer studies in the explicit
-complete test tier. Skipping required checks or optional models to obtain a
-shorter time will not satisfy this requirement.
+## Still required before submission
 
-The September 30 development-source local measurement (`0.2.4.9000`, not rc.6)
-took 468.66 seconds including approximately 27 seconds of installation: about
-442 seconds of checking on arm64 macOS/R 4.6.1. Static analysis took 58 seconds,
-ordinary examples 22, tests 230, vignette rebuilding 11, PDF manual 11 and HTML
-manual 12. The selected tests completed without failures or warnings. Normal
-examples were enabled; the additional `donttest` workload was not included.
-The full check found undeclared test imports from callr/pkgload; their Suggests
-declarations were repaired and R's test-dependency check then passed. The
-development-version NOTE remains expected. All other archive files are byte
-identical; no second complete local check is claimed. Exact
-archive hashes, commands, skips and the separate successful fresh-process
-check are recorded in `inst/validation/cran-check-time-20260930.md`.
+The export-repair head has successful pkgdown, macOS and three Ubuntu checks.
+Its Windows check failed when the R subprocess running the numeric-feature
+workflow tests crashed; the underlying cause is unresolved. The current source
+adds a failure-only diagnostic replay without dropping those tests or changing
+time limits. It needs matching five-environment CI and pkgdown results on the
+existing draft PR. Remote incoming checks, hosted links and browser
+interaction/layout verification also remain open. No merge into main, site
+deployment or CRAN submission/acceptance is claimed by these local results.
 
-The subsequent development-source Windows R 4.6.1 check took 1,561.889 seconds
-including a rounded 90-second installation, or approximately 1,472 seconds
-of checking. Static analysis took 214 seconds, ordinary examples 73, tests
-about 900, vignette rebuilding 27 and HTML manual generation 76. The result
-was one ERROR, one WARNING and three NOTEs. The failed test was a README
-wording check, subsequently corrected and checked locally. Indexed PDF
-generation lacked makeindex; an isolated Windows run identified that missing
-tool, which has been added to CI setup. A subsequent manual-only Windows run
-successfully generated the indexed PDF in 20.55 seconds. V8 was absent, so HTML math rendering
-was not checked; it is now requested for subsequent timing runs. These repairs
-do not turn the original result into a clean check or resolve the 600-second
-ceiling. No complete rerun or current-source Win-builder result is claimed.
-The timing profile explicitly disabled `_R_CHECK_DONTTEST_EXAMPLES_`, so its
-example measurement excludes that additional workload. Final submission checks
-must reconcile this override with the normal `--as-cran` behavior; marking code
-as `donttest` does not establish that CRAN will skip it.
-
-A subsequent adaptive-MML optimization reduces repeated matrix calculations
-without changing integration rules or tolerances. Targeted numerical and API
-checks pass. A local retained-calibration comparison improved from 4.367 to
-3.395 seconds (median of three runs per implementation); this does not measure
-the complete suite or establish the required Windows runtime.
-
-The September 24 Windows result skipped six tests because RTMB was 1.9 rather
-than the required >= 2.0. The rc.6 September 26 results do not have those RTMB
-skips; their five other skips are described above. Final evidence must record
-optional-package versions and executed feature checks, including supported
-RTMB and nleqslv routes and clear behavior when dependencies are unavailable.
-
-## Historical rc.6 NOTE explanation
-
-The rc.6 local and both Win-builder NOTE entries report maintainer information and
-seven updates in six months. That candidate consolidates estimation/inference corrections
-and interface/reporting improvements described in NEWS. Its final recorded
-local package check had no errors or warnings. The initial missing-vignette-index
-problem was corrected before freezing this archive.
-
-## Remaining before submission
-
-The earlier functional, URL, reverse-dependency and Windows results belong
-to rc.6. Submission preparation is not complete: resolve the check-time excess,
-complete the agreed development scope, identify the final archive and obtain
-its matching full-check and optional-dependency evidence. Explain remaining
-notes and timing explicitly in the final submission comments. Do not assume
-that acceptance of 0.2.3.1 authorizes another over-budget submission. Detailed
-development and reuse records remain in package-excluded maintainer material.
+The later saved-summary head completed macOS checking with 14,472 passing
+assertions, three established skips, and one failure: the exact S3-registration
+test still expected the pre-summary method set. All four new methods were
+registered; the expectation list is now updated. Windows/Linux did not start
+because that macOS prerequisite failed. The same head's pkgdown build stopped
+at the new figure's missing alt-text registration; its examples and pages
+generated, and the corrected post-reference hook passes locally. These scoped
+repairs still require matching remote checks; they do not resolve the earlier
+Windows subprocess crash.

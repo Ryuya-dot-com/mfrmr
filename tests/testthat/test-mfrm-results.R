@@ -404,7 +404,11 @@ test_that("launch_mfrmr_viewer is a viewer over mfrm_results", {
   expect_true(length(payload$table_names) > 0L)
   expect_true(length(payload$qc_table_names) > 0L)
   expect_true(nrow(payload$bias_guidance) > 0L)
-  expect_true(nrow(payload$unexpected_table) > 0L)
+  # The residual-only cutoff produces a valid zero-flag result for this fixture.
+  expect_s3_class(payload$unexpected_table, "data.frame")
+  expect_equal(nrow(payload$unexpected_table), 0L)
+  expect_identical(names(payload$unexpected_table), names(res$components$unexpected$table))
+  expect_length(payload$unexpected_choices, 0L)
   expect_true(all(c("qc", "report", "bias", "misfit") %in% names(payload$tab_status)))
   expect_true(any(payload$tab_status$report$Name == "apa_outputs" &
                     payload$tab_status$report$Status == "not_requested"))

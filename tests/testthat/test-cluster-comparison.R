@@ -191,6 +191,24 @@ test_that("feature selection preserves imputation pairing even without shared fe
   expect_true(all(out$comparison_summary$Partitions == 2L))
   expect_equal(nrow(fixed$imputed_cells), 0L)
   expect_identical(fixed$analyses[[1]]$membership, fixed$analyses[[2]]$membership)
+  # Separate RDS reads recreate formula environments, not different imputations.
+  path <- tempfile(fileext = ".rds")
+  on.exit(unlink(path), add = TRUE)
+  saveRDS(y, path)
+  restored <- readRDS(path)
+  saved_environment <- environment(restored$imputation_model$formulas[[1]])
+  reopened <- mfrm_cluster_compare(list(X = x, Y = restored))
+  expect_equal(reopened$comparisons,
+    mfrm_cluster_compare(list(X = x, Y = y))$comparisons)
+  expect_identical(reopened$analyses$Y, restored)
+  expect_identical(environment(restored$imputation_model$formulas[[1]]), saved_environment)
+  changed_record <- restored
+  changed_record$imputation_model$imp$Y[1, 1] <-
+    changed_record$imputation_model$imp$Y[1, 1] + 1e-12
+  expect_error(mfrm_cluster_compare(list(X = x, Y = changed_record)), "same fitted mids")
+  changed_record <- restored
+  changed_record$imputation_model$formulas$Y <- Y ~ Complete
+  expect_error(mfrm_cluster_compare(list(X = x, Y = changed_record)), "same fitted mids")
   # Independent pair enumeration for the disjoint selections in each completion.
   ij <- utils::combn(1:6, 2)
   for (j in 1:2) {

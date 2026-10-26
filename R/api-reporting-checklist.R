@@ -6,11 +6,12 @@
 #' @param bias_results Optional output from [estimate_bias()] or a named list of
 #'   such outputs.
 #' @param hierarchical_structure Optional output from
-#'   [analyze_hierarchical_structure()]. When supplied, the
-#'   "Hierarchical structure review" checklist item is flipped to
-#'   `DraftReady = TRUE` and its `Detail` column surfaces the number
-#'   of nested / crossed facet pairs and whether the ICC table is
-#'   available.
+#'   [analyze_hierarchical_structure()] for matching retained rating rows.
+#'   The reviewed facets may be a subset of the fitted facets. After checking
+#'   the data identity, the "Hierarchical structure review" item is marked
+#'   `DraftReady = TRUE`; `Detail` names the reviewed columns, row count,
+#'   nested / crossed pairs and ICC availability. This indicates available
+#'   material within that scope, not a complete design assessment.
 #' @param include_references If `TRUE`, include a compact reference table in the
 #'   returned bundle.
 #'
@@ -62,8 +63,9 @@
 #'   package's documented caveats. `ReadyForAPA` is a backward-compatible alias
 #'   of the same flag; neither field certifies formal inferential adequacy.
 #' - `fit_readiness`, `fit_readiness_components`, and
-#'   `fit_readiness_parameters`: exact source-fit v3 readiness provenance;
-#'   these fields are not re-derived from checklist completeness.
+#'   `fit_readiness_parameters`: the fitted model's recorded numerical checks
+#'   and restrictions on inference, overall and by component or parameter.
+#'   Checklist completeness does not change these records.
 #' - `section_summary`: available items by section.
 #' - The Global Fit section includes a "Fit/separation reporting boundary"
 #'   row that points to [precision_review_report()], [fit_measures_table()],
@@ -74,9 +76,10 @@
 #' - `facets_positioning`: report-ready wording that states `mfrmr` is not a
 #'   FACETS numerical clone and separates native estimation from FACETS-style
 #'   handoff or external-table review.
-#' - `visual_scope`: plotting-route summary that separates report-default
-#'   2D figures from exploratory surface/3D-ready data handoffs, including a
-#'   short `InterpretationCheck` for the main user-facing caveat.
+#' - `visual_scope`: available plots and their interpretation limits. It
+#'   distinguishes 2D figures from category-surface data for custom rendering;
+#'   data availability does not mean an interactive 3D renderer is provided.
+#'   `InterpretationCheck` gives the main caveat for each type of plot.
 #' - `references`: abbreviated background citations and topics when requested,
 #'   not a complete bibliography. Verify full records for the methods used;
 #'   use `citation("mfrmr")` for the installed software's citation.
@@ -119,7 +122,6 @@
 #'   [specifications_report()], [data_quality_report()],
 #'   [build_misfit_casebook()], [build_linking_review()]
 #' @examples
-#' \donttest{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
@@ -146,7 +148,15 @@
 #'        c("Section", "Item", "DraftReady", "NextAction"))
 #' # DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats
 #' # Choose follow-up analyses for your question, not merely to make every row TRUE
-#' }
+#' @section Saved-result reuse:
+#' Supplied screening results must describe this fitted analysis. Results from
+#' another fit or older results without identity metadata are refused. See
+#' [mfrmr_compatibility_layer] to recreate them from the saved fit and matching
+#' diagnostics without refitting the model.
+#' Structural reviews are checked against the reviewed data, not the model's
+#' estimates. Row order and unused columns do not affect this match. Reviews
+#' of additional input rows or unrecorded grouping columns remain standalone
+#' analyses; they cannot establish availability for this fit's checklist.
 #' @export
 reporting_checklist <- function(fit,
                                 diagnostics = NULL,
@@ -164,11 +174,8 @@ reporting_checklist <- function(fit,
   }
   mfrm_results_validate_diagnostics_identity(fit, diagnostics,
                                              helper = "reporting_checklist()")
-  if (!is.null(hierarchical_structure) &&
-      !inherits(hierarchical_structure, "mfrm_hierarchical_structure")) {
-    stop("`hierarchical_structure` must come from ",
-         "analyze_hierarchical_structure().", call. = FALSE)
-  }
+  mfrm_validate_bias_identity(fit, bias_results, helper = "reporting_checklist()")
+  .ha_validate_data_identity(fit, hierarchical_structure)
 
   config <- fit$config %||% list()
   prep <- fit$prep %||% list()
@@ -565,20 +572,20 @@ reporting_checklist <- function(fit,
       ),
       add_item(
         "Method Section",
-        "Facet sample-size adequacy",
+        "Facet rating-count screening",
         {
           flag <- suppressWarnings(as.character(fit$summary$FacetSampleSizeFlag %||% NA_character_))
-          !is.na(flag) && flag %in% c("standard", "strong")
+          !is.na(flag) && flag %in% c("sparse", "marginal", "standard", "strong")
         },
         detail = {
           flag <- suppressWarnings(as.character(fit$summary$FacetSampleSizeFlag %||% NA_character_))
           min_n <- suppressWarnings(as.integer(fit$summary$FacetMinLevelN %||% NA_integer_))
           sparse_n <- suppressWarnings(as.integer(fit$summary$FacetSparseCount %||% NA_integer_))
           if (is.na(flag)) {
-            "Sample-size flag unavailable in fit summary."
+            "Rating-count screening flag unavailable in fit summary."
           } else {
             sprintf(
-              "Worst facet band: %s (min level N = %s; sparse facets = %s).",
+              "Lowest count band: %s (minimum retained rows per level = %s; sparse levels = %s). Count labels do not establish precision or coverage.",
               flag,
               if (is.na(min_n)) NA_character_ else as.character(min_n),
               if (is.na(sparse_n)) NA_character_ else as.character(sparse_n)
@@ -588,31 +595,29 @@ reporting_checklist <- function(fit,
         source_component = "fit$summary$FacetSampleSizeFlag + facet_small_sample_review()",
         severity = "recommended",
         missing_action = paste0(
-          "Run `facet_small_sample_review(fit)` and report the bands. ",
-          "mfrmr treats facets as fixed effects with no shrinkage, so small-N ",
-          "levels keep wide SEs."
+          "Run `facet_small_sample_review(fit)` and report retained rating counts. ",
+          "Inspect targeting, connectedness and estimator-specific uncertainty."
         ),
         available_action = paste0(
-          "Report the per-facet adequacy bands and discuss any sparse/marginal ",
-          "levels; cite Linacre (1994) sample-size guidance where relevant."
+          "Report the counts and discuss sparse/marginal levels. Availability ",
+          "of this screen is not evidence of adequate sample size or precision."
         )
       ),
       add_item(
         "Method Section",
         "Hierarchical structure review",
-        # Ready when the user actually ran analyze_hierarchical_structure()
-        # and passed the result in. Previously this item was hard-coded to
-        # FALSE so there was no way to mark it draft-ready; now callers can
-        # supply `hierarchical_structure = hs`.
         !is.null(hierarchical_structure),
         detail = if (!is.null(hierarchical_structure)) {
           hs_sum <- hierarchical_structure$summary
           paste0(
-            "Hierarchical review complete: ",
-            hs_sum$NFacets %||% NA, " facets, ",
+            "Hierarchical review available for ",
+            paste(hierarchical_structure$facets, collapse = ", "),
+            if (!is.null(hierarchical_structure$data_identity$person))
+              paste0(" (person column: ", hierarchical_structure$data_identity$person, ")") else "",
+            "; ", hierarchical_structure$data_identity$rows, " retained rating rows, ",
             hs_sum$NestedPairs %||% 0L, " nested pair(s), ",
             hs_sum$CrossedPairs %||% 0L, " crossed pair(s)",
-            if (isTRUE(hs_sum$ICCAvailable)) "; ICC available" else "",
+            if (isTRUE(hs_sum$ICCAvailable)) "; ICC available" else "; ICC not available",
             "."
           )
         } else {
@@ -868,10 +873,10 @@ reporting_checklist <- function(fit,
         "Visual Displays",
         "Wright map",
         TRUE,
-        detail = "Supported by plot.mfrm_fit() / plot_wright_unified()",
+        detail = "Supported by plot.mfrm_fit() / plot(x, type = \"wright\", view = \"unified\")",
         source_component = "plot.mfrm_fit",
         severity = "recommended",
-        plot_helper = "plot.mfrm_fit() / plot_wright_unified()",
+        plot_helper = "plot.mfrm_fit() / plot(x, type = \"wright\", view = \"unified\")",
         draw_free_route = "plot(fit, type = \"wright\", draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
         available_action = "Include a Wright map when the manuscript benefits from a shared-scale targeting display."
@@ -881,14 +886,14 @@ reporting_checklist <- function(fit,
         "QC / facet dashboard",
         nrow(obs_df) > 0,
         detail = if (nrow(obs_df) > 0) {
-          "plot_qc_dashboard() / plot_facet_quality_dashboard() can use the current diagnostics bundle"
+          "plot(x, type = \"qc\") / plot(x, type = \"facet_dashboard\") can use the current diagnostics bundle"
         } else {
           "No observation-level diagnostics for dashboard plotting"
         },
         source_component = "diagnostics$obs + diagnostics$fit",
         severity = "recommended",
-        plot_helper = "plot_qc_dashboard() / plot_facet_quality_dashboard()",
-        draw_free_route = "plot_qc_dashboard(fit, diagnostics = diagnostics, draw = FALSE)",
+        plot_helper = "plot(x, type = \"qc\") / plot(x, type = \"facet_dashboard\")",
+        draw_free_route = "plot(fit, type = \"qc\", diagnostics = diagnostics, draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
         missing_action = "Run diagnose_mfrm() so the QC and facet dashboards can be rendered from the current analysis bundle.",
         available_action = "Use the dashboard as a first-pass triage view, then move to the specific follow-up plot behind each flag."
@@ -898,14 +903,14 @@ reporting_checklist <- function(fit,
         "Residual PCA visuals",
         has_pca,
         detail = if (has_pca) {
-          "plot_residual_pca() can render scree/loadings from the current residual PCA bundle"
+          "plot(x, type = \"residual_pca\") can render scree/loadings from the current residual PCA bundle"
         } else {
           "Residual PCA not computed"
         },
         source_component = "diagnostics$pca",
         severity = "recommended",
-        plot_helper = "plot_residual_pca()",
-        draw_free_route = "plot_residual_pca(analyze_residual_pca(diagnostics, mode = \"overall\"), mode = \"overall\", plot_type = \"scree\", draw = FALSE)",
+        plot_helper = "plot(x, type = \"residual_pca\")",
+        draw_free_route = "plot(analyze_residual_pca(diagnostics, mode = \"overall\"), type = \"residual_pca\", mode = \"overall\", view = \"scree\", draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
         missing_action = "Run residual PCA if you want scree/loadings visuals for residual-structure follow-up.",
         available_action = "Use residual PCA plots as exploratory structure follow-up, not as standalone dimensionality proof."
@@ -935,14 +940,14 @@ reporting_checklist <- function(fit,
         "Inter-rater / displacement visuals",
         has_fit || has_resid,
         detail = if (has_fit || has_resid) {
-          "plot_displacement() is available; plot_interrater_agreement() is available when a rater facet is present"
+          "plot(x, type = \"displacement\") is available; plot(x, type = \"agreement\") is available when a rater facet is present"
         } else {
           "No fit/residual inputs for displacement or inter-rater visuals"
         },
         source_component = "diagnostics$obs + diagnostics$measures",
         severity = "recommended",
-        plot_helper = "plot_displacement() / plot_interrater_agreement()",
-        draw_free_route = "plot_displacement(displacement_table(fit, diagnostics = diagnostics), draw = FALSE)",
+        plot_helper = "plot(x, type = \"displacement\") / plot(x, type = \"agreement\")",
+        draw_free_route = "plot(displacement_table(fit, diagnostics = diagnostics), type = \"displacement\", draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
         missing_action = "Retain fit and residual outputs if you want displacement or inter-rater follow-up figures.",
         available_action = "Use displacement and inter-rater views to localize QC issues after dashboard screening."
@@ -955,8 +960,8 @@ reporting_checklist <- function(fit,
         source_component = "diagnostics$marginal_fit",
         severity = "recommended",
         ready_for_apa = FALSE,
-        plot_helper = "plot_marginal_fit() / plot_marginal_pairwise()",
-        draw_free_route = "plot_marginal_fit(diagnostics, draw = FALSE)",
+        plot_helper = "plot(x, type = \"marginal_fit\") / plot(x, type = \"marginal_pairwise\")",
+        draw_free_route = "plot(diagnostics, type = \"marginal_fit\", draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
         missing_action = "For MML reporting runs, call diagnose_mfrm(..., diagnostic_mode = \"both\") to enable strict marginal follow-up visuals where supported.",
         available_action = "Treat strict marginal plots as exploratory corroboration screens, then corroborate with design review and legacy diagnostics."
@@ -966,17 +971,17 @@ reporting_checklist <- function(fit,
         "Bias / DIF visuals",
         n_bias_pairs > 0 || n_bias_errors > 0,
         detail = if (n_bias_errors > 0) {
-          "plot_bias_interaction() can use the current bias bundle, but failed pair requests should be reviewed before interpretation"
+          "plot(x, type = \"bias\") can use the current bias bundle, but failed pair requests should be reviewed before interpretation"
         } else if (n_bias_pairs > 0) {
-          "plot_bias_interaction() can use the current bias bundle; use plot_dif_heatmap() when a DIF result is available"
+          "plot(x, type = \"bias\") can use the current bias bundle; use plot(x, type = \"heatmap\") when a DIF result is available"
         } else {
           "No bias screening bundle available"
         },
         source_component = "bias_results",
         severity = "recommended",
         ready_for_apa = FALSE,
-        plot_helper = "plot_bias_interaction() / plot_dif_heatmap()",
-        draw_free_route = "plot_bias_interaction(bias_results[[1]], draw = FALSE)",
+        plot_helper = "plot(x, type = \"bias\") / plot(x, type = \"heatmap\")",
+        draw_free_route = "plot(bias_results[[1]], type = \"bias\", draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
         missing_action = "Run bias or DIF screening before discussing interaction-level visuals.",
         available_action = "Use bias/DIF plots as screening follow-up, not as formal hypothesis tests."
@@ -986,15 +991,15 @@ reporting_checklist <- function(fit,
         "Precision / information curves",
         converged,
         detail = if (converged) {
-          "compute_information() / plot_information() are available for the current fitted model"
+          "compute_information() / plot(x) are available for the current fitted model"
         } else {
           "Information curves are not recommended until convergence is resolved"
         },
         source_component = "fit + compute_information()",
         severity = "recommended",
         ready_for_apa = converged && formal_precision,
-        plot_helper = "plot_information()",
-        draw_free_route = "plot_information(compute_information(fit), draw = FALSE)",
+        plot_helper = "plot(x)",
+        draw_free_route = "plot(compute_information(fit), draw = FALSE)",
         plot_return_class = "mfrm_plot_data",
         missing_action = "Resolve convergence before using information or precision curves in reporting.",
         available_action = if (formal_precision) {
@@ -1204,24 +1209,24 @@ visual_scope_table <- function(fit, checklist) {
       "Model-dependent; requires residual PCA computation"
     ),
     PrimaryHelper = c(
-      "plot_qc_dashboard() / plot_facet_quality_dashboard()",
-      "plot(fit, type = \"wright\") / plot_wright_unified()",
+      "plot(x, type = \"qc\") / plot(x, type = \"facet_dashboard\")",
+      "plot(fit, type = \"wright\") / plot(x, type = \"wright\", view = \"unified\")",
       "plot(fit, type = \"pathway\") / plot(fit, type = \"ccc\")",
       "plot(fit, type = \"ccc_surface\")",
-      "compute_information() -> plot_information()",
-      "plot_marginal_fit() / plot_marginal_pairwise()",
-      "plot_bias_interaction() / plot_dif_heatmap()",
-      "analyze_residual_pca() -> plot_residual_pca()"
+      "compute_information() -> plot(x)",
+      "plot(x, type = \"marginal_fit\") / plot(x, type = \"marginal_pairwise\")",
+      "plot(x, type = \"bias\") / plot(x, type = \"heatmap\")",
+      "analyze_residual_pca() -> plot(x, type = \"residual_pca\")"
     ),
     DrawFreeRoute = c(
-      "plot_qc_dashboard(fit, diagnostics = diagnostics, draw = FALSE)",
+      "plot(fit, type = \"qc\", diagnostics = diagnostics, draw = FALSE)",
       "plot(fit, type = \"wright\", draw = FALSE)",
       "plot(fit, type = \"ccc\", draw = FALSE)",
       "plot(fit, type = \"ccc_surface\", draw = FALSE)",
-      "plot_information(compute_information(fit), draw = FALSE)",
-      "plot_marginal_fit(diagnostics, draw = FALSE)",
-      "plot_bias_interaction(bias_results[[1]], draw = FALSE)",
-      "plot_residual_pca(analyze_residual_pca(diagnostics, mode = \"overall\"), draw = FALSE)"
+      "plot(compute_information(fit), draw = FALSE)",
+      "plot(diagnostics, type = \"marginal_fit\", draw = FALSE)",
+      "plot(bias_results[[1]], type = \"bias\", draw = FALSE)",
+      "plot(analyze_residual_pca(diagnostics, mode = \"overall\"), type = \"residual_pca\", draw = FALSE)"
     ),
     ReportUse = c(
       "triage figure; usually not the final manuscript figure by itself",
@@ -1238,7 +1243,7 @@ visual_scope_table <- function(fit, checklist) {
       "2D recommended; 3D Wright maps are discouraged",
       "2D report default; surface plot data available through the category route",
       "advanced surface data only; no package-native interactive renderer",
-      "2D curve route active; 3D information surface is a future data handoff candidate",
+      "2D information curves available; no package-native 3D information surface",
       "2D heatmap/bar style preferred; 3D not recommended",
       "2D heatmap/profile preferred; 3D not recommended",
       "2D scree/loadings preferred; 3D not recommended"
@@ -1279,22 +1284,20 @@ visual_scope_table <- function(fit, checklist) {
 #' - `section_summary`: section-level checklist coverage
 #' - `software_scope`: external-software relationship summary
 #' - `facets_positioning`: report-ready FACETS relationship wording
-#' - `visual_scope`: plotting-route and 3D-ready data-handoff summary, including
-#'   the main `InterpretationCheck` caveat for each visual family
+#' - `visual_scope`: available plots and data for custom rendering, including
+#'   the main `InterpretationCheck` caveat for each type of plot
 #' - `priority_summary`: counts by priority/severity
 #' - `action_items`: highest-priority rows that still need draft work
 #' - `settings`: checklist settings rendered as a compact table
 #' - `notes`: interpretation notes
 #' @seealso [reporting_checklist()], [summary.mfrm_apa_outputs]
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", quad_points = 7, maxit = 30)
 #' diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
 #' chk <- reporting_checklist(fit, diagnostics = diag)
 #' summary(chk)
-#' }
 #' @method summary mfrm_reporting_checklist
 #' @export
 summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {

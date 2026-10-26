@@ -79,8 +79,10 @@ test_that("nonfinite inputs and empty candidate sets retain failure status", {
   expect_equal(d$baseline_links$Status, "no_finite_differences")
   expect_true(all(is.na(d$removal$MaxAbsCumulativeChange)))
   d <- plot(offset_chain(c(0, 1), c(1e200, 1e200)), type = "offset_sensitivity", draw = FALSE)$data$data
-  expect_equal(d$baseline_links$Status, "numerical_failure")
-  expect_true(all(d$links$Status == "numerical_failure"))
+  expect_equal(d$baseline_links$Status, "computed")
+  expect_equal(d$baseline_links$Offset, .5)
+  expect_true(all(d$links$Status == "computed"))
+  expect_equal(d$links$Offset, c(1, 0))
   d <- plot(offset_chain(numeric()), type = "offset_sensitivity", draw = FALSE)$data$data
   expect_equal(d$baseline_links$Status, "no_common")
   expect_equal(nrow(d$removal), 0L)

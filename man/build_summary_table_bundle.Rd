@@ -25,7 +25,8 @@ build_summary_table_bundle(
 \code{mfrm_facets_run}, \code{mfrm_bias}, \code{mfrm_anchor_review},
 \code{mfrm_linking_review}, \code{mfrm_misfit_casebook},
 \code{mfrm_model_choice_review}, \code{mfrm_weighting_review},
-\code{mfrm_unit_prediction}, or \code{mfrm_plausible_values} object, one of their
+\code{mfrm_calibration_score}, \code{mfrm_unit_prediction}, or
+\code{mfrm_plausible_values} object, one of their
 \code{summary()} outputs, or a compatible precomputed recovery-evidence
 summary.}
 
@@ -84,6 +85,11 @@ manuscript-facing subset before plotting or export.
 \section{Supported inputs}{
 
 \itemize{
+\item \code{\link[=mfrm_g_study]{mfrm_g_study()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}, \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}},
+\code{\link[=mfrm_residual_network]{mfrm_residual_network()}} or their \code{\link[=mfrm_report]{mfrm_report()}} objects; supply saved
+intervals to \code{mfrm_report()} first. These routes retain all evidence tables,
+including signed estimates, settings and unavailable states, without \code{top_n}
+truncation.
 \item \code{\link[=fit_mfrm]{fit_mfrm()}} or \code{summary(fit)}
 \item \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} or \code{summary(diag)}
 \item \code{\link[=precision_review_report]{precision_review_report()}} or \code{summary(precision_review)}
@@ -95,7 +101,7 @@ manuscript-facing subset before plotting or export.
 \item \code{\link[=build_apa_outputs]{build_apa_outputs()}} or \code{summary(apa)}
 \item \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}} or \code{summary(sim_eval)}
 \item \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}} or \code{summary(sig_eval)}
-\item \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} or \code{summary(rec)}
+\item \code{\link[=simulate_mfrm_recovery]{simulate_mfrm_recovery()}} or \code{summary(rec)}
 \item \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} or \code{summary(rec_assessment)}
 \item a compatible precomputed recovery-evidence summary
 \item \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} or \code{summary(pred)}
@@ -108,6 +114,8 @@ manuscript-facing subset before plotting or export.
 \item \code{\link[=build_model_choice_review]{build_model_choice_review()}} or \code{summary(review)}
 \item \code{\link[=build_weighting_review]{build_weighting_review()}} or \code{summary(review)}
 \item \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{summary(pred_units)}
+\item \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}} or \code{summary(scores)}; includes all review
+dispositions and unrounded conditional decisions when requested
 \item \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} or \code{summary(pv)}
 }
 }
@@ -172,7 +180,6 @@ plan.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -180,7 +187,6 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 bundle <- build_summary_table_bundle(fit)
 bundle$table_index
 summary(bundle)$role_summary
-}
 
 }
 \seealso{

@@ -100,10 +100,10 @@ rt <- response_time_review(
   time = "ResponseTime"
 )
 summary(rt)
-plot_response_time_review(rt, draw = FALSE)
+plot(rt, draw = FALSE)
 }
 \seealso{
-\code{\link[=plot_response_time_review]{plot_response_time_review()}}, \code{\link[=fit_mfrm]{fit_mfrm()}},
+\link[=plot.mfrm_response_time_review]{plot(x)}, \code{\link[=fit_mfrm]{fit_mfrm()}},
 \link{mfrmr_visual_diagnostics}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}}
 }
 \concept{quality control}

@@ -27,6 +27,12 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   ))
 
   review <- build_model_choice_review(RSM = rsm_fit, GPCM = gpcm_fit)
+  report <- mfrm_report(review, study_context = c(question = "Sensitivity to criterion discrimination"))
+  expect_identical(report$tables$comparison_table, as.data.frame(review$comparison_table))
+  expect_identical(report$tables$model_roles, as.data.frame(review$model_roles))
+  expect_identical(report$tables$comparison_warnings$Warning, review$comparison_warnings)
+  expect_false(report$tables$overview$ICComparable)
+  expect_match(paste(report$notes, collapse = " "), "AIC rank alone")
 
   expect_s3_class(review, "mfrm_model_choice_review")
   expect_s3_class(review, "mfrm_bundle")

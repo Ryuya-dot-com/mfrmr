@@ -72,6 +72,9 @@ test_that("two-family input never silently changes requested model options", {
 })
 
 test_that("public conditional curves match the product equation and retain unavailable intervals", {
+  # The fixture keeps Japanese facet names; the default PDF font cannot encode them.
+  grDevices::pdf(NULL, family = "Japan1")
+  on.exit(grDevices::dev.off(), add = TRUE)
   args <- gmfrm_public_args(); fit <- do.call(fit_mfrm, args)
   grid <- data.frame(Theta = rep(c(-1,0,1), 2))
   grid[[args$slope_facet[1]]] <- rep(c("same:1", "t3"), each=3)
@@ -98,15 +101,15 @@ test_that("public conditional curves match the product equation and retain unava
   expect_error(mfrm_curve_intervals(fit,grid,method="sandwich"), "do not yet support")
   expect_error(mfrm_curve_intervals(fit,grid,simultaneous="bonferroni"), "not supported")
   p <- plot(curves, draw=FALSE)
-  expect_match(p$labels$subtitle, "intervals are unavailable")
-  expect_match(p$labels$caption, "unavailable for two-family GPCM")
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "intervals are unavailable")
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"), "unavailable for two-family GPCM")
   expect_false(any(vapply(p$layers, function(layer) inherits(layer$geom, "GeomPoint"), logical(1))))
   contexts <- unique(plot_data(p, "table")$Context)
   labels <- p$facet$params$labeller(data.frame(Context = contexts))[[1L]]
   expect_true(all(grepl("\n", labels, fixed = TRUE)))
   expect_true(all(grepl("Judge-ID = ", labels, fixed = TRUE)))
   expect_true(all(grepl("観点 名 = ", labels, fixed = TRUE)))
-  expect_false(grepl("95|Approximate", p$labels$subtitle))
+  expect_false(grepl("95|Approximate", paste(plot_data(p, "notes")$Text, collapse = "\n")))
   expect_null(plot(curves, draw=FALSE, title=NULL,subtitle=NULL,caption=NULL)$labels$title)
   expect_equal(plot_data(p, component="table")$Estimate, curves$table$Estimate)
   single <- mfrm_curve_intervals(fit, grid[1, , drop = FALSE])
@@ -116,7 +119,7 @@ test_that("public conditional curves match the product equation and retain unava
   expect_equal(built$data[[3L]]$y, single$table$Estimate)
   expect_true(all(built$data[[3L]]$shape == 19))
   expect_no_warning(ggplot2::ggplotGrob(one_point))
-  ci <- confint(fit)
+  ci <- confint(fit, parm = "slopes")
   local_mocked_bindings(fit_mfrm=function(...) stop("unexpected fitting"),
     diagnose_mfrm=function(...) stop("unexpected diagnostics"),
     mfrm_curve_intervals=function(...) stop("unexpected curves"),
@@ -180,7 +183,7 @@ test_that("public conditional curves match the product equation and retain unava
     for (prefix in c("table_gpcm_", "report_")) {
       path <- exported$written_files$Path[exported$written_files$Component == paste0(prefix,name)]
       expect_length(path, 1L)
-      expect_equal(read.csv(path, check.names=FALSE), report$tables[[name]], tolerance=1e-12)
+      expect_equal(read.csv(path, encoding="UTF-8", check.names=FALSE), report$tables[[name]], tolerance=1e-12)
     }
   }
   index <- readLines(file.path(export_dir,"index.html"),warn=FALSE)
@@ -252,7 +255,7 @@ test_that("unsupported two-family consumers give a specific scope error", {
       plot_wright_unified, plot_threshold_ladder, bootstrap_mfrm_gpcm,
       extract_mfrm_sim_spec, make_anchor_table, apply_empirical_bayes_shrinkage,
       analyze_facet_equivalence, estimate_bias, estimate_all_bias,
-      plot_rater_severity_profile, export_mfrm)) {
+      plot_rater_severity_profile, export_mfrm_tables)) {
     expect_error(fun(fit), class="mfrmr_gpcm_scope_error")
   }
   expect_error(mfrm_response_diagnostics(fit), "Resolve the two-family convergence")
@@ -263,7 +266,7 @@ test_that("unsupported two-family consumers give a specific scope error", {
   expect_error(plot_rater_trajectory(list(a=fit,b=fit)), class="mfrmr_gpcm_scope_error")
   expect_error(summary(fit,profile="facets"), "only the fit summary")
   expect_error(summary(fit,profile="reporting"), "only the fit summary")
-  ci <- confint(fit)
+  ci <- confint(fit, parm = "slopes")
   expect_true(all(is.na(ci)))
   expect_match(attr(ci,"diagnostics")$InferenceReview[1],"per-Person")
 })

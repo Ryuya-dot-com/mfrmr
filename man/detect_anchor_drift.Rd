@@ -30,10 +30,10 @@ detect_anchor_drift(
 non-Person facets).}
 
 \item{drift_threshold}{Absolute screening threshold for flagging (logits,
-default 0.5).}
+default 0.5). A non-negative scalar; \code{Inf} disables magnitude screening.}
 
 \item{flag_se_ratio}{Drift/SE ratio screening threshold for flagging
-(default 2.0).}
+(default 2.0). A non-negative scalar; \code{Inf} disables SE-ratio flagging.}
 
 \item{reference}{Index or name of the reference fit (default: first).}
 
@@ -90,6 +90,18 @@ screening would retain no row, the current implementation falls back to all
 finite differences. Use a single substantively coherent facet when a common
 shift across facet blocks is not defensible, and inspect \code{drift_table} rather
 than treating \code{LinkSupportAdequate} as sufficient evidence.
+The fallback is recorded as \code{ScreeningFallback}, and \code{Contributing} /
+\code{N_Contributing} identify the elements actually used in the final offset.
+Retention and contribution are different: a retained row with a missing SE
+does not enter a weighted offset when other rows have usable SEs.
+
+\code{OffsetStatus} and \code{OffsetReason} distinguish computed offsets, absent or
+nonfinite common differences, and numerical failure. Missing residuals stay
+missing. \code{SERatioStatus} explains unavailable SE ratios; \code{FlagBasis} identifies
+whether the flag used both criteria, only residual magnitude, or neither.
+In the magnitude-only case, \code{Flag = FALSE} is not a negative SE-ratio screen.
+Summaries report unavailable counts, and withhold the complete flagged count
+when any residual flag is unavailable.
 
 Matching \code{Facet} and \code{Level} labels are treated as common elements; the
 helper cannot verify that they have invariant meaning across waves. The
@@ -97,6 +109,15 @@ input fits must therefore use compatible model, score, orientation, and
 population conventions and must be independently reviewed for fit readiness.
 Offset removal aligns coordinates conditionally on those assumptions; it is
 not proof of scale equivalence.
+
+This is a relative drift screen. For example, if the selected judges'
+estimates all differ from the reference by +0.40 logits, \code{LinkOffset} is
++0.40 and each residual \code{Drift} is zero. This does not establish panel
+stability. The offset itself also cannot distinguish real panel change
+from a change of coordinates. Common recorded performances can provide
+a separate reference, but a complete recording-based annual analysis and
+its formal difference intervals are not yet verified here. See the annual
+assessment example in \link{mfrmr_linking_and_dff}.
 
 An element is \strong{flagged} when either condition is met:
 \deqn{|\Delta_e| > \texttt{drift\_threshold}}
@@ -106,6 +127,10 @@ even when imprecise, while a smaller residual can be flagged by its SE ratio.
 The ratio uses only the two element SEs and omits uncertainty in the
 estimated \code{LinkOffset} and any cross-fit covariance. It is therefore a
 descriptive screen, not a formal z test with a calibrated error rate.
+Residuals share an estimated offset, and contributing elements also enter
+that offset. Offset covariance can either reduce or increase residual
+uncertainty relative to the displayed denominator. The ratio is not
+guaranteed to be conservative.
 
 When \code{facets} is \code{NULL}, all non-Person facets are compared.  Providing a
 subset (e.g., \code{facets = "Criterion"}) restricts comparison to those facets
@@ -152,21 +177,20 @@ link rests on fewer than 5 retained common elements in at least one facet.
 \item Fit separate models for each administration wave.
 \item Combine into a named list: \code{fits <- list(Spring = fit_s, Fall = fit_f)}.
 \item Call \code{drift <- detect_anchor_drift(fits)}.
-\item Review \code{summary(drift)} and \code{plot_anchor_drift(drift)}.
+\item Review \code{summary(drift)} and \code{plot(drift)}.
 \item Flagged elements may need to be removed from anchor sets or
 investigated for substantive causes (e.g., rater re-training).
 }
 }
 
 \examples{
-\donttest{
 # Deliberately linked teaching waves: common labels below represent the
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-# Two balanced 12-Person waves retain every Rater and Criterion.
-d1 <- toy[toy$Person \%in\% people[1:12], , drop = FALSE]
-d2 <- toy[toy$Person \%in\% people[13:24], , drop = FALSE]
+# Two balanced 24-Person waves retain every Rater and Criterion.
+d1 <- toy[toy$Person \%in\% people[1:24], , drop = FALSE]
+d2 <- toy[toy$Person \%in\% people[25:48], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -176,8 +200,7 @@ summary(drift)
 head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
 drift$common_elements
 }
-}
 \seealso{
 \code{\link[=anchor_to_baseline]{anchor_to_baseline()}}, \code{\link[=build_equating_chain]{build_equating_chain()}},
-\code{\link[=make_anchor_table]{make_anchor_table()}}, \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, \link{mfrmr_linking_and_dff}
+\code{\link[=make_anchor_table]{make_anchor_table()}}, \link[=plot.mfrm_anchor_drift]{plot(x)}, \link{mfrmr_linking_and_dff}
 }

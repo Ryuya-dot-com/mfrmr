@@ -308,7 +308,7 @@ mfrm_testlet_response_probabilities <- function(input, par, rows, order) {
   gw <- if (variance == 0) 1 else rule$weights
   person <- match(input$data[[input$columns$person]][rows[1L]], input$persons)
   kernel <- mfrm_testlet_kernel(input, par, theta, rule, persons = person)
-  lw <- kernel$loglik[, 1L] + log(rule$weights)
+  lw <- (kernel$loglik[, 1L] - max(kernel$loglik[, 1L])) + log(rule$weights)
   pw <- exp(lw - max(lw)); pw <- pw / sum(pw)
   result <- matrix(NA_real_, length(rows), ns + 1L)
   for (block in input$groups[[person]]) {
@@ -317,11 +317,12 @@ mfrm_testlet_response_probabilities <- function(input, par, rows, order) {
     cache <- lapply(block, function(i) {
       eta <- as.vector(outer(theta, gamma, "+")) - sum(input$X[i, ] * par[seq_len(nb)])
       logw <- outer(eta, 0:ns) - matrix(c(0, cumsum(steps)), length(eta), ns + 1L, byrow = TRUE)
+      logw <- logw - row_max_fast(logw)
       logw - mfrm_testlet_logsum_rows(logw)
     })
     loglik <- Reduce(`+`, lapply(seq_along(block), function(j)
       matrix(cache[[j]][, input$y[block[j]] + 1L], length(theta), length(gamma))))
-    local <- sweep(loglik, 2L, log(gw), "+")
+    local <- sweep(loglik - row_max_fast(loglik), 2L, log(gw), "+")
     local <- exp(local - mfrm_testlet_logsum_rows(local))
     joint <- as.vector(local * pw)
     for (j in selected) result[j, ] <- colSums(exp(cache[[match(rows[j], block)]]) * joint)
@@ -341,9 +342,11 @@ mfrm_random_rater_response_probabilities <- function(input, calibration, rows, o
   lognum <- vapply(0:length(steps), function(k)
     -as.numeric(numerator$fn(c(par, k, as.numeric(seq_along(steps) <= k)))), numeric(1))
   if (!is.finite(logden) || any(!is.finite(lognum))) stop("Joint-rater response integration is nonfinite.")
-  normalizer <- max(lognum) + log(sum(exp(lognum - max(lognum))))
-  list(probabilities = matrix(exp(lognum - normalizer), 1L),
-    normalization_error = expm1(normalizer - logden), logden = logden)
+  maximum <- max(lognum)
+  shifted <- lognum - maximum
+  normalizer <- log(sum(exp(shifted)))
+  list(probabilities = matrix(exp(shifted - normalizer), 1L),
+    normalization_error = expm1((maximum - logden) + normalizer), logden = logden)
 }
 
 #' @rdname mfrm_response_diagnostics

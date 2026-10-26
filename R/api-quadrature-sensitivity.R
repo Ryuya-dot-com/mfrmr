@@ -110,8 +110,18 @@ mfrmr_gqs_validate <- function(fit, data, quad_points,
 mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
   replay <- fit$config$replay_inputs
   if (mfrm_has_product_slopes(fit)) {
+    replay$mml_integration <- fit$config$estimation_control$mml_integration
+    replay$mml_accuracy_control <- NULL
     if (mfrmr_adaptive_integration(fit$config)) {
       policy <- fit$config$estimation_control$gpcm_mml_start %||% "neutral"
+      if (identical(policy, "explicit")) {
+        record <- fit$opt$mml_initialization
+        starts <- lapply(record$attempts, `[[`, "start")
+        mfrmr_gqs_assert(identical(record$policy, "explicit") && length(starts) >= 2L &&
+          identical(names(starts), record$table$Start) && identical(replay$gpcm_mml_start, starts),
+          "The saved explicit initialization vectors and replay settings must agree.")
+        policy <- starts
+      }
       mfrmr_gqs_assert(is.null(replay$gpcm_mml_start) || identical(replay$gpcm_mml_start, policy),
         "The saved adaptive initialization and replay settings must agree.")
       replay$gpcm_mml_start <- policy
@@ -147,6 +157,7 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
     ),
     anchors = replay$anchors,
     group_anchors = replay$group_anchors,
+    centering_scope = config$centering_scope %||% "remainder",
     noncenter_facet = as.character(
       replay$noncenter_facet %||% "Person"
     ),
@@ -196,7 +207,10 @@ mfrmr_gqs_population_arguments <- function(fit) {
       ordered = is.ordered(persons[[name]]))
     if (!is.null(pop$contrasts[[name]])) stats::contrasts(persons[[name]]) <- pop$contrasts[[name]]
   }
-  list(population_formula = pop$formula, person_data = persons, person_id = pop$person_id)
+  arguments <- list(population_formula = pop$formula, person_data = persons, person_id = pop$person_id)
+  fixed_sd <- pop$fixed_sd %||% fit$config$population_spec$fixed_sd
+  if (!is.null(fixed_sd)) arguments$population_sd <- fixed_sd
+  arguments
 }
 
 mfrmr_gqs_canonical_prepared_data <- function(fit) {
@@ -500,7 +514,11 @@ mfrmr_gqs_score_difference <- function(reference, candidate, column) {
 }
 
 mfrmr_gqs_raw_information <- function(fit) {
-  covariance <- compute_mml_parameter_covariance(fit)
+  product <- mfrm_has_product_slopes(fit)
+  inference <- if (product) mfrm_gpcm_product_inference(fit) else NULL
+  # Reuse only within this call. An early interval refusal may have no matrix;
+  # raw diagnostic information remains separately available in that case.
+  covariance <- inference$information %||% compute_mml_parameter_covariance(fit)
   hessian <- covariance$hessian
   eigenvalues <- if (is.matrix(hessian) && nrow(hessian) > 0L) {
     eigen(hessian, symmetric = TRUE, only.values = TRUE)$values
@@ -522,9 +540,8 @@ mfrmr_gqs_raw_information <- function(fit) {
     slopes$OptimizerEstimate %||% slopes$Estimate %||% numeric()
   )
   slope_se <- rep(NA_real_, length(slope_values))
-  slope_slice <- covariance$param_slices$log_slopes %||% integer()
-  product <- mfrm_has_product_slopes(fit)
-  intervals <- if (product) stats::confint(fit) else NULL
+  slope_slice <- covariance$param_slices[["log_slopes"]] %||% integer()
+  intervals <- if (product) mfrm_gpcm_intervals_from_inference(fit, inference) else NULL
   if (product && identical(covariance$status, "ok") && is.matrix(covariance$cov)) {
     target <- mfrm_gpcm_product_slope_targets(fit$opt$par, fit$config)$components
     index <- mfrm_match_slope_table(target$metadata$Owner, target$metadata$Level, slopes)
@@ -546,7 +563,7 @@ mfrmr_gqs_raw_information <- function(fit) {
     1
   }
   population_sd_se <- NA_real_
-  sigma_slice <- covariance$param_slices$log_sigma2 %||% integer()
+  sigma_slice <- covariance$param_slices[["log_sigma2"]] %||% integer()
   if (covariance$status %in% c("ok", "regularized") &&
       is.matrix(covariance$cov) && length(sigma_slice) == 1L &&
       is.finite(population_sd)) {
@@ -834,7 +851,6 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [apa_table()]
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
@@ -847,7 +863,6 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' summary(sensitivity)
 #' # Preserve small numerical differences when preparing the sensitivity table.
 #' apa_table(sensitivity, digits = 5)
-#' }
 #' @export
 mml_quadrature_sensitivity <- function(
     fit,

@@ -18,7 +18,7 @@ test_that("explicit scoring priors match independently checked retained patterns
   expect_true(x$review$eligible)
   # This matrix checks scoring priors, not repeated Hessians of an unchanged
   # calibration. Reuse one real review only while its exact input is preserved.
-  local_mocked_bindings(prediction_local_calibration_review = function(fit) {
+  local_mocked_bindings(prediction_local_calibration_review = function(fit, covariance = NULL) {
     expect_identical(fit, x$fit)
     x$review
   }, .package = "mfrmr")
@@ -55,7 +55,7 @@ test_that("explicit scoring priors match independently checked retained patterns
 
 test_that("prior identity accompanies summaries, draws, figure data and exported estimates", {
   x <- scoring_prior_fixture()
-  local_mocked_bindings(prediction_local_calibration_review = function(fit) {
+  local_mocked_bindings(prediction_local_calibration_review = function(fit, covariance = NULL) {
     expect_identical(fit, x$fit)
     x$review
   }, .package = "mfrmr")

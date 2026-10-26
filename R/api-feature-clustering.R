@@ -176,9 +176,17 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   `medoids`, the reviewed `feature_data`, and `settings`. Silhouette values
 #'   describe within-sample separation, not membership probabilities or
 #'   resampling stability. `summary()` returns the cluster-size/silhouette table.
+#'   Numeric profiles report the mean, median and sample SD in the original
+#'   feature units. SD is `NA` for a one-entity group and zero for identical
+#'   values in a group with at least two entities. A singleton's silhouette is
+#'   zero by convention; it is not evidence of group separation.
 #' @details Numeric differences are divided by the feature range among included
-#'   entities; nominal features use match/mismatch, ordered factors use their
-#'   declared order, and logical features use symmetric binary differences.
+#'   entities; nominal features use match/mismatch and logical features use
+#'   symmetric binary differences. Ordered factors use equally spaced integer
+#'   codes in their declared level order, divided by the observed code range.
+#'   Unused intermediate levels retain their spacing. The Gower dissimilarity
+#'   is the weighted mean of these feature contributions, dividing by the sum
+#'   of the selected weights. Weights apply to features, not entities.
 #'   Numeric 0/1 features are treated as numeric, not asymmetric presence/absence.
 #'   Every selected feature must vary among included entities. Gower scaling,
 #'   feature types, weights, omission policy, and numeric ranges are retained.
@@ -198,6 +206,28 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'
 #'   For feature selection, missingness review, and multiple-imputation examples,
 #'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
+#' @section Reading clustering metrics:
+#' For entity i, a(i) is its mean dissimilarity to other members of its own
+#' group; b(i) is the smallest mean dissimilarity to any other group.
+#' Silhouette = (b - a) / max(a, b), between -1 and 1. Values near 1 indicate
+#' compact, separated placement in this fitted geometry; near zero indicates
+#' a boundary; negative values indicate closer average proximity to another
+#' group. A singleton receives 0 by convention; zero does not establish overlap.
+#' A zero denominator also receives 0. Overall means weight entities equally;
+#' cluster means use that cluster's included entities. Excluded IDs have NA.
+#' A silhouette is neither a membership probability nor evidence of stability.
+#'
+#' Gower distance is unitless in `[0, 1]` here: numeric absolute differences
+#' divided by included-sample ranges, nominal/binary mismatches, and ordinal
+#' rank differences are combined using the specified feature weights.
+#' The PAM medoid is an actual included entity minimizing within-group total
+#' dissimilarity; it is not a feature-wise mean. Profile Mean/Median/SD retain
+#' original units; categorical Proportion uses included group size as denominator.
+#' A large group or a high silhouette is not a better-performing group.
+#' Compare partitions under a fixed feature/distance definition; changing the
+#' sample, weights or scaling changes what these numbers measure.
+#' See [cluster::silhouette()] and Rousseeuw (1987),
+#' \doi{10.1016/0377-0427(87)90125-7}, for the silhouette definition.
 #' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
 #'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
 #' @examples
@@ -280,9 +310,9 @@ cluster_external_features <- function(x, k, weights, missing, linkage = NULL) {
     silhouette <- numeric(n)
     silhouette[as.integer(rownames(fit$silinfo$widths))] <- fit$silinfo$widths[, "sil_width"]
   } else {
-    tree <- stats::hclust(distance, method = linkage)
+    tree <- hclust(distance, method = linkage)
     tree$labels <- x$row_summary$ID[keep]
-    labels <- stats::cutree(tree, k = as.integer(k))
+    labels <- cutree(tree, k = as.integer(k))
     silhouette <- unname(cluster::silhouette(labels, distance)[, "sil_width"])
   }
   membership <- data.frame(ID = x$row_summary$ID, Cluster = NA_integer_,
@@ -320,9 +350,17 @@ cluster_feature_profiles <- function(values, labels) {
   for (g in seq_len(max(labels))) for (name in names(values)) {
     value <- values[[name]][labels == g]
     if (is.numeric(value)) {
+      spread <- stats::sd(value)
+      if (length(value) > 1L && any(value != value[1L]) &&
+          (!is.finite(spread) || spread < sqrt(.Machine$double.xmin))) {
+        # SD can be representable even when its squared intermediate is not.
+        shifted <- value - value[1L]
+        unit <- max(abs(shifted))
+        spread <- stats::sd(shifted / unit) * unit
+      }
       numeric_profiles[[length(numeric_profiles) + 1L]] <- data.frame(
         Cluster = g, Feature = name, N = length(value), Mean = mean(value),
-        Median = stats::median(value), SD = stats::sd(value))
+        Median = stats::median(value), SD = spread)
     } else {
       counts <- table(if (is.logical(value)) factor(value, levels = c(FALSE, TRUE)) else value)
       categorical_profiles[[length(categorical_profiles) + 1L]] <- data.frame(

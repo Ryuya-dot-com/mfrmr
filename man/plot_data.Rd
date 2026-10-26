@@ -4,7 +4,14 @@
 \alias{plot_data}
 \title{Extract reusable data from an mfrmr plot object}
 \usage{
-plot_data(x, component = NULL, type = NULL, ...)
+plot_data(
+  x,
+  component = NULL,
+  type = NULL,
+  ...,
+  format = c("native", "long"),
+  value_cols = NULL
+)
 }
 \arguments{
 \item{x}{An \code{mfrm_plot_data} object, or a fitted/report/review object with a
@@ -18,6 +25,17 @@ data. When \code{NULL}, the full plot-data list is returned.}
 
 \item{...}{Additional arguments passed to \code{plot(..., draw = FALSE)} when
 \code{x} is not already an \code{mfrm_plot_data} object.}
+
+\item{format}{\code{"native"} (default) returns the saved component unchanged.
+\code{"long"} reshapes a selected table or matrix without dropping missing cells.}
+
+\item{value_cols}{Explicit table columns to gather into \code{Variable} and \code{Value}.
+Other columns, and an added \code{SourceRow}, remain identifiers/metadata.
+Select compatible value types and comparable units; estimates, standard
+errors and interval bounds are distinct quantities, not replicate draws.
+Matrices instead yield Row, Column, RowLabel, ColumnLabel and Value, with
+indices retaining identity even if labels repeat. Already-long tables
+(including cluster-profile \code{observations}) need no reshaping.}
 }
 \value{
 The full reusable plot-data list, or the selected component.
@@ -29,9 +47,29 @@ It accepts an existing \code{mfrm_plot_data} object, or any mfrmr object whose
 \code{plot()} method supports \code{draw = FALSE}. Use \code{\link[=plot_data_components]{plot_data_components()}} first
 when you want to inspect which components are available before extracting
 one.
+
+Titles, subtitles, and explanatory footnotes are omitted from figures by
+default. Use \code{plot_data(p, "title")} for the suggested title and
+\code{plot_data(p, "notes")} for a \code{Type}/\code{Text} table of descriptions and cautions.
+This works for returned base-graphics payloads and mfrmr-generated ggplots,
+including after \code{saveRDS()}/\code{readRDS()}. Printing an \code{mfrm_plot_data} object
+also displays its notes in the console. Axes, legends, panel headings and
+data/status symbols remain in the figure. Removing figure text does not
+remove numerical warnings or strengthen the interpretation of a result.
 }
+\section{Custom distribution plots}{
+
+A cluster profile's \code{observations} component contains one row per original
+entity and selected feature, with ID, Feature, Value, Cluster, Included and
+MissingReason. Missing values and omitted entities remain. Use Included to
+select the plotted population explicitly. \code{table} is the summary, not raw
+observations. Export either with write.csv; use the observations for custom
+box/violin/raincloud plots. Feature units are the original units, supplied by
+the study. A smooth density is usually inappropriate for a few ordinal bins.
+\code{vignette("mfrmr-networks-and-reporting")} demonstrates custom plots and CSVs.
+}
+
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -48,6 +86,7 @@ fit <- fit_mfrm(
 
 # Draw the Wright map and keep its reusable data
 wright <- plot(fit)
+plot_data(wright, "notes")
 
 # Extract the plotted locations as a table
 locations <- plot_data(wright, component = "locations")
@@ -56,5 +95,4 @@ head(locations)
 # For table extraction alone, no graphics device is needed
 locations_only <- plot_data(fit, component = "locations")
 head(locations_only)
-}
 }

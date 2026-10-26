@@ -21,14 +21,16 @@ estimate_all_bias(
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. When \code{NULL},
-diagnostics are computed with \code{residual_pca = "none"}.}
+diagnostics are computed with \code{residual_pca = "none"}.
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.}
 
 \item{pairs}{Optional list of facet specifications. Each element should be a
 character vector of length 2 or more, for example
 \code{list(c("Rater", "Criterion"), c("Task", "Criterion"))}.
 Explicit specifications may include canonical \code{"Person"} regardless of
 \code{include_person}. When \code{NULL}, all 2-way combinations of modeled facets
-are used.}
+are used. Each combination may appear only once, regardless of facet order.}
 
 \item{include_person}{If \code{TRUE} and \code{pairs = NULL}, include \code{"Person"} in the
 automatically generated pair set. \code{"Person"} denotes the source column
@@ -38,8 +40,9 @@ cells condition on fitted JML person measures or MML EAP scores.}
 \item{drop_empty}{If \code{TRUE}, omit empty bias tables from \code{by_pair} while still
 recording them in the summary table.}
 
-\item{keep_errors}{If \code{TRUE}, retain per-pair error rows in the returned
-\code{errors} table instead of failing the whole batch.}
+\item{keep_errors}{If \code{TRUE}, also retain per-pair error rows in the returned
+\code{errors} table. Either way, errors remain in \code{summary$Error} and do not
+stop the batch.}
 
 \item{max_abs}{Passed to \code{\link[=estimate_bias]{estimate_bias()}}.}
 
@@ -76,15 +79,29 @@ boundary for the batch.
 The \code{summary} table aggregates results across pairs:
 \itemize{
 \item \code{Rows}: number of interaction cells estimated
-\item \code{ScreenPositive}: count of cells with \eqn{|t| \ge 2}
+\item \code{Points}: cells with an available bias estimate
+(including bounded optima; inspect \code{BiasStatus} in the combined cells)
+\item \code{ScreenAvailable}, \code{ScreenUnavailable}: cells with/without a usable
+conditional screening statistic
+\item \code{ScreenPositive}: count of available cells with \eqn{|t| \ge 2};
+\code{NA} when no screening statistic is available, including failed pairs
 \item \code{Significant}: backward-compatible alias for \code{ScreenPositive}
-\item \code{MeanAbsBias}: average absolute bias magnitude (logits)
+\item \code{MeanAbsBias}: average absolute available bias magnitude (native ability units)
+\item \code{Status}: \code{available}, \code{partial}, \code{unavailable}, \code{empty}, or \code{failed};
+\code{available} refers to conditional screening, not formal inference
 \item \code{FormalInferenceEligible} / \code{PrimaryReportingEligible}: always \code{FALSE};
 these conditional plug-in interaction statistics are screening evidence
 }
 
 Per-pair failures (e.g., insufficient data for a sparse pair) are
 captured in \code{errors} rather than stopping the entire batch.
+There is no collection-wide multiplicity correction. Cells and pairs reuse
+the same observations and fitted calibration. Adjusting their screening tail
+areas would not establish formal family-wise error or false-discovery control.
+A screen-positive result is a prompt for review, not proof of unfairness;
+no screen-positive cells does not establish absence of interaction.
+Search-boundary points remain visible, with missing screening statistics
+and the \code{ScreenStatus}/\code{ScreenReason} returned by \code{\link[=estimate_bias]{estimate_bias()}}.
 }
 \section{Output}{
 
@@ -106,20 +123,30 @@ The returned object is a bundle-like list with class
 \code{RSM} / \code{PCM} reporting runs, prefer \code{method = "MML"} plus
 \code{diagnostic_mode = "both"} in the diagnostics call.
 \item Run \code{estimate_all_bias()} to compute the requested multi-pair interactions.
+\item Inspect \code{summary(bias_all)$overview} for availability and magnitude, then
+\code{summary(bias_all)$cells} for all retained cells and their observed counts.
+Use \code{\link[=plot.mfrm_bias_collection]{plot.mfrm_bias_collection()}} for the overview or a named pair.
 \item Pass the resulting \code{by_pair} list into \code{\link[=reporting_checklist]{reporting_checklist()}} or
 \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.
 }
 }
 
+\section{Saved-result reuse}{
+
+The returned \code{fit_identity} records the fitted analysis for reuse with
+reports and exports. Recreate older results from the saved fit and matching
+diagnostics using the original screening options; no model refit is needed.
+See \link{mfrmr_compatibility_layer} for migration instructions.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", quad_points = 7, maxit = 30)
+                method = "MML")
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 bias_all <- estimate_all_bias(fit, diagnostics = diag)
-bias_all$summary[, c("Interaction", "Rows", "ScreenPositive")]
-}
+summary(bias_all)
+head(summary(bias_all)$cells)
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=reporting_checklist]{reporting_checklist()}}, \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}

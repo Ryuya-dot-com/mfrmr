@@ -49,6 +49,9 @@ cells above the requested absolute residual mean threshold, in score units.
 \item \verb{$gpcm_boundary}: for \code{GPCM} inputs, a capability-boundary table
 marking the narrative as caveated DFF screening output.
 \item \verb{$config}: analysis configuration inherited from the input.
+\item \verb{$comparison_review}: when supplied to \code{\link[=analyze_dff]{analyze_dff()}}, its separate
+prospective interaction review, retained without treating its states as
+classifications of the residual/refit contrasts. Also retained by \code{summary()}.
 }
 }
 
@@ -85,7 +88,6 @@ Rasch measurement in language testing. \emph{Language Testing}, 29(4),
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_bias")
 
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
@@ -96,8 +98,7 @@ dif <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 rpt <- dif_report(dif)
 cat(rpt$narrative)
 }
-}
 \seealso{
 \code{\link[=analyze_dff]{analyze_dff()}}, \code{\link[=analyze_dif]{analyze_dif()}}, \code{\link[=dif_interaction_table]{dif_interaction_table()}},
-\code{\link[=plot_dif_heatmap]{plot_dif_heatmap()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}
+\link[=plot.mfrm_dif]{plot(x, type = "heatmap")}, \code{\link[=build_apa_outputs]{build_apa_outputs()}}
 }

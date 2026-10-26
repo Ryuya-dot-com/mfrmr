@@ -46,6 +46,8 @@ test_that("default GPCM MML estimates the common population scale", {
   fit <- fit_gpcm_identification_fixture(gpcm_identification_fixture())
 
   expect_true(isTRUE(fit$population$active))
+  expect_null(fit$config$replay_inputs$population_sd)
+  expect_null(mfrmr_gqs_population_arguments(fit)$population_sd)
   expect_identical(fit$population$source, "gpcm_mml_default_identification")
   expect_identical(
     fit$population$identification_role,

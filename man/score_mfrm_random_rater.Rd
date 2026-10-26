@@ -47,6 +47,9 @@ omission in a supplied roster must be requested explicitly.}
 An \code{mfrm_random_rater_scores} object with \code{table}, complete scoring
 roster, data accounting, settings and source metadata for \code{\link[=mfrm_results]{mfrm_results()}}.
 Save it with \code{saveRDS()}. Its summary and plots need no live optimizer.
+Keep \code{table$Status} and \code{table$Reason} with exported scores: \code{prior_only}
+describes the assumed population without observed responses for that Person;
+\code{unavailable} withholds the estimate, SD and bounds with a recorded cause.
 }
 \description{
 Compute conditional Person scores using the complete joint scoring roster,
@@ -78,6 +81,15 @@ a quadrature-grid CDF. Computation grows with roster size and requested
 Persons. Start with a few IDs when checking a large roster; \code{persons = NULL}
 computes every Person's posterior and can be slow. Selecting outputs keeps
 all scoring responses. No fixed effects or population variances are re-estimated.
+
+With \code{newdata}, reusing a source rater ID does not import that rater's
+saved conditional distribution. Shared-rater distributions are calculated
+from the supplied responses and fitted population parameters. To retain
+earlier responses, include them in the complete scoring table, with each
+intended rating event appearing once. By contrast,
+\code{\link[=predict.mfrm_random_rater]{predict.mfrm_random_rater()}} with \code{rater = "observed"} uses the rater's
+conditional distribution from the calibration responses at abilities you
+supply; it does not estimate abilities from new responses.
 
 Intervals condition on all supplied observed responses, fitted calibration
 and the fitted or specified normal ability population. They exclude

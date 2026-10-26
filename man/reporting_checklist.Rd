@@ -22,11 +22,12 @@ diagnostics are computed with \code{residual_pca = "none"}.}
 such outputs.}
 
 \item{hierarchical_structure}{Optional output from
-\code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}}. When supplied, the
-"Hierarchical structure review" checklist item is flipped to
-\code{DraftReady = TRUE} and its \code{Detail} column surfaces the number
-of nested / crossed facet pairs and whether the ICC table is
-available.}
+\code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}} for matching retained rating rows.
+The reviewed facets may be a subset of the fitted facets. After checking
+the data identity, the "Hierarchical structure review" item is marked
+\code{DraftReady = TRUE}; \code{Detail} names the reviewed columns, row count,
+nested / crossed pairs and ICC availability. This indicates available
+material within that scope, not a complete design assessment.}
 
 \item{include_references}{If \code{TRUE}, include a compact reference table in the
 returned bundle.}
@@ -96,8 +97,9 @@ topics with numerical evidence and information to supply manually.
 package's documented caveats. \code{ReadyForAPA} is a backward-compatible alias
 of the same flag; neither field certifies formal inferential adequacy.
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
-\code{fit_readiness_parameters}: exact source-fit v3 readiness provenance;
-these fields are not re-derived from checklist completeness.
+\code{fit_readiness_parameters}: the fitted model's recorded numerical checks
+and restrictions on inference, overall and by component or parameter.
+Checklist completeness does not change these records.
 \item \code{section_summary}: available items by section.
 \item The Global Fit section includes a "Fit/separation reporting boundary"
 row that points to \code{\link[=precision_review_report]{precision_review_report()}}, \code{\link[=fit_measures_table]{fit_measures_table()}},
@@ -108,9 +110,10 @@ FACETS, ConQuest, and SPSS-style tabular handoffs.
 \item \code{facets_positioning}: report-ready wording that states \code{mfrmr} is not a
 FACETS numerical clone and separates native estimation from FACETS-style
 handoff or external-table review.
-\item \code{visual_scope}: plotting-route summary that separates report-default
-2D figures from exploratory surface/3D-ready data handoffs, including a
-short \code{InterpretationCheck} for the main user-facing caveat.
+\item \code{visual_scope}: available plots and their interpretation limits. It
+distinguishes 2D figures from category-surface data for custom rendering;
+data availability does not mean an interactive 3D renderer is provided.
+\code{InterpretationCheck} gives the main caveat for each type of plot.
 \item \code{references}: abbreviated background citations and topics when requested,
 not a complete bibliography. Verify full records for the methods used;
 use \code{citation("mfrmr")} for the installed software's citation.
@@ -159,8 +162,19 @@ available from the current analysis objects.
 }
 }
 
+\section{Saved-result reuse}{
+
+Supplied screening results must describe this fitted analysis. Results from
+another fit or older results without identity metadata are refused. See
+\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
+diagnostics without refitting the model.
+Structural reviews are checked against the reviewed data, not the model's
+estimates. Row order and unused columns do not affect this match. Reviews
+of additional input rows or unrecorded grouping columns remain standalone
+analyses; they cannot establish availability for this fit's checklist.
+}
+
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -187,7 +201,6 @@ subset(checklist$checklist, !DraftReady,
        c("Section", "Item", "DraftReady", "NextAction"))
 # DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats
 # Choose follow-up analyses for your question, not merely to make every row TRUE
-}
 }
 \seealso{
 \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=build_visual_summaries]{build_visual_summaries()}},

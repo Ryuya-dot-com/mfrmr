@@ -96,3 +96,38 @@ R-source/runner and fixture hashes, source commit, TAM version and session.
 Package R code is unchanged from main `08a5ee9b`; only the roadmap and
 repository-only comparison files change. No full package suite or simulation
 grid was rerun. Existing scripts remain runnable without a new public API.
+
+## October 4 import and saved-result repair
+
+The four retained TAM fits (two owner arrangements, two integration orders)
+reproduced a public import defect: `import_tam_fit()` assigned `Extreme =
+"none"` to every Person, including the all-low and all-high response patterns.
+The importer now uses each generalized item's fitted category support and
+the retained response mask, aligns Person IDs and item columns, and records
+`NObserved` and `ResponseStatus`. Entirely missing or unverifiable response
+rows have an unavailable extreme flag. The diagnostic observation count uses
+the same mask. Finite EAPs and posterior SDs remain source estimates; neither
+extreme flags nor import supply calibration uncertainty.
+
+Both import regression files passed, including the existing many-facet TAM
+route. Checks cover incomplete and masked responses, entirely missing rows,
+unequal category support, an unobserved fitted upper category, permuted IDs
+and item columns, and unavailable source metadata. All four stored fits
+retain exactly their source EAPs/SDs and now identify the two extreme patterns.
+Fresh sessions with R 4.6.0 and R 4.6.1 (Matrix 1.7.6) reproduced saved tables
+and unrounded plot values, with fitting disabled, and drew/redrew the plots
+at the walkthrough's 7-by-5-inch size. Fontconfig reported an unwritable cache;
+all drawing and redraw checks completed. Evidence and the replay script are
+retained in `import-replay-20261004.rds` in the existing result directory.
+No retained calibration, posterior integration, or scoring comparison was
+repeated; small upstream fits ran as part of the focused regression tests.
+Re-import the original TAM fit to repair an older imported object; its source
+responses are not retained by the imported bundle itself.
+
+This closes the incorrect import flags and observation counts, not the
+missing joint parameter covariance or sampling validation. The historical
+item-only q=31/41 record remains evidence for its stated source; matching fit
+objects were not located in the current result directories. The historical
+ConQuest GPCM record explicitly retained raw output only in a temporary probe
+directory, and its recorded executable path is absent on this Mac. Their
+published aggregate comparisons have not been relabelled as fresh execution.

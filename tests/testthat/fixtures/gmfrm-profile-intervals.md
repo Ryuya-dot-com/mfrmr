@@ -15,8 +15,8 @@ numerical refinement, not an automatic profiling fallback or a claim about
 neutral-start recovery. The final public calls are:
 
 ```r
-task <- confint(fit, method = "profile", slope = c(Task = "t3"))
-rater <- confint(fit, method = "profile", slope = c(Rater = "r3"))
+task <- confint(fit, parm = "slopes", method = "profile", slope = c(Task = "t3"))
+rater <- confint(fit, parm = "slopes", method = "profile", slope = c(Rater = "r3"))
 ```
 
 Both use unchanged profile controls: two starts, 400 BFGS iterations per stage,

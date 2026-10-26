@@ -66,12 +66,23 @@ does not infer membership or support overlapping groups.
 
 ## Fit and check the calibration
 
-```{r fit}
+The following call fits the model. To avoid repeating this calculation whenever
+the tutorial is rendered, the displayed results use the packaged synthetic
+example fitted with these data and settings. Run the call yourself to estimate
+a new calibration; reading the saved example is not a new estimation check.
+
+```{r fit-recipe, eval=FALSE}
 testlet_fit <- fit_mfrm_testlet(
   ratings, person = "Person", score = "Score", testlet = "Rater",
   facets = c("Rater", "Criterion"), score_levels = 1:4,
   quad_points = 121
 )
+```
+
+```{r fit}
+saved_example <- readRDS(system.file("examples", "extended-models.rds",
+                                      package = "mfrmr", mustWork = TRUE))$testlet
+testlet_fit <- saved_example$fit
 testlet_fit$checks
 summary(testlet_fit)$data_usage
 testlet_fit$calibration$variance
@@ -95,6 +106,14 @@ With a unit Rasch slope, fixing ability variance is a population restriction,
 not merely choosing units. Estimating it still assumes a common normal
 population independent of assignment; it does not repair skewness or
 different ability populations across rater panels.
+
+After integrating ability and local effects, **different persons are
+independent under this model**. Their individual ratings are not independent
+replications. More persons can provide information about the common variances
+when the design separates ability from local dependence; adding criteria in
+one block is not equivalent. Normal calibration intervals require an identified
+interior model with adequate information. Their information matrix includes
+both estimated variances, rather than treating fitted variances as known.
 
 `NumericalReady` checks optimization, search boundaries, and agreement with a
 higher integration order. `InformationPositive` checks usable local curvature.
@@ -286,6 +305,13 @@ Person in one call**. The function neither appends to cached responses nor
 conditions on a saved local-effect estimate. To score additional ratings for
 an existing person, supply that person's complete set with the correct shared
 memberships. Do not duplicate the old rows when assembling it.
+
+The fixed-facet restriction still applies when a column has two roles. Here
+`Rater` is both the testlet label and a fixed facet. A new Person rated by the
+known raters can be scored, but a new rater label has no fitted fixed severity
+and is refused. A separate testlet column that is not a fixed facet may use
+new labels. Changing labels is not a substitute for choosing which ratings
+actually share a local effect.
 
 ```{r saved}
 path <- tempfile(fileext = ".rds")

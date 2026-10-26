@@ -6,7 +6,7 @@ gpcm_reporting_fixture <- local({
         model='GPCM',step_facet='Criterion',slope_facet='Criterion',seed=924090)
       f <- fit_mfrm(d,'Person',c('Rater','Criterion'),'Score',model='GPCM',method='MML',
         step_facet='Criterion',slope_facet='Criterion',quad_points=31,maxit=400,reltol=1e-10)
-      ci <- confint(f,scale='standardized',level=.995,simultaneous='bonferroni')
+      ci <- confint(f, parm = "slopes",scale='standardized',level=.995,simultaneous='bonferroni')
       grid <- data.frame(Theta=seq(-2,2,length.out=7),Rater='R01',Criterion='C01')
       cached <<- list(fit=f,ci=ci,curves=mfrm_curve_intervals(f,grid,level=.9))
     }
@@ -37,7 +37,7 @@ test_that('saved inference carries targets and exact sources through tables and 
   expect_match(report$markdown,'GPCM uncertainty')
   contrasts <- matrix(c(1,-1,0),1,dimnames=list('first/second',x$fit$slopes$SlopeFacet))
   # Explicit names specify which fitted slopes the comparison combines.
-  ratio <- confint(x$fit,contrasts=contrasts,method='sandwich',adjust=TRUE)
+  ratio <- confint(x$fit, parm = "slopes",contrasts=contrasts,method='sandwich',adjust=TRUE)
   tables <- mfrmr:::mfrm_gpcm_inference_tables(ratio)
   expect_equal(as.matrix(tables$contrasts[-1]),contrasts,ignore_attr=TRUE)
   expect_equal(tables$settings$IndependentClusters,80)
@@ -64,7 +64,7 @@ test_that('plot extraction and customization retain unavailable intervals withou
   expect_equal(plot_data(p,'table')$Estimate,attr(x$ci,'diagnostics')$Estimate)
   expect_equal(plot_data(x$curves,'table')$Estimate,x$curves$table$Estimate)
   expect_identical(plot_data(x$curves,'settings')$level,.9)
-  expect_match(as_ggplot(x$curves)$labels$subtitle,'90%')
+  expect_match(paste(plot_data(as_ggplot(x$curves), "notes")$Text, collapse = "\n"),'90%')
   bad <- x$ci; tab <- attr(bad,'diagnostics')
   tab$CI_Lower[1:2] <- c(0,NA); tab$CI_Upper[1:2] <- c(Inf,NA)
   tab$CIEligible[1:2] <- FALSE; attr(bad,'diagnostics') <- tab
@@ -92,7 +92,7 @@ test_that('curve plots expose unavailable intervals and break ribbons at gaps', 
   one <- tab[tab$Category==1 & tab$CIEligible,]
   expect_length(unique(one$IntervalGroup),2L)
   expect_identical(tab$InferenceReview,x$table$InferenceReview)
-  expect_match(p$labels$caption,'1 of 21')
+  expect_match(paste(plot_data(p, "notes")$Text, collapse = "\n"),'1 of 21')
   built <- ggplot2::ggplot_build(p)
   expect_equal(nrow(built$data[[3]]),1L)
   expect_equal(built$data[[3]]$shape,4)
@@ -103,11 +103,11 @@ test_that('curve plots expose unavailable intervals and break ribbons at gaps', 
   x$table$CIEligible[] <- FALSE
   x$table$Lower[] <- x$table$Upper[] <- NA_real_
   all_missing <- plot(x,draw=FALSE)
-  expect_match(all_missing$labels$caption,'21 of 21')
+  expect_match(paste(plot_data(all_missing, "notes")$Text, collapse = "\n"),'21 of 21')
   expect_equal(nrow(ggplot2::ggplot_build(all_missing)$data[[3]]),21L)
   expect_match(all_missing$labels$alt,'Crosses')
   x$cautions <- paste(rep('Weak information requires careful review.',8),collapse=' ')
-  expect_true(max(nchar(strsplit(plot(x,draw=FALSE)$labels$subtitle,'\n')[[1]]))<=75)
+  expect_true(max(nchar(strsplit(plot_data(plot(x,draw=FALSE), "subtitle"),'\n')[[1]]))<=75)
 })
 
 test_that('saved GPCM exports replay the exact selected inference', {
@@ -166,7 +166,7 @@ test_that('bootstrap test plots retain all unresolved replicates', {
     settings=list(sampling='Independent Persons',seed=1)),class='mfrm_gpcm_bootstrap')
   expect_identical(plot_data(x,'table'),x$trials)
   expect_equal(nrow(apa_table(x,which='trials')$table),2)
-  expect_match(as_ggplot(x)$labels$caption,'unresolved: 1')
+  expect_match(paste(plot_data(as_ggplot(x), "notes")$Text, collapse = "\n"),'unresolved: 1')
   x$trials$Available[] <- FALSE; x$trials$LR[] <- NA_real_
   expect_no_error(ggplot2::ggplot_build(as_ggplot(x)))
 })
@@ -203,11 +203,14 @@ test_that('selected bootstrap updates remain identified through saved output', {
   b$settings$diagnostic_checks_scope <- 'Only selected refits were rechecked.'
   before <- serialize(b,NULL)
   ci <- confint(b)
+  expect_identical(summary(b)$intervals, ci)
+  expect_identical(summary(b)$settings, b$settings)
+  expect_equal(summary(b)$overview$Unresolved, 1L)
   expect_identical(as.numeric(ci),as.numeric(original))
   expect_identical(attr(ci,'availability'),attr(original,'availability'))
   expect_match(paste(capture.output(print(b)),collapse=' '),'not a complete rerun')
   expect_true(all(grepl('not a complete rerun',attr(ci,'diagnostics')$InferenceReview)))
-  expect_match(plot(ci,draw=FALSE)$labels$subtitle,'not a complete')
+  expect_match(paste(plot_data(plot(ci,draw=FALSE), "notes")$Text, collapse = "\n"),'not a complete')
   expect_null(plot(ci,subtitle=NULL,draw=FALSE)$labels$subtitle)
   expect_identical(apa_table(b,which='sampling')$table$Reanalysis,b$settings$recheck)
   tables <- mfrmr:::mfrm_gpcm_inference_tables(ci)
@@ -223,4 +226,33 @@ test_that('selected bootstrap updates remain identified through saved output', {
   b$settings$purpose <- 'PCM_GPCM_test'
   expect_match(paste(capture.output(print(b)),collapse=' '),'not a complete rerun')
   expect_identical(mfrmr:::mfrm_gpcm_inference_tables(b)$sampling$Reanalysis,b$settings$recheck)
+})
+
+
+test_that("saved curve and bootstrap summaries retain unavailable targets and history", {
+  curve <- structure(list(settings = list(level = .95, point_only = TRUE),
+    table = data.frame(Estimate = .4, Lower = NA_real_, Upper = NA_real_,
+      CIEligible = FALSE, InferenceReview = "Provisional curves only"),
+    contexts = data.frame(ObservedContext = FALSE), cautions = "Retained caution",
+    anchor_note = "Conditional on fixed anchors"), class = "mfrm_curve_intervals")
+  out <- summary(curve)
+  expect_identical(out$table, curve$table)
+  expect_identical(out$settings, curve$settings)
+  expect_identical(out$contexts, curve$contexts)
+  expect_identical(out$cautions, curve$cautions)
+  expect_identical(out$anchor_note, curve$anchor_note)
+  boot <- structure(list(trials = data.frame(Available = c(TRUE, FALSE, NA)),
+    settings = list(purpose = "PCM_GPCM_test", recheck = list(replicate = 2)),
+    checks = data.frame(BootstrapEligible = c(TRUE, FALSE),
+      BootstrapCaution = c("Weak information", "Rejected trial")),
+    test = data.frame(PValue = NA_real_, Reason = "Unresolved trials")),
+    class = "mfrm_gpcm_bootstrap")
+  s <- summary(boot)
+  expect_equal(s$overview, data.frame(Planned = 3L, Available = 1L, Unresolved = 2L))
+  expect_identical(s$settings, boot$settings)
+  expect_identical(s$test, boot$test)
+  expect_null(s$intervals)
+  expect_identical(s$cautions, "Weak information")
+  expect_error(summary(curve, unused = TRUE), "must be empty")
+  expect_error(summary(boot, unused = TRUE), "must be empty")
 })

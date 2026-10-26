@@ -24,6 +24,125 @@ connects those steps to actual `mfrmr` tables and figures. The
 [Manuscript coverage map](#manuscript-coverage-map) also identifies information
 that the researcher must provide outside the fitted model.
 
+For a literature-based comparison with FACETS/ConQuest and actual L2
+speaking/writing papers, see [connect designs, networks and reports](mfrmr-networks-and-reporting.html#connect-to-a-manuscript-not-a-coefficient-inventory).
+That lesson also distinguishes the analysis units of MFRM and G/D studies.
+
+## Choose report sections by question
+
+A report needs a common core: the question, rating unit and assignment,
+rubric endpoints/direction, retained sample, method and scale, uncertainty,
+and the substantive answer. Add the sections below when they answer that
+question. An unrequested analysis is not a reporting defect, and a longer
+coefficient list is not stronger evidence.
+
+| When this is your question | Report these outputs together | Existing route |
+| --- | --- | --- |
+| Can the model distinguish people or facet levels, and where does it misfit? | Estimates/intervals, Separation, Strata, model or fit-adjusted Reliability, fit basis, Wright map and relevant category curves | `diagnose_mfrm()` → `mfrm_results()` → `mfrm_report()`; this lesson below |
+| Do two named raters agree on the same responses? | Exact/adjacent agreement when useful, Cohen's kappa with declared unweighted/linear/quadratic weights, common-unit counts and exclusions | `pairwise_kappa_table()`; [agreement lesson](mfrmr-rating-agreement.html). Several raters produce separate pair results, not a single panel kappa. |
+| How much observed agreement does the panel show? | Krippendorff's alpha with its distance and pairable units, or a justified alternative such as Gwet AC2 | `krippendorff_alpha_table()` / `gwet_ac2_table()`. Choose the chance/distance model before interpreting the coefficient. |
+| How reproducible are numeric ratings under the specified rater model? | The stated ICC definition, single/average-score target, consistency/absolute-agreement target and analyzed sample | `pairwise_icc_table()` and its help. An ICC is not interchangeable with separation reliability, alpha or kappa. |
+| Which future assessment plan suits the intended score? | G-study variance/covariance components; D-study G/Phi/SEM, score weights, count grid, uncertainty and eligible paired contrasts | [G/D-study reporting structure](mfrmr-gtheory.html#report-the-assessment-planning-answer), `mfrm_report(g/d, intervals = saved_ci)` → `build_summary_table_bundle()`; `plot(g/d)` and the editable G/D template |
+| Can scores be compared across forms or waves? | Anchor source, values, scale/direction, centering, overlap, invariance assumption, drift and uncertainty basis | [Linking workflow](mfrmr-linking-and-dff.html), `review_mfrm_anchors()` → anchored fit / `build_linking_review()` → `build_summary_table_bundle()` |
+| Does a particular combination or group need investigation? | Signed bias/DFF contrast, cell evidence, reference group, multiplicity, uncertainty and follow-up | Specified `estimate_bias()` / `analyze_dff()` → `plot()` / tables. Supply matching bias results to `reporting_checklist()` and `build_apa_outputs()`; `dif_report()` serves DFF. |
+| Does a model choice change the answer? | Comparison basis, AIC/BIC where comparable, eligible LRT, numerical checks and changes in the target estimates/conclusion | `compare_mfrm()` → `build_model_choice_review()` → `build_summary_table_bundle()`; [model choice](mfrmr-model-choice.html#compare-conclusions-not-just-fit-statistics) |
+| What unexplained structure or grouping merits follow-up? | Node/feature definition, residual versus observed-score basis, overlap, missingness, selection choices and exploratory stability | [Visual diagnostics](mfrmr-visual-diagnostics.html) and [feature groups](mfrmr-external-features.html); keep exploration separate from confirmation |
+
+Separation describes spread relative to error; Strata transforms separation;
+Reliability expresses another ratio of the same underlying variance estimates.
+They are useful companion summaries, not three independent confirmations.
+Kappa and alpha instead concern observed agreement. Report both only when the
+pairwise and panel questions both matter. Select comparable criteria/occasions
+and name the pooling rule; a single pooled coefficient can hide differences
+among criteria. Never fill missing overlap with zero agreement.
+
+The ordinary report already has fit, precision, bias and linking wording
+tables. `include = "bias"` supplies a facet screen, not a newly selected
+Rater-by-Criterion interaction; `include = "linking"` does not create evidence
+from other waves. Supply the targeted analyses through their supported routes.
+Observed alpha/kappa and external-feature groups remain separate result objects.
+G/D studies and residual networks now enter `mfrm_report()` directly and retain
+their own estimands and reporting tables. The editable GPCM example below joins one particular set of
+these outputs; it is not an automatic report for all package functions.
+
+For assessment planning, copy and render
+`system.file("templates", "gtheory-report.Rmd", package = "mfrmr")`.
+See the [G/D-study route](mfrmr-gtheory.html#report-the-assessment-planning-answer)
+for source-checked saved intervals and full CSV/HTML exports.
+
+For selected **anchor, bias and model-choice questions**, copy
+`system.file("templates", "assessment-review.Rmd", package = "mfrmr")`.
+Its switches run only the requested modules. The template starts from bundled
+ratings, retains all bias cells and anchor values, and exports each report
+with a complete saved analysis. These objects now enter `mfrm_report()`
+directly; reporting does not recalculate estimates or test missing evidence.
+
+Keep the study's score meaning with each report:
+
+```{r declared-context, eval=FALSE}
+context <- c(rating_unit = "One performance by judge by criterion rating",
+  score_direction = "Higher Comprehensibility means harder to understand",
+  rubric = "1 = very easy; 9 = very difficult", transformation = "None")
+report <- mfrm_report(results, study_context = context)
+report$tables$study_context
+```
+
+The declaration is copied into the object, HTML/Markdown and appendix tables;
+it does not recode the data or reverse a parameter's sign. Reuse it across
+measurement, planning and feedback only when the units and meanings match.
+Record differences in aggregation, scale and anchor origin explicitly. The
+model cannot validate the meaning of these author-supplied declarations.
+
+## Start with an editable GPCM report
+
+For a **one-family GPCM MML** analysis, the package includes a complete
+R Markdown starting point. It fits the bundled synthetic ratings and produces
+an HTML report, CSV tables, two PNG figures and a saved analysis:
+
+```{r gpcm-template, eval=FALSE}
+template <- system.file("templates", "gpcm-report.Rmd", package = "mfrmr")
+file.copy(template, "gpcm-report.Rmd")
+rmarkdown::render("gpcm-report.Rmd")
+
+# Then use your own data: Person, Rater, Criterion, Score; one rating per cell.
+rmarkdown::render("gpcm-report.Rmd", params = list(
+  ratings_csv = "ratings.csv", rating_min = 1, rating_max = 4,
+  output_dir = "my-gpcm-report-files"
+))
+```
+
+Edit the model and study-context sections for your assessment. The template
+uses criterion-specific steps and slopes; it is not a two-family GPCM or
+JML template. Repeated occasions require an explicit measurement unit and
+matching agreement keys. The default output folder is `gpcm-report-files`.
+
+| What you want to report | Where it comes from | Key distinction |
+| --- | --- | --- |
+| Separation, Strata, Reliability | `diagnose_mfrm(fit)$reliability` | Separation-based precision, with its recorded SE basis and eligibility; not observed agreement. |
+| Infit/Outfit and ZSTD | `diagnose_mfrm(fit)$fit` | Native MML EAP plug-in fit; not TAM/ConQuest posterior-averaged fit. |
+| Wright map | `plot(fit, diagnostics = diagnostics)` | Locations and targeting; the template deliberately draws points without implying qualified intervals. |
+| Category-probability curves | `plot(fit, type = "ccc")`; `category_curves_report(fit)` | Conditional reference profiles; retain their step/slope owners and reference settings. |
+| Krippendorff's alpha | `krippendorff_alpha_table()` on the ratings | A separate observed-agreement calculation. `mfrm_report()` does not automatically add it. |
+| Draft Methods/Results and reporting gaps | `mfrm_report(..., style = "apa")`, `build_apa_outputs()`, `reporting_checklist()` | Draft text and evidence tracking; recruitment, design justification and the substantive answer still come from the researcher. |
+
+These outputs can support a paper, but their presence does not qualify every
+claim. In particular, a converged one-family GPCM can retain incomplete
+identification/boundary evidence and review-only precision summaries. Read the
+fit decision and any target-specific interval result; do not interpret missing
+intervals or formal-inference eligibility as established by a report preset.
+The template retains these states and separates model precision from alpha.
+
+It asks a panel-level agreement question, which explains its alpha section.
+Separation is already included. For a specified rater-pair question, add
+`pairwise_kappa_table()` with explicit weights and the same matched rating
+units; the template includes an optional code example. The synthetic rating
+design has six raters but only six of the fifteen possible pairs share units.
+The remaining nine pair coefficients are unavailable, not zero. This is a
+reason to show the assignment/overlap evidence alongside agreement, not to
+substitute model-adjusted severity for missing pairwise observations.
+
+The worked lesson below develops the reporting logic in more detail using RSM.
+
 The running question is: **after accounting for person ability and criterion
 difficulty, how much do the raters differ in severity?** The synthetic data
 illustrate the reporting workflow; they are not evidence about a real
@@ -211,8 +330,8 @@ subset(diag$marginal_fit$pairwise$pair_stats, Flagged,
 The package's default marginal rules use an absolute standardized-residual
 cutoff of 2 or a root-mean-square proportion discrepancy of 0.05; pairwise
 screens also use an exact/adjacent agreement-gap cutoff of 0.10. Record the
-rules used in your run and inspect flagged groups with `plot_marginal_fit()`
-and `plot_marginal_pairwise()`. These remain screening results; an acceptable
+rules used in your run and inspect flagged groups with `plot()`
+and `plot()`. These remain screening results; an acceptable
 overall average does not resolve local warnings.
 
 ## 3. Show estimates, uncertainty, and the answer
@@ -281,7 +400,7 @@ apa_table(
   diag_summary$reliability[, c("Facet", "Levels", "Separation", "Strata", "Reliability", "RealReliability")],
   digits = 3,
   caption = "Separation and reliability by facet",
-  note = "Interpret the facet and error basis explicitly; rater separation reliability is not interrater agreement."
+  note = "High Person separation reliability indicates distinguishable abilities; high rater separation reliability indicates distinguishable severities, not agreement. Low rater values can also reflect imprecision."
 )
 
 agreement <- interrater_agreement_table(fit, diagnostics = diag)
@@ -291,8 +410,11 @@ agreement$summary[, c(
 ```
 
 A rater separation reliability describes how distinctly rater locations are
-estimated relative to their errors; a high value does not mean that raters
-agree. Person separation reliability addresses differentiation among persons
+estimated relative to their errors; a high value indicates distinguishable
+severities, not agreement. Low values can also reflect imprecise estimates
+and do not establish agreement or equivalence. Neither a high nor a low value
+tests every rater pair or quantifies the practical size of severity differences.
+Person separation reliability addresses differentiation among persons
 under its stated error basis. Specify whether the model or misfit-adjusted
 (`RealReliability`) index is reported, and the replication/error sources
 relevant to the intended score use. These coefficients do not describe every
@@ -326,29 +448,66 @@ opportunity count and overlap pattern, not just a percentage. These are
 observed-score summaries; keep them separate from the marginal diagnostic
 screens above. Use `agreement$pairs` when differences among rater pairs matter.
 
+For observed QWK, ordinal Krippendorff alpha, Gwet AC2 or an aligned score-source
+comparison, follow [Rating agreement and score comparisons](mfrmr-rating-agreement.html).
+That tutorial shows the matching keys and sample audits, and distinguishes
+these chance-agreement definitions from the fitted-model expectation above.
+
 ```{r categories, fig.alt = "Category-use and threshold summaries for the synthetic four-category rubric. Review ordering and sparse use together rather than treating a single display as validation of the scale."}
 scale <- rating_scale_table(fit, diagnostics = diag)
-scale$category_table[, c("Category", "Count", "AvgPersonMeasure", "Infit", "Outfit")]
-scale$threshold_table
+scale$category_table[, c("Category", "Count", "AvgMeasure", "ExpectedMeasure", "Infit", "Outfit")]
 plot(scale)
+scale$notes
 ```
 
-For a threshold table with uncertainty, use the diagnostics already computed:
+`AvgMeasure` is the average oriented generating measure among responses in
+each observed category; `ExpectedMeasure` is its model expectation. Category
+residual mean squares are descriptive and have no universal unit baseline.
+
+Check the threshold owner and the denominator before interpreting sparse use:
+
+```{r category-owner}
+scale$model_context
+scale$owner_category_table[, c(
+  "StepFacet", "CategoryLabel", "RawCount", "Count", "Percent", "UsageStatus"
+)]
+```
+
+This RSM uses a single `Common` threshold family. For PCM, `StepOwner` records
+the selected `step_facet`, and `StepFacet` identifies each level of that facet.
+For example, rater-owned PCM thresholds describe each rater's category
+transitions; criterion-owned thresholds describe each criterion's transitions.
+`RawCount` counts ratings and `Count` sums their weights. The percentage
+denominator is the total weight within that owner level, not the number of
+persons. Local zero counts remain visible even if a category is used elsewhere.
+No-exposure percentages are unavailable, and a zero count alone does not
+establish structural absence.
+
+The threshold table already includes uncertainty from the supplied diagnostics:
 
 ```{r threshold-uncertainty}
-steps <- diag$parameter_uncertainty$steps
-steps[, c("Step", "Estimate", "SE", "CI_Lower", "CI_Upper", "CI_Level")]
-steps[, c("Step", "SE_Status", "CIEligible", "CIUse")]
+steps <- scale$threshold_table
+steps[, c("StepFacet", "Step", "Estimate", "SE", "CI_Lower", "CI_Upper")]
+steps[, c("StepFacet", "Step", "SE_Status", "CIEligible", "CIUse",
+          "UncertaintySourceStatus")]
 ```
 
 `Step_1`, `Step_2`, and `Step_3` are the transitions 1–2, 2–3, and 3–4 here.
-The table uses MML observed-information SEs and 95% normal intervals. A bare
-fit's `steps` table supplies point estimates; `rating_scale_table()` does not
-automatically add the uncertainty from a separately supplied diagnostics
-object. Check its availability and reporting status before quoting intervals.
-For PCM, retain `StepFacet` to identify the threshold family. Do not substitute
-a criterion-location SE for a threshold SE, or a centered step for the combined
-criterion-plus-step location. These distinctions matter when preparing tables
+The supplied diagnostics use MML observed-information SEs and 95% normal
+intervals. Their estimates and owner/step keys must match the fit. New
+diagnostics also record the calibration identity; older diagnostics without
+that identity retain their numbers with a review status. Source verification
+does not establish interval coverage. Check availability and reporting status
+before quoting intervals. Calling `rating_scale_table(fit)` without diagnostics
+returns points and category counts without computing covariance; its SEs are
+unavailable.
+
+Retain `StepFacet` in PCM output and original category labels when reporting
+recoded scores. A centered step offset is not the full ability-axis crossing:
+that crossing also includes the applicable facet locations. Its SE, and the SE
+of a difference between steps, require the relevant covariance terms. Do not
+substitute a criterion-location SE or an individual step SE. These distinctions
+matter when preparing tables
 such as the criterion-specific thresholds and SEs in Eckes (2005, Table 5).
 
 The bars show observed category counts; the line shows fitted expected counts.
@@ -385,6 +544,103 @@ A score-use claim needs the decision thresholds, rounding rule, reference
 environment, uncertainty treatment, and full-sample counts of changed
 decisions. The six-row preview is not that analysis. Statistical adjustment
 alone does not establish fairness or authorize replacing operational scores.
+
+### If the score will determine pass or fail
+
+An additional score-use question is: **under a specified future rating plan,
+how often would the scoring rule misclassify a person, and how precise is
+measurement near the cut?** For this illustration, every person receives six
+ratings from two named raters across the three criteria. The true pass cut is
+0 logits; the operational sum rule passes sums of at least 9. The sum uses
+category indices 0–3, so 9 corresponds to an original 1–4 score sum of 15 for
+six complete ratings. These are illustrative decisions, not recommended cuts
+or cuts inferred from the fitted data.
+
+```{r decision-plan}
+decision_plan <- expand.grid(
+  Rater = sort(unique(as.character(toy$Rater)))[1:2],
+  Criterion = sort(unique(as.character(toy$Criterion))),
+  stringsAsFactors = FALSE
+)
+decisions <- classification_table(
+  fit, rating_plan = decision_plan,
+  cut_scores = c(Pass = 0), score_cuts = 9, operational_cuts = 0,
+  theta = c(-1, -0.25, 0, 0.25, 1),
+  theta_weights = c(0.10, 0.20, 0.30, 0.25, 0.15)
+)
+decisions$cuts
+decisions$table[, c("Theta", "Method", "Accuracy", "Consistency", "SEM", "Status", "SourceStatus")]
+decisions$marginal
+```
+
+The five ability points and their masses define an explicitly hypothetical
+discrete population. They are not fitted EAP scores or a continuous-normal
+quadrature rule. Equality enters the higher category: the mass at 0 belongs
+to the true-pass group. Thus the true-fail and true-pass proportions are 0.30
+and 0.70. Without supplied population weights, the function returns conditional
+results but does not invent a population average.
+
+`lee_sum` calculates the finite summed-score distribution for the stated sum
+rule. `rudner_normal` approximates decisions based on an ML ability estimate
+and its stated ability cut. Those operational rules need not agree; the
+expected sum at 0 in `$cuts` is a diagnostic, not an instruction to round a
+cut. Do not rank the two methods' accuracy without first establishing a common
+decision rule. The normal approximation can be poor for short plans or
+extreme abilities. Neither route evaluates the earlier EAP scoring rule.
+
+`SEMAtTrueCut` and the nearby `SEM` values are in ability logits, conditional
+on this calibration and locally independent ratings. They exclude uncertainty
+in estimated facet/step parameters and are not posterior SDs. Consistency
+concerns two conditionally independent repetitions of the same fixed plan;
+it does not generalize to different raters, retake policies or random tasks.
+This API supports ordinary RSM/PCM; two-family GMFRM is outside its scope.
+
+Report an error's denominator as part of its name. For a binary decision,
+`Overclassification` in `$marginal` is the population joint probability of
+false pass, and `Underclassification` is that of false fail. The joint matrix allows
+three different, useful descriptions of each error:
+
+```{r decision-errors}
+error_rates <- do.call(rbind, lapply(
+  split(decisions$classification_matrix, decisions$classification_matrix$Method),
+  function(d) {
+    false_pass <- sum(d$Probability[d$TrueCategory == 1 & d$ObservedCategory == 2])
+    false_fail <- sum(d$Probability[d$TrueCategory == 2 & d$ObservedCategory == 1])
+    joint <- c(false_pass, false_fail)
+    true_group <- c(sum(d$Probability[d$TrueCategory == 1]),
+                    sum(d$Probability[d$TrueCategory == 2]))
+    decision_group <- c(sum(d$Probability[d$ObservedCategory == 2]),
+                        sum(d$Probability[d$ObservedCategory == 1]))
+    # A missing or zero conditioning mass gives an undefined rate, not zero.
+    given_true <- given_decision <- rep(NA_real_, 2)
+    ok <- is.finite(true_group) & true_group > 0
+    given_true[ok] <- joint[ok] / true_group[ok]
+    ok <- is.finite(decision_group) & decision_group > 0
+    given_decision[ok] <- joint[ok] / decision_group[ok]
+    data.frame(
+      Method = d$Method[1], Error = c("False pass", "False fail"),
+      JointProbability = joint, TrueGroupProbability = true_group,
+      RateGivenTrueGroup = given_true, DecisionGroupProbability = decision_group,
+      RateGivenDecisionGroup = given_decision,
+      Status = d$Status[1], SourceStatus = decisions$source$status
+    )
+  }
+))
+rownames(error_rates) <- NULL
+error_rates
+```
+
+For false pass, the denominators are everyone, people truly below the cut,
+and people declared to pass, respectively. For false fail, the last two are
+people truly at/above the cut and people declared to fail. For example, a
+joint false-pass probability of 0.06 in a population with 0.30 true failures
+would mean a conditional false-pass rate of 0.06/0.30 = 0.20; those are
+illustrative arithmetic values, not the fitted results above. Missing method
+probabilities remain missing in the calculation; no `na.rm = TRUE` discards
+them. Zero denominators give `NA`. Retain `Status` and `SourceStatus` as well
+as the rates: numerical availability does not validate the source calibration,
+population, plan or operational cut. Inspect `decisions$notes` and
+`?classification_table` before interpreting or exporting the results.
 
 ## A short Methods and Results example
 
@@ -434,7 +690,10 @@ the same person and criterion; agreement within one category was 85.5%.
 These statistics describe distinct aspects of this fit. They do not establish
 the cause of severity differences, rubric validity, or the adequacy of an
 operational scoring decision. The illustration does not evaluate a different
-population model, a pairwise inferential contrast, or decision accuracy.
+population model or a pairwise inferential contrast, and it does not empirically
+validate classification decisions. The fixed-plan example above describes
+model-implied decision probabilities under hypothetical cuts and population
+weights.
 
 For an empirical report, add recruitment, participant and rater characteristics,
 training and scoring procedures, rubric rationale, actual missingness reasons,
@@ -504,9 +763,9 @@ MFRM reporting guide, not a certification of journal compliance.
 | Model and estimand | `results$settings_overview`, `$population_overview`; model call and `specifications_report(fit)`. | Why RSM/PCM/GPCM and MML/JML answer the question; population distribution, threshold structure, constraints, orientation, weights, anchors, and any interactions. State what score or contrast is estimated. |
 | Computation and reproducibility | `results$overview`, `$decision`; recorded estimation controls and replay/manifest export. | Software versions, optimizer and integration settings, tolerances, iteration limits, convergence problems and remedies, and relevant numerical sensitivity. Retain the exact analysis script. |
 | Estimates and uncertainty | `as.data.frame(fit)`; `fit_measures_table()`; person/facet/step summaries. | Units, direction, reference constraints, SE and interval basis and level, uncertainty for planned contrasts, effect magnitude, and practical interpretation. Do not invent unavailable contrast tests. |
-| Model fit and local diagnostics | `diag_summary$overall_fit`, `$diagnostic_basis`; `plot_marginal_fit()`, `unexpected_response_table()`, optional residual PCA. | Which assumptions each analysis probes, diagnostic mode, thresholds and their rationale/source, inspected flags, and follow-up decisions. Global fit does not establish validity; PCA does not prove unidimensionality. |
+| Model fit and local diagnostics | `diag_summary$overall_fit`, `$diagnostic_basis`; `plot()`, `unexpected_response_table()`, optional residual PCA. | Which assumptions each analysis probes, diagnostic mode, thresholds and their rationale/source, inspected flags, and follow-up decisions. Global fit does not establish validity; PCA does not prove unidimensionality. |
 | Precision, separation, and agreement | `prec$profile`, `$checks`, `$fit_separation_basis`; `diag_summary$reliability`; `agreement$summary` and `$pairs`. | Interpreted score, relevant error sources/replications, index definition, adjustment and uncertainty basis, paired-rating denominator and overlap. Separate rater severity, inconsistency, agreement, and person-score precision. |
-| Category functioning | `scale$category_table`, `$threshold_table`, category plots; `diag$parameter_uncertainty$steps` for step SEs, intervals, and reporting status. | Intended categories, threshold family and reference, sparse-category implications, rubric-based interpretation, and reasons and consequences of any recoding. Distinguish step uncertainty from facet-location uncertainty. |
+| Category functioning | `scale$category_table`, `$owner_category_table`, `$model_context`, `$threshold_table` and `$notes`; stored step SEs and status are joined from matching diagnostics. | Intended categories, threshold owner, counts and denominators, sparse-category implications, rubric-based interpretation, and reasons and consequences of any recoding. Distinguish step uncertainty from facet-location and full-crossing uncertainty. |
 | Comparisons, bias, DFF, or linking, when relevant | `compare_mfrm()`, `build_model_choice_review()`, `estimate_bias()`, `analyze_dff()`, or `build_linking_review()`. | Planned contrasts, same-data/comparability checks, numerical sensitivity, reference groups and anchor rationale, uncertainty, multiplicity, and departures from plan. Screening flags alone do not establish unfairness or drift absence. |
 | Latent regression or simulation, when relevant | Population coefficients/coding/caveats; recovery/evaluation helpers. | Covariate coding and omissions; or generating conditions, repetitions, random seeds, failures, evaluation metrics and Monte Carlo uncertainty. Explain each analysis's role and distinguish empirical results from results under simulation assumptions. |
 | Answer, limitations, and implications | Tables, plots, and generated draft text supply supporting results. | Answer each question in words, with direction, magnitude, uncertainty, conditions, alternative explanations, limitations, and implications for the intended score use. Do not infer validity or causality from fit alone. |
@@ -551,8 +810,8 @@ data.frame(
 Full paths and data-handling notes remain in `bundle$written_files`.
 `data = toy` includes the original input CSV needed by the fit replay script.
 Omitting `data` leaves a `your_data.csv` placeholder to replace manually.
-The bundle's core step CSV contains point estimates; save the diagnostic
-step table as well when reporting its SEs and intervals.
+The bundle's core step CSV contains point estimates; save the joined threshold
+table below as well when reporting its SEs, intervals and source status.
 
 Save the selected manuscript table, its caption and note, the threshold
 uncertainty table, and the draft carrying your supplied context:
@@ -562,6 +821,15 @@ uncertainty table, and the draft carrying your supplied context:
 write.csv(rater_table, file.path(output_dir, "Table1-raters.csv"), row.names = FALSE)
 writeLines(capture.output(print(rater_apa)), file.path(output_dir, "Table1-raters.txt"))
 write.csv(steps, file.path(output_dir, "Step-uncertainty.csv"), row.names = FALSE)
+write.csv(scale$owner_category_table, file.path(output_dir, "Category-owner-counts.csv"), row.names = FALSE)
+writeLines(scale$notes, file.path(output_dir, "Category-notes.txt"))
+saveRDS(list(classification = decisions, error_rates = error_rates), file.path(output_dir, "Decision-analysis.rds"))
+write.csv(error_rates, file.path(output_dir, "Decision-error-rates.csv"), row.names = FALSE)
+writeLines(c(decisions$notes,
+  "False pass conditions on true failure or declared pass; false fail on true pass or declared failure.",
+  "JointProbability uses the whole supplied population; missing/zero conditioning mass gives an undefined conditional rate.",
+  "Use Decision-analysis.rds for the rating plan, category map, cuts, population weights and source assessment."),
+  file.path(output_dir, "Decision-notes.txt"))
 write.csv(mfrmr_example_operational_design, file.path(output_dir, "Planned-ratings.csv"), row.names = FALSE)
 write.csv(data_summary$structural_missingness, file.path(output_dir, "Planned-missingness.csv"), row.names = FALSE)
 writeLines(apa$report_text, file.path(output_dir, "Methods-Results-draft.txt"))
@@ -569,9 +837,11 @@ writeLines(apa$report_text, file.path(output_dir, "Methods-Results-draft.txt"))
 # Draw to the file device, then close it even if drawing fails
 png(file.path(output_dir, "Figure1-Wright.png"), width = 1800, height = 1500, res = 200)
 tryCatch(
-  plot(fit, diagnostics = diag, show_ci = TRUE),
+  figure <- plot(fit, diagnostics = diag, show_ci = TRUE),
   finally = dev.off()
 )
+write.csv(plot_data(figure, "notes"),
+  file.path(output_dir, "Figure1-Wright-notes.csv"), row.names = FALSE)
 writeLines(c(
   "Figure 1. Person, facet, and step locations in the synthetic MML/RSM analysis.",
   "282 ratings; 48 persons, six raters, three criteria; rubric 1-4.",
@@ -583,7 +853,7 @@ writeLines(c(
 ), file.path(output_dir, "Figure1-Wright-caption.txt"))
 
 # Filenames are shown here; output_dir retains the folder location.
-list.files(output_dir, pattern = "^(Table1|Step-uncertainty|Planned|Figure1|Methods-Results)")
+list.files(output_dir, pattern = "^(Table1|Step-uncertainty|Category|Decision|Planned|Figure1|Methods-Results)")
 ```
 
 `Table1-raters.csv` retains unrounded values and does not contain the table caption or
@@ -591,7 +861,21 @@ note; keep the paired text file. The PNG likewise needs its accompanying
 caption. The bundle generates its own generic APA draft, so retain
 `Methods-Results-draft.txt` for the draft with the `context` supplied above.
 Check and edit that text against the study record before manuscript use.
-Use the journal's figure dimensions and resolution for the final submission.
+`Decision-analysis.rds` separately retains the fixed-plan calculation, its
+assumptions and the error-rate denominators. `readRDS()` reopens those results
+without fitting. Keep it with `Decision-error-rates.csv` and `Decision-notes.txt`;
+the generic result bundle does not automatically include this plain-list output.
+Figures omit titles and explanatory footnotes by default. Keep these separately
+in the manuscript: `plot_data(figure, "title")` retrieves the suggested title,
+and `plot_data(figure, "notes")` retrieves descriptions and cautions.
+`export_mfrm_results(..., include = "plots")` saves the suggested title and
+notes automatically in a matching `_plot_{type}_notes.csv` beside each PNG.
+The multi-plot `fit` route writes separate image/notes pairs for `fit_wright_map`,
+`fit_pathway_map` and `fit_category_characteristic_curves`, preserving all three
+figures. The `starter` index links each image to its corresponding notes. These notes
+also survive `saveRDS()` and `readRDS()`. Axis labels, legends, panel identifiers
+and unresolved-value symbols remain in the image. Use the journal's figure
+dimensions and resolution for the final submission.
 Keep the planned-rating roster alongside its missingness summary: the observed
 input CSV alone cannot identify which unobserved combinations were planned.
 

@@ -311,7 +311,7 @@ mfrmr_run_recovery_validation <- function(case_ids = NULL,
   }
   tier <- match.arg(tier)
   plan <- mfrmr_recovery_validation_resolve_cases(case_ids = case_ids, tier = tier)
-  eval_recovery <- mfrmr_recovery_validation_fun("evaluate_mfrm_recovery")
+  eval_recovery <- mfrmr_recovery_validation_fun("simulate_mfrm_recovery")
   assess_recovery <- mfrmr_recovery_validation_fun("assess_mfrm_recovery")
   prompt_steps <- mfrmr_recovery_validation_prompt_steps()
   started_at <- Sys.time()

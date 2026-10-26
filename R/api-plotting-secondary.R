@@ -32,7 +32,7 @@
 #' from raw-residual Yen Q3; no fixed correlation cutoff establishes local
 #' independence for this standardized, aggregated index.
 #'
-#' This helper complements [plot_marginal_pairwise()]: the marginal
+#' This helper complements [plot(x, type = "marginal_pairwise")][plot.mfrm_fit]: the marginal
 #' version uses posterior-integrated agreement residuals on a
 #' top-N pair list, while this view shows every pair on a shared color
 #' scale so an analyst can scan for diagonal blocks or hotspots.
@@ -51,21 +51,24 @@
 #'
 #' @return An `mfrm_plot_data` whose `data` slot bundles the symmetric
 #'   residual `matrix`, one row per unordered pair in `pairs`, and the
-#'   threshold used.
-#' @seealso [plot_marginal_pairwise()], [plot_qc_dashboard()],
+#'   minimum overlap `min_pairs`. Interpretation notes are available through
+#'   `plot_data(p, "notes")`. Save the complete payload with [base::saveRDS()];
+#'   [as_ggplot()] converts its saved matrix without recalculating residuals.
+#' @seealso [plot(x, type = "marginal_pairwise")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 300)
-#' p <- plot_local_dependence_heatmap(fit, draw = FALSE)
+#' p <- plot(fit, type = "local_dependence", draw = FALSE)
 #' dim(p$data$matrix)
 #' # Inspect large absolute correlations alongside shared-person counts.
 #' # Unavailable pairs are not evidence of local independence.
-#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_local_dependence_heatmap <- function(fit,
                                           diagnostics = NULL,
                                           facet = "Rater",
@@ -73,103 +76,11 @@ plot_local_dependence_heatmap <- function(fit,
                                           preset = c("standard", "publication", "compact", "monochrome"),
                                           draw = TRUE) {
   if (missing(preset)) preset <- .mfrm_default_plot_preset()
-  if (!inherits(fit, "mfrm_fit")) {
-    stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
-  }
-  if (length(facet) != 1L || is.na(facet)) {
-    stop("`facet` must name a single fitted facet.", call. = FALSE)
-  }
-  facet <- as.character(facet)
-  facet_names <- as.character(fit$config$facet_names %||% character(0))
-  if (!facet %in% facet_names) {
-    stop("`facet` must be one of: ", paste(facet_names, collapse = ", "), ".",
-         call. = FALSE)
-  }
-  if (!is.numeric(min_pairs) || length(min_pairs) != 1L ||
-      !is.finite(min_pairs) || min_pairs < 3 || min_pairs != floor(min_pairs)) {
-    stop("`min_pairs` must be a single integer of at least 3.", call. = FALSE)
-  }
   style <- resolve_plot_preset(preset)
-  if (is.null(diagnostics)) {
-    diagnostics <- suppressMessages(diagnose_mfrm(fit, residual_pca = "none",
-                                                    diagnostic_mode = "legacy"))
-  }
-  mfrm_results_validate_diagnostics_identity(
-    fit, diagnostics, helper = "plot_local_dependence_heatmap()"
-  )
-  obs <- as.data.frame(diagnostics$obs %||% data.frame(),
-                        stringsAsFactors = FALSE)
-  needed <- c(facet, "Person", "StdResidual")
-  missing <- setdiff(needed, names(obs))
-  if (length(missing) > 0L) {
-    stop("`diagnostics$obs` is missing required columns: ",
-         paste(missing, collapse = ", "), ".",
-         call. = FALSE)
-  }
-  obs[[facet]] <- as.character(obs[[facet]])
-  obs$Person <- as.character(obs$Person)
-  obs$StdResidual <- suppressWarnings(as.numeric(obs$StdResidual))
-  obs <- obs[!is.na(obs[[facet]]) & !is.na(obs$Person), , drop = FALSE]
-  obs$StdResidual[!is.finite(obs$StdResidual)] <- NA_real_
-
-  wide <- tryCatch(
-    tidyr::pivot_wider(
-      obs[, c("Person", facet, "StdResidual"), drop = FALSE],
-      id_cols = "Person",
-      names_from = !!rlang::sym(facet),
-      values_from = "StdResidual",
-      values_fn = function(x) mean(x, na.rm = TRUE)
-    ),
-    error = function(e) NULL
-  )
-  if (is.null(wide)) {
-    stop("Could not pivot residuals to a person x level matrix.",
-         call. = FALSE)
-  }
-  rater_cols <- setdiff(names(wide), "Person")
-  if (length(rater_cols) < 2L) {
-    stop("At least two distinct levels are required for the heatmap.",
-         call. = FALSE)
-  }
-
-  rater_cols <- sort(rater_cols)
-  mat <- matrix(NA_real_, nrow = length(rater_cols), ncol = length(rater_cols),
-                 dimnames = list(rater_cols, rater_cols))
-  diag(mat) <- vapply(rater_cols, function(level) {
-    values <- wide[[level]]
-    values <- values[is.finite(values)]
-    if (length(values) >= min_pairs && stats::sd(values) > 0) 1 else NA_real_
-  }, numeric(1))
-  pairs_rows <- list()
-  for (i in seq_len(length(rater_cols) - 1L)) {
-    for (j in seq.int(i + 1L, length(rater_cols))) {
-      a <- suppressWarnings(as.numeric(wide[[rater_cols[i]]]))
-      b <- suppressWarnings(as.numeric(wide[[rater_cols[j]]]))
-      ok <- is.finite(a) & is.finite(b)
-      n_pair <- sum(ok)
-      r <- if (n_pair >= min_pairs) {
-        suppressWarnings(stats::cor(a[ok], b[ok]))
-      } else NA_real_
-      reason <- if (n_pair < min_pairs) "Insufficient shared persons" else
-        if (!is.finite(r)) "No residual variation in the shared persons" else ""
-      mat[i, j] <- mat[j, i] <- r
-      pairs_rows[[length(pairs_rows) + 1L]] <- data.frame(
-        Level1 = rater_cols[i],
-        Level2 = rater_cols[j],
-        ResidualCor = r,
-        N = n_pair,
-        Reason = reason,
-        stringsAsFactors = FALSE
-      )
-    }
-  }
-  pairs_df <- if (length(pairs_rows) > 0L) {
-    do.call(rbind, pairs_rows)
-  } else {
-    data.frame(Level1 = character(0), Level2 = character(0),
-               ResidualCor = numeric(0), N = integer(0), Reason = character(0),
-               stringsAsFactors = FALSE)
-  }
+  associations <- .mfrm_residual_associations(fit, diagnostics, facet, min_pairs)
+  mat <- associations$matrix
+  pairs_df <- associations$pairs
+  rater_cols <- colnames(mat)
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
@@ -177,20 +88,20 @@ plot_local_dependence_heatmap <- function(fit,
     old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 5, 3, 2))
-    graphics::image(
+    image(
       x = seq_len(ncol(mat)), y = seq_len(nrow(mat)),
       z = mat, col = cols, zlim = c(-1, 1),
       xaxt = "n", yaxt = "n", xlab = facet, ylab = facet,
-      main = sprintf("Pairwise residual correlation (Q3 view): %s", facet)
+      main = ""
     )
-    graphics::axis(1, at = seq_along(rater_cols), labels = rater_cols,
+    axis(1, at = seq_along(rater_cols), labels = rater_cols,
                     las = 2, cex.axis = 0.8)
-    graphics::axis(2, at = seq_along(rater_cols), labels = rater_cols,
+    axis(2, at = seq_along(rater_cols), labels = rater_cols,
                     las = 1, cex.axis = 0.8)
     for (i in seq_along(rater_cols)) for (j in seq_along(rater_cols)) {
       v <- mat[i, j]
       if (is.finite(v)) {
-        graphics::text(j, i, sprintf("%.2f", v), cex = 0.7,
+        text(j, i, sprintf("%.2f", v), cex = 0.7,
                         col = if (abs(v) > 0.6) "white" else "black")
       }
     }
@@ -206,6 +117,9 @@ plot_local_dependence_heatmap <- function(fit,
       title = sprintf("Pairwise residual correlation (Q3 view): %s", facet),
       subtitle = sprintf("%d of %d unique pairs available; at least %d shared persons required",
                          sum(is.finite(pairs_df$ResidualCor)), nrow(pairs_df), min_pairs),
+      caption = paste("Standardized residuals are averaged without weighting within Person/facet-level cells; correlations use shared Persons.",
+        "This is a Q3-style screen, not raw-residual Yen Q3 or a calibrated test of local independence.",
+        "Unavailable pairs are NA, not zero; inspect the pair table for overlap counts and reasons."),
       preset = style$name
     )
   ))
@@ -222,6 +136,31 @@ plot_local_dependence_heatmap <- function(fit,
 #' scale, not ICCs; use [compute_facet_icc()] for the complementary
 #' observed-score variance-share view.
 #'
+#' @details
+#' High Person separation reliability indicates distinguishable abilities.
+#' High rater separation reliability indicates distinguishable severities,
+#' **not agreement** between raters. If raters should be interchangeable,
+#' reliable severity differences merit review. Low rater separation reliability
+#' can also reflect imprecise estimates and does not establish agreement.
+#' The index does not test every rater pair or measure the practical size of
+#' severity differences. Examine estimated severities and their uncertainty,
+#' and use [interrater_agreement_table()] for observed agreement.
+#'
+#' The separation-reliability formula is shared across facets, but the facet's
+#' role changes its interpretation. Person separation reliability is analogous
+#' to test reliability, not numerically identical to Cronbach's alpha; MML
+#' Person rows using EAP/posterior SD also have the limitations described in
+#' [mfrmr-package]. No universal adequate/strong reference lines are drawn.
+#' Reliability, separation and Strata use approximate marginal-SE variance
+#' subtraction and do not propagate covariance among estimates, even when
+#' the SEs come from joint information. Model and fit-adjusted indices are
+#' not confidence limits; Strata does not identify actual groups.
+#' Ordinary JML uses exploratory location precision; these indices are
+#' screening summaries, not structural confidence intervals. Corrected-JML
+#' `RootSE` is not an input to these indices. Corrected JML and two-family
+#' GPCM are unavailable here, including when diagnostics are supplied.
+#' The returned plot retains interpretation notes for saved reuse.
+#'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param diagnostics Optional [diagnose_mfrm()] output. Computed on
 #'   demand when omitted.
@@ -231,24 +170,28 @@ plot_local_dependence_heatmap <- function(fit,
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @return An `mfrm_plot_data` whose `data` slot bundles a tidy
-#'   `Facet`, `Metric`, `Value` data frame.
+#'   `Facet`, `Metric`, `Value` data frame. When present in the supplied
+#'   diagnostics, precision tier, reliability use/basis, formal-inference flag
+#'   and model-summary notes are retained alongside each plotted value.
 #' @seealso [diagnose_mfrm()], [mfrmr_visual_diagnostics]
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 300)
-#' p <- plot_reliability_snapshot(fit, draw = FALSE)
+#' p <- plot(fit, type = "reliability", draw = FALSE)
 #' p$data$table
-#' # Look for (default `metric = "reliability"`):
-#' # - >= 0.9 strong, 0.7-0.9 adequate, < 0.7 weak (Wright & Masters 1982).
-#' # - The Person row is the operative reliability for ability scores.
-#' # - Non-Person rows (Rater / Criterion) report the same index but
-#' #   should be read as "are facet elements distinguishable?"; values
-#' #   close to 1 mean facet means differ reliably from each other.
-#' }
+#' # High Person value: distinguishable abilities.
+#' # High rater value: distinguishable severities, not agreement.
+#' # Low rater value: not proof of agreement; inspect estimation precision.
+#' p$data$notes
+#' @references
+#' Linacre, J. M. Facets documentation, \emph{Reliability - separation - strata}.
+#' \url{https://www.winsteps.com/facetman/reliability.htm}
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_reliability_snapshot <- function(fit,
                                       diagnostics = NULL,
                                       metric = c("reliability", "separation", "strata"),
@@ -258,6 +201,7 @@ plot_reliability_snapshot <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
+  stop_if_product_slopes(fit, "plot(x, type = \"reliability\")")
   metric <- match.arg(metric)
   style <- resolve_plot_preset(preset)
   if (is.null(diagnostics)) {
@@ -295,34 +239,38 @@ plot_reliability_snapshot <- function(fit,
     Value = vals,
     stringsAsFactors = FALSE
   )
+  precision <- intersect(c("PrecisionTier", "ReliabilityUse", "ReliabilityBasis",
+    "SupportsFormalInference", "ModelSummaryNote"), names(rel))
+  payload[precision] <- rel[precision]
+  caption <- paste("Raters: severity differences, not agreement.",
+                   "Persons: ability differences.", sep = "\n")
+  notes <- mfrm_separation_interpretation()
+  if (isTRUE(fit$config$method %in% c("JML", "JMLE"))) {
+    notes <- paste(notes, "Ordinary JML uses exploratory location precision; these indices are screening summaries, not structural confidence intervals.")
+  }
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
     old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
-    graphics::par(mar = c(5, 6, 3, 2))
+    graphics::par(mar = c(4.5, 6, 1.5, 2))
     bar_max <- if (identical(metric, "reliability")) {
-      max(1.0, max(payload$Value, na.rm = TRUE) * 1.05)
+      max(1.0, max(payload$Value, na.rm = TRUE)) * 1.15
     } else {
-      max(payload$Value, na.rm = TRUE) * 1.10
+      max(payload$Value, na.rm = TRUE) * 1.15
     }
-    bp <- graphics::barplot(
+    bp <- barplot(
       payload$Value, names.arg = payload$Facet,
       horiz = TRUE, las = 1,
       xlim = c(0, bar_max),
       col = grDevices::adjustcolor(style$accent_primary, alpha.f = 0.7),
       border = style$accent_primary,
-      xlab = paste0(metric, " (", metric_col, ")"),
-      main = sprintf("Facet %s snapshot", metric)
+      xlab = if (metric == "reliability") "Separation reliability" else metric_col,
+      main = ""
     )
-    graphics::text(payload$Value, bp,
+    text(payload$Value, bp,
                     labels = sprintf("%.2f", payload$Value),
                     pos = 4, cex = 0.85, col = style$neutral)
-    if (identical(metric, "reliability")) {
-      graphics::abline(v = c(0.7, 0.9), lty = c(3, 2), col = style$grid)
-      graphics::mtext("0.7 = adequate, 0.9 = strong (Wright & Masters, 1982)",
-                       side = 1, line = 3.5, cex = 0.7)
-    }
   }
 
   invisible(new_mfrm_plot_data(
@@ -333,16 +281,10 @@ plot_reliability_snapshot <- function(fit,
       title = sprintf("Facet %s snapshot", metric),
       subtitle = paste0("Sorted by ", metric_col, "; N facet rows = ",
                          nrow(payload)),
+      caption = caption,
+      notes = data.frame(Type = "interpretation", Text = notes),
       preset = style$name,
-      reference_lines = if (identical(metric, "reliability")) {
-        new_reference_lines(
-          axis = c("v", "v"),
-          value = c(0.7, 0.9),
-          label = c("Adequate (0.7)", "Strong (0.9)"),
-          linetype = c("dotted", "dashed"),
-          role = c("threshold", "threshold")
-        )
-      } else NULL
+      reference_lines = NULL
     )
   ))
 }
@@ -352,7 +294,7 @@ plot_reliability_snapshot <- function(fit,
 #'
 #' Visualizes the person x element matrix of standardized residuals
 #' from [diagnose_mfrm()] as a heatmap. Complements
-#' [plot_guttman_scalogram()] (which shows raw responses) by exposing
+#' [plot(x, type = "guttman")][plot.mfrm_fit] (which shows raw responses) by exposing
 #' the residual structure directly: large positive cells show
 #' under-prediction, negative cells over-prediction.
 #'
@@ -370,23 +312,24 @@ plot_reliability_snapshot <- function(fit,
 #' @return An `mfrm_plot_data` whose `data` slot bundles the residual
 #'   `matrix` (rows = Person, columns = facet level) and the long-form
 #'   `obs` table.
-#' @seealso [plot_guttman_scalogram()], [plot_unexpected()],
+#' @seealso [plot(x, type = "guttman")][plot.mfrm_fit], [plot(x, type = "unexpected")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 300)
-#' p <- plot_residual_matrix(fit, top_n_persons = 12, draw = FALSE)
+#' p <- plot(fit, type = "residual_matrix", top_n_persons = 12, draw = FALSE)
 #' dim(p$data$matrix)
 #' # Look for: |residual| > 2 or > 3 crosses conventional two- or
 #' #   three-standard-deviation review bands; these are heuristic screens,
 #' #   not calibrated 5% or 1% tests (Wright & Linacre 1994). Repeated
 #' #   high-magnitude cells at one facet level warrant pattern review but
 #' #   do not by themselves establish scoring drift.
-#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_residual_matrix <- function(fit,
                                  diagnostics = NULL,
                                  facet = "Rater",
@@ -458,15 +401,15 @@ plot_residual_matrix <- function(fit,
     old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 6, 3, 2))
-    graphics::image(
+    image(
       x = seq_along(levels_x), y = seq_along(persons),
       z = t(mat), col = cols, zlim = c(-zmax, zmax),
       xaxt = "n", yaxt = "n", xlab = facet, ylab = "Person",
-      main = sprintf("Standardized residual matrix (Person x %s)", facet)
+      main = ""
     )
-    graphics::axis(1, at = seq_along(levels_x), labels = levels_x,
+    axis(1, at = seq_along(levels_x), labels = levels_x,
                     las = 2, cex.axis = 0.7)
-    graphics::axis(2, at = seq_along(persons),
+    axis(2, at = seq_along(persons),
                     labels = persons, las = 1, cex.axis = 0.7)
   }
 
@@ -519,21 +462,22 @@ plot_residual_matrix <- function(fit,
 #' @seealso [apply_empirical_bayes_shrinkage()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "JML", maxit = 300)
 #' fit_eb <- apply_empirical_bayes_shrinkage(fit)
-#' p <- plot_shrinkage_funnel(fit_eb, draw = FALSE)
+#' p <- plot(fit_eb, type = "shrinkage", view = "funnel", draw = FALSE)
 #' head(p$data$table)
 #' # Look for: short segments (Raw and Shrunken close together) =
 #' #   little pooling. Long segments fanning toward the centre = the
 #' #   prior pulled the estimate strongly; this is most pronounced for
 #' #   small-N levels. ShrinkageFactor near 1 means most of the
 #' #   movement was driven by the prior rather than the data.
-#' }
 #' @inheritSection mfrmr_visual_diagnostics Session plot defaults
-#' @export
+#' @keywords internal
+#' @section Migration in 0.2.4:
+#' This renderer is internal. Use the corresponding `plot()` route in
+#' [mfrmr_plot_migration]; the former exported name is no longer available.
 plot_shrinkage_funnel <- function(fit,
                                   facet = NULL,
                                   top_n = 30L,
@@ -643,28 +587,27 @@ plot_shrinkage_funnel <- function(fit,
     if (!all(is.finite(xr))) xr <- c(-1, 1)
     if (diff(xr) == 0) xr <- xr + c(-0.5, 0.5)
     xr <- xr + c(-0.06, 0.06) * diff(xr)
-    graphics::plot(NA, xlim = xr, ylim = c(0.5, nrow(payload) + 0.5),
+    plot(NA, xlim = xr, ylim = c(0.5, nrow(payload) + 0.5),
                     yaxt = "n",
                     xlab = "Estimate (logits)", ylab = facet,
-                    main = sprintf("Empirical-Bayes shrinkage funnel: %s",
-                                    facet))
-    graphics::abline(v = 0, lty = 3, col = style$grid)
-    graphics::axis(2, at = payload$RowOrder, labels = payload$Level,
+                    main = "")
+    abline(v = 0, lty = 3, col = style$grid)
+    axis(2, at = payload$RowOrder, labels = payload$Level,
                     las = 1, cex.axis = 0.7)
-    graphics::segments(payload$RawEstimate, payload$RowOrder,
+    segments(payload$RawEstimate, payload$RowOrder,
                         payload$ShrunkEstimate, payload$RowOrder,
                         col = style$neutral, lwd = 1.2)
     if (isTRUE(show_ci)) {
-      graphics::segments(payload$RawCI_Lower, payload$RowOrder - 0.12,
+      segments(payload$RawCI_Lower, payload$RowOrder - 0.12,
                          payload$RawCI_Upper, payload$RowOrder - 0.12,
                          col = style$accent_primary, lwd = 1)
-      graphics::segments(payload$ShrunkCI_Lower, payload$RowOrder + 0.12,
+      segments(payload$ShrunkCI_Lower, payload$RowOrder + 0.12,
                          payload$ShrunkCI_Upper, payload$RowOrder + 0.12,
                          col = style$accent_tertiary, lwd = 1)
     }
-    graphics::points(payload$RawEstimate, payload$RowOrder,
+    points(payload$RawEstimate, payload$RowOrder,
                       pch = 1, col = style$accent_primary, cex = 1.0)
-    graphics::points(payload$ShrunkEstimate, payload$RowOrder,
+    points(payload$ShrunkEstimate, payload$RowOrder,
                       pch = 19, col = style$accent_tertiary, cex = 1.0)
     legend_labels <- c("Raw", "Shrunken")
     legend_pch <- c(1, 19)
@@ -677,8 +620,7 @@ plot_shrinkage_funnel <- function(fit,
       legend_lty <- c(legend_lty, 1)
       legend_col <- c(legend_col, style$accent_primary)
     }
-    if (isTRUE(show_ci)) graphics::mtext("Plug-in bands; prior-variance uncertainty and covariance omitted.", side = 1, line = 3, cex = 0.65)
-    graphics::legend("topright",
+    legend("topright",
                       legend = legend_labels,
                       pch = legend_pch, lty = legend_lty, col = legend_col,
                       bty = "n", cex = 0.85, inset = 0.02)

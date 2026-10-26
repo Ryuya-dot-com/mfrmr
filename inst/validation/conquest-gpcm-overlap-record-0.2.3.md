@@ -1,11 +1,141 @@
 # ConQuest 5.47.5 bounded-GPCM overlap record for mfrmr 0.2.3
 
-Status: exact item-only likelihood/coordinate map established and used to
-correct the default GPCM-MML scale identification; one native MML microcase
-completed; external comparison remains `review`, 2026-08-11. This record does
-not promote GPCM to the mandatory ConQuest core, validate a many-facet GPCM,
-set a cross-engine tolerance, bind a release candidate, or authorize a
-simulation.
+Current status, 2026-10-23: a retained current-source comparison supports
+item-only GPCM calibration and observed-information agreement, including latent
+regression and incomplete observations. The numerical checks below pass; formal
+inference, many-facet equivalence and the public ConQuest bridge are not promoted.
+The August 11 record is retained below as historical evidence, not evidence for
+the current working source or current raw-output retention.
+
+## October 23 current-source comparison for 0.2.4
+
+**Question.** Does the improved direct MML route reach the same item-only GPCM
+solution as ConQuest after matching models, identification and integration
+accuracy? Does agreement extend to full parameter covariance, and do differences
+in reported Person summaries imply a calibration error?
+
+**Design.** One seeded response sample has 240 Persons, six items and four
+categories, with heterogeneous positive slopes and item-specific steps. The
+three analyses use no covariate, a continuous latent-regression covariate, and
+that regression with planned 15% independent missing responses (207 of 1,440
+responses absent, 14.4%). These are related analyses of one sample, not three
+independent replications or a recovery/coverage study. Every Person retains an
+observation and every item/category is observed.
+
+mfrmr uses the existing `free_population` identification and
+`mml_integration="auto"`, starting at Q31. Each case selects adaptive Q31; a
+separate Q63 refit checks movement. ConQuest 5.47.5 uses fixed latent intercept
+zero and residual variance one, `model item + item*step ! type=scoresfree,
+positivescores=yes`, and quadrature at 31/61/121 nodes with ranges ±6/±6/±8.
+The parameter-change/deviance-change settings are 1e-8/1e-10. All runs terminate
+on the deviance criterion. Estimated Tau remains between 0.821 and 2.316,
+strictly inside the requested 0-to-20 range. This checks an interior positive
+solution; ConQuest's zero-boundary behavior is not mfrmr's positive-log-slope
+parameterization. An identical number of nodes would not imply identical
+integration rules.
+
+The exported A and C matrices verify the actual response law and free-parameter
+ordering. Scale conversion uses the exact map below, including the regression
+coefficient and residual SD. Conditional probabilities calculated directly from
+the mfrmr formula agree with the converted exported design within 8.89e-16 on
+161 ability values from −4 to 4 on the ConQuest scale. All free coordinates
+round-trip within 1e-11. This is a response-law check, not merely label matching.
+
+**Calibration and uncertainty.** The following differences use the final
+121-node ConQuest result and the mfrmr adaptive result on the same scale.
+
+| Analysis | Absolute reported deviance difference | Maximum free-coordinate difference | Maximum category-probability difference | Maximum SE relative difference |
+| --- | ---: | ---: | ---: | ---: |
+| No covariate | 8.08e-8 | 1.33e-5 | 2.40e-6 | 0.00462% |
+| Latent regression | 2.19e-7 | 1.30e-5 | 1.56e-6 | 0.00545% |
+| Regression with missing responses | 2.83e-7 | 1.27e-5 | 1.62e-6 | 0.00577% |
+
+The independently expressed continuous integral agrees with the *retained
+public mfrmr objective* within 4.16e-10 in total negative log likelihood. Its
+Person EAP and posterior SD agree within 9.82e-10 and 3.97e-9, respectively.
+The finer adaptive Q63 evaluator agrees with the continuous reference at both
+programs' mapped estimates within 2.28e-13. The absolute continuous deviance
+gap between programs is at most 8.23e-10; small signed negative gaps are not
+evidence of one optimizer's superiority. Q63 refitting moves mfrmr free
+coordinates by at most 8.57e-7. Native terminal NLL gradient sup norms are
+4.01e-5–6.08e-5; those evaluated at rounded ConQuest exports are
+1.98e-4–2.30e-4. These are local numerical checks, not a global-maximum proof.
+
+ConQuest's `stderr=empirical` and `matrixout` provide the **full joint parameter
+covariance**: 24 dimensions without regression and 25 with it. This is distinct
+from `export covariance`, which provides the latent variance. The native
+observed-information inverse is transformed with the full Jacobian, including
+location, step, slope and population cross terms. Parameter labels, rank,
+symmetry and positive definiteness are checked. The largest covariance-element
+difference, standardized by the product of native SEs, is 1.16e-4. Jacobian step
+halving changes entries by at most 1.78e-10; refining native information from
+Q31 to Q63 changes standardized covariance by at most 2.53e-9. ConQuest CSVs
+retain six decimal places; this resolution and its empirical differentiation
+limit finer equality claims. Full covariance agreement does not establish
+finite-sample interval coverage. See the [official command reference](https://conquestmanual.acer.org/s4-00.html)
+for `estimate`, `matrixout`, `export` and posterior-reporting controls.
+
+Before fitting, numerical review thresholds were set to 1e-4 for coordinates,
+1e-5 for probabilities and continuous deviance, 1e-3 for the total NLL gradient
+at rounded external coordinates, and 1e-3 for standardized covariance-element
+differences. All final cases meet these scoped criteria. These thresholds do
+not override `InferenceReady=FALSE`, certify public bridge compatibility or
+establish scientific equivalence for every design.
+
+**Person posterior reporting.** Continuous posterior summaries at the two
+calibrations differ by at most 2.77e-6 in EAP and 7.44e-7 in posterior SD after
+scale conversion. ConQuest's reported summaries with `p_nodes=2000` differ from
+its own continuous reference by up to 0.0231 and 0.0189. Changing only the
+reporting seed from 2 to 3 changes EAP by up to 0.0325 and SD by up to 0.0262.
+Together with the manual's separate Monte Carlo posterior calculation, this
+supports reporting approximation as the source of these much larger
+differences. Two seeds characterize this example, not a general Monte Carlo
+error guarantee. Replacing mfrmr's accurate posterior moments with these
+stochastic values would not improve numerical accuracy.
+
+**Algorithm consequence.** At the initial native fixed Q31 solutions, maximum
+individual log-marginal discrepancies are 0.00107–0.00244, and finer-rule NLL
+gradient sup norms are 0.088–0.103. Adaptive refitting changes free coordinates
+by 0.00141–0.00242 and removes these discrepancies in this sample. ConQuest
+itself also benefits from refinement: its Q31 reported deviance differs from
+the continuous evaluation at its own estimates by as much as 1.79e-4, versus
+at most 2.83e-7 at Q121. Thus these results support accuracy-controlled MML;
+they do not identify EM as the cause of agreement or establish that switching
+mfrmr to EM would be more accurate or faster. No matched-work runtime comparison
+was performed. Default adoption and downstream inference eligibility remain
+separate decisions.
+
+**Many-facet boundary.** The ordinary native model has adjacent-category log
+odds `a_i * (theta - d_i - r_j - t_ik)`. The ordinary additive ConQuest
+`scoresfree` model has `Tau_i * z - xi_i - xi_j - xi_ik` after tying the item
+scores. The native rater contrast is multiplied by `a_i`; a single additive
+ConQuest rater contrast is common to all items. For example, slopes 0.5 and 2
+with a rater difference 0.6 give native log-odds contrasts 0.3 and 1.2, which
+one common rater coefficient cannot reproduce. ConQuest 4+ allows linear C
+matrix constraints on scores ([official Note 8](https://www.acer.org/files/Note_8--The_ConQuest_4_Model.pdf));
+tying those scores alone does not impose the additional unknown products
+`a_i*r_j`. Freely adding item-by-rater interactions would enlarge the model,
+not prove identical estimation. This does not assert that every custom
+ConQuest representation is impossible. An exact response-law and constraint
+map is needed before a many-facet or two-family comparison can be interpreted
+as a comparison of estimators.
+
+**Reproducibility and limits.** `conquest-gpcm-mml-20261023.R` prepares the
+inputs/commands, fits native models, checks raw exports, compares continuous
+integration and information, and replays the results in a fresh R session.
+Raw commands, inputs, output matrices, saved native fits and executable/source
+hashes are retained with locations recorded in the internal roadmap. The
+August raw outputs were not found at their old temporary location, so the
+current conclusions use newly retained runs. Early harness errors concerned a
+mixed shorthand ConQuest command and CSV integer/whitespace parsing; their
+logs remain retained, and no failed run is treated as a fitted result. All 211
+R source files are unchanged from the validated auto-integration implementation.
+No estimator, default, public bridge, inference eligibility or release status
+was changed for this comparison. Weak identification, extreme sparsity,
+larger designs, anchors, many-facet joint estimation and interval coverage are
+not certified by this one-sample comparison.
+
+## Historical August 11 record
 
 ## Decision
 

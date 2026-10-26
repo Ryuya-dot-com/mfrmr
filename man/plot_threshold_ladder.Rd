@@ -15,8 +15,8 @@ plot_threshold_ladder(
 \item{fit}{An \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{highlight_disorder}{Logical. When \code{TRUE} (default), draw
-disordered segments with the preset's \code{fail} colour and add a
-subtitle counting the disordered groups.}
+disordered segments with the preset's \code{fail} colour. The number of
+affected groups is returned in the notes, outside the figure.}
 
 \item{preset}{Visual preset (\code{"standard"}, \code{"publication"}, \code{"compact"},
 or \code{"monochrome"}).}
@@ -36,11 +36,22 @@ GPCM) there is one ladder per \code{step_facet} level.
 }
 \section{Interpreting output}{
 
-Within each ladder, thresholds should ascend monotonically. A
-disordered crossing (highlighted in the fail colour) suggests that
-the corresponding category is rarely the most likely response over
-any logit interval, and is a common trigger for category-collapsing
-decisions.
+Each ladder shows centered step offsets for one step-owner level, including
+when GPCM slopes belong to a different facet. Slopes do not duplicate the
+threshold families. Disorder describes point estimates; inspect owner-level
+counts, curves and the rubric before considering category changes.
+Missing steps remain unavailable and are not bridged by connecting lines.
+No intervals or full ability-axis crossings are calculated. Save the result
+of \code{plot()} to retain its model context and interpretation notes.
+Automatic ggplot conversion of this ladder is unavailable; use base graphics
+or \code{\link[=plot_data]{plot_data()}} for custom graphics. The saved \code{\link[=rating_scale_table]{rating_scale_table()}}
+threshold view has its own ggplot conversion.
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -78,10 +89,11 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 toy <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "MML", quad_points = 7, maxit = 30)
-p <- plot_threshold_ladder(fit, draw = FALSE)
+p <- plot(fit, type = "thresholds", draw = FALSE)
 head(p$data$data)
 }
 \seealso{
 \code{\link[=category_structure_report]{category_structure_report()}}, \code{\link[=category_curves_report]{category_curves_report()}},
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}} (\code{type = "ccc"}).
 }
+\keyword{internal}

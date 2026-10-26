@@ -39,7 +39,6 @@ round_numeric_frame <- function(df, digits = 3L) {
 #'   `summary()`
 #'
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
 #' out <- run_mfrm_facets(
@@ -52,7 +51,6 @@ round_numeric_frame <- function(df, digits = 3L) {
 #' s <- summary(out)
 #' s$overview[, c("Model", "Method", "Converged")]
 #' s$mapping
-#' }
 #' @export
 summary.mfrm_facets_run <- function(object, digits = 3, top_n = 10, ...) {
   if (!inherits(object, "mfrm_facets_run")) {
@@ -129,7 +127,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #' @param x A `mfrm_facets_run` object from [run_mfrm_facets()].
 #' @param y Unused.
 #' @param type Plot route: `"fit"` delegates to [plot.mfrm_fit()] and `"qc"`
-#'   delegates to [plot_qc_dashboard()].
+#'   delegates to [plot(x, type = "qc")][plot.mfrm_fit].
 #' @param ... Additional arguments passed to the selected plot function.
 #'
 #' @details
@@ -140,7 +138,7 @@ print.mfrm_facets_run <- function(x, ...) {
 #'
 #' @section Interpreting output:
 #' Returns the plotting object produced by the delegated route:
-#' [plot.mfrm_fit()] for `"fit"` and [plot_qc_dashboard()] for `"qc"`.
+#' [plot.mfrm_fit()] for `"fit"` and [plot(x, type = "qc")][plot.mfrm_fit] for `"qc"`.
 #'
 #' @section Typical workflow:
 #' 1. Run [run_mfrm_facets()].
@@ -149,11 +147,10 @@ print.mfrm_facets_run <- function(x, ...) {
 #'
 #' @return A plotting object from the delegated plot route.
 #'
-#' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot_qc_dashboard()],
+#' @seealso [run_mfrm_facets()], [plot.mfrm_fit()], [plot(x, type = "qc")][plot.mfrm_fit],
 #'   [mfrmr_visual_diagnostics], [mfrmr_workflow_methods]
 #'
 #' @examples
-#' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' out <- run_mfrm_facets(
@@ -167,7 +164,6 @@ print.mfrm_facets_run <- function(x, ...) {
 #' p_fit$wright_map$data$plot
 #' p_qc <- plot(out, type = "qc", draw = FALSE)
 #' p_qc$data$plot
-#' }
 #'
 #' @export
 plot.mfrm_facets_run <- function(x, y = NULL, type = c("fit", "qc"), ...) {

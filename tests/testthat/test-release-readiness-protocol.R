@@ -11,10 +11,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   public_path <- file.path(pkg_root, "ROADMAP.md")
   news_path <- file.path(pkg_root, "NEWS.md")
-  internal_path <- file.path(pkg_root, "inst", "validation",
-                             "internal-roadmap-0.2.4.md")
   skip_if_not(all(file.exists(c(public_path, news_path))))
-  expect_true(file.exists(internal_path))
 
   public <- paste(readLines(public_path, warn = FALSE, encoding = "UTF-8"),
                   collapse = "\n")
@@ -23,8 +20,6 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   historical_boundary <- match("# mfrmr 0.2.2", news)
   expect_true(is.finite(historical_boundary))
   current_news <- paste(news[seq_len(historical_boundary - 1L)], collapse = "\n")
-  internal <- paste(readLines(internal_path, warn = FALSE, encoding = "UTF-8"),
-                    collapse = "\n")
   forbidden <- c(
     "0\\.2\\.3-draft", "SHA-256", "candidate manifest", "M1:", "M2:",
     "Confirmation authorized", "inst/validation", "C:/", "C:\\\\",
@@ -32,7 +27,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
     "population_assumption_linked", "metric_specific_comparison_eligibility",
     "ready_with_exclusions", "legacy_contract_missing",
     "mfrmr-internal-readiness", "single source of truth", "frozen gate",
-    "preflight", "denominator"
+    "preflight"
   )
   for (pattern in forbidden) {
     expect_false(grepl(pattern, public, perl = TRUE), info = pattern)
@@ -47,12 +42,9 @@ test_that("public roadmap and current NEWS exclude internal release operations",
     expect_false(grepl(pattern, current_news, fixed = TRUE), info = pattern)
   }
   required_public_markers <- c(
-    "Status: public roadmap",
-    "## Current releases",
     "## Model scope",
     "## Generalizability theory",
-    "## Rater assignment and anchors",
-    "## External comparison",
+    "## Anchor alignment before 0.2.4",
     "## Compatibility principles",
     "## Focus for 0.2.4"
   )
@@ -60,15 +52,13 @@ test_that("public roadmap and current NEWS exclude internal release operations",
     expect_match(public, marker, fixed = TRUE)
   }
   expect_match(
-    public,
-    "mfrmr 0.2.4.9000 is under development and has not been released",
+    gsub("[[:space:]]+", " ", gsub("[`*]", "", public)),
+    "mfrmr 0.2.4 is a release candidate and has not been released",
     fixed = TRUE
   )
   expect_match(public, "GPCM", fixed = TRUE)
-  expect_match(public, "Multivariate observed-score G/D studies", fixed = TRUE)
-  expect_match(public, "complete versus connected\n   incomplete assignments", fixed = TRUE)
-  expect_match(internal, "internal development and validation roadmap",
-               fixed = TRUE)
+  expect_match(public, "multivariate", fixed = TRUE)
+  expect_match(public, "incomplete", fixed = TRUE)
 
   ignore <- readLines(file.path(pkg_root, ".Rbuildignore"), warn = FALSE)
   expect_true(any(grepl("ROADMAP", ignore, fixed = TRUE)))
@@ -76,6 +66,12 @@ test_that("public roadmap and current NEWS exclude internal release operations",
 })
 
 test_that("internal draft.62 roadmap and GPCM work remain explicit and private", {
+  skip_if_private_validation_missing(c(
+    "gtheory-reconstruction-roadmap-0.2.3.md",
+    "release-evidence-checklist-0.2.3.csv",
+    "roadmap-reassessment-record-0.2.3.md",
+    "internal-roadmap-0.2.3.md"
+  ))
   pkg_root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   internal_path <- file.path(
     pkg_root, "inst", "validation", "internal-roadmap-0.2.3.md"
@@ -1927,6 +1923,9 @@ test_that("release-readiness protocol requires --as-cran provenance", {
 })
 
 test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
+  skip_if_private_validation_missing(c(
+    "release-evidence-checklist-0.2.3.csv"
+  ))
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
   source(protocol, local = env)
@@ -2084,6 +2083,9 @@ test_that("release-readiness binds a 0.2.3 candidate to frozen hashed inputs", {
 })
 
 test_that("release-readiness reconstructs checklist decisions from hashed result rows", {
+  skip_if_private_validation_missing(c(
+    "release-evidence-checklist-0.2.3.csv"
+  ))
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
   source(protocol, local = env)
@@ -2288,7 +2290,9 @@ test_that("release-readiness rejects stale numeric pass counts in current prose"
 
   writeLines(c(
     "## R CMD check results",
-    "The exact candidate logs and hashes are retained in release evidence."
+    "The exact candidate logs and hashes are retained in release evidence.",
+    "# Historical development check",
+    "392 checks passed on that earlier source."
   ), cran_comments)
   current <- env$mfrmr_release_readiness_prose_count_status(
     paths,
@@ -2712,6 +2716,9 @@ test_that("release-readiness accepts check-only runner and rejects legacy G4", {
 })
 
 test_that("release-readiness protocol checks source-truth alignment", {
+  skip_if_private_validation_missing(c(
+    "gpcm-post-0.2.2-roadmap.md"
+  ))
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
   source(protocol, local = env)
@@ -2780,6 +2787,15 @@ test_that("release-readiness protocol checks source-truth alignment", {
   expect_true(status$SourceTruthOK)
 
   roadmap <- readLines(paths$roadmap)
+  # Statistical denominators, ordinary Markdown and a different release
+  # heading must not be mistaken for internal operations or stale metadata.
+  readable <- roadmap[!roadmap %in% c("Status: public roadmap", "## Current releases")]
+  readable <- sub("mfrmr 0.2.2 is a release candidate",
+                  "mfrmr `0.2.2` is a release\ncandidate", readable, fixed = TRUE)
+  writeLines(c(readable, "Report agreement denominators."), paths$roadmap)
+  expect_true(env$mfrmr_release_readiness_source_truth_status(paths)$SourceTruthOK)
+  writeLines(sub("0.2.2", "0.2.0", readable, fixed = TRUE), paths$roadmap)
+  expect_false(env$mfrmr_release_readiness_source_truth_status(paths)$RoadmapLifecycleMatches)
   writeLines(c(roadmap, "[Numerical evidence](inst/validation/example.md)"), paths$roadmap)
   expect_true(env$mfrmr_release_readiness_source_truth_status(paths)$RoadmapReaderFacing)
   writeLines(c(roadmap, "Run internal operations from inst/validation."), paths$roadmap)
@@ -2880,7 +2896,6 @@ test_that("release-readiness protocol enforces semantic example guards", {
     )
   )
   expect_identical(status$ExamplesIfSourceTargets, "launch_mfrmr_viewer")
-  expect_gt(status$DonttestRdPages, 0L)
   expect_identical(status$Detail, "")
   expect_true(status$ExamplePolicyOK)
 
@@ -2908,6 +2923,9 @@ test_that("release-readiness protocol enforces semantic example guards", {
 })
 
 test_that("release-readiness protocol checks GPCM scope alignment", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.4.md"
+  ))
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
   source(protocol, local = env)
@@ -2964,6 +2982,29 @@ test_that("current evidence lookup does not borrow a historical release", {
   expect_false(file.exists(lookup("0.2.5.9000")))
 })
 
+test_that("candidate version checks distinguish current and historical labels", {
+  env <- new.env(parent = globalenv())
+  source(release_readiness_protocol_path(), local = env)
+  root <- tempfile("release-version-")
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  paths <- env$mfrmr_release_readiness_paths(root, target_version = "0.2.4")
+  writeLines("Version: 0.2.4", paths$description)
+  writeLines(c("# mfrmr 0.2.4", "Candidate.", "# mfrmr 0.2.3",
+               "Earlier testing of 0.2.4.9000."), paths$news)
+  writeLines(c("# Unreleased candidate", "Final checks remain open.",
+               "# Historical development check", "Version 0.2.4.9000."),
+             paths$cran_comments)
+  status <- env$mfrmr_release_readiness_version_status(paths)
+  expect_true(status$VersionOK)
+  expect_false(status$DevelopmentLabelPresent)
+  writeLines(c("# Unreleased candidate", "Current version 0.2.4.9000.",
+               "# Historical development check"), paths$cran_comments)
+  status <- env$mfrmr_release_readiness_version_status(paths)
+  expect_false(status$VersionOK)
+  expect_true(status$DevelopmentLabelPresent)
+})
+
 test_that("release-readiness protocol reviews the source tree shape", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
@@ -2974,7 +3015,11 @@ test_that("release-readiness protocol reviews the source tree shape", {
     pkg_root <- system.file(package = "mfrmr")
   }
   expect_true(nzchar(pkg_root))
-  review <- env$mfrmr_release_readiness_review(pkg_dir = pkg_root)
+  paths <- env$mfrmr_release_readiness_paths(pkg_root)
+  # Review canonical paths, without discovering logs inside retained archives.
+  review <- env$mfrmr_release_readiness_review(pkg_dir = pkg_root,
+    check_log = file.path(pkg_root, "mfrmr.Rcheck", "00check.log"),
+    tarball = paths$tarball)
   expect_s3_class(review, "mfrmr_release_readiness_review")
   expect_true(all(c(
     "prompt_steps", "gate_summary", "release_decision",
@@ -2994,7 +3039,6 @@ test_that("release-readiness protocol reviews the source tree shape", {
   } else {
     expect_true(isTRUE(review$version_status$VersionOK[1]))
   }
-  expect_true(file.exists(review$paths$gpcm_roadmap))
   expect_true(isTRUE(review$source_truth_status$SourceTruthOK[1]))
   contract_applies <- utils::compareVersion(
     description_version,
@@ -3062,7 +3106,12 @@ test_that("release-readiness protocol reviews the source tree shape", {
       "not_applicable"
     )
   }
-  expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")
+  if (file.exists(review$paths$gpcm_roadmap)) {
+    expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")
+  } else {
+    expect_identical(review$gpcm_scope_status$GPCMScopeStatus[1], "concern")
+    expect_match(review$gpcm_scope_status$Detail[1], "roadmap is missing", fixed = TRUE)
+  }
   if (file.exists(file.path(pkg_root, ".github", "workflows", "R-CMD-check.yaml"))) {
     expect_true(isTRUE(review$ci_workflow_status$CIWorkflowOK[1]))
   }

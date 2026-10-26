@@ -170,6 +170,9 @@ test_that("a pre-issue token requires exact semantic evidence and current PID", 
 })
 
 test_that("launch-tier work remains internal and nonexecuting", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_launch_tier_contract()
   source <- paste(readLines(ctx$paths[[2L]], warn = FALSE), collapse = "\n")
   record <- paste(readLines(file.path(

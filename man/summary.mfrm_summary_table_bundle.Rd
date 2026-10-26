@@ -78,14 +78,12 @@ in the bundle.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
 )
 bundle <- build_summary_table_bundle(fit)
 summary(bundle)
-}
 }
 \seealso{
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}, \code{\link[=apa_table]{apa_table()}}, \code{\link[=plot]{plot()}}

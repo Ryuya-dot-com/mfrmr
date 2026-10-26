@@ -2,7 +2,7 @@
 mfrm_extended_estimate_plot <- function(table, labels, name, default_title, xlab,
     note, draw, settings, style = c("interval", "precision", "distribution"),
     sort = c("input", "estimate", "uncertainty"), palette = c("accessible", "mono"),
-    title = NULL, caption = NULL, show_title = TRUE, show_notes = TRUE,
+    title = NULL, caption = NULL, show_title = FALSE, show_notes = FALSE,
     show_labels = TRUE, reference = 0, text_scale = 1, point_size = 2.5,
     extra = list()) {
   style <- match.arg(style); sort <- match.arg(sort); palette <- match.arg(palette)
@@ -97,43 +97,43 @@ mfrm_draw_extended_estimates <- function(payload) {
     precision = range(c(0, dd$Width[dd$Included]), finite = TRUE), distribution = c(0, 1))
   if (diff(ylim) == 0) ylim <- ylim + c(0, 1)
   if (style == "precision") ylim[2] <- ylim[2] * 1.15
-  graphics::plot(NA_real_, NA_real_, type = "n", xlim = opt$limits, ylim = ylim,
+  plot(NA_real_, NA_real_, type = "n", xlim = opt$limits, ylim = ylim,
     xlab = payload$xlab, ylab = payload$ylab, main = title,
     yaxt = if (style == "interval") "n" else "s", bty = "n")
-  graphics::abline(h = if (style == "interval") y else graphics::axTicks(2), col = "grey92")
-  if (!is.null(opt$reference)) graphics::abline(v = opt$reference, lty = 2, col = "grey45")
+  abline(h = if (style == "interval") y else graphics::axTicks(2), col = "grey92")
+  if (!is.null(opt$reference)) abline(v = opt$reference, lty = 2, col = "grey45")
   if (style == "interval") {
-    if (comparison) graphics::segments(tab$OrdinaryLower, y - offset, tab$OrdinaryUpper, y - offset,
+    if (comparison) segments(tab$OrdinaryLower, y - offset, tab$OrdinaryUpper, y - offset,
       col = "grey35", lty = 2, lwd = 1.5)
-    graphics::segments(pmax(opt$limits[1], tab$Lower), y + offset,
+    segments(pmax(opt$limits[1], tab$Lower), y + offset,
       pmin(opt$limits[2], tab$Upper), y + offset, col = dd$Colour, lwd = 1.5)
     for (i in seq_len(nrow(tab))) {
-      if (is.infinite(tab$Lower[i])) graphics::arrows(opt$limits[1] + opt$padding, y[i] + offset,
+      if (is.infinite(tab$Lower[i])) arrows(opt$limits[1] + opt$padding, y[i] + offset,
         opt$limits[1], y[i] + offset, length = .08, col = dd$Colour[i])
-      if (is.infinite(tab$Upper[i])) graphics::arrows(opt$limits[2] - opt$padding, y[i] + offset,
+      if (is.infinite(tab$Upper[i])) arrows(opt$limits[2] - opt$padding, y[i] + offset,
         opt$limits[2], y[i] + offset, length = .08, col = dd$Colour[i])
     }
-    graphics::points(tab$Estimate[dd$Included], (y + offset)[dd$Included],
+    points(tab$Estimate[dd$Included], (y + offset)[dd$Included],
       pch = dd$Shape[dd$Included], col = dd$Colour[dd$Included], cex = opt$point_size / 2.5)
-    if (opt$show_labels) graphics::axis(2, at = y, labels = dd$Label, las = 1, tick = FALSE)
-    if (comparison) graphics::legend("top", horiz = TRUE, bty = "n", cex = .8,
+    if (opt$show_labels) axis(2, at = y, labels = dd$Label, las = 1, tick = FALSE)
+    if (comparison) legend("top", horiz = TRUE, bty = "n", cex = .8,
       legend = c(paste("Bootstrap", payload$settings$method), "Ordinary normal"),
       col = c(colour, "grey35"), lty = c(1, 2))
   } else if (style == "precision") {
     keep <- dd$Included
-    graphics::points(dd$Estimate[keep], dd$Width[keep], pch = dd$Shape[keep],
+    points(dd$Estimate[keep], dd$Width[keep], pch = dd$Shape[keep],
       col = dd$Colour[keep], cex = opt$point_size / 2.5)
-    if (opt$show_labels && any(keep)) graphics::text(dd$Estimate[keep], dd$Width[keep], dd$Label[keep], pos = 3, cex = .8)
+    if (opt$show_labels && any(keep)) text(dd$Estimate[keep], dd$Width[keep], dd$Label[keep], pos = 3, cex = .8)
   } else if (nrow(payload$distribution)) {
     path <- payload$distribution_path; ecdf <- payload$distribution
     graphics::polygon(c(path$Estimate, rev(range(path$Estimate))),
       c(path$Cumulative, 0, 0), col = grDevices::adjustcolor(colour, alpha.f = .12), border = NA)
-    graphics::lines(path, col = colour, lwd = 2)
-    graphics::points(ecdf, col = colour, pch = 16, cex = opt$point_size / 2.5)
+    lines(path, col = colour, lwd = 2)
+    points(ecdf, col = colour, pch = 16, cex = opt$point_size / 2.5)
     graphics::rug(dd$Estimate[dd$Included], col = colour)
   }
-  if (style != "interval" && !any(dd$Included)) graphics::text(mean(opt$limits), mean(ylim), "No eligible estimates")
-  for (i in seq_along(caption_lines)) graphics::mtext(caption_lines[i], side = 1,
+  if (style != "interval" && !any(dd$Included)) text(mean(opt$limits), mean(ylim), "No eligible estimates")
+  for (i in seq_along(caption_lines)) mtext(caption_lines[i], side = 1,
     line = 4 + (i - 1) * .85, cex = .7, adj = 0)
   invisible(payload)
 }

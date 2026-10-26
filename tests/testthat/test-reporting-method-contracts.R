@@ -145,6 +145,11 @@ test_that("weighted reports distinguish observed rows from the weight sum", {
   expect_match(gsub("[[:space:]]+", " ", apa$report_text),
                paste0("was fit to ", rows, " observations"), fixed = TRUE)
   expect_match(apa$report_text, "sum of observation weights", fixed = TRUE)
+  text <- gsub("[[:space:]]+", " ", apa$report_text)
+  expect_match(text, "multiplied row-level ordered-category log-likelihood contributions", fixed = TRUE)
+  expect_match(text, "Person distribution was integrated once per Person", fixed = TRUE)
+  expect_match(text, "not interpreted as replicated independent Person response patterns", fixed = TRUE)
+  expect_false(grepl("applied as frequency counts", text, fixed = TRUE))
   smap <- mfrmr:::build_visual_summary_map(fit, diag)
   expect_true(any(grepl(paste0("Observations: N = ", rows), smap$wright_map, fixed = TRUE)))
   wmap <- mfrmr:::build_visual_warning_map(fit, diag,
@@ -246,8 +251,8 @@ test_that("build_visual_summary_map returns summary text for all keys", {
 test_that("build_visual_summary_map includes strict marginal routes for MML diagnostics", {
   smap_mml <- mfrmr:::build_visual_summary_map(.fit_mml, .diag_mml)
   expect_true(any(grepl("Expected counts condition on the same responses", smap_mml$strict_marginal_fit, fixed = TRUE)))
-  expect_true(any(grepl("plot_marginal_fit()", smap_mml$strict_marginal_fit, fixed = TRUE)))
-  expect_true(any(grepl("plot_marginal_pairwise()", smap_mml$strict_pairwise_local_dependence, fixed = TRUE)))
+  expect_true(any(grepl('plot(x, type = "marginal_fit")', smap_mml$strict_marginal_fit, fixed = TRUE)))
+  expect_true(any(grepl('plot(x, type = "marginal_pairwise")', smap_mml$strict_pairwise_local_dependence, fixed = TRUE)))
 })
 
 test_that("build_visual_warning_map explains when strict marginal diagnostics were not requested", {
@@ -308,18 +313,6 @@ test_that("build_apa_report_text with bias_results includes bias summary", {
 test_that("build_apa_report_text without bias mentions no bias data", {
   text <- mfrmr:::build_apa_report_text(.fit, .diag, bias_results = NULL)
   expect_true(nchar(text) > 0)
-})
-
-test_that("APA draft describes row weights without treating MML rows as persons", {
-  fit_weighted <- .fit_mml
-  fit_weighted$config$weight_col <- "CaseWeight"
-  text <- mfrmr:::build_apa_report_text(fit_weighted, .diag_mml)
-  text <- gsub("\\s+", " ", text)
-
-  expect_match(text, "multiplied row-level ordered-category log-likelihood contributions", fixed = TRUE)
-  expect_match(text, "Person distribution was integrated once per Person", fixed = TRUE)
-  expect_match(text, "not interpreted as replicated independent Person response patterns", fixed = TRUE)
-  expect_false(grepl("applied as frequency counts", text, fixed = TRUE))
 })
 
 test_that("build_apa_outputs surfaces latent-regression population-model wording", {

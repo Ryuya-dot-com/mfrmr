@@ -85,6 +85,8 @@ test_that("facet_quality_dashboard handles single and named-list bias bundles", 
 test_that("facet_quality_dashboard surfaces failed bias-collection pairs in notes", {
   bias_collection <- structure(
     list(
+      fit_identity = facet_dashboard_fixture$bias_rater$fit_identity,
+      calculation_version = facet_dashboard_fixture$bias_rater$calculation_version,
       by_pair = list(rater_criterion = facet_dashboard_fixture$bias_rater),
       errors = data.frame(
         Interaction = "Task x Criterion",
@@ -141,14 +143,20 @@ test_that("plot_facet_quality_dashboard returns mfrm_plot_data for severity and 
 
 
 test_that("unavailable diagnostics cannot silently pass screening", {
+  fit <- facet_dashboard_fixture$fit
   dx <- facet_dashboard_fixture$diagnostics
   dx$measures <- as.data.frame(dx$measures)
   rows <- which(dx$measures$Facet == "Rater")
+  # Keep the missing estimate consistent with the fitted source being displayed.
+  level <- dx$measures$Level[rows[1]]
+  fit$facets$others$Estimate[fit$facets$others$Facet == "Rater" &
+                            fit$facets$others$Level == level] <- NA_real_
   dx$measures$Estimate[rows[1]] <- NA_real_
+  dx$parameter_uncertainty$source <- mfrm_native_location_identity(fit)
   dx$measures$Infit[rows] <- 1
   dx$measures$Outfit[rows] <- NA_real_
   dx$measures$Infit[rows[1]] <- 2
-  dash <- facet_quality_dashboard(facet_dashboard_fixture$fit, diagnostics = dx)
+  dash <- facet_quality_dashboard(fit, diagnostics = dx)
   expect_true(is.na(dash$detail$SeverityFlag[1]))
   expect_true(dash$detail$MisfitFlag[1])
   expect_true(all(is.na(dash$detail$MisfitFlag[-1])))

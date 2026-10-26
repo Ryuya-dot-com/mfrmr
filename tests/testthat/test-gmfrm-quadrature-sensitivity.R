@@ -89,6 +89,40 @@ test_that("quadrature probabilities and diagnostic SEs use both slope owners", {
   expect_identical(mfrmr_gqs_slope_keys(reordered),rev(mfrmr_gqs_slope_keys(fit)))
 })
 
+test_that("two-family sensitivity shares fresh information without reusing eligibility", {
+  fit <- gmfrm_quadrature_fixture()$review$fits$q31
+  original <- compute_mml_parameter_covariance
+  orders <- integer()
+  local_mocked_bindings(compute_mml_parameter_covariance = function(x, ...) {
+    orders <<- c(orders, x$config$estimation_control$quad_points)
+    original(x, ...)
+  }, .package = "mfrmr")
+  expected <- suppressWarnings(confint(fit, parm = "slopes"))
+  orders <- integer()
+  actual <- suppressWarnings(mfrmr_gqs_raw_information(fit))
+  expect_identical(orders, c(31L, 61L))
+  expect_identical(actual$intervals, expected)
+  expect_true(all(is.finite(actual$slope_se)))
+  expect_true(all(attr(actual$intervals, "diagnostics")$CIEligible))
+
+  # Refusal before information must preserve raw SEs without borrowing the
+  # preceding fit's permission to report intervals.
+  changed <- fit
+  changed$summary$Converged <- FALSE
+  expected <- confint(changed, parm = "slopes")
+  orders <- integer()
+  refused <- mfrmr_gqs_raw_information(changed)
+  expect_identical(orders, 31L)
+  expect_identical(refused$intervals, expected)
+  expect_identical(refused$slope_se, actual$slope_se)
+  expect_false(any(attr(refused$intervals, "diagnostics")$CIEligible))
+  expect_match(attr(refused$intervals, "diagnostics")$InferenceReview[1], "EM must meet")
+  expect_true(fit$summary$Converged)
+  imported <- changed
+  class(imported) <- c("mfrm_imported_fit", class(imported))
+  expect_error(mfrmr_gqs_raw_information(imported), "require a native GPCM fit")
+})
+
 test_that("two-family replay controls and invalid integration requests stay explicit", {
   x <- gmfrm_quadrature_fixture()
   args <- mfrmr_gqs_refit_arguments(x$fit,x$data,31L)

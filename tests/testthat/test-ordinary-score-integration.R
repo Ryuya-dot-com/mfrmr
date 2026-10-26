@@ -23,7 +23,7 @@ test_that("ordinary retained-prior scoring checks the batch independently of cal
     expect_identical(summary(retained)$settings,retained$settings)
     stale <- retained; stale$settings$score_integration_review <- NULL
     expect_error(summary(stale),"inconsistent numerical review records")
-    expect_error(mfrmr:::export_validate_optional_object(stale,"mfrm_unit_prediction","prediction"),
+    expect_error(mfrmr:::export_validate_optional_object(stale,"mfrm_unit_prediction","prediction", fit = fit),
       "inconsistent numerical review records")
     legacy <- retained
     legacy$settings$score_integration_required <- legacy$settings$score_integration_review <- NULL

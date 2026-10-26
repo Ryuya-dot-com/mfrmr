@@ -422,6 +422,9 @@ test_that("P3 advances exactly five capabilities and remains execution-free", {
 })
 
 test_that("P3 record advances only the internal checklist", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_calibration_p3()
   record <- paste(readLines(file.path(
     ctx$validation,

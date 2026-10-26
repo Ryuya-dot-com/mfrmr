@@ -2,6 +2,7 @@
 % Please edit documentation in R/api-gpcm-curve-intervals.R
 \name{mfrm_curve_intervals}
 \alias{mfrm_curve_intervals}
+\alias{summary.mfrm_curve_intervals}
 \alias{print.mfrm_curve_intervals}
 \alias{plot.mfrm_curve_intervals}
 \title{Uncertainty in GPCM category probabilities and information curves}
@@ -16,6 +17,8 @@ mfrm_curve_intervals(
   level = 0.95,
   simultaneous = c("none", "bonferroni")
 )
+
+\method{summary}{mfrm_curve_intervals}(object, ...)
 
 \method{print}{mfrm_curve_intervals}(x, ...)
 
@@ -47,18 +50,19 @@ sum over all observed exposures as in \code{\link[=compute_information]{compute_
 
 \item{method, clusters, adjust, level, simultaneous}{As in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.}
 
-\item{x}{A saved \code{mfrm_curve_intervals} result.}
+\item{object, x}{A saved \code{mfrm_curve_intervals} result.}
 
 \item{...}{Unused.}
 
-\item{title, subtitle}{Optional plot text; NULL removes it.}
+\item{title, subtitle}{Optional returned text; NULL removes it. Figure text
+is not drawn. Use \code{plot_data(p, "title")} and \code{plot_data(p, "notes")}.}
 
 \item{palette}{Optional vector of colors, one per category/series. Line
 types distinguish series in addition to color. The default is colorblind friendly.}
 
 \item{draw}{Draw the ggplot immediately? Default TRUE; FALSE returns it only.}
 
-\item{caption}{Optional plot caption. If omitted, unavailable intervals are
+\item{caption}{Optional returned caption. If omitted, unavailable intervals are
 counted and explained, along with unobserved combinations of fitted levels.
 Two-family point-only curves instead state that calibration intervals
 are unavailable for the entire plot, without marking every curve point.
@@ -71,7 +75,10 @@ A \code{mfrm_curve_intervals} list with \code{table}, \code{settings}, and the e
 unobserved combination of fitted facet levels (\code{ObservedContext}). This
 records the retained rating design, not statistical identification or
 interval reliability. Its plot method returns a ggplot with the plotted data available
-in \code{plot$data}; titles can be omitted and the plot can be customized.
+in \code{plot$data}; descriptions and cautions are available through
+\code{plot_data(p, "notes")}, separately from the figure.
+\code{summary()} returns settings, the complete interval table, contexts,
+numerical cautions and the anchor note without recalculating information.
 }
 \description{
 Evaluate specified rating contexts at known ability values and propagate the
@@ -103,12 +110,12 @@ affected unequal-rater-slope condition with the updated optimizer left
 its interval results unchanged. See the GPCM scope vignette
 for the evaluated grid, denominators and source limitations; an available
 interval is not a finite-sample coverage certification.
-Printing and the default plot subtitle identify the approximation.
+Printing and the returned plot description identify the approximation.
 Custom plot text may omit that description; retain the method and its
 limitations in the figure legend or accompanying report.
 For one-family curves, crosses mark retained estimates whose intervals
 are unavailable. Two-family curves have no calibration intervals; the
-default subtitle and caption state this without covering curves in crosses.
+returned subtitle and caption state this without covering curves in crosses.
 A context with only one supplied ability value retains colored points.
 Panel labels put each facet on its own line. With many rating contexts,
 supply the comparisons of interest in \code{newdata} or enlarge the exported
@@ -119,8 +126,13 @@ uncertainty. Consult the table's \code{InferenceReview} for each reason.
 A numerically verified but ill-conditioned information inverse can
 supply intervals with a warning, as described in \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}.
 The warning is saved in \code{cautions} and the table's \code{InferenceReview}, and
-appears in printing and the default plot subtitle. A custom subtitle,
+appears in printing and the returned plot description. A custom subtitle,
 including NULL, changes the display without removing saved diagnostics.
+In a one-family fit with fixed facet anchors or group means, model and
+sandwich intervals condition on those supplied values. Their source
+calibration uncertainty is not propagated. Fixing a facet location does
+not fix its slope, thresholds or whole response curve. Availability still
+depends on the joint-information and numerical checks described above.
 }
 \section{Two slope families}{
 
@@ -135,11 +147,27 @@ and missing intervals. A slope value of one is not a rater-quality threshold.
 }
 
 \examples{
-# After fitting a GPCM:
-# grid <- expand.grid(Theta = seq(-3, 3, length.out = 41),
-#                     Rater = "R01", Criterion = "C01")
-# curves <- mfrm_curve_intervals(fit, grid)
-# plot(curves, title = NULL, subtitle = NULL)
+# How do category probabilities vary with ability in one rating context?
+ratings <- load_mfrmr_data("example_core")
+fit <- fit_mfrm(ratings, "Person", c("Rater", "Criterion"), "Score",
+  model = "GPCM", method = "MML", step_facet = "Criterion",
+  slope_facet = "Rater", rating_min = 1, rating_max = 4,
+  category_policy = "preserve", quad_points = 61)
+# Select actual labels from the example; replace them with your context.
+grid <- expand.grid(Theta = seq(-2, 2, length.out = 21),
+  Rater = unique(ratings$Rater)[1],
+  Criterion = unique(ratings$Criterion)[1])
+curves <- mfrm_curve_intervals(fit, grid)
+# At ability zero, read the probabilities of the original score categories.
+subset(curves$table, Theta == 0,
+  select = c(Category, Estimate, Lower, Upper, CIEligible, InferenceReview))
+plot(curves)
+# Ribbons describe calibration uncertainty at fixed ability, not uncertainty
+# about an individual's ability. They are pointwise, not simultaneous bands.
+file <- tempfile(fileext = ".rds")
+saveRDS(curves, file) # Keep the complete result, including context and notes
+saved <- readRDS(file)
+saved$settings
 }
 \seealso{
 \code{\link[=confint.mfrm_fit]{confint.mfrm_fit()}}, \code{\link[=category_curves_report]{category_curves_report()}}, \code{\link[=compute_information]{compute_information()}}

@@ -12,9 +12,15 @@
   title = paste(x$settings$facet, "estimates and contrasts"),
   subtitle = paste0(format(100 * x$settings$level, trim = TRUE),
     "\% pointwise normal intervals | ", if (x$settings$method == "sandwich")
-    paste0("Sandwich | ", x$settings$clusters, " independent clusters assumed") else
+    paste0("Sandwich | ", x$settings$clusters, " independent clusters assumed") else if
+    (identical(x$settings$procedure, "cml_conditional_information"))
+    "Conditional information" else if (identical(x$settings$uncertainty,
+    "independent_anchor_delta")) "Information + anchor source" else
     "Observed information"),
-  caption = if (any(x$table$Status != "available"))
+  caption = if (any(!is.finite(x$table$Estimate)))
+    paste0("Not estimated: no point or interval | ",
+    "Crosses: estimated points with unavailable intervals") else if (any(x$table$Status
+    != "available"))
     "Open diamonds: fixed targets | Crosses: unavailable selected intervals" else NULL,
   reference = 0,
   show_legend = TRUE,
@@ -25,14 +31,17 @@
 \item{x}{Output from \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}.}
 
 \item{comparison}{Logical. With a sandwich result, also show its ordinary
-model-based interval. Both intervals use the same point estimate.}
+model-based interval. With source-propagated anchors, show the separate
+conditional-on-anchors interval. Both use the same point estimate.}
 
 \item{draw}{Logical; \code{FALSE} returns exact plotted data without opening a device.}
 
 \item{preset}{A package plot preset, for example \code{"standard"} or \code{"monochrome"}.}
 
-\item{title, subtitle, caption}{Optional text; \code{NULL} omits it. Defaults show
-the facet, exact confidence level, method and fixed/unavailable symbols.}
+\item{title, subtitle, caption}{Optional returned text; \code{NULL} omits it.
+Defaults describe the facet, exact confidence level, method and
+fixed/unavailable symbols. This text is not drawn; use
+\code{plot_data(p, "notes")} and \code{plot_data(p, "title")} to retrieve it.}
 
 \item{reference}{Optional finite vertical reference; default zero. Use
 \code{NULL} to omit it. This is not a rater-quality threshold.}
@@ -51,7 +60,10 @@ Plot fixed-facet interval methods
 }
 \details{
 Fixed targets use open diamonds without inferential intervals.
-Unavailable selected intervals use crosses; an ordinary comparison interval
+A conditionally fixed anchor can have a source-propagated interval; the
+comparison displays its conditional fixed value separately. Method labels
+distinguish source propagation from conditional observed information.
+Unavailable intervals in either displayed method use crosses; an ordinary comparison interval
 does not substitute for a missing sandwich interval. The zero line is a
 reference, not a threshold of practical importance or a rater-quality rule.
 No fit or covariance is recalculated. Target order is preserved.
@@ -59,7 +71,24 @@ Weak-information cautions remain in the returned data and appear in the
 default subtitle. Custom or omitted subtitles change display only.
 For experimental two-family GPCM locations, the axis uses fixed-N(0,1)
 ability units and the default subtitle states the location reference and
-unqualified coverage. These are not uniform expected-rating differences.
+unqualified coverage, with a deficient Person-score rank caution when
+applicable. These are not uniform expected-rating differences.
+Standardized contrast axes use population SD units; returned notes identify
+whether SD uncertainty is estimated or the known SD is one. Reviewed
+interaction contrasts retain group direction, panel weights and scale in
+their source result; returned labels distinguish them from facet locations.
+Native CML intervals are labeled conditional information. Their returned
+notes describe asymptotic validity without implying weak information or
+an estimated ability population SD.
+When a comparison has no estimate, its row is labeled "not estimated"
+and has no point or interval. An empty display range is only an axis
+placeholder; it does not assign a value to unavailable targets.
+Joint interaction-cell results retain cell identities, counts and sparse
+flags in \code{plot_data(p, "interaction_cells")}. Their axis uses additive
+predictor shifts; row labels show the two level names in fitted facet order.
+Units follow the fixed N(0,1) ability scale. Positive effects raise
+expected coded scores relative to the jointly fitted main effects. These
+pointwise intervals are not fixed-baseline bias screens or fairness labels.
 }
 \section{Session plot defaults}{
 

@@ -43,12 +43,10 @@ Compact summary helper for QA of table data before manuscript export.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 tbl <- apa_table(fit, which = "summary")
 summary(tbl)
-}
 }
 \seealso{
 \code{\link[=apa_table]{apa_table()}}, \code{\link[=plot]{plot()}}

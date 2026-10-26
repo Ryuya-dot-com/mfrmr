@@ -7,8 +7,13 @@
 Package-native guide to moving from fitted model objects to
 manuscript-draft text, tables, notes, and revision checklists in \code{mfrmr}.
 
-This guide currently applies fully to diagnostics-based \code{RSM} / \code{PCM}
-workflows. \code{GPCM} fits support \code{\link[=reporting_checklist]{reporting_checklist()}},
+This guide applies to ordinary MML/JML \code{RSM} / \code{PCM} reporting, with the
+estimator-specific limits on structural inference. Native CML and
+comparison-only fits do not supply this consolidated reporting workflow.
+For CML, use \code{summary(fit)} and \code{\link[=mfrm_facet_intervals]{mfrm_facet_intervals()}}, then \code{summary(ci)},
+\code{plot(ci)}, \code{\link[=apa_table]{apa_table()}} and \code{saveRDS(ci, file)}; see
+\code{vignette("mfrmr-facet-intervals", package = "mfrmr")}.
+Ordinary one-family \code{GPCM} fits support \code{\link[=reporting_checklist]{reporting_checklist()}},
 \code{\link[=precision_review_report]{precision_review_report()}}, direct curve/graph and residual table helpers,
 and caveated APA/QC/export bundles. Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} when you
 need the formal boundary for the current \code{GPCM} reporting path.
@@ -21,6 +26,11 @@ Full FACETS-style score-side contract review remains blocked. Scorefile
 export, design forecasting, diagnostic/signal-detection screening, and
 linking synthesis use their own caveated \code{GPCM} routes and should not be
 treated as automatic operational-scoring evidence.
+
+See \code{vignette("mfrmr-networks-and-reporting")} for Lamprianou-inspired network
+views, the FACETS/ConQuest reporting crosswalk and speaking/writing examples
+combining MFRM with G/D studies. \code{\link[=plot_data]{plot_data()}} supports long-format extraction
+and original-value cluster profiles for custom distribution plots.
 }
 \section{Start with the reporting question}{
 
@@ -55,6 +65,25 @@ Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} for co
 sentence starters, then verify availability with
 \code{reporting_checklist()$visual_scope}.
 }
+}
+
+\section{Editable one-family GPCM report}{
+
+Copy the installed \code{templates/gpcm-report.Rmd} using
+\code{system.file("templates", "gpcm-report.Rmd", package = "mfrmr")}, then render
+it with \code{\link[rmarkdown:render]{rmarkdown::render()}}. The default synthetic example produces an
+HTML report, separation/Strata/reliability and fit tables, a Wright map,
+category-probability curves, ordinal Krippendorff's alpha, CSVs and an RDS
+analysis. Set \code{ratings_csv}, \code{rating_min}, \code{rating_max} and \code{output_dir}
+through the template's parameters for your data. It expects columns Person,
+Rater, Criterion and Score, with one rating per cell; repeated occasions
+require an explicit measurement unit and agreement keys.
+The model is one-family GPCM MML with criterion-owned steps and slopes.
+Alpha is calculated separately from observed ratings; \code{\link[=mfrm_report]{mfrm_report()}} does
+not automatically include it. Fit review states and precision limitations
+remain visible. Complete the study-context and interpretation prompts before
+treating the rendered document as a manuscript. See
+\code{vignette("mfrmr-reporting-and-apa")} for the output map and full RSM lesson.
 }
 
 \section{Recommended reporting route}{
@@ -98,8 +127,8 @@ Use \code{\link[=reporting_checklist]{reporting_checklist()}} to inspect manuscr
 or \code{\link[=export_summary_appendix]{export_summary_appendix()}}. These narrower tools remain useful and
 are not replaced by the general report. For \code{GPCM}, keep the
 \code{gpcm_boundary} caveats with APA/QC/export output.
-When strict marginal rows are available, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}} and
-\code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}} support local-misfit follow-up.
+When strict marginal rows are available, \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")} and
+\link[=plot.mfrm_fit]{plot(x, type = "marginal_pairwise")} support local-misfit follow-up.
 When candidate models are compared, keep the comparison as a reporting
 review: \code{\link[=compare_mfrm]{compare_mfrm()}} -> \code{\link[=build_model_choice_review]{build_model_choice_review()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}. Treat \code{GPCM} as a slope-aware
@@ -260,8 +289,8 @@ guidance for public visual helpers.}
 \item Treat \code{\link[=reporting_checklist]{reporting_checklist()}} as the gap finder and
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} as the writing engine.
 \item Use the checklist's \code{"Visual Displays"} rows to decide whether the next
-follow-up should be \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \code{\link[=plot_marginal_fit]{plot_marginal_fit()}},
-\code{\link[=plot_residual_pca]{plot_residual_pca()}}, \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}, or another public plot.
+follow-up should be \link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link[=plot.mfrm_fit]{plot(x, type = "marginal_fit")},
+\link[=plot.mfrm_fit]{plot(x, type = "residual_pca")}, \link[=plot.mfrm_fit]{plot(x, type = "bias")}, or another public plot.
 \item Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} to draft visual captions and
 results-sentence starters, but do not paste the skeletons without checking
 the actual fit, diagnostics, and study context.
@@ -296,8 +325,10 @@ deidentified; review every file under the study's data-handling policy before
 any handoff.
 }
 
-\section{Typical workflow}{
+\section{Additional task-specific workflows}{
 
+Use these when the reporting question calls for extra manuscript or
+appendix assembly, after choosing the supported route above.
 \itemize{
 \item Manuscript-first route:
 \code{\link[=fit_mfrm]{fit_mfrm()}} -> \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} -> \code{\link[=reporting_checklist]{reporting_checklist()}} ->
@@ -340,7 +371,6 @@ caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=bui
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -368,5 +398,4 @@ tbl <- apa_table(results, which = "facet_overview")
 tbl # Prints the table, caption, and note; review them before using in a paper
 
 # For individual estimates, see as.data.frame(fit)
-}
 }

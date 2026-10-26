@@ -8,10 +8,10 @@ unexpected_after_bias_table(
   fit,
   bias_results,
   diagnostics = NULL,
-  abs_z_min = 2,
+  abs_z_min = 3,
   prob_max = 0.3,
   top_n = 100,
-  rule = c("either", "both")
+  rule = c("residual", "either", "both")
 )
 }
 \arguments{
@@ -29,7 +29,8 @@ unexpected_after_bias_table(
 Summary counts, percentages, and before/after comparisons use all flagged
 observations, regardless of this display limit.}
 
-\item{rule}{Flagging rule: \code{"either"} or \code{"both"}.}
+\item{rule}{\code{"residual"} (default), \code{"either"}, or \code{"both"}; see
+\code{\link[=unexpected_response_table]{unexpected_response_table()}} for the same baseline/after-bias rule.}
 }
 \value{
 A named list with:
@@ -105,8 +106,15 @@ The \code{summary} data.frame contains:
 }
 }
 
+\section{Saved-result reuse}{
+
+The returned \code{fit_identity} records the fitted analysis for reuse with
+reports and exports. Recreate older results from the saved fit and matching
+diagnostics using the original screening options; no model refit is needed.
+See \link{mfrmr_compatibility_layer} for migration instructions.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_bias")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -115,7 +123,6 @@ t10 <- unexpected_after_bias_table(fit, bias, diagnostics = diag, top_n = 20)
 summary(t10)
 p_t10 <- plot(t10, draw = FALSE)
 p_t10$data$plot
-}
 }
 \seealso{
 \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=bias_count_table]{bias_count_table()}},

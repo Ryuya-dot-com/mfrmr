@@ -49,9 +49,15 @@ across waves as rater drift, link the waves by either (i) holding
 common anchors fixed across fits (see
 \link{mfrmr_linking_and_dff} for the supported linking route), or
 (ii) harmonizing the scale post-hoc with a Stocking-Lord type
-transformation and reviewing the result via \code{\link[=plot_anchor_drift]{plot_anchor_drift()}}.
+transformation and reviewing the result via \link[=plot.mfrm_anchor_drift]{plot(x)}.
 The trajectory plot itself does not perform linking; it only
 visualizes the supplied fits on their as-fit scales.
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -86,13 +92,13 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit_a <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 300)
 fit_b <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                   method = "JML", maxit = 300)
-p <- plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b), draw = FALSE)
+p <- plot(fit_a, type = "trajectory", comparison = list(T2 = fit_b),
+  labels = c("T1", "T2"), draw = FALSE)
 head(p$data$data)
 # Look for: stable trajectories (small wave-to-wave shifts within
 #   each rater's CI ribbon) once the waves are anchor-linked. A
@@ -101,10 +107,10 @@ head(p$data$data)
 #   logits are on different scales and the picture cannot be read
 #   as drift; see the Anchor-linking caveat in the docstring.
 }
-}
 \seealso{
-\code{\link[=plot_anchor_drift]{plot_anchor_drift()}}, \link{mfrmr_linking_and_dff}
+\link[=plot.mfrm_anchor_drift]{plot(x)}, \link{mfrmr_linking_and_dff}
 }
 \concept{confidence intervals}
 \concept{linking}
 \concept{visual diagnostics}
+\keyword{internal}

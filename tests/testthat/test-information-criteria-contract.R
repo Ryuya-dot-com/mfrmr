@@ -411,6 +411,45 @@ test_that("fitted-object IC comparison audits weights, legacy state, and identit
     tolerance = 1e-8
   )
 
+  # Isolate ratio arithmetic from fitting: two negligible candidates can still
+  # have a finite relative weight even when both normalized weights round to zero.
+  local({
+    contract <- mfrmr:::mfrm_extract_fit_ic_contract(fit_unweighted)
+    local_mocked_bindings(mfrm_extract_fit_ic_contract = function(fit, ...) {
+      result <- contract
+      result$AIC <- fit$ratio_test_aic
+      result
+    })
+    candidates <- lapply(c(100, 1700, 1702), function(value) {
+      result <- fit_unweighted; result$ratio_test_aic <- value; result
+    })
+    cmp <- do.call(compare_mfrm, c(candidates, list(labels = c("A", "B", "C"))))
+    expect_identical(cmp$table$AkaikeWeight, c(1, 0, 0))
+    er <- cmp$evidence_ratios
+    expect_equal(er$LogEvidenceRatio, c(800, 801, 1))
+    expect_equal(er$EvidenceRatio[3], exp(1))
+    expect_true(all(is.na(er$EvidenceRatio[1:2])))
+    expect_identical(er$RatioReason, c("overflow", "overflow", "available"))
+    reversed <- do.call(compare_mfrm, c(rev(candidates), list(labels = c("C", "B", "A"))))
+    expect_equal(reversed$evidence_ratios$EvidenceRatio[1], exp(-1))
+    expect_identical(reversed$evidence_ratios$RatioReason, c("available", "underflow", "underflow"))
+    expect_identical(summary(cmp)$evidence_ratios, er)
+    expect_match(paste(capture.output(print(cmp)), collapse = "\n"),
+                 "overflow; log ratio = 800", fixed = TRUE)
+    expect_match(paste(capture.output(print(reversed)), collapse = "\n"),
+                 "underflow; log ratio = -801", fixed = TRUE)
+    small <- cmp
+    small$evidence_ratios$EvidenceRatio[3] <- exp(-100)
+    expect_match(paste(capture.output(print(small)), collapse = "\n"),
+                 format(signif(exp(-100), 3), trim = TRUE), fixed = TRUE)
+    extremes <- candidates[1:2]
+    extremes[[1]]$ratio_test_aic <- -1e308
+    extremes[[2]]$ratio_test_aic <- 1e308
+    large <- do.call(compare_mfrm, extremes)$evidence_ratios
+    expect_equal(large$LogEvidenceRatio, 1e308)
+    expect_identical(large$RatioReason, "overflow")
+  })
+
   constant_data <- data
   person_weight <- setNames(rep(c(1, 2), length.out = 24L), keep_persons)
   constant_data$AnalysisWeight <- person_weight[as.character(constant_data$Person)]

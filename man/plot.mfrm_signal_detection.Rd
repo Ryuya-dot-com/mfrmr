@@ -23,7 +23,9 @@
 \item{metric}{Metric to plot. For \code{signal = "bias"}, prefer
 \code{metric = "screen_rate"} for the screening hit rate. The older
 \code{metric = "power"} spelling is retained as a backwards-compatible alias
-that maps to \code{BiasScreenRate}.}
+that maps to \code{BiasScreenRate}.
+\code{"estimate"} plots the signed reference-minus-focal DIF contrast or
+the additive bias shift. A refit contrast requires common-scale linking.}
 
 \item{x_var}{Design variable used on the x-axis. When \code{x} was generated from
 a \code{sim_spec} with custom public facet names, the corresponding aliases
@@ -48,24 +50,22 @@ labels (\code{x_label}, \code{group_label}), \code{design_variable_aliases},
 \code{display_metric}, and \code{interpretation_note} so
 callers can label bias-side plots as screening summaries rather than
 formal power/error-rate displays.
+\code{summary_table} retains per-design means and availability denominators;
+\code{notes} retains interpretation and legacy-result restrictions. If additional
+design variables are collapsed, each plotted point is an equally weighted
+average of available design-level means, not a pooled trial/cell rate.
 }
 \description{
 Plot DIF/bias screening simulation results
 }
 \examples{
-\donttest{
-sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
-  n_person = 8,
-  n_rater = 2,
-  n_criterion = 2,
-  raters_per_person = 1,
-  reps = 1,
-  maxit = 30,
-  bias_max_iter = 1,
-  seed = 123
-))
+# One saved replication illustrates output structure, not precise rates.
+# Regeneration recipe: examples/simulation-results.R in the package.
+saved <- readRDS(system.file("examples", "simulation-results.rds",
+  package = "mfrmr", mustWork = TRUE))
+# Inspect saved$generation_warnings and the result's run/status tables.
+sig_eval <- saved$signal_detection
 plot(sig_eval, signal = "dif", metric = "power", x_var = "n_person", draw = FALSE)
-}
 }
 \seealso{
 \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \link{summary.mfrm_signal_detection}

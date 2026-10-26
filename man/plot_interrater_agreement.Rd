@@ -30,9 +30,12 @@ plot_interrater_agreement(
 
 \item{context_facets}{Optional context facets when \code{x} is \code{mfrm_fit}.}
 
-\item{exact_warn}{Warning threshold for exact agreement.}
+\item{exact_warn}{Warning threshold for exact agreement when \code{x} is a fit.
+Saved agreement results use their own thresholds; conflicting overrides
+are rejected. Recreate the agreement result to change its flag rules.}
 
-\item{corr_warn}{Warning threshold for pairwise correlation.}
+\item{corr_warn}{Warning threshold for pairwise correlation when \code{x} is a fit.
+Saved agreement results use their own threshold.}
 
 \item{plot_type}{\code{"exact"}, \code{"corr"}, or \code{"difference"}.}
 
@@ -58,16 +61,21 @@ is an error, even if equal or \code{NULL}. Positional legacy arguments retain
 their order; use the exact name \code{title}.}
 }
 \value{
-A plotting-data object of class \code{mfrm_plot_data}.
+A plotting-data object of class \code{mfrm_plot_data}. \code{\link[=as_ggplot]{as_ggplot()}}
+preserves the selected metric, pair order, model-expected values,
+unavailable comparisons and saved review thresholds. Notes remain in
+\code{plot_data(p, "notes")}, outside the default figure. \code{top_n} limits the
+two bar views; the difference view uses all pairs in the input bundle.
 }
 \description{
 Plot inter-rater agreement diagnostics using base R
 }
 \details{
-Inter-rater agreement plots summarize pairwise consistency for a chosen
-rater facet.  Agreement statistics are computed over observations that
-share the same person and context-facet levels, ensuring that
-comparisons reflect identical rating targets.
+Inter-rater agreement plots describe matched scores for a chosen rater
+facet. The default matches Person and all other non-rater facets; custom
+\code{context_facets} change the comparison unit. Inspect the saved settings
+before interpreting agreement. Repeated ratings within a rater/context
+cell are averaged as described in \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}.
 
 \strong{Exact agreement} is the proportion of matched observations where
 both raters assigned the same category score.  The \strong{expected
@@ -92,8 +100,8 @@ facets are used as context.
 \describe{
 \item{\code{"exact"} (default)}{Bar chart of exact agreement proportion by
 rater pair.  Expected agreement overlaid as connected circles.
-Horizontal reference line at \code{exact_warn}.  Bars colored red when
-observed agreement falls below the warning threshold.}
+Horizontal reference line at the saved \code{exact_warn}. Bar colors follow
+the combined exact/correlation flag, not only the displayed metric.}
 \item{\code{"corr"}}{Bar chart of pairwise Pearson correlation by rater
 pair.  Reference line at \code{corr_warn}.  Ordered by correlation
 (lowest first).  Low correlations suggest inconsistent rank
@@ -109,8 +117,10 @@ flagged.  Vertical reference at 0.}
 
 \section{Interpreting output}{
 
-Pairs below \code{exact_warn} and/or \code{corr_warn} should be prioritized for
-rater calibration review.  On the difference plot, points far from the
+Colors retain the saved combined flag: either known cutoff crossing flags
+a pair; an incomplete decision is neutral. These are descriptive review
+rules, not automatic rater-quality or training-priority decisions.
+On the difference plot, points far from the
 origin along the x-axis indicate directional score differences; points high on the
 y-axis indicate large inconsistency regardless of direction.
 }
@@ -129,6 +139,12 @@ y-axis indicate large inconsistency regardless of direction.
 For a plot-selection guide and a longer walkthrough, see
 \link{mfrmr_visual_diagnostics} and
 \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}.
+}
+
+\section{Migration in 0.2.4}{
+
+This renderer is internal. Use the corresponding \code{plot()} route in
+\link{mfrmr_plot_migration}; the former exported name is no longer available.
 }
 
 \section{Session plot defaults}{
@@ -163,7 +179,6 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -179,15 +194,15 @@ fit <- fit_mfrm(
 )
 
 # Compare observed exact agreement with its model-expected baseline
-plot_interrater_agreement(fit, rater_facet = "Rater")
+plot(fit, type = "agreement", rater_facet = "Rater")
 # Bars show observed agreement; connected circles show model-expected agreement
 
 # Optional: compare the direction and magnitude of observed-score differences
-plot_interrater_agreement(fit, rater_facet = "Rater", plot_type = "difference")
+plot(fit, type = "agreement", rater_facet = "Rater", metric = "difference")
 # Positive horizontal values mean Rater1 assigned higher scores than Rater2
 }
-}
 \seealso{
-\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=plot_facets_chisq]{plot_facets_chisq()}},
-\code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \link{mfrmr_visual_diagnostics}
+\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")},
+\link[=plot.mfrm_fit]{plot(x, type = "qc")}, \link{mfrmr_visual_diagnostics}
 }
+\keyword{internal}

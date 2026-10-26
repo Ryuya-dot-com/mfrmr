@@ -24,12 +24,12 @@ Plot report/table bundles with base R defaults
 \details{
 \code{plot()} dispatches by bundle class:
 \itemize{
-\item \code{mfrm_unexpected} -> \code{\link[=plot_unexpected]{plot_unexpected()}}
-\item \code{mfrm_fair_average} -> \code{\link[=plot_fair_average]{plot_fair_average()}}
-\item \code{mfrm_displacement} -> \code{\link[=plot_displacement]{plot_displacement()}}
-\item \code{mfrm_interrater} -> \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}
-\item \code{mfrm_facets_chisq} -> \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}
-\item \code{mfrm_bias_interaction} -> \code{\link[=plot_bias_interaction]{plot_bias_interaction()}}
+\item \code{mfrm_unexpected} -> \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}
+\item \code{mfrm_fair_average} -> \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}
+\item \code{mfrm_displacement} -> \link[=plot.mfrm_fit]{plot(x, type = "displacement")}
+\item \code{mfrm_interrater} -> \link[=plot.mfrm_fit]{plot(x, type = "agreement")}
+\item \code{mfrm_facets_chisq} -> \link[=plot.mfrm_fit]{plot(x, type = "facets_chisq")}
+\item \code{mfrm_bias_interaction} -> \link[=plot.mfrm_fit]{plot(x, type = "bias")}
 \item \code{mfrm_bias_count} -> bias-count plots (cell counts / low-count rates)
 \item \code{mfrm_fixed_reports} -> pairwise-contrast diagnostics
 \item \code{mfrm_visual_summaries} -> warning/summary message count plots
@@ -43,7 +43,7 @@ category-specific-information plots
 \item \code{mfrm_output_bundle} -> graph/score output-file diagnostics,
 including \code{type = "score_se"} when scorefile SE columns are available
 \item \code{mfrm_residual_pca} -> residual PCA scree, parallel-analysis, or
-loadings views via \code{\link[=plot_residual_pca]{plot_residual_pca()}}
+loadings views via \link[=plot.mfrm_fit]{plot(x, type = "residual_pca")}
 \item \code{mfrm_specifications} -> facet/anchor/convergence plots
 \item \code{mfrm_data_quality} -> dashboard, quality-flag, score-map, facet-pattern,
 and row/category/missing-row plots
@@ -77,6 +77,11 @@ only for interpretable in-range boundaries by default; use
 suppress those vertical boundary lines. Use
 \code{plot_data(x, component = "plot_long")} on a category-curve bundle when
 you want one ggplot2/plotly-friendly table across all curve families.
+Keep curve families and groups separate in custom figures. Automatic
+\code{\link[=as_ggplot]{as_ggplot()}} conversion supports rating-scale counts/thresholds and
+category-structure counts; it is unavailable for category-curve bundles and
+category-structure boundary views. Step displays use point estimates and
+do not turn stored step SEs into crossing, gap or curve intervals.
 }
 \section{Interpreting output}{
 
@@ -91,6 +96,36 @@ the selected route and reusable data; set \code{draw = TRUE} for immediate base 
 \item Inspect routing with \code{summary(bundle)} if needed.
 \item Call \code{plot(bundle, type = ..., draw = FALSE)} to obtain reusable plot data.
 }
+}
+
+\section{Network display controls}{
+
+For subset, design, rater and halo bundles with \code{type = "network"}, use
+\code{layout} (a two-column coordinate matrix, optionally row-named by all node IDs,
+or a function of the displayed igraph), \code{display_min_weight} (absolute edge
+weight for the picture only), and \code{graphical} (a named list of plot.igraph
+arguments, such as vertex.size, vertex.label, vertex.color, edge.curved).
+Unnamed vectors and coordinates follow the returned \code{nodes} order. All nodes,
+including isolates, remain. Edge vectors in \code{graphical} follow the displayed
+\code{edges} order, after any display filter. The default is a deterministic circle; positions
+do not estimate anything. Labels are hidden by default above 80 nodes;
+set vertex.label explicitly to override. Supply the same named layout to compare views.
+Constructor filters such as \code{min_weight} change calculated metrics;
+\code{display_min_weight} does not. Returned \code{source_edges} retain the calculated
+graph, \code{edges} the displayed graph, and \code{coordinates} the actual positions.
+Titles are metadata by default; add a title explicitly via \code{graphical}.
+See \code{vignette("mfrmr-networks-and-reporting")} for bipartite assignment,
+directional disagreement and rater-by-criterion examples inspired by Lamprianou.
+With \code{\link[=rater_network_analysis]{rater_network_analysis()}} and \code{weight_metric = "DirectionalMagnitude"},
+\verb{type = "fit", metric = "SWS"} (or \code{"PUS"}) shows the published network
+inconsistency index. The returned table retains unavailable rows/statuses;
+there are no calibrated reference cutoffs. An entirely unavailable index
+draws an unavailable message and retains the original rows/statuses in the
+returned table, rather than substituting zero. For signed alpha,
+\code{type = "matrix"} returns all eligible signed pair coefficients before graph filtering, retaining
+zero and undefined values separately. Network drawings use magnitude for
+edge width and dashed lines for negative agreement. Use
+\code{\link[=plot.mfrm_network_ergm]{plot.mfrm_network_ergm()}} for ERGM coefficient intervals and simulated GOF.
 }
 
 \section{Session plot defaults}{
@@ -125,7 +160,6 @@ appearance, not estimates, confidence levels or diagnostic thresholds.
 }
 
 \examples{
-\donttest{
 toy_full <- load_mfrmr_data("example_core")
 toy_people <- unique(toy_full$Person)[1:12]
 toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
@@ -157,7 +191,6 @@ if (interactive()) {
   )
 }
 }
-}
 \seealso{
-\code{summary()}, \code{\link[=plot_unexpected]{plot_unexpected()}}, \code{\link[=plot_fair_average]{plot_fair_average()}}, \code{\link[=plot_displacement]{plot_displacement()}}
+\code{summary()}, \link[=plot.mfrm_fit]{plot(x, type = "unexpected")}, \link[=plot.mfrm_fit]{plot(x, type = "fair_average")}, \link[=plot.mfrm_fit]{plot(x, type = "displacement")}
 }

@@ -231,6 +231,9 @@ test_that("review contract cannot fit, launch, hash-gate, or promote", {
 })
 
 test_that("record and roadmap retain the no-result boundary", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p2_candidate_004_numerical_review_contract()
   record <- paste(readLines(file.path(
     ctx$validation,

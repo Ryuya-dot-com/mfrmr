@@ -230,6 +230,9 @@ test_that("the harness has no deletion or top-level execution path", {
 })
 
 test_that("internal documentation keeps execution and promotion separate", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_minimum_diagnostic_harness()
   record_path <- file.path(
     ctx$validation,

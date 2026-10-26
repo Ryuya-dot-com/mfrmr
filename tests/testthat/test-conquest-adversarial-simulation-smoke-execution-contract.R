@@ -181,6 +181,9 @@ test_that("execution source contains no fit, external launch, or hash gate", {
 })
 
 test_that("execution record closes G3 and later roadmap state stays consistent", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_smoke_execution()
   record <- paste(readLines(file.path(
     ctx$validation,

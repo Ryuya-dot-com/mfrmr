@@ -78,6 +78,11 @@ model settings and optimizer records. It contains no native pointers;
 save it with \code{saveRDS()}. Its summary, plot and prediction methods are
 specific to this model; it is not an ordinary \code{mfrm_fit} or portable
 fixed-facet calibration object.
+Calibration and summary rater tables retain \code{IntervalStatus}, \code{CIEligible} and
+\code{InferenceReview} for normal-interval availability. These distinguish
+unrequested bounds, unsupported targets and unresolved checks or variance
+boundaries; see \code{\link[=confint.mfrm_random_rater]{confint.mfrm_random_rater()}}. Retained points require
+the separate fit checks and are not certified by these fields.
 }
 \description{
 Estimate rater severity when the raters are modeled as draws from a specified
@@ -101,6 +106,14 @@ variance parameters. Person effects are integrated by quadrature conditional
 on all shared rater effects; the resulting joint rater integral uses the
 Laplace approximation through the optional RTMB package. Integrating a new
 rater separately for each person would fit a different model.
+After marginalization, Persons sharing a rater are dependent. Adding
+Persons rated by the same fixed panel does not add independent draws from
+the rater population. Even if those rater effects became known exactly,
+a fixed number of draws would not consistently estimate a positive
+population variance. Person count or total rating count alone therefore
+cannot justify ordinary large-sample population-SD inference. The full
+calibration information includes all estimated population SDs, but this
+does not establish the required asymptotic regime or Laplace accuracy.
 
 The initial scope is RSM, unit weights, a connected person-rater design,
 multiple persons per rater, and full-rank additive fixed-facet coding.
@@ -109,6 +122,11 @@ omitted scores are not imputed. Informative assignment, nonnormal rater
 populations, PCM, anchors, interactions, testlets and latent regression
 are not implemented by this route. Connectedness alone does not guarantee
 adequate information about rater variance.
+A fixed-facet level with only minimum or only maximum scores has no finite
+calibration estimate. Such separation fails \code{checks$NumericalReady} and
+\code{checks$InformationPositive}, even if the optimizer reports convergence.
+\code{checks$FixedFacetSeparation} records this sufficient separation check;
+its absence does not exclude separation along combinations of facets.
 
 Both estimated zero variances are considered explicitly. One-sided variance
 scores check these boundaries; the derivative with respect to SD alone cannot

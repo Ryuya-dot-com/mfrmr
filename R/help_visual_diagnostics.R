@@ -12,12 +12,12 @@
 #' manuscript checklist.
 #'
 #' This guide is primarily written for diagnostics-based `RSM` / `PCM`
-#' workflows. `GPCM` fits also use the residual-based diagnostics stack
-#' through [diagnose_mfrm()], [plot_unexpected()], [plot_displacement()],
-#' [plot_interrater_agreement()], [plot_facets_chisq()],
-#' [plot_residual_pca()], and [plot_qc_dashboard()], plus the
+#' workflows. Ordinary one-family `GPCM` fits also use the residual-based diagnostics stack
+#' through [diagnose_mfrm()], [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit],
+#' [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "facets_chisq")][plot.mfrm_fit],
+#' [plot(x, type = "residual_pca")][plot.mfrm_fit], and [plot(x, type = "qc")][plot.mfrm_fit], plus the
 #' posterior-scoring, design-weighted-information path via
-#' [compute_information()] / [plot_information()], and the Wright /
+#' [compute_information()] / [plot(x)][plot.mfrm_information], and the Wright /
 #' pathway / CCC fit plots. Two `GPCM`-specific caveats apply when
 #' interpreting these residual-based screens:
 #'
@@ -28,12 +28,15 @@
 #'   strict invariance.
 #' - FACETS-style fair averages are a Rasch-family measure-to-score
 #'   transformation. Under `GPCM` the fair-average panel of
-#'   [plot_qc_dashboard()] therefore renders with an explicit
+#'   [plot(x, type = "qc")][plot.mfrm_fit] therefore renders with an explicit
 #'   "unavailable" status, and the broader compatibility-export helpers
 #'   stay outside the documented `GPCM` boundary.
 #'
 #' Use [gpcm_capability_matrix()] for the formal per-helper boundary
 #' before choosing a `GPCM` follow-up plot route.
+#' Two-family GPCM and corrected JML use their separate
+#' [mfrm_response_diagnostics()] routes; the shared `mfrm_fit` class does not
+#' authorize the ordinary diagnostics or Wright/Pathway displays above.
 #'
 #' Portable fixed-calibration score batches have a separate review route.
 #' Use `summary(scores)` and `plot(scores)` as described in
@@ -71,12 +74,14 @@
 #' appearance, not estimates, confidence levels or diagnostic thresholds.
 #'
 #' @section Titles and compatibility:
-#' The development version adds `title` to [plot_marginal_fit()],
-#' [plot_marginal_pairwise()], [plot_unexpected()],
-#' [plot_interrater_agreement()], [plot_facets_chisq()], [plot_bubble()],
-#' [plot_bias_interaction()] and [plot_facet_quality_dashboard()]. Omission
-#' keeps the default title; `title = "Scoring patterns"` replaces it;
-#' `title = NULL` or `title = ""` suppresses it. The dashboard's S3 `plot()`
+#' The development version adds `title` to [plot(x, type = "marginal_fit")][plot.mfrm_fit],
+#' [plot(x, type = "marginal_pairwise")][plot.mfrm_fit], [plot(x, type = "unexpected")][plot.mfrm_fit],
+#' [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "facets_chisq")][plot.mfrm_fit], [plot(x, type = "bubble")][plot.mfrm_fit],
+#' [plot(x, type = "bias")][plot.mfrm_fit] and [plot(x, type = "facet_dashboard")][plot.mfrm_fit]. Omission
+#' retains default title metadata; `title = "Scoring patterns"` replaces it;
+#' `title = NULL` or `title = ""` suppresses that metadata. Titles and explanatory
+#' notes are returned outside the figure by default; display controls below
+#' govern explicit drawing. The dashboard's S3 `plot()`
 #' method forwards these controls. Use exact argument names.
 #'
 #' Legacy `main` remains supported without warnings, and `main = NULL` keeps
@@ -113,78 +118,171 @@
 #' To change labels on the converted ggplot, use
 #' `as_ggplot(p) + ggplot2::labs(title = NULL)`.
 #'
-#' Title suppression depends on the entry point. Ordinary fitted-model plots
-#' retain the historical `title = NULL` meaning (automatic title); use
-#' `show_title = FALSE` to hide it and `show_notes = FALSE` to hide notes.
-#' Fixed-facet interval plots and the helpers listed above accept
-#' `title = NULL` to hide the title. These distinctions preserve existing
-#' scripts. Hiding annotations does not remove numerical cautions from the
-#' saved results or establish stronger inference.
+#' Figures omit titles, subtitles and explanatory footnotes by default.
+#' Keep the returned object: `p <- plot(fit)`, then use
+#' `plot_data(p, "title")` and `plot_data(p, "notes")` to prepare the title
+#' and notes separately in a manuscript. Printing a returned `mfrm_plot_data`
+#' object also displays notes in the console. The same notes accessor works
+#' for mfrmr ggplots and after saving and reloading the returned object.
+#' Axis labels, legends, panel identifiers and data/status symbols remain.
+#' `title`, `main`, `subtitle` and `caption` now supply metadata by default.
+#' Entry points with `show_title` and `show_notes` allow explicit opt-in
+#' display; both switches default to `FALSE`. For ggplot customization, use
+#' `ggplot2::labs(title = "...")`. Numerical warnings and saved diagnostics
+#' remain available regardless of these presentation choices.
+#'
+#' @section Read score direction and diagnostic terms first:
+#' A logit is a model coordinate, not a label for good or bad performance.
+#' Record the wording of both ends of the rubric before interpreting a plot.
+#' In the ordinary positive-discrimination models, a higher Person location
+#' predicts higher **coded scores**, holding other effects fixed:
+#'
+#' | Comprehensibility coding | Meaning of a higher Person location |
+#' | --- | --- |
+#' | 1 = difficult to understand; 4 = easy to understand | Easier to understand |
+#' | 1 = easy to understand; 4 = difficult to understand | More difficult to understand |
+#'
+#' For a default negatively oriented Rater facet, a higher Rater location
+#' instead predicts **lower** coded scores. This is more severe under the
+#' first rubric, but more favorable under the second. A facet declared in
+#' `positive_facets` has the opposite parameter orientation. That argument
+#' does not reverse the outcome categories or make a Person score mean
+#' "better". Relabeling categories or flipping a graphical axis also does not
+#' recode the fitted model. To reverse a numeric 1--4 rubric, recode as
+#' `5 - Score` before fitting, retaining the original data and consistent
+#' category meanings across criteria. Existing anchors must use the same
+#' coding and scale; changing coding is not just editing a figure.
+#'
+#' The fitted-model plotting notes state recorded facet directions without
+#' guessing the rubric meaning. Use `p <- plot(fit, type = "wright")`,
+#' `print(p)` and `plot_data(p, "notes")`; keep the rubric wording with the
+#' analysis when saving it. The package does not infer that a column called
+#' Comprehensibility measures ease rather than difficulty. An older saved
+#' plot retains its original notes; regenerate the plot from its saved fit to
+#' obtain new guidance. An imported model requires its source orientation.
+#'
+#' **Overfit and underfit.** Infit and Outfit mean squares compare squared
+#' residuals with the variation expected under the selected model. Their
+#' reference is 1: smaller values describe less residual variation (overfit),
+#' larger values more variation (underfit). Infit weights observations by
+#' information; Outfit is more sensitive to unexpected responses far from
+#' the person's fitted location. ZSTD uses a different, zero-centered
+#' reference. Displayed bands are review limits, not universal acceptability
+#' rules, and a tiny deviation from 1 is not automatically flagged.
+#'
+#' In a speech contest, trained judges can have similar severity estimates
+#' or high agreement while their fit is near 1. Those features alone do not
+#' imply overfit. If low mean squares occur, review actual residuals, category
+#' use, shared performances and whether judgments were made independently.
+#' Training is one contextual explanation to investigate, not a demonstrated
+#' cause or a reason to dismiss the result. Joint discussion/copying can
+#' introduce dependence; consistent independent application of a rubric is
+#' a different process. Overfit is not the machine-learning meaning of fitting
+#' too many parameters. Neither overfit nor underfit alone identifies halo,
+#' unfairness, judge incompetence or a rule for deleting ratings.
+#'
+#' **Bias in a bias plot.** [estimate_bias()] estimates an additional shift
+#' for a combination, such as Judge A scoring Content, after holding the
+#' baseline Person/facet/step/slope estimates fixed. It concerns a conditional
+#' interaction departure, not the judge's overall severity, statistical bias
+#' of an estimator, or proof of prejudice or unfairness. In mfrmr, positive
+#' `Bias Size` increases expected coded scores and negative values decrease
+#' them. Under a high-is-good rubric, positive bias thus favors that cell,
+#' whereas positive default Rater severity reduces its score. FACETS output
+#' can use different configured bias directions; compare definitions before
+#' comparing signs. The facet-profile plot averages **absolute** bias and
+#' cannot show which cells are favored. Read signed cell rows, exposure,
+#' uncertainty and the scoring context. Conditional intervals omit calibration
+#' uncertainty and the flags remain screening evidence.
+#'
+#' **Step.** A Step is an adjacent-category transition parameter: a 1--4
+#' rubric has transitions 1 to 2, 2 to 3 and 3 to 4. In the default unit-slope
+#' RSM, \eqn{\log\{P(Y=k)/P(Y=k-1)\}=\theta-\delta-\beta-\tau_k}.
+#' At \eqn{\theta=\delta+\beta+\tau_k}, the two adjacent categories have equal
+#' probability. Other categories may also occur, so neither probability need
+#' be 0.5. A Step is not a learning stage, the mean Person location observed
+#' in that category, a cumulative 50-percent threshold, or a pass/fail cut.
+#' Stored \eqn{\tau_k} offsets differ from full ability-axis crossings when
+#' facet effects are nonzero. The ordinary CCC/Wright step reference fixes
+#' other additive effects at zero; [plot.mfrm_fit] documents that profile.
+#' RSM shares steps; PCM/GPCM assigns them to a selected owner. Check the
+#' owner's counts and curves before interpreting disorder or merging categories.
+#' See [rating_scale_table()] and [mfrmr_methods_reference] for calculations
+#' and the Andrich/Masters references.
+#'
+#' These distinctions follow the official FACETS
+#' \href{https://winsteps.com/facetman64/positive.htm}{facet orientation},
+#' \href{https://winsteps.com/facetman64/table7.htm}{fit report} and
+#' \href{https://winsteps.com/facetman64/table13.htm}{bias report} descriptions,
+#' and the Winsteps
+#' \href{https://www.winsteps.com/winman/table2_4.htm}{adjacent-category threshold explanation}.
+#' mfrmr's specific sign, reference-profile and uncertainty rules remain those
+#' documented in its own function help.
 #'
 #' @section Start with the question:
 #' - "Do persons and facet levels overlap on the same logit scale?"
-#'   Use `plot(fit, type = "wright")` or [plot_wright_unified()].
+#'   Use `plot(fit, type = "wright")` or [plot(x, type = "wright", view = "unified")][plot.mfrm_fit].
 #' - "Where do score categories transition across theta?"
 #'   Use `plot(fit, type = "pathway")` and `plot(fit, type = "ccc")`.
 #' - "How do measures and observed scores relate to Fair Scores?"
-#'   Use [plot_fair_average()] with `plot_type = "measure"`, `"scatter"`, or
+#'   Use [plot(x, type = "fair_average")][plot.mfrm_fit] with `view = "measure"`, `"scatter"`, or
 #'   `"difference"`. FairZ is a zero-reference expected score, not a z-score.
 #' - "Is the design linked well enough across subsets or administrations?"
 #'   Use `plot(subset_connectivity_report(...), type = "design_matrix")`,
 #'   [mfrm_network_analysis()], [build_mfrm_network_review()],
-#'   `plot(..., type = "network")`, and [plot_anchor_drift()].
+#'   `plot(..., type = "network")`, and [plot(x)][plot.mfrm_anchor_drift].
 #' - "Which responses or levels look locally problematic?"
-#'   Use [plot_unexpected()] and [plot_displacement()].
+#'   Use [plot(x, type = "unexpected")][plot.mfrm_fit] and [plot(x, type = "displacement")][plot.mfrm_fit].
 #' - "Which facet/category cells drive strict marginal misfit?"
-#'   Use [plot_marginal_fit()].
+#'   Use [plot(x, type = "marginal_fit")][plot.mfrm_fit].
 #' - "Which level pairs drive strict local-dependence follow-up?"
-#'   Use [plot_marginal_pairwise()].
+#'   Use [plot(x, type = "marginal_pairwise")][plot.mfrm_fit].
 #' - "Do raters agree within observed shared scoring contexts?"
-#'   Use [plot_interrater_agreement()] and [rater_network_analysis()].
+#'   Use [plot(x, type = "agreement")][plot.mfrm_fit] and [rater_network_analysis()].
 #' - "Do facet levels separate meaningfully?"
-#'   Use [plot_facets_chisq()].
+#'   Use [plot(x, type = "facets_chisq")][plot.mfrm_fit].
 #' - "Do criteria within the same rater move together in a halo-like way?"
 #'   Use [rater_halo_network_analysis()] and
 #'   `plot(..., type = "edge_distribution")`.
 #' - "Is there notable residual structure after the main Rasch dimension?"
-#'   Use [plot_residual_pca()].
+#'   Use [plot(x, type = "residual_pca")][plot.mfrm_fit].
 #' - "Which interaction cells or facet levels drive bias screening results?"
-#'   Use [plot_bias_interaction()].
+#'   Use [plot(x, type = "bias")][plot.mfrm_fit].
 #' - "Which group-by-facet contrasts drive DFF / DIF screening results?"
-#'   Use [plot_dif_heatmap()] and [plot_dif_summary()] after
+#'   Use [plot(x, type = "heatmap")][plot.mfrm_dif] and [plot(x, type = "summary")][plot.mfrm_dif] after
 #'   [analyze_dff()].
 #' - "Do person response rows follow the expected Guttman-style
 #'    ordering once persons and items are sorted on the logit scale?"
-#'   Use [plot_guttman_scalogram()] as a teaching-oriented screen.
+#'   Use [plot(x, type = "guttman")][plot.mfrm_fit] as a teaching-oriented screen.
 #' - "Do person-level standardized residuals look Gaussian, or are
 #'    there heavy tails that warrant follow-up?"
-#'   Use [plot_residual_qq()].
+#'   Use [plot(x, type = "residual_qq")][plot.mfrm_fit].
 #' - "Is rater severity drifting across waves or training sessions
 #'    (assuming the waves are already on a common anchored scale)?"
-#'   Use [plot_rater_trajectory()] together with [plot_anchor_drift()]
+#'   Use `plot(fits[[1L]], type = "trajectory", comparison = fits[-1L], labels = names(fits))` (see [plot.mfrm_fit()]) together with [plot(x)][plot.mfrm_anchor_drift]
 #'   for the linking-scale review.
 #' - "I have many raters and want a compact pairwise agreement / correlation
 #'    overview instead of the bar chart?"
-#'   Use [plot_rater_agreement_heatmap()].
+#'   Use [plot(x, type = "agreement", view = "heatmap")][plot.mfrm_fit].
 #' - "Do response times suggest rapid responding, slow responding, or timing
 #'    patterns by person, facet, or score category?"
-#'   Use [response_time_review()] and [plot_response_time_review()] as a
+#'   Use [response_time_review()] and [plot(x)][plot.mfrm_response_time_review] as a
 #'   descriptive QC layer outside the MFRM likelihood.
 #' - "Are there pairs of facet levels whose residuals co-move beyond the
 #'    main-effects MFRM? (Q3-style local-dependence screen)"
-#'   Use [plot_local_dependence_heatmap()].
+#'   Use [plot(x, type = "local_dependence")][plot.mfrm_fit].
 #' - "How distinguishable is each facet on a single page (separation,
 #'    strata, reliability)?"
-#'   Use [plot_reliability_snapshot()].
+#'   Use [plot(x, type = "reliability")][plot.mfrm_fit].
 #' - "Where do persons with the largest residual aggregates accumulate
 #'    across facet levels?"
-#'   Use [plot_residual_matrix()].
+#'   Use [plot(x, type = "residual_matrix")][plot.mfrm_fit].
 #' - "How much did empirical-Bayes shrinkage move each facet level?"
-#'   Use [plot_shrinkage_funnel()] on a fit augmented via
+#'   Use [plot(x, type = "shrinkage", view = "funnel")][plot.mfrm_fit] on a fit augmented via
 #'   [apply_empirical_bayes_shrinkage()].
 #' - "I need one compact triage screen first."
-#'   Use [plot_qc_dashboard()] for `RSM` / `PCM`. The `GPCM`
-#'   branch can also call [plot_qc_dashboard()], but its fair-average
+#'   Use [plot(x, type = "qc")][plot.mfrm_fit] for `RSM` / `PCM`. The `GPCM`
+#'   branch can also call [plot(x, type = "qc")][plot.mfrm_fit], but its fair-average
 #'   panel reports an explicit unavailability indicator because that
 #'   panel's score-metric semantics are limited to the Rasch-family branch.
 #' - "I scored new Persons from a frozen portable calibration; which scores
@@ -219,15 +317,15 @@
 #' @section Recommended visual route:
 #' 1. If you are drafting a report, run [reporting_checklist()] first and read
 #'    the `"Visual Displays"` rows as the plot-readiness layer.
-#' 2. Start with [plot_qc_dashboard()] for one-page triage.
-#' 3. Move to [plot_unexpected()], [plot_displacement()],
-#'    [plot_marginal_fit()], [plot_marginal_pairwise()], and
-#'    [plot_interrater_agreement()] for flagged local issues.
+#' 2. Start with [plot(x, type = "qc")][plot.mfrm_fit] for one-page triage.
+#' 3. Move to [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit],
+#'    [plot(x, type = "marginal_fit")][plot.mfrm_fit], [plot(x, type = "marginal_pairwise")][plot.mfrm_fit], and
+#'    [plot(x, type = "agreement")][plot.mfrm_fit] for flagged local issues.
 #' 4. Use `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
-#'    and `plot_residual_pca()` for structural interpretation.
-#' 5. Use [plot_bias_interaction()], [plot_dif_heatmap()],
-#'    [plot_dif_summary()], [plot_anchor_drift()], and
-#'    [plot_information()] when the checklist or dashboard points to
+#'    and `plot(fit, type = "wright", view = "unified")` for structural interpretation.
+#' 5. Use [plot(x, type = "bias")][plot.mfrm_fit], [plot(x, type = "heatmap")][plot.mfrm_dif],
+#'    [plot(x, type = "summary")][plot.mfrm_dif], [plot(x)][plot.mfrm_anchor_drift], and
+#'    [plot(x)][plot.mfrm_information] when the checklist or dashboard points to
 #'    interaction, differential-functioning, linking, or precision
 #'    follow-up.
 #' 6. Use `plot(..., draw = FALSE)` when you want reusable plot data instead
@@ -263,17 +361,17 @@
 #' The plotting layer supports the following public follow-up roles when the
 #' fitted object contains the required data:
 #' - First-pass triage:
-#'   [plot_qc_dashboard()] or the `"Visual Displays"` rows from
+#'   [plot(x, type = "qc")][plot.mfrm_fit] or the `"Visual Displays"` rows from
 #'   [reporting_checklist()].
 #' - Structural interpretation:
 #'   `plot(fit, type = "wright")`, `plot(fit, type = "pathway")`,
-#'   `plot(fit, type = "ccc")`, and [plot_residual_pca()].
+#'   `plot(fit, type = "ccc")`, and [plot(x, type = "residual_pca")][plot.mfrm_fit].
 #' - Local issue follow-up:
-#'   [plot_unexpected()], [plot_displacement()],
-#'   [plot_interrater_agreement()], [plot_bias_interaction()],
-#'   [plot_dif_heatmap()], and [plot_dif_summary()].
+#'   [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit],
+#'   [plot(x, type = "agreement")][plot.mfrm_fit], [plot(x, type = "bias")][plot.mfrm_fit],
+#'   [plot(x, type = "heatmap")][plot.mfrm_dif], and [plot(x, type = "summary")][plot.mfrm_dif].
 #' - Strict marginal follow-up:
-#'   [plot_marginal_fit()] and [plot_marginal_pairwise()] for
+#'   [plot(x, type = "marginal_fit")][plot.mfrm_fit] and [plot(x, type = "marginal_pairwise")][plot.mfrm_fit] for
 #'   `diagnostic_mode = "both"`.
 #' - Reporting/export handoff:
 #'   [build_visual_summaries()] and `draw = FALSE` routes that return reusable
@@ -314,63 +412,63 @@
 #'   dominant-category strips. Best for scale progression.}
 #'   \item{`plot(fit, type = "ccc")`}{Category probability curves. Best for
 #'   checking whether categories peak in sequence.}
-#'   \item{`plot_unexpected()`}{Observation-level surprises. Best for case
+#'   \item{`plot()`}{Observation-level surprises. Best for case
 #'   review and local misfit triage.}
-#'   \item{`plot_displacement()`}{Level-wise anchor movement. Best for anchor
+#'   \item{`plot()`}{Level-wise anchor movement. Best for anchor
 #'   robustness and residual calibration tension.}
-#'   \item{`plot_marginal_fit()`}{Posterior-integrated first-order category
+#'   \item{`plot()`}{Posterior-integrated first-order category
 #'   residuals. Best for seeing which facet/category cells drive strict
 #'   marginal flags.}
-#'   \item{`plot_marginal_pairwise()`}{Posterior-integrated exact/adjacent
+#'   \item{`plot()`}{Posterior-integrated exact/adjacent
 #'   agreement residuals. Best for exploratory local-dependence follow-up after
 #'   strict marginal flags.}
-#'   \item{`plot_interrater_agreement()`}{Exact agreement, expected agreement,
+#'   \item{`plot()`}{Exact agreement, expected agreement,
 #'   pairwise correlation, and agreement gaps. Best for rater consistency.}
-#'   \item{`plot_facets_chisq()`}{Facet variability and chi-square summaries.
+#'   \item{`plot()`}{Facet variability and chi-square summaries.
 #'   Best for checking whether a facet contributes meaningful spread.}
-#'   \item{`plot_residual_pca()`}{Residual structure after the Rasch dimension
+#'   \item{`plot()`}{Residual structure after the Rasch dimension
 #'   is removed. Best for exploratory residual-structure review, not as a
 #'   standalone unidimensionality test.}
-#'   \item{`plot_bias_interaction()`}{Interaction-bias screening views for
+#'   \item{`plot()`}{Interaction-bias screening views for
 #'   cells and facet profiles. Best for systematic departure from the
 #'   additive main-effects model.}
-#'   \item{`plot_dif_heatmap()` / `plot_dif_summary()`}{DFF / DIF
+#'   \item{`plot()` / `plot()`}{DFF / DIF
 #'   screening views for facet-level x group contrasts. Best for showing
 #'   which facet and group pair is involved before writing substantive
 #'   interpretations.}
-#'   \item{`plot_anchor_drift()`}{Anchor drift and screened linking-chain visuals.
+#'   \item{`plot()`}{Anchor drift and screened linking-chain visuals.
 #'   Best for multi-form or multi-wave linking review after checking retained
 #'   common-element support.}
-#'   \item{`plot_guttman_scalogram()`}{Person x facet-level response matrix with
+#'   \item{`plot()`}{Person x facet-level response matrix with
 #'   unexpected-response overlay. Best for teaching-oriented scalogram intuition
 #'   and visual triage of where the data depart from the expected ordering.}
-#'   \item{`plot_residual_qq()`}{Normal Q-Q plot of person-level standardized
+#'   \item{`plot()`}{Normal Q-Q plot of person-level standardized
 #'   residual aggregates. Best for checking the tail behavior of residuals as
 #'   exploratory follow-up after a fit screen.}
-#'   \item{`plot_rater_trajectory()`}{Per-rater severity trajectory across
+#'   \item{`plot()`}{Per-rater severity trajectory across
 #'   named waves / occasions. Best for rater-training or drift feedback when
 #'   the supplied fits have already been placed on a common anchored scale;
 #'   the helper itself does not perform linking.}
-#'   \item{`plot_rater_agreement_heatmap()`}{Compact pairwise rater x rater
+#'   \item{`plot()`}{Compact pairwise rater x rater
 #'   heatmap of exact agreement (default) or Pearson-style correlation. Best
 #'   when the rater count makes the bar-chart form of
-#'   [plot_interrater_agreement()] too busy.}
-#'   \item{`response_time_review()` / `plot_response_time_review()`}{Descriptive
+#'   [plot(x, type = "agreement")][plot.mfrm_fit] too busy.}
+#'   \item{`response_time_review()` / `plot()`}{Descriptive
 #'   response-time screening by person, facet, and score category. Best for
 #'   reviewing rapid/slow response patterns alongside MFRM diagnostics; it is
 #'   not a joint speed-accuracy model and does not change fitted measures.}
-#'   \item{`plot_local_dependence_heatmap()`}{Standardized, aggregated-residual Q3-style heatmap of
+#'   \item{`plot()`}{Standardized, aggregated-residual Q3-style heatmap of
 #'   pairwise residual correlations between facet levels. Best for
 #'   exploratory local-dependence screening; pairs with very strong
 #'   off-diagonal residual correlation merit content-level review.}
-#'   \item{`plot_reliability_snapshot()`}{One-figure facet x reliability /
+#'   \item{`plot()`}{One-figure facet x reliability /
 #'   separation / strata bar overview built from `diagnostics$reliability`.
 #'   Best as a single small figure for "which facets are statistically
 #'   distinguishable?".}
-#'   \item{`plot_residual_matrix()`}{Person x facet-level standardized
-#'   residual heatmap. Best as a follow-up to [plot_guttman_scalogram()] when
+#'   \item{`plot()`}{Person x facet-level standardized
+#'   residual heatmap. Best as a follow-up to [plot(x, type = "guttman")][plot.mfrm_fit] when
 #'   the residual sign and magnitude matter, not just the response code.}
-#'   \item{`plot_shrinkage_funnel()`}{Empirical-Bayes shrinkage caterpillar /
+#'   \item{`plot()`}{Empirical-Bayes shrinkage caterpillar /
 #'   funnel showing raw versus shrunken facet estimates. Best on fits
 #'   produced via [apply_empirical_bayes_shrinkage()] for reviewing how
 #'   much each level moved under the prior.}
@@ -387,31 +485,31 @@
 #' workflows, so column subsets and column names differ.
 #' \describe{
 #'   \item{Wright (variable) map}{`plot(fit, type = "wright")` and
-#'   [plot_wright_unified()] correspond to FACETS Table 6 / Winsteps
+#'   [plot(x, type = "wright", view = "unified")][plot.mfrm_fit] correspond to FACETS Table 6 / Winsteps
 #'   "Person-Item map".}
 #'   \item{Pathway / probability curves}{`plot(fit, type = "pathway")`
 #'   and `plot(fit, type = "ccc")` correspond to Winsteps Table 21
 #'   ("Probability category curves") and FACETS category-probability
 #'   curves.}
 #'   \item{Test / item information}{[compute_information()] +
-#'   [plot_information()] correspond to Winsteps Table 17 ("Test
+#'   [plot(x)][plot.mfrm_information] correspond to Winsteps Table 17 ("Test
 #'   characteristic curve, test information function").}
 #'   \item{Misfit / Infit / Outfit}{[diagnose_mfrm()] and the Largest
 #'   |ZSTD| / MnSq misfit blocks of `summary(diag)` correspond to
 #'   Winsteps Table 10/13/14 (Misfit order) and FACETS Tables 7/8.}
 #'   \item{Bias / interaction}{[estimate_bias()] +
-#'   [plot_bias_interaction()] correspond to FACETS Table 14
+#'   [plot(x, type = "bias")][plot.mfrm_fit] correspond to FACETS Table 14
 #'   ("Bias / Interaction calibration report").}
 #'   \item{Differential rater / item functioning}{[analyze_dff()] /
-#'   [analyze_dif()] + [plot_dif_heatmap()] / [plot_dif_summary()]
+#'   [analyze_dif()] + [plot(x, type = "heatmap")][plot.mfrm_dif] / [plot(x, type = "summary")][plot.mfrm_dif]
 #'   cover the FACETS DIF / bias-by-group route and the Winsteps DIF
 #'   (Table 30 group differences) report.}
 #'   \item{Inter-rater agreement}{[interrater_agreement_table()] +
-#'   [plot_interrater_agreement()] / [plot_rater_agreement_heatmap()]
+#'   [plot(x, type = "agreement")][plot.mfrm_fit] / [plot(x, type = "agreement", view = "heatmap")][plot.mfrm_fit]
 #'   correspond to FACETS Table 7-style observed-vs-expected agreement
 #'   reports.}
-#'   \item{Anchoring / linking}{[plot_anchor_drift()] and
-#'   [plot_information()] cover the FACETS / Winsteps anchored-run
+#'   \item{Anchoring / linking}{[plot(x)][plot.mfrm_anchor_drift] and
+#'   [plot(x)][plot.mfrm_information] cover the FACETS / Winsteps anchored-run
 #'   review route; full equating-chain helpers are exposed via
 #'   [build_equating_chain()].}
 #' }
@@ -449,28 +547,28 @@
 #'   [fit_mfrm()] -> [diagnose_mfrm()] -> [reporting_checklist()] ->
 #'   inspect `"Visual Displays"` rows -> chosen public plot helper.
 #' - Quick screening:
-#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [plot_qc_dashboard()].
+#'   [fit_mfrm()] -> [diagnose_mfrm()] -> [plot(x, type = "qc")][plot.mfrm_fit].
 #' - Strict marginal follow-up:
 #'   [diagnose_mfrm()] with `diagnostic_mode = "both"` ->
-#'   [plot_marginal_fit()] ->
-#'   [plot_marginal_pairwise()].
+#'   [plot(x, type = "marginal_fit")][plot.mfrm_fit] ->
+#'   [plot(x, type = "marginal_pairwise")][plot.mfrm_fit].
 #' - Scale and targeting review:
 #'   `plot(fit, type = "wright")` -> `plot(fit, type = "pathway")` ->
 #'   `plot(fit, type = "ccc")`.
 #' - Linking review:
 #'   [subset_connectivity_report()] -> `plot(..., type = "design_matrix")` /
 #'   [mfrm_network_analysis()] / [build_mfrm_network_review()] /
-#'   `plot(..., type = "network")` -> [plot_anchor_drift()].
+#'   `plot(..., type = "network")` -> [plot(x)][plot.mfrm_anchor_drift].
 #' - Interaction review:
-#'   [estimate_bias()] -> [plot_bias_interaction()] ->
+#'   [estimate_bias()] -> [plot(x, type = "bias")][plot.mfrm_fit] ->
 #'   [reporting_checklist()].
 #' - DFF / DIF review:
-#'   [analyze_dff()] -> [plot_dif_heatmap()] / [plot_dif_summary()] ->
+#'   [analyze_dff()] -> [plot(x, type = "heatmap")][plot.mfrm_dif] / [plot(x, type = "summary")][plot.mfrm_dif] ->
 #'   inspect the explicit facet, level, and group-pair columns before
 #'   writing interpretation.
 #'
 #' @section Figures with separate titles and interpretation:
-#' Wright, expected-score pathway, CCC, and [plot_fair_average()] displays
+#' Wright, expected-score pathway, CCC, and [plot(x, type = "fair_average")][plot.mfrm_fit] displays
 #' accept `show_title = FALSE` and `show_notes = FALSE`. These options hide
 #' figure annotations while retaining axes, legends, structural panel labels,
 #' and the original title and notes in the returned `mfrm_plot_data` object.
@@ -492,7 +590,7 @@
 #' thresholds and reference measures fixed. GPCM-MML plots can use structural
 #' table SEs for non-Person rows, conditioning on Person EAP/reference means.
 #' `fair_average_table(fair_se = TRUE)` does not provide RSM/PCM fair-score
-#' SEs. See [mfrmr_interval_guide()] and [plot_fair_average()] for the status
+#' SEs. See [mfrmr_interval_guide()] and [plot(x, type = "fair_average")][plot.mfrm_fit] for the status
 #' columns and the observed-minus-fair gap caveat.
 #'
 #' @section Non-Latin and long labels:
@@ -514,15 +612,15 @@
 #'   [mfrmr_reporting_and_apa], [mfrmr_linking_and_dff],
 #'   [gpcm_capability_matrix], [visual_reporting_template()],
 #'   [mfrmr_interval_guide()],
-#'   [plot.mfrm_fit()], [plot_qc_dashboard()],
-#'   [plot_unexpected()], [plot_displacement()], [plot_marginal_fit()],
-#'   [plot_marginal_pairwise()], [plot_interrater_agreement()],
-#'   [plot_facets_chisq()], [plot_residual_pca()], [plot_bias_interaction()],
-#'   [plot_dif_heatmap()], [plot_dif_summary()], [plot_anchor_drift()],
-#'   [plot_guttman_scalogram()],
-#'   [plot_residual_qq()], [plot_rater_trajectory()],
-#'   [plot_rater_agreement_heatmap()], [response_time_review()],
-#'   [plot_response_time_review()]
+#'   [plot(x, type = "guttman")][plot.mfrm_fit], [plot(x, type = "qc")][plot.mfrm_fit],
+#'   [plot(x, type = "unexpected")][plot.mfrm_fit], [plot(x, type = "displacement")][plot.mfrm_fit], [plot(x, type = "marginal_fit")][plot.mfrm_fit],
+#'   [plot(x, type = "marginal_pairwise")][plot.mfrm_fit], [plot(x, type = "agreement")][plot.mfrm_fit],
+#'   [plot(x, type = "facets_chisq")][plot.mfrm_fit], [plot(x, type = "residual_pca")][plot.mfrm_fit], [plot(x, type = "bias")][plot.mfrm_fit],
+#'   [plot(x, type = "heatmap")][plot.mfrm_dif], [plot(x, type = "summary")][plot.mfrm_dif], [plot(x)][plot.mfrm_anchor_drift],
+#'   [plot.mfrm_fit()],
+#'   [plot(x, type = "residual_qq")][plot.mfrm_fit], `plot(fits[[1L]], type = "trajectory", comparison = fits[-1L], labels = names(fits))` (see [plot.mfrm_fit()]),
+#'   [plot(x, type = "agreement", view = "heatmap")][plot.mfrm_fit], [response_time_review()],
+#'   [plot(x)][plot.mfrm_response_time_review]
 #'
 #' @concept visual diagnostics
 #' @concept reporting workflow
@@ -530,7 +628,6 @@
 #' @concept GPCM boundaries
 #'
 #' @examples
-#' \donttest{
 #' # Load the package and example ratings
 #' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
@@ -554,11 +651,11 @@
 #' review$decision
 #'
 #' # Inspect an overview of model-fit issues
-#' plot_qc_dashboard(fit, diagnostics = diagnostics)
+#' plot(fit, type = "qc", diagnostics = diagnostics)
 #'
 #' # Follow up on observed versus model-expected category frequencies
-#' plot_marginal_fit(diagnostics)
-#' }
+#' plot(diagnostics, type = "marginal_fit")
+#' @seealso [mfrmr_plot_migration]
 #' @name mfrmr_visual_diagnostics
 NULL
 
@@ -649,18 +746,18 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "plot(fit, type = \"pathway\", preset = \"publication\")",
       "plot(fit, type = \"ccc\", preset = \"publication\")",
       "plot(fit, type = \"ccc_surface\", draw = FALSE)",
-      "compute_information(fit) -> plot_information(..., preset = \"publication\")",
-      "plot_qc_dashboard(fit, diagnostics = diagnostics, preset = \"publication\")",
-      "plot_unexpected(); plot_displacement()",
-      "plot_marginal_fit(); plot_marginal_pairwise()",
-      "plot_bias_interaction(); plot_dif_heatmap(); plot_dif_summary()",
-      "analyze_residual_pca() -> plot_residual_pca()",
-      "plot_guttman_scalogram(fit, diagnostics = diagnostics)",
-      "plot_residual_qq(fit, diagnostics = diagnostics)",
-      "plot_rater_trajectory(list(T1 = fit_a, T2 = fit_b))",
-      "plot_rater_agreement_heatmap(fit, diagnostics = diagnostics)",
-      "response_time_review(...); plot_response_time_review(...)",
-      "plot_shrinkage_funnel(fit_eb, show_ci = TRUE, preset = \"publication\")"
+      "compute_information(fit) -> plot(..., preset = \"publication\")",
+      "plot(fit, type = \"qc\", diagnostics = diagnostics, preset = \"publication\")",
+      "plot(x, type = \"unexpected\"); plot(x, type = \"displacement\")",
+      "plot(x, type = \"marginal_fit\"); plot(x, type = \"marginal_pairwise\")",
+      "plot(x, type = \"bias\"); plot(x, type = \"heatmap\"); plot(x, type = \"summary\")",
+      "analyze_residual_pca() -> plot(x, type = \"residual_pca\")",
+      "plot(fit, type = \"guttman\", diagnostics = diagnostics)",
+      "plot(fit, type = \"residual_qq\", diagnostics = diagnostics)",
+      "plot((list(T1 = fit_a, T2 = fit_b))[[1L]], type = \"trajectory\", comparison = (list(T1 = fit_a, T2 = fit_b))[-1L], labels = names(list(T1 = fit_a, T2 = fit_b)))",
+      "plot(fit, type = \"agreement\", view = \"heatmap\", diagnostics = diagnostics)",
+      "response_time_review(...); plot(timing)",
+      "plot(fit_eb, type = \"shrinkage\", view = \"funnel\", show_ci = TRUE, preset = \"publication\")"
     ),
     DefaultPlacement = c(
       "Main text when targeting, spread, or shared-logit interpretation is central.",
@@ -775,7 +872,7 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
       "2D report default.",
       "2D report default.",
       "advanced surface data only; no package-native interactive renderer.",
-      "2D curve route active; 3D information surface is deferred.",
+      "2D information curves available; no package-native 3D information surface.",
       "2D dashboard only; 3D not recommended.",
       "2D point/profile views preferred.",
       "2D heatmap/bar views preferred.",
@@ -822,12 +919,107 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
 #' already-estimated quantities. The `Basis` and `InterpretationBoundary`
 #' columns are the important guardrails.
 #'
+#' @section Why an estimate or interval is missing:
+#' A finite printed value may be a usable estimate, an optimizer value retained
+#' for review, a constraint-fixed value, or a prior-only score. Read the result's
+#' status and explanation before interpreting it. An `NA` bound is not an
+#' infinite limit, zero uncertainty, or evidence of no effect.
+#'
+#' - **Fit and parameter readiness:** start with `summary(fit)$decision`,
+#'   `$readiness` and `$key_warnings` for ordinary fits. For CML inspect
+#'   `summary(fit)$checks` and `$notes`; comparison-only CML retains
+#'   `EstimateStatus` and `EstimateReason` in `fit$comparisons`. Identification
+#'   failure or absence of a finite MLE cannot be repaired merely by increasing
+#'   optimizer iterations. A refused calculation explains the restriction in
+#'   its error instead of returning an inferential result.
+#' - **Facet and population intervals:** inspect `ci$table$Status`,
+#'   `$CIEligible` and `$InferenceReview`, together with the result's checks
+#'   and cautions. Missing SEs or bounds may coexist with a retained point;
+#'   that does not certify the point as reliable. `fixed` refers to a target
+#'   fixed by constraints, not an estimate with perfect measured precision.
+#' - **GPCM slope/profile intervals:** use `attr(ci, "diagnostics")` and
+#'   the saved endpoint checks. They distinguish an unavailable interval from
+#'   a partially resolved profile; [confint.mfrm_fit()] describes each method.
+#' - **Testlet and shared-rater normal intervals:** use
+#'   `attr(ci, "diagnostics")` and `attr(ci, "checks")`; default summary tables
+#'   also retain `IntervalStatus` and `InferenceReview`. These distinguish intervals
+#'   not requested, unsupported targets, failed numerical/information checks,
+#'   and estimated zero-variance boundaries. The boundary restriction applies
+#'   even when optimization has converged. See [confint.mfrm_testlet()] and
+#'   [confint.mfrm_random_rater()].
+#' - **Person scores:** [score_mfrm_persons()] and the extension scoring
+#'   functions retain row-level `Status` and `Reason`. `prior_only` means no
+#'   observed responses: the reported mean and interval describe the assumed
+#'   population. `unavailable` withholds individual estimates and intervals.
+#'   Review the stated cause; more quadrature nodes cannot supply observations
+#'   or remedy a zero ability-variance restriction.
+#' - **G/D-study intervals:** read the metric-specific `Status`, diagnostics
+#'   and notes. A width below numerical resolution is a calculation limitation,
+#'   not perfect reliability; raw log-ratio or pivot diagnostics may still be
+#'   retained. An explicitly reported zero endpoint, a constraint boundary and
+#'   an unresolved numerical interval have different meanings.
+#'
+#' Increase integration precision or revise optimizer controls only when the
+#' saved diagnostics identify those numerical issues. Model assumptions,
+#' insufficient design information and unsupported boundary inference need
+#' substantive review. Numerical success alone does not resolve them.
+#' Keep explanations with saved results: use [saveRDS()] for the whole object,
+#' and export the status/reason table with CSV. Older saved tables do not gain
+#' fields merely by being read; recreate summaries or interval displays from
+#' their source fit where supported. Do not rewrite historical fit checks.
+#'
+#' @section Availability is not coverage:
+#' Read the target, interval method and assumptions before interpreting bounds.
+#' Numerical availability, sampling coverage and public API support are separate
+#' questions. Where returned, `CIEligible` records the source and method's
+#' eligibility checks, which can include model, design and numerical restrictions;
+#' `CoverageQualified = FALSE` means nominal sampling coverage is not established
+#' for that procedure. It is not a measured coverage rate and does not erase
+#' computed bounds. Absence of that field is not evidence of coverage either.
+#'
+#' A partial profile retains computed endpoints and the unresolved side's
+#' reason. An unresolved search is not an infinite limit or a calibrated
+#' one-sided interval. Inspect `apa_table(result, which = "profile_endpoints")`
+#' and retain the method's notes when reporting or exporting it.
+#'
+#' Corrected-JML `RootSE` describes variation around an adjusted-equation root;
+#' residual bias can separate that root from the true structural parameter.
+#' It must not be turned into a structural confidence interval by multiplying
+#' it by 1.96. This guide includes that uncertainty-only route with no default
+#' confidence level. Unavailable public structural intervals do not establish
+#' that every interval method is mathematically impossible.
+#'
+#' Conditional Person posterior intervals hold calibration fixed. A full
+#' external Bayesian analysis, for example through [export_mfrm_model()], has
+#' different assumptions and returns credible intervals; export alone neither
+#' runs the sampler nor validates its intervals. Inspect sampler precision,
+#' convergence and prior sensitivity. Neither type of posterior interval is
+#' automatically a frequentist confidence interval with nominal coverage.
+#' See [gpcm_capability_matrix()] for estimator-specific routes and restrictions.
+#' For coefficients, conditional population means and residual variance in an
+#' estimated RSM/PCM population, use [mfrm_population_intervals()]. Its
+#' [plot() method][plot.mfrm_population_intervals] displays coefficients or
+#' saved contrasts, retaining unavailable intervals and experimental status.
+#' Residual variance stays in the table because its units differ. This route
+#' is separate from Person scoring and facet-location intervals.
+#'
+#' Native RSM/PCM CML intervals use conditional information, with no estimated
+#' Person abilities or population SD. The guide gives a dedicated route for
+#' saved comparison-only targets and explains the facet argument for full CML
+#' results. A separate full-MML interaction route accepts `comparison_review`
+#' and optional `scale = "standardized"`; estimated-SD standardization includes
+#' the same fit's population-SD uncertainty and its covariance with the contrast.
+#' It requires an intercept-only normal population rather than substituting a
+#' regression residual SD. Neither numerical eligibility nor a positive
+#' conditional identification check establishes global MML identification or
+#' finite-sample interval coverage.
+#'
 #' @return A data.frame with columns:
 #' - `Route`
 #' - `Scope`
 #' - `PrimaryHelper`
 #' - `DisplayRoute`
-#' - `DefaultLevel`
+#' - `DefaultLevel` (missing for an uncertainty-only route without intervals)
 #' - `IntervalColumns`
 #' - `Basis`
 #' - `UseFor`
@@ -840,10 +1032,11 @@ visual_reporting_template <- function(scope = c("all", "manuscript", "appendix",
 #' mfrmr_interval_guide("visual")[, c("Route", "DisplayRoute", "Basis")]
 #' mfrmr_interval_guide("gpcm")[, c("Route", "GPCMStatus", "InterpretationBoundary")]
 #' @seealso [mfrmr_visual_diagnostics], [visual_reporting_template()],
-#'   [plot_fair_average()], [plot_bias_interaction()],
-#'   [plot_displacement()], [plot_wright_unified()],
-#'   [plot_rater_severity_profile()], [plot_apa_figure_one()],
-#'   [fit_measures_table()], [mfrm_facet_intervals()], [pool_mfrm_imputed()],
+#'   [plot(x, type = "fair_average")][plot.mfrm_fit], [plot(x, type = "bias")][plot.mfrm_fit],
+#'   [plot(x, type = "displacement")][plot.mfrm_fit], [plot(x, type = "wright", view = "unified")][plot.mfrm_fit],
+#'   [plot(x, type = "rater_severity")][plot.mfrm_fit], [plot(x, type = "apa_summary")][plot.mfrm_fit],
+#'   [fit_measures_table()], [mfrm_facet_intervals()], [mfrm_population_intervals()],
+#'   [pool_mfrm_imputed()],
 #'   [mfrm_random_rater_intervals()], [confint.mfrm_random_rater()],
 #'   [fit_mfrm_testlet()], [predict.mfrm_testlet()]
 #' @concept confidence intervals
@@ -896,29 +1089,29 @@ mfrmr_interval_guide <- function(scope = c(
       "fit_measures_table(ci_level = 0.95)",
       "fit_measures_table(...); plot(type = \"measure_ci\", ci_level = 0.95)",
       "plot(fit, type = \"wright\", show_ci = TRUE, ci_level = 0.95)",
-      "plot_wright_unified(fit, show_ci = TRUE, ci_level = 0.95)",
-      "plot_rater_severity_profile(fit, ci_level = 0.95)",
-      "plot_apa_figure_one(fit, ci_level = 0.95)",
-      "plot_fair_average(fit, show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)",
-      "plot_bias_interaction(..., show_ci = TRUE, ci_level = 0.95)",
-      "plot_displacement(..., show_ci = TRUE, ci_level = 0.95)",
-      "plot_dif_summary(...)",
-      "analyze_facet_equivalence(ci_level = 0.95); plot_facet_equivalence()",
-      "detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)",
-      "plot_rater_trajectory(..., ci_level = 0.95)",
-      "plot_shrinkage_funnel(..., show_ci = TRUE, ci_level = 0.95); plot(fit, type = \"shrinkage\", show_ci = TRUE, ci_level = 0.95)",
+      "plot(fit, type = \"wright\", view = \"unified\", show_ci = TRUE, ci_level = 0.95)",
+      "plot(fit, type = \"rater_severity\", ci_level = 0.95)",
+      "plot(fit, type = \"apa_summary\", ci_level = 0.95)",
+      "plot(fit, type = \"fair_average\", show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)",
+      "plot(..., type = \"bias\", show_ci = TRUE, ci_level = 0.95)",
+      "plot(..., type = \"displacement\", show_ci = TRUE, ci_level = 0.95)",
+      "plot(..., type = \"summary\")",
+      "analyze_facet_equivalence(ci_level = 0.95); plot(x, type = \"facet_equivalence\")",
+      "detect_anchor_drift(...); plot(drift, type = \"forest\", ci_level = 0.95)",
+      "plot(fits[[1L]], type = \"trajectory\", comparison = fits[-1L], labels = names(fits), ci_level = 0.95)",
+      "plot(..., type = \"shrinkage\", view = \"funnel\", show_ci = TRUE, ci_level = 0.95); plot(fit, type = \"shrinkage\", show_ci = TRUE, ci_level = 0.95)",
       "compute_facet_icc(ci_method = \"boot\", ci_level = 0.95); plot(analyze_hierarchical_structure(...))"
     ),
     DisplayRoute = c(
       "Use the returned table or facets_table.",
       "Use plot(fit_measures, type = \"measure_ci\", draw = FALSE) for reusable plot data.",
       "Use plot(..., draw = FALSE)$data$locations or draw the base-R map.",
-      "Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.",
+      "Use plot(..., type = \"wright\", view = \"unified\", draw = FALSE)$locations or draw the base-R map.",
       "Use draw = FALSE to reuse the ranked severity table and band labels.",
       "Use draw = FALSE to reuse wright, severity, threshold, and summary panels.",
-      "Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.",
+      "Use plot(..., type = \"fair_average\", show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.",
       "Use ranked or scatter views; heatmap and profile views intentionally omit intervals.",
-      "Use plot_type = \"lollipop\" with draw = FALSE for interval-ready data.",
+      "Use view = \"lollipop\" with draw = FALSE for interval-ready data.",
       "Use draw = FALSE when rebuilding the summary figure.",
       "Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.",
       "Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.",
@@ -966,7 +1159,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Show which facet levels have wide measure uncertainty before discussing fit flags.",
       "Show targeting and location uncertainty on a compact variable map.",
       "Show targeting and uncertainty across persons, facets, and thresholds.",
-      "Give rater-training feedback with uncertainty and gentle / strict severity bands.",
+      "Compare signed rater locations and qualified uncertainty; neutral guides are optional.",
       "Build a manuscript Figure 1 overview while preserving reusable panel data.",
       "Inspect fair-score uncertainty separately from historical measure-level SE columns; FairZ is not a z-score.",
       "Screen interaction-bias cells while showing uncertainty around the bias-size estimate.",
@@ -983,7 +1176,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Fit status still comes from MnSq/ZSTD review; the CI plot is a precision display.",
       "Use for targeting and uncertainty context; it is not global model-fit proof.",
       "Use for targeting and uncertainty context; it is not global model-fit proof.",
-      "Severity bands are calibration feedback, not automatic operational removal decisions.",
+      "Distance-from-zero guides are not homogeneity, equivalence or rater-quality decisions; use covariance-aware contrasts and a justified practical bound.",
       "Composite figures orient readers; panel intervals should be interpreted through the source helper.",
       "Diagnostic-only: CI_Eligible / FairCIEligible remain FALSE; finite or regularized covariance does not establish full-refit coverage. Gap whiskers hold the observed mean fixed.",
       "Bias intervals remain screening evidence unless the study design supports stronger inferential wording.",
@@ -1034,18 +1227,18 @@ mfrmr_interval_guide <- function(scope = c(
 
   out <- rbind(out, data.frame(
     Route = c("Fixed-facet model/sandwich intervals", "Assigned-score MI facet intervals"),
-    Scope = c("table,visual,fit,reporting", "table,visual,fit,reporting"),
+    Scope = c("table,visual,fit,gpcm,reporting", "table,visual,fit,reporting"),
     PrimaryHelper = c(
       "mfrm_facet_intervals(fit, facet, method = \"model\", level = 0.95)",
       "pool_mfrm_imputed(analyses, facet, ci_level = 0.95)"
     ),
     DisplayRoute = c(
-      "Use plot(result), as_ggplot(result), apa_table(result), or attach it with mfrm_results(fit, intervals = list(raters = result), compute = \"never\").",
+      "For supported MML fits, use plot(result), as_ggplot(result), apa_table(result), or attach it with mfrm_results(fit, intervals = list(raters = result), compute = \"never\"). See the separate CML and MML interaction routes below.",
       "Use summary(result) or plot(result, draw = FALSE)."
     ),
     DefaultLevel = c(0.95, 0.95),
     IntervalColumns = c(
-      "Lower, Upper, SE, ModelLower, ModelUpper, ModelSE, Status",
+      "Lower, Upper, SE, ModelLower, ModelUpper, ModelSE, Status; CIEligible and CoverageQualified on experimental routes",
       "Lower, Upper, SE, DF, Status"
     ),
     Basis = c(
@@ -1053,18 +1246,69 @@ mfrmr_interval_guide <- function(scope = c(
       "Rubin pooling of full within-imputation model covariance and between-imputation covariance, with scalar t reference."
     ),
     UseFor = c(
-      "Compare uncertainty for fixed facet estimates and prespecified contrasts, including rater differences.",
+      "Compare uncertainty for fixed facet estimates and prespecified within-facet contrasts from supported MML fits, including rater differences.",
       "Report eligible fixed facet estimates and contrasts after proper imputation of missing assigned scores."
     ),
     InterpretationBoundary = c(
-      "RSM/PCM sandwich inference requires many independent Persons or declared larger clusters. Two-family GPCM supports experimental model-based location intervals only; location differences need not be uniform rating differences. Coverage is not guaranteed.",
+      "Sandwich support is limited to fixed-population RSM/PCM and requires many independent Persons or declared larger clusters. One-family GPCM locations use model-information Wald intervals under regular MML assumptions; two-family locations remain experimental. Location differences need not be uniform rating differences. Finite-sample coverage is not guaranteed.",
       "Depends on adequate imputations and complete-data inference; excludes EAP pooling, sandwich pooling and simultaneous rater decisions."
     ),
-    GPCMStatus = c("experimental two-family MML locations only", "unavailable; RSM/PCM MML only"),
+    GPCMStatus = c("supported_with_caveat one-family MML locations; experimental two-family; no JML or GPCM sandwich", "unavailable; RSM/PCM MML only"),
     Notes = c(
-      "Fixed-standard-normal MML, unit weights and unregularized information. RSM/PCM uses fixed quadrature; two families use fixed-grid EM or adaptive direct MML with separate numerical checks. Inspect Status; not replacement-rater or G/D-study inference.",
+      "Unit weights and unregularized joint information. Native-location extensions include estimated normal RSM/PCM populations and fixed or intercept-only normal one-family GPCM; two families use fixed N(0,1). Inspect helper-specific scope, Status and scale; standardized contrasts include estimated population-SD uncertainty.",
       "All completions must qualify on a common identified scale; unassigned events stay unassigned. Inspect Status and the imputation model."
     ),
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = c("CML conditional-information intervals", "MML interaction-contrast intervals"),
+    Scope = rep("table,visual,fit,reporting", 2),
+    PrimaryHelper = c(
+      "mfrm_facet_intervals(fit, level = 0.95)",
+      "mfrm_facet_intervals(fit, comparison_review = review, scale = \"standardized\", level = 0.95)"
+    ),
+    DisplayRoute = c(
+      "summary(result), plot(result), as_ggplot(result), apa_table(result) and saveRDS(result); CML does not support mfrm_results().",
+      "summary(result), plot(result), as_ggplot(result), apa_table(result) and saveRDS(result); attach with mfrm_results(fit, intervals = list(comparisons = result), compute = \"never\") for reports and saved plot type = 'facet_comparisons'."
+    ),
+    DefaultLevel = rep(0.95, 2),
+    IntervalColumns = c(
+      "Estimate, SE, Lower, Upper, Status, CIEligible, InferenceReview; comparison-only results also retain ConditionalState, IdentificationBasis and EstimateReason",
+      "Estimate, NativeEstimate, SE, Lower, Upper, CIEligible, CoverageQualified, IdentificationBasis, MarginalIdentificationState"
+    ),
+    Basis = c(
+      "Pointwise asymptotic Wald intervals from joint conditional information after conditioning on each Person's total and observed roster; comparison-only results reuse saved identified-subspace covariance.",
+      "Pointwise model-information intervals from the full joint MML covariance. Standardized contrasts use the joint delta-method derivative of contrast/population SD, including SD uncertainty and cross-covariance."
+    ),
+    UseFor = c(
+      "Read requested contrasts from a CML fit_scope = 'comparisons' result. For a full mfrm_cml_fit, add facet and optional named contrasts to the helper call.",
+      "Read declared facet-by-origin contrasts from a matching full native RSM/PCM MML interaction fit; use scale = 'native' for original fitted units."
+    ),
+    InterpretationBoundary = c(
+      "Native units only; CML supplies no population SD, Person abilities, ordinary diagnostics or consolidated reports. Unidentified targets stay missing. Finite-MLE and information checks do not guarantee finite-sample coverage.",
+      "Estimated-SD standardization requires a common intercept-only normal population; a regression residual SD is not marginal population SD. Native intervals also admit origin-specific population means. Numerical eligibility and conditional identification are separate from global marginal identification and finite-sample coverage. JML/MML comparison-only fits remain descriptive."
+    ),
+    GPCMStatus = rep("unavailable; RSM/PCM only", 2),
+    Notes = c(
+      "Requires method = 'model' and scale = 'native'. Omit comparison_review and contrasts for comparison-only fits: targets and checks are already saved. Retain missing rows, reasons, target weights and joint covariance when saving; see vignette('mfrmr-linking-and-dff').",
+      "Requires method = 'model', unit weights and a matching review. Fixed N(0,1) has known SD 1; an estimated SD comes from this same fit, never external or empirical Person scores. Inspect helper-specific model, source and numerical checks and retained population assumptions; see vignette('mfrmr-linking-and-dff')."
+    ),
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = "Conditional-normal population intervals",
+    Scope = "table,fit,reporting,visual",
+    PrimaryHelper = "mfrm_population_intervals(fit, level = 0.95, contrasts = L)",
+    DisplayRoute = "summary(ci), vcov(ci), apa_table(ci), plot(ci) or plot(ci, type = 'contrasts'); as_ggplot(ci) reuses saved values. Attach with mfrm_results(fit, intervals = list(population = ci), compute = \"never\") for reports and table exports.",
+    DefaultLevel = 0.95,
+    IntervalColumns = "Lower, Upper, SE, WorkingLower, WorkingUpper, WorkingSE, NaturalScaleStatus, Status, CIEligible, InferenceReview",
+    Basis = "Pointwise normal coefficient/contrast intervals and exponentiated log-variance intervals, using the inverse full joint MML information including nuisance parameters.",
+    UseFor = "Estimate conditional population means, prespecified linear combinations and residual population variance under the fitted predictor coding.",
+    InterpretationBoundary = "Experimental RSM/PCM direct MML only. CIEligible describes numerical availability, not established coverage. Not individual ability differences, causal effects, zero-variance boundary inference or calibration-inclusive Person intervals.",
+    GPCMStatus = "unavailable; estimated normal RSM/PCM population only",
+    Notes = "Use contrasts = NULL for coefficients and variance only, or supply L with fitted coefficient column names. Requires unit weights, full-rank coding, unanchored centered facets/steps and no interactions. Retain checks, unavailable rows and interpretation_notes; vcov(ci) uses coefficient/log-variance coordinates, with contrast_covariance stored separately. Plots separate coefficients from contrasts, retain unavailable rows and exclude residual variance from their native-ability axis; inspect population_coding, population_spec and contrast_weights in plot_data().",
     stringsAsFactors = FALSE
   ))
 
@@ -1079,7 +1323,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Use plot(result, draw = FALSE), summary(result) or confint(result).",
       "Inspect the interval and its profile attribute."),
     DefaultLevel = rep(0.95, 3),
-    IntervalColumns = c("Lower, Upper; method, target and note attributes", "Lower, Upper; availability attribute",
+    IntervalColumns = c("Lower, Upper; IntervalStatus, CIEligible, InferenceReview in diagnostics; source checks attribute", "Lower, Upper; availability attribute",
       "Lower, Upper; profile attribute"),
     Basis = c("Normal prediction interval with first-order calibration-adjusted prediction SE.",
       "Full-refit parametric prediction-error bootstrap; studentized by default, unscaled error comparison available.",
@@ -1104,7 +1348,7 @@ mfrmr_interval_guide <- function(scope = c(
     DisplayRoute = c("Use plot(fit, facet = 'Rater', intervals = 'normal', level = 0.95) or summary(fit, calibration_intervals = 'normal'). Defaults omit bounds.",
       "Use scores$table, summary(scores), plot(scores, draw = FALSE) or as_ggplot(scores)."),
     DefaultLevel = rep(0.95, 2),
-    IntervalColumns = c("Lower, Upper, SE", "Lower, Upper, ConditionalSD, Status, Reason"),
+    IntervalColumns = c("Lower, Upper; Estimate, SE, IntervalStatus, CIEligible, InferenceReview in diagnostics; source checks attribute", "Lower, Upper, ConditionalSD, Status, Reason"),
     Basis = c("Explicit observed-information normal approximation for fixed facets and steps in the Person-specific testlet RSM.",
       "Continuous equal-tail posterior intervals conditional on calibration and the fitted or specified normal Person population."),
     UseFor = c("Describe fixed facet effects while modeling dependence within Person/testlet blocks.",
@@ -1121,7 +1365,7 @@ mfrmr_interval_guide <- function(scope = c(
     Route = "Shared-rater fixed-facet and step calibration", Scope = "table,fit,reporting",
     PrimaryHelper = "confint(fit, parm = 'calibration', level = 0.95)",
     DisplayRoute = "Use summary(fit, calibration_intervals = 'normal', level = 0.95) or mfrm_results(fit, calibration_intervals = 'normal', calibration_level = 0.95). Defaults omit bounds.",
-    DefaultLevel = 0.95, IntervalColumns = "Lower, Upper, SE",
+    DefaultLevel = 0.95, IntervalColumns = "Lower, Upper; Estimate, SE, IntervalStatus, CIEligible, InferenceReview in diagnostics; source checks attribute",
     Basis = "Explicit observed-information normal approximation for fixed facets and steps in the shared-rater RSM.",
     UseFor = "Describe calibration effects separately from realized rater effects and population SDs.",
     InterpretationBoundary = "Finite-sample coverage is not established. Numerical/information failures and estimated variance boundaries withhold bounds.",
@@ -1151,8 +1395,45 @@ mfrmr_interval_guide <- function(scope = c(
     Basis = "Pointwise log-Wald intervals from the inverse full joint MML observed information, with sum-zero log-slope transformation.",
     UseFor = "Sampling uncertainty in relative discriminations with geometric mean one.",
     InterpretationBoundary = "Default relative/model target; explicit options select standardized slopes, contrasts, sandwich or Bonferroni intervals. These are not rater-quality intervals or general coverage guarantees.",
-    GPCMStatus = "supported_with_caveat; eligible native GPCM MML only",
+    GPCMStatus = "supported_with_caveat; eligible one-family GPCM MML only",
     Notes = "Requires current likelihood metadata, adequate convergence/categories, unit weights, q>=31 and positive unregularized information. Ordinary Wright/Pathway maps do not display these slope intervals.",
+    stringsAsFactors = FALSE
+  ))
+
+  out <- rbind(out, data.frame(
+    Route = c("GMFRM component-slope intervals", "GPCM slope profile intervals",
+      "Corrected-JML local root uncertainty"),
+    Scope = c("gpcm,visual,table,fit,reporting", "gpcm,visual,table,fit,reporting",
+      "gpcm,table,fit,reporting"),
+    PrimaryHelper = c("confint(fit, parm = \"slopes\", level = 0.95)",
+      "confint(fit, parm = \"slopes\", method = \"profile\", slope = selected_slope, level = 0.95)",
+      "summary(fit)$tables$uncertainty; summary(fit)$tables$slopes"),
+    DisplayRoute = c(
+      "plot(result), apa_table(result); attach with mfrm_results(fit, intervals = list(slopes = result)).",
+      "print(result), plot(result), apa_table(result, which = \"profile_endpoints\"); attach the selected profile to mfrm_results().",
+      "summary(fit), mfrm_results(fit), mfrm_report(); point-only plots have no structural confidence bounds."),
+    DefaultLevel = c(.95, .95, NA_real_),
+    IntervalColumns = c(
+      "Lower, Upper; CIEligible, CoverageQualified, InferenceReview in diagnostics",
+      "Lower, Upper; CI_Lower, CI_Upper, CIEligible, CIUse, InferenceReview in diagnostics; endpoint status in the profile table",
+      "RootSE, LogRootSE; no structural Lower or Upper bounds"),
+    Basis = c(
+      "Experimental component log-Wald intervals from full joint MML information on the fixed N(0,1) population scale.",
+      "Experimental likelihood-ratio inversion for one selected slope with an asymptotic chi-square(1) reference.",
+      "Experimental full estimating-equation covariance around the adjusted root under the declared Person/roster sampling law."),
+    UseFor = c("Inspect uncertainty about either owner's component discrimination.",
+      "Inspect asymmetric slope uncertainty and retain partial or unbounded outcomes.",
+      "Describe local variation separately from remaining structural estimation bias."),
+    InterpretationBoundary = c(
+      "CIEligible is numerical availability; CoverageQualified remains FALSE. The first family has geometric mean one; the second is free. No two-family sandwich or slope-contrast intervals.",
+      "Computed bounds do not prove nominal coverage. An unresolved side is not an infinite limit or a calibrated one-sided interval; search limits are not endpoints.",
+      "RootSE is not a qualified structural confidence interval. A covariance or t adjustment alone cannot remove residual bias."),
+    GPCMStatus = c("experimental two-family MML only; coverage unqualified",
+      "experimental one- and two-family MML only; no JML profiles",
+      "experimental corrected JML only; structural intervals unavailable"),
+    Notes = c("Uses the fitted fixed-grid EM or adaptive direct integration route; scale defaults to standardized. Not an interval for the product of two slopes or for rater quality.",
+      "Select one exact slope level; for two families use a named owner/level value. Profiling refits nuisance parameters and can be costly; displaying saved results does not refit.",
+      "Inspect correction order, sampling law, point status and covariance reason. Conditional Person posterior intervals are a different target; see gpcm_capability_matrix()."),
     stringsAsFactors = FALSE
   ))
 
@@ -1168,11 +1449,25 @@ mfrmr_interval_guide <- function(scope = c(
     UseFor = c("Uncertainty in category probabilities or information per rating.", "Approximate slope uncertainty under the fitted population and analyzed assignment."),
     InterpretationBoundary = c("Not Person-score intervals or a continuous simultaneous confidence band.",
       "Not an exact small-sample method; failed refits can leave infinite bounds. Null-model LRT draws cannot supply slope intervals."),
-    GPCMStatus = "supported_with_caveat; eligible native GPCM MML only",
+    GPCMStatus = "supported_with_caveat; eligible one-family GPCM MML only",
     Notes = c("Default model covariance and pointwise intervals; sandwich and finite-grid Bonferroni are explicit options.",
       "Default relative 95% pointwise intervals; select scale, level and contrasts explicitly. Generating the bootstrap can be costly; displaying saved output does not refit."),
     stringsAsFactors = FALSE
   ))
+
+  out <- rbind(out, data.frame(
+    Route = "Binary rater-network coefficient intervals",
+    Scope = "table,visual,reporting",
+    PrimaryHelper = "fit_rater_network(...); confint(model, level = 0.95)",
+    DisplayRoute = "summary(model); plot(model, type = 'coefficients'); mfrm_report(model)",
+    DefaultLevel = .95,
+    IntervalColumns = "Percentage-labelled bounds; diagnostics and notes attributes",
+    Basis = "Approximate pointwise normal ERGM coefficient intervals in conditional log-odds coordinates.",
+    UseFor = "Prespecified binary network configurations or node covariates, after estimation diagnostics.",
+    InterpretationBoundary = "Not MFRM parameters, causal halo or estimated-edge uncertainty; backend failure keeps missing bounds.",
+    GPCMStatus = "Network likelihood, not a GPCM rating likelihood",
+    Notes = "Changing confint level does not change the stored 95% coefficient table/plot. Review MCMC and GOF; numerical availability is not convergence certification.",
+    stringsAsFactors = FALSE))
 
   if (identical(scope, "all")) {
     return(out)

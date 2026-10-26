@@ -67,13 +67,26 @@ By default, \code{report_text} includes:
 the eligible canonical MML AIC/Person-BIC/SABIC panel or its explicit
 ineligibility and legacy-descriptive status; q<31 MML criteria are
 explicitly labelled screening/review-only rather than automatic ranking
-\item anchor/constraint summary (\code{noncenter_facet}, anchored levels, group anchors, dummy facets)
+\item anchor/constraint summary (\code{noncenter_facet}, centering convention,
+anchored levels, group anchors, dummy facets)
 \item latent-regression population-model wording when \code{fit} has an active
 \code{population_formula}
 \item category/threshold diagnostics (including disordered-step details when present)
 \item overall fit, misfit count, and top misfit levels
 \item facet reliability/separation, residual PCA summary, and bias-screen counts
+\item stored inter-rater agreement, its matched-opportunity denominator and
+unavailable outcomes, separately from separation reliability
 }
+
+Agreement wording uses the rater facet in the stored diagnostics summary;
+\code{context$rater_facet} does not recalculate or relabel that summary. The
+model-expected baseline uses fitted category probabilities with calibration
+fixed, not marginal-frequency chance agreement. Adjacent agreement includes
+exact matches and differences of at most 1 on the compared score scale.
+Missing expected values remain explicit, including the stored number of
+opportunities without valid probabilities. An absent summary does not
+establish agreement. See \code{\link[=interrater_agreement_table]{interrater_agreement_table()}} for the matching,
+repeated-rating and denominator conventions.
 }
 \section{Interpreting output}{
 
@@ -132,8 +145,15 @@ If supplied, \code{bias_results} must come from \code{\link[=estimate_bias]{esti
 package-native bias helper that provides a table component.
 }
 
+\section{Saved-result reuse}{
+
+Supplied screening results must describe this fitted analysis. Results from
+another fit or older results without identity metadata are refused. See
+\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
+diagnostics without refitting the model.
+}
+
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -168,7 +188,6 @@ apa_review <- summary(apa)
 apa_review$content_checks
 cat(apa$report_text)
 # Adapt the text to the study question, design, and evidence before using it
-}
 }
 \seealso{
 \code{\link[=build_visual_summaries]{build_visual_summaries()}}, \code{\link[=estimate_bias]{estimate_bias()}},

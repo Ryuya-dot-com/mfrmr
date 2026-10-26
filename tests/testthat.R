@@ -12,17 +12,50 @@ is_cran_check <- local({
 
 cran_light_tests <- c(
   "api-migration",
+  "model-export",
+  "model-export-affine",
+  "model-export-summary",
+  "posterior-summary",
   "adaptive-fitting",
   "adaptive-quadrature-review",
   "calibration-public-api",
+  "calibration-plot-conversion",
+  "appendix-table-collisions",
   "conditional-scoring",
+  "decision-probabilities",
+  "classification",
   "category-variance",
+  "bias-numerics",
+  "facets-manual-consistency",
+  "facets-manual-boundaries",
+  "facets-results",
+  "fair-delta",
+  "category-owner-reporting",
+  "rater-effect-plots",
   "fixed-measure-precision",
+  "facet-centering",
+  "parameter-map-invariants",
+  "likelihood-numerics",
+  "source-posterior-numerics",
+  "preparation-invariants",
+  "anchor-centering",
+  "anchor-migration",
+  "anchored-facet-intervals",
+  "anchored-calibration",
+  "anchored-diagnostics",
+  "anchored-gpcm",
+  "fit-measures-scope",
   "portable-gpcm",
   "portable-jml",
   "scoring-prior",
   "cran-smoke",
+  "cml",
+  "cml-comparisons",
+  "cml-interval-display",
   "cluster-comparison",
+  "comparison-review",
+  "fitted-comparisons",
+  "partial-comparisons",
   "cluster-plots",
   "compatibility-aliases",
   "compiled-header-contract",
@@ -31,14 +64,27 @@ cran_light_tests <- c(
   "d-study-plots",
   "example-datasets",
   "extended-example-replay",
+  "simulation-example-replay",
+  "results-replay",
+  "results-csv-encoding",
   "facet-dashboard",
   "feature-clustering",
   "numeric-feature-workflows",
   "response-imputation",
   "facet-intervals",
+  "mml-comparison-intervals",
   "facet-interval-reporting",
+  "plot-dispatch",
+  "plot-population-intervals",
+  "dff-plot-support",
+  "dff-refit-availability",
+  "linking-numerics",
+  "plot-export-notes",
+  "reliability-snapshot-scope",
+  "shrinkage-numerics",
   "screening-performance",
   "random-rater",
+  "random-rater-profile",
   "random-rater-intervals",
   "testlet",
   "testlet-integration",
@@ -46,12 +92,27 @@ cran_light_tests <- c(
   "gauss-hermite-weights",
   "generalizability-missing",
   "multivariate-gtheory",
+  "multivariate-gstudy-intervals",
+  "gstudy-sampling-vcov",
+  "gstudy-example-replay",
+  "multivariate-dstudy-intervals",
+  "dstudy-summary",
+  "dstudy-delta",
+  "dstudy-spectral-f",
+  "dstudy-method-selection",
+  "dstudy-mls-inversion",
+  "dstudy-score-intervals",
+  "multivariate-gstudy-plots",
   "multivariate-nested-gtheory",
   "multivariate-d-compare",
   "multivariate-d-study-plots",
   "icc-ci-method",
   "icc-input",
+  "mantel-haenszel",
+  "ordinal-logistic",
+  "dff-row-matching",
   "posterior-intervals",
+  "population-intervals",
   "shrinkage-replay",
   "mml-cpp11-backend",
   "missing-codes-integration",
@@ -59,6 +120,7 @@ cran_light_tests <- c(
   "gpcm-capability-matrix",
   "gpcm-ic-eligibility",
   "gpcm-lrt",
+  "rsm-pcm-nesting",
   "gpcm-uncertainty-readiness",
   "gpcm-inference-extensions",
   "gpcm-inference-reporting",
@@ -69,9 +131,22 @@ cran_light_tests <- c(
   "gmfrm-portable",
   "gmfrm-scoring-results",
   "gmfrm-rater-feedback",
+  "experimental-reporting",
+  "agreement-reporting",
   "gmfrm-facet-intervals",
+  "gmfrm-interval-status",
+  "gmfrm-rank-deficient-source",
+  "gmfrm-adaptive-profiles",
+  "gmfrm-adaptive-start",
   "gmfrm-em",
   "jml-public-workflow",
+  "study-report",
+  "report-modules",
+  "residual-network",
+  "network-inference",
+  "prefit-network",
+  "descriptive-review-contract",
+  "krippendorff-alpha",
   "namespace-contract",
   "optimizer-curvature",
   "vignette-artifacts"
@@ -87,11 +162,32 @@ if (is_cran_check) {
   # Exercise the public data -> declared-design review -> fit -> summary ->
   # Wright/pathway plot -> export route once, plus lightweight compatibility,
   # backend, privacy, and installed-artifact contracts. Portable scoring,
-  # dashboard restrictions, and guarded optimizer restarts are included.
+  # dashboard restrictions, consolidated plot dispatch on saved results, and
+  # guarded optimizer restarts are included.
   # Detailed plotting, repeated estimation/diagnostics, simulation/recovery,
   # documentation scans and broad regression tests remain in the complete
   # local/CI suite, which must be run with NOT_CRAN=true.
-  test_check("mfrmr", filter = cran_light_filter)
+  local({
+    # CRAN permits at most two concurrent cores. Keep each worker's numerical
+    # libraries single-threaded, retain an explicit serial override, and leave
+    # the full regression suite below unchanged. No test is dropped for timing.
+    requested <- suppressWarnings(as.integer(getOption(
+      "Ncpus", Sys.getenv("TESTTHAT_CPUS", "2")
+    )))
+    if (length(requested) != 1L || is.na(requested) || requested < 1L) {
+      stop("Ncpus / TESTTHAT_CPUS must specify a positive integer.")
+    }
+    withr::local_options(Ncpus = min(2L, requested))
+    withr::local_envvar(c(
+      TESTTHAT_PARALLEL = if (utils::packageVersion("testthat") >= "3.1.0") {
+        Sys.getenv("TESTTHAT_PARALLEL", "true")
+      } else "false",
+      OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1",
+      MKL_NUM_THREADS = "1", VECLIB_MAXIMUM_THREADS = "1",
+      BLIS_NUM_THREADS = "1"
+    ))
+    test_check("mfrmr", filter = cran_light_filter)
+  })
 } else {
   test_check("mfrmr")
 }

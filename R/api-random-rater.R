@@ -48,6 +48,14 @@
 #'   on all shared rater effects; the resulting joint rater integral uses the
 #'   Laplace approximation through the optional RTMB package. Integrating a new
 #'   rater separately for each person would fit a different model.
+#'   After marginalization, Persons sharing a rater are dependent. Adding
+#'   Persons rated by the same fixed panel does not add independent draws from
+#'   the rater population. Even if those rater effects became known exactly,
+#'   a fixed number of draws would not consistently estimate a positive
+#'   population variance. Person count or total rating count alone therefore
+#'   cannot justify ordinary large-sample population-SD inference. The full
+#'   calibration information includes all estimated population SDs, but this
+#'   does not establish the required asymptotic regime or Laplace accuracy.
 #'
 #'   The initial scope is RSM, unit weights, a connected person-rater design,
 #'   multiple persons per rater, and full-rank additive fixed-facet coding.
@@ -56,6 +64,11 @@
 #'   populations, PCM, anchors, interactions, testlets and latent regression
 #'   are not implemented by this route. Connectedness alone does not guarantee
 #'   adequate information about rater variance.
+#'   A fixed-facet level with only minimum or only maximum scores has no finite
+#'   calibration estimate. Such separation fails `checks$NumericalReady` and
+#'   `checks$InformationPositive`, even if the optimizer reports convergence.
+#'   `checks$FixedFacetSeparation` records this sufficient separation check;
+#'   its absence does not exclude separation along combinations of facets.
 #'
 #'   Both estimated zero variances are considered explicitly. One-sided variance
 #'   scores check these boundaries; the derivative with respect to SD alone cannot
@@ -159,6 +172,11 @@
 #'   save it with `saveRDS()`. Its summary, plot and prediction methods are
 #'   specific to this model; it is not an ordinary `mfrm_fit` or portable
 #'   fixed-facet calibration object.
+#'   Calibration and summary rater tables retain `IntervalStatus`, `CIEligible` and
+#'   `InferenceReview` for normal-interval availability. These distinguish
+#'   unrequested bounds, unsupported targets and unresolved checks or variance
+#'   boundaries; see [confint.mfrm_random_rater()]. Retained points require
+#'   the separate fit checks and are not certified by these fields.
 #' @references Van den Noortgate, W., De Boeck, P. and Meulders, M. (2003).
 #'   Cross-classification multilevel logistic models in psychometrics.
 #'   *Journal of Educational and Behavioral Statistics*, 28, 369--386.
@@ -380,20 +398,21 @@ mfrm_random_rater_zero_score <- function(input, beta, steps, quad_points, person
   nr <- max(input$rater); total_score <- numeric(nr); total_hessian <- numeric(nr)
   offset <- if (length(beta)) as.vector(input$X %*% beta) else rep(0, length(input$y))
   for (indices in split(seq_along(input$y), input$person)) {
-    loglik <- log(rule$weights)
+    loglik <- numeric(quad_points)
     score <- curvature <- matrix(0, quad_points, nr)
     for (i in indices) {
       eta <- person_sd * rule$nodes - offset[i]
       logw <- outer(eta, 0:length(steps)) - matrix(c(0, cumsum(steps)), length(eta), length(steps) + 1L, byrow = TRUE)
       shift <- apply(logw, 1L, max)
       p <- exp(logw - shift); denominator <- rowSums(p); p <- p / denominator
-      loglik <- loglik + logw[, input$y[i] + 1L] - shift - log(denominator)
+      loglik <- loglik + ((logw[, input$y[i] + 1L] - shift) - log(denominator))
       mean <- as.vector(p %*% (0:length(steps)))
       variance <- mfrm_category_variance(p, 0:length(steps), mean)
       r <- input$rater[i]
       score[, r] <- score[, r] + mean - input$y[i]
       curvature[, r] <- curvature[, r] - variance
     }
+    loglik <- (loglik - max(loglik)) + log(rule$weights)
     posterior <- exp(loglik - max(loglik)); posterior <- posterior / sum(posterior)
     s <- colSums(posterior * score)
     total_score <- total_score + s
@@ -410,37 +429,65 @@ mfrm_random_rater_objective <- function(input, quad_points, start_sd = .5,
     stop("Install optional RTMB version 2.0 or later for shared-rater estimation.", call. = FALSE)
   }
   rule <- gauss_hermite_normal(quad_points)
-  n <- length(input$y); np <- max(input$person); nr <- max(input$rater)
-  incidence <- Matrix::sparseMatrix(i = input$person, j = seq_len(n), x = 1,
-    dims = c(np, n))
-  theta <- matrix(rep(rule$nodes, each = n), n, quad_points)
-  focal <- if (is.null(focal_person)) NULL else as.numeric(input$person == focal_person)
+  np <- max(input$person); nr <- max(input$rater)
+  # Equal predictors share category log probabilities, but each Person retains
+  # their own category counts. Focal ability rows must form separate cells.
+  design <- data.frame(rater = input$rater, input$X)
+  if (!is.null(focal_person)) design$focal <- input$person == focal_person
+  key <- do.call(paste, c(lapply(design, function(x) match(x, unique(x))), sep = ":"))
+  first <- match(unique(key), key); cell <- match(key, key[first]); nc <- length(first)
+  categories <- seq_along(input$score_levels) - 1L
+  counts <- lapply(categories, function(y) {
+    rows <- which(input$y == y)
+    Matrix::sparseMatrix(i = input$person[rows], j = cell[rows], x = 1, dims = c(np, nc))
+  })
+  theta <- matrix(rep(rule$nodes, each = nc), nc, quad_points)
+  focal <- if (is.null(focal_person)) NULL else as.numeric(input$person[first] == focal_person)
   objective <- function(par) {
     sd <- if (is.null(fixed_sd)) par$sd else fixed_sd
     person_sd <- if (is.null(fixed_person_sd)) par$person_sd else fixed_person_sd
-    base <- -sd * par$z[input$rater]
-    if (ncol(input$X)) base <- base - (RTMB::AD(input$X) %*% par$beta)[, 1L]
-    eta <- RTMB::matrix(rep(base, quad_points), n, quad_points) + person_sd * theta
+    base <- -sd * par$z[input$rater[first]]
+    if (ncol(input$X)) base <- base - (RTMB::AD(input$X[first, , drop = FALSE]) %*% par$beta)[, 1L]
+    eta <- RTMB::matrix(rep(base, quad_points), nc, quad_points) + person_sd * theta
     if (!is.null(focal)) eta <- eta + focal * (par$focal_ability - person_sd * theta)
-    cumulative <- c(RTMB::AD(0), cumsum(par$steps))
-    logden <- 0 * eta
-    for (k in seq_along(par$steps)) logden <- RTMB::logspace_add(logden, k * eta - cumulative[k + 1L])
-    logp <- input$y * eta - cumulative[input$y + 1L] - logden
-    person_logp <- RTMB::AD(incidence) %*% logp
+    # Sum relative to each category using adjacent log odds. The two sweeps
+    # preserve small differences at large finite ties in O(categories) work.
+    upper <- vector("list", length(categories))
+    upper[[length(categories)]] <- 0 * eta
+    for (k in rev(seq_along(par$steps))) upper[[k]] <-
+      RTMB::logspace_add(0 * eta, (eta - par$steps[k]) + upper[[k + 1L]])
+    lower <- 0 * eta
+    log_probabilities <- vector("list", length(categories))
+    log_probabilities[[1L]] <- -upper[[1L]]
+    for (y in seq_along(par$steps)) {
+      lower <- RTMB::logspace_add(0 * eta, (par$steps[y] - eta) + lower)
+      log_probabilities[[y + 1L]] <- if (y == length(par$steps)) -lower else
+        -RTMB::logspace_add(lower, (eta - par$steps[y + 1L]) + upper[[y + 2L]])
+    }
+    person_logp <- RTMB::AD(matrix(0, np, quad_points))
+    for (y in categories) person_logp <- person_logp +
+      RTMB::AD(counts[[y + 1L]]) %*% log_probabilities[[y + 1L]]
     if (!is.null(replicate_row)) {
       # One hypothetical replicate shares this row's ability and rater. Its
       # category changes the numerator integral, never the fitted calibration.
-      extra <- par$replicate_score * eta[replicate_row, ] -
-        sum(par$replicate_steps * par$steps) - logden[replicate_row, ]
+      step_weights <- c(RTMB::AD(1), par$replicate_steps, RTMB::AD(0))
+      category_weights <- step_weights[-length(step_weights)] - step_weights[-1L]
+      # The residual preserves derivatives for independently varied score and
+      # step indicators; it is zero for every actual response category.
+      extra <- (par$replicate_score - sum(par$replicate_steps)) * eta[cell[replicate_row], ]
+      for (y in categories) extra <- extra +
+        category_weights[y + 1L] * log_probabilities[[y + 1L]][cell[replicate_row], ]
       person_logp <- person_logp + outer(as.numeric(seq_len(np) == input$person[replicate_row]), extra)
     }
+    offset <- RTMB::apply(person_logp, 1L, max)
+    person_logp <- person_logp - offset
     person_marginal <- person_logp[, 1L] + log(rule$weights[1L])
     for (q in 2:quad_points) person_marginal <- RTMB::logspace_add(
       person_marginal, person_logp[, q] + log(rule$weights[q]))
     rater_effect <- sd * par$z
     RTMB::ADREPORT(rater_effect)
     # One z per observed rater enters every person's likelihood before summing.
-    -sum(person_marginal) + sum(par$z^2) / 2 + nr * log(2 * pi) / 2
+    -sum(offset + person_marginal) + sum(par$z^2) / 2 + nr * log(2 * pi) / 2
   }
   parameters <- list(beta = rep(0, ncol(input$X)),
     steps = seq(-1, 1, length.out = length(input$score_levels) - 1L), z = rep(0, nr))
@@ -570,15 +617,23 @@ mfrm_random_rater_fit <- function(input, quad_points, fixed_sd, maxit,
       at_zero$best$par[seq_len(nb)], at_zero$best$par[nb + seq_len(ns)], at_zero$sd, high_order)
   }
   quadrature_stable <- isTRUE(integration_difference < 1e-5) && isTRUE(gradient_difference < 1e-4)
-  numerical_ready <- best$convergence == 0L && gradient_max < 1e-4 && boundary_ok &&
+  # An extreme-only fixed level admits a likelihood-increasing direction:
+  # move that level and compensate its zero sum with the common step mean.
+  # This survives integration over persons/raters. Tiny positive eigenvalues
+  # at the optimizer's finite stopping point cannot establish a finite MLE.
+  separated <- any(vapply(input$columns$facets, function(facet) {
+    any(vapply(split(input$y, input$data[[facet]]), function(y)
+      all(y == 0L) || all(y == length(input$score_levels) - 1L), logical(1)))
+  }, logical(1)))
+  numerical_ready <- !separated && best$convergence == 0L && gradient_max < 1e-4 && boundary_ok &&
     quadrature_stable &&
     (!estimated_boundary || high_zero_score <= 1e-5) &&
     (!estimated_person_boundary || (high_person_zero_score["score"] + high_person_zero_score["difference"] <= 1e-5 &&
       high_person_zero_score["difference"] < 1e-4))
-  H <- stats::optimHess(best$par, obj$fn, obj$gr)
+  H <- optimHess(best$par, obj$fn, obj$gr)
   H <- (H + t(H)) / 2
   values <- eigen(H, symmetric = TRUE, only.values = TRUE)$values
-  information_ready <- all(is.finite(values)) && min(values) > max(values) * 1e-10
+  information_ready <- !separated && all(is.finite(values)) && min(values) > max(values) * 1e-10
   covariance <- if (numerical_ready && information_ready) chol2inv(chol(H)) else matrix(NA_real_, length(best$par), length(best$par))
   obj$fn(best$par)
   conditional_cov <- sd^2 * as.matrix(Matrix::solve(obj$env$spHess(obj$env$last.par, random = TRUE)))
@@ -607,7 +662,7 @@ mfrm_random_rater_fit <- function(input, quad_points, fixed_sd, maxit,
       HigherOrderPersonZeroScoreDifference = unname(high_person_zero_score["difference"]),
       QuadraturePoints = quad_points, CheckPoints = high_order,
       LogLikDifference = integration_difference, GradientDifference = gradient_difference,
-      PersonQuadratureStable = quadrature_stable,
+      PersonQuadratureStable = quadrature_stable, FixedFacetSeparation = separated,
       NumericalReady = numerical_ready, InformationPositive = information_ready),
     zero_optimization = record(zero_fit),
     person_zero_optimization = if (is.null(fixed_person_sd)) record(at_zero$best) else NULL,

@@ -138,8 +138,11 @@ test_that("long and Japanese names stay distinguishable when abbreviated", {
 })
 
 test_that("numerous PCM thresholds do not erase the default facet display", {
-  dat <- simulate_mfrm_data(n_person = 30, n_rater = 2, n_criterion = 4,
-                            score_levels = 9, seed = 9461)
+  # A layout fixture must retain all nine categories in each PCM ladder.
+  dat <- expand.grid(Person = paste0("P", 1:30), Rater = paste0("R", 1:2),
+                     Criterion = paste0("C", 1:4), stringsAsFactors = FALSE)
+  dat$Score <- rep(1:9, length.out = nrow(dat))
+  expect_true(all(table(dat$Criterion, dat$Score) > 0))
   fit <- suppressWarnings(fit_mfrm(dat, person = "Person",
     facets = c("Rater", "Criterion"), score = "Score", model = "PCM",
     method = "JML", maxit = 15))
@@ -159,7 +162,7 @@ test_that("numerous PCM thresholds do not erase the default facet display", {
       x = graphics::grconvertX(c(box$left, box$left + box$w), from = "user", to = "ndc"),
       y = graphics::grconvertY(c(box$top - box$h, box$top), from = "user", to = "ndc"))
     result
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL, width = 5, height = 4)
   on.exit(grDevices::dev.off(), add = TRUE)
   .mfrmr_muffle_expected_warnings(plot(fit, type = "ccc"), "^Review-only display:")
@@ -197,7 +200,7 @@ test_that("an overcrowded canvas reports its limit without deleting labels", {
   expect_true(all(is.finite(as.matrix(placed))))
 })
 
-test_that("pathway and CCC disclose the same reference profile in data and drawing", {
+test_that("pathway and CCC retain the reference profile outside the default figure", {
   fit <- make_toy_fit(maxit = 20)
   bundle <- .mfrmr_muffle_expected_warnings(
     plot(fit, type = "bundle", draw = FALSE), "^Review-only display:")
@@ -208,14 +211,15 @@ test_that("pathway and CCC disclose the same reference profile in data and drawi
   testthat::local_mocked_bindings(mtext = function(text, ...) {
     labels <<- c(labels, as.character(text))
     original_mtext(text, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   grDevices::pdf(NULL, width = 7, height = 5)
   on.exit(grDevices::dev.off(), add = TRUE)
   for (type in c("pathway", "ccc")) {
     labels <- character()
     p <- .mfrmr_muffle_expected_warnings(plot(fit, type = type), "^Review-only display:")
     expect_identical(p$data$curve_basis, expected_basis)
-    expect_match(paste(labels, collapse = " "),
+    expect_false(any(grepl("additive effects and interactions fixed at zero", labels, fixed = TRUE)))
+    expect_match(paste(plot_data(p, "notes")$Text, collapse = " "),
       "additive effects and interactions fixed at zero", fixed = TRUE)
     expect_true(all(p$data$curve_basis$PredictorOffset == 0))
   }
@@ -234,7 +238,7 @@ test_that("category-count axes include expected counts above observed bars", {
     result
   }, .package = "mfrmr")
 
-  categories <- list(category_table = data.frame(
+  categories <- list(calculation_version = 2L, category_table = data.frame(
     Category = 1:3, Count = c(2, 4, 3), ExpectedCount = c(NA, 30, 1)
   ))
   categories$category_usage <- mfrmr:::summarize_category_usage(categories$category_table)
@@ -261,6 +265,9 @@ test_that("category-count axes include expected counts above observed bars", {
 test_that("rater profiles reserve room for complete labels or explain the size limit", {
   fit <- make_toy_fit(maxit = 20)
   dx <- make_toy_diagnostics(fit)
+  # This layout test deliberately changes only display labels. Identity is
+  # checked separately; bypass it here rather than fitting a new labelled model.
+  local_mocked_bindings(mfrm_results_validate_diagnostics_identity = function(...) "layout_fixture")
   rater <- dx$measures$Facet == "Rater"
   dx$measures$Level[rater] <- paste("Long assessment team", dx$measures$Level[rater])
   grDevices::pdf(NULL, width = 8, height = 6)
@@ -276,7 +283,7 @@ test_that("rater profiles reserve room for complete labels or explain the size l
                 graphics::par("mai")[2] - 0.1)
     }
     original_axis(side, at = at, labels = labels, ...)
-  }, .package = "graphics")
+  }, .package = "mfrmr")
   plot_rater_severity_profile(fit, dx)
   expect_equal(axis_calls, 1L)
   expect_identical(graphics::par("mar"), old_mar)
@@ -298,4 +305,26 @@ test_that("FACETS maps warn when adjacent multi-line cells cannot fit", {
     strrep("long label ", 30))
   expect_warning(mfrmr:::draw_wright_facets_style(p$data, show_ci = FALSE),
                  "FACETS-style facet labels need more space")
+})
+
+
+test_that("facet bars reserve label space and include confidence limits", {
+  grDevices::png(tempfile(fileext = ".png"), width = 1200, height = 740, res = 160)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  before <- graphics::par("mar")
+  seen <- NULL
+  previous_hook <- getHook("plot.new")
+  on.exit(setHook("plot.new", previous_hook, action = "replace"), add = TRUE)
+  setHook("plot.new", function(...) {
+    seen <<- graphics::par("mai")[2]
+  }, action = "append")
+  tab <- data.frame(Facet = "Rater", Level = c("R01", "R06"),
+    Estimate = c(-.61, .41), SE = c(.3, .2))
+  draw_facet_plot(tab, title = "", show_ci = TRUE)
+  expect_gt(seen, max(graphics::strwidth(paste0(tab$Facet, ": ", tab$Level),
+    units = "inches")))
+  bounds <- c(tab$Estimate - qnorm(.975)*tab$SE, tab$Estimate + qnorm(.975)*tab$SE)
+  expect_lte(graphics::par("usr")[1], min(bounds))
+  expect_gte(graphics::par("usr")[2], max(bounds))
+  expect_identical(graphics::par("mar"), before)
 })

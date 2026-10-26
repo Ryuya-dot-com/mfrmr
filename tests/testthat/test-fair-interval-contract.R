@@ -61,11 +61,11 @@ test_that("extreme display measures retain fitted values without borrowing their
       printed <- gsub("[[:space:]]+", " ", paste(capture.output(print(fit)), collapse = " "))
       expect_match(printed, "finite-item bias correction", fixed = TRUE)
       expect_false(grepl("ready_with_exclusions|joint_person_coordinate_scale|descriptive_jml", printed))
-      expect_true(all(is.na(b$raw_by_facet$Rater$FairM)))
+      expect_true(all(is.finite(b$raw_by_facet$Rater$FairM)))
       expect_true(all(is.finite(b$raw_by_facet$Rater$FairZ)))
-      expect_match(b$raw_by_facet$Rater$FairMReference[1], "mean Person measure is unbounded", fixed = TRUE)
-      expect_error(plot_fair_average(b, facet = "Rater", draw = FALSE),
-                   "mean JML Person measure is unbounded", fixed = TRUE)
+      expect_match(b$raw_by_facet$Rater$FairMReference[1], "finite fitted Person", fixed = TRUE)
+      expect_no_error(plot_fair_average(b, facet = "Rater", draw = FALSE))
+      expect_gt(b$raw_by_facet$Rater$FairMExcludedPersons[1], 0)
       expect_no_error(plot_fair_average(b, facet = "Rater", metric = "FairZ", draw = FALSE))
     } else {
       expect_true(all(is.finite(p$PrimaryMeasure)))
@@ -122,7 +122,7 @@ test_that("fair-score plot intervals cannot acquire formal eligibility", {
   expect_match(p$data$subtitle, "observed means held fixed", fixed = TRUE)
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     visible <- plot_fair_average(fit, show_ci = TRUE, draw = FALSE)
-    expect_match(gsub("[[:space:]]+", " ", as_ggplot(visible)$labels$subtitle), "observed means held fixed", fixed = TRUE)
+    expect_match(gsub("[[:space:]]+", " ", paste(plot_data(as_ggplot(visible), "notes")$Text, collapse = "\n")), "observed means held fixed", fixed = TRUE)
   }
   expect_true(all(!d$CI_Eligible))
   expect_true(all(d$CI_ReportingUse[is.finite(d$CI_Lower)] == "diagnostic_only"))

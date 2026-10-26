@@ -48,7 +48,9 @@ test_that("separation, reliability, and strata match hand calculations", {
   expect_equal(row$RealStrata, real_strata)
   expect_equal(row$MeanInfit, mean(measures$Infit))
   expect_equal(row$MeanOutfit, mean(measures$Outfit))
-  expect_identical(row$ReliabilityUse, "primary_reporting")
+  expect_true(row$SourceSupportsFormalInference)
+  expect_false(row$SupportsFormalInference)
+  expect_identical(row$ReliabilityUse, "approximate_summary")
 })
 
 test_that("facet precision summary includes sample and population bases", {
@@ -220,4 +222,36 @@ test_that("reliability does not infer eligibility from convergence or missing fl
   expect_false(out$SupportsFormalInference)
   measures$Estimate <- Inf
   expect_true(is.na(mfrmr:::calc_reliability(measures)$Reliability))
+})
+
+test_that("PCM fourth-moment df retains independent precision and reflection invariance", {
+  # Decimal exp-polynomial references were calculated with 60-digit arithmetic.
+  # Native df columns retain executable disagreements; they are not targets
+  # for weakening the independent mathematical contract.
+  refs <- read.csv(test_path("fixtures", "facets-pcm-df-precision.csv"))
+  for (i in seq_len(nrow(refs))) {
+    r <- refs[i, ]; steps <- as.numeric(r[c("Step1", "Step2", "Step3")])
+    get <- function(eta, steps, scores) {
+      mom <- mfrmr:::compute_response_probability_bundle(
+        list(model="PCM", n_cat=4L), list(step_idx=rep(1L,4)),
+        list(steps_mat=matrix(steps,1)), rep(eta,4))
+      obs <- data.frame(Observed=scores, Expected=mom$expected_k, Var=mom$var_k,
+        Weight=rep(r$Count/4,4), FourthCentralMoment=mom$fourth_central_moment,
+        StdSq=(scores-mom$expected_k)^2/mom$var_k)
+      list(mom=mom, fit=mfrmr:::calc_overall_fit(obs,fit_df_method="facets"))
+    }
+    a <- get(r$Eta,steps,0:3); b <- get(-r$Eta,-rev(steps),3:0)
+    expect_equal(a$mom$expected_k, rep(r$DecimalExpected,4), tolerance=1e-13)
+    expect_equal(a$mom$var_k, rep(r$DecimalVariance,4), tolerance=1e-13)
+    expect_equal(a$mom$fourth_central_moment, rep(r$DecimalFourth,4), tolerance=1e-13)
+    expect_equal(a$fit$DF_Infit, r$DecimalDF, tolerance=1e-12)
+    expect_equal(a$fit$DF_Outfit, r$DecimalDF, tolerance=1e-12)
+    expect_equal(a$fit,b$fit,tolerance=1e-12)
+  }
+  # Uniform 0:3 is an exact rational check independent of the fixture generator.
+  obs <- data.frame(StdSq=(0:3-1.5)^2/1.25,Var=1.25,
+    FourthCentralMoment=2.5625,Weight=c(1,.5,2,3))
+  fit <- mfrmr:::calc_overall_fit(obs,fit_df_method="facets")
+  expect_equal(fit$DF_Infit,3.125*sum(obs$Weight),tolerance=1e-14)
+  expect_equal(fit$DF_Outfit,fit$DF_Infit,tolerance=1e-14)
 })

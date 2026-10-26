@@ -149,9 +149,11 @@ test_that("major beginner-facing summaries respect the 80-column privacy contrac
 
   person_ids <- unique(as.character(fit$facets$person$Person))
   conquest_person_ids <- unique(as.character(conquest_bundle$mfrmr_case_eap$Person))
+  diagnostics_summary <- summary(diagnostics)
+  diagnostics_original <- serialize(diagnostics_summary, NULL)
   outputs <- list(
     diagnostics = list(
-      lines = capture.output(print(summary(diagnostics))),
+      lines = capture.output(printed_diagnostics <- print(diagnostics_summary)),
       ids = person_ids
     ),
     results_brief = list(
@@ -170,6 +172,12 @@ test_that("major beginner-facing summaries respect the 80-column privacy contrac
 
   diagnostics_lines <- outputs$diagnostics$lines
   results_lines <- outputs$results_brief$lines
+  expect_identical(printed_diagnostics, diagnostics_summary)
+  expect_identical(serialize(diagnostics_summary, NULL), diagnostics_original)
+  diagnostics_text <- gsub("[[:space:]]+", " ", paste(diagnostics_lines, collapse = " "))
+  for (reason in unique(diagnostics_summary$overall_fit$FitReason)) {
+    expect_match(diagnostics_text, reason, fixed = TRUE)
+  }
   expect_true(any(grepl("^Decision$", diagnostics_lines)))
   expect_true(any(grepl("Formal inference:", diagnostics_lines, fixed = TRUE)))
   expect_true(any(grepl("^Decision$", results_lines)))
@@ -180,10 +188,22 @@ test_that("major beginner-facing summaries respect the 80-column privacy contrac
   expect_true(any(grepl("mfrmr fit status", conquest_lines, fixed = TRUE)))
   expect_true(any(grepl("Inference ready", conquest_lines, fixed = TRUE)))
   expect_true(any(grepl("not inference-ready", conquest_lines, fixed = TRUE)))
-  expect_true(any(grepl("Resolve the mfrmr convergence issue", conquest_lines, fixed = TRUE)))
+  expect_true(any(grepl("Inspect why the mfrmr fit is not inference-ready", conquest_lines, fixed = TRUE)))
   expect_false(any(grepl("Run the generated command locally", conquest_lines, fixed = TRUE)))
 
   for (output in outputs) {
     expect_public_console_output(output$lines, output$ids)
+  }
+  display <- diagnostics_summary
+  uses <- c("approximate_summary", "review_before_reporting", "screening_only")
+  display$reliability$ReliabilityUse <- rep(uses, length.out = nrow(display$reliability))
+  for (detail in c("brief", "full")) {
+    display$detail <- detail
+    before <- serialize(display, NULL)
+    text <- paste(capture.output(print(display)), collapse = " ")
+    expect_false(any(vapply(uses, grepl, logical(1), x = text, fixed = TRUE)))
+    for (label in c("Approximate summary", "Review before reporting", "Screening only"))
+      expect_match(text, label, fixed = TRUE)
+    expect_identical(serialize(display, NULL), before)
   }
 })

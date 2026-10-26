@@ -1,0 +1,165 @@
+{
+  "Date": "2026-10-09",
+  "Purpose": "Persistent restart environment; not D1 statistical completion",
+  "RuntimeRoot": "validation-results/runtime-20261009",
+  "R": {
+    "Version": "4.6.1",
+    "Platform": "aarch64-apple-darwin23",
+    "DistributionURL": "https://cran.r-project.org/bin/macosx/sonoma-arm64/base/R-4.6.1-arm64.pkg",
+    "PublishedSHA1": "fc9f4ada15589e8e037b9bf05563d21e97181635",
+    "HistoricalBinarySHA256": {
+      "bin/exec/R": "3a64ef371bfadd5be2839300761e7bce1a59f05b9ea8f0c8c5ef37a540d33c9e",
+      "library/parallel/libs/parallel.so": "489961432f78e4243c4fe5e7aaa7f712b649ad86fbb5a71dd99cbeb0b46ccdd1",
+      "library/tools/libs/tools.so": "e7ca8ca4a4f6afeb6f150b358cd98e92911b7a896036bd73ee4ba2e3b6d2f385",
+      "library/methods/libs/methods.so": "89e57dbbc7835a89b5fee606da733b9f226a7023f48d292e78002f36c748b77d",
+      "library/utils/libs/utils.so": "d9fbc4efb4d963691b44e73cb3a914471b2aa3a38487a5b0647191d260ff7905",
+      "library/splines/libs/splines.so": "7b359d829186dec5389d5fd4a893d88a4dfb737d8317c04af4d1e9b8c0707cb2",
+      "library/grDevices/libs/cairo.so": "676c894bfc8e39aa981bc9e602cbd0e83a8545e7c1720bed0c478b6dc178e3d2",
+      "library/grDevices/libs/grDevices.so": "bedd11320a86d6d29158ea2f106fffcd93a40ef3c46c8de8a919234fcd8ebfed",
+      "library/graphics/libs/graphics.so": "d80467e0d35cfa17b54b1153061dad08621803504c0294aa2ae0f96593f4c5de",
+      "library/stats/libs/stats.so": "91da877e5da1211c8fb8bbce0ff12b57c63efb3dfd43daffeb0cf5010164b669",
+      "library/grid/libs/grid.so": "78f08c2bcbba2d3b05da07ee24b62db57522d28513bb7b2f70409181dfb0e054",
+      "lib/libgfortran.5.dylib": "692e27e65bb07137d029e412cc1ad1a1a9a687857d79993d50a7218f67c0a3e5",
+      "lib/libRblas.0.dylib": "5e81850ad663fe7072628e33ac064409f32a63e7b2424605ffbfcf6f2a83d172",
+      "lib/libR.dylib": "9ed638d6cefd8a07b30c6bee1452bba5658b5903c477d272e293ef8ea3a33517",
+      "lib/libquadmath.0.dylib": "c32e5d2225a1452ffb568c4ae6457dc01526e15cdfa440dbaee766ffb5e4d072",
+      "lib/libgcc_s.1.1.dylib": "789a25f4e43c84f75d00aab34f44c0f974b2e79a9f8286cdfdc1350f1fecda21",
+      "lib/libRlapack.dylib": "8d8d8f6e3da80c8c9fa71367ad67a9780d48e1c8f35b34d8d01abccdf24ef925",
+      "lib/libR.dylib.dSYM/Contents/Resources/DWARF/libR.dylib": "b0b9321f776daf0ccdfa91f091dfcf01cc0f764c92136cc573ad7c402cc79872",
+      "modules/lapack.so": "b14a809f2e0a76941caaa56da7761b30b78c645456a3216838a639b6a2172136",
+      "modules/R_X11.so": "dc0c862edd30d70d50e9d4bb5028ccb048416cf856baa97867333ebe94b07f40"
+    },
+    "PackageInventory": "inst/validation/runtime-packages-20261009.csv",
+    "PackageEntries": 209,
+    "Launcher": "scripts/validation-R",
+    "SourcePackage": "mfrmr 0.2.4.9000 loaded from the selected frozen source with pkgload; never substitute installed system mfrmr",
+    "Preflight": "scripts/validation-runtime-preflight.R",
+    "EpochChecks": [
+      "original AB source",
+      "qualified AB transition source"
+    ],
+    "RNGkind": [
+      "Mersenne-Twister",
+      "Inversion",
+      "Rejection"
+    ],
+    "Restoration": [
+      "Verify archive SHA256 and published SHA1 before extraction.",
+      "pkgutil --expand-full validation-results/mfrm-r461-recovery-20261007/R-4.6.1-arm64.pkg validation-results/runtime-20261009/R-4.6.1",
+      "Keep the isolated additional library at validation-results/runtime-20261009/library. It was copied with APFS clone-on-write from installed packages, plus the pinned lpSolve binary; system packages were not modified.",
+      "The inventory distinguishes additional and R-bundled library entries. TreeSHA256 hashes relative UTF-8 file paths followed by NUL and each file SHA256 digest, sorted by path; symlinks to files are read through.",
+      "Preserve these library trees. Rebuilding the same package version elsewhere is not proof of the same binary; verify the appropriate saved runtime guard and qualify changed builds before numerical continuation.",
+      "Use sh scripts/validation-R; the official unmodified bin/R shell wrapper points to the system framework and is not the isolated launcher."
+    ]
+  },
+  "Python": {
+    "Version": "3.13.3",
+    "BaseInterpreter": "/opt/homebrew/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/bin/python3.13",
+    "BaseInterpreterSHA256": "34af8eed630f46919dcb77457077ae3564f7cd25f5d83c56530e64d00de78804",
+    "Requirements": "inst/validation/runtime-python-20261009.txt",
+    "Versions": {
+      "Numpy": "2.4.2",
+      "Scipy": "1.17.1",
+      "Mpmath": "1.3.0"
+    },
+    "Provenance": "Python 3.13.3 and NumPy 2.4.2 match the retained witness-startup-cost record; mpmath 1.3.0 and three interval implementation file hashes match the retained exact-conversion proof. SciPy 1.17.1 matches the cached October 4 wheel, but the historical producer did not record its SciPy version, so historical SciPy identity is not asserted.",
+    "Replay": "validation-results/development-restart-20261009/python-replay.json",
+    "Qualification": "Eight saved bounds and 23040 raw interval conversions match exactly. Eight rational witnesses were reconstructed from retained certificates and reused in the persistent cache; no fitting, new datasets or new certificates.",
+    "Restoration": [
+      "/opt/homebrew/Cellar/python@3.13/3.13.3/bin/python3.13 -m venv --copies validation-results/runtime-20261009/python",
+      "validation-results/runtime-20261009/python/bin/python -m pip install --no-index --find-links validation-results/runtime-20261009/downloads --require-hashes -r inst/validation/runtime-python-20261009.txt",
+      "The venv still depends on the pinned host Python standard library/framework; this is a recorded macOS environment, not a self-contained cross-platform image."
+    ],
+    "PersistentWitnessCache": "validation-results/runtime-20261009/qualified-witness-cache"
+  },
+  "ThreadVariables": [
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS"
+  ],
+  "ThreadPolicy": {
+    "AB_and_D": "all unset",
+    "C_E_Task_and_Python_numeric": "all 1",
+    "Authority": "Each saved epoch manifest, not a universal default"
+  },
+  "Archives": {
+    "validation-results/mfrm-r461-recovery-20261007/R-4.6.1-arm64.pkg": {
+      "SHA256": "67f6eea4ced4ce48f0a0d4fa3a1cac43d1859a05a88993ee3dff7c52e7edbc4b",
+      "Bytes": 105066342
+    },
+    "validation-results/runtime-20261009/downloads/lpSolve_5.6.23.tgz": {
+      "SHA256": "0baa52d25c2afc1222080be4d630443f5082eba76413bf1f8106fae908dd69ca",
+      "Bytes": 1075720
+    },
+    "validation-results/runtime-20261009/downloads/mpmath-1.3.0-py3-none-any.whl": {
+      "SHA256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+      "Bytes": 536198
+    },
+    "validation-results/runtime-20261009/downloads/numpy-2.4.2-cp313-cp313-macosx_14_0_arm64.whl": {
+      "SHA256": "8e4549f8a3c6d13d55041925e912bfd834285ef1dd64d6bc7d542583355e2e98",
+      "Bytes": 5198157
+    },
+    "validation-results/runtime-20261009/downloads/scipy-1.17.1-cp313-cp313-macosx_14_0_arm64.whl": {
+      "SHA256": "7ff200bf9d24f2e4d5dc6ee8c3ac64d739d3a89e2326ba68aaf6c4a2b838fd7d",
+      "Bytes": 20325719
+    }
+  },
+  "EvidenceRoot": "validation-results/development-restart-20261009",
+  "HistoricalEvidencePolicy": "Original source/evidence files stay immutable. Temporary path relocations are separately recorded and accepted only when archived bytes match original hashes.",
+  "RemainingBeforeProducerAdoption": "Bounded pending-region selection is qualified in normal-rescale/left-pending-region-20261009/ under the retained N30 profiles. Create a separately source-bound continuation before adopting it; preserve the historical queue, validate temporary-source aliases by archived hashes, and retain independent checking of new exclusions. No complete producer rerun or D1 confidence-set completion is claimed.",
+  "OptionalPlottingLibrary": {
+    "Path": "validation-results/runtime-20261009/optional-library",
+    "Purpose": "Supplement for plotting regressions; frozen numerical library unchanged. Append to .libPaths() explicitly for these tests.",
+    "Packages": [
+      {
+        "Package": "ggplot2",
+        "Version": "4.0.3",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/ggplot2",
+        "TreeSHA256": "5fadc9bf53a66534ae4bb07f94a0524bea201e8e331429317cca8d5584e965f0"
+      },
+      {
+        "Package": "isoband",
+        "Version": "0.3.0",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/isoband",
+        "TreeSHA256": "31f5b609cb8c2ec059523f4e991bd6bc7eb070c34895c4d5cdc2fd02369b541a"
+      },
+      {
+        "Package": "S7",
+        "Version": "0.2.2",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/S7",
+        "TreeSHA256": "98cb33a391d217e769b46ec061fb917f3dee1e1a914b887aef5ddec3ededaa47"
+      },
+      {
+        "Package": "scales",
+        "Version": "1.4.0",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/scales",
+        "TreeSHA256": "7212fec41f08d34e477318e3334b26e922e5a42fc55e67236d05bc181c3e3226"
+      },
+      {
+        "Package": "farver",
+        "Version": "2.1.2",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/farver",
+        "TreeSHA256": "8599402fb7fc2ca6ea2050fb31e8f0153bcbbe239e41021fb4a74a24f7192326"
+      },
+      {
+        "Package": "labeling",
+        "Version": "0.4.3",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/labeling",
+        "TreeSHA256": "44eaaa838ed9e3187cfcbd78e6dbb5b4c436bbfe0265fc9062a261446cfe6877"
+      },
+      {
+        "Package": "RColorBrewer",
+        "Version": "1.1-3",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/RColorBrewer",
+        "TreeSHA256": "32e3342c66837794e84ee24ce1342e60078a3192ba3332107ae1992649de3a9c"
+      },
+      {
+        "Package": "viridisLite",
+        "Version": "0.4.3",
+        "Source": "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/viridisLite",
+        "TreeSHA256": "ac027eeaf635c35c2ef7596c85b969e194187bb8d79e4a2d206826d0f039a2a2"
+      }
+    ]
+  }
+}

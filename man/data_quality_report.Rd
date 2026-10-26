@@ -114,7 +114,6 @@ final estimation/reporting.
 }
 
 \examples{
-\donttest{
 # Load the package and example ratings
 library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
@@ -135,7 +134,6 @@ summary(quality)
 
 # Draw the data-quality overview
 plot(quality)
-}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=specifications_report]{specifications_report()}},

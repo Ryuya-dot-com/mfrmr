@@ -9,7 +9,9 @@ measurable_summary_table(fit, diagnostics = NULL)
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.
+Must match this fitted analysis; see \link{mfrmr_compatibility_layer} for
+migration of saved diagnostics.}
 }
 \value{
 A named list with:
@@ -82,21 +84,21 @@ The \code{category_stats} data.frame contains:
 \describe{
 \item{Category}{Score category value.}
 \item{Count, Percent}{Observed count and percentage.}
-\item{Infit, Outfit, InfitZSTD, OutfitZSTD}{Category-level fit.}
+\item{Infit, Outfit}{Descriptive category residual mean squares.}
+\item{InfitZSTD, OutfitZSTD}{Unavailable (NA); conditioning on the observed
+category does not preserve a universal unit-residual reference.}
 \item{ExpectedCount, DiffCount, LowCount}{Expected-observed comparison
 and low-count flag.}
 }
 }
 
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 300)
 t5 <- measurable_summary_table(fit)
 summary(t5)
 p_t5 <- plot(t5, draw = FALSE)
 p_t5$data$plot
-}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=rating_scale_table]{rating_scale_table()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}},

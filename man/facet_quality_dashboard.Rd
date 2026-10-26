@@ -21,7 +21,9 @@ facet_quality_dashboard(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for the same \code{fit}.
+Mismatched or outdated diagnostics are rejected. Recompute diagnostics
+after refitting; the model itself does not need to be fitted again.}
 
 \item{facet}{Optional facet name. When \code{NULL}, the function tries to infer
 a rater-like facet and otherwise falls back to the first modeled facet.}
@@ -42,7 +44,8 @@ about 0.67--1.5, whereas the unmodified package defaults are 0.5--1.5.}
 marking facet estimates near the fitted origin. The default \code{NULL}
 disables this flag because origin proximity is not evidence that a rater
 avoids extreme score categories. Use \code{\link[=data_quality_report]{data_quality_report()}} for observed
-category-use and restriction-of-range screening.}
+category-use screening and \code{\link[=rater_centrality_table]{rater_centrality_table()}} for model-based
+indirect centrality indices.}
 
 \item{bias_count_warn}{Minimum flagged-bias row count required to flag a
 level.}
@@ -88,7 +91,8 @@ form (0.67-1.5).
 \eqn{|\mathrm{Estimate}| <} \code{central_tendency_max} logits are marked.
 This only describes proximity to the fitted origin and must not be
 interpreted as central-category use or restriction of range. Those are
-response-pattern questions handled by \code{\link[=data_quality_report]{data_quality_report()}}.
+response-pattern questions; see \code{\link[=data_quality_report]{data_quality_report()}} and
+\code{\link[=rater_centrality_table]{rater_centrality_table()}} for their distinct descriptive indices.
 \item \strong{Bias}: elements involved in \eqn{\ge} \code{bias_count_warn}
 screen-positive interaction cells (from \code{\link[=estimate_bias]{estimate_bias()}}) are flagged.
 }
@@ -137,8 +141,15 @@ when \code{bias_results} was supplied; \code{NULL} otherwise
 }
 }
 
+\section{Saved-result reuse}{
+
+Supplied screening results must describe this fitted analysis. Results from
+another fit or older results without identity metadata are refused. See
+\link{mfrmr_compatibility_layer} to recreate them from the saved fit and matching
+diagnostics without refitting the model.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person \%in\% unique(toy$Person)[1:8], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
@@ -146,7 +157,6 @@ diag <- diagnose_mfrm(fit, residual_pca = "none")
 dash <- facet_quality_dashboard(fit, diagnostics = diag)
 summary(dash)
 }
-}
 \seealso{
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \link[=plot.mfrm_fit]{plot(x, type = "qc")}
 }

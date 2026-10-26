@@ -49,6 +49,9 @@ test_that("audit itself cannot launch ConQuest or bless comparison claims", {
 })
 
 test_that("record and roadmap retain the optional boundary", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_optional_package_boundary_audit()
   record <- paste(readLines(file.path(
     ctx$validation,

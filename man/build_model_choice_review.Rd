@@ -67,7 +67,6 @@ Model-choice ranking also requires the current selectable IC contract:
 q<31 fits retain raw criteria but produce a screening/review-only bundle.
 }
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                     method = "MML", model = "RSM", quad_points = 31)
@@ -76,7 +75,6 @@ fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                     quad_points = 31)
 review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 summary(review)
-}
 }
 \seealso{
 \code{\link[=compare_mfrm]{compare_mfrm()}}, \code{\link[=build_weighting_review]{build_weighting_review()}},

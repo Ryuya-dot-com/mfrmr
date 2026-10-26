@@ -414,12 +414,15 @@ test_that("interrater_agreement_table returns pairs + summary", {
 })
 
 test_that("ExpectedExact uses fitted category probabilities rather than marginal chance", {
-  res <- interrater_agreement_table(.stab_fit, diagnostics = .stab_dx,
+  fit <- readRDS(test_path("fixtures", "ordinary-score-integration.rds"))$fits[["PCM-MML-fixed"]]
+  diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+  res <- interrater_agreement_table(fit, diagnostics = diagnostics,
     rater_facet = "Rater")
   pair <- res$pairs[1, , drop = FALSE]
-  probs <- mfrmr:::compute_prob_matrix(.stab_fit)
-  obs <- .stab_dx$obs
-  context_cols <- c("Person", "Task", "Criterion")
+  expect_identical(pair$ExpectedReason, "available")
+  probs <- mfrmr:::compute_prob_matrix(fit)
+  obs <- diagnostics$obs
+  context_cols <- c("Person", setdiff(fit$config$facet_names, "Rater"))
   context_key <- do.call(paste, c(lapply(obs[context_cols], as.character), sep = "|"))
   idx1 <- which(as.character(obs$Rater) == as.character(pair$Rater1))
   idx2 <- which(as.character(obs$Rater) == as.character(pair$Rater2))

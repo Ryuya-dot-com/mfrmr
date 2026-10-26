@@ -161,6 +161,9 @@ test_that("G4R cannot read estimates or launch an engine", {
 })
 
 test_that("G4R record and internal roadmap retain the calibration hold", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_post_mechanics_review()
   record <- paste(readLines(file.path(
     ctx$validation,

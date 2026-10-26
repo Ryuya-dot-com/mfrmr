@@ -254,6 +254,9 @@ test_that("the P3 construction layer cannot launch ConQuest", {
 })
 
 test_that("the P3 record closes construction and preserves later gates", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_p3_item_only_fixtures()
   record_path <- file.path(
     ctx$validation,

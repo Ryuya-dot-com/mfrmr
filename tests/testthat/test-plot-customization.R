@@ -28,10 +28,10 @@ test_that("plot APIs accept title/palette/label customization", {
   )
 
   expect_no_error(
-    mfrmr::plot_unexpected(
-      fit,
+    plot(
+      fit, type = "unexpected",
       diagnostics = diag,
-      plot_type = "severity",
+      view = "severity",
       draw = FALSE,
       main = "Custom Unexpected",
       palette = c(higher = "#d95f02", lower = "#1b9e77", bar = "#2b8cbe"),
@@ -42,8 +42,8 @@ test_that("plot APIs accept title/palette/label customization", {
 
   expect_identical(
     as.character(
-      mfrmr::plot_unexpected(
-        fit,
+      plot(
+        fit, type = "unexpected",
         diagnostics = diag,
         draw = FALSE,
         preset = "publication"
@@ -51,8 +51,8 @@ test_that("plot APIs accept title/palette/label customization", {
     ),
     "publication"
   )
-  p_unexpected <- mfrmr::plot_unexpected(
-    fit,
+  p_unexpected <- plot(
+    fit, type = "unexpected",
     diagnostics = diag,
     draw = FALSE,
     preset = "publication"
@@ -61,8 +61,8 @@ test_that("plot APIs accept title/palette/label customization", {
   expect_true(is.data.frame(p_unexpected$data$legend))
   expect_true(is.data.frame(p_unexpected$data$reference_lines))
 
-  p_displacement <- mfrmr::plot_displacement(
-    fit,
+  p_displacement <- plot(
+    fit, type = "displacement",
     diagnostics = diag,
     draw = FALSE,
     preset = "publication"
@@ -70,8 +70,8 @@ test_that("plot APIs accept title/palette/label customization", {
   expect_identical(as.character(p_displacement$data$preset), "publication")
   expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_displacement$data)))
 
-  p_fchi <- mfrmr::plot_facets_chisq(
-    fit,
+  p_fchi <- plot(
+    fit, type = "facets_chisq",
     diagnostics = diag,
     draw = FALSE,
     preset = "publication"
@@ -81,11 +81,11 @@ test_that("plot APIs accept title/palette/label customization", {
 
   expect_no_error(
     {
-      p_ir <- mfrmr::plot_interrater_agreement(
-        fit,
+      p_ir <- plot(
+        fit, type = "agreement",
         diagnostics = diag,
         rater_facet = "Rater",
-        plot_type = "exact",
+        metric = "exact",
         draw = FALSE,
         main = "Custom Inter-rater",
         palette = c(ok = "#2b8cbe", flag = "#cb181d", expected = "#08519c"),
@@ -100,11 +100,11 @@ test_that("plot APIs accept title/palette/label customization", {
   pdf(NULL)
   on.exit(dev.off(), add = TRUE)
   expect_no_error(
-    mfrmr::plot_interrater_agreement(
-      fit,
+    plot(
+      fit, type = "agreement",
       diagnostics = diag,
       rater_facet = "Rater",
-      plot_type = "exact",
+      metric = "exact",
       draw = TRUE,
       main = "Custom Inter-rater",
       palette = c(ok = "#2b8cbe", flag = "#cb181d", expected = "#08519c"),
@@ -122,9 +122,9 @@ test_that("plot APIs accept title/palette/label customization", {
   t13_3 <- mfrmr::bias_interaction_report(bias3, top_n = 20)
 
   expect_no_error(
-    mfrmr::plot_bias_interaction(
-      t13_3,
-      plot = "facet_profile",
+    plot(
+      t13_3, type = "bias",
+      view = "facet_profile",
       draw = FALSE,
       main = "Custom Higher-Order Bias Profile",
       palette = c(normal = "#2b8cbe", flag = "#cb181d", profile = "#756bb1"),
@@ -133,10 +133,10 @@ test_that("plot APIs accept title/palette/label customization", {
     )
   )
 
-  p_pca <- mfrmr::plot_residual_pca(
-    mfrmr::analyze_residual_pca(diag, mode = "overall"),
+  p_pca <- plot(
+    mfrmr::analyze_residual_pca(diag, mode = "overall"), type = "residual_pca",
     mode = "overall",
-    plot_type = "scree",
+    view = "scree",
     draw = FALSE,
     preset = "publication"
   )
@@ -149,7 +149,7 @@ test_that("plot APIs accept title/palette/label customization", {
   )
   expect_true(all(c("title", "subtitle", "legend", "reference_lines") %in% names(p_wright$data)))
 
-  p_bubble_mono <- mfrmr::plot_bubble(fit, draw = FALSE, preset = "monochrome")
+  p_bubble_mono <- plot(fit, type = "bubble", draw = FALSE, preset = "monochrome")
   expect_identical(as.character(p_bubble_mono$data$preset), "monochrome")
 })
 
@@ -169,7 +169,8 @@ test_that("fit plot presentation flags retain notes and numerical payloads", {
     title = function(main = NULL, ...) {
       text_drawn <<- c(text_drawn, as.character(main))
       original_title(main = main, ...)
-    }, .package = "graphics")
+    }, .package = "mfrmr")
+  local_graphics_headings(function(main) text_drawn <<- c(text_drawn, as.character(main)))
   for (type in c("wright", "facets", "pathway", "ccc", "fit_pathway", "person", "step", "facet")) {
     args <- list(x = fit, type = if (type == "facets") "wright" else type,
                  title = "Custom heading", top_n = 2)
@@ -193,7 +194,7 @@ test_that("fit plot presentation flags retain notes and numerical payloads", {
     expect_null(g$labels$title)
     expect_null(g$labels$subtitle)
     expect_null(g$labels$caption)
-    expect_identical(attr(g, "mfrmr_notes"), p$data$notes)
+    expect_identical(utils::head(plot_data(g, "notes"), nrow(p$data$notes)), p$data$notes)
     expect_true(any(grepl("Review-only display", capture.output(print(p)), fixed = TRUE)))
     if (type == "wright") expect_true(any(grepl("omitted", p$data$notes$Text, fixed = TRUE)))
     if (type %in% c("pathway", "ccc")) expect_true(any(p$data$notes$Type == "reference_profile"))
@@ -211,6 +212,11 @@ test_that("fit plot presentation flags retain notes and numerical payloads", {
     expect_identical(is.null(g$labels$title), !flags[1])
     expect_identical(is.null(g$labels$subtitle), !flags[2])
   }
+  text_drawn <- character()
+  .mfrmr_muffle_expected_warnings(
+    plot(fit, renderer = "facets", title = "Optional FACETS heading",
+      show_title = TRUE, show_notes = FALSE), "^Review-only display:")
+  expect_true(any(grepl("Optional FACETS heading", text_drawn, fixed = TRUE)))
   direct <- .mfrmr_muffle_expected_warnings(
     as_ggplot(fit, type = "wright", show_title = FALSE, show_notes = FALSE),
     "^Review-only display:")

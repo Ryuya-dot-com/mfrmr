@@ -17,7 +17,9 @@ rater_network_analysis(
   severity_continuity = 0.5,
   exact_warn = 0.5,
   corr_warn = 0.3,
-  include_graph = FALSE
+  include_graph = FALSE,
+  alpha_level = c("interval", "ordinal", "nominal", "ratio"),
+  alpha_categories = NULL
 )
 }
 \arguments{
@@ -42,7 +44,10 @@ rating convention.}
 \item{weight_metric}{Pair-level weight used for \code{"agreement"} or
 \code{"disagreement"} networks. Defaults to \code{Exact} for agreement and \code{MAD}
 for disagreement. Available pair columns include \code{Exact}, \code{Adjacent},
-\code{Corr}, \code{MAD}, \code{OneMinusExact}, and \code{AbsMeanDiff}.}
+\code{Corr}, \code{MAD}, \code{OneMinusExact}, and \code{AbsMeanDiff}. \code{KrippendorffAlpha}
+retains signed alpha edges in agreement mode. Directed mode accepts
+\code{DirectionalHigherProp} (default, count/N) or \code{DirectionalMagnitude}
+(sum of positive score differences/N, for Lamprianou's weighted indices).}
 
 \item{min_pair_n}{Minimum number of shared contexts required for a rater
 pair to contribute an edge.}
@@ -68,6 +73,10 @@ pair flags consistent with the tabular agreement view.}
 
 \item{include_graph}{If \code{TRUE}, include the underlying \code{igraph} object in the
 returned bundle.}
+
+\item{alpha_level, alpha_categories}{Measurement level and category order for
+\code{KrippendorffAlpha}; see \code{\link[=krippendorff_alpha_table]{krippendorff_alpha_table()}}. The default interval
+level follows Lamprianou (2025); ordinal alpha requires a declared order.}
 }
 \value{
 A bundle of class \code{mfrm_rater_network} containing:
@@ -111,14 +120,69 @@ reported \code{SeverityIndex} is positive for relatively severe raters and
 negative for relatively lenient raters, but it is on a network-analysis scale
 and should not be read as an MFRM severity logit.
 A rater without any retained directional comparisons has an unavailable
-index, not a balanced index. Zero or negative undirected weights remain in
-the pair table but do not form graph edges. Graph distances summarize
+index, not a balanced index. Except for signed alpha, zero or negative
+undirected weights remain in the pair table but do not form graph edges. Graph distances summarize
 reachable pairs only, so they do not describe distance across disconnected
 components. Recreate older network results from the existing fit and matching
 diagnostics with the original settings before summary, plotting or export.
 }
+\section{Signed agreement and weighted network fit}{
+
+Pairwise alpha uses only shared finite scoring contexts and pair-specific
+marginals. Negative alpha is retained, zero remains a non-edge, and undefined
+expected disagreement remains \code{NA} with \code{AlphaStatus}. Alpha is not a
+correlation. \code{Weight} is its magnitude for drawing; \code{SignedWeight} retains
+its sign. \code{Strength} is absolute strength; \code{PositiveStrength},
+\code{NegativeStrength} (magnitude) and \code{SignedStrength} separate its meanings.
+Path centralities are withheld for signed alpha. These are pairwise
+coefficients, not the multi-rater alpha for the whole study.
+Repeated rater-context cells follow the existing weighted-mean score-profile
+aggregation. Shared contexts are then equally weighted; row weights are not
+treated as independent replicates or precision weights for alpha/SWS/PUS.
+
+With \code{DirectionalMagnitude}, \code{network_fit} implements equations 1--3 of
+Lamprianou (2025). Let w_ij be the sum of positive score differences from i
+to j, T_ij the number of shared contexts (including ties), and
+S_i = sum_j(w_ij/T_ij) / sum_j(w_ji/T_ij). Severity is -log(S_i).
+SWS_i = sum_j(w_ij S_j/S_i + w_ji S_i/S_j) / sum_j(T_ij) - 1.
+PUS_i = mean_j(w_ij w_ji / T_ij^2), over compared partners including
+zero-disagreement partners. \code{network_fit} uses all eligible pairs before
+\code{min_weight} filtering, with no continuity correction. This differs from the
+filtered, optionally corrected \code{node_metrics$SeverityIndex}.
+\code{score_diff_tolerance} omits differences at or below the tolerance, retaining
+the full difference above it; zero is the unmodified definition. Report
+tolerance, eligible contexts, rubric range and units. Higher scores here mean
+numerically higher; interpret leniency only after checking rubric direction.
+
+Zero incoming/outgoing strength can give infinite severity. SWS is unavailable
+when any required ratio is undefined or nonpositive; PUS can still be zero.
+Negative SWS values are preserved: the subtraction of one does not guarantee
+nonnegativity. Under a positive score multiplier a, severity is unchanged,
+SWS + 1 scales by a and PUS by a^2. These are descriptive inconsistency
+indices, not standardized Rasch MnSq, universally expectation-one statistics,
+or calibrated tests. No universal cutoffs or p-values are attached.
+A high PUS can reflect balanced reversals; low PUS may reflect sparse
+disagreement. Check overlap and score range before interpreting either.
+}
+
+\section{Relation to MFRM and published network analyses}{
+
+These are observed-score relationships, not fitted residuals or adjusted
+Rasch parameters. Lamprianou (2025) compares agreement, directional and
+rater-by-criterion networks with MFRM; a close empirical correspondence is
+not numerical equivalence. Signed alpha edges and weighted directional
+SWS/PUS indices are available here; \code{\link[=fit_rater_network]{fit_rater_network()}} supplies binary
+ERGM estimation. Halo-edge associations can reflect trait covariance and
+rubric overlap; \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} offers person-cluster
+bootstrap contrasts instead of an independent-edge test.
+Use \code{\link[=mfrm_residual_network]{mfrm_residual_network()}} for residual associations and
+\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} for prefit assignment links. See
+\code{vignette("mfrmr-networks-and-reporting")} for complementary views, paired
+overlap, direction and interpretation. \code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}} documents custom
+layouts and display-only filters, which do not change the computed network.
+}
+
 \examples{
-\donttest{
 toy <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 300
@@ -128,7 +192,6 @@ if (requireNamespace("igraph", quietly = TRUE)) {
   rn$summary
   head(rn$node_metrics)
   plot(rn, type = "severity", draw = FALSE)
-}
 }
 }
 \references{
@@ -141,6 +204,6 @@ effects in language assessment: A comparison of ChatGPT vs human raters.
 \emph{Research Methods in Applied Linguistics, 4}, 100205.
 }
 \seealso{
-\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}},
+\code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \link[=plot.mfrm_fit]{plot(x, type = "agreement")},
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=plot.mfrm_bundle]{plot.mfrm_bundle()}}
 }

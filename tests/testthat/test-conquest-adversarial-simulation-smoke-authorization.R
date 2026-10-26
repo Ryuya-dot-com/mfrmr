@@ -190,6 +190,9 @@ test_that("authorization source does not generate, fit, launch, or hash", {
 })
 
 test_that("record and roadmap separate authorization from execution", {
+  skip_if_private_validation_missing(c(
+    "internal-roadmap-0.2.3.md"
+  ))
   ctx <- load_conquest_adversarial_simulation_smoke_authorization()
   record <- paste(readLines(file.path(
     ctx$validation,

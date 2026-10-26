@@ -3,7 +3,7 @@
 # approximate posterior quantiles accurately even when those moments converge.
 mfrmr_person_posterior_intervals <- function(idx, config, params, base_eta,
                                              person_labels, population_spec = NULL,
-                                             interval_level = 0.95) {
+                                             interval_level = 0.95, cut_scores = NULL) {
   basis <- resolve_person_quadrature_basis(list(nodes = c(0,1), weights = c(1,1)),
     population_spec %||% materialize_population_spec(config, params), person_count = length(person_labels))
   mu <- if (isTRUE(basis$transformed)) basis$mu else rep(0, length(person_labels))
@@ -25,10 +25,13 @@ mfrmr_person_posterior_intervals <- function(idx, config, params, base_eta,
     evaluate <- mfrmr_adaptive_person_kernel(local_idx, config, params, base_eta[rows], mu[person], sigma)
     location <- mfrmr_adaptive_posterior_location(evaluate)
     mode <- location$mode; scale <- location$scale
-    peak <- evaluate(mode)$log_likelihood + stats::dnorm(mode, log = TRUE)
+    peak_likelihood <- evaluate(mode)$log_likelihood
+    peak_prior <- stats::dnorm(mode, log = TRUE)
     log_density <- function(u) {
       z <- mode + scale * u
-      evaluate(z, include_moments = FALSE)$log_likelihood + stats::dnorm(z, log = TRUE) - peak
+      # Remove the common likelihood offset before adding the prior density.
+      (evaluate(z, include_moments = FALSE)$log_likelihood - peak_likelihood) +
+        (stats::dnorm(z, log = TRUE) - peak_prior)
     }
     integral <- function(lower, upper) {
       if (lower == upper) return(0)
@@ -55,7 +58,12 @@ mfrmr_person_posterior_intervals <- function(idx, config, params, base_eta,
       tol=1e-10, check.conv=TRUE)$root
     upper <- stats::uniroot(function(u) upper_tail(u)-alpha, c(-limit,limit),
       tol=1e-10, check.conv=TRUE)$root
-    mu[person] + sigma * (mode + scale * c(Lower=lower,Upper=upper))
+    answer <- mu[person] + sigma * (mode + scale * c(Lower=lower,Upper=upper))
+    if (!is.null(cut_scores)) {
+      cuts <- ((unname(cut_scores)-mu[person])/sigma-mode)/scale
+      answer <- c(answer, mfrm_cut_probabilities(integral, cuts, mass, -limit, limit))
+    }
+    answer
   })
   do.call(rbind,result)
 }

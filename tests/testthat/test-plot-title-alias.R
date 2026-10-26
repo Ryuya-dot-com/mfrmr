@@ -55,21 +55,23 @@ local({
     }
   })
 
-  test_that("base rendering receives the selected title for every view", {
+  test_that("base rendering omits headings while preserving selected title metadata", {
     seen <- list()
     real_title <- graphics::title
     local_mocked_bindings(title = function(main = NULL, ...) {
       seen[[length(seen) + 1L]] <<- list(main = main)
       real_title(main = main, ...)
-    }, .package = "graphics")
+    }, .package = "mfrmr")
+    local_graphics_headings(function(main) seen[[length(seen) + 1L]] <<- list(main = main))
     grDevices::pdf(NULL)
-    on.exit(grDevices::dev.off())
+    on.exit(grDevices::dev.off(), add = TRUE)
     for (case in cases) {
       args <- case$args; args$draw <- TRUE
       for (text in list("Heading sent to renderer", NULL)) {
         seen <- list()
         p <- do.call(case$fun, c(args, list(title = text)))
-        expect_true(any(vapply(seen, function(s) identical(s$main, p$data$title), logical(1))),
+        expect_true(length(seen) > 0L, info = paste(case$fun, args[[2]]))
+        expect_false(any(vapply(seen, function(s) any(nzchar(as.character(s$main))), logical(1))),
           info = paste(case$fun, args[[2]]))
       }
     }
@@ -92,7 +94,7 @@ local({
     expect_null(g$labels$title)
     expect_no_error(ggplot2::ggplot_build(g))
     custom <- do.call(plot_bubble, c(args, list(title = "Custom ggplot heading")))
-    expect_identical(as_ggplot(custom)$labels$title, "Custom ggplot heading")
+    expect_identical(plot_data(as_ggplot(custom), "title"), "Custom ggplot heading")
     file <- tempfile(fileext = ".rds")
     on.exit(unlink(file), add = TRUE)
     saveRDS(p, file)
