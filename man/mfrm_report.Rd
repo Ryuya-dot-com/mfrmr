@@ -449,7 +449,7 @@ stopifnot(file.copy(sheet$path, recipient_file, overwrite = FALSE))
 \references{
 Brennan, R. L. (2003). \emph{Coefficients and indices in generalizability theory}.
 CASMA Research Report No. 1, University of Iowa.
-\url{https://education.uiowa.edu/casma/research}.
+\url{https://education.uiowa.edu/sites/education.uiowa.edu/files/2026-04/casma-research-report-1-archived.pdf}.
 
 Jiang, Z., Raymond, M., DiStefano, C., Shi, D., Liu, R., & Sun, J. (2022).
 A Monte Carlo study of confidence interval methods for generalizability
