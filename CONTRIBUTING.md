@@ -17,6 +17,19 @@ devtools::document()
 devtools::check(args = c("--no-manual"), document = FALSE)
 ```
 
+To try a development checkout, start a fresh R session in its package root:
+
+```r
+pkgload::load_all(".", export_all = FALSE)
+getNamespaceInfo(asNamespace("mfrmr"), "path")
+```
+
+The returned path should identify that checkout. Use a complete checkout or
+install a complete source archive; copying selected R files can omit internal
+helpers even when the public function is present. A version number alone does
+not distinguish development copies with the same package version. If a helper
+is missing, verify the source files and loaded namespace path before refitting.
+
 ## Source control and retained evidence
 
 Use a separate Git checkout on each computer, outside file-sync folders. Exchange
